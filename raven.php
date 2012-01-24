@@ -251,11 +251,9 @@ class RavenStacktrace
                 $filename = basename($frame['file']);
             }
 
+            $module = $filename;
             if (isset($frame['class'])) {
-                $module = basename($frame['file']) .':'. $frame['class'];
-            }
-            else {
-                $module = '';
+                $module .= ':' . $frame['class'];
             }
 
             array_push($result, array(
