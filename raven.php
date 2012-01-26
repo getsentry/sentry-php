@@ -239,11 +239,11 @@ class RavenStacktrace
                     $context['line'] = sprintf(
                         '%s(%s)', $frame['function'], $frame['args']);
                 }
+                $abs_path = '';
                 $context['prefix'] = '';
                 $context['suffix'] = '';
-                $abs_path = '';
-                $filename = '[Anonymous function]';
-                $lineno = 0;
+                $context['filename'] = $filename = '[Anonymous function]';
+                $context['lineno'] = 0;
             }
             else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
@@ -258,8 +258,8 @@ class RavenStacktrace
 
             array_push($result, array(
                 'abs_path' => $abs_path,
-                'filename' => $filename,
-                'lineno' => (isset($frame['line'])) ? $frame['line'] : 0,
+                'filename' => $context['filename'],
+                'lineno' => $context['lineno'],
                 'module' => $module,
                 'function' => $frame['function'],
                 'vars' => array(),
@@ -274,17 +274,41 @@ class RavenStacktrace
 
     private static function read_source_file($filename, $lineno)
     {
-        $source_lines = array(
+        $frame = array(
             'prefix' => array(),
             'line' => '',
-            'suffix' => array()
+            'suffix' => array(),
+            'filename' => $filename,
+            'lineno' => $lineno,
         );
 
         if ($filename === null || $lineno === null) {
-            return $source_lines;
+            return $frame;
         }
 
-        $fh = fopen($filename, 'r');
+        // Code which is eval'ed have a modified filename.. Extract the
+        // correct filename + linenumber from the string.
+        $matches = array();
+        $matched = preg_match("/^(.*?)\((\d+)\) : eval\(\)'d code$/", 
+            $filename, $matches);
+        if ($matched) {
+            $frame['filename'] = $filename = $matches[1];
+            $frame['lineno'] = $lineno = $matches[2];
+        }
+
+
+        // Try to open the file. We wrap this in a try/catch block in case 
+        // someone has modified the error_trigger to throw exceptions.
+        try {
+            $fh = fopen($filename, 'r');
+            if ($fh === false) {
+                return $frame;
+            }
+        }
+        catch (ErrorException $exc) {
+            return $frame;
+        }
+
         $line = false;
         $cur_lineno = 0;
 
@@ -293,18 +317,20 @@ class RavenStacktrace
             $line = fgets($fh);
 
             if ($cur_lineno == $lineno) {
-                $source_lines['line'] = $line;
+                $frame['line'] = $line;
             }
             elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno < 3)
             {
-                $source_lines['prefix'][] = $line;
+                $frame['prefix'][] = $line;
             }
             elseif ($lineno - $cur_lineno > -3 && $lineno - $cur_lineno < 0)
             {
-                $source_lines['suffix'][] = $line;
+                $frame['suffix'][] = $line;
             }
         }
         fclose($fh);
-        return $source_lines;
+        return $frame;
     }
 }
+
+
