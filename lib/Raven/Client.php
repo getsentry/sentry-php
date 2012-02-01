@@ -40,20 +40,8 @@ class Raven_Client
         $this->public_key = (!empty($options['public_key']) ? $options['public_key'] : null);
         $this->project = (isset($options['project']) ? $options['project'] : 1);
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
-        $this->name = (!empty($options['name']) ? $options['name'] : self::getHostname());
+        $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
         $this->site = (!empty($options['site']) ? $options['site'] : '');
-    }
-
-    /**
-     * Compatibility layer for getting the hostname if it's available as PHP < 5.3
-     * does not include gethostname().
-     */
-    public static function getHostname()
-    {
-        if (function_exists('gethostname')) {
-            return gethostname();
-        }
-        return php_uname('n');
     }
 
     /**
@@ -186,7 +174,7 @@ class Raven_Client
 
     public function send($data)
     {
-        $message = base64_encode(gzcompress(json_encode($data)));
+        $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
 
         foreach($this->servers as $url) {
             $timestamp = microtime(true);
@@ -240,7 +228,7 @@ class Raven_Client
      */
     private function get_signature($message, $timestamp, $key)
     {
-        return hash_hmac('sha1', $timestamp .' '. $message, $key);
+        return Raven_Compat::hash_hmac('sha1', $timestamp .' '. $message, $key);
     }
 
     private function get_auth_header($signature, $timestamp, $client,
