@@ -88,12 +88,39 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->servers, array('http://example.com/api/store/'));
         $this->assertEquals($client->public_key, 'public');
         $this->assertEquals($client->secret_key, 'secret');
-   }
+    }
 
-    public function testServersFirstArgument()
+    public function testDsnFirstArgumentWithOptions()
     {
-        $client = new Raven_Client(array('http://example.com/api/store/'));
+        $client = new Raven_Client('http://public:secret@example.com/1', array(
+            'site' => 'foo',
+        ));
+
+        $this->assertEquals($client->project, 1);
+        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->public_key, 'public');
+        $this->assertEquals($client->secret_key, 'secret');
+        $this->assertEquals($client->site, 'foo');
+    }
+
+    public function testOptionsFirstArgument()
+    {
+        $client = new Raven_Client(array(
+            'servers' => array('http://example.com/api/store/'),
+        ));
 
         $this->assertEquals($client->servers, array('http://example.com/api/store/'));
-   }
+    }
+
+    public function testOptionsFirstArgumentWithOptions()
+    {
+        $client = new Raven_Client(array(
+            'servers' => array('http://example.com/api/store/'),
+        ), array(
+            'site' => 'foo',
+        ));
+
+        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->site, 'foo');
+    }
 }

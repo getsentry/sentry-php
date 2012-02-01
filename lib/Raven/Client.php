@@ -23,27 +23,21 @@ class Raven_Client
     const WARNING = 30;
     const ERROR = 40;
 
-    function __construct($servers_or_dsn, $public_key=null, $secret_key=null,
-                         $project=1, $site='', $auto_log_stacks=True,
-                         $name=null)
+    function __construct($options_or_dsn=null, $options=array())
     {
-        if (!is_array($servers_or_dsn)) {
-            $config = $this->parseDSN($servers_or_dsn);
-            $servers = $config['servers'];
-            $project = $config['project'];
-            $public_key = $config['public_key'];
-            $secret_key = $config['secret_key'];
+        if (!is_array($options_or_dsn)) {
+            // Must be a valid DSN
+            $options_or_dsn = $this->parseDSN($options_or_dsn);
         }
-        else {
-            $servers = $servers_or_dsn;
-        }
-        $this->servers = $servers;
-        $this->secret_key = $secret_key;
-        $this->public_key = $public_key;
-        $this->project = $project;
-        $this->auto_log_stacks = $auto_log_stacks;
-        $this->name = ($name ? $name : gethostname());
-        $this->site = $site;
+        $options = array_merge($options_or_dsn, $options);
+
+        $this->servers = $options['servers'];
+        $this->secret_key = $options['secret_key'];
+        $this->public_key = $options['public_key'];
+        $this->project = ($options['project'] ? $options['project'] : 1);
+        $this->auto_log_stacks = ($options['auto_log_stacks'] ? $options['auto_log_stacks'] : false);
+        $this->name = ($options['name'] ? $options['name'] : gethostname());
+        $this->site = ($options['site'] ? $options['site'] : '');
     }
 
     /**
