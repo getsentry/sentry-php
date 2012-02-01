@@ -20,7 +20,7 @@ $context = array(
 );
 
 $context['files'] = '';
-$path = realpath(dirname(__FILE__).'/../lib/Twig');
+$path = realpath(dirname(__FILE__).'/../lib/Raven');
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path), RecursiveIteratorIterator::LEAVES_ONLY) as $file)
 {
     if (preg_match('/\.php$/', $file))
