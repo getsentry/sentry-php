@@ -50,22 +50,29 @@ class Raven_Client
     public static function parseDSN($dsn)
     {
         $url = parse_url($dsn);
-        $scheme = $url['scheme'];
+        $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https'))) {
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . $scheme);
         }
-        $netloc = $url['host'];
-        $pos = strrpos($url['path'], '/', 1);
-        if ($pos !== false) {
-            $path = substr($url['path'], 0, $pos);
-            $project = substr($url['path'], $pos + 1);
+        $netloc = (isset($url['host']) ? $url['host'] : null);
+        $rawpath = (isset($url['path']) ? $url['path'] : null);
+        if ($rawpath) {
+            $pos = strrpos($rawpath, '/', 1);
+            if ($pos !== false) {
+                $path = substr($rawpath, 0, $pos);
+                $project = substr($rawpath, $pos + 1);
+            }
+            else {
+                $path = '';
+                $project = substr($rawpath, 1);
+            }
         }
         else {
+            $project = null;
             $path = '';
-            $project = substr($url['path'], 1);
         }
-        $username = $url['user'];
-        $password = $url['pass'];
+        $username = (isset($url['user']) ? $url['user'] : null);
+        $password = (isset($url['pass']) ? $url['pass'] : null);
         if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
             throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
         }
