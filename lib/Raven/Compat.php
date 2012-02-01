@@ -61,15 +61,19 @@ class Raven_Compat
         return ($raw_output) ? pack($pack, $output) : $output;
     }
 
+    /**
+     * Note that we discard the options given to be compatible
+     * with PHP < 5.3
+     */
     public static function json_encode($value, $options=0)
     {
         if (function_exists('json_encode')) {
-            return json_encode($value, $options);
+            return json_encode($value);
         }
-        return self::_json_encode($value, $options);
+        return self::_json_encode($value);
     }
 
-    public static function _json_encode($value, $options=0)
+    public static function _json_encode($value)
     {
         return null; // no idea yet
     }
