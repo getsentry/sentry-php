@@ -138,18 +138,25 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
+        // The function getallheaders() is only available when running in a 
+        // web-request. The function is missing when run from the commandline..
+        $headers = array();
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
         $data = array_merge($data, array(
             'server_name' => $this->name,
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
             'sentry.interfaces.Http' => array(
-                'method' => $_SERVER['REQUEST_METHOD'],
+                'method' => $this->_server_variable('REQUEST_METHOD'),
                 'url' => $this->get_current_url(),
-                'query_string' => $_SERVER['QUERY_STRING'],
+                'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => $headers,
                 'env' => $_SERVER,
             )
         ));
@@ -280,8 +287,22 @@ class Raven_Client
      */
     private function get_current_url()
     {
+        // When running from commandline the REQUEST_URI is missing.
+        if ($this->_server_variable('REQUEST_URI') === '') {
+            return '';
+        }
+
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
+
+    private function _server_var($key)
+    {
+        if (isset($_SERVER[$key])) {
+            return $_SERVER[$key];
+        }
+        return '';
+    }
+
 }
