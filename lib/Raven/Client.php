@@ -31,7 +31,7 @@ class Raven_Client
         }
         if (!is_array($options_or_dsn)) {
             // Must be a valid DSN
-            $options_or_dsn = $this->parseDSN($options_or_dsn);
+            $options_or_dsn = self::parseDSN($options_or_dsn);
         }
         $options = array_merge($options_or_dsn, $options);
 
@@ -47,7 +47,7 @@ class Raven_Client
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
      */
-    public function parseDSN($dsn)
+    public static function parseDSN($dsn)
     {
         $url = parse_url($dsn);
         $scheme = $url['scheme'];
