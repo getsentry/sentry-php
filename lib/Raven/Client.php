@@ -35,9 +35,9 @@ class Raven_Client
         }
         $options = array_merge($options_or_dsn, $options);
 
-        $this->servers = $options['servers'];
-        $this->secret_key = $options['secret_key'];
-        $this->public_key = $options['public_key'];
+        $this->servers = (!empty($options['servers']) ? $options['servers'] : null);
+        $this->secret_key = (!empty($options['secret_key']) ? $options['secret_key'] : null);
+        $this->public_key = (!empty($options['public_key']) ? $options['public_key'] : null);
         $this->project = (isset($options['project']) ? $options['project'] : 1);
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
         $this->name = (!empty($options['name']) ? $options['name'] : gethostname());
