@@ -38,10 +38,10 @@ class Raven_Client
         $this->servers = $options['servers'];
         $this->secret_key = $options['secret_key'];
         $this->public_key = $options['public_key'];
-        $this->project = ($options['project'] ? $options['project'] : 1);
-        $this->auto_log_stacks = ($options['auto_log_stacks'] ? $options['auto_log_stacks'] : false);
-        $this->name = ($options['name'] ? $options['name'] : gethostname());
-        $this->site = ($options['site'] ? $options['site'] : '');
+        $this->project = (isset($options['project']) ? $options['project'] : 1);
+        $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
+        $this->name = (!empty($options['name']) ? $options['name'] : gethostname());
+        $this->site = (!empty($options['site']) ? $options['site'] : '');
     }
 
     /**
