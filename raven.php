@@ -72,18 +72,24 @@ class RavenClient
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
+        $headers = array();
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+        
+
         $data = array_merge($data, array(
             'server_name' => $this->name,
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
             'sentry.interfaces.Http' => array(
-                'method' => $_SERVER['REQUEST_METHOD'],
+                'method' => isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET',
                 'url' => $this->get_current_url(),
-                'query_string' => $_SERVER['QUERY_STRING'],
+                'query_string' => isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '',
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => $headers,
                 'env' => $_SERVER,
             )
         ));
@@ -151,7 +157,7 @@ class RavenClient
         curl_setopt($curl, CURLOPT_VERBOSE, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_exec($curl);
+        echo curl_exec($curl);
         curl_close($curl);
     }
 
@@ -212,6 +218,9 @@ class RavenClient
      */
     private function get_current_url() 
     {
+        if (!isset($_SERVER['REQUEST_URI'])) {
+            return '';
+        }
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' 
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
@@ -332,5 +341,3 @@ class RavenStacktrace
         return $frame;
     }
 }
-
-
