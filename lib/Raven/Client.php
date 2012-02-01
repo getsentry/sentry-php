@@ -23,7 +23,7 @@ class Raven_Client
     const WARNING = 30;
     const ERROR = 40;
 
-    function __construct($servers_or_dsn, $public_key, $secret_key,
+    function __construct($servers_or_dsn, $public_key=null, $secret_key=null,
                          $project=1, $site='', $auto_log_stacks=True,
                          $name=null)
     {

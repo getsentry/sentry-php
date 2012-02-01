@@ -79,4 +79,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $result = Raven_Client::parseDsn('http://public@example.com/1');
     }
+
+    public function testDsnFirstArgument()
+    {
+        $client = new Raven_Client('http://public:secret@example.com/1');
+
+        $this->assertEquals($client->project, 1);
+        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->public_key, 'public');
+        $this->assertEquals($client->secret_key, 'secret');
+   }
 }
