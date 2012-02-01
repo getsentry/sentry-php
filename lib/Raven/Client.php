@@ -40,8 +40,20 @@ class Raven_Client
         $this->public_key = (!empty($options['public_key']) ? $options['public_key'] : null);
         $this->project = (isset($options['project']) ? $options['project'] : 1);
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
-        $this->name = (!empty($options['name']) ? $options['name'] : gethostname());
+        $this->name = (!empty($options['name']) ? $options['name'] : self::getHostname());
         $this->site = (!empty($options['site']) ? $options['site'] : '');
+    }
+
+    /**
+     * Compatibility layer for getting the hostname if it's available as PHP < 5.3
+     * does not include gethostname().
+     */
+    public static function getHostname()
+    {
+        if (function_exists('gethostname')) {
+            return gethostname();
+        }
+        return php_uname('n');
     }
 
     /**
