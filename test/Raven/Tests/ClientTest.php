@@ -89,4 +89,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->public_key, 'public');
         $this->assertEquals($client->secret_key, 'secret');
    }
+
+    public function testServersFirstArgument()
+    {
+        $client = new Raven_Client(array('http://example.com/api/store/'));
+
+        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+   }
 }
