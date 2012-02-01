@@ -25,6 +25,10 @@ class Raven_Client
 
     function __construct($options_or_dsn=null, $options=array())
     {
+        if (is_null($options_or_dsn)) {
+            // Read from environment
+            $options_or_dsn = $_SERVER['SENTRY_DSN'];
+        }
         if (!is_array($options_or_dsn)) {
             // Must be a valid DSN
             $options_or_dsn = $this->parseDSN($options_or_dsn);
