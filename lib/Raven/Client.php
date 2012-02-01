@@ -1,13 +1,21 @@
 <?php
-/**
- * PHP Client for sentry
- * 
- * See http://github.com/dcramer/sentry and http://github.com/dcramer/raven
+
+/*
+ * This file is part of Raven.
  *
- * Author: Michael van Tellingen
+ * (c) Sentry Team
  *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
-class RavenClient
+
+/**
+ * Raven PHP Client
+ *
+ * @package raven
+ */
+
+class Raven_Client
 {
     const DEBUG = 10;
     const INFO = 20;
@@ -15,22 +23,75 @@ class RavenClient
     const WARNING = 30;
     const ERROR = 40;
 
-    function __construct($servers, $public_key, $secret_key, 
-                         $project=1, $site='', $auto_log_stacks=True)
+    function __construct($servers_or_dsn, $public_key, $secret_key,
+                         $project=1, $site='', $auto_log_stacks=True,
+                         $name=null)
     {
+        if (!is_array($servers_or_dsn)) {
+            $config = $this->parseDSN($servers_or_dsn);
+            $servers = $config['servers'];
+            $project = $config['project'];
+            $public_key = $config['public_key'];
+            $secret_key = $config['secret_key'];
+        }
+        else {
+            $servers = $servers_or_dsn;
+        }
         $this->servers = $servers;
         $this->secret_key = $secret_key;
         $this->public_key = $public_key;
         $this->project = $project;
         $this->auto_log_stacks = $auto_log_stacks;
-        $this->name = gethostname();
+        $this->name = ($name ? $name : gethostname());
         $this->site = $site;
+    }
+
+    /**
+     * Parses a Raven-compatible DSN and returns an array of its values.
+     */
+    public function parseDSN($dsn)
+    {
+        $url = parse_url($dsn);
+        $scheme = $url['scheme'];
+        if (!in_array($scheme, array('http', 'https'))) {
+            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . $scheme);
+        }
+        $netloc = $url['host'];
+        $pos = strrpos($url['path'], '/', 1);
+        if ($pos !== false) {
+            $path = substr($url['path'], 0, $pos);
+            $project = substr($url['path'], $pos + 1);
+        }
+        else {
+            $path = '';
+            $project = substr($url['path'], 1);
+        }
+        $username = $url['user'];
+        $password = $url['pass'];
+        if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
+            throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
+        }
+        return array(
+            'servers'    => array(sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path)),
+            'project'    => $project,
+            'public_key' => $username,
+            'secret_key' => $password,
+        );
+    }
+
+    /**
+     * Given an identifier, returns a Sentry searchable string.
+     */
+    public function getIdent($ident)
+    {
+        // XXX: We dont calculate checksums yet, so we only have the ident.
+        return $ident;
     }
 
     /**
      * Log a message to sentry
      */
-    public function message($message, $params=array(), $level=self::INFO, 
+    public function message($message, $params=array(), $level=self::INFO,
                             $stack=false)
     {
         $data = array(
@@ -41,7 +102,7 @@ class RavenClient
                 'params' => $params,
             )
         );
-        $this->capture($data, $stack);
+        return $this->capture($data, $stack);
     }
 
     /**
@@ -62,7 +123,7 @@ class RavenClient
                 'module' => $exception->getFile() .':'. $exception->getLine(),
             )
         );
-        $this->capture($data, $exception->getTrace());
+        return $this->capture($data, $exception->getTrace());
     }
 
     public function capture($data, $stack)
@@ -92,16 +153,18 @@ class RavenClient
             $stack = debug_backtrace();
 
             // Drop last stack
-             array_shift($stack); 
+             array_shift($stack);
         }
 
         if ($stack && !isset($data['sentry.interfaces.Stacktrace'])) {
             $data['sentry.interfaces.Stacktrace'] = array(
-                'frames' => RavenStacktrace::get_stack_info($stack)
+                'frames' => Raven_Stacktrace::get_stack_info($stack)
             );
         }
 
         $this->send($data);
+
+        return $event_id;
     }
 
     public function send($data)
@@ -147,7 +210,7 @@ class RavenClient
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $new_headers);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data); 
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
         curl_setopt($curl, CURLOPT_VERBOSE, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
@@ -156,14 +219,14 @@ class RavenClient
     }
 
     /**
-     * Create a signature 
+     * Create a signature
      */
     private function get_signature($message, $timestamp, $key)
     {
         return hash_hmac('sha1', $timestamp .' '. $message, $key);
     }
 
-    private function get_auth_header($signature, $timestamp, $client, 
+    private function get_auth_header($signature, $timestamp, $client,
                                      $api_key=null)
     {
         $header = array(
@@ -183,7 +246,7 @@ class RavenClient
     /**
      * Generate an uuid4 value
      */
-    private function uuid4() 
+    private function uuid4()
     {
         $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
@@ -210,127 +273,10 @@ class RavenClient
     /**
      * Return the URL for the current request
      */
-    private function get_current_url() 
+    private function get_current_url()
     {
-        $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' 
+        $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
 }
-
-
-/**
- * Small helper class to inspect the stacktrace
- */
-class RavenStacktrace
-{
-    public static function get_stack_info($stack)
-    {
-        $result = array();
-        foreach($stack as $frame) {
-            if (!isset($frame['file'])) {
-
-                if (isset($frame['class'])) {
-                    $context['line'] = sprintf('%s%s%s(%s)',
-                        $frame['class'], $frame['type'], $frame['function'],
-                        $frame['args']);
-                }
-                else {
-                    $context['line'] = sprintf(
-                        '%s(%s)', $frame['function'], $frame['args']);
-                }
-                $abs_path = '';
-                $context['prefix'] = '';
-                $context['suffix'] = '';
-                $context['filename'] = $filename = '[Anonymous function]';
-                $context['lineno'] = 0;
-            }
-            else {
-                $context = self::read_source_file($frame['file'], $frame['line']);
-                $abs_path = $frame['file'];
-                $filename = basename($frame['file']);
-            }
-
-            $module = $filename;
-            if (isset($frame['class'])) {
-                $module .= ':' . $frame['class'];
-            }
-
-            array_push($result, array(
-                'abs_path' => $abs_path,
-                'filename' => $context['filename'],
-                'lineno' => $context['lineno'],
-                'module' => $module,
-                'function' => $frame['function'],
-                'vars' => array(),
-                'pre_context' => $context['prefix'],
-                'context_line' => $context['line'],
-                'post_context' => $context['suffix'],
-
-            ));
-        }
-        return array_reverse($result);
-    }
-
-    private static function read_source_file($filename, $lineno)
-    {
-        $frame = array(
-            'prefix' => array(),
-            'line' => '',
-            'suffix' => array(),
-            'filename' => $filename,
-            'lineno' => $lineno,
-        );
-
-        if ($filename === null || $lineno === null) {
-            return $frame;
-        }
-
-        // Code which is eval'ed have a modified filename.. Extract the
-        // correct filename + linenumber from the string.
-        $matches = array();
-        $matched = preg_match("/^(.*?)\((\d+)\) : eval\(\)'d code$/", 
-            $filename, $matches);
-        if ($matched) {
-            $frame['filename'] = $filename = $matches[1];
-            $frame['lineno'] = $lineno = $matches[2];
-        }
-
-
-        // Try to open the file. We wrap this in a try/catch block in case 
-        // someone has modified the error_trigger to throw exceptions.
-        try {
-            $fh = fopen($filename, 'r');
-            if ($fh === false) {
-                return $frame;
-            }
-        }
-        catch (ErrorException $exc) {
-            return $frame;
-        }
-
-        $line = false;
-        $cur_lineno = 0;
-
-        while(!feof($fh)) {
-            $cur_lineno++;
-            $line = fgets($fh);
-
-            if ($cur_lineno == $lineno) {
-                $frame['line'] = $line;
-            }
-            elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno < 3)
-            {
-                $frame['prefix'][] = $line;
-            }
-            elseif ($lineno - $cur_lineno > -3 && $lineno - $cur_lineno < 0)
-            {
-                $frame['suffix'][] = $line;
-            }
-        }
-        fclose($fh);
-        return $frame;
-    }
-}
-
-
