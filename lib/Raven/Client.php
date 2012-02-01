@@ -40,20 +40,8 @@ class Raven_Client
         $this->public_key = (!empty($options['public_key']) ? $options['public_key'] : null);
         $this->project = (isset($options['project']) ? $options['project'] : 1);
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
-        $this->name = (!empty($options['name']) ? $options['name'] : self::getHostname());
+        $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
         $this->site = (!empty($options['site']) ? $options['site'] : '');
-    }
-
-    /**
-     * Compatibility layer for getting the hostname if it's available as PHP < 5.3
-     * does not include gethostname().
-     */
-    public static function getHostname()
-    {
-        if (function_exists('gethostname')) {
-            return gethostname();
-        }
-        return php_uname('n');
     }
 
     /**
@@ -150,18 +138,25 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
+        // The function getallheaders() is only available when running in a 
+        // web-request. The function is missing when run from the commandline..
+        $headers = array();
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
         $data = array_merge($data, array(
             'server_name' => $this->name,
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
             'sentry.interfaces.Http' => array(
-                'method' => $_SERVER['REQUEST_METHOD'],
+                'method' => $this->_server_variable('REQUEST_METHOD'),
                 'url' => $this->get_current_url(),
-                'query_string' => $_SERVER['QUERY_STRING'],
+                'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => $headers,
                 'env' => $_SERVER,
             )
         ));
@@ -186,7 +181,7 @@ class Raven_Client
 
     public function send($data)
     {
-        $message = base64_encode(gzcompress(json_encode($data)));
+        $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
 
         foreach($this->servers as $url) {
             $timestamp = microtime(true);
@@ -240,7 +235,7 @@ class Raven_Client
      */
     private function get_signature($message, $timestamp, $key)
     {
-        return hash_hmac('sha1', $timestamp .' '. $message, $key);
+        return Raven_Compat::hash_hmac('sha1', $timestamp .' '. $message, $key);
     }
 
     private function get_auth_header($signature, $timestamp, $client,
@@ -292,8 +287,22 @@ class Raven_Client
      */
     private function get_current_url()
     {
+        // When running from commandline the REQUEST_URI is missing.
+        if ($this->_server_variable('REQUEST_URI') === '') {
+            return '';
+        }
+
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
+
+    private function _server_var($key)
+    {
+        if (isset($_SERVER[$key])) {
+            return $_SERVER[$key];
+        }
+        return '';
+    }
+
 }
