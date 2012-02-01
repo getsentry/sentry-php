@@ -157,7 +157,7 @@ class RavenClient
         curl_setopt($curl, CURLOPT_VERBOSE, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        echo curl_exec($curl);
+        curl_exec($curl);
         curl_close($curl);
     }
 
