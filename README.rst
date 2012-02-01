@@ -5,6 +5,10 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
 
 ::
 
+    // Register the autoloader
+    require('/path/to/Raven/Autoloader.php');
+    Raven_Autoloader::register();
+
     // Instantiate a new client with a compatible DSN
     $client = new Raven_Client('http://public:secret@example.com/1');
 
