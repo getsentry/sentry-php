@@ -1,0 +1,27 @@
+{
+    "name": "raven/raven",
+    "type": "library",
+    "description": "A PHP client for Sentry (http://getsentry.com)",
+    "keywords": ["log", "logging"],
+    "homepage": "http://getsentry.com",
+    "version": "0.1",
+    "license": "Apache License 2",
+    "authors": [
+        {
+            "name": "Michael van Tellingen",
+            "email": ""
+        },
+        {
+            "name": "David Cramer",
+            "email": "dcramer@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.2.4"
+    },
+    "autoload": {
+        "psr-0" : {
+            "Raven_" : "lib/"
+        }
+    }
+}
