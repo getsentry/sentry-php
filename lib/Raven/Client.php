@@ -94,9 +94,26 @@ class Raven_Client
     }
 
     /**
-     * Log a message to sentry
+     * Deprecated
      */
     public function message($message, $params=array(), $level=self::INFO,
+                            $stack=false)
+    {
+        return $this->captureMessage($message, $params, $level, $stack);
+    }
+
+    /**
+     * Deprecated
+     */
+    public function exception($exception)
+    {
+        return $this->captureException($exception);
+    }
+
+    /**
+     * Log a message to sentry
+     */
+    public function captureMessage($message, $params=array(), $level=self::INFO,
                             $stack=false)
     {
         $data = array(
@@ -113,7 +130,7 @@ class Raven_Client
     /**
      * Log an exception to sentry
      */
-    public function exception($exception)
+    public function captureException($exception)
     {
         $exc_message = $exception->getMessage();
         if ($exc_message == '') {
@@ -138,7 +155,7 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
-        // The function getallheaders() is only available when running in a 
+        // The function getallheaders() is only available when running in a
         // web-request. The function is missing when run from the commandline..
         $headers = array();
         if (function_exists('getallheaders')) {

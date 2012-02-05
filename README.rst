@@ -13,10 +13,10 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
     $client = new Raven_Client('http://public:secret@example.com/1');
 
     // Capture a message
-    $event_id = $client->getIdent($client->message('my log message'));
+    $event_id = $client->getIdent($client->captureMessage('my log message'));
 
     // Capture an exception
-    $event_id = $client->getIdent($client->exception($ex));
+    $event_id = $client->getIdent($client->captureException($ex));
 
     // Give the user feedback
     echo "Sorry, there was an error!";
