@@ -314,7 +314,7 @@ class Raven_Client
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
 
-    private function _server_var($key)
+    private function _server_variable($key)
     {
         if (isset($_SERVER[$key])) {
             return $_SERVER[$key];
