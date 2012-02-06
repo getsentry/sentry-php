@@ -252,14 +252,14 @@ class Raven_Client
      */
     private function get_signature($message, $timestamp, $key)
     {
-        return Raven_Compat::hash_hmac('sha1', $timestamp .' '. $message, $key);
+        return Raven_Compat::hash_hmac('sha1', sprintf('%F', $timestamp) .' '. $message, $key);
     }
 
     private function get_auth_header($signature, $timestamp, $client,
                                      $api_key=null)
     {
         $header = array(
-            "sentry_timestamp={$timestamp}",
+            sprintf("sentry_timestamp=%F", $timestamp),
             "sentry_signature={$signature}",
             "sentry_client={$client}",
             "sentry_version=2.0",
