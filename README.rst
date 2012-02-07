@@ -22,6 +22,11 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
     echo "Sorry, there was an error!";
     echo "Your reference ID is " . $event_id;
 
+    // Install error handlers
+    $error_handler = new Raven_ErrorHandler($client);
+    set_error_handler(array($error_handler, 'handleError');
+    set_exception_handler(array($error_handler, 'handleException'));
+
 Resources
 ---------
 
