@@ -32,4 +32,5 @@ Resources
 
 * `Bug Tracker <http://github.com/getsentry/raven-php/issues>`_
 * `Code <http://github.com/getsentry/raven-php>`_
+* `Mailing List <https://groups.google.com/group/getsentry>`_
 * `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
