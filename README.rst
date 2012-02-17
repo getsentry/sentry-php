@@ -53,13 +53,13 @@ And include it in your scripts:
 
 ::
 
-    require_once '/path/to/Requests/library/Raven.php';
+    require_once '/path/to/Raven/library/Raven.php';
 
 Or, alternatively use the autoloader:
 
 ::
 
-    require_once '/path/to/Requests/library/Raven/Autoloader.php';
+    require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
 
 
