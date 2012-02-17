@@ -5,10 +5,6 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
 
 ::
 
-    // Register the autoloader
-    require('/path/to/Raven/Autoloader.php');
-    Raven_Autoloader::register();
-
     // Instantiate a new client with a compatible DSN
     $client = new Raven_Client('http://public:secret@example.com/1');
 
@@ -26,6 +22,46 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
     $error_handler = new Raven_ErrorHandler($client);
     set_error_handler(array($error_handler, 'handleError');
     set_exception_handler(array($error_handler, 'handleException'));
+
+Installation
+------------
+
+Install with Composer
+~~~~~~~~~~~~~~~~~~~~~
+
+If you're using [Composer](https://github.com/composer/composer) to manage
+dependencies, you can add Requests with it.
+
+::
+
+    {
+        "require": {
+            "raven/raven": ">=0.2.0"
+        }
+    }
+
+Install source from GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To install the source code:
+
+::
+
+    $ git clone git://github.com/getsentry/raven-php.git
+
+And include it in your scripts:
+
+::
+
+    require_once '/path/to/Requests/library/Raven.php';
+
+Or, alternatively use the autoloader:
+
+::
+
+    require_once '/path/to/Requests/library/Raven/Autoloader.php';
+    Raven_Autoloader::register();
+
 
 Resources
 ---------
