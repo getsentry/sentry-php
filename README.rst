@@ -30,7 +30,7 @@ Install with Composer
 ~~~~~~~~~~~~~~~~~~~~~
 
 If you're using `Composer <https://github.com/composer/composer>`_ to manage
-dependencies, you can add Requests with it.
+dependencies, you can add Raven with it.
 
 ::
 
