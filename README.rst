@@ -29,7 +29,7 @@ Installation
 Install with Composer
 ~~~~~~~~~~~~~~~~~~~~~
 
-If you're using [Composer](https://github.com/composer/composer) to manage
+If you're using `Composer <https://github.com/composer/composer>`_ to manage
 dependencies, you can add Requests with it.
 
 ::
