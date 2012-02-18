@@ -42,6 +42,7 @@ class Raven_Client
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
         $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
         $this->site = (!empty($options['site']) ? $options['site'] : '');
+        $this->_lasterror = null;
     }
 
     /**
@@ -133,7 +134,7 @@ class Raven_Client
     public function captureException($exception)
     {
         $exc_message = $exception->getMessage();
-        if ($exc_message == '') {
+        if (empty($exc_message)) {
             $exc_message = '<unknown exception>';
         }
 
@@ -244,8 +245,14 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         $ret = curl_exec($curl);
+        $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $success = ($code == 200);
         curl_close($curl);
-        return ($ret !== false);
+        if (!$success) {
+            // It'd be nice just to raise an exception here, but it's not very PHP-like
+            $this->_lasterror = $ret;
+        }
+        return $success;
     }
 
     /**
