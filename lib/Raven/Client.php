@@ -52,10 +52,11 @@ class Raven_Client
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if (!in_array($scheme, array('http', 'https'))) {
+        if (!in_array($scheme, array('http', 'https', 'udp'))) {
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . $scheme);
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
+        $netloc.= (isset($url['port']) ? ':'.$url['port'] : null);
         $rawpath = (isset($url['path']) ? $url['path'] : null);
         if ($rawpath) {
             $pos = strrpos($rawpath, '/', 1);
@@ -219,12 +220,24 @@ class Raven_Client
     private function send_remote($url, $data, $headers=array())
     {
         $parts = parse_url($url);
-        if ($parts['scheme'] === 'udp') {
-            // Not implemented yet
-            return $this->send_udp(
-                $parts['netloc'], $data, $headers['X-Sentry-Auth']);
-        }
+        $parts['netloc'] = $parts['host'].($parts['port'] ? ':'.$parts['port'] : null);
+
+        if ($parts['scheme'] === 'udp')
+            return $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
+
         return $this->send_http($url, $data, $headers);
+    }
+
+    private function send_udp($netloc, $data, $headers)
+    {
+        list($host, $port) = explode(':', $netloc);
+        $raw_data = $headers."\n\n".$data;
+
+        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
+        socket_close($sock);
+
+        return true;
     }
 
     /**
