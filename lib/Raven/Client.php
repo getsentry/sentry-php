@@ -146,7 +146,19 @@ class Raven_Client
                 'module' => $exception->getFile() .':'. $exception->getLine(),
             )
         );
-        return $this->capture($data, $exception->getTrace());
+
+        /**
+         * Exception::getTrace doesn't store the point at where the exception
+         * was thrown, so we have to stuff it in ourselves. Ugh.
+         */
+        $trace = $exception->getTrace();
+        $frame_where_exception_thrown = array(
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+        );
+        array_unshift($trace, $frame_where_exception_thrown);
+
+        return $this->capture($data, $trace);
     }
 
     public function capture($data, $stack)
@@ -185,6 +197,16 @@ class Raven_Client
             // Drop last stack
              array_shift($stack);
         }
+
+        /**
+         * PHP's way of storing backstacks seems bass-ackwards to me
+         * 'function' is not the function you're in; it's any function being
+         * called, so we have to shift 'function' down by 1. Ugh.
+         */
+        for ($i = 0; $i < count($stack) - 1; $i++) {
+            $stack[$i]['function'] = $stack[$i + 1]['function'];
+        }
+        $stack[count($stack) - 1]['function'] = null;
 
         if ($stack && !isset($data['sentry.interfaces.Stacktrace'])) {
             $data['sentry.interfaces.Stacktrace'] = array(
