@@ -56,6 +56,7 @@ class Raven_Client
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . $scheme);
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
+        $netloc.= (isset($url['port']) ? ':'.$url['port'] : null);
         $rawpath = (isset($url['path']) ? $url['path'] : null);
         if ($rawpath) {
             $pos = strrpos($rawpath, '/', 1);
