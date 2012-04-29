@@ -1,7 +1,10 @@
 raven-php
 =========
 
-.. image:: https://secure.travis-ci.org/getsentry/raven-php.png?branch=master
+|travis-ci|_
+
+.. |travis-ci| image:: https://secure.travis-ci.org/getsentry/raven-php.png?branch=master
+.. _travis-ci: https://secure.travis-ci.org/getsentry/raven-php 
 
 raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
 
