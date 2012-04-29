@@ -3,3 +3,8 @@ php:
   - 5.2
   - 5.3
   - 5.4
+notifications:
+  irc:
+    channels: "irc.freenode.org#sentry"
+    on_success: change
+    on_failure: change
