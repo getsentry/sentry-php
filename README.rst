@@ -42,6 +42,17 @@ dependencies, you can add Raven with it.
         }
     }
 
+or to get the latest version off the master branch:
+
+::
+
+    {
+        "require": {
+            "raven/raven": "dev-master"
+        }
+    }
+
+
 Install source from GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -64,6 +75,12 @@ Or, alternatively use the autoloader:
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
 
+Or, if you're using `Composer <https://github.com/composer/composer>`_:
+
+::
+
+    require_once 'vendor/autoload.php';
+    
 
 Resources
 ---------
