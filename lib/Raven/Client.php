@@ -246,7 +246,7 @@ class Raven_Client
     private function send_remote($url, $data, $headers=array())
     {
         $parts = parse_url($url);
-        $parts['netloc'] = $parts['host'].($parts['port'] ? ':'.$parts['port'] : null);
+        $parts['netloc'] = $parts['host'].(array_key_exists('port', $parts) ? ':'.$parts['port'] : null);
 
         if ($parts['scheme'] === 'udp')
             return $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
