@@ -51,28 +51,34 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testParseDsnInvalidScheme()
     {
-        $result = Raven_Client::parseDsn('gopher://public:secret@/1');
+        try {
+            $result = Raven_Client::parseDsn('gopher://public:secret@/1');
+            $this->fail();
+        } catch (Exception $e) {
+            return;
+        }
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testParseDsnMissingNetloc()
     {
-        $result = Raven_Client::parseDsn('http://public:secret@/1');
+        try {
+            $result = Raven_Client::parseDsn('http://public:secret@/1');
+            $this->fail();
+        } catch (Exception $e) {
+            return;
+        }
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testParseDsnMissingProject()
     {
-        $result = Raven_Client::parseDsn('http://public:secret@example.com');
+        try {
+            $result = Raven_Client::parseDsn('http://public:secret@example.com');
+            $this->fail();
+        } catch (Exception $e) {
+            return;
+        }
     }
 
     /**
