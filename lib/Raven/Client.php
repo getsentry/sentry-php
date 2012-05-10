@@ -41,7 +41,7 @@ class Raven_Client
         $this->project = (isset($options['project']) ? $options['project'] : 1);
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
         $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
-        $this->site = (!empty($options['site']) ? $options['site'] : '');
+        $this->site = (!empty($options['site']) ? $options['site'] : $this->_server_variable('SERVER_NAME'));
         $this->_lasterror = null;
     }
 
