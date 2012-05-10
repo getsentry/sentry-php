@@ -1,6 +1,10 @@
 raven-php
 =========
 
+.. image:: https://secure.travis-ci.org/getsentry/raven-php.png?branch=master
+   :target: http://travis-ci.org/getsentry/raven-php
+
+
 raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
 
 ::
@@ -40,6 +44,17 @@ dependencies, you can add Raven with it.
         }
     }
 
+or to get the latest version off the master branch:
+
+::
+
+    {
+        "require": {
+            "raven/raven": "dev-master"
+        }
+    }
+
+
 Install source from GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -62,6 +77,12 @@ Or, alternatively use the autoloader:
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
 
+Or, if you're using `Composer <https://github.com/composer/composer>`_:
+
+::
+
+    require_once 'vendor/autoload.php';
+    
 
 Resources
 ---------

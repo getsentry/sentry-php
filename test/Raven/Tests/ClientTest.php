@@ -41,6 +41,16 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
+    public function testParseDsnPort()
+    {
+        $result = Raven_Client::parseDsn('http://public:secret@example.com:9000/app/1');
+
+        $this->assertEquals($result['project'], 1);
+        $this->assertEquals($result['servers'], array('http://example.com:9000/app/api/store/'));
+        $this->assertEquals($result['public_key'], 'public');
+        $this->assertEquals($result['secret_key'], 'secret');
+    }
+
     /**
      * @expectedException InvalidArgumentException
      */
