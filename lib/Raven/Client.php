@@ -183,7 +183,7 @@ class Raven_Client
             $stack = debug_backtrace();
 
             // Drop last stack
-             array_shift($stack);
+            array_shift($stack);
         }
 
         if ($stack && !isset($data['sentry.interfaces.Stacktrace'])) {
