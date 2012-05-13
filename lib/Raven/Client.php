@@ -132,7 +132,7 @@ class Raven_Client
     /**
      * Log an exception to sentry
      */
-    public function captureException($exception)
+    public function captureException($exception, $culprit=null, $logger=null)
     {
         $exc_message = $exception->getMessage();
         if (empty($exc_message)) {
@@ -140,15 +140,24 @@ class Raven_Client
         }
 
         $data = array(
-            'message' => $exc_message,
-            'sentry.interfaces.Exception' => array(
-                'value' =>  '',
-                'type' => $exception->getCode(),
-                'module' => $exception->getFile() .':'. $exception->getLine(),
-            )
+            'message' => $exc_message
         );
 
-        /**
+        $data['sentry.interfaces.Exception'] = array(
+                'value' => $exc_message,
+                'type' => $exception->getCode(),
+                'module' => $exception->getFile() .':'. $exception->getLine(),
+        );
+
+        if ($culprit){
+            $data["culprit"] = $culprit;
+        }
+
+        if ($logger){
+            $data["logger"] = $logger;
+        }
+
+        /**'sentry.interfaces.Exception'
          * Exception::getTrace doesn't store the point at where the exception
          * was thrown, so we have to stuff it in ourselves. Ugh.
          */
@@ -158,7 +167,6 @@ class Raven_Client
             'line' => $exception->getLine(),
         );
         array_unshift($trace, $frame_where_exception_thrown);
-
         return $this->capture($data, $trace);
     }
 
@@ -246,7 +254,7 @@ class Raven_Client
     private function send_remote($url, $data, $headers=array())
     {
         $parts = parse_url($url);
-        $parts['netloc'] = $parts['host'].($parts['port'] ? ':'.$parts['port'] : null);
+        $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
 
         if ($parts['scheme'] === 'udp')
             return $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
