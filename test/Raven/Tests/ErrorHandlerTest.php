@@ -13,7 +13,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 {
     public function testErrorsAreLoggedAsExceptions()
     {
-        $client = $this->getMock('Client', array('captureException'));
+        $client = $this->getMock('Client', array('captureException', 'getIdent'));
         $client->expects($this->once())
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
@@ -24,7 +24,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
     public function testExceptionsAreLogged()
     {
-        $client = $this->getMock('Client', array('captureException'));
+        $client = $this->getMock('Client', array('captureException', 'getIdent'));
         $client->expects($this->once())
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
