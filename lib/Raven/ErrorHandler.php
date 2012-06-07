@@ -35,11 +35,13 @@ class Raven_ErrorHandler
     }
 
     function handleError($code, $message, $file='', $line=0, $context=array()) {
+        
         $e = new ErrorException($message, 0, $code, $file, $line);
         $this->handleException($e, $isError = true);
 
+
         if ($this->call_existing_error_handler && $this->old_error_handler) {
-            call_user_func($this->old_exception_handler, $code, $message, $file, $line, $context);
+            call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);
         }
     }
 
@@ -54,7 +56,7 @@ class Raven_ErrorHandler
         $this->old_error_handler = set_error_handler(array($this, 'handleError'), $error_types);
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
-
+    
     private $old_exception_handler = null;
     private $call_existing_exception_handler = false;
     private $old_error_handler = null;
