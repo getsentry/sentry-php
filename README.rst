@@ -25,7 +25,7 @@ raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
     // Install error handlers
     $error_handler = new Raven_ErrorHandler($client);
     $error_handler->registerExceptionHandler();
-	$error_handler->registerErrorHandler();
+    $error_handler->registerErrorHandler();
 
 Installation
 ------------
