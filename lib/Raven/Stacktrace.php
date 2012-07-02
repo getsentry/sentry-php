@@ -15,11 +15,11 @@ class Raven_Stacktrace
                 if (isset($frame['class'])) {
                     $context['line'] = sprintf('%s%s%s(%s)',
                         $frame['class'], $frame['type'], $frame['function'],
-                        $frame['args']);
+                        is_array($frame['args'])?implode(',', $frame['args']):$frame['args']);
                 }
                 else {
                     $context['line'] = sprintf(
-                        '%s(%s)', $frame['function'], $frame['args']);
+                        '%s(%s)', $frame['function'], is_array($frame['args'])?implode(',', $frame['args']):$frame['args']);
                 }
                 $abs_path = '';
                 $context['prefix'] = '';
