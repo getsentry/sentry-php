@@ -62,4 +62,3 @@ class Raven_ErrorHandler
     private $old_error_handler = null;
     private $call_existing_error_handler = false;
 }
-?>
