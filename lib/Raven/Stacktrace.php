@@ -15,7 +15,7 @@ class Raven_Stacktrace
                     $args = (is_array($frame['args']) ? implode(',', $frame['args']) : $frame['args']);
                 }
                 else {
-                    $args = arra();
+                    $args = array();
                 }
                 if (isset($frame['class'])) {
                     $context['line'] = sprintf('%s%s%s(%s)',
