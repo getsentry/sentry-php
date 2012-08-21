@@ -12,7 +12,23 @@ class Raven_Stacktrace
         foreach($stack as $frame) {
             if (!isset($frame['file'])) {
                 if (isset($frame['args'])) {
-                    $args = (is_array($frame['args']) ? implode(',', $frame['args']) : $frame['args']);
+                    if (is_array($frame['args'])){
+                        $args = "";
+                        array_walk($frame['args'], function(&$item, $key) use (&$args) {
+                            if (!is_empty($args)){
+                                $args =+ ', ';
+                            }
+                            if (is_object($item) && !method_exists( $item, '__toString' )){
+                                $args =+ "Object of class: " + get_class($item);
+                            } elseif (is_array($item)){
+                                $args =+ "Array with a size of: " + sizeof($item);
+                            } else {
+                                $args =+ $item;
+                            }
+                        });
+                    } else {
+                        $args = $frame['args'];
+                    }
                 }
                 else {
                     $args = array();
