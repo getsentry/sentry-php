@@ -13,14 +13,19 @@ class Raven_Stacktrace
             if (!isset($frame['file'])) {
                 if (isset($frame['args'])) {
                     if (is_array($frame['args'])){
-                        array_walk($frame['args'], function(&$item, $key){
+                        $args = "";
+                        array_walk($frame['args'], function(&$item, $key) use (&$args) {
+                            if (!is_empty($args)){
+                                $args =+ ', ';
+                            }
                             if (is_object($item) && !method_exists( $item, '__toString' )){
-                                $item = "Object of class: " + get_class($item);
+                                $args =+ "Object of class: " + get_class($item);
                             } elseif (is_array($item)){
-                                $item = "Array with a size of: " + sizeof($item);
+                                $args =+ "Array with a size of: " + sizeof($item);
+                            } else {
+                                $args =+ $item;
                             }
                         });
-                        $args = implode(',', $frame['args']);
                     } else {
                         $args = $frame['args'];
                     }
