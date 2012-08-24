@@ -9,6 +9,21 @@
  * file that was distributed with this source code.
  */
 
+// XXX: Is there a better way to stub the client?
+class Dummy_Raven_Client extends Raven_Client
+{
+    private $__sent_events = array();
+
+    public function getSentEvents()
+    {
+        return $this->__sent_events;
+    }
+    public function send($data)
+    {
+        $this->__sent_events[] = $data;
+    }
+}
+
 class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 {
     public function testParseDsnHttp()
@@ -138,5 +153,27 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($client->servers, array('http://example.com/api/store/'));
         $this->assertEquals($client->site, 'foo');
+    }
+
+    public function testCaptureMessageDoesHandleUninterpolatedMessage()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('Test Message %s');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['message'], 'Test Message %s');
+    }
+
+    public function testCaptureMessageDoesHandleInterpolatedMessage()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('Test Message %s', 'foo');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['message'], 'Test Message foo');
     }
 }
