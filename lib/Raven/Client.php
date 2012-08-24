@@ -219,20 +219,22 @@ class Raven_Client
             array_shift($stack);
         }
 
-        /**
-         * PHP's way of storing backstacks seems bass-ackwards to me
-         * 'function' is not the function you're in; it's any function being
-         * called, so we have to shift 'function' down by 1. Ugh.
-         */
-        for ($i = 0; $i < count($stack) - 1; $i++) {
-            $stack[$i]['function'] = $stack[$i + 1]['function'];
-        }
-        $stack[count($stack) - 1]['function'] = null;
+        if (!empty($stack)) {
+            /**
+             * PHP's way of storing backstacks seems bass-ackwards to me
+             * 'function' is not the function you're in; it's any function being
+             * called, so we have to shift 'function' down by 1. Ugh.
+             */
+            for ($i = 0; $i < count($stack) - 1; $i++) {
+                $stack[$i]['function'] = $stack[$i + 1]['function'];
+            }
+            $stack[count($stack) - 1]['function'] = null;
 
-        if ($stack && !isset($data['sentry.interfaces.Stacktrace'])) {
-            $data['sentry.interfaces.Stacktrace'] = array(
-                'frames' => Raven_Stacktrace::get_stack_info($stack)
-            );
+            if (!isset($data['sentry.interfaces.Stacktrace'])) {
+                $data['sentry.interfaces.Stacktrace'] = array(
+                    'frames' => Raven_Stacktrace::get_stack_info($stack)
+                );
+            }
         }
 
         if (function_exists('mb_convert_encoding')) {
