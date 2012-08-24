@@ -37,7 +37,7 @@ class Raven_ErrorHandler
     function handleError($code, $message, $file='', $line=0, $context=array()) {
         
         $e = new ErrorException($message, 0, $code, $file, $line);
-        $this->handleException($e, $isError = true);
+        $this->handleException($e, true);
 
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {

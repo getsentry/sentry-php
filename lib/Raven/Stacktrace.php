@@ -12,7 +12,7 @@ class Raven_Stacktrace
         foreach($stack as $frame) {
             if (!isset($frame['file'])) {
                 if (isset($frame['args'])) {
-                    $args = (is_array($frame['args']) ? implode(',', $frame['args']) : $frame['args']);
+                    $args = is_string($frame['args']) ? $frame['args'] : @json_encode($frame['args']);
                 }
                 else {
                     $args = array();
