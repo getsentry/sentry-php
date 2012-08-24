@@ -25,13 +25,17 @@ class Raven_Client
 
     function __construct($options_or_dsn=null, $options=array())
     {
-        if (is_null($options_or_dsn)) {
+        if (is_null($options_or_dsn) && !empty($_SERVER['SENTRY_DSN'])) {
             // Read from environment
             $options_or_dsn = $_SERVER['SENTRY_DSN'];
         }
         if (!is_array($options_or_dsn)) {
-            // Must be a valid DSN
-            $options_or_dsn = self::parseDSN($options_or_dsn);
+            if (!empty($options_or_dsn)) {
+                // Must be a valid DSN
+                $options_or_dsn = self::parseDSN($options_or_dsn);
+            } else {
+                $options_or_dsn = array();
+            }
         }
         $options = array_merge($options_or_dsn, $options);
 
