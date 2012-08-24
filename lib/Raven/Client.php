@@ -118,8 +118,16 @@ class Raven_Client
     public function captureMessage($message, $params=array(), $level=self::INFO,
                             $stack=false)
     {
+        // Gracefully handle messages which contain formatting characters, but were not
+        // intended to be used with formatting.
+        if (!empty($params)) {
+            $formatted_message = vsprintf($message, $params);
+        } else {
+            $formatted_message = $message;
+        }
+
         $data = array(
-            'message' => vsprintf($message, $params),
+            'message' => $formatted_message,
             'level' => $level,
             'sentry.interfaces.Message' => array(
                 'message' => $message,
