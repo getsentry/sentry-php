@@ -17,6 +17,8 @@
 
 class Raven_Client
 {
+    const VERSION = '0.1.0';
+
     const DEBUG = 10;
     const INFO = 20;
     const WARN = 30;
@@ -251,13 +253,15 @@ class Raven_Client
         $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
 
         foreach($this->servers as $url) {
+            $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
             $signature = $this->get_signature(
                 $message, $timestamp, $this->secret_key);
 
             $headers = array(
+                'User-Agent' => $client_string,
                 'X-Sentry-Auth' => $this->get_auth_header(
-                    $signature, $timestamp, 'raven-php/0.1', $this->public_key),
+                    $signature, $timestamp, $client_string, $this->public_key),
                 'Content-Type' => 'application/octet-stream'
             );
 
