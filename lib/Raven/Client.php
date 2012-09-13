@@ -19,11 +19,12 @@ class Raven_Client
 {
     const VERSION = '0.1.0';
 
-    const DEBUG = 10;
-    const INFO = 20;
-    const WARN = 30;
-    const WARNING = 30;
-    const ERROR = 40;
+    const DEBUG = 'debug';
+    const INFO = 'info';
+    const WARN = 'warning';
+    const WARNING = 'warning';
+    const ERROR = 'error';
+    const FATAL = 'fatal';
 
     function __construct($options_or_dsn=null, $options=array())
     {
