@@ -50,6 +50,17 @@ class Raven_Client
         $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
         $this->site = (!empty($options['site']) ? $options['site'] : $this->_server_variable('SERVER_NAME'));
         $this->_lasterror = null;
+
+        $this->processors = array();
+        foreach ((isset($options['processors']) ? $options['processors'] : $this->getDefaultProcessors()) as $processor) {
+            $this->processors[] = new $processor($this);
+        }
+
+    }
+
+    private function getDefaultProcessors()
+    {
+        return array();        
     }
 
     /**
@@ -244,9 +255,20 @@ class Raven_Client
             $data = $this->remove_invalid_utf8($data);
         }
 
+        // sanitize data
+        $data = $this->process($data);
+
         $this->send($data);
 
         return $event_id;
+    }
+
+    public function process($data)
+    {
+        foreach ($this->processors as $processor) {
+            $data = $processor->process($data);
+        }
+        return $data;
     }
 
     public function send($data)

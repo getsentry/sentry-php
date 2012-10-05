@@ -176,4 +176,27 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $event = array_pop($events);
         $this->assertEquals($event['message'], 'Test Message foo');
     }
+
+    public function testDoesRegisterProcessors()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'processors' => array('Raven_Processor'),
+        ));
+        $this->assertEquals(count($client->processors), 1);
+        $this->assertTrue($client->processors[0] instanceof Raven_Processor);
+    }
+
+    public function testProcessDoesCallProcessors()
+    {
+        $data = array("key"=>"value");
+
+        $processor = $this->getMock('Processor', array('process'));
+        $processor->expects($this->once())
+               ->method('process')
+               ->with($data);
+
+        $client = new Dummy_Raven_Client();
+        $client->processors[] = $processor;
+        $client->process($data);
+    }
 }
