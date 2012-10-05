@@ -58,9 +58,11 @@ class Raven_Client
 
     }
 
-    private function getDefaultProcessors()
+    public static function getDefaultProcessors()
     {
-        return array();        
+        return array(
+            'Raven_SanitizeDataProcessor',
+        );        
     }
 
     /**
