@@ -49,6 +49,8 @@ class Raven_Client
         $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
         $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
         $this->site = (!empty($options['site']) ? $options['site'] : $this->_server_variable('SERVER_NAME'));
+        $this->tags = (!empty($options['tags']) ? $options['tags'] : array());
+
         $this->_lasterror = null;
 
         $this->processors = array();
@@ -256,6 +258,9 @@ class Raven_Client
         if (function_exists('mb_convert_encoding')) {
             $data = $this->remove_invalid_utf8($data);
         }
+
+        // TODO: allow tags to be specified per event
+        $data['tags'] = $this->tags;
 
         // sanitize data
         $data = $this->process($data);
