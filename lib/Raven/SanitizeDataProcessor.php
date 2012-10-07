@@ -8,7 +8,7 @@
 class Raven_SanitizeDataProcessor extends Raven_Processor
 {
     const MASK = '********';
-    const FIELDS_RE = '/(password|passwd|secret)/i';
+    const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
     const VALUES_RE = '/^\d{16}$/';
 
     function apply($value, $fn, $key=null) {
