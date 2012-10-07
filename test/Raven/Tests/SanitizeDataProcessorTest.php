@@ -36,7 +36,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($vars['the_secret'], Raven_SanitizeDataProcessor::MASK);
         $this->assertEquals($vars['a_password_here'], Raven_SanitizeDataProcessor::MASK);
         $this->assertEquals($vars['mypasswd'], Raven_SanitizeDataProcessor::MASK);
-		$this->assertEquals($vars['authorization'], Raven_SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['authorization'], Raven_SanitizeDataProcessor::MASK);
     }
 
     public function testDoesFilterCreditCard()
