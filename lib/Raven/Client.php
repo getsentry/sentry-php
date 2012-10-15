@@ -50,6 +50,7 @@ class Raven_Client
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
+        $this->trace = (bool)Raven_Util::get($options, 'trace', false);
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
@@ -249,7 +250,7 @@ class Raven_Client
 
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info($stack)
+                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace)
                 );
             }
         }
