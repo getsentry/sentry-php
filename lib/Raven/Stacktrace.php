@@ -6,7 +6,7 @@
  */
 class Raven_Stacktrace
 {
-    public static function get_stack_info($stack)
+    public static function get_stack_info($stack, $trace=false)
     {
         $result = array();
         foreach($stack as $frame) {
@@ -42,20 +42,72 @@ class Raven_Stacktrace
                 $module .= ':' . $frame['class'];
             }
 
+            if ($trace) {
+                $vars = get_frame_context($frame);
+            } else {
+                $vars = array();
+            }
+
             array_push($result, array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
                 'lineno' => $context['lineno'],
                 'module' => $module,
                 'function' => $frame['function'],
-                'vars' => array(),
+                'vars' => $vars,
                 'pre_context' => $context['prefix'],
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
-
             ));
         }
         return array_reverse($result);
+    }
+
+    public static function get_frame_context($frame) {
+        if (!isset($frame['function'])) {
+            return array();
+        }
+
+        if (!isset($frame['args'])) {
+            return array();
+        }
+
+        if (strpos($frame['function'], '{closure}') !== false) {
+            return array();
+        }
+
+        if (isset($frame['class'])) {
+            if (method_exists($frame['class'], $frame['function'])) {
+                $reflection = new ReflectionMethod($frame['class'], $frame['function']);
+            }
+            else
+            {
+                $reflection = new ReflectionMethod($frame['class'], '__call');
+            }
+        }
+        else
+        {
+            $reflection = new ReflectionFunction($frame['function']);
+        }
+
+        $params = $reflection->getParameters();
+
+        $args = array();
+        foreach ($frame['args'] as $i => $arg)
+        {
+            if (isset($params[$i]))
+            {
+                // Assign the argument by the parameter name
+                $args[$params[$i]->name] = $arg;
+            }
+            else
+            {
+                // Assign the argument by number
+                $args[$i] = $arg;
+            }
+        }
+
+        return $args;
     }
 
     private static function read_source_file($filename, $lineno)
