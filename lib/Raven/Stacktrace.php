@@ -51,7 +51,7 @@ class Raven_Stacktrace
             }
 
             if ($trace) {
-                $vars = self::get_frame_context($frame);
+                $vars = self::get_frame_context($nextframe);
             } else {
                 $vars = array();
             }
@@ -122,7 +122,7 @@ class Raven_Stacktrace
         return $args;
     }
 
-    private static function read_source_file($filename, $lineno)
+    private static function read_source_file($filename, $lineno, $context_lines=5)
     {
         $frame = array(
             'prefix' => array(),
@@ -169,11 +169,11 @@ class Raven_Stacktrace
             if ($cur_lineno == $lineno) {
                 $frame['line'] = $line;
             }
-            elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno < 3)
+            elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno <= ($context_lines + 1))
             {
                 $frame['prefix'][] = $line;
             }
-            elseif ($lineno - $cur_lineno > -3 && $lineno - $cur_lineno < 0)
+            elseif ($lineno - $cur_lineno >= -$context_lines && $lineno - $cur_lineno < 0)
             {
                 $frame['suffix'][] = $line;
             }
