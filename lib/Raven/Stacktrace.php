@@ -6,10 +6,19 @@
  */
 class Raven_Stacktrace
 {
-    public static function get_stack_info($stack, $trace=false)
+    public static function get_stack_info($frames, $trace=false)
     {
+        /**
+         * PHP's way of storing backstacks seems bass-ackwards to me
+         * 'function' is not the function you're in; it's any function being
+         * called, so we have to shift 'function' down by 1. Ugh.
+         */
         $result = array();
-        foreach($stack as $frame) {
+        for ($i = 0; $i < count($frames) - 1; $i++) {
+            var_dump('wat');
+            $frame = $frames[$i];
+            $nextframe = $frames[$i];
+
             if (!isset($frame['file'])) {
                 if (isset($frame['args'])) {
                     $args = is_string($frame['args']) ? $frame['args'] : @json_encode($frame['args']);
@@ -19,11 +28,11 @@ class Raven_Stacktrace
                 }
                 if (isset($frame['class'])) {
                     $context['line'] = sprintf('%s%s%s(%s)',
-                        $frame['class'], $frame['type'], $frame['function'],
+                        $nextframe['class'], $nextframe['type'], $nextframe['function'],
                         $args);
                 }
                 else {
-                    $context['line'] = sprintf('%s(%s)', $frame['function'], $args);
+                    $context['line'] = sprintf('%s(%s)', $nextframe['function'], $args);
                 }
                 $abs_path = '';
                 $context['prefix'] = '';
@@ -48,18 +57,20 @@ class Raven_Stacktrace
                 $vars = array();
             }
 
-            array_push($result, array(
+            $result[] = array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
                 'lineno' => $context['lineno'],
                 'module' => $module,
-                'function' => $frame['function'],
+                'function' => $nextframe['function'],
                 'vars' => $vars,
                 'pre_context' => $context['prefix'],
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
-            ));
+            );
         }
+
+        var_dump($result);
         return array_reverse($result);
     }
 
@@ -98,12 +109,12 @@ class Raven_Stacktrace
             if (isset($params[$i]))
             {
                 // Assign the argument by the parameter name
-                $args[$params[$i]->name] = $arg;
+                $args[$params[$i]->name] = (string)$arg;
             }
             else
             {
                 // Assign the argument by number
-                $args[$i] = $arg;
+                $args[(string)$i] = (string)$arg;
             }
         }
 
