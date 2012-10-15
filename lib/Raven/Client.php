@@ -209,6 +209,28 @@ class Raven_Client
         return $this->capture($data, $trace);
     }
 
+    private function is_http_request()
+    {
+        // The function getallheaders() is only available when running in a
+        // web-request. The function is missing when run from the commandline..
+        return function_exists('getallheaders');
+    }
+
+    private function get_http_data()
+    {
+        return array(
+            'sentry.interfaces.Http' => array(
+                'method' => $this->_server_variable('REQUEST_METHOD'),
+                'url' => $this->get_current_url(),
+                'query_string' => $this->_server_variable('QUERY_STRNG'),
+                'data' => $_POST,
+                'cookies' => $_COOKIE,
+                'headers' => getallheaders(),
+                'env' => $_SERVER,
+            )
+        );
+    }
+
     public function capture($data, $stack)
     {
         $event_id = $this->uuid4();
@@ -216,28 +238,16 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
-        // The function getallheaders() is only available when running in a
-        // web-request. The function is missing when run from the commandline..
-        $headers = array();
-        if (function_exists('getallheaders')) {
-            $headers = getallheaders();
-        }
-
         $data = array_merge($data, array(
             'server_name' => $this->name,
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
-            'sentry.interfaces.Http' => array(
-                'method' => $this->_server_variable('REQUEST_METHOD'),
-                'url' => $this->get_current_url(),
-                'query_string' => $this->_server_variable('QUERY_STRNG'),
-                'data' => $_POST,
-                'cookies' => $_COOKIE,
-                'headers' => $headers,
-                'env' => $_SERVER,
-            )
         ));
+
+        if ($this->is_http_request()) {
+            $data = array_merge($data, $this->get_http_data());
+        }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === True) {
             $stack = debug_backtrace();
@@ -416,7 +426,7 @@ class Raven_Client
     {
         // When running from commandline the REQUEST_URI is missing.
         if ($this->_server_variable('REQUEST_URI') === '') {
-            return '';
+            return null;
         }
 
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
