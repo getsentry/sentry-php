@@ -15,9 +15,8 @@ class Raven_Stacktrace
          */
         $result = array();
         for ($i = 0; $i < count($frames) - 1; $i++) {
-            var_dump('wat');
             $frame = $frames[$i];
-            $nextframe = $frames[$i];
+            $nextframe = @$frames[$i + 1];
 
             if (!isset($frame['file'])) {
                 if (isset($frame['args'])) {
@@ -26,7 +25,7 @@ class Raven_Stacktrace
                 else {
                     $args = array();
                 }
-                if (isset($frame['class'])) {
+                if (!empty($nextframe['class'])) {
                     $context['line'] = sprintf('%s%s%s(%s)',
                         $nextframe['class'], $nextframe['type'], $nextframe['function'],
                         $args);
@@ -47,8 +46,8 @@ class Raven_Stacktrace
             }
 
             $module = $filename;
-            if (isset($frame['class'])) {
-                $module .= ':' . $frame['class'];
+            if (isset($nextframe['class'])) {
+                $module .= ':' . $nextframe['class'];
             }
 
             if ($trace) {
@@ -70,11 +69,12 @@ class Raven_Stacktrace
             );
         }
 
-        var_dump($result);
         return array_reverse($result);
     }
 
     public static function get_frame_context($frame) {
+        // The reflection API seems more appropriate if we associate it with the frame
+        // where the function is actually called (since we're treating them as function context)
         if (!isset($frame['function'])) {
             return array();
         }
@@ -109,12 +109,13 @@ class Raven_Stacktrace
             if (isset($params[$i]))
             {
                 // Assign the argument by the parameter name
-                $args[$params[$i]->name] = (string)$arg;
+                $args[$params[$i]->name] = $arg;
             }
             else
             {
+                // TODO: Sentry thinks of these as context locals, so they must be named
                 // Assign the argument by number
-                $args[(string)$i] = (string)$arg;
+                // $args[$i] = $arg;
             }
         }
 
