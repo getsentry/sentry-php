@@ -83,6 +83,48 @@ Or, if you're using `Composer <https://github.com/composer/composer>`_:
 
     require_once 'vendor/autoload.php';
     
+Configuration
+-------------
+
+Several options exist that allow you to configure the behavior of the ``Raven_Client``. These are passed as the
+second parameter of the constructor, and is expected to be an array of key value pairs:
+
+::
+
+    $client = new Raven_Client($dsn, array(
+        'option_name' => 'value',
+    ));
+
+``name``
+~~~~~~~~
+
+A string to override the default value for the server's hostname.
+
+Defaults to ``Raven_Compat::gethostname()``
+
+``tags``
+~~~~~~~~
+
+An array of tags to apply to events in this context.
+
+::
+
+    'tags' => array(
+        'php_version': phpversion(),
+    )
+
+``signing``
+~~~~~~~~~~~
+
+Instructs the client to sign all messages. This behavior is deprecated in modern Sentry servers, and should
+only be enabled if you need it for legacy compatibility.
+
+
+``trace``
+~~~~~~~~~
+
+Sets this to ``false`` to disable reflection tracing (fuction calling arguments) in stacktraces.
+
 
 Resources
 ---------
