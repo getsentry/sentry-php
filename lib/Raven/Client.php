@@ -42,22 +42,21 @@ class Raven_Client
         }
         $options = array_merge($options_or_dsn, $options);
 
-        $this->servers = (!empty($options['servers']) ? $options['servers'] : null);
-        $this->secret_key = (!empty($options['secret_key']) ? $options['secret_key'] : null);
-        $this->public_key = (!empty($options['public_key']) ? $options['public_key'] : null);
-        $this->project = (isset($options['project']) ? $options['project'] : 1);
-        $this->auto_log_stacks = (isset($options['auto_log_stacks']) ? $options['auto_log_stacks'] : false);
-        $this->name = (!empty($options['name']) ? $options['name'] : Raven_Compat::gethostname());
-        $this->site = (!empty($options['site']) ? $options['site'] : $this->_server_variable('SERVER_NAME'));
-        $this->tags = (!empty($options['tags']) ? $options['tags'] : array());
-
-        $this->_lasterror = null;
+        $this->servers = Raven_Util::get($options, 'servers');
+        $this->secret_key = Raven_Util::get($options, 'secret_key');
+        $this->public_key = Raven_Util::get($options, 'public_key');
+        $this->project = Raven_Util::get($options, 'project', 1);
+        $this->auto_log_stacks = (bool)Raven_Util::get($options, 'auto_log_stacks', false);
+        $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
+        $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
+        $this->tags = Raven_Util::get($options, 'tags', array());
 
         $this->processors = array();
-        foreach ((isset($options['processors']) ? $options['processors'] : $this->getDefaultProcessors()) as $processor) {
+        foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
             $this->processors[] = new $processor($this);
         }
 
+        $this->_lasterror = null;
     }
 
     public static function getDefaultProcessors()
