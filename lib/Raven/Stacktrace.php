@@ -86,7 +86,20 @@ class Raven_Stacktrace
         if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
-
+        $statements = array('include', 'include_once', 'require', 'require_once', 'call_user_func', 'call_user_func_array');
+        if (in_array($frame['function'], $statements))
+        {
+            if (empty($frame['args']))
+            {
+                // No arguments
+                return array();
+            }
+            else
+            {
+                // Sanitize the file path
+                return array();
+            }
+        }
         if (isset($frame['class'])) {
             if (method_exists($frame['class'], $frame['function'])) {
                 $reflection = new ReflectionMethod($frame['class'], $frame['function']);
