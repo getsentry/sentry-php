@@ -19,6 +19,9 @@
     "require": {
         "php": ">=5.2.4"
     },
+    "bin": [
+        "bin/raven"
+    ],
     "autoload": {
         "psr-0" : {
             "Raven_" : "lib/"

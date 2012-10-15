@@ -1,0 +1,48 @@
+#!/usr/bin/php
+<?php
+// TODO: if we could get rid of this and have composer figure things out it'd make it
+// a bit more sane
+require(dirname(__file__) . '/../lib/Raven/Autoloader.php');
+Raven_Autoloader::register();
+
+function raven_cli_test($command, $args)
+{
+    // Do something silly
+    try {
+        throw new Exception('This is a test exception sent from the Raven CLI.');
+    } catch (Exception $ex) {
+        return $ex;
+    }
+}
+
+function main()
+{
+    global $argv;
+
+    $dsn = $argv[2];
+    // Parse DSN as a test
+    try {
+        $parsed = Raven_Client::parseDSN($dsn);
+    } catch (InvalidArgumentException $ex) {
+        exit("There was an error parsing your DSN:\n  " . $ex->getMessage());
+    }
+
+    $client = new Raven_Client($dsn, array(
+        'trace' => true,
+    ));
+
+    $ex = raven_cli_test("command name", array("foo" => "bar"));
+    $client->captureException($ex);
+
+    $last_error = $client->getLastError();
+    if (!empty($last_error)) {
+        exit("There was an error sending the test event:\n  " . $last_error);
+    }
+}
+
+
+if (count($argv) != 3) {
+    exit('Usage: raven test <dsn>');
+}
+
+main();
