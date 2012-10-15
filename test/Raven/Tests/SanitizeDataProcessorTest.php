@@ -26,7 +26,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $client = $this->getMock('Client');
+        $client = new Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $result = $processor->process($data);
 
@@ -45,7 +45,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             'ccnumba' => '4242424242424242'
         );
 
-        $client = $this->getMock('Client');
+        $client = new Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $result = $processor->process($data);
 

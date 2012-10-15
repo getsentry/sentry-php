@@ -6,7 +6,7 @@
  */
 class Raven_Processor
 {
-    function __construct($client)
+    function __construct(Raven_Client $client)
     {
         $this->client = $client;
     }
