@@ -112,6 +112,11 @@ class Raven_Client
         );
     }
 
+    public function getLastError()
+    {
+        return $this->_lasterror;
+    }
+
     /**
      * Given an identifier, returns a Sentry searchable string.
      */
@@ -354,6 +359,8 @@ class Raven_Client
         if (!$success) {
             // It'd be nice just to raise an exception here, but it's not very PHP-like
             $this->_lasterror = $ret;
+        } else {
+            $this->_lasterror = null;
         }
         return $success;
     }
