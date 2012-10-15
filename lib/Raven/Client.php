@@ -50,7 +50,7 @@ class Raven_Client
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
-        $this->trace = (bool)Raven_Util::get($options, 'trace', false);
+        $this->trace = (bool)Raven_Util::get($options, 'trace', true);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
         $this->signing = (bool)Raven_Util::get($options, 'signing', false);
