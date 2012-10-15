@@ -17,6 +17,13 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
                 $value[$k] = $this->apply($v, $fn, $k);
             }
             return $value;
+        } elseif (is_object($value)){
+            foreach (get_object_vars($value) as $k=>$v) {
+                $value->$k = $this->apply($v, $fn, $k);
+            }
+            return $value;
+        } elseif (is_resource($value)){
+            return (string) $value;
         }
         return call_user_func($fn, $key, $value);
     }
@@ -26,7 +33,6 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         if (empty($value)) {
             return $value;
         }
-
         if (preg_match(self::VALUES_RE, $value)) {
             return self::MASK;
         }
