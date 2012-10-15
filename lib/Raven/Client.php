@@ -52,6 +52,9 @@ class Raven_Client
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool)Raven_Util::get($options, 'trace', false);
 
+        // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
+        $this->signing = (bool)Raven_Util::get($options, 'signing', false);
+
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
             $this->processors[] = new $processor($this);
@@ -286,8 +289,12 @@ class Raven_Client
         foreach($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
-            $signature = $this->get_signature(
-                $message, $timestamp, $this->secret_key);
+            if ($this->signing) {
+                $signature = $this->get_signature(
+                    $message, $timestamp, $this->secret_key);
+            } else {
+                $signature = null;
+            }
 
             $headers = array(
                 'User-Agent' => $client_string,
@@ -364,13 +371,15 @@ class Raven_Client
     {
         $header = array(
             sprintf("sentry_timestamp=%F", $timestamp),
-            "sentry_signature={$signature}",
             "sentry_client={$client}",
             "sentry_version=2.0",
         );
+        if (!empty($signature)) {
+            $header[] = "sentry_signature={$signature}";
+        }
 
         if ($api_key) {
-            array_push($header, "sentry_key={$api_key}");
+            $header[] = "sentry_key={$api_key}";
         }
 
         return sprintf('Sentry %s', implode(', ', $header));
