@@ -67,6 +67,7 @@ class Raven_Client
         );        
     }
 
+
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
      */
@@ -75,7 +76,7 @@ class Raven_Client
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https', 'udp'))) {
-            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . $scheme);
+            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
         $netloc.= (isset($url['port']) ? ':'.$url['port'] : null);
