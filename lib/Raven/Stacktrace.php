@@ -43,7 +43,7 @@ class Raven_Stacktrace
             }
 
             if ($trace) {
-                $vars = get_frame_context($frame);
+                $vars = self::get_frame_context($frame);
             } else {
                 $vars = array();
             }
