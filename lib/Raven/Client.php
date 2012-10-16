@@ -271,12 +271,17 @@ class Raven_Client
         // TODO: allow tags to be specified per event
         $data['tags'] = $this->tags;
 
-        // sanitize data
+        $data = $this->sanitize($data);
         $data = $this->process($data);
 
         $this->send($data);
 
         return $event_id;
+    }
+
+    public function sanitize($data)
+    {
+        return Raven_Util::apply($data, array('Raven_Util', 'to_string'));
     }
 
     public function process($data)

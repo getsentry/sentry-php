@@ -11,23 +11,6 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
     const VALUES_RE = '/^\d{16}$/';
 
-    function apply($value, $fn, $key=null) {
-        if (is_array($value)) {
-            foreach ($value as $k=>$v) {
-                $value[$k] = $this->apply($v, $fn, $k);
-            }
-            return $value;
-        } elseif (is_object($value)){
-            foreach (get_object_vars($value) as $k=>$v) {
-                $value->$k = $this->apply($v, $fn, $k);
-            }
-            return $value;
-        } elseif (is_resource($value)){
-            return (string) $value;
-        }
-        return call_user_func($fn, $key, $value);
-    }
-
     function sanitize($key, $value)
     {
         if (empty($value)) {
@@ -45,6 +28,6 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     }
 
     function process($data) {
-        return $this->apply($data, array($this, 'sanitize'));
+        return Raven_Util::apply($data, array($this, 'sanitize'));
     }
 }

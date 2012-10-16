@@ -24,4 +24,18 @@ class Raven_Util
         }
         return $default;
     }
+
+    public static function apply($value, $fn, $key=null) {
+        if (is_array($value)) {
+            foreach ($value as $k=>$v) {
+                $value[$k] = self::apply($v, $fn, $k);
+            }
+            return $value;
+        }
+        return call_user_func($fn, $key, $value);
+    }
+
+    public static function to_string($value) {
+        return (string)$value;
+    }
 }
