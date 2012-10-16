@@ -35,7 +35,17 @@ class Raven_Util
         return call_user_func($fn, $key, $value);
     }
 
-    public static function to_string($key, $value) {
-        return (string)$value;
+    public static function makeJsonCompatible($value) {
+        return self::apply($value, array('Raven_Util', 'toString'));
+    }
+
+    public static function toString($key, $value) {
+        if (is_object($value)) {
+            return '<'.get_class($value).'>';
+        }
+        if (is_resource($value)) {
+            return '<'.get_resource_type($value).'>';
+        }
+        return @(string)$value;
     }
 }

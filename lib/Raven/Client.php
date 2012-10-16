@@ -281,7 +281,7 @@ class Raven_Client
 
     public function sanitize($data)
     {
-        return Raven_Util::apply($data, array('Raven_Util', 'to_string'));
+        return Raven_Util::makeJsonCompatible($data);
     }
 
     public function process($data)
