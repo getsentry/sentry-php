@@ -104,7 +104,7 @@ class Raven_Stacktrace
             else
             {
                 // Sanitize the file path
-                return array($step['args'][0]);
+                return array($frame['args'][0]);
             }
         }
         if (isset($frame['class'])) {
