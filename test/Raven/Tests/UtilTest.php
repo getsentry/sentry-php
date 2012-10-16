@@ -16,17 +16,17 @@ class Raven_StacktraceTestObject
 
 class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
 {
-    public function testToStringSanitizesArrays()
+    public function testGetReturnsDefaultOnMissing()
     {
-        $input = array(1, 2, 3);
-        $result = Raven_Util::makeJsonCompatible($input);
-        $this->assertEquals($result, array('1', '2', '3'));
+        $input = array('foo' => 'bar');
+        $result = Raven_Util::get($input, 'baz', 'foo');
+        $this->assertEquals($result, 'foo');
     }
 
-    public function testToStringSanitizesObjectsToStrings()
+    public function testGetReturnsPresentValuesEvenWhenEmpty()
     {
-        $input = new Raven_StacktraceTestObject();
-        $result = Raven_Util::makeJsonCompatible($input);
-        $this->assertEquals($result, '<Raven_StacktraceTestObject>');
+        $input = array('foo' => '');
+        $result = Raven_Util::get($input, 'foo', 'bar');
+        $this->assertEquals($result, '');
     }
 }
