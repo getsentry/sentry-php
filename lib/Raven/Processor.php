@@ -12,10 +12,9 @@ class Raven_Processor
     }
 
     /** 
-     * Process data and return updated message.
+     * Process and sanitize data, modifying the existing value if nescesary.
      */
-    public function process($data)
+    public function process(&$data)
     {
-        return $data;
     }
 }

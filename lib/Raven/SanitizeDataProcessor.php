@@ -11,23 +11,21 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
     const VALUES_RE = '/^\d{16}$/';
 
-    function sanitize($key, $value)
+    function sanitize(&$item, $key)
     {
-        if (empty($value)) {
-            return $value;
+        if (empty($item)) {
+            return;
         }
-        if (preg_match(self::VALUES_RE, $value)) {
-            return self::MASK;
+        if (preg_match(self::VALUES_RE, $item)) {
+            $item = self::MASK;
         }
 
         if (preg_match(self::FIELDS_RE, $key)) {
-            return self::MASK;
+            $item = self::MASK;
         }
-
-        return $value;
     }
 
-    function process($data) {
-        return Raven_Util::apply($data, array($this, 'sanitize'));
+    function process(&$data) {
+        array_walk_recursive($data, array($this, 'sanitize'));
     }
 }

@@ -28,9 +28,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
 
         $client = new Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
-        $result = $processor->process($data);
+        $processor->process($data);
 
-        $vars = $result['sentry.interfaces.Http']['data'];
+        $vars = $data['sentry.interfaces.Http']['data'];
         $this->assertEquals($vars['foo'], 'bar');
         $this->assertEquals($vars['password'], Raven_SanitizeDataProcessor::MASK);
         $this->assertEquals($vars['the_secret'], Raven_SanitizeDataProcessor::MASK);
@@ -47,8 +47,8 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
 
         $client = new Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
-        $result = $processor->process($data);
+        $processor->process($data);
 
-        $this->assertEquals($result['ccnumba'], Raven_SanitizeDataProcessor::MASK);
+        $this->assertEquals($data['ccnumba'], Raven_SanitizeDataProcessor::MASK);
     }
 }
