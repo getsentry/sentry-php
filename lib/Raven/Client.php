@@ -268,8 +268,10 @@ class Raven_Client
             $data = $this->remove_invalid_utf8($data);
         }
 
-        // TODO: allow tags to be specified per event
-        $data['tags'] = $this->tags;
+        // Merge tags from constructor and event specified by event (if available)
+        $data['tags'] = (array_key_exists('tags', $data)) 
+            ? $data['tags'] = array_merge($data['tags'],$this->tags)
+            : $data['tags'] = $this->tags;   
 
         $this->sanitize($data);
         $this->process($data);
