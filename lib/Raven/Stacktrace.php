@@ -6,6 +6,14 @@
  */
 class Raven_Stacktrace
 {
+    public static $statements = array(
+        'include',
+        'include_once',
+        'require',
+        'require_once',
+    );
+
+
     public static function get_stack_info($frames, $trace=false)
     {
         /**
@@ -86,8 +94,7 @@ class Raven_Stacktrace
         if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
-        $statements = array('include', 'include_once', 'require', 'require_once', 'call_user_func', 'call_user_func_array');
-        if (in_array($frame['function'], $statements))
+        if (in_array($frame['function'], self::$statements))
         {
             if (empty($frame['args']))
             {
@@ -97,7 +104,7 @@ class Raven_Stacktrace
             else
             {
                 // Sanitize the file path
-                return array();
+                return array($step['args'][0]);
             }
         }
         if (isset($frame['class'])) {

@@ -35,7 +35,7 @@ class Raven_Util
         return call_user_func($fn, $key, $value);
     }
 
-    public static function to_string($value) {
+    public static function to_string($key, $value) {
         return (string)$value;
     }
 }
