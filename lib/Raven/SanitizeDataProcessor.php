@@ -16,8 +16,13 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         if (empty($item)) {
             return;
         }
+
         if (preg_match(self::VALUES_RE, $item)) {
             $item = self::MASK;
+        }
+
+        if (empty($key)) {
+            return;
         }
 
         if (preg_match(self::FIELDS_RE, $key)) {

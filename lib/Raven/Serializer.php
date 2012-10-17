@@ -33,10 +33,8 @@ class Raven_Serializer
      */
     public static function serialize($value)
     {
-        if (is_object($value)) {
-            return 'Object '.get_class($value);
-        } elseif (is_resource($value)) {
-            return 'Resource '.get_resource_type($value);
+        if (is_object($value) || is_resource($value)) {
+            return self::serializeValue($value);
         } else if (is_array($value)) {
             $new = array();
             foreach ($value as $k=>$v) {
@@ -58,8 +56,12 @@ class Raven_Serializer
             return 'true';
         } else if (is_float($value) && (int)$value == $value) {
             return $value.'.0';
+        } else if (is_object($value)) {
+            return 'Object '.get_class($value);
+        } else if (is_resource($value)) {
+            return 'Resource '.get_resource_type($value);
         } else {
-            return print_r($value, true);
+            return (string)$value;
         }
     }
 }

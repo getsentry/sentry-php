@@ -281,7 +281,7 @@ class Raven_Client
 
     public function sanitize(&$data)
     {
-        Raven_Serializer::serialize($data);
+        $data = Raven_Serializer::serialize($data);
     }
 
     public function process(&$data)
