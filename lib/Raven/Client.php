@@ -26,6 +26,8 @@ class Raven_Client
     const ERROR = 'error';
     const FATAL = 'fatal';
 
+    var $severity_map;
+
     public function __construct($options_or_dsn=null, $options=array())
     {
         if (is_null($options_or_dsn) && !empty($_SERVER['SENTRY_DSN'])) {
@@ -52,6 +54,7 @@ class Raven_Client
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
+        $this->severity_map = NULL;
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
         $this->signing = (bool) Raven_Util::get($options, 'signing', false);
@@ -204,6 +207,8 @@ class Raven_Client
         if ($logger !== null) {
             $data['logger'] = $logger;
         }
+
+        $data["level"] = static::translateSeverity($exception->getSeverity());
 
         /**'sentry.interfaces.Exception'
          * Exception::getTrace doesn't store the point at where the exception
@@ -473,5 +478,33 @@ class Raven_Client
         }
 
         return '';
+    }
+
+    public function translateSeverity($severity) {
+        if (is_array($this->severity_map) && isset($this->severity_map[$severity])) {
+            return $this->severity_map[$severity];
+        }
+        switch ($severity) {
+            case E_ERROR:              return Raven_Client::ERROR;
+            case E_WARNING:            return Raven_Client::WARN;
+            case E_PARSE:              return Raven_Client::ERROR;
+            case E_NOTICE:             return Raven_Client::INFO;
+            case E_CORE_ERROR:         return Raven_Client::ERROR;
+            case E_CORE_WARNING:       return Raven_Client::WARN;
+            case E_COMPILE_ERROR:      return Raven_Client::ERROR;
+            case E_COMPILE_WARNING:    return Raven_Client::WARN;
+            case E_USER_ERROR:         return Raven_Client::ERROR;
+            case E_USER_WARNING:       return Raven_Client::WARN;
+            case E_USER_NOTICE:        return Raven_Client::INFO;
+            case E_STRICT:             return Raven_Client::INFO;
+            case E_RECOVERABLE_ERROR:  return Raven_Client::ERROR;
+            case E_DEPRECATED:         return Raven_Client::WARN;
+            case E_USER_DEPRECATED:    return Raven_Client::WARN;
+        }
+        return Raven_Client::ERROR;
+    }
+
+    public function registerSeverityMap($map) {
+        $this->severity_map = $map;
     }
 }
