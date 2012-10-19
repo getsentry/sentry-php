@@ -184,7 +184,7 @@ class Raven_Stacktrace
 
         while(!feof($fh)) {
             $cur_lineno++;
-            $line = fgets($fh);
+            $line = rtrim(fgets($fh), '\r\n');
 
             if ($cur_lineno == $lineno) {
                 $frame['line'] = $line;
