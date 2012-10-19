@@ -60,6 +60,8 @@ class Raven_Serializer
             return 'Object '.get_class($value);
         } else if (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
+        } else if (is_integer($value)) {
+            return $value;
         } else {
             return (string)$value;
         }
