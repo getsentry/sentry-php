@@ -191,8 +191,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
     }
 
-    public function testCaptureExceptionSetsInterface()
+    public function testCaptureExceptionSetsInterfaces()
     {
+        # TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = new Dummy_Raven_Client();
         try {
             throw new Exception('Foo bar');
@@ -203,11 +204,22 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
-        $this->assertEquals($event['sentry.interfaces.Exception'], array(
-            'value' => 'Foo bar',
-            'type' => 'Exception',
-            'module' => '/Users/dcramer/Development/raven-php/test/Raven/Tests/ClientTest.php:198',
-        ));
+
+        $exc = $event['sentry.interfaces.Exception'];
+        $this->assertEquals($exc['value'], 'Foo bar');
+        $this->assertEquals($exc['type'], 'Exception');
+        $this->assertFalse(empty($exc['module']));
+
+        $this->assertFalse(empty($event['sentry.interfaces.Stacktrace']['frames']));
+        $frames = $event['sentry.interfaces.Stacktrace']['frames'];
+        $frame = $frames[count($frames) - 1];
+        $this->assertEquals($frame['lineno'], 199);
+        $this->assertEquals($frame['module'], 'ClientTest.php:Raven_Tests_ClientTest');
+        $this->assertEquals($frame['function'], 'testCaptureExceptionSetsInterfaces');
+        $this->assertEquals($frame['vars'], array());
+        $this->assertEquals($frame['context_line'], '            throw new Exception(\'Foo bar\');');
+        $this->assertFalse(empty($frame['pre_context']));
+        $this->assertFalse(empty($frame['post_context']));
     }
 
     public function testDoesRegisterProcessors()
