@@ -170,11 +170,25 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client();
 
-        $client->captureMessage('Test Message %s', 'foo');
+        $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
         $this->assertEquals($event['message'], 'Test Message foo');
+    }
+
+    public function testCaptureMessageSetsInterface()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('Test Message %s', array('foo'));
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['sentry.interfaces.Message'], array(
+            'message' => 'Test Message %s',
+            'params' => array('foo'),
+        ));
     }
 
     public function testDoesRegisterProcessors()
