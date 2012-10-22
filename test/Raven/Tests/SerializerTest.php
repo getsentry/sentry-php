@@ -38,4 +38,12 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result, 1);
     }
 
+    public function testRecursionMaxDepth()
+    {
+        $input = array();
+        $input[] = &$input;
+        $result = Raven_Serializer::serialize($input, 3);
+        $this->assertEquals($result, array(array(array('Array of length 1'))));
+    }
+
 }

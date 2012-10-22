@@ -31,14 +31,14 @@ class Raven_Serializer
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
      */
-    public static function serialize($value)
+    public static function serialize($value, $max_depth=3, $_depth=0)
     {
         if (is_object($value) || is_resource($value)) {
             return self::serializeValue($value);
-        } else if (is_array($value)) {
+        } else if ($_depth < $max_depth && is_array($value)) {
             $new = array();
             foreach ($value as $k=>$v) {
-                $new[$k] = self::serialize($v);
+                $new[self::serializeValue($k)] = self::serialize($v, $max_depth, $_depth + 1);
             }
             return $new;
         } else {
@@ -60,9 +60,14 @@ class Raven_Serializer
             return 'Object '.get_class($value);
         } else if (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
+        } else if (is_array($value)) {
+            return 'Array of length ' . count($value);
         } else if (is_integer($value)) {
-            return $value;
+            return (integer)$value;
         } else {
+            if (function_exists('mb_convert_encoding')) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+            }
             return (string)$value;
         }
     }

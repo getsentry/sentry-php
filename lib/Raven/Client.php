@@ -264,10 +264,6 @@ class Raven_Client
             }
         }
 
-        if (function_exists('mb_convert_encoding')) {
-            $data = $this->remove_invalid_utf8($data);
-        }
-
         // TODO: allow tags to be specified per event
         $data['tags'] = $this->tags;
 
@@ -445,23 +441,4 @@ class Raven_Client
         }
         return '';
     }
-
-    private function remove_invalid_utf8($data)
-    {
-        foreach ($data as $key => $value) {
-            if (is_string($key)) {
-                $key = mb_convert_encoding($key, 'UTF-8', 'UTF-8');
-            }
-            if (is_string($value)) {
-                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-            }
-            if (is_array($value)) {
-                $value = $this->remove_invalid_utf8($value);
-            }
-            $data[$key] = $value;
-        }
-
-        return $data;
-    }
-
 }
