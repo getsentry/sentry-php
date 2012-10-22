@@ -183,9 +183,9 @@ class Raven_Client
         );
 
         $data['sentry.interfaces.Exception'] = array(
-                'value' => $exc_message,
-                'type' => $exception->getCode(),
-                'module' => $exception->getFile() .':'. $exception->getLine(),
+            'value' => $exc_message,
+            'type' => get_class($exception),
+            'module' => $exception->getFile() .':'. $exception->getLine(),
         );
 
         if ($culprit){

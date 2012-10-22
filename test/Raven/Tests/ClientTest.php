@@ -191,6 +191,25 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
     }
 
+    public function testCaptureExceptionSetsInterface()
+    {
+        $client = new Dummy_Raven_Client();
+        try {
+            throw new Exception('Foo bar');
+        } catch (Exception $ex) {
+            $client->captureException($ex);
+        }
+
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['sentry.interfaces.Exception'], array(
+            'value' => 'Foo bar',
+            'type' => 'Exception',
+            'module' => '/Users/dcramer/Development/raven-php/test/Raven/Tests/ClientTest.php:198',
+        ));
+    }
+
     public function testDoesRegisterProcessors()
     {
         $client = new Dummy_Raven_Client(array(
