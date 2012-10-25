@@ -1,5 +1,8 @@
 <?php
 
+use Raven\Client;
+use Raven\SanitizeDataProcessor;
+
 /*
  * This file is part of Raven.
  *
@@ -25,18 +28,18 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
                 ),
             )
         );
-
-        $client = new Raven_Client();
-        $processor = new Raven_SanitizeDataProcessor($client);
+		
+        $client = new Client();
+        $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
         $vars = $data['sentry.interfaces.Http']['data'];
         $this->assertEquals($vars['foo'], 'bar');
-        $this->assertEquals($vars['password'], Raven_SanitizeDataProcessor::MASK);
-        $this->assertEquals($vars['the_secret'], Raven_SanitizeDataProcessor::MASK);
-        $this->assertEquals($vars['a_password_here'], Raven_SanitizeDataProcessor::MASK);
-        $this->assertEquals($vars['mypasswd'], Raven_SanitizeDataProcessor::MASK);
-        $this->assertEquals($vars['authorization'], Raven_SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['password'], SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['the_secret'], SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['a_password_here'], SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['mypasswd'], SanitizeDataProcessor::MASK);
+        $this->assertEquals($vars['authorization'], SanitizeDataProcessor::MASK);
     }
 
     public function testDoesFilterCreditCard()
@@ -45,10 +48,11 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             'ccnumba' => '4242424242424242'
         );
 
-        $client = new Raven_Client();
-        $processor = new Raven_SanitizeDataProcessor($client);
+		
+        $client = new Client();
+        $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $this->assertEquals($data['ccnumba'], Raven_SanitizeDataProcessor::MASK);
+        $this->assertEquals($data['ccnumba'], SanitizeDataProcessor::MASK);
     }
 }

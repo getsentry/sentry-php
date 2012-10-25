@@ -1,5 +1,7 @@
 <?php
 
+namespace Raven;
+
 /*
  * This file is part of Raven.
  *
@@ -14,10 +16,10 @@
  *
  * @package raven
  */
-class Raven_Autoloader
+class Autoloader
 {
     /**
-     * Registers Raven_Autoloader as an SPL autoloader.
+     * Registers Raven\Autoloader as an SPL autoloader.
      */
     static public function register()
     {
@@ -38,7 +40,7 @@ class Raven_Autoloader
             return;
         }
 
-        if (is_file($file = dirname(__FILE__).'/../'.str_replace(array('_', "\0"), array('/', ''), $class).'.php')) {
+        if (is_file($file = dirname(__FILE__).'/../'.str_replace(array('\\','_', "\0"), array('/','/', ''), $class).'.php')) {
             require $file;
         }
     }

@@ -1,5 +1,7 @@
 <?php
 
+namespace Raven;
+
 /*
  * This file is part of Raven.
  *
@@ -15,7 +17,7 @@
  * @package raven
  */
 
-class Raven_Util
+class Util
 {
     /**
      * Because we love Python, this works much like dict.get() in Python.

@@ -1,5 +1,7 @@
 <?php
 
+namespace Raven;
+
 /*
  * This file is part of Raven.
  *
@@ -9,7 +11,7 @@
  * file that was distributed with this source code.
  */
  
-class Raven_Compat
+class Compat
 {
 
     public static function gethostname()

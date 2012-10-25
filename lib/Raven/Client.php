@@ -1,5 +1,14 @@
 <?php
 
+namespace Raven;
+
+use Raven\Compat;
+use Raven\Serializer;
+use Raven\SanitizeDataProcessor;
+use Raven\Processor;
+use Raven\Stacktrace;
+use Raven\Util;
+
 /*
  * This file is part of Raven.
  *
@@ -15,7 +24,7 @@
  * @package raven
  */
 
-class Raven_Client
+class Client
 {
     const VERSION = '0.1.0';
 
@@ -42,21 +51,21 @@ class Raven_Client
         }
         $options = array_merge($options_or_dsn, $options);
 
-        $this->servers = Raven_Util::get($options, 'servers');
-        $this->secret_key = Raven_Util::get($options, 'secret_key');
-        $this->public_key = Raven_Util::get($options, 'public_key');
-        $this->project = Raven_Util::get($options, 'project', 1);
-        $this->auto_log_stacks = (bool)Raven_Util::get($options, 'auto_log_stacks', false);
-        $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
-        $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
-        $this->tags = Raven_Util::get($options, 'tags', array());
-        $this->trace = (bool)Raven_Util::get($options, 'trace', true);
+        $this->servers = Util::get($options, 'servers');
+        $this->secret_key = Util::get($options, 'secret_key');
+        $this->public_key = Util::get($options, 'public_key');
+        $this->project = Util::get($options, 'project', 1);
+        $this->auto_log_stacks = (bool)Util::get($options, 'auto_log_stacks', false);
+        $this->name = Util::get($options, 'name', Compat::gethostname());
+        $this->site = Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
+        $this->tags = Util::get($options, 'tags', array());
+        $this->trace = (bool)Util::get($options, 'trace', true);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
-        $this->signing = (bool)Raven_Util::get($options, 'signing', false);
+        $this->signing = (bool)Util::get($options, 'signing', false);
 
         $this->processors = array();
-        foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
+        foreach (Util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
             $this->processors[] = new $processor($this);
         }
 
@@ -66,7 +75,7 @@ class Raven_Client
     public static function getDefaultProcessors()
     {
         return array(
-            'Raven_SanitizeDataProcessor',
+            'Raven\SanitizeDataProcessor',
         );        
     }
 
@@ -79,7 +88,7 @@ class Raven_Client
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https', 'udp'))) {
-            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
+            throw new \InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
         $netloc.= (isset($url['port']) ? ':'.$url['port'] : null);
@@ -102,7 +111,7 @@ class Raven_Client
         $username = (isset($url['user']) ? $url['user'] : null);
         $password = (isset($url['pass']) ? $url['pass'] : null);
         if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
-            throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
+            throw new \InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
         }
         return array(
             'servers'    => array(sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path)),
@@ -259,7 +268,7 @@ class Raven_Client
         if (!empty($stack)) {
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace),
+                    'frames' => Stacktrace::get_stack_info($stack, $this->trace),
                 );
             }
         }
@@ -277,7 +286,7 @@ class Raven_Client
 
     public function sanitize(&$data)
     {
-        $data = Raven_Serializer::serialize($data);
+        $data = Serializer::serialize($data);
     }
 
     public function process(&$data)
@@ -289,7 +298,7 @@ class Raven_Client
 
     public function send($data)
     {
-        $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
+        $message = base64_encode(gzcompress(Compat::json_encode($data)));
 
         foreach($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
@@ -370,7 +379,7 @@ class Raven_Client
      */
     private function get_signature($message, $timestamp, $key)
     {
-        return Raven_Compat::hash_hmac('sha1', sprintf('%F', $timestamp) .' '. $message, $key);
+        return Compat::hash_hmac('sha1', sprintf('%F', $timestamp) .' '. $message, $key);
     }
 
     private function get_auth_header($signature, $timestamp, $client,

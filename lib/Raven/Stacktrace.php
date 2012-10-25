@@ -1,10 +1,11 @@
 <?php
+namespace Raven;
 /**
  * Small helper class to inspect the stacktrace
  *
  * @package raven
  */
-class Raven_Stacktrace
+class Stacktrace
 {
     public static $statements = array(
         'include',
@@ -109,16 +110,16 @@ class Raven_Stacktrace
         }
         if (isset($frame['class'])) {
             if (method_exists($frame['class'], $frame['function'])) {
-                $reflection = new ReflectionMethod($frame['class'], $frame['function']);
+                $reflection = new \ReflectionMethod($frame['class'], $frame['function']);
             }
             else
             {
-                $reflection = new ReflectionMethod($frame['class'], '__call');
+                $reflection = new \ReflectionMethod($frame['class'], '__call');
             }
         }
         else
         {
-            $reflection = new ReflectionFunction($frame['function']);
+            $reflection = new \ReflectionFunction($frame['function']);
         }
 
         $params = $reflection->getParameters();

@@ -1,5 +1,7 @@
 <?php
 
+namespace Raven;
+
 /*
  * This file is part of Raven.
  *
@@ -12,15 +14,15 @@
 /**
  * Event handlers for exceptions and errors
  *
- * $client = new Raven_Client('http://public:secret/example.com/1');
- * $error_handler = new Raven_ErrorHandler($client);
+ * $client = new Raven\Client('http://public:secret/example.com/1');
+ * $error_handler = new Raven\ErrorHandler($client);
  * $error_handler->registerExceptionHandler();
  * $error_handler->registerErrorHandler();
  *
  * @package raven
  */
 
-class Raven_ErrorHandler
+class ErrorHandler
 {
     function __construct($client) {
         $this->client = $client;
@@ -36,7 +38,7 @@ class Raven_ErrorHandler
 
     function handleError($code, $message, $file='', $line=0, $context=array()) {
         
-        $e = new ErrorException($message, 0, $code, $file, $line);
+        $e = new \ErrorException($message, 0, $code, $file, $line);
         $this->handleException($e, true);
 
 
