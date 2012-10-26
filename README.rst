@@ -5,7 +5,7 @@ raven-php
    :target: http://travis-ci.org/getsentry/raven-php
 
 
-raven-php is an experimental PHP client for `Sentry <http://aboutsentry.com/>`_.
+raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
 
 ::
 
