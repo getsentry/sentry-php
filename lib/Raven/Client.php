@@ -211,9 +211,7 @@ class Raven_Client
 
     private function is_http_request()
     {
-        // The function getallheaders() is only available when running in a
-        // web-request. The function is missing when run from the commandline..
-        return function_exists('getallheaders');
+        return 'cli' != PHP_SAPI;
     }
 
     private function get_http_data()
@@ -225,7 +223,7 @@ class Raven_Client
                 'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => headers_list(),
                 'env' => $_SERVER,
             )
         );
