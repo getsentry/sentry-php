@@ -233,9 +233,9 @@ class Raven_Client
     {
         return array(
             'sentry.interfaces.User' => array(
-                'is_authenticated' => count($_SESSION) ? true : false,
+                'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
                 'id' => session_id(),
-                'username' => var_export($_SESSION, true),
+                'username' => isset($_SESSION) ? var_export($_SESSION, true) : null,
             )
         );
     }
