@@ -267,6 +267,10 @@ class Raven_Client
         // TODO: allow tags to be specified per event
         $data['tags'] = $this->tags;
 
+        if (empty($data["logger"])){
+            $data["logger"] = 'php';
+        }
+
         $this->sanitize($data);
         $this->process($data);
 
