@@ -214,7 +214,7 @@ class Raven_Client
         return 'cli' != PHP_SAPI;
     }
 
-    private function get_http_data()
+    protected function get_http_data()
     {
         return array(
             'sentry.interfaces.Http' => array(
@@ -227,6 +227,22 @@ class Raven_Client
                 'env' => $_SERVER,
             )
         );
+    }
+
+    protected function get_user_data()
+    {
+        return array(
+            'sentry.interfaces.User' => array(
+                'is_authenticated' => count($_SESSION) ? true : false,
+                'id' => session_id(),
+                'username' => var_export($_SESSION, true),
+            )
+        );
+    }
+
+    protected function get_extra_data()
+    {
+        return array();
     }
 
     public function capture($data, $stack)
@@ -245,6 +261,7 @@ class Raven_Client
 
         if ($this->is_http_request()) {
             $data = array_merge($data, $this->get_http_data());
+            $data = array_merge($data, $this->get_user_data());
         }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === True) {
@@ -267,6 +284,10 @@ class Raven_Client
 
         if (empty($data["logger"])){
             $data["logger"] = 'php';
+        }
+
+        if ($extra = $this->get_extra_data()) {
+            $data["extra"] = $extra;
         }
 
         $this->sanitize($data);
