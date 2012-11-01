@@ -1,5 +1,7 @@
 <?php
 
+use Raven\Util;
+
 /*
  * This file is part of Raven.
  *
@@ -19,14 +21,14 @@ class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
     public function testGetReturnsDefaultOnMissing()
     {
         $input = array('foo' => 'bar');
-        $result = Raven_Util::get($input, 'baz', 'foo');
+        $result = Util::get($input, 'baz', 'foo');
         $this->assertEquals($result, 'foo');
     }
 
     public function testGetReturnsPresentValuesEvenWhenEmpty()
     {
         $input = array('foo' => '');
-        $result = Raven_Util::get($input, 'foo', 'bar');
+        $result = Util::get($input, 'foo', 'bar');
         $this->assertEquals($result, '');
     }
 }

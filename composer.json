@@ -27,7 +27,7 @@
     ],
     "autoload": {
         "psr-0" : {
-            "Raven_" : "lib/"
+            "Raven\\" : "lib/"
         }
     }
 }

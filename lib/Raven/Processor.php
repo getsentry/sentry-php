@@ -1,12 +1,14 @@
 <?php
+
+namespace Raven;
 /**
  * Base class for data processing.
  *
  * @package raven
  */
-class Raven_Processor
+class Processor
 {
-    function __construct(Raven_Client $client)
+    function __construct(Client $client)
     {
         $this->client = $client;
     }

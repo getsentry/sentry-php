@@ -10,7 +10,7 @@ raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
 ::
 
     // Instantiate a new client with a compatible DSN
-    $client = new Raven_Client('http://public:secret@example.com/1');
+    $client = new Raven\Client('http://public:secret@example.com/1');
 
     // Capture a message
     $event_id = $client->getIdent($client->captureMessage('my log message'));
@@ -23,7 +23,7 @@ raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
     echo "Your reference ID is " . $event_id;
 
     // Install error handlers
-    $error_handler = new Raven_ErrorHandler($client);
+    $error_handler = new Raven\ErrorHandler($client);
     $error_handler->registerExceptionHandler();
     $error_handler->registerErrorHandler();
 
@@ -75,7 +75,7 @@ Or, alternatively use the autoloader:
 ::
 
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
-    Raven_Autoloader::register();
+    Raven\Autoloader::register();
 
 Or, if you're using `Composer <https://github.com/composer/composer>`_:
 
@@ -86,12 +86,12 @@ Or, if you're using `Composer <https://github.com/composer/composer>`_:
 Configuration
 -------------
 
-Several options exist that allow you to configure the behavior of the ``Raven_Client``. These are passed as the
+Several options exist that allow you to configure the behavior of the ``Raven\Client``. These are passed as the
 second parameter of the constructor, and is expected to be an array of key value pairs:
 
 ::
 
-    $client = new Raven_Client($dsn, array(
+    $client = new Raven\Client($dsn, array(
         'option_name' => 'value',
     ));
 
@@ -100,7 +100,7 @@ second parameter of the constructor, and is expected to be an array of key value
 
 A string to override the default value for the server's hostname.
 
-Defaults to ``Raven_Compat::gethostname()``
+Defaults to ``Compat::gethostname()``
 
 ``tags``
 ~~~~~~~~

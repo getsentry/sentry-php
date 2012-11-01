@@ -1,5 +1,7 @@
 <?php
 
+use Raven\ErrorHandler;
+
 /*
  * This file is part of Raven.
  *
@@ -18,7 +20,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new ErrorHandler($client);
         $handler->handleError(E_WARNING, 'message');
     }
 
@@ -31,7 +33,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         $e = new ErrorException('message', 0, E_WARNING, '', 0);
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new ErrorHandler($client);
         $handler->handleException($e);
     }
 }
