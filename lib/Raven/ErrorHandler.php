@@ -83,19 +83,19 @@ class Raven_ErrorHandler
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
-    public function registerShutdownFunction()
+    public function registerShutdownFunction($reservedMemorySize = 10)
     {
         register_shutdown_function(array($this, 'handleFatalError'));
 
-        self::reserveMemory();
+        self::reserveMemory($reservedMemorySize);
     }
 
     /**
      * This is allows to catch memory limit fatal errors.
      */
-    private static function reserveMemory()
+    private static function reserveMemory($reservedMemorySize)
     {
-        $GLOBALS['tmp_buf'] = str_repeat('x', 1024 * 500);
+        $GLOBALS['tmp_buf'] = str_repeat('x', 1024 * $reservedMemorySize);
     }
 
     /**
