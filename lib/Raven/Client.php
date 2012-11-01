@@ -211,12 +211,10 @@ class Raven_Client
 
     private function is_http_request()
     {
-        // The function getallheaders() is only available when running in a
-        // web-request. The function is missing when run from the commandline..
-        return function_exists('getallheaders');
+        return isset($_SERVER['REQUEST_METHOD']);
     }
 
-    private function get_http_data()
+    protected function get_http_data()
     {
         return array(
             'sentry.interfaces.Http' => array(
@@ -225,10 +223,26 @@ class Raven_Client
                 'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => headers_list(),
                 'env' => $_SERVER,
             )
         );
+    }
+
+    protected function get_user_data()
+    {
+        return array(
+            'sentry.interfaces.User' => array(
+                'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
+                'id' => session_id(),
+                'data' => isset($_SESSION) ? $_SESSION : null,
+            )
+        );
+    }
+
+    protected function get_extra_data()
+    {
+        return array();
     }
 
     public function capture($data, $stack)
@@ -247,6 +261,7 @@ class Raven_Client
 
         if ($this->is_http_request()) {
             $data = array_merge($data, $this->get_http_data());
+            $data = array_merge($data, $this->get_user_data());
         }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === True) {
@@ -266,6 +281,14 @@ class Raven_Client
 
         // TODO: allow tags to be specified per event
         $data['tags'] = $this->tags;
+
+        if (empty($data["logger"])){
+            $data["logger"] = 'php';
+        }
+
+        if ($extra = $this->get_extra_data()) {
+            $data["extra"] = $extra;
+        }
 
         $this->sanitize($data);
         $this->process($data);
