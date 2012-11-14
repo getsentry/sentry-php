@@ -35,4 +35,3 @@ class Raven_Tests_CompatTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result, '{"foo":{"bar":1}}');
     }
 }
-
