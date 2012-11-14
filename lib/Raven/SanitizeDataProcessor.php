@@ -11,7 +11,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
     const VALUES_RE = '/^\d{16}$/';
 
-    function sanitize(&$item, $key)
+    public function sanitize(&$item, $key)
     {
         if (empty($item)) {
             return;
@@ -30,7 +30,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
-    function process(&$data) {
+    public function process(&$data)
+    {
         array_walk_recursive($data, array($this, 'sanitize'));
     }
 }

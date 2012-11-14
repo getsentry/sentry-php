@@ -9,16 +9,18 @@
  * file that was distributed with this source code.
  */
 
-
-function raven_test_recurse($times, $callback) {
+function raven_test_recurse($times, $callback)
+{
     $times -= 1;
     if ($times > 0) {
         return call_user_func('raven_test_recurse', $times, $callback);
     }
+
     return call_user_func($callback);
 }
 
-function raven_test_create_stacktrace($args=null, $times=3) {
+function raven_test_create_stacktrace($args=null, $times=3)
+{
     return raven_test_recurse($times, 'debug_backtrace');
 }
 

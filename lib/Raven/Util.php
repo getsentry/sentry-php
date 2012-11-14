@@ -19,7 +19,7 @@ class Raven_Util
 {
     /**
      * Because we love Python, this works much like dict.get() in Python.
-     * 
+     *
      * Returns $var from $array if set, otherwise returns $default.
      */
     public static function get($array, $var, $default=null)
@@ -27,6 +27,7 @@ class Raven_Util
         if (isset($array[$var])) {
             return $array[$var];
         }
+
         return $default;
     }
 }
