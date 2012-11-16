@@ -257,6 +257,21 @@ class Raven_Client
 
     protected function get_http_data()
     {
+        $env = $headers = array();
+
+        foreach ($_SERVER as $key => $value) {
+            if (0 === strpos($key, 'HTTP_')) {
+                if (in_array($key, array('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'))) {
+                    continue;
+                }
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH'))) {
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $name))))] = $value;
+            } else {
+                $env[$key] = $value;
+            }
+        }
+
         return array(
             'sentry.interfaces.Http' => array(
                 'method' => $this->_server_variable('REQUEST_METHOD'),
@@ -264,8 +279,8 @@ class Raven_Client
                 'query_string' => $this->_server_variable('QUERY_STRING'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => $this->getallheaders(),
-                'env' => $_SERVER,
+                'headers' => $headers,
+                'env' => $env,
             )
         );
     }
@@ -532,22 +547,4 @@ class Raven_Client
     public function registerSeverityMap($map) {
         $this->severity_map = $map;
     }
-    
-    protected function getallheaders()
-    {
-        if(function_exists('getallheaders')) {
-            return getallheaders();
-        }
-
-        $headers = array();
-        foreach ($_SERVER as $name => $value)
-        {
-            if (substr($name, 0, 5) == 'HTTP_')
-            {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
-            }
-        }
-        return $headers;
-    }
-
 }
