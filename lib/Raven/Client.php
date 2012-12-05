@@ -223,7 +223,7 @@ class Raven_Client
                 'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => headers_list(),
+                'headers' => getallheaders(),
                 'env' => $_SERVER,
             )
         );
