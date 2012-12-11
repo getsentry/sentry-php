@@ -23,10 +23,11 @@
 
 class Raven_ErrorHandler
 {
-    private $old_exception_handler = null;
+    private $old_exception_handler;
     private $call_existing_exception_handler = false;
-    private $old_error_handler = null;
+    private $old_error_handler;
     private $call_existing_error_handler = false;
+    private $reservedMemory;
 
     public function __construct($client)
     {
@@ -58,7 +59,7 @@ class Raven_ErrorHandler
             return;
         }
 
-        self::freeMemory();
+        unset($this->reservedMemory);
 
         $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, E_STRICT);
 
@@ -90,22 +91,6 @@ class Raven_ErrorHandler
     {
         register_shutdown_function(array($this, 'handleFatalError'));
 
-        self::reserveMemory($reservedMemorySize);
-    }
-
-    /**
-     * This is allows to catch memory limit fatal errors.
-     */
-    private static function reserveMemory($reservedMemorySize)
-    {
-        $GLOBALS['tmp_buf'] = str_repeat('x', 1024 * $reservedMemorySize);
-    }
-
-    /**
-     * Free momory
-     */
-    private static function freeMemory()
-    {
-        unset($GLOBALS['tmp_buf']);
+        $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
     }
 }
