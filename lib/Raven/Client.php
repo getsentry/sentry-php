@@ -258,7 +258,8 @@ class Raven_Client
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
-            'logger' => $this->logger,
+            'logger' => $this->logger, 
+            'tags' => $this->tags,
         ));
 
         if ($this->is_http_request()) {
@@ -280,9 +281,6 @@ class Raven_Client
                 );
             }
         }
-
-        // TODO: allow tags to be specified per event
-        $data['tags'] = $this->tags;
 
         if ($extra = $this->get_extra_data()) {
             $data["extra"] = $extra;
