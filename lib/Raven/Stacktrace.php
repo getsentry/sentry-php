@@ -27,25 +27,29 @@ class Raven_Stacktrace
             $nextframe = @$frames[$i + 1];
 
             if (!isset($frame['file'])) {
-                if (isset($frame['args'])) {
-                    $args = is_string($frame['args']) ? $frame['args'] : @json_encode($frame['args']);
-                }
-                else {
-                    $args = array();
-                }
-                if (!empty($nextframe['class'])) {
-                    $context['line'] = sprintf('%s%s%s(%s)',
-                        $nextframe['class'], $nextframe['type'], $nextframe['function'],
-                        $args);
-                }
-                else {
-                    $context['line'] = sprintf('%s(%s)', $nextframe['function'], $args);
-                }
-                $abs_path = '';
-                $context['prefix'] = '';
-                $context['suffix'] = '';
-                $context['filename'] = $filename = '[Anonymous function]';
-                $context['lineno'] = 0;
+                // XXX: Disable capturing of anonymous functions until we can implement a better grouping mechanism.
+                // In our examples these generally didnt help with debugging as the information was found elsewhere
+                // within the exception or the stacktrace
+                continue;
+                // if (isset($frame['args'])) {
+                //     $args = is_string($frame['args']) ? $frame['args'] : @json_encode($frame['args']);
+                // }
+                // else {
+                //     $args = array();
+                // }
+                // if (!empty($nextframe['class'])) {
+                //     $context['line'] = sprintf('%s%s%s(%s)',
+                //         $nextframe['class'], $nextframe['type'], $nextframe['function'],
+                //         $args);
+                // }
+                // else {
+                //     $context['line'] = sprintf('%s(%s)', $nextframe['function'], $args);
+                // }
+                // $abs_path = '';
+                // $context['prefix'] = '';
+                // $context['suffix'] = '';
+                // $context['filename'] = $filename = '[Anonymous function]';
+                // $context['lineno'] = 0;
             }
             else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
