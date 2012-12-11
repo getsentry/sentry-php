@@ -77,8 +77,11 @@ class Raven_ErrorHandler
         $this->call_existing_exception_handler = $call_existing_exception_handler;
     }
 
-    public function registerErrorHandler($call_existing_error_handler = true, $error_types = E_ALL)
+    public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
     {
+        if (null === $error_types) {
+            $error_types = E_ALL | E_STRICT;
+        }
         $this->old_error_handler = set_error_handler(array($this, 'handleError'), $error_types);
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
