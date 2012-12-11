@@ -18,6 +18,13 @@ raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
     // Capture an exception
     $event_id = $client->getIdent($client->captureException($ex));
 
+    // Provide some additional data with an exception
+    $event_id = $client->getIdent($client->captureException($ex, array(
+        'extra' => array(
+            'php_version' => phpversion()
+        ),
+    )));
+
     // Give the user feedback
     echo "Sorry, there was an error!";
     echo "Your reference ID is " . $event_id;

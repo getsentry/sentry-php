@@ -147,7 +147,7 @@ class Raven_Client
     /**
      * Log a message to sentry
      */
-    public function captureMessage($message, $params=array(), $level=self::INFO,
+    public function captureMessage($message, $params=array(), $level_or_options=array(),
                             $stack=false)
     {
         // Gracefully handle messages which contain formatting characters, but were not
@@ -158,43 +158,50 @@ class Raven_Client
             $formatted_message = $message;
         }
 
-        $data = array(
-            'message' => $formatted_message,
-            'level' => $level,
-            'sentry.interfaces.Message' => array(
-                'message' => $message,
-                'params' => $params,
-            )
+        if (!is_array($level_or_options)) {
+            $data = array(
+                'level' => $level_or_options,
+            );
+        } else {
+            $data = $level_or_options;
+        }
+
+        $data['message'] = $formatted_message;
+        $data['sentry.interfaces.Message'] = array(
+            'message' => $message,
+            'params' => $params,
         );
+
         return $this->capture($data, $stack);
     }
 
     /**
      * Log an exception to sentry
      */
-    public function captureException($exception, $culprit=null, $logger=null)
+    public function captureException($exception, $culprit_or_options=null, $logger=null)
     {
         $exc_message = $exception->getMessage();
         if (empty($exc_message)) {
             $exc_message = '<unknown exception>';
         }
 
-        $data = array(
-            'message' => $exc_message
-        );
+        if (!is_array($culprit_or_options)) {
+            $data = array(
+                'culprit' => $culprit_or_options,
+            );
+        } else {
+            $data = $culprit_or_options;
+        }
 
+        $data['message'] = $exc_message;
         $data['sentry.interfaces.Exception'] = array(
             'value' => $exc_message,
             'type' => get_class($exception),
             'module' => $exception->getFile() .':'. $exception->getLine(),
         );
 
-        if ($culprit){
-            $data["culprit"] = $culprit;
-        }
-
-        if ($logger){
-            $data["logger"] = $logger;
+        if ($logger !== null) {
+            $data['logger'] = $logger;
         }
 
         /**'sentry.interfaces.Exception'
@@ -206,7 +213,9 @@ class Raven_Client
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
         );
+
         array_unshift($trace, $frame_where_exception_thrown);
+
         return $this->capture($data, $trace);
     }
 
