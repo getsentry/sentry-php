@@ -42,6 +42,7 @@ class Raven_Client
         }
         $options = array_merge($options_or_dsn, $options);
 
+        $this->logger = Raven_Util::get($options, 'logger', 'php');
         $this->servers = Raven_Util::get($options, 'servers');
         $this->secret_key = Raven_Util::get($options, 'secret_key');
         $this->public_key = Raven_Util::get($options, 'public_key');
@@ -257,6 +258,7 @@ class Raven_Client
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
+            'logger' => $this->logger,
         ));
 
         if ($this->is_http_request()) {
@@ -281,10 +283,6 @@ class Raven_Client
 
         // TODO: allow tags to be specified per event
         $data['tags'] = $this->tags;
-
-        if (empty($data["logger"])){
-            $data["logger"] = 'php';
-        }
 
         if ($extra = $this->get_extra_data()) {
             $data["extra"] = $extra;
