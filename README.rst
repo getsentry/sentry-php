@@ -107,7 +107,7 @@ second parameter of the constructor, and is expected to be an array of key value
 
 A string to override the default value for the server's hostname.
 
-Defaults to ``Raven_Compat::gethostname()``
+Defaults to ``Raven_Compat::gethostname()``.
 
 ``tags``
 ~~~~~~~~
@@ -130,7 +130,15 @@ only be enabled if you need it for legacy compatibility.
 ``trace``
 ~~~~~~~~~
 
-Sets this to ``false`` to disable reflection tracing (fuction calling arguments) in stacktraces.
+Set this to ``false`` to disable reflection tracing (fuction calling arguments) in stacktraces.
+
+
+``logger``
+~~~~~~~~~~
+
+Adjust the default logger name for messages.
+
+Defaults to ``php``.
 
 
 Resources
