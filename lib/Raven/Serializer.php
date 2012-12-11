@@ -65,10 +65,12 @@ class Raven_Serializer
         } else if (is_integer($value)) {
             return (integer)$value;
         } else {
+            $value = (string)$value;
+
             if (function_exists('mb_convert_encoding')) {
                 $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
             }
-            return (string)$value;
+            return $value;
         }
     }
 }
