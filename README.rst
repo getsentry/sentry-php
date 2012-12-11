@@ -110,7 +110,7 @@ An array of tags to apply to events in this context.
 ::
 
     'tags' => array(
-        'php_version': phpversion(),
+        'php_version' => phpversion(),
     )
 
 ``signing``
