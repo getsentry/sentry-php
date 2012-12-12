@@ -13,7 +13,6 @@ class Raven_Stacktrace
         'require_once',
     );
 
-
     public static function get_stack_info($frames, $trace=false)
     {
         /**
@@ -50,8 +49,7 @@ class Raven_Stacktrace
                 // $context['suffix'] = '';
                 // $context['filename'] = $filename = '[Anonymous function]';
                 // $context['lineno'] = 0;
-            }
-            else {
+            } else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
                 $abs_path = $frame['file'];
                 $filename = basename($frame['file']);
@@ -84,7 +82,8 @@ class Raven_Stacktrace
         return array_reverse($result);
     }
 
-    public static function get_frame_context($frame) {
+    public static function get_frame_context($frame)
+    {
         // The reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
         if (!isset($frame['function'])) {
@@ -98,15 +97,11 @@ class Raven_Stacktrace
         if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
-        if (in_array($frame['function'], self::$statements))
-        {
-            if (empty($frame['args']))
-            {
+        if (in_array($frame['function'], self::$statements)) {
+            if (empty($frame['args'])) {
                 // No arguments
                 return array();
-            }
-            else
-            {
+            } else {
                 // Sanitize the file path
                 return array($frame['args'][0]);
             }
@@ -114,29 +109,21 @@ class Raven_Stacktrace
         if (isset($frame['class'])) {
             if (method_exists($frame['class'], $frame['function'])) {
                 $reflection = new ReflectionMethod($frame['class'], $frame['function']);
-            }
-            else
-            {
+            } else {
                 $reflection = new ReflectionMethod($frame['class'], '__call');
             }
-        }
-        else
-        {
+        } else {
             $reflection = new ReflectionFunction($frame['function']);
         }
 
         $params = $reflection->getParameters();
 
         $args = array();
-        foreach ($frame['args'] as $i => $arg)
-        {
-            if (isset($params[$i]))
-            {
+        foreach ($frame['args'] as $i => $arg) {
+            if (isset($params[$i])) {
                 // Assign the argument by the parameter name
                 $args[$params[$i]->name] = $arg;
-            }
-            else
-            {
+            } else {
                 // TODO: Sentry thinks of these as context locals, so they must be named
                 // Assign the argument by number
                 // $args[$i] = $arg;
@@ -178,31 +165,27 @@ class Raven_Stacktrace
             if ($fh === false) {
                 return $frame;
             }
-        }
-        catch (ErrorException $exc) {
+        } catch (ErrorException $exc) {
             return $frame;
         }
 
         $line = false;
         $cur_lineno = 0;
 
-        while(!feof($fh)) {
+        while (!feof($fh)) {
             $cur_lineno++;
             $line = rtrim(fgets($fh), "\r\n");
 
             if ($cur_lineno == $lineno) {
                 $frame['line'] = $line;
-            }
-            elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno <= ($context_lines + 1))
-            {
+            } elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno <= ($context_lines + 1)) {
                 $frame['prefix'][] = $line;
-            }
-            elseif ($lineno - $cur_lineno >= -$context_lines && $lineno - $cur_lineno < 0)
-            {
+            } elseif ($lineno - $cur_lineno >= -$context_lines && $lineno - $cur_lineno < 0) {
                 $frame['suffix'][] = $line;
             }
         }
         fclose($fh);
+
         return $frame;
     }
 }

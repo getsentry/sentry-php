@@ -26,7 +26,7 @@ class Raven_Client
     const ERROR = 'error';
     const FATAL = 'fatal';
 
-    function __construct($options_or_dsn=null, $options=array())
+    public function __construct($options_or_dsn=null, $options=array())
     {
         if (is_null($options_or_dsn) && !empty($_SERVER['SENTRY_DSN'])) {
             // Read from environment
@@ -47,14 +47,14 @@ class Raven_Client
         $this->secret_key = Raven_Util::get($options, 'secret_key');
         $this->public_key = Raven_Util::get($options, 'public_key');
         $this->project = Raven_Util::get($options, 'project', 1);
-        $this->auto_log_stacks = (bool)Raven_Util::get($options, 'auto_log_stacks', false);
+        $this->auto_log_stacks = (bool) Raven_Util::get($options, 'auto_log_stacks', false);
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
-        $this->trace = (bool)Raven_Util::get($options, 'trace', true);
+        $this->trace = (bool) Raven_Util::get($options, 'trace', true);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
-        $this->signing = (bool)Raven_Util::get($options, 'signing', false);
+        $this->signing = (bool) Raven_Util::get($options, 'signing', false);
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
@@ -68,9 +68,8 @@ class Raven_Client
     {
         return array(
             'Raven_SanitizeDataProcessor',
-        );        
+        );
     }
-
 
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
@@ -90,13 +89,11 @@ class Raven_Client
             if ($pos !== false) {
                 $path = substr($rawpath, 0, $pos);
                 $project = substr($rawpath, $pos + 1);
-            }
-            else {
+            } else {
                 $path = '';
                 $project = substr($rawpath, 1);
             }
-        }
-        else {
+        } else {
             $project = null;
             $path = '';
         }
@@ -105,6 +102,7 @@ class Raven_Client
         if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
             throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
         }
+
         return array(
             'servers'    => array(sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path)),
             'project'    => $project,
@@ -267,7 +265,7 @@ class Raven_Client
             'event_id' => $event_id,
             'project' => $this->project,
             'site' => $this->site,
-            'logger' => $this->logger, 
+            'logger' => $this->logger,
             'tags' => $this->tags,
         ));
 
@@ -319,7 +317,7 @@ class Raven_Client
     {
         $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
 
-        foreach($this->servers as $url) {
+        foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
             if ($this->signing) {
@@ -369,7 +367,7 @@ class Raven_Client
     private function send_http($url, $data, $headers=array())
     {
         $new_headers = array();
-        foreach($headers as $key => $value) {
+        foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
         }
         $parts = parse_url($url);
@@ -390,6 +388,7 @@ class Raven_Client
         } else {
             $this->_lasterror = null;
         }
+
         return $success;
     }
 
@@ -444,6 +443,7 @@ class Raven_Client
             // 48 bits for "node"
             mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff ), mt_rand( 0, 0xffff )
         );
+
         return str_replace('-', '', $uuid);
     }
 
@@ -459,6 +459,7 @@ class Raven_Client
 
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
 
@@ -467,6 +468,7 @@ class Raven_Client
         if (isset($_SERVER[$key])) {
             return $_SERVER[$key];
         }
+
         return '';
     }
 }

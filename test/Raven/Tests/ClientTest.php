@@ -213,7 +213,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($event['level'], $client::WARNING);
     }
 
-
     public function testCaptureMessageHandlesLevelAsThirdArg()
     {
         $client = new Dummy_Raven_Client();
@@ -263,7 +262,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $event = array_pop($events);
         $this->assertEquals($event['culprit'], 'test');
     }
-
 
     public function testCaptureExceptionHandlesCulpritAsSecondArg()
     {

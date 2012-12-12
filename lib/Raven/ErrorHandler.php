@@ -44,7 +44,7 @@ class Raven_ErrorHandler
     }
 
     public function handleError($code, $message, $file='', $line=0, $context=array())
-    {    
+    {
         $e = new ErrorException($message, 0, $code, $file, $line);
         $this->handleException($e, true);
 

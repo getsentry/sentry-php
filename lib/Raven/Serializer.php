@@ -15,7 +15,6 @@
  * limitations under the License.
 */
 
-
 /**
  * This helper is based on code from Facebook's Phabricator project
  *
@@ -35,11 +34,12 @@ class Raven_Serializer
     {
         if (is_object($value) || is_resource($value)) {
             return self::serializeValue($value);
-        } else if ($_depth < $max_depth && is_array($value)) {
+        } elseif ($_depth < $max_depth && is_array($value)) {
             $new = array();
             foreach ($value as $k=>$v) {
                 $new[self::serializeValue($k)] = self::serialize($v, $max_depth, $_depth + 1);
             }
+
             return $new;
         } else {
             return self::serializeValue($value);
@@ -50,26 +50,27 @@ class Raven_Serializer
     {
         if ($value === null) {
             return 'null';
-        } else if ($value === false) {
+        } elseif ($value === false) {
             return 'false';
-        } else if ($value === true) {
+        } elseif ($value === true) {
             return 'true';
-        } else if (is_float($value) && (int)$value == $value) {
+        } elseif (is_float($value) && (int) $value == $value) {
             return $value.'.0';
-        } else if (is_object($value)) {
+        } elseif (is_object($value)) {
             return 'Object '.get_class($value);
-        } else if (is_resource($value)) {
+        } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
-        } else if (is_array($value)) {
+        } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
-        } else if (is_integer($value)) {
-            return (integer)$value;
+        } elseif (is_integer($value)) {
+            return (integer) $value;
         } else {
-            $value = (string)$value;
+            $value = (string) $value;
 
             if (function_exists('mb_convert_encoding')) {
                 $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
             }
+
             return $value;
         }
     }
