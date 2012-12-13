@@ -156,7 +156,9 @@ class Raven_Client
             $formatted_message = $message;
         }
 
-        if (!is_array($level_or_options)) {
+        if ($level_or_options === null) {
+            $data = array();
+        } else if (!is_array($level_or_options)) {
             $data = array(
                 'level' => $level_or_options,
             );
