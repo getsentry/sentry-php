@@ -184,9 +184,10 @@ class Raven_Client
         }
 
         if (!is_array($culprit_or_options)) {
-            $data = array(
-                'culprit' => $culprit_or_options,
-            );
+            $data = array();
+            if ($culprit_or_options !== null) {
+                $data['culprit'] = $culprit_or_options;
+            }
         } else {
             $data = $culprit_or_options;
         }
