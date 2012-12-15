@@ -25,7 +25,7 @@ class Raven_Stacktrace
             $frame = $frames[$i];
             $nextframe = @$frames[$i + 1];
 
-            if (!isset($frame['file'])) {
+            if (!array_key_exists('file', $frame)) {
                 // XXX: Disable capturing of anonymous functions until we can implement a better grouping mechanism.
                 // In our examples these generally didnt help with debugging as the information was found elsewhere
                 // within the exception or the stacktrace
