@@ -40,7 +40,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
     {
         $stack = array(
             array(
-                "file" => __DIR__ . "/resources/a.php",
+                "file" => dirname(__FILE__) . "/resources/a.php",
                 "line" => 11,
                 "function" => "a_test",
                 "args"=> array(
@@ -48,7 +48,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
                 ),
             ),
             array(
-                "file" => __DIR__ . "/resources/b.php",
+                "file" => dirname(__FILE__) . "/resources/b.php",
                 "line" => 3,
                 "args"=> array(
                     "/tmp/a.php",
