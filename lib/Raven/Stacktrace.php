@@ -69,7 +69,7 @@ class Raven_Stacktrace
             $result[] = array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
-                'lineno' => $context['lineno'],
+                'lineno' => (int) $context['lineno'],
                 'module' => $module,
                 'function' => $nextframe['function'],
                 'vars' => $vars,
