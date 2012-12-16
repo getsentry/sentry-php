@@ -57,6 +57,7 @@ class Raven_Client
         $this->timeout = Raven_Util::get($options, 'timeout', 5);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
+        $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
         $this->signing = (bool) Raven_Util::get($options, 'signing', false);
@@ -338,7 +339,7 @@ class Raven_Client
         if (!empty($stack)) {
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace),
+                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace, $this->shift_vars),
                 );
             }
         }

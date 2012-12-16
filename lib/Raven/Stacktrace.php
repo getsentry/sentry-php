@@ -13,7 +13,7 @@ class Raven_Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, $trace=false)
+    public static function get_stack_info($frames, $trace=false, $shiftvars=true)
     {
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
@@ -61,7 +61,11 @@ class Raven_Stacktrace
             }
 
             if ($trace) {
-                $vars = self::get_frame_context($nextframe);
+                if ($shiftvars) {
+                    $vars = self::get_frame_context($nextframe);
+                } else {
+                    $vars = self::get_caller_frame_context($frame);
+                }
             } else {
                 $vars = array();
             }
@@ -80,6 +84,22 @@ class Raven_Stacktrace
         }
 
         return array_reverse($result);
+    }
+
+    public static function get_caller_frame_context($frame)
+    {
+        if (!isset($frame['args'])) {
+            return array();
+        }
+
+        $i = 1;
+        $args = array();
+        foreach ($frame['args'] as $arg) {
+            $args['param'.$i] = $arg;
+            $i++;
+        }
+        return $args;
+
     }
 
     public static function get_frame_context($frame)
