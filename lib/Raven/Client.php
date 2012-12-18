@@ -208,7 +208,7 @@ class Raven_Client
             $data['logger'] = $logger;
         }
 
-        $data["level"] = static::translateSeverity($exception->getSeverity());
+        $data["level"] = $this->translateSeverity($exception->getSeverity());
 
         /**'sentry.interfaces.Exception'
          * Exception::getTrace doesn't store the point at where the exception
