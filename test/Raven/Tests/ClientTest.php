@@ -205,23 +205,23 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
 
         $client->captureMessage('Test Message %s', array('foo'), array(
-            'level' => $client::WARNING,
+            'level' => Dummy_Raven_Client::WARNING,
         ));
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
-        $this->assertEquals($event['level'], $client::WARNING);
+        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
     }
 
     public function testCaptureMessageHandlesLevelAsThirdArg()
     {
         $client = new Dummy_Raven_Client();
 
-        $client->captureMessage('Test Message %s', array('foo'), $client::WARNING);
+        $client->captureMessage('Test Message %s', array('foo'), Dummy_Raven_Client::WARNING);
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
-        $this->assertEquals($event['level'], $client::WARNING);
+        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
     }
 
     public function testCaptureExceptionSetsInterfaces()
