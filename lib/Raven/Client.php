@@ -242,7 +242,7 @@ class Raven_Client
             'sentry.interfaces.Http' => array(
                 'method' => $this->_server_variable('REQUEST_METHOD'),
                 'url' => $this->get_current_url(),
-                'query_string' => $this->_server_variable('QUERY_STRNG'),
+                'query_string' => $this->_server_variable('QUERY_STRING'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
                 'headers' => getallheaders(),
