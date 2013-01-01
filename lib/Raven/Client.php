@@ -245,7 +245,7 @@ class Raven_Client
                 'query_string' => $this->_server_variable('QUERY_STRNG'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
-                'headers' => getallheaders(),
+                'headers' => $this->getallheaders(),
                 'env' => $_SERVER,
             )
         );
@@ -513,4 +513,22 @@ class Raven_Client
     public function registerSeverityMap($map) {
         $this->severity_map = $map;
     }
+    
+    protected function getallheaders()
+    {
+        if(function_exists('getallheaders')) {
+            return getallheaders();
+        }
+
+        $headers = array();
+        foreach ($_SERVER as $name => $value)
+        {
+            if (substr($name, 0, 5) == 'HTTP_')
+            {
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            }
+        }
+        return $headers;
+    }
+
 }
