@@ -231,6 +231,25 @@ class Raven_Client
         return $this->capture($data, $trace);
     }
 
+    /**
+     * Log an query to sentry
+     */
+    public function captureQuery($query, $level=self::INFO, $engine = '')
+    {
+        $data = array(
+            'message' => $query,
+            'level' => $level,
+            'sentry.interfaces.Query' => array(
+                'query' => $query
+            )
+        );
+
+        if ($engine !== '') {
+            $data['sentry.interfaces.Query']['engine'] = $engine;
+        }
+        return $this->capture($data, false);
+    }
+
     private function is_http_request()
     {
         return isset($_SERVER['REQUEST_METHOD']);
@@ -242,7 +261,7 @@ class Raven_Client
             'sentry.interfaces.Http' => array(
                 'method' => $this->_server_variable('REQUEST_METHOD'),
                 'url' => $this->get_current_url(),
-                'query_string' => $this->_server_variable('QUERY_STRNG'),
+                'query_string' => $this->_server_variable('QUERY_STRING'),
                 'data' => $_POST,
                 'cookies' => $_COOKIE,
                 'headers' => $this->getallheaders(),
