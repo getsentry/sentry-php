@@ -274,6 +274,17 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($event['culprit'], 'test');
     }
 
+    public function testCaptureExceptionHandlesExcludeOption()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'exclude' => array('Exception'),
+        ));
+        $ex = $this->create_exception();
+        $client->captureException($ex, 'test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 0);
+    }
+
     public function testDoesRegisterProcessors()
     {
         $client = new Dummy_Raven_Client(array(

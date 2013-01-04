@@ -54,6 +54,7 @@ class Raven_Client
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
+        $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
@@ -183,6 +184,10 @@ class Raven_Client
      */
     public function captureException($exception, $culprit_or_options=null, $logger=null)
     {
+        if (in_array(get_class($exception), $this->exclude)) {
+            return null;
+        }
+
         $exc_message = $exception->getMessage();
         if (empty($exc_message)) {
             $exc_message = '<unknown exception>';
