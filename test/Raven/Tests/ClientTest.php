@@ -22,6 +22,10 @@ class Dummy_Raven_Client extends Raven_Client
     {
         $this->__sent_events[] = $data;
     }
+    public function get_http_data()
+    {
+        return parent::get_http_data();
+    }
 }
 
 class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
@@ -308,5 +312,69 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $defaults = $client->getDefaultProcessors();
         $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
+    }
+
+    /**
+     * @backupGlobals
+     */
+    public function testGetHttpData()
+    {
+        $_SERVER = array(
+            'REDIRECT_STATUS'     => '200',
+            'CONTENT_TYPE'        => 'text/xml',
+            'CONTENT_LENGTH'      => '99',
+            'HTTP_HOST'           => 'getsentry.com',
+            'HTTP_ACCEPT'         => 'text/html',
+            'HTTP_ACCEPT_CHARSET' => 'utf-8',
+            'HTTP_COOKIE'         => 'cupcake: strawberry',
+            'HTTP_CONTENT_TYPE'   => 'text/html',
+            'HTTP_CONTENT_LENGTH' => '1000',
+            'SERVER_PORT'         => '443',
+            'SERVER_PROTOCOL'     => 'HTTP/1.1',
+            'REQUEST_METHOD'      => 'PATCH',
+            'QUERY_STRING'        => 'q=bitch&l=en',
+            'REQUEST_URI'         => '/welcome/',
+            'SCRIPT_NAME'         => '/index.php',
+        );
+        $_POST = array(
+            'stamp' => '1c',
+        );
+        $_COOKIE = array(
+            'donut' => 'chocolat',
+        );
+
+        $expected = array(
+            'sentry.interfaces.Http' => array(
+                'method' => 'PATCH',
+                'url' => 'https://getsentry.com/welcome/',
+                'query_string' => 'q=bitch&l=en',
+                'data' => array(
+                    'stamp'           => '1c',
+                ),
+                'cookies' => array(
+                    'donut'           => 'chocolat',
+                ),
+                'headers' => array(
+                    'Host'            => 'getsentry.com',
+                    'Accept'          => 'text/html',
+                    'Accept-Charset'  => 'utf-8',
+                    'Cookie'          => 'cupcake: strawberry',
+                    'Content-Type'    => 'text/xml',
+                    'Content-Length'  => '99',
+                ),
+                'env' => array(
+                    'REDIRECT_STATUS' => '200',
+                    'SERVER_PORT'     => '443',
+                    'SERVER_PROTOCOL' => 'HTTP/1.1',
+                    'REQUEST_METHOD'  => 'PATCH',
+                    'QUERY_STRING'    => 'q=bitch&l=en',
+                    'REQUEST_URI'     => '/welcome/',
+                    'SCRIPT_NAME'     => '/index.php',
+                ),
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $this->assertEquals($expected, $client->get_http_data());
     }
 }
