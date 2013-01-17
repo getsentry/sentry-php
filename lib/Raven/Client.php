@@ -538,8 +538,12 @@ class Raven_Client
             case E_USER_NOTICE:        return Raven_Client::INFO;
             case E_STRICT:             return Raven_Client::INFO;
             case E_RECOVERABLE_ERROR:  return Raven_Client::ERROR;
+        }
+        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+          switch ($severity) {
             case E_DEPRECATED:         return Raven_Client::WARN;
             case E_USER_DEPRECATED:    return Raven_Client::WARN;
+          }
         }
         return Raven_Client::ERROR;
     }
