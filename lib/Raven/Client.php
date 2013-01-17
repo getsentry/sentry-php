@@ -54,6 +54,7 @@ class Raven_Client
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
+        $this->timeout = Raven_Util::get($options, 'timeout', 5);
         $this->severity_map = NULL;
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
@@ -426,6 +427,8 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $this->timeout * 1000);
+        curl_setopt($curl, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
         $ret = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
