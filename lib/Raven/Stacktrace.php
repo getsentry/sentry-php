@@ -21,7 +21,7 @@ class Raven_Stacktrace
          * called, so we have to shift 'function' down by 1. Ugh.
          */
         $result = array();
-        for ($i = 0; $i < count($frames) - 1; $i++) {
+        for ($i = 0; $i < count($frames); $i++) {
             $frame = $frames[$i];
             $nextframe = @$frames[$i + 1];
 
