@@ -5,7 +5,7 @@
     "keywords": ["log", "logging"],
     "homepage": "http://getsentry.com",
     "version": "0.3.1",
-    "license": "Apache License 2",
+    "license": "BSD",
     "authors": [
         {
             "name": "David Cramer",
