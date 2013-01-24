@@ -34,9 +34,9 @@ class Raven_ErrorHandler
         $this->client = $client;
     }
 
-    public function handleException($e, $isError = false)
+    public function handleException($e, $isError = false, $vars = null)
     {
-        $e->event_id = $this->client->getIdent($this->client->captureException($e));
+        $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
 
         if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
@@ -49,7 +49,7 @@ class Raven_ErrorHandler
         if (!error_reporting()) { return; }
 
         $e = new ErrorException($message, 0, $code, $file, $line);
-        $this->handleException($e, true);
+        $this->handleException($e, true, $context);
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {
             call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);

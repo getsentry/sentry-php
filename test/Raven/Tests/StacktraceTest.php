@@ -73,6 +73,133 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
 
     }
 
+    public function testSimpleUnshiftedTrace()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . "/resources/a.php",
+                "line" => 11,
+                "function" => "a_test",
+                "args"=> array(
+                    "friend",
+                ),
+            ),
+            array(
+                "file" => dirname(__FILE__) . "/resources/b.php",
+                "line" => 3,
+                "args"=> array(
+                    "/tmp/a.php",
+                ),
+                "function" => "include_once",
+            ),
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, false);
+
+        $frame = $frames[0];
+        $this->assertEquals('b.php', $frame["module"]);
+        $this->assertEquals(3, $frame["lineno"]);
+        $this->assertNull($frame["function"]);
+        $this->assertEquals('/tmp/a.php', $frame['vars']['param1']);
+        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
+        $frame = $frames[1];
+        $this->assertEquals('a.php', $frame["module"]);
+        $this->assertEquals(11, $frame["lineno"]);
+        $this->assertEquals('include_once', $frame["function"]);
+        $this->assertEquals('friend', $frame['vars']['param1']);
+        $this->assertEquals('a_test($foo);', $frame["context_line"]);
+
+
+    }
+
+    public function testShiftedCaptureVars()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . "/resources/a.php",
+                "line" => 11,
+                "function" => "a_test",
+                "args"=> array(
+                    "friend",
+                ),
+            ),
+            array(
+                "file" => dirname(__FILE__) . "/resources/b.php",
+                "line" => 3,
+                "args"=> array(
+                    "/tmp/a.php",
+                ),
+                "function" => "include_once",
+            ),
+        );
+
+        $vars = array(
+            "foo" => "bar",
+            "baz" => "zoom"
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars);
+
+        $frame = $frames[0];
+        $this->assertEquals('b.php', $frame["module"]);
+        $this->assertEquals(3, $frame["lineno"]);
+        $this->assertNull($frame["function"]);
+        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
+        $this->assertEquals(array(), $frame['vars']);
+        $frame = $frames[1];
+        $this->assertEquals('a.php', $frame["module"]);
+        $this->assertEquals(11, $frame["lineno"]);
+        $this->assertEquals('include_once', $frame["function"]);
+        $this->assertEquals('a_test($foo);', $frame["context_line"]);
+        $this->assertEquals($vars, $frame['vars']);
+
+
+    }
+
+    public function testUnshiftedCaptureVars()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . "/resources/a.php",
+                "line" => 11,
+                "function" => "a_test",
+                "args"=> array(
+                    "friend",
+                ),
+            ),
+            array(
+                "file" => dirname(__FILE__) . "/resources/b.php",
+                "line" => 3,
+                "args"=> array(
+                    "/tmp/a.php",
+                ),
+                "function" => "include_once",
+            ),
+        );
+
+        $vars = array(
+            "foo" => "bar",
+            "baz" => "zoom"
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, false, $vars);
+
+        $frame = $frames[0];
+        $this->assertEquals('b.php', $frame["module"]);
+        $this->assertEquals(3, $frame["lineno"]);
+        $this->assertNull($frame["function"]);
+        $this->assertEquals(array('param1' => '/tmp/a.php'), $frame['vars']);
+        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
+        $frame = $frames[1];
+        $this->assertEquals('a.php', $frame["module"]);
+        $this->assertEquals(11, $frame["lineno"]);
+        $this->assertEquals('include_once', $frame["function"]);
+        $this->assertEquals($vars, $frame['vars']);
+        $this->assertEquals('a_test($foo);', $frame["context_line"]);
+
+
+    }
+
     public function testDoesFixFrameInfo()
     {
         /**

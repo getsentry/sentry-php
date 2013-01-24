@@ -57,6 +57,7 @@ class Raven_Client
         $this->timeout = Raven_Util::get($options, 'timeout', 5);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
+        $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
         $this->signing = (bool) Raven_Util::get($options, 'signing', false);
@@ -134,9 +135,9 @@ class Raven_Client
      * Deprecated
      */
     public function message($message, $params=array(), $level=self::INFO,
-                            $stack=false)
+                            $stack=false, $vars = null)
     {
-        return $this->captureMessage($message, $params, $level, $stack);
+        return $this->captureMessage($message, $params, $level, $stack, $vars);
     }
 
     /**
@@ -151,7 +152,7 @@ class Raven_Client
      * Log a message to sentry
      */
     public function captureMessage($message, $params=array(), $level_or_options=array(),
-                            $stack=false)
+                            $stack=false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
@@ -177,13 +178,13 @@ class Raven_Client
             'params' => $params,
         );
 
-        return $this->capture($data, $stack);
+        return $this->capture($data, $stack, $vars);
     }
 
     /**
      * Log an exception to sentry
      */
-    public function captureException($exception, $culprit_or_options=null, $logger=null)
+    public function captureException($exception, $culprit_or_options=null, $logger=null, $vars=null)
     {
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
@@ -234,7 +235,7 @@ class Raven_Client
 
         array_unshift($trace, $frame_where_exception_thrown);
 
-        return $this->capture($data, $trace);
+        return $this->capture($data, $trace, $vars);
     }
 
     /**
@@ -307,7 +308,7 @@ class Raven_Client
         return array();
     }
 
-    public function capture($data, $stack)
+    public function capture($data, $stack, $vars = null)
     {
         $event_id = $this->uuid4();
 
@@ -338,7 +339,7 @@ class Raven_Client
         if (!empty($stack)) {
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace),
+                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace, $this->shift_vars, $vars),
                 );
             }
         }
