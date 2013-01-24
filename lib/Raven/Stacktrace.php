@@ -158,33 +158,29 @@ class Raven_Stacktrace
         }
 
 
-        // Try to open the file. We wrap this in a try/catch block in case
-        // someone has modified the error_trigger to throw exceptions.
         try {
-            $fh = fopen($filename, 'r');
-            if ($fh === false) {
-                return $frame;
-            }
-        } catch (ErrorException $exc) {
+            $file = new SplFileObject($filename);
+            $target = max(0, ($lineno - ($context_lines + 1)));
+            $file->seek($target);
+            $cur_lineno = $target+1;
+            while (!$file->eof()) {
+                $line = rtrim($file->current(), "\r\n");
+                if ($cur_lineno == $lineno) {
+                    $frame['line'] = $line;
+                } elseif ($cur_lineno < $lineno) {
+                    $frame['prefix'][] = $line;
+                } elseif ($cur_lineno > $lineno) {
+                    $frame['suffix'][] = $line;
+                }
+                $cur_lineno++;
+                if ($cur_lineno > $lineno + $context_lines) {
+                    break;
+                }
+                $file->next();
+             }
+        } catch (RuntimeException $exc) {
             return $frame;
         }
-
-        $line = false;
-        $cur_lineno = 0;
-
-        while (!feof($fh)) {
-            $cur_lineno++;
-            $line = rtrim(fgets($fh), "\r\n");
-
-            if ($cur_lineno == $lineno) {
-                $frame['line'] = $line;
-            } elseif ($lineno - $cur_lineno > 0 && $lineno - $cur_lineno <= ($context_lines + 1)) {
-                $frame['prefix'][] = $line;
-            } elseif ($lineno - $cur_lineno >= -$context_lines && $lineno - $cur_lineno < 0) {
-                $frame['suffix'][] = $line;
-            }
-        }
-        fclose($fh);
 
         return $frame;
     }
