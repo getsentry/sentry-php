@@ -2,37 +2,37 @@ raven-php
 =========
 
 .. image:: https://secure.travis-ci.org/getsentry/raven-php.png?branch=master
-   :target: http://travis-ci.org/getsentry/raven-php
+	 :target: http://travis-ci.org/getsentry/raven-php
 
 
 raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
 
 ::
 
-    // Instantiate a new client with a compatible DSN
-    $client = new Raven_Client('http://public:secret@example.com/1');
+		// Instantiate a new client with a compatible DSN
+		$client = new Raven_Client('http://public:secret@example.com/1');
 
-    // Capture a message
-    $event_id = $client->getIdent($client->captureMessage('my log message'));
+		// Capture a message
+		$event_id = $client->getIdent($client->captureMessage('my log message'));
 
-    // Capture an exception
-    $event_id = $client->getIdent($client->captureException($ex));
+		// Capture an exception
+		$event_id = $client->getIdent($client->captureException($ex));
 
-    // Provide some additional data with an exception
-    $event_id = $client->getIdent($client->captureException($ex, array(
-        'extra' => array(
-            'php_version' => phpversion()
-        ),
-    )));
+		// Provide some additional data with an exception
+		$event_id = $client->getIdent($client->captureException($ex, array(
+				'extra' => array(
+						'php_version' => phpversion()
+				),
+		)));
 
-    // Give the user feedback
-    echo "Sorry, there was an error!";
-    echo "Your reference ID is " . $event_id;
+		// Give the user feedback
+		echo "Sorry, there was an error!";
+		echo "Your reference ID is " . $event_id;
 
-    // Install error handlers
-    $error_handler = new Raven_ErrorHandler($client);
-    $error_handler->registerExceptionHandler();
-    $error_handler->registerErrorHandler();
+		// Install error handlers
+		$error_handler = new Raven_ErrorHandler($client);
+		$error_handler->registerExceptionHandler();
+		$error_handler->registerErrorHandler();
 
 Installation
 ------------
@@ -45,21 +45,21 @@ dependencies, you can add Raven with it.
 
 ::
 
-    {
-        "require": {
-            "raven/raven": ">=0.2.0"
-        }
-    }
+		{
+				"require": {
+						"raven/raven": ">=0.2.0"
+				}
+		}
 
 or to get the latest version off the master branch:
 
 ::
 
-    {
-        "require": {
-            "raven/raven": "dev-master"
-        }
-    }
+		{
+				"require": {
+						"raven/raven": "dev-master"
+				}
+		}
 
 
 Install source from GitHub
@@ -69,27 +69,27 @@ To install the source code:
 
 ::
 
-    $ git clone git://github.com/getsentry/raven-php.git
+		$ git clone git://github.com/getsentry/raven-php.git
 
 And include it in your scripts:
 
 ::
 
-    require_once '/path/to/Raven/library/Raven.php';
+		require_once '/path/to/Raven/library/Raven.php';
 
 Or, alternatively use the autoloader:
 
 ::
 
-    require_once '/path/to/Raven/library/Raven/Autoloader.php';
-    Raven_Autoloader::register();
+		require_once '/path/to/Raven/library/Raven/Autoloader.php';
+		Raven_Autoloader::register();
 
 Or, if you're using `Composer <https://github.com/composer/composer>`_:
 
 ::
 
-    require_once 'vendor/autoload.php';
-    
+		require_once 'vendor/autoload.php';
+
 Configuration
 -------------
 
@@ -98,9 +98,9 @@ second parameter of the constructor, and is expected to be an array of key value
 
 ::
 
-    $client = new Raven_Client($dsn, array(
-        'option_name' => 'value',
-    ));
+		$client = new Raven_Client($dsn, array(
+				'option_name' => 'value',
+		));
 
 ``name``
 ~~~~~~~~
@@ -116,9 +116,9 @@ An array of tags to apply to events in this context.
 
 ::
 
-    'tags' => array(
-        'php_version' => phpversion(),
-    )
+		'tags' => array(
+				'php_version' => phpversion(),
+		)
 
 ``signing``
 ~~~~~~~~~~~
@@ -147,4 +147,4 @@ Resources
 * `Bug Tracker <http://github.com/getsentry/raven-php/issues>`_
 * `Code <http://github.com/getsentry/raven-php>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
-* `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)
+* `IRC <irc://irc.freenode.net/sentry>`_	(irc.freenode.net, #sentry)

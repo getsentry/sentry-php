@@ -7,42 +7,42 @@ Raven_Autoloader::register();
 
 function raven_cli_test($command, $args)
 {
-    // Do something silly
-    try {
-        throw new Exception('This is a test exception sent from the Raven CLI.');
-    } catch (Exception $ex) {
-        return $ex;
-    }
+		// Do something silly
+		try {
+				throw new Exception('This is a test exception sent from the Raven CLI.');
+		} catch (Exception $ex) {
+				return $ex;
+		}
 }
 
 function main()
 {
-    global $argv;
+		global $argv;
 
-    $dsn = $argv[2];
-    // Parse DSN as a test
-    try {
-        $parsed = Raven_Client::parseDSN($dsn);
-    } catch (InvalidArgumentException $ex) {
-        exit("There was an error parsing your DSN:\n  " . $ex->getMessage());
-    }
+		$dsn = $argv[2];
+		// Parse DSN as a test
+		try {
+				$parsed = Raven_Client::parseDSN($dsn);
+		} catch (InvalidArgumentException $ex) {
+				exit("There was an error parsing your DSN:\n	" . $ex->getMessage());
+		}
 
-    $client = new Raven_Client($dsn, array(
-        'trace' => true,
-    ));
+		$client = new Raven_Client($dsn, array(
+				'trace' => true,
+		));
 
-    $ex = raven_cli_test("command name", array("foo" => "bar"));
-    $client->captureException($ex);
+		$ex = raven_cli_test("command name", array("foo" => "bar"));
+		$client->captureException($ex);
 
-    $last_error = $client->getLastError();
-    if (!empty($last_error)) {
-        exit("There was an error sending the test event:\n  " . $last_error);
-    }
+		$last_error = $client->getLastError();
+		if (!empty($last_error)) {
+				exit("There was an error sending the test event:\n	" . $last_error);
+		}
 }
 
 
 if (count($argv) != 3) {
-    exit('Usage: raven test <dsn>');
+		exit('Usage: raven test <dsn>');
 }
 
 main();

@@ -7,31 +7,31 @@
  */
 class Raven_SanitizeDataProcessor extends Raven_Processor
 {
-    const MASK = '********';
-    const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
-    const VALUES_RE = '/^\d{16}$/';
+		const MASK = '********';
+		const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
+		const VALUES_RE = '/^\d{16}$/';
 
-    public function sanitize(&$item, $key)
-    {
-        if (empty($item)) {
-            return;
-        }
+		public function sanitize(&$item, $key)
+		{
+				if (empty($item)) {
+						return;
+				}
 
-        if (preg_match(self::VALUES_RE, $item)) {
-            $item = self::MASK;
-        }
+				if (preg_match(self::VALUES_RE, $item)) {
+						$item = self::MASK;
+				}
 
-        if (empty($key)) {
-            return;
-        }
+				if (empty($key)) {
+						return;
+				}
 
-        if (preg_match(self::FIELDS_RE, $key)) {
-            $item = self::MASK;
-        }
-    }
+				if (preg_match(self::FIELDS_RE, $key)) {
+						$item = self::MASK;
+				}
+		}
 
-    public function process(&$data)
-    {
-        array_walk_recursive($data, array($this, 'sanitize'));
-    }
+		public function process(&$data)
+		{
+				array_walk_recursive($data, array($this, 'sanitize'));
+		}
 }

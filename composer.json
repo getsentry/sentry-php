@@ -1,29 +1,29 @@
 {
-    "name": "raven/raven",
-    "type": "library",
-    "description": "A PHP client for Sentry (http://getsentry.com)",
-    "keywords": ["log", "logging"],
-    "homepage": "http://getsentry.com",
-    "version": "0.4.0",
-    "license": "BSD",
-    "authors": [
-        {
-            "name": "David Cramer",
-            "email": "dcramer@gmail.com"
-        }
-    ],
-    "require-dev": {
-        "phpunit/phpunit": "3.7.*"
-    },
-    "require": {
-        "php": ">=5.2.4"
-    },
-    "bin": [
-        "bin/raven"
-    ],
-    "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
-        }
-    }
+		"name": "raven/raven",
+		"type": "library",
+		"description": "A PHP client for Sentry (http://getsentry.com)",
+		"keywords": ["log", "logging"],
+		"homepage": "http://getsentry.com",
+		"version": "0.4.0",
+		"license": "BSD",
+		"authors": [
+				{
+						"name": "David Cramer",
+						"email": "dcramer@gmail.com"
+				}
+		],
+		"require-dev": {
+				"phpunit/phpunit": "3.7.*"
+		},
+		"require": {
+				"php": ">=5.2.4"
+		},
+		"bin": [
+				"bin/raven"
+		],
+		"autoload": {
+				"psr-0" : {
+						"Raven_" : "lib/"
+				}
+		}
 }
