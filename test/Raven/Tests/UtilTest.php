@@ -11,22 +11,22 @@
 
 class Raven_StacktraceTestObject
 {
-    private $foo = 'bar';
+		private $foo = 'bar';
 }
 
 class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
 {
-    public function testGetReturnsDefaultOnMissing()
-    {
-        $input = array('foo' => 'bar');
-        $result = Raven_Util::get($input, 'baz', 'foo');
-        $this->assertEquals($result, 'foo');
-    }
+		public function testGetReturnsDefaultOnMissing()
+		{
+				$input = array('foo' => 'bar');
+				$result = Raven_Util::get($input, 'baz', 'foo');
+				$this->assertEquals($result, 'foo');
+		}
 
-    public function testGetReturnsPresentValuesEvenWhenEmpty()
-    {
-        $input = array('foo' => '');
-        $result = Raven_Util::get($input, 'foo', 'bar');
-        $this->assertEquals($result, '');
-    }
+		public function testGetReturnsPresentValuesEvenWhenEmpty()
+		{
+				$input = array('foo' => '');
+				$result = Raven_Util::get($input, 'foo', 'bar');
+				$this->assertEquals($result, '');
+		}
 }

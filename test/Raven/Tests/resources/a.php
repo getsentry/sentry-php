@@ -3,8 +3,8 @@
 
 function a_test($str)
 {
-    echo "\nHi: $str";
-    var_dump(debug_backtrace());
+		echo "\nHi: $str";
+		var_dump(debug_backtrace());
 }
 
 $foo = 'friend';
