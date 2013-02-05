@@ -56,7 +56,7 @@ class Raven_Serializer
             return 'true';
         } elseif (is_float($value) && (int) $value == $value) {
             return $value.'.0';
-        } elseif (is_object($value)) {
+        } elseif (is_object($value) || gettype($value) == 'object') {
             return 'Object '.get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
