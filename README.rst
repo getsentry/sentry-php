@@ -71,13 +71,7 @@ To install the source code:
 
     $ git clone git://github.com/getsentry/raven-php.git
 
-And include it in your scripts:
-
-::
-
-    require_once '/path/to/Raven/library/Raven.php';
-
-Or, alternatively use the autoloader:
+And including it using the autoloader:
 
 ::
 
