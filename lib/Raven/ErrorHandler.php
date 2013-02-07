@@ -28,16 +28,23 @@ class Raven_ErrorHandler
     private $old_error_handler;
     private $call_existing_error_handler = false;
     private $reservedMemory;
+    private $send_errors_last = false;
 
-    public function __construct($client)
+    public function __construct($client, $send_errors_last = false)
     {
         $this->client = $client;
+        register_shutdown_function(array($this, 'detectShutdown'));
+        if($send_errors_last){
+            $this->send_errors_last = true;
+            $this->client->store_errors_for_bulk_send = true;
+            register_shutdown_function(array($this->client, 'sendUnsentErrors'));
+        }
     }
 
     public function handleException($e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
-
+        
         if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
         }
@@ -95,5 +102,9 @@ class Raven_ErrorHandler
         register_shutdown_function(array($this, 'handleFatalError'));
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
+    }
+    
+    public function detectShutdown() {
+        define('RAVEN_CLIENT_END_REACHED', true);
     }
 }

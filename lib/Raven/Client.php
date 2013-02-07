@@ -1,5 +1,6 @@
 <?php
 
+
 /*
  * This file is part of Raven.
  *
@@ -27,6 +28,8 @@ class Raven_Client
     const FATAL = 'fatal';
 
     var $severity_map;
+
+    var $store_errors_for_bulk_send = false;
 
     public function __construct($options_or_dsn=null, $options=array())
     {
@@ -350,8 +353,15 @@ class Raven_Client
 
         $this->sanitize($data);
         $this->process($data);
-
-        $this->send($data);
+        
+        if(!$this->store_errors_for_bulk_send){
+            $this->send($data);
+        }else{
+            if(empty($this->error_data)){
+                $this->error_data = array();
+            }
+            $this->error_data[] = $data;
+        }
 
         return $event_id;
     }
@@ -365,6 +375,19 @@ class Raven_Client
     {
         foreach ($this->processors as $processor) {
             $processor->process($data);
+        }
+    }
+    
+    public function sendUnsentErrors(){
+        if(!empty($this->error_data)){
+            foreach($this->error_data as $data){
+                $this->send($data);
+            }
+            unset($this->error_data);
+        }
+        if($this->store_errors_for_bulk_send){
+            //incase an error occurs after this is called, on shutdown, send any new errors.
+            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED'); 
         }
     }
 
