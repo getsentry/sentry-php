@@ -433,8 +433,8 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $this->timeout * 1000);
-        curl_setopt($curl, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
         $ret = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
