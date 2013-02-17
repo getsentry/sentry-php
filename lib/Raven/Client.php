@@ -18,7 +18,7 @@
 
 class Raven_Client
 {
-    const VERSION = '0.4.0';
+    const VERSION = '0.5.0';
 
     const DEBUG = 'debug';
     const INFO = 'info';
