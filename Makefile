@@ -1,4 +1,7 @@
 .PHONY: test
 
+develop:
+	composer install --dev
+
 test:
-	phpunit
+	vendor/bin/phpunit
