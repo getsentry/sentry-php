@@ -325,6 +325,19 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
     }
 
+    public function testGetDefaultData() {
+        $client = new Dummy_Raven_Client();
+        $expected = array(
+            'platform' => 'php',
+            'project' => $client->project,
+            'server_name' => $client->name,
+            'site' => $client->site,
+            'logger' => $client->logger,
+            'tags' => $client->tags,
+        );
+        $this->assertEquals($expected, $client->get_default_data());
+    }
+
     /**
      * @backupGlobals
      */

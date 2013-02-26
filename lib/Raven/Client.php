@@ -311,6 +311,18 @@ class Raven_Client
         return array();
     }
 
+    public function get_default_data()
+    {
+        return array(
+            'server_name' => $this->name,
+            'project' => $this->project,
+            'site' => $this->site,
+            'logger' => $this->logger,
+            'tags' => $this->tags,
+            'platform' => 'php',
+        );
+    }
+
     public function capture($data, $stack, $vars = null)
     {
         $event_id = $this->uuid4();
@@ -318,14 +330,8 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
-        $data = array_merge($data, array(
-            'server_name' => $this->name,
-            'event_id' => $event_id,
-            'project' => $this->project,
-            'site' => $this->site,
-            'logger' => $this->logger,
-            'tags' => $this->tags,
-        ));
+        $data = array_merge($data, $this->get_default_data());
+        $data['event_id'] = $event_id;
 
         if ($this->is_http_request()) {
             $data = array_merge($data, $this->get_http_data());
