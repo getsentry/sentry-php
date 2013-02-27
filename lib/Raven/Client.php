@@ -399,8 +399,12 @@ class Raven_Client
 
     public function send($data)
     {
-        $message = base64_encode(gzcompress(Raven_Compat::json_encode($data)));
-
+        $message = Raven_Compat::json_encode($data);
+        
+        if (function_exists("gzcompress")) {
+            $message = base64_encode(gzcompress($message));
+        }
+        
         foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
