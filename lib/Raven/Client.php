@@ -396,10 +396,8 @@ class Raven_Client
         $message = Raven_Compat::json_encode($data);
         
         if (function_exists("gzcompress")) {
-            $message = gzcompress($message);
+            $message = base64_encode(gzcompress($message));
         }
-        
-        $message = base64_encode($message);
         
         foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
