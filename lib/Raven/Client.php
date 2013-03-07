@@ -601,11 +601,10 @@ class Raven_Client
         $this->severity_map = $map;
     }
 
-    public function set_user_data($is_authenticated, $id=null, $data=null) {
-        $this->user = array(
-            "is_authenticated" => $is_authenticated,
-            "id"               => $id,
-            "data"             => $data
-        );
+    public function set_user_data($id, $email=null, $data=array()) {
+        $this->user = array_merge(array(
+            "id"    => $id,
+            "email" => $email
+        ), $data);
     }
 }
