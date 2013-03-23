@@ -330,12 +330,12 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
-        $data = array_merge($data, $this->get_default_data());
+        $data = array_merge($this->get_default_data(), $data);
         $data['event_id'] = $event_id;
 
         if ($this->is_http_request()) {
-            $data = array_merge($data, $this->get_http_data());
-            $data = array_merge($data, $this->get_user_data());
+            $data = array_merge($this->get_http_data(), $data);
+            $data = array_merge($this->get_user_data(), $data);
         }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === True) {
