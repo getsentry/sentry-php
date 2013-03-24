@@ -82,7 +82,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testParseDsnInvalidScheme()
     {
         try {
-            $result = Raven_Client::parseDsn('gopher://public:secret@/1');
+            Raven_Client::parseDsn('gopher://public:secret@/1');
             $this->fail();
         } catch (Exception $e) {
             return;
@@ -92,7 +92,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testParseDsnMissingNetloc()
     {
         try {
-            $result = Raven_Client::parseDsn('http://public:secret@/1');
+            Raven_Client::parseDsn('http://public:secret@/1');
             $this->fail();
         } catch (Exception $e) {
             return;
@@ -102,7 +102,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testParseDsnMissingProject()
     {
         try {
-            $result = Raven_Client::parseDsn('http://public:secret@example.com');
+            Raven_Client::parseDsn('http://public:secret@example.com');
             $this->fail();
         } catch (Exception $e) {
             return;
@@ -114,14 +114,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testParseDsnMissingPublicKey()
     {
-        $result = Raven_Client::parseDsn('http://:secret@example.com/1');
+        Raven_Client::parseDsn('http://:secret@example.com/1');
     }
     /**
      * @expectedException InvalidArgumentException
      */
     public function testParseDsnMissingSecretKey()
     {
-        $result = Raven_Client::parseDsn('http://public@example.com/1');
+        Raven_Client::parseDsn('http://public@example.com/1');
     }
 
     public function testDsnFirstArgument()
