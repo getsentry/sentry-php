@@ -130,7 +130,7 @@ class Raven_Client
      */
     public function getIdent($ident)
     {
-        // XXX: We dont calculate checksums yet, so we only have the ident.
+        // XXX: We don't calculate checksums yet, so we only have the ident.
         return $ident;
     }
 
@@ -392,7 +392,7 @@ class Raven_Client
             unset($this->error_data);
         }
         if($this->store_errors_for_bulk_send){
-            //incase an error occurs after this is called, on shutdown, send any new errors.
+            //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED'); 
         }
     }

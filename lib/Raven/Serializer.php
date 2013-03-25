@@ -20,7 +20,7 @@
  *
  *   https://github.com/facebook/phabricator
  *
- * Specifically, it is an adapation of the PhutilReadableSerializer class.
+ * Specifically, it is an adaptation of the PhutilReadableSerializer class.
  *
  * @package raven
  */
@@ -36,7 +36,7 @@ class Raven_Serializer
             return self::serializeValue($value);
         } elseif ($_depth < $max_depth && is_array($value)) {
             $new = array();
-            foreach ($value as $k=>$v) {
+            foreach ($value as $k => $v) {
                 $new[self::serializeValue($k)] = self::serialize($v, $max_depth, $_depth + 1);
             }
 
