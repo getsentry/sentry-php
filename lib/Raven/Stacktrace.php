@@ -27,7 +27,7 @@ class Raven_Stacktrace
 
             if (!array_key_exists('file', $frame)) {
                 // XXX: Disable capturing of anonymous functions until we can implement a better grouping mechanism.
-                // In our examples these generally didnt help with debugging as the information was found elsewhere
+                // In our examples these generally didn't help with debugging as the information was found elsewhere
                 // within the exception or the stacktrace
                 continue;
                 // if (isset($frame['args'])) {

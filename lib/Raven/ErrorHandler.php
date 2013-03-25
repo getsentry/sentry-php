@@ -34,7 +34,7 @@ class Raven_ErrorHandler
     {
         $this->client = $client;
         register_shutdown_function(array($this, 'detectShutdown'));
-        if($send_errors_last){
+        if ($send_errors_last) {
             $this->send_errors_last = true;
             $this->client->store_errors_for_bulk_send = true;
             register_shutdown_function(array($this->client, 'sendUnsentErrors'));
@@ -50,9 +50,8 @@ class Raven_ErrorHandler
         }
     }
 
-    public function handleError($code, $message, $file='', $line=0, $context=array())
+    public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
-
         if (!error_reporting()) { return; }
 
         $e = new ErrorException($message, 0, $code, $file, $line);
