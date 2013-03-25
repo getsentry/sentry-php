@@ -12,7 +12,7 @@ class Raven_Processor
     }
 
     /**
-     * Process and sanitize data, modifying the existing value if nescesary.
+     * Process and sanitize data, modifying the existing value if necessary.
      */
     public function process(&$data)
     {

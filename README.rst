@@ -125,7 +125,7 @@ only be enabled if you need it for legacy compatibility.
 ``trace``
 ~~~~~~~~~
 
-Set this to ``false`` to disable reflection tracing (fuction calling arguments) in stacktraces.
+Set this to ``false`` to disable reflection tracing (function calling arguments) in stacktraces.
 
 
 ``logger``
