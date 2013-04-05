@@ -353,8 +353,8 @@ class Raven_Client
             }
         }
 
-        if ($extra = $this->get_extra_data()) {
-            $data["extra"] = $extra;
+        if (!isset($data['extra'])) {
+            $data["extra"] = $this->get_extra_data();
         }
 
         $this->sanitize($data);

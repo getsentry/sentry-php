@@ -210,11 +210,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'), array(
             'level' => Dummy_Raven_Client::WARNING,
+            'extra' => array('foo' => 'bar')
         ));
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
         $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
+        $this->assertEquals($event['extra']['foo'], 'bar');
     }
 
     public function testCaptureMessageHandlesLevelAsThirdArg()
