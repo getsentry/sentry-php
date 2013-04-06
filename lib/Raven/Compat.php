@@ -53,7 +53,8 @@ class Raven_Compat
             $key = str_pad($key, $size, chr(0x00));
         }
 
-        for ($i = 0; $i < strlen($key) - 1; $i++) {
+        $keyLastPos = strlen($key) - 1;
+        for ($i = 0; $i < $keyLastPos; $i++) {
             $opad[$i] = $opad[$i] ^ $key[$i];
             $ipad[$i] = $ipad[$i] ^ $key[$i];
         }
