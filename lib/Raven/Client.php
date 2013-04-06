@@ -298,7 +298,7 @@ class Raven_Client
 
     protected function get_user_data()
     {
-        if ($this->user === null) {
+        if ($this->_user === null) {
             return array(
                 'sentry.interfaces.User' => array(
                     'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
@@ -308,7 +308,7 @@ class Raven_Client
             );
         } else {
             return array(
-                'sentry.interfaces.User' => $this->user
+                'sentry.interfaces.User' => $this->_user
             );
         }
     }
@@ -601,7 +601,7 @@ class Raven_Client
     }
 
     public function set_user_data($id, $email=null, $data=array()) {
-        $this->user = array_merge(array(
+        $this->_user = array_merge(array(
             "id"    => $id,
             "email" => $email
         ), $data);
