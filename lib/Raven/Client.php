@@ -71,6 +71,7 @@ class Raven_Client
         }
 
         $this->_lasterror = null;
+        $this->_user = null;
     }
 
     public static function getDefaultProcessors()
@@ -297,13 +298,19 @@ class Raven_Client
 
     protected function get_user_data()
     {
-        return array(
-            'sentry.interfaces.User' => array(
-                'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
-                'id' => session_id(),
-                'data' => isset($_SESSION) ? $_SESSION : null,
-            )
-        );
+        if ($this->user === null) {
+            return array(
+                'sentry.interfaces.User' => array(
+                    'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
+                    'id' => session_id(),
+                    'data' => isset($_SESSION) ? $_SESSION : null,
+                )
+            );
+        } else {
+            return array(
+                'sentry.interfaces.User' => $this->user
+            );
+        }
     }
 
     protected function get_extra_data()
@@ -591,5 +598,12 @@ class Raven_Client
 
     public function registerSeverityMap($map) {
         $this->severity_map = $map;
+    }
+
+    public function set_user_data($id, $email=null, $data=array()) {
+        $this->user = array_merge(array(
+            "id"    => $id,
+            "email" => $email
+        ), $data);
     }
 }
