@@ -66,7 +66,7 @@ class Raven_Client
         $this->signing = (bool) Raven_Util::get($options, 'signing', false);
 
         $this->processors = array();
-        foreach (Raven_util::get($options, 'processors', $this->getDefaultProcessors()) as $processor) {
+        foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
             $this->processors[] = new $processor($this);
         }
 

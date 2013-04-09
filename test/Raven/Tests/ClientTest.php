@@ -317,13 +317,15 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testDefaultProcessorsAreUsed()
     {
         $client = new Dummy_Raven_Client();
-        $this->assertEquals(count($client->processors), count($client->getDefaultProcessors()));
+        $defaults = Dummy_Raven_Client::getDefaultProcessors();
+        
+        $this->assertEquals(count($client->processors), count($defaults));
     }
 
     public function testDefaultProcessorsContainSanitizeDataProcessor()
     {
-        $client = new Dummy_Raven_Client();
-        $defaults = $client->getDefaultProcessors();
+        $defaults = Dummy_Raven_Client::getDefaultProcessors();
+        
         $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
     }
 
