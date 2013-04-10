@@ -23,7 +23,7 @@ class Raven_Stacktrace
         $result = array();
         for ($i = 0; $i < count($frames); $i++) {
             $frame = $frames[$i];
-            $nextframe = @$frames[$i + 1];
+            $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
 
             if (!array_key_exists('file', $frame)) {
                 // XXX: Disable capturing of anonymous functions until we can implement a better grouping mechanism.
