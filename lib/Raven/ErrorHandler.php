@@ -104,6 +104,8 @@ class Raven_ErrorHandler
     }
     
     public function detectShutdown() {
-        @define('RAVEN_CLIENT_END_REACHED', true);
+        if (!defined('RAVEN_CLIENT_END_REACHED')) {
+            define('RAVEN_CLIENT_END_REACHED', true);
+        }
     }
 }
