@@ -155,7 +155,7 @@ class Raven_Client
     /**
      * Log a message to sentry
      */
-    public function captureMessage($message, $params=array(), $level_or_options=array(),
+    public function captureMessage($message, $tags=array(), $params=array(), $level_or_options=array(),
                             $stack=false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
@@ -177,6 +177,7 @@ class Raven_Client
         }
 
         $data['message'] = $formatted_message;
+        $data['tags'] = $tags;
         $data['sentry.interfaces.Message'] = array(
             'message' => $message,
             'params' => $params,
@@ -188,7 +189,7 @@ class Raven_Client
     /**
      * Log an exception to sentry
      */
-    public function captureException($exception, $culprit_or_options=null, $logger=null, $vars=null)
+    public function captureException($exception, $tags = array(), $culprit_or_options=null, $logger=null, $vars=null)
     {
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
@@ -208,6 +209,7 @@ class Raven_Client
             $data = $culprit_or_options;
         }
 
+        $data['tags'] = $tags;
         $data['message'] = $exc_message;
         $data['sentry.interfaces.Exception'] = array(
             'value' => $exc_message,
@@ -337,7 +339,7 @@ class Raven_Client
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
 
-        $data = array_merge($this->get_default_data(), $data);
+        $data = array_merge_recursive($this->get_default_data(), $data);
         $data['event_id'] = $event_id;
 
         if ($this->is_http_request()) {
