@@ -61,6 +61,7 @@ class Raven_Client
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
+        $this->use_as_failover = (bool) Raven_Util::get($options, 'use_as_failover', false);
 
         // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
         $this->signing = (bool) Raven_Util::get($options, 'signing', false);
@@ -429,7 +430,11 @@ class Raven_Client
                 'Content-Type' => 'application/octet-stream'
             );
 
-            $this->send_remote($url, $message, $headers);
+            $success = $this->send_remote($url, $message, $headers);
+
+            if ($success && $this->use_as_failover) {
+                break;
+            }
         }
     }
 
@@ -450,10 +455,15 @@ class Raven_Client
         $raw_data = $headers."\n\n".$data;
 
         $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
+        $success = @socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
+        if ($success === false) {
+            $this->_lasterror = socket_last_error($sock);
+        } else {
+            $success = true;
+        }
         socket_close($sock);
 
-        return true;
+        return $success;
     }
 
     /**
