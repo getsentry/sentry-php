@@ -4,7 +4,7 @@
     "description": "A PHP client for Sentry (http://getsentry.com)",
     "keywords": ["log", "logging"],
     "homepage": "http://getsentry.com",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "license": "BSD",
     "authors": [
         {
