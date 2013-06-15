@@ -406,6 +406,10 @@ class Raven_Client
 
     public function send($data)
     {
+        if (!$this->servers) {
+            return;
+        }
+
         $message = Raven_Compat::json_encode($data);
         
         if (function_exists("gzcompress")) {
