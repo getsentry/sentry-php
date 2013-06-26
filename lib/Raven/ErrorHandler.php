@@ -52,7 +52,7 @@ class Raven_ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
-        if (!error_reporting()) { return; }
+        if (!(error_reporting() & $code)) { return; }
 
         $e = new ErrorException($message, 0, $code, $file, $line);
         $this->handleException($e, true, $context);
