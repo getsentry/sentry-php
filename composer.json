@@ -4,7 +4,6 @@
     "description": "A PHP client for Sentry (http://getsentry.com)",
     "keywords": ["log", "logging"],
     "homepage": "http://getsentry.com",
-    "version": "0.6.0",
     "license": "BSD",
     "authors": [
         {
@@ -24,6 +23,11 @@
     "autoload": {
         "psr-0" : {
             "Raven_" : "lib/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.6.x-dev"
         }
     }
 }
