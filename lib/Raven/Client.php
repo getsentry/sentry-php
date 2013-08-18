@@ -57,7 +57,7 @@ class Raven_Client
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
-        $this->timeout = Raven_Util::get($options, 'timeout', 5);
+        $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
@@ -476,8 +476,8 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->timeout);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $this->timeout * 1E3);
+        curl_setopt($curl, CURLOPT_TIMEOUT_MS, $this->timeout * 1E3);
         $ret = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
