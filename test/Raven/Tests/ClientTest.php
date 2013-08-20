@@ -405,4 +405,28 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $this->assertEquals($expected, $client->get_http_data());
     }
+    
+    public function testSetUserDataSetsInterface()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $id = 'unique_id';
+        $email = 'foo@example.com';
+
+        $user = array(
+            'username' => 'my_user',
+        );
+
+
+        $client->set_user_data($id, $email, $user);
+        $client->captureMessage('Test Message %s', array('foo'));
+
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+
+        $user = array_merge(compact('id', 'email'), $user);
+
+        $this->assertEquals($event['sentry.interfaces.User'], $user);
+    }
 }
