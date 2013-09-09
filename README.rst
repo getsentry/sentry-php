@@ -41,17 +41,18 @@ Installation
 Install with Composer
 ~~~~~~~~~~~~~~~~~~~~~
 
-If you're using `Composer <https://github.com/composer/composer>`_ to manage
+If you're using `Composer <https://getcomposer.org/>`_ to manage
 dependencies, you can add Raven with it.
 
 ::
 
     {
         "require": {
-            "raven/raven": ">=0.2.0"
+            "raven/raven": "$VERSION"
         }
     }
 
+(replace ``$VERSION`` with one of the available versions on `Packagist <https://packagist.org/packages/raven/raven>`_)
 or to get the latest version off the master branch:
 
 ::
@@ -61,6 +62,12 @@ or to get the latest version off the master branch:
             "raven/raven": "dev-master"
         }
     }
+
+Note that using unstable versions is not recommended and should be avoided. Also
+you should define a maximum version, e.g. by doing ``>=0.6,<1.0`` or ``~0.6``.
+
+Composer will take care of the autoloading for you, so if you require the
+``vendor/autoload.php``, you're good to go.
 
 
 Install source from GitHub
@@ -79,12 +86,6 @@ And including it using the autoloader:
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
 
-Or, if you're using `Composer <https://github.com/composer/composer>`_:
-
-::
-
-    require_once 'vendor/autoload.php';
-    
 Configuration
 -------------
 
