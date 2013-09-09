@@ -353,6 +353,11 @@ class Raven_Client
         }
 
         if (!empty($stack)) {
+            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
+            if (!class_exists('Raven_Stacktrace')) {
+                spl_autoload_call('Raven_Stacktrace');
+            }
+
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace, $this->shift_vars, $vars),
@@ -366,7 +371,7 @@ class Raven_Client
 
         $this->sanitize($data);
         $this->process($data);
-        
+
         if(!$this->store_errors_for_bulk_send){
             $this->send($data);
         }else{
@@ -381,6 +386,11 @@ class Raven_Client
 
     public function sanitize(&$data)
     {
+        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
+        if (!class_exists('Raven_Serializer')) {
+            spl_autoload_call('Raven_Serializer');
+        }
+
         $data = Raven_Serializer::serialize($data);
     }
 
@@ -390,7 +400,7 @@ class Raven_Client
             $processor->process($data);
         }
     }
-    
+
     public function sendUnsentErrors(){
         if(!empty($this->error_data)){
             foreach($this->error_data as $data){
@@ -400,7 +410,7 @@ class Raven_Client
         }
         if($this->store_errors_for_bulk_send){
             //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED'); 
+            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
         }
     }
 
@@ -411,11 +421,11 @@ class Raven_Client
         }
 
         $message = Raven_Compat::json_encode($data);
-        
+
         if (function_exists("gzcompress")) {
             $message = base64_encode(gzcompress($message));
         }
-        
+
         foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
