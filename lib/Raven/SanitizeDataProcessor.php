@@ -7,9 +7,9 @@
  */
 class Raven_SanitizeDataProcessor extends Raven_Processor
 {
-    const MASK = '********';
-    const FIELDS_RE = '/(authorization|password|passwd|secret)/i';
-    const VALUES_RE = '/^\d{16}$/';
+    static $mask = '********';
+    static $fields_re = '/(authorization|password|passwd|secret|password_confirmation|card_number)/i';
+    static $values_re = '/^(?:\d[ -]*?){13,16}$/';
 
     public function sanitize(&$item, $key)
     {
@@ -17,16 +17,16 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
             return;
         }
 
-        if (preg_match(self::VALUES_RE, $item)) {
-            $item = self::MASK;
+        if (preg_match(self::$values_re, $item)) {
+            $item = self::$mask;
         }
 
         if (empty($key)) {
             return;
         }
 
-        if (preg_match(self::FIELDS_RE, $key)) {
-            $item = self::MASK;
+        if (preg_match(self::$fields_re, $key)) {
+            $item = self::$mask;
         }
     }
 
