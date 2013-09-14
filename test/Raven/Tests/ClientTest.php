@@ -252,7 +252,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($frame['lineno'] > 0);
         $this->assertEquals($frame['module'], 'ClientTest.php:Raven_Tests_ClientTest');
         $this->assertEquals($frame['function'], 'create_exception');
-        $this->assertEquals($frame['vars'], array());
+        $this->assertFalse(isset($frame['vars']));
         $this->assertEquals($frame['context_line'], '            throw new Exception(\'Foo bar\');');
         $this->assertFalse(empty($frame['pre_context']));
         $this->assertFalse(empty($frame['post_context']));
@@ -318,14 +318,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client();
         $defaults = Dummy_Raven_Client::getDefaultProcessors();
-        
+
         $this->assertEquals(count($client->processors), count($defaults));
     }
 
     public function testDefaultProcessorsContainSanitizeDataProcessor()
     {
         $defaults = Dummy_Raven_Client::getDefaultProcessors();
-        
+
         $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
     }
 
@@ -405,7 +405,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $this->assertEquals($expected, $client->get_http_data());
     }
-    
+
     public function testSetUserDataSetsInterface()
     {
         $client = new Dummy_Raven_Client();

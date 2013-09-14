@@ -283,16 +283,29 @@ class Raven_Client
             }
         }
 
+        $result = array(
+            'method' => $this->_server_variable('REQUEST_METHOD'),
+            'url' => $this->get_current_url(),
+            'query_string' => $this->_server_variable('QUERY_STRING'),
+        );
+
+        // dont set this as an empty array as PHP will treat it as a numeric array
+        // instead of a mapping which goes against the defined Sentry spec
+        if (!empty($_POST)) {
+            $result['data'] = $_POST;
+        }
+        if (!empty($_COOKIE)) {
+            $result['cookies'] = $_COOKIE;
+        }
+        if (!empty($headers)) {
+            $result['headers'] = $headers;
+        }
+        if (!empty($env)) {
+            $result['env'] = $env;
+        }
+
         return array(
-            'sentry.interfaces.Http' => array(
-                'method' => $this->_server_variable('REQUEST_METHOD'),
-                'url' => $this->get_current_url(),
-                'query_string' => $this->_server_variable('QUERY_STRING'),
-                'data' => $_POST,
-                'cookies' => $_COOKIE,
-                'headers' => $headers,
-                'env' => $env,
-            )
+            'sentry.interfaces.Http' => $result,
         );
     }
 

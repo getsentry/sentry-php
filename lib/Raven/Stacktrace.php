@@ -75,17 +75,23 @@ class Raven_Stacktrace
                 }
             }
 
-            $result[] = array(
+            $frame = array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
                 'lineno' => (int) $context['lineno'],
                 'module' => $module,
                 'function' => $nextframe['function'],
-                'vars' => $vars,
                 'pre_context' => $context['prefix'],
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
             );
+            // dont set this as an empty array as PHP will treat it as a numeric array
+            // instead of a mapping which goes against the defined Sentry spec
+            if (!empty($vars)) {
+                $frame['vars'] = $vars;
+            }
+
+            $result[] = $frame;
         }
 
         return array_reverse($result);

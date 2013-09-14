@@ -145,7 +145,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(3, $frame["lineno"]);
         $this->assertNull($frame["function"]);
         $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
-        $this->assertEquals(array(), $frame['vars']);
+        $this->assertFalse(isset($frame['vars']));
         $frame = $frames[1];
         $this->assertEquals('a.php', $frame["module"]);
         $this->assertEquals(11, $frame["lineno"]);
