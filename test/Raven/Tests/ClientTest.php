@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of Raven.
+ *
+ * (c) Sentry Team
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 class PHPUnitUtil
 {
@@ -12,15 +20,6 @@ class PHPUnitUtil
         return $method->invokeArgs($obj, $args);
     }
 }
-
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 // XXX: Is there a better way to stub the client?
 class Dummy_Raven_Client extends Raven_Client

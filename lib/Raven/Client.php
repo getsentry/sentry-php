@@ -1,6 +1,4 @@
 <?php
-
-
 /*
  * This file is part of Raven.
  *
@@ -267,7 +265,7 @@ class Raven_Client
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    protected function get_http_data()
+    private function get_http_data()
     {
         $env = $headers = array();
 
@@ -310,7 +308,7 @@ class Raven_Client
         );
     }
 
-    protected function get_user_data()
+    private function get_user_data()
     {
         if ($this->_user === null) {
             $result = array(
@@ -327,7 +325,7 @@ class Raven_Client
         );
     }
 
-    protected function get_extra_data()
+    private function get_extra_data()
     {
         return array();
     }
