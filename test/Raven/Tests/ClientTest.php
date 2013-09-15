@@ -1,5 +1,15 @@
 <?php
 
+class PHPUnitUtil
+{
+    public static function callMethod($obj, $name, array $args = array()) {
+        $class = new \ReflectionClass($obj);
+        $method = $class->getMethod($name);
+        $method->setAccessible(true);
+        return $method->invokeArgs($obj, $args);
+    }
+}
+
 /*
  * This file is part of Raven.
  *
@@ -22,9 +32,9 @@ class Dummy_Raven_Client extends Raven_Client
     {
         $this->__sent_events[] = $data;
     }
-    public function get_http_data()
+    public function is_http_request()
     {
-        return parent::get_http_data();
+        return true;
     }
 }
 
@@ -403,11 +413,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $this->assertEquals($expected, $client->get_http_data());
+        $return_val = PHPUnitUtil::callMethod($client, 'get_http_data');
+        $this->assertEquals($return_val, $expected);
     }
 
-    public function testSetUserDataSetsInterface()
-    {
+    public function testGetUserDataWithSetUser() {
         $client = new Dummy_Raven_Client();
 
         $id = 'unique_id';
@@ -417,16 +427,43 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'username' => 'my_user',
         );
 
-
         $client->set_user_data($id, $email, $user);
-        $client->captureMessage('Test Message %s', array('foo'));
 
-        $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
-        $event = array_pop($events);
+        $expected = array(
+            'sentry.interfaces.User' => array(
+                'id' => 'unique_id',
+                'username' => 'my_user',
+                'email' => 'foo@example.com',
+            )
+        );
 
-        $user = array_merge(compact('id', 'email'), $user);
+        $return_val = PHPUnitUtil::callMethod($client, 'get_user_data');
+        $this->assertEquals($return_val, $expected);
+    }
 
-        $this->assertEquals($event['sentry.interfaces.User'], $user);
+    public function testGetUserDataWithNoUser() {
+        $client = new Dummy_Raven_Client();
+
+        $expected = array(
+            'sentry.interfaces.User' => array(
+                'id' => session_id(),
+            )
+        );
+        $return_val = PHPUnitUtil::callMethod($client, 'get_user_data');
+        $this->assertEquals($return_val, $expected);
+    }
+
+    public function testGetAuthHeader() {
+        $client = new Dummy_Raven_Client();
+
+        $clientstring = 'raven-php/test';
+        $signature = 'signature';
+        $timestamp = '1234341324.340000';
+
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
+                    "sentry_version=3, sentry_signature={$signature}";
+        $return_val = PHPUnitUtil::callMethod($client, 'get_auth_header', array(
+            $signature, $timestamp, 'raven-php/test'));
+        $this->assertEquals($return_val, $expected);
     }
 }

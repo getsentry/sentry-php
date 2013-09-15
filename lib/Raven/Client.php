@@ -19,6 +19,7 @@
 class Raven_Client
 {
     const VERSION = '0.6.1';
+    const PROTOCOL = '3';
 
     const DEBUG = 'debug';
     const INFO = 'info';
@@ -312,18 +313,18 @@ class Raven_Client
     protected function get_user_data()
     {
         if ($this->_user === null) {
-            return array(
-                'sentry.interfaces.User' => array(
-                    'is_authenticated' => isset($_SESSION) && count($_SESSION) ? true : false,
-                    'id' => session_id(),
-                    'data' => isset($_SESSION) ? $_SESSION : null,
-                )
+            $result = array(
+                'id' => session_id(),
             );
+            if (!empty($_SESSION)) {
+                $result['data'] = $_SESSION;
+            }
         } else {
-            return array(
-                'sentry.interfaces.User' => $this->_user
-            );
+            $result = $this->_user;
         }
+        return array(
+            'sentry.interfaces.User' => $result,
+        );
     }
 
     protected function get_extra_data()
@@ -527,9 +528,9 @@ class Raven_Client
                                      $api_key=null)
     {
         $header = array(
-            sprintf("sentry_timestamp=%F", $timestamp),
+            sprintf('sentry_timestamp=%F', $timestamp),
             "sentry_client={$client}",
-            "sentry_version=2.0",
+            sprintf('sentry_version=%s', self::PROTOCOL),
         );
         if (!empty($signature)) {
             $header[] = "sentry_signature={$signature}";
