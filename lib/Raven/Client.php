@@ -453,7 +453,8 @@ class Raven_Client
             $headers = array(
                 'User-Agent' => $client_string,
                 'X-Sentry-Auth' => $this->get_auth_header(
-                    $signature, $timestamp, $client_string, $this->public_key),
+                    $signature, $timestamp, $client_string, $this->public_key,
+                    $this->secret_key),
                 'Content-Type' => 'application/octet-stream'
             );
 
@@ -525,7 +526,7 @@ class Raven_Client
     }
 
     private function get_auth_header($signature, $timestamp, $client,
-                                     $api_key=null)
+                                     $api_key, $secret_key)
     {
         $header = array(
             sprintf('sentry_timestamp=%F', $timestamp),
@@ -539,6 +540,11 @@ class Raven_Client
         if ($api_key) {
             $header[] = "sentry_key={$api_key}";
         }
+
+        if ($secret_key) {
+            $header[] = "sentry_secret={$secret_key}";
+        }
+
 
         return sprintf('Sentry %s', implode(', ', $header));
     }
