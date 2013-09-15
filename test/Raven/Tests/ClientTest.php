@@ -8,19 +8,6 @@
  * file that was distributed with this source code.
  */
 
-class PHPUnitUtil
-{
-    // http://stackoverflow.com/questions/249664/best-practices-to-test-protected-methods-with-phpunit
-    public static function callMethod($obj, $name, array $args = array()) {
-        $class = new ReflectionClass($obj);
-        $method = $class->getMethod($name);
-        if (phpversion() >= 5.3) {
-            $method->setAccessible(true);
-        }
-        return $method->invokeArgs($obj, $args);
-    }
-}
-
 // XXX: Is there a better way to stub the client?
 class Dummy_Raven_Client extends Raven_Client
 {
@@ -37,6 +24,18 @@ class Dummy_Raven_Client extends Raven_Client
     public function is_http_request()
     {
         return true;
+    }
+    public function get_auth_header($timestamp, $client, $api_key, $secret_key)
+    {
+        return parent::get_auth_header($timestamp, $client, $api_key, $secret_key);
+    }
+    public function get_http_data()
+    {
+        return parent::get_http_data();
+    }
+    public function get_user_data()
+    {
+        return parent::get_user_data();
     }
 }
 
@@ -415,8 +414,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $return_val = PHPUnitUtil::callMethod($client, 'get_http_data');
-        $this->assertEquals($return_val, $expected);
+        $this->assertEquals($client->get_http_data(), $expected);
     }
 
     public function testGetUserDataWithSetUser() {
@@ -439,8 +437,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $return_val = PHPUnitUtil::callMethod($client, 'get_user_data');
-        $this->assertEquals($return_val, $expected);
+        $this->assertEquals($client->get_user_data(), $expected);
     }
 
     public function testGetUserDataWithNoUser() {
@@ -451,22 +448,18 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                 'id' => session_id(),
             )
         );
-        $return_val = PHPUnitUtil::callMethod($client, 'get_user_data');
-        $this->assertEquals($return_val, $expected);
+        $this->assertEquals($client->get_user_data(), $expected);
     }
 
     public function testGetAuthHeader() {
         $client = new Dummy_Raven_Client();
 
         $clientstring = 'raven-php/test';
-        $signature = 'signature';
         $timestamp = '1234341324.340000';
 
         $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
-                    "sentry_version=3, sentry_signature={$signature}, sentry_key=publickey, " .
-                    "sentry_secret=secretkey";
-        $return_val = PHPUnitUtil::callMethod($client, 'get_auth_header', array(
-            $signature, $timestamp, 'raven-php/test', 'publickey', 'secretkey'));
-        $this->assertEquals($return_val, $expected);
+                    "sentry_version=3, sentry_key=publickey, sentry_secret=secretkey";
+
+        $this->assertEquals($client->get_auth_header($timestamp, 'raven-php/test', 'publickey', 'secretkey'), $expected);
     }
 }

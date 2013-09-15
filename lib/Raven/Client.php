@@ -61,9 +61,6 @@ class Raven_Client
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
 
-        // XXX: Signing is disabled by default as it is no longer required by modern versions of Sentrys
-        $this->signing = (bool) Raven_Util::get($options, 'signing', false);
-
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
             $this->processors[] = new $processor($this);
@@ -260,12 +257,12 @@ class Raven_Client
         return $this->capture($data, false);
     }
 
-    private function is_http_request()
+    protected function is_http_request()
     {
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    private function get_http_data()
+    protected function get_http_data()
     {
         $env = $headers = array();
 
@@ -308,7 +305,7 @@ class Raven_Client
         );
     }
 
-    private function get_user_data()
+    protected function get_user_data()
     {
         if ($this->_user === null) {
             $result = array(
@@ -325,7 +322,7 @@ class Raven_Client
         );
     }
 
-    private function get_extra_data()
+    protected function get_extra_data()
     {
         return array();
     }
@@ -441,17 +438,10 @@ class Raven_Client
         foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
             $timestamp = microtime(true);
-            if ($this->signing) {
-                $signature = $this->get_signature(
-                    $message, $timestamp, $this->secret_key);
-            } else {
-                $signature = null;
-            }
-
             $headers = array(
                 'User-Agent' => $client_string,
                 'X-Sentry-Auth' => $this->get_auth_header(
-                    $signature, $timestamp, $client_string, $this->public_key,
+                    $timestamp, $client_string, $this->public_key,
                     $this->secret_key),
                 'Content-Type' => 'application/octet-stream'
             );
@@ -515,25 +505,13 @@ class Raven_Client
         return $success;
     }
 
-    /**
-     * Create a signature
-     */
-    private function get_signature($message, $timestamp, $key)
-    {
-        return Raven_Compat::hash_hmac('sha1', sprintf('%F', $timestamp) .' '. $message, $key);
-    }
-
-    private function get_auth_header($signature, $timestamp, $client,
-                                     $api_key, $secret_key)
+    protected function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
         $header = array(
             sprintf('sentry_timestamp=%F', $timestamp),
             "sentry_client={$client}",
             sprintf('sentry_version=%s', self::PROTOCOL),
         );
-        if (!empty($signature)) {
-            $header[] = "sentry_signature={$signature}";
-        }
 
         if ($api_key) {
             $header[] = "sentry_key={$api_key}";
