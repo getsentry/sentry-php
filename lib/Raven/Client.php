@@ -264,7 +264,7 @@ class Raven_Client
 
     private function is_http_request()
     {
-        return isset($_SERVER['REQUEST_METHOD']);
+        return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
     protected function get_http_data()
@@ -577,7 +577,7 @@ class Raven_Client
     private function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
-        if ($this->_server_variable('REQUEST_URI') === '') {
+        if (!isset($_SERVER['REQUEST_URI'])) {
             return null;
         }
 
