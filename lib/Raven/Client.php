@@ -489,8 +489,17 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $this->timeout * 1E3);
-        curl_setopt($curl, CURLOPT_TIMEOUT_MS, $this->timeout * 1E3);
+        if (defined('CURLOPT_TIMEOUT_MS')) {
+            // MS is available in curl >= 7.16.2
+            $timeout = max(1, ceil(1000 * $this->timeout));
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $timeout);
+            curl_setopt($curl, CURLOPT_TIMEOUT_MS, $timeout);
+        } else {
+            // fall back to the lower-precision timeout.
+            $timeout = max(1, ceil($this->timeout));
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
+            curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
+        }
         $ret = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
