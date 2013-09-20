@@ -44,7 +44,7 @@ class Raven_ErrorHandler
     public function handleException($e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
-        
+
         if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
         }
@@ -70,9 +70,9 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, E_STRICT);
+        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
 
-        if (in_array($lastError['type'], $errors)) {
+        if ($lastError['type'] & $errors) {
             $e = new ErrorException(
                 @$lastError['message'], @$lastError['type'], @$lastError['type'],
                 @$lastError['file'], @$lastError['line']
@@ -102,7 +102,7 @@ class Raven_ErrorHandler
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
     }
-    
+
     public function detectShutdown() {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
