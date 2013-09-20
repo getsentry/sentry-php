@@ -29,7 +29,7 @@ class Raven_ErrorHandler
     private $call_existing_error_handler = false;
     private $reservedMemory;
     private $send_errors_last = false;
-    private $error_types = E_ALL;
+    private $error_types = -1;
 
     public function __construct($client, $send_errors_last = false)
     {
@@ -90,7 +90,7 @@ class Raven_ErrorHandler
 
     public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
     {
-        $this->error_types = (null === $error_types) ? E_ALL | E_STRICT : $error_types;
+        $this->error_types = (null === $error_types) ? error_reporting() : $error_types;
         $this->old_error_handler = set_error_handler(array($this, 'handleError'));
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
