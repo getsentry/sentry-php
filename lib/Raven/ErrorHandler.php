@@ -29,6 +29,7 @@ class Raven_ErrorHandler
     private $call_existing_error_handler = false;
     private $reservedMemory;
     private $send_errors_last = false;
+    private $error_types = E_ALL;
 
     public function __construct($client, $send_errors_last = false)
     {
@@ -44,7 +45,7 @@ class Raven_ErrorHandler
     public function handleException($e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
-        
+
         if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
         }
@@ -52,10 +53,10 @@ class Raven_ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
-        if (!(error_reporting() & $code)) { return; }
-
-        $e = new ErrorException($message, 0, $code, $file, $line);
-        $this->handleException($e, true, $context);
+        if ($this->error_types & $code) {
+          $e = new ErrorException($message, 0, $code, $file, $line);
+          $this->handleException($e, true, $context);
+        }
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {
             call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);
@@ -89,10 +90,8 @@ class Raven_ErrorHandler
 
     public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
     {
-        if (null === $error_types) {
-            $error_types = E_ALL | E_STRICT;
-        }
-        $this->old_error_handler = set_error_handler(array($this, 'handleError'), $error_types);
+        $this->error_types = (null === $error_types) ? E_ALL | E_STRICT : $error_types;
+        $this->old_error_handler = set_error_handler(array($this, 'handleError'));
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
@@ -102,7 +101,7 @@ class Raven_ErrorHandler
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
     }
-    
+
     public function detectShutdown() {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
