@@ -53,7 +53,7 @@ class Raven_ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
-        if ($this->error_types & $code) {
+        if ($this->error_types & $code & error_reporting()) {
           $e = new ErrorException($message, 0, $code, $file, $line);
           $this->handleException($e, true, $context);
         }
@@ -88,9 +88,9 @@ class Raven_ErrorHandler
         $this->call_existing_exception_handler = $call_existing_exception_handler;
     }
 
-    public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
+    public function registerErrorHandler($call_existing_error_handler = true, $error_types = -1)
     {
-        $this->error_types = (null === $error_types) ? error_reporting() : $error_types;
+        $this->error_types = $error_types;
         $this->old_error_handler = set_error_handler(array($this, 'handleError'));
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
