@@ -7,7 +7,7 @@ raven-php
 
 raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
 
-::
+.. code-block:: php
 
     // Instantiate a new client with a compatible DSN
     $client = new Raven_Client('http://public:secret@example.com/1');
@@ -44,7 +44,7 @@ Install with Composer
 If you're using `Composer <https://getcomposer.org/>`_ to manage
 dependencies, you can add Raven with it.
 
-::
+.. code-block:: json
 
     {
         "require": {
@@ -55,7 +55,7 @@ dependencies, you can add Raven with it.
 (replace ``$VERSION`` with one of the available versions on `Packagist <https://packagist.org/packages/raven/raven>`_)
 or to get the latest version off the master branch:
 
-::
+.. code-block:: json
 
     {
         "require": {
@@ -81,7 +81,7 @@ To install the source code:
 
 And including it using the autoloader:
 
-::
+.. code-block:: php
 
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
@@ -92,7 +92,7 @@ Configuration
 Several options exist that allow you to configure the behavior of the ``Raven_Client``. These are passed as the
 second parameter of the constructor, and is expected to be an array of key value pairs:
 
-::
+.. code-block:: php
 
     $client = new Raven_Client($dsn, array(
         'option_name' => 'value',
@@ -110,7 +110,7 @@ Defaults to ``Raven_Compat::gethostname()``.
 
 An array of tags to apply to events in this context.
 
-::
+.. code-block:: php
 
     'tags' => array(
         'php_version' => phpversion(),
