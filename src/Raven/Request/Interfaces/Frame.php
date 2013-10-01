@@ -1,11 +1,12 @@
 <?php
 
 namespace Raven\Request\Interfaces;
+use Guzzle\Common\ToArrayInterface;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  */
-class Frame
+class Frame implements ToArrayInterface
 {
     /**
      * @var string|null
@@ -234,6 +235,7 @@ class Frame
             'abs_path' => $this->getAbsolutePath(),
             'filename' => $this->getFilename(),
             'function' => $this->getFunction(),
+            'module' => $this->getModule(),
             'vars' => $this->getVars(),
             'pre_context' => $this->getPreContext(),
             'context_line' => $this->getContextLine(),

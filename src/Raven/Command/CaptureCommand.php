@@ -18,7 +18,7 @@ class CaptureCommand extends OperationCommand
     protected function init()
     {
         if (!isset($this['event_id'])) {
-            $this['event_id'] = Uuid::uuid4();
+            $this['event_id'] = Uuid::uuid4()->toString();
         }
 
         if (!isset($this['timestamp'])) {
@@ -134,6 +134,12 @@ class CaptureCommand extends OperationCommand
                     'required' => false,
                     'type' => 'object',
                     'instanceOf' => 'Raven\Request\Interfaces\Exception',
+                    'location' => 'json',
+                ),
+                'sentry.interfaces.StackTrace' => array(
+                    'required' => false,
+                    'type' => 'object',
+                    'instanceOf' => 'Raven\Request\Interfaces\StackTrace',
                     'location' => 'json',
                 ),
                 'sentry.interfaces.Http' => array(

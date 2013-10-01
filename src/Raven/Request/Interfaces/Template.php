@@ -1,11 +1,12 @@
 <?php
 
 namespace Raven\Request\Interfaces;
+use Guzzle\Common\ToArrayInterface;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  */
-class Template
+class Template implements ToArrayInterface
 {
     /**
      * @var string

@@ -1,11 +1,12 @@
 <?php
 
 namespace Raven\Request\Interfaces;
+use Guzzle\Common\ToArrayInterface;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  */
-class SingleException
+class SingleException implements ToArrayInterface
 {
     /**
      * @var string

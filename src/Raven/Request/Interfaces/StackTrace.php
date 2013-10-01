@@ -1,11 +1,12 @@
 <?php
 
 namespace Raven\Request\Interfaces;
+use Guzzle\Common\ToArrayInterface;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  */
-class StackTrace
+class StackTrace implements ToArrayInterface
 {
     /**
      * @var Frame[]
@@ -38,8 +39,10 @@ class StackTrace
      */
     public function toArray()
     {
-        return array_map(function (Frame $frame) {
-            return $frame->toArray();
-        }, $this->getFrames());
+        return array(
+            'frames' => array_map(function (Frame $frame) {
+                return $frame->toArray();
+            }, $this->getFrames()),
+        );
     }
 }
