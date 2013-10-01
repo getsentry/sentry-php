@@ -5,6 +5,7 @@ namespace Raven\Command;
 use Guzzle\Service\Command\AbstractCommand;
 use Guzzle\Service\Command\OperationCommand;
 use Guzzle\Service\Description\Operation;
+use Raven\Client;
 use Rhumsaa\Uuid\Uuid;
 
 /**
@@ -27,7 +28,7 @@ class CaptureCommand extends OperationCommand
         if ($this['timestamp'] instanceof \DateTime) {
             $this['timestamp'] = clone $this['timestamp'];
             $this['timestamp']->setTimezone(new \DateTimeZone('UTC'));
-            $this['timestamp'] = $this['timestamp']->getTimestamp();
+            $this['timestamp'] = $this['timestamp']->format(\DateTime::ISO8601);
         }
     }
 
@@ -63,13 +64,13 @@ class CaptureCommand extends OperationCommand
                     'required' => true,
                     'type' => 'string',
                     'enum' => array(
-                        'debug',
-                        'info',
-                        'warning',
-                        'error',
-                        'fatal',
+                        Client::LEVEL_DEBUG,
+                        Client::LEVEL_INFO,
+                        Client::LEVEL_WARNING,
+                        Client::LEVEL_ERROR,
+                        Client::LEVEL_FATAL,
                     ),
-                    'default' => 'error',
+                    'default' => Client::LEVEL_ERROR,
                     'location' => 'json',
                 ),
                 'logger' => array(

@@ -1,13 +1,19 @@
 <?php
 
 use Guzzle\Plugin\Log\LogPlugin;
+use Raven\Plugin\CaptureHttpInterfacePlugin;
+use Raven\Request\Factory\SymfonyHttpFactory;
+use Symfony\Component\HttpFoundation\Request;
 
 require __DIR__ . '/vendor/autoload.php';
+
+$request = Request::create('http://helloworld.com/app_dev.php/hello');
 
 $client = Raven\Client::create(array(
     'dsn' => 'http://0de7eceaa7a342e8846db675d8faef02:c1bd869c9a704bbe93b7570ec446542e@sentry.hautelook.net/2',
 ));
 $client->addSubscriber(LogPlugin::getDebugPlugin());
+$client->addSubscriber(new CaptureHttpInterfacePlugin(new SymfonyHttpFactory($request)));
 
 $client->capture(array(
     'message' => 'HELLO THERE',

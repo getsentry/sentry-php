@@ -25,7 +25,9 @@
     "require-dev": {
         "hautelook/frankenstein": "0.1.*",
         "phpunit/phpunit": "~3.7",
-        "atoum/atoum": "*@dev"
+        "atoum/atoum": "*@dev",
+        "symfony/http-foundation": "~2.1",
+        "symfony/security": "~2.1"
     },
     "autoload": {
         "psr-0": { "Raven\\": "src/" }

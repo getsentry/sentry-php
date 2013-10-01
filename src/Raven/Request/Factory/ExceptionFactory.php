@@ -42,40 +42,53 @@ class ExceptionFactory
     {
         $flattenException = FlattenException::create($e);
 
-        $frames = array_map(function ($entry) {
-            $frame = new Frame($entry['file'], $entry['function'], $entry['class']);
+        $frames = array();
+        foreach ($flattenException->getTrace() as $entry) {
+            $frames[] = $frame = new Frame(
+                $entry['file'],
+                (strlen($entry['class']) > 0 ? $entry['class'] . '::' : ''). $entry['function'],
+                $entry['class']
+            );
             $frame->setLineNumber($entry['line']);
+            $frame->setVars($this->getFrameVars($entry));
 
-            $vars = array();
-            foreach ($entry['args'] as $arg) {
-                $vars[] = is_array($arg[1]) ? $arg[0] : $arg[1]; // get the arg value
-            }
-            $frame->setVars($vars);
-
-            // TODO maybe cache this stuff
-            if (is_readable($entry['file'])) {
-                $fileContent = file_get_contents($entry['file']);
-                $lines = explode("\n", $fileContent);
-                $lineCount = count($lines);
-                $lineIndex = $frame->getLineNumber() - 1;
-
-                // TODO not sure this is well handled
-                $frame->setContextLine($lines[$lineIndex]);
-                $frame->setPreContext(array_slice(
-                    $lines,
-                    max(0, $lineIndex - 5),
-                    min(5, $lineIndex)
-                ));
-                $frame->setPostContext(array_slice(
-                    $lines,
-                    min($lineCount, $lineIndex + 1),
-                    min(5, $lineCount - $lineIndex)
-                ));
-            }
-
-            return $frame;
-        }, $flattenException->getTrace());
+            $this->handleFrameContext($frame, $entry);
+        }
 
         return new StackTrace($frames);
+    }
+
+    private function getFrameVars($entry)
+    {
+        $vars = array();
+        foreach ($entry['args'] as $arg) {
+            $vars[] = is_array($arg[1]) ? $arg[0] : $arg[1]; // get the arg value
+        }
+
+        return $vars;
+    }
+
+    private function handleFrameContext(Frame $frame, $entry)
+    {
+        // TODO maybe cache this stuff, reading file on a production environment if bad
+        if (is_readable($entry['file'])) {
+            $fileContent = file_get_contents($entry['file']);
+            $lines = explode("\n", $fileContent);
+            $lineCount = count($lines);
+            $lineIndex = $frame->getLineNumber() - 1;
+
+            // TODO not sure this is well handled
+            $frame->setContextLine($lines[$lineIndex]);
+            $frame->setPreContext(array_slice(
+                $lines,
+                max(0, $lineIndex - 5),
+                min(5, $lineIndex)
+            ));
+            $frame->setPostContext(array_slice(
+                $lines,
+                min($lineCount, $lineIndex + 1),
+                min(5, $lineCount - $lineIndex)
+            ));
+        }
     }
 }
