@@ -9,25 +9,24 @@
         {
             "name": "David Cramer",
             "email": "dcramer@gmail.com"
+        },
+        {
+            "name": "Raven Contributors",
+            "homepage": "https://github.com/getsentry/raven-php/contributors"
         }
     ],
     "require-dev": {
         "phpunit/phpunit": "3.7.*"
     },
     "require": {
-        "php": ">=5.2.4"
+        "php": ">=5.3"
     },
-    "bin": [
-        "bin/raven"
-    ],
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
-        }
+        "psr-0": { "Raven\\": "src/" }
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.7.x-dev"
+            "dev-master": "1.0.x-dev"
         }
     }
 }

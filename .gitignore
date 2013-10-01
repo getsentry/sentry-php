@@ -1,3 +1,2 @@
-*.lock
-package.xml
+/composer.lock
 /vendor
