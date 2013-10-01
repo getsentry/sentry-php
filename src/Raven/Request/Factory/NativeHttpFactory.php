@@ -6,13 +6,13 @@ use Raven\Request\Interfaces\Http;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
+ *
+ * Code from the original raven-php client
  */
 class NativeHttpFactory implements HttpFactoryInterface
 {
     /**
      * {@inheritdoc}
-     *
-     * Code from the original raven-php client
      */
     public function create()
     {
