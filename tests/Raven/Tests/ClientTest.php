@@ -1,0 +1,89 @@
+<?php
+
+namespace Raven\Tests;
+
+use Hautelook\Frankenstein\TestCase;
+use Raven\Client;
+
+class ClientTest extends TestCase
+{
+    public function testCreateClientWithDsn()
+    {
+        $client = Client::create(array(
+            'dsn' => 'https://public:secret@sentryapp.com/yolo/1337'
+        ));
+
+        $this
+            ->string($client->getBaseUrl(true))
+                ->isEqualTo('https://sentryapp.com/yolo/api/1337/')
+            ->string($client->getConfig('public_key'))
+                ->isEqualTo('public')
+            ->string($client->getConfig('secret_key'))
+                ->isEqualTo('secret')
+        ;
+    }
+
+    public function testCreateClientWithoutDsn()
+    {
+        $client = Client::create(array(
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+            'host' => 'sentryapp.com',
+            'path' => '/yolo/',
+        ));
+
+        $this
+            ->string($client->getBaseUrl(true))
+                ->isEqualTo('https://sentryapp.com/yolo/api/1337/')
+            ->string($client->getConfig('public_key'))
+                ->isEqualTo('public')
+            ->string($client->getConfig('secret_key'))
+                ->isEqualTo('secret')
+        ;
+    }
+
+    public function testFailingCreateClient()
+    {
+        $this
+            ->exception(function () {
+                $client = Client::create(array());
+            })
+                ->isInstanceOf('InvalidArgumentException')
+        ;
+    }
+
+    public function testClientPort()
+    {
+        $client = Client::create(array(
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+            'port' => 6666,
+        ));
+
+        $this
+            ->string($client->getBaseUrl(true))
+                ->contains(':6666')
+        ;
+    }
+
+    public function testCaptureCommand()
+    {
+        $client = Client::create(array(
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+        ));
+
+        $command = $client->getCommand('capture', array(
+            'message' => 'foo',
+        ));
+        $request = $command->prepare();
+
+        $this
+            ->string($request->getUrl(true)->getPath())
+                ->isEqualTo('/api/1337/store/')
+        ;
+    }
+}
