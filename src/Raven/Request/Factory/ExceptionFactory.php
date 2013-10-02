@@ -55,7 +55,7 @@ class ExceptionFactory
             $this->handleFrameContext($frame, $entry);
         }
 
-        return new StackTrace($frames);
+        return new StackTrace(array_reverse($frames));
     }
 
     private function getFrameVars($entry)
