@@ -88,6 +88,8 @@ class Client extends GuzzleClient
             self::REQUEST_OPTIONS,
             self::CURL_OPTIONS,
             self::COMMAND_PARAMS,
+            'tags',
+            'extra',
         ));
 
         $resolver->setDefaults(array(
@@ -105,6 +107,8 @@ class Client extends GuzzleClient
             'host' => 'string',
             'path' => 'string',
             'port' => array('null', 'integer'),
+            'tags' => 'array',
+            'extra' => 'array',
         ));
         $resolver->setAllowedValues(array(
             'protocol' => array('https', 'http'),

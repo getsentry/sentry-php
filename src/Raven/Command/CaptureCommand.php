@@ -30,6 +30,13 @@ class CaptureCommand extends OperationCommand
             $this['timestamp']->setTimezone(new \DateTimeZone('UTC'));
             $this['timestamp'] = $this['timestamp']->format(\DateTime::ISO8601);
         }
+
+        if (isset($this->client['tags'])) {
+            $this->client['tags'] = array_merge($this->client['tags'], $this['tags'] ?: array());
+        }
+        if (isset($this->client['extra'])) {
+            $this->client['extra'] = array_merge($this->client['extra'], $this['extra'] ?: array());
+        }
     }
 
     /**
