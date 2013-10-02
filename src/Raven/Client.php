@@ -87,6 +87,7 @@ class Client extends GuzzleClient
             'exception_factory',
             self::REQUEST_OPTIONS,
             self::CURL_OPTIONS,
+            self::COMMAND_PARAMS,
         ));
 
         $resolver->setDefaults(array(
