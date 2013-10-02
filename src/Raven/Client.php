@@ -29,6 +29,8 @@ class Client extends GuzzleClient
 
     public function __construct(array $config = array())
     {
+        $config = static::resolveAndValidateConfig($config);
+
         parent::__construct(
             sprintf(
                 '{protocol}://{host}%s{+path}api/{project_id}/',
@@ -62,7 +64,7 @@ class Client extends GuzzleClient
 
     public static function create($config = array())
     {
-        return new static(static::resolveAndValidateConfig($config));
+        return new static($config);
     }
 
     private static function resolveAndValidateConfig(array $config)
