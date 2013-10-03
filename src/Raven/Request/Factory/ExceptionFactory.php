@@ -55,6 +55,11 @@ class ExceptionFactory
             $this->handleFrameContext($frame, $entry);
         }
 
+        // When the error handler creates an error exception, the error handler will appear in the stack trace
+        if ($e instanceof \ErrorException) {
+            $frames = $this->filterFramesAfterRavenErrorHandler($frames);
+        }
+
         return new StackTrace(array_reverse($frames));
     }
 
@@ -98,5 +103,22 @@ class ExceptionFactory
                 min(5, $lineCount - $lineIndex)
             ));
         }
+    }
+
+    private function filterFramesAfterRavenErrorHandler(array $frames)
+    {
+        $ravenErrorHandlerFrameIndex = null;
+        foreach ($frames as $index => $frame) {
+            if ($frame->getFunction() === 'Raven\ErrorHandler::handleError') {
+                $ravenErrorHandlerFrameIndex = $index;
+                break;
+            }
+        }
+
+        if (null !== $ravenErrorHandlerFrameIndex) {
+            array_splice($frames, 0, $ravenErrorHandlerFrameIndex + 1);
+        }
+
+        return $frames;
     }
 }

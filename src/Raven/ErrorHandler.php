@@ -91,6 +91,7 @@ class ErrorHandler
 
             unset($this->reservedMemory);
 
+            // The symfony/debug FatalErrorException will use xdebug if available to get the stacktrace
             $e = new FatalErrorException(
                 @$lastError['message'],
                 @$lastError['type'],
