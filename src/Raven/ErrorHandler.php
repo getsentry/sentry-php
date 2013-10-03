@@ -2,6 +2,8 @@
 
 namespace Raven;
 
+use Symfony\Component\Debug\Exception\FatalErrorException;
+
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  *
@@ -10,6 +12,7 @@ namespace Raven;
 class ErrorHandler
 {
     private $client;
+    private $catchExceptions;
 
     private $callExistingExceptionHandler;
     private $previousExceptionHandler;
@@ -20,9 +23,10 @@ class ErrorHandler
 
     private $reservedMemory;
 
-    public function __construct(Client $client)
+    public function __construct(Client $client, $catchExceptions = true)
     {
         $this->client = $client;
+        $this->catchExceptions = $catchExceptions;
     }
 
     public function registerExceptionHandler($callExistingExceptionHandler = true)
@@ -47,41 +51,59 @@ class ErrorHandler
 
     public function handleException($e)
     {
-        $this->client->captureException($e);
+        try {
+            $this->client->captureException($e);
 
-        if ($this->callExistingExceptionHandler && null !== $this->previousExceptionHandler) {
-            call_user_func($this->previousExceptionHandler, $e);
+            if ($this->callExistingExceptionHandler && null !== $this->previousExceptionHandler) {
+                call_user_func($this->previousExceptionHandler, $e);
+            }
+        } catch (\Exception $e) {
+            if (!$this->catchExceptions) {
+                throw $e;
+            }
         }
     }
 
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
-        if ($this->errorTypes & $code & error_reporting()) {
-            $e = new \ErrorException($message, 0, $code, $file, $line);
-            $this->client->captureException($e);
-        }
+        try {
+            if ($this->errorTypes & $code & error_reporting()) {
+                $e = new \ErrorException($message, 0, $code, $file, $line);
+                $this->client->captureException($e);
+            }
 
-        if ($this->callExistingErrorHandler && $this->previousErrorHandler) {
-            call_user_func($this->previousErrorHandler, $code, $message, $file, $line, $context);
+            if ($this->callExistingErrorHandler && $this->previousErrorHandler) {
+                call_user_func($this->previousErrorHandler, $code, $message, $file, $line, $context);
+            }
+        } catch (\Exception $e) {
+            if (!$this->catchExceptions) {
+                throw $e;
+            }
         }
     }
 
     public function handleFatalError()
     {
-        if (null === $lastError = error_get_last()) {
-            return;
+        try {
+            if (null === $lastError = error_get_last()) {
+                return;
+            }
+
+            unset($this->reservedMemory);
+
+            $e = new FatalErrorException(
+                @$lastError['message'],
+                @$lastError['type'],
+                @$lastError['type'],
+                @$lastError['file'],
+                @$lastError['line']
+            );
+
+            $this->client->captureException($e);
+        } catch (\Exception $e) {
+            if (!$this->catchExceptions) {
+                throw $e;
+            }
         }
-
-        unset($this->reservedMemory);
-
-        $e = new \ErrorException(
-            @$lastError['message'],
-            @$lastError['type'],
-            @$lastError['type'],
-            @$lastError['file'],
-            @$lastError['line']
-        );
-
-        $this->client->captureException($e);
     }
 }
