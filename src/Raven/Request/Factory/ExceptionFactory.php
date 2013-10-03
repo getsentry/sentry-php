@@ -70,12 +70,20 @@ class ExceptionFactory
 
     private function handleFrameContext(Frame $frame, $entry)
     {
+        if ($entry['line'] < 1) {
+            return;
+        }
+
         // TODO maybe cache this stuff, reading file on a production environment if bad
         if (is_readable($entry['file'])) {
             $fileContent = file_get_contents($entry['file']);
             $lines = explode("\n", $fileContent);
             $lineCount = count($lines);
             $lineIndex = $frame->getLineNumber() - 1;
+
+            if ($lineCount < 1) {
+                return;
+            }
 
             // TODO not sure this is well handled
             $frame->setContextLine($lines[$lineIndex]);
