@@ -18,7 +18,7 @@
     "require": {
         "php": ">=5.3",
         "guzzle/guzzle": "~3.7",
-        "symfony/options-resolver": "~2.1",
+        "symfony/config": "~2.1",
         "symfony/debug": "~2.3",
         "rhumsaa/uuid": "~2.0"
     },

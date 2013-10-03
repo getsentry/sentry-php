@@ -7,7 +7,6 @@ use Guzzle\Service\Client as GuzzleClient;
 use Guzzle\Service\Command\Factory\MapFactory;
 use Raven\Plugin\SentryAuthPlugin;
 use Raven\Request\Factory\ExceptionFactory;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
@@ -69,54 +68,8 @@ class Client extends GuzzleClient
 
     private static function resolveAndValidateConfig(array $config)
     {
-        $dsnParser = new DsnParser();
-        if (isset($config['dsn'])) {
-            $config = array_merge($config, $dsnParser->parse($config['dsn']));
-        }
-
-        $resolver = new OptionsResolver();
-        $resolver->setRequired(array(
-            'public_key',
-            'secret_key',
-            'project_id',
-            'protocol',
-            'host',
-            'path',
-            'port',
-        ));
-        $resolver->setOptional(array(
-            'dsn',
-            'exception_factory',
-            self::REQUEST_OPTIONS,
-            self::CURL_OPTIONS,
-            self::COMMAND_PARAMS,
-            'tags',
-            'extra',
-        ));
-
-        $resolver->setDefaults(array(
-            'protocol' => 'https',
-            'host' => 'app.getsentry.com',
-            'path' => '/',
-            'port' => null,
-        ));
-
-        $resolver->setAllowedTypes(array(
-            'public_key' => 'string',
-            'secret_key' => 'string',
-            'project_id' => 'string',
-            'protocol' => 'string',
-            'host' => 'string',
-            'path' => 'string',
-            'port' => array('null', 'integer'),
-            'tags' => 'array',
-            'extra' => 'array',
-        ));
-        $resolver->setAllowedValues(array(
-            'protocol' => array('https', 'http'),
-        ));
-
-        $config = $resolver->resolve($config);
+        $configuration = new Configuration();
+        $configuration->process($config);
 
         return $config;
     }

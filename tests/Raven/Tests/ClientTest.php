@@ -49,7 +49,7 @@ class ClientTest extends TestCase
             ->exception(function () {
                 $client = Client::create(array());
             })
-                ->isInstanceOf('InvalidArgumentException')
+                ->isInstanceOf('Symfony\Component\Config\Definition\Exception\InvalidConfigurationException')
         ;
     }
 
@@ -65,6 +65,23 @@ class ClientTest extends TestCase
         $this
             ->string($client->getBaseUrl(true))
                 ->contains(':6666')
+        ;
+    }
+
+    public function testRequestOptions()
+    {
+        $client = Client::create(array(
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+            Client::REQUEST_OPTIONS => array(
+                'foo' => 'bar',
+            ),
+        ));
+
+        $this
+            ->variable($client->getDefaultOption('foo'))
+                ->isEqualTo('bar')
         ;
     }
 
