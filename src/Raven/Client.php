@@ -69,9 +69,8 @@ class Client extends GuzzleClient
     private static function resolveAndValidateConfig(array $config)
     {
         $configuration = new Configuration();
-        $configuration->process($config);
 
-        return $config;
+        return $configuration->process($config);
     }
 
     public function captureException(\Exception $e, array $parameters = array())
