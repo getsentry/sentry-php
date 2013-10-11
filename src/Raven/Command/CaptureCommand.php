@@ -3,9 +3,13 @@
 namespace Raven\Command;
 
 use Guzzle\Service\Command\AbstractCommand;
+use Guzzle\Service\Command\DefaultRequestSerializer;
+use Guzzle\Service\Command\LocationVisitor\VisitorFlyweight;
 use Guzzle\Service\Command\OperationCommand;
 use Guzzle\Service\Description\Operation;
 use Raven\Client;
+use Raven\Request\LocationVisitor\HeaderVisitor;
+use Raven\Request\LocationVisitor\JsonVisitor;
 use Rhumsaa\Uuid\Uuid;
 
 /**
@@ -37,6 +41,10 @@ class CaptureCommand extends OperationCommand
         if (isset($this->client['extra'])) {
             $this->client['extra'] = array_merge($this->client['extra'], $this['extra'] ?: array());
         }
+
+        $factory = new VisitorFlyweight();
+        $factory->addRequestVisitor('json', new JsonVisitor());
+        $this->setRequestSerializer(new DefaultRequestSerializer($factory));
     }
 
     /**
@@ -125,7 +133,7 @@ class CaptureCommand extends OperationCommand
                     'required' => false,
                     'type' => 'array',
                     'items' => array(
-                        'type' => 'string|number',
+                        'type' => array('string', 'number'),
                     ),
                     'location' => 'json',
                 ),

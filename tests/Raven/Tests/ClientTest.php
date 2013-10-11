@@ -103,4 +103,27 @@ class ClientTest extends TestCase
                 ->isEqualTo('/api/1337/store/')
         ;
     }
+
+    public function testCaptureCommandFilterData()
+    {
+        $client = Client::create(array(
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+        ));
+
+        $command = $client->getCommand('capture', array(
+            'message' => 'foo',
+            'extra' => array(
+                'password' => 'zomg password',
+            ),
+        ));
+        $request = $command->prepare();
+
+        $json = json_decode((string) $request->getBody(), true);
+        $this
+            ->string($json['extra']['password'])
+                ->isEqualTo('********')
+        ;
+    }
 }
