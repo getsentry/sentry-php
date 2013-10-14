@@ -9,7 +9,7 @@ use Symfony\Component\Security\Core\SecurityContextInterface;
 /**
  * @author Adrien Brault <adrien.brault@gmail.com>
  */
-class SymfonyHttpFactory implements HttpFactoryInterface
+class SymfonyUserFactory implements HttpFactoryInterface
 {
     /**
      * @var SecurityContextInterface
