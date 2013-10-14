@@ -52,7 +52,9 @@ class SymfonyHttpFactory implements HttpFactoryInterface
         }
         $http->setData($this->request->request->all());
         $http->setCookies($this->request->cookies->all());
-        $http->setHeaders($this->request->headers->all());
+        $http->setHeaders(array_map(function (array $values) {
+            return count($values) === 1 ? reset($values) : $values;
+        }, $this->request->headers->all()));
         $http->setEnv($this->request->server->all());
 
         return $http;
