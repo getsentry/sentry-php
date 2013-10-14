@@ -25,10 +25,6 @@ class SymfonyHttpFactory implements HttpFactoryInterface
      */
     public function setRequest(Request $request = null)
     {
-        if (null === $request) {
-            return; // We want to keep the "last" request until the shutdown function does its thing
-        }
-
         $this->request = $request;
     }
 
