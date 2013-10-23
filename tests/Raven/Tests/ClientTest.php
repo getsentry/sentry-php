@@ -126,4 +126,34 @@ class ClientTest extends TestCase
                 ->isEqualTo('********')
         ;
     }
+
+    public function testIgnoreExceptions()
+    {
+        $client = Client::create(array(
+            'host' => 'localhost:1',
+            'public_key' => 'public',
+            'secret_key' => 'secret',
+            'project_id' => '1337',
+            Client::CURL_OPTIONS => array(
+                CURLOPT_CONNECTTIMEOUT => 0,
+            ),
+
+            'ignored_exceptions' => array(
+                'InvalidArgumentException' => true,
+                'RuntimeException' => false,
+                'Exception',
+            ),
+        ));
+
+        $this
+            ->variable($client->captureException(new \Exception()))
+                ->isNull()
+            ->variable($client->captureException(new \InvalidArgumentException()))
+                ->isNull()
+            ->exception(function () use ($client) {
+                // check that this exception is not ignored, and that the client tries to send it
+                $client->captureException(new \RuntimeException());
+            })
+        ;
+    }
 }

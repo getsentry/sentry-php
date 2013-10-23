@@ -75,6 +75,10 @@ class Client extends GuzzleClient
 
     public function captureException(\Exception $e, array $parameters = array())
     {
+        if ($this->shouldIgnoreException($e)) {
+            return null;
+        }
+
         $exception = $this->exceptionFactory->create($e);
 
         $parameters['message'] = $e->getMessage();
@@ -108,5 +112,18 @@ class Client extends GuzzleClient
         }
 
         return self::LEVEL_ERROR;
+    }
+
+    private function shouldIgnoreException(\Exception $e)
+    {
+        $exceptionClass = new \ReflectionClass(get_class($e));
+
+        foreach ($this->getConfig('ignored_exceptions') as $ignoredException => $ignored) {
+            if ($exceptionClass->getName() === $ignoredException || $exceptionClass->isSubclassOf($ignoredException)) {
+                return false !== $ignored;
+            }
+        }
+
+        return false;
     }
 }

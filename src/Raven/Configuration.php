@@ -131,6 +131,24 @@ class Configuration
                 ->arrayNode('extra')
                     ->prototype('scalar')->end()
                 ->end()
+                ->arrayNode('ignored_exceptions')
+                    ->beforeNormalization()
+                        ->always(function (array $ignoredExceptions) {
+                            $newIgnoredExceptions = array();
+                            foreach ($ignoredExceptions as $class => $ignored) {
+                                if (!is_bool($ignored)) {
+                                    $class = $ignored;
+                                    $ignored = true;
+                                }
+
+                                $newIgnoredExceptions[$class] = $ignored;
+                            }
+
+                            return $newIgnoredExceptions;
+                        })
+                    ->end()
+                    ->prototype('scalar')->end()
+                ->end()
             ->end()
         ;
 
