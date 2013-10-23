@@ -9,25 +9,35 @@
         {
             "name": "David Cramer",
             "email": "dcramer@gmail.com"
+        },
+        {
+            "name": "Raven Contributors",
+            "homepage": "https://github.com/getsentry/raven-php/contributors"
         }
     ],
-    "require-dev": {
-        "phpunit/phpunit": "3.7.*"
-    },
     "require": {
-        "php": ">=5.2.4"
+        "php": ">=5.3",
+        "guzzle/guzzle": "~3.7",
+        "symfony/config": "~2.1",
+        "symfony/debug": "~2.3",
+        "rhumsaa/uuid": "~2.0"
     },
-    "bin": [
-        "bin/raven"
-    ],
+    "require-dev": {
+        "hautelook/frankenstein": "0.1.*",
+        "phpunit/phpunit": "~3.7",
+        "atoum/atoum": "*@dev",
+        "symfony/http-foundation": "~2.1",
+        "symfony/security": "~2.1"
+    },
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
-        }
+        "psr-0": { "Raven\\": "src/" }
+    },
+    "config": {
+        "bin-dir": "bin"
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.7.x-dev"
+            "dev-master": "1.0.x-dev"
         }
     }
 }
