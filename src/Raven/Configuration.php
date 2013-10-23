@@ -2,6 +2,7 @@
 
 namespace Raven;
 
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 /**
@@ -46,6 +47,13 @@ class Configuration
         $nodeBuilder = new NodeBuilder();
         $rootNode = $nodeBuilder->arrayNode(null);
 
+        $this->addConfiguration($rootNode);
+
+        return $rootNode->getNode();
+    }
+
+    public function addConfiguration(ArrayNodeDefinition $rootNode)
+    {
         $dsnParser = $this->dsnParser;
         $rootNode
             ->beforeNormalization()
@@ -151,7 +159,5 @@ class Configuration
                 ->end()
             ->end()
         ;
-
-        return $rootNode->getNode();
     }
 }
