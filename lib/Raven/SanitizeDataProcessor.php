@@ -8,7 +8,7 @@
 class Raven_SanitizeDataProcessor extends Raven_Processor
 {
     static $mask = '********';
-    static $fields_re = '/(authorization|password|passwd|secret|password_confirmation|card_number)/i';
+    static $fields_re = '/(authorization|password|passwd|secret|password_confirmation|card_number|cvv|cardNumber|expirationDate)/i';
     static $values_re = '/^(?:\d[ -]*?){13,16}$/';
 
     public function sanitize(&$item, $key)
