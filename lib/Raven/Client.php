@@ -60,6 +60,7 @@ class Raven_Client
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
+        $this->http_proxy = Raven_Util::get($options, 'http_proxy');
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
@@ -489,6 +490,9 @@ class Raven_Client
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        if ($this->http_proxy) {
+            curl_setopt($curl, CURLOPT_PROXY, $this->http_proxy);
+        }
         if (defined('CURLOPT_TIMEOUT_MS')) {
             // MS is available in curl >= 7.16.2
             $timeout = max(1, ceil(1000 * $this->timeout));
