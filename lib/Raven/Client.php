@@ -27,6 +27,7 @@ class Raven_Client
     const FATAL = 'fatal';
 
     var $severity_map;
+    var $extra_data;
 
     var $store_errors_for_bulk_send = false;
 
@@ -61,6 +62,7 @@ class Raven_Client
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
+        $this->extra_data = Raven_Util::get($options, 'extra', array());
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
@@ -325,7 +327,7 @@ class Raven_Client
 
     protected function get_extra_data()
     {
-        return array();
+        return $this->extra_data;
     }
 
     public function get_default_data()

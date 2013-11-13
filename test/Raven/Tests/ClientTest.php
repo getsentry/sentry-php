@@ -179,6 +179,17 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->site, 'foo');
     }
 
+    public function testOptionsExtraData()
+    {
+        $client = new Dummy_Raven_Client(array('extra' => array('foo' => 'bar')));
+
+        $client->captureMessage('Test Message %s', array('foo'));
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['extra']['foo'], 'bar');
+    }
+
     public function testCaptureMessageDoesHandleUninterpolatedMessage()
     {
         $client = new Dummy_Raven_Client();
