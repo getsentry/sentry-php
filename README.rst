@@ -87,36 +87,6 @@ And including it using the autoloader:
     Raven_Autoloader::register();
 
 
-Providing Request Context
--------------------------
-
-Most of the time you're not actually calling out to Raven directly, but you still want to provide some additional context. This lifecycle generally constists of something like the following:
-
-- Set some context via a middleware (e.g. the logged in user)
-- Send all given context with any events during the request lifecycle
-- Cleanup context
-
-There are three primary methods for providing request context:
-
-.. code-block:: php
-
-    // bind the logged in user
-    $client->user_context(array('email' => 'foo@example.com'));
-
-    // tag the request with something interesting
-    $client->tags_context(array('interesting' => 'yes'));
-
-    // provide a bit of additional context
-    $client->extra_context(array('happiness' => 'very'));
-
-
-If you're performing additional requests during the lifecycle, you'll also need to ensure you cleanup the context (to reset its state):
-
-.. code-block:: php
-
-    $client->context->clear();
-
-
 Configuration
 -------------
 
@@ -147,12 +117,6 @@ An array of tags to apply to events in this context.
         'php_version' => phpversion(),
     )
 
-``signing``
-~~~~~~~~~~~
-
-Instructs the client to sign all messages. This behavior is deprecated in modern Sentry servers, and should
-only be enabled if you need it for legacy compatibility.
-
 
 ``trace``
 ~~~~~~~~~
@@ -166,6 +130,38 @@ Set this to ``false`` to disable reflection tracing (function calling arguments)
 Adjust the default logger name for messages.
 
 Defaults to ``php``.
+
+
+Providing Request Context
+-------------------------
+
+Most of the time you're not actually calling out to Raven directly, but you still want to provide some additional context. This lifecycle generally constists of something like the following:
+
+- Set some context via a middleware (e.g. the logged in user)
+- Send all given context with any events during the request lifecycle
+- Cleanup context
+
+There are three primary methods for providing request context:
+
+.. code-block:: php
+
+    // bind the logged in user
+    $client->user_context(array('email' => 'foo@example.com'));
+
+    // tag the request with something interesting
+    $client->tags_context(array('interesting' => 'yes'));
+
+    // provide a bit of additional context
+    $client->extra_context(array('happiness' => 'very'));
+
+
+If you're performing additional requests during the lifecycle, you'll also need to ensure you cleanup the context (to reset its state):
+
+.. code-block:: php
+
+    $client->context->clear();
+
+
 
 
 Resources
