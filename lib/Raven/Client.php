@@ -71,6 +71,7 @@ class Raven_Client
 
         $this->_lasterror = null;
         $this->_user = null;
+        $this->context = new Raven_Context();
     }
 
     public static function getDefaultProcessors()
@@ -310,18 +311,20 @@ class Raven_Client
 
     protected function get_user_data()
     {
-        if ($this->_user === null) {
-            $result = array(
+        $user = $this->context->user;
+        if ($user === null) {
+            if (!session_id()) {
+                return array();
+            }
+            $user = array(
                 'id' => session_id(),
             );
             if (!empty($_SESSION)) {
-                $result['data'] = $_SESSION;
+                $user['data'] = $_SESSION;
             }
-        } else {
-            $result = $this->_user;
         }
         return array(
-            'sentry.interfaces.User' => $result,
+            'sentry.interfaces.User' => $user,
         );
     }
 
@@ -344,18 +347,29 @@ class Raven_Client
 
     public function capture($data, $stack, $vars = null)
     {
-        $event_id = $this->uuid4();
-
         if (!isset($data['timestamp'])) $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         if (!isset($data['level'])) $data['level'] = self::ERROR;
+        if (!isset($data['tags'])) $data['tags'] = array();
+        if (!isset($data['extra'])) $data['extra'] = array();
+        if (!isset($data['event_id'])) $data['event_id'] = $this->uuid4();
 
         $data = array_merge($this->get_default_data(), $data);
-        $data['event_id'] = $event_id;
 
         if ($this->is_http_request()) {
             $data = array_merge($this->get_http_data(), $data);
-            $data = array_merge($this->get_user_data(), $data);
         }
+
+        $data = array_merge($this->get_user_data(), $data);
+
+        $data['tags'] = array_merge(
+            $this->tags,
+            $this->context->tags,
+            $data['tags']);
+
+        $data['extra'] = array_merge(
+            $this->get_extra_data(),
+            $this->context->extra,
+            $data['extra']);
 
         if ((!$stack && $this->auto_log_stacks) || $stack === True) {
             $stack = debug_backtrace();
@@ -377,10 +391,6 @@ class Raven_Client
             }
         }
 
-        if (!isset($data['extra'])) {
-            $data["extra"] = $this->get_extra_data();
-        }
-
         $this->sanitize($data);
         $this->process($data);
 
@@ -393,7 +403,7 @@ class Raven_Client
             $this->error_data[] = $data;
         }
 
-        return $event_id;
+        return $data['event_id'];
     }
 
     public function sanitize(&$data)
@@ -626,9 +636,32 @@ class Raven_Client
     }
 
     public function set_user_data($id, $email=null, $data=array()) {
-        $this->_user = array_merge(array(
-            "id"    => $id,
-            "email" => $email
-        ), $data);
+        $this->user_context(array_merge(array(
+            'id'    => $id,
+            'email' => $email,
+        ), $data));
     }
+
+    /**
+     * Sets user context.
+     */
+    public function user_context($data) {
+        $this->context->user = $data;
+    }
+
+    /**
+     * Appends tags context.
+     */
+    public function tags_context($data) {
+        $this->context->tags = array_merge($this->context->tags, $data);
+    }
+
+    /**
+     * Appends additional context.
+     */
+    public function extra_context($data) {
+        $this->context->extra = array_merge($this->context->extra, $data);
+    }
+
+
 }

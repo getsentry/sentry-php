@@ -473,4 +473,56 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($client->get_auth_header($timestamp, 'raven-php/test', 'publickey', 'secretkey'), $expected);
     }
+
+    public function testCaptureMessageWithUserContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->user_context(array('email' => 'foo@example.com'));
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['sentry.interfaces.User'], array(
+            'email' => 'foo@example.com',
+        ));
+    }
+
+    public function testCaptureMessageWithTagsContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->tags_context(array('foo' => 'bar'));
+        $client->tags_context(array('biz' => 'boz'));
+        $client->tags_context(array('biz' => 'baz'));
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['tags'], array(
+            'foo' => 'bar',
+            'biz' => 'baz',
+        ));
+    }
+
+    public function testCaptureMessageWithExtraContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->extra_context(array('foo' => 'bar'));
+        $client->extra_context(array('biz' => 'boz'));
+        $client->extra_context(array('biz' => 'baz'));
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['extra'], array(
+            'foo' => 'bar',
+            'biz' => 'baz',
+        ));
+    }
+
 }
