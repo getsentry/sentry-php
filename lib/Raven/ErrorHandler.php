@@ -91,7 +91,7 @@ class Raven_ErrorHandler
     public function registerErrorHandler($call_existing_error_handler = true, $error_types = -1)
     {
         $this->error_types = $error_types;
-        $this->old_error_handler = set_error_handler(array($this, 'handleError'));
+        $this->old_error_handler = set_error_handler(array($this, 'handleError'), error_reporting());
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
