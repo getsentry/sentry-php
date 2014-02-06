@@ -16,7 +16,7 @@
 
 class Raven_Client
 {
-    const VERSION = '0.7.1';
+    const VERSION = '0.7.1-exec';
     const PROTOCOL = '3';
 
     const DEBUG = 'debug';
@@ -63,6 +63,7 @@ class Raven_Client
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
+        $this->use_exec = (bool) Raven_Util::get($options, 'use_exec', false);
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
@@ -435,8 +436,9 @@ class Raven_Client
         $message = Raven_Compat::json_encode($data);
 
         if (function_exists("gzcompress")) {
-            $message = base64_encode(gzcompress($message));
+            $message = gzcompress($message);
         }
+        $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
 
         foreach ($this->servers as $url) {
             $client_string = 'raven-php/' . self::VERSION;
@@ -481,6 +483,18 @@ class Raven_Client
      */
     private function send_http($url, $data, $headers=array())
     {
+        if ($this->use_exec) {
+            $cmd = '/usr/bin/curl -X POST ';
+            foreach ($headers as $key => $value)
+                $cmd .= '-H \''. $key. ': '. $value. '\' ';
+            $cmd .= '-d \''. $data .'\' ';
+            $cmd .= '\''. $url .'\' ';
+            $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
+            $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
+            exec($cmd);
+            return true; // The exec method is just fire and forget, so just assume it always works
+        }
+
         $new_headers = array();
         foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
