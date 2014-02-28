@@ -181,6 +181,9 @@ class Raven_Client
             'message' => $message,
             'params' => $params,
         );
+        if (!array_has_key('extra', $data)) {
+            $data['extra'] = $params;
+        }
 
         return $this->capture($data, $stack, $vars);
     }
