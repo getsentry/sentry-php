@@ -125,6 +125,9 @@ class Raven_Stacktrace
             return array();
         }
 
+        if (strpos($frame['function'], '__lambda_func') !== false) {
+            return array();
+        }
         if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
