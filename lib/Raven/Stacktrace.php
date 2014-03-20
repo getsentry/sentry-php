@@ -125,6 +125,9 @@ class Raven_Stacktrace
             return array();
         }
 
+        if (strpos($frame['function'], '__lambda_func') !== false) {
+            return array();
+        }
         if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
@@ -190,6 +193,16 @@ class Raven_Stacktrace
             $frame['lineno'] = $lineno = $matches[2];
         }
 
+        // In the case of an anonymous function, the filename is sent as:
+        // "</path/to/filename>(<lineno>) : runtime-created function"
+        // Extract the correct filename + linenumber from the string.
+        $matches = array();
+        $matched = preg_match("/^(.*?)\((\d+)\) : runtime-created function$/",
+            $filename, $matches);
+        if ($matched) {
+            $frame['filename'] = $filename = $matches[1];
+            $frame['lineno'] = $lineno = $matches[2];
+        }
 
         try {
             $file = new SplFileObject($filename);
