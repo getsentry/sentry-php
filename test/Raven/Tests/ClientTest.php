@@ -529,29 +529,29 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
     }
 
+    public function cb1($data) {
+        $this->assertEquals($data['message'], 'test');
+        return false;
+    }
+
+    public function cb2($data) {
+        $this->assertEquals($data['message'], 'test');
+        return true;
+    }
+
     public function testSendCallback()
     {
-        // callback returns false (stops send event)
-        $callback = function($data) {
-            $this->assertEquals($data['message'], 'test');
-            return false;
-        };
 
-        $client = new Dummy_Raven_Client(array('send_callback' => $callback));
+        $client = new Dummy_Raven_Client(array('send_callback' => array($this, 'cb1')));
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 0);
 
-        // callback returns true (continue as usual)
-        $callback = function($data) {
-            $this->assertEquals($data['message'], 'test');
-            return true;
-        };
-
-        $client = new Dummy_Raven_Client(array('send_callback' => $callback));
+        $client = new Dummy_Raven_Client(array('send_callback' => array($this, 'cb2')));
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 1);
     }
-
 }
+
+
