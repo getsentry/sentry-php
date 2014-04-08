@@ -161,7 +161,7 @@ class Raven_Stacktrace
                 if (is_array($arg)) {
                   foreach ($arg as $key => $value) {
                     if (!is_array($value)) {
-                      $arg[$key] = substr($value, 0, 5000);
+                      $arg[$key] = substr($value, 0, 1024);
                     }
                   }
                 }
