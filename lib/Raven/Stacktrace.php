@@ -128,7 +128,10 @@ class Raven_Stacktrace
         if (strpos($frame['function'], '__lambda_func') !== false) {
             return array();
         }
-        if (strpos($frame['function'], '{closure}') !== false || $frame['class'] == 'Closure') {
+        if (isset($frame['class']) && $frame['class'] == 'Closure') {
+            return array();
+        }
+        if (strpos($frame['function'], '{closure}') !== false) {
             return array();
         }
         if (in_array($frame['function'], self::$statements)) {
