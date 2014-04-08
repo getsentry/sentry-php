@@ -158,6 +158,13 @@ class Raven_Stacktrace
         foreach ($frame['args'] as $i => $arg) {
             if (isset($params[$i])) {
                 // Assign the argument by the parameter name
+                if (is_array($arg)) {
+                  foreach ($arg as $key => $value) {
+                    if (!is_array($value)) {
+                      $arg[$key] = substr($value, 0, 5000);
+                    }
+                  }
+                }
                 $args[$params[$i]->name] = $arg;
             } else {
                 // TODO: Sentry thinks of these as context locals, so they must be named
