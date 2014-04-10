@@ -522,16 +522,16 @@ class Raven_Client
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
             curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
         }
-        $ret = curl_exec($curl);
+        curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
-        curl_close($curl);
         if (!$success) {
             // It'd be nice just to raise an exception here, but it's not very PHP-like
-            $this->_lasterror = $ret;
+            $this->_lasterror = curl_error($curl);
         } else {
             $this->_lasterror = null;
         }
+        curl_close($curl);
 
         return $success;
     }
