@@ -71,7 +71,6 @@ class Raven_Client
         }
 
         $this->_lasterror = null;
-        $this->_lasterror_message = null;
         $this->_user = null;
         $this->context = new Raven_Context();
     }
@@ -126,11 +125,6 @@ class Raven_Client
     public function getLastError()
     {
         return $this->_lasterror;
-    }
-
-    public function getLastErrorMessage()
-    {
-        return $this->_lasterror_message;
     }
 
     /**
@@ -528,16 +522,14 @@ class Raven_Client
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
             curl_setopt($curl, CURLOPT_TIMEOUT, $timeout);
         }
-        $ret = curl_exec($curl);
+        curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $success = ($code == 200);
         if (!$success) {
             // It'd be nice just to raise an exception here, but it's not very PHP-like
-            $this->_lasterror = $ret;
-            $this->_lasterror_message = curl_error($curl);
+            $this->_lasterror = curl_error($curl);
         } else {
             $this->_lasterror = null;
-            $this->_lasterror_message = null;
         }
         curl_close($curl);
 
