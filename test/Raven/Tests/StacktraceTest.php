@@ -213,19 +213,19 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         // just grab the last few frames
         $frames = array_slice($frames, -5);
         $frame = $frames[0];
-        $this->assertEquals($frame['module'], 'StacktraceTest.php:Raven_Tests_StacktraceTest');
-        $this->assertEquals($frame['function'], 'testDoesFixFrameInfo');
+        $this->assertEquals('StacktraceTest.php:Raven_Tests_StacktraceTest', $frame['module']);
+        $this->assertEquals('testDoesFixFrameInfo', $frame['function']);
         $frame = $frames[1];
-        $this->assertEquals($frame['module'], 'StacktraceTest.php');
-        $this->assertEquals($frame['function'], 'raven_test_create_stacktrace');
+        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
         $frame = $frames[2];
-        $this->assertEquals($frame['module'], 'StacktraceTest.php');
-        $this->assertEquals($frame['function'], 'raven_test_recurse');
+        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $this->assertEquals('raven_test_recurse', $frame['function']);
         $frame = $frames[3];
-        $this->assertEquals($frame['module'], 'StacktraceTest.php');
-        $this->assertEquals($frame['function'], 'raven_test_recurse');
+        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $this->assertEquals('raven_test_recurse', $frame['function']);
         $frame = $frames[4];
-        $this->assertEquals($frame['module'], 'StacktraceTest.php');
-        $this->assertEquals($frame['function'], 'raven_test_recurse');
+        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $this->assertEquals('raven_test_recurse', $frame['function']);
     }
 }
