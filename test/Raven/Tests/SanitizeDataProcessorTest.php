@@ -32,11 +32,11 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
 
         $vars = $data['sentry.interfaces.Http']['data'];
         $this->assertEquals($vars['foo'], 'bar');
-        $this->assertEquals($vars['password'], Raven_SanitizeDataProcessor::$mask);
-        $this->assertEquals($vars['the_secret'], Raven_SanitizeDataProcessor::$mask);
-        $this->assertEquals($vars['a_password_here'], Raven_SanitizeDataProcessor::$mask);
-        $this->assertEquals($vars['mypasswd'], Raven_SanitizeDataProcessor::$mask);
-        $this->assertEquals($vars['authorization'], Raven_SanitizeDataProcessor::$mask);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['password']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['the_secret']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['a_password_here']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['mypasswd']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['authorization']);
     }
 
     public function testDoesFilterCreditCard()
@@ -49,6 +49,6 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $this->assertEquals($data['ccnumba'], Raven_SanitizeDataProcessor::$mask);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $data['ccnumba']);
     }
 }

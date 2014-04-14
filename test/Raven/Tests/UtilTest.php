@@ -20,13 +20,13 @@ class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
     {
         $input = array('foo' => 'bar');
         $result = Raven_Util::get($input, 'baz', 'foo');
-        $this->assertEquals($result, 'foo');
+        $this->assertEquals('foo', $result);
     }
 
     public function testGetReturnsPresentValuesEvenWhenEmpty()
     {
         $input = array('foo' => '');
         $result = Raven_Util::get($input, 'foo', 'bar');
-        $this->assertEquals($result, '');
+        $this->assertEquals('', $result);
     }
 }
