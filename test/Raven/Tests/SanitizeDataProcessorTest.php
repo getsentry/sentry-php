@@ -21,7 +21,13 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
                     'the_secret' => 'hello',
                     'a_password_here' => 'hello',
                     'mypasswd' => 'hello',
-                    'authorization' => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ='
+                    'authorization' => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
+                    'card_number' => array(
+                        '1111',
+                        '2222',
+                        '3333',
+                        '4444'
+                    )
                 ),
             )
         );
@@ -37,6 +43,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($vars['a_password_here'], Raven_SanitizeDataProcessor::$mask);
         $this->assertEquals($vars['mypasswd'], Raven_SanitizeDataProcessor::$mask);
         $this->assertEquals($vars['authorization'], Raven_SanitizeDataProcessor::$mask);
+        $this->assertEquals(Raven_SanitizeDataProcessor::$mask, $vars['card_number']['0']);
     }
 
     public function testDoesFilterCreditCard()
