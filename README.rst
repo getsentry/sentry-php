@@ -162,6 +162,21 @@ If you're performing additional requests during the lifecycle, you'll also need 
     $client->context->clear();
 
 
+Contributing
+------------
+
+First, make sure you can run the test suite. Install development dependencies :
+
+::
+
+    $ composer install
+    
+You may now use phpunit :
+
+::
+
+    $ bin/phpunit
+
 
 
 Resources
