@@ -163,7 +163,7 @@ class Raven_Stacktrace
                 // Assign the argument by the parameter name
                 if (is_array($arg)) {
                   foreach ($arg as $key => $value) {
-                    if (!is_array($value) and ! is_object($value)) {
+                    if (is_string($value)) {
                       $arg[$key] = substr($value, 0, 1024);
                     }
                   }
