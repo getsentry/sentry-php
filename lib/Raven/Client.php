@@ -213,13 +213,8 @@ class Raven_Client
         }
 
         do {
-            $exc_message = $exception->getMessage();
-            if (empty($exc_message)) {
-                $exc_message = '<unknown exception>';
-            }
-
             $exc_data = array(
-                'value' => $exc_message,
+                'value' => $exception->getMessage(),
                 'type' => get_class($exception),
                 'module' => $exception->getFile() .':'. $exception->getLine(),
             );
