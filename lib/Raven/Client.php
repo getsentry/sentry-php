@@ -191,13 +191,10 @@ class Raven_Client
      */
     public function captureException($exception, $culprit_or_options=null, $logger=null, $vars=null)
     {
+        $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
+
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
-        }
-
-        $exc_message = $exception->getMessage();
-        if (empty($exc_message)) {
-            $exc_message = '<unknown exception>';
         }
 
         if (!is_array($culprit_or_options)) {
@@ -209,13 +206,53 @@ class Raven_Client
             $data = $culprit_or_options;
         }
 
-        $data['message'] = $exc_message;
-        $data['sentry.interfaces.Exception'] = array(
-            'value' => $exc_message,
-            'type' => get_class($exception),
-            'module' => $exception->getFile() .':'. $exception->getLine(),
-        );
+        // TODO(dcramer): DRY this up
+        $message = $exception->getMessage();
+        if (empty($message)) {
+            $message = '<unknown exception>';
+        }
 
+        do {
+            $exc_message = $exception->getMessage();
+            if (empty($exc_message)) {
+                $exc_message = '<unknown exception>';
+            }
+
+            $exc_data = array(
+                'value' => $exc_message,
+                'type' => get_class($exception),
+                'module' => $exception->getFile() .':'. $exception->getLine(),
+            );
+
+            /**'sentry.interfaces.Exception'
+             * Exception::getTrace doesn't store the point at where the exception
+             * was thrown, so we have to stuff it in ourselves. Ugh.
+             */
+            $trace = $exception->getTrace();
+            $frame_where_exception_thrown = array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            );
+
+            array_unshift($trace, $frame_where_exception_thrown);
+
+            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
+            if (!class_exists('Raven_Stacktrace')) {
+                spl_autoload_call('Raven_Stacktrace');
+            }
+
+            $exc_data['stacktrace'] = array(
+                'frames' => Raven_Stacktrace::get_stack_info($trace, $this->trace, $this->shift_vars, $vars),
+            );
+
+            $exceptions[] = $exc_data;
+
+        } while ($has_chained_exceptions && $exception = $exception->getPrevious());
+
+        $data['message'] = $message;
+        $data['sentry.interfaces.Exception'] = array(
+            'values' => array_reverse($exceptions),
+        );
         if ($logger !== null) {
             $data['logger'] = $logger;
         }
@@ -227,18 +264,6 @@ class Raven_Client
                 $data['level'] = self::ERROR;
             }
         }
-
-        /**'sentry.interfaces.Exception'
-         * Exception::getTrace doesn't store the point at where the exception
-         * was thrown, so we have to stuff it in ourselves. Ugh.
-         */
-        $trace = $exception->getTrace();
-        $frame_where_exception_thrown = array(
-            'file' => $exception->getFile(),
-            'line' => $exception->getLine(),
-        );
-
-        array_unshift($trace, $frame_where_exception_thrown);
 
         return $this->capture($data, $trace, $vars);
     }

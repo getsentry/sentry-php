@@ -268,12 +268,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $event = array_pop($events);
 
         $exc = $event['sentry.interfaces.Exception'];
-        $this->assertEquals($exc['value'], 'Foo bar');
-        $this->assertEquals($exc['type'], 'Exception');
-        $this->assertFalse(empty($exc['module']));
+        $this->assertEquals(count($exc['values']), 1);
+        $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
+        $this->assertEquals($exc['values'][0]['type'], 'Exception');
+        $this->assertFalse(empty($exc['values'][0]['module']));
 
-        $this->assertFalse(empty($event['sentry.interfaces.Stacktrace']['frames']));
-        $frames = $event['sentry.interfaces.Stacktrace']['frames'];
+        $this->assertFalse(empty($exc['values'][0]['stacktrace']['frames']));
+        $frames = $exc['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
         $this->assertTrue($frame['lineno'] > 0);
         $this->assertEquals($frame['module'], 'ClientTest.php:Raven_Tests_ClientTest');
