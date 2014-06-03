@@ -64,7 +64,7 @@ class Raven_Client
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
-        $this->use_exec = (bool) Raven_Util::get($options, 'use_exec', false);
+        $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
 
         $this->processors = array();
@@ -520,19 +520,30 @@ class Raven_Client
      */
     private function send_http($url, $data, $headers=array())
     {
-        if ($this->use_exec) {
-            $cmd = $this->curl_path.' -X POST ';
-            foreach ($headers as $key => $value) {
-                $cmd .= '-H \''. $key. ': '. $value. '\' ';
-            }
-            $cmd .= '-d \''. $data .'\' ';
-            $cmd .= '\''. $url .'\' ';
-            $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-            $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
-            exec($cmd);
-            return true; // The exec method is just fire and forget, so just assume it always works
+        if ($this->curl_method == 'exec') {
+            $this->send_http_asynchronous_exec($url, $data, $headers);
+        } else {
+            $this->send_http_synchronous($url, $data, $headers);
         }
+    }
 
+    private function send_http_asynchronous_curl_exec($url, $data, $headers) {
+        $cmd = $this->curl_path.' -X POST ';
+        foreach ($headers as $key => $value) {
+            $cmd .= '-H \''. $key. ': '. $value. '\' ';
+        }
+        $cmd .= '-d \''. $data .'\' ';
+        $cmd .= '\''. $url .'\' ';
+        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
+        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
+
+        exec($cmd);
+
+        return true; // The exec method is just fire and forget, so just assume it always works
+    }
+
+    private function send_http_synchronous($url, $data, $headers)
+    {
         $new_headers = array();
         foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
