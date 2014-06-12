@@ -1,0 +1,8 @@
+0.9.0
+-----
+
+- Protocol version 5
+- Default to asynchronous HTTP handler using curl_multi.
+
+
+(For previous versions see the commit history)
