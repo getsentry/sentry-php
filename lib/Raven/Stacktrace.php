@@ -88,6 +88,11 @@ class Raven_Stacktrace
             // dont set this as an empty array as PHP will treat it as a numeric array
             // instead of a mapping which goes against the defined Sentry spec
             if (!empty($vars)) {
+                foreach ($vars as $key => $value) {
+                    if (is_string($value) || is_numeric($value)) {
+                        $vars[$key] = substr($value, 0, 1024);
+                    }
+                }
                 $frame['vars'] = $vars;
             }
 
