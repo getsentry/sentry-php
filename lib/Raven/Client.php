@@ -380,6 +380,10 @@ class Raven_Client
         if (!isset($data['extra'])) $data['extra'] = array();
         if (!isset($data['event_id'])) $data['event_id'] = $this->uuid4();
 
+        if (isset($data['message'])) {
+            $data['message'] = substr($data['message'], 0, 1024);
+        }
+
         $data = array_merge($this->get_default_data(), $data);
 
         if ($this->is_http_request()) {
