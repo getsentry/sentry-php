@@ -554,7 +554,7 @@ class Raven_Client
         if ($this->curl_method == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
         } elseif ($this->curl_method == 'exec') {
-            $this->send_http_asynchronous_exec($url, $data, $headers);
+            $this->send_http_asynchronous_curl_exec($url, $data, $headers);
         } else {
             $this->send_http_synchronous($url, $data, $headers);
         }
