@@ -218,7 +218,7 @@ class Raven_Client
             $message = '<unknown exception>';
         }
 
-		$exc = $exception;
+        $exc = $exception;
         do {
             $exc_data = array(
                 'value' => $exc->getMessage(),
