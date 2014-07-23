@@ -33,5 +33,14 @@ class Raven_Tests_CompatTest extends PHPUnit_Framework_TestCase
 
         $result = Raven_Compat::_json_encode(array('foo' => array('bar' => 1)));
         $this->assertEquals('{"foo":{"bar":1}}', $result);
+
+        $result = Raven_Compat::_json_encode(array(1, 2, 3, 4, 'foo', 'bar'));
+        $this->assertEquals('[1,2,3,4,"foo","bar"]', $result);
+
+        $result = Raven_Compat::_json_encode(array(1, 'foo', 'foobar' => 'bar'));
+        $this->assertEquals('{0:1,1:"foo","foobar":"bar"}', $result);
+
+        $result = Raven_Compat::_json_encode(array(array()));
+        $this->assertEquals('[[]]', $result);
     }
 }
