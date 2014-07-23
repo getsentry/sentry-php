@@ -218,21 +218,22 @@ class Raven_Client
             $message = '<unknown exception>';
         }
 
+        $exc = $exception;
         do {
             $exc_data = array(
-                'value' => $exception->getMessage(),
-                'type' => get_class($exception),
-                'module' => $exception->getFile() .':'. $exception->getLine(),
+                'value' => $exc->getMessage(),
+                'type' => get_class($exc),
+                'module' => $exc->getFile() .':'. $exc->getLine(),
             );
 
             /**'sentry.interfaces.Exception'
              * Exception::getTrace doesn't store the point at where the exception
              * was thrown, so we have to stuff it in ourselves. Ugh.
              */
-            $trace = $exception->getTrace();
+            $trace = $exc->getTrace();
             $frame_where_exception_thrown = array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
+                'file' => $exc->getFile(),
+                'line' => $exc->getLine(),
             );
 
             array_unshift($trace, $frame_where_exception_thrown);
@@ -248,7 +249,7 @@ class Raven_Client
 
             $exceptions[] = $exc_data;
 
-        } while ($has_chained_exceptions && $exception = $exception->getPrevious());
+        } while ($has_chained_exceptions && $exc = $exc->getPrevious());
 
         $data['message'] = $message;
         $data['sentry.interfaces.Exception'] = array(

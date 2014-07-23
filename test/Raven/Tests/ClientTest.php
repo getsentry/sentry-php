@@ -320,6 +320,31 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     }
 
+    public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug() {
+        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+            $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
+        }
+
+        $client = new Dummy_Raven_Client();
+        $e1 = new ErrorException('First', 0, E_DEPRECATED);
+        $e2 = new ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
+        $e3 = new ErrorException('Third', 0, E_ERROR, __FILE__, __LINE__, $e2);
+
+        $client->captureException($e1);
+        $client->captureException($e2);
+        $client->captureException($e3);
+        $events = $client->getSentEvents();
+
+        $event = array_pop($events);
+        $this->assertEquals($event['level'], Dummy_Raven_Client::ERROR);
+
+        $event = array_pop($events);
+        $this->assertEquals($event['level'], Dummy_Raven_Client::INFO);
+
+        $event = array_pop($events);
+        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
+    }
+
     public function testCaptureExceptionHandlesOptionsAsSecondArg()
     {
         $client = new Dummy_Raven_Client();
