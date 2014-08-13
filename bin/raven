@@ -1,5 +1,9 @@
 #!/usr/bin/php
 <?php
+
+// Maximize error reporting
+error_reporting(E_ALL | E_STRICT);
+
 // TODO: if we could get rid of this and have composer figure things out it'd make it
 // a bit more sane
 require(dirname(__file__) . '/../lib/Raven/Autoloader.php');
