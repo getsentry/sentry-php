@@ -86,6 +86,27 @@ And including it using the autoloader:
     require_once '/path/to/Raven/library/Raven/Autoloader.php';
     Raven_Autoloader::register();
 
+Testing Your Connection
+-----------------------
+
+The PHP client includes a simple helper script to test your connection and credentials with
+the Sentry master server:
+
+.. code-block:: bash
+
+    $ bin/raven test https://public:secret@app.getsentry.com/1
+    Client configuration:
+    -> servers: [https://sentry.example.com/api/store/]
+    -> project: 1
+    -> public_key: public
+    -> secret_key: secret
+
+    Sending a test event:
+    -> event ID: f1765c9aed4f4ceebe5a93df9eb2d34f
+
+    Done!
+
+.. note:: The CLI enforces the synchronous option on HTTP requests whereas the default configuration is asyncrhonous.
 
 Configuration
 -------------
@@ -116,6 +137,25 @@ An array of tags to apply to events in this context.
     'tags' => array(
         'php_version' => phpversion(),
     )
+
+
+``curl_method``
+~~~~~~~~~~~~~~~
+
+Defaults to 'async'.
+
+Available methods:
+
+- async (default): uses a curl_multi handler for best-effort asynchronous submissions
+- sync: send requests immediately when they're made
+- exec: asynchronously send events by forking a curl process for each item
+
+``curl_path``
+~~~~~~~~~~~~~
+
+Defaults to 'curl'.
+
+Specify the path to the curl binary to be used with the 'exec' curl method.
 
 
 ``trace``
@@ -170,7 +210,7 @@ First, make sure you can run the test suite. Install development dependencies :
 ::
 
     $ composer install
-    
+
 You may now use phpunit :
 
 ::
