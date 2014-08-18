@@ -524,7 +524,7 @@ class Raven_Client
         return true;
     }
 
-    private function get_curl_options(){
+    protected function get_curl_options(){
         $options = array(
             CURLOPT_VERBOSE => false,
             CURLOPT_SSL_VERIFYHOST => 2,
