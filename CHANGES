@@ -1,3 +1,10 @@
+0.9.1
+-----
+
+- Change default curl connection to 'sync'
+- Improve CLI reporting
+
+
 0.9.0
 -----
 
