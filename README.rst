@@ -142,12 +142,12 @@ An array of tags to apply to events in this context.
 ``curl_method``
 ~~~~~~~~~~~~~~~
 
-Defaults to 'async'.
+Defaults to 'sync'.
 
 Available methods:
 
-- async (default): uses a curl_multi handler for best-effort asynchronous submissions
 - sync: send requests immediately when they're made
+- async (default): uses a curl_multi handler for best-effort asynchronous submissions
 - exec: asynchronously send events by forking a curl process for each item
 
 ``curl_path``

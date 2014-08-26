@@ -64,7 +64,7 @@ class Raven_Client
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
-        $this->curl_method = Raven_Util::get($options, 'curl_method', 'async');
+        $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
 
         $this->processors = array();
