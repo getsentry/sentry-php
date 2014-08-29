@@ -14,6 +14,9 @@ raven-php is a PHP client for `Sentry <http://aboutsentry.com/>`_.
 
     // Capture a message
     $event_id = $client->getIdent($client->captureMessage('my log message'));
+    if ($client->getLastError() !== null) {
+        printf('There was an error sending the event to Sentry: %s', $client->getLastError());
+    }
 
     // Capture an exception
     $event_id = $client->getIdent($client->captureException($ex));
