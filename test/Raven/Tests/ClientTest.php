@@ -615,5 +615,3 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1, count($events));
     }
 }
-
-

@@ -66,6 +66,7 @@ class Raven_Client
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
+        $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
@@ -524,11 +525,18 @@ class Raven_Client
         return true;
     }
 
-    protected function get_curl_options(){
+    protected function get_default_ca_cert() {
+        return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
+    }
+
+    protected function get_curl_options()
+    {
         $options = array(
             CURLOPT_VERBOSE => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_CAPATH => $this->ca_cert,
+            CURLOPT_USERAGENT => 'raven-php/' . self::VERSION,
         );
         if ($this->http_proxy) {
             $options[CURLOPT_PROXY] = $this->http_proxy;
@@ -562,6 +570,7 @@ class Raven_Client
     }
 
     private function send_http_asynchronous_curl_exec($url, $data, $headers) {
+        // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
         foreach ($headers as $key => $value) {
             $cmd .= '-H \''. $key. ': '. $value. '\' ';
