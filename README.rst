@@ -174,6 +174,17 @@ Adjust the default logger name for messages.
 
 Defaults to ``php``.
 
+``ca_cert``
+~~~~~~~~~~~
+
+The path to the CA certificate bundle.
+
+Defaults to the common bundle which includes getsentry.com: ./data/cacert.pem
+
+Caveats:
+
+- The CA bundle is ignored unless curl throws an error suggesting it needs a cert.
+- The option is only currently used within the synchronous curl transport.
 
 Providing Request Context
 -------------------------
