@@ -216,7 +216,7 @@ class Raven_Client
         // TODO(dcramer): DRY this up
         $message = $exception->getMessage();
         if (empty($message)) {
-            $message = '<unknown exception>';
+            $message = get_class($exception);
         }
 
         $exc = $exception;
