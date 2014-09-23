@@ -186,6 +186,13 @@ Caveats:
 - The CA bundle is ignored unless curl throws an error suggesting it needs a cert.
 - The option is only currently used within the synchronous curl transport.
 
+``curl_ssl_version``
+~~~~~~~~~~~~~~~~~~~~~~
+
+The SSL version (2 or 3) to use.
+By default PHP will try to determine this itself, although in some cases this must be set manually.
+
+
 Providing Request Context
 -------------------------
 
