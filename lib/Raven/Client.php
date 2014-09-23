@@ -67,6 +67,7 @@ class Raven_Client
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
+		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
 
         $this->processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
@@ -541,6 +542,9 @@ class Raven_Client
         if ($this->http_proxy) {
             $options[CURLOPT_PROXY] = $this->http_proxy;
         }
+        if ($this->curl_ssl_version) {
+	        $options[CURLOPT_SSLVERSION] = $this->curl_ssl_version;
+        }        
         if (defined('CURLOPT_TIMEOUT_MS')) {
             // MS is available in curl >= 7.16.2
             $timeout = max(1, ceil(1000 * $this->timeout));
