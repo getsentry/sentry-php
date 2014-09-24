@@ -149,8 +149,8 @@ Defaults to 'sync'.
 
 Available methods:
 
-- sync: send requests immediately when they're made
-- async (default): uses a curl_multi handler for best-effort asynchronous submissions
+- sync (default): send requests immediately when they're made
+- async: uses a curl_multi handler for best-effort asynchronous submissions
 - exec: asynchronously send events by forking a curl process for each item
 
 ``curl_path``
