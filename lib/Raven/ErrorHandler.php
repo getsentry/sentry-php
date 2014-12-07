@@ -30,9 +30,11 @@ class Raven_ErrorHandler
     private $reservedMemory;
     private $send_errors_last = false;
     private $error_types = -1;
+    private $error_types_shutdown;
 
     public function __construct($client, $send_errors_last = false)
     {
+        $this->error_types_shutdown = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
         $this->client = $client;
         register_shutdown_function(array($this, 'detectShutdown'));
         if ($send_errors_last) {
@@ -71,9 +73,7 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
-
-        if ($lastError['type'] & $errors) {
+        if ($lastError['type'] & $this->error_types_shutdown) {
             $e = new ErrorException(
                 @$lastError['message'], @$lastError['type'], @$lastError['type'],
                 @$lastError['file'], @$lastError['line']
@@ -95,8 +95,12 @@ class Raven_ErrorHandler
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
-    public function registerShutdownFunction($reservedMemorySize = 10)
+    public function registerShutdownFunction($reservedMemorySize = 10, $error_types = null)
     {
+        if ($error_types !== null) {
+            $this->error_types_shutdown = $error_types;
+        }
+
         register_shutdown_function(array($this, 'handleFatalError'));
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
