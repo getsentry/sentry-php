@@ -26,6 +26,8 @@ class Raven_Client
     const ERROR = 'error';
     const FATAL = 'fatal';
 
+    const MESSAGE_LIMIT = 1024;
+
     var $severity_map;
     var $extra_data;
 
@@ -58,6 +60,7 @@ class Raven_Client
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
+        $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = NULL;
         $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
@@ -246,7 +249,9 @@ class Raven_Client
             }
 
             $exc_data['stacktrace'] = array(
-                'frames' => Raven_Stacktrace::get_stack_info($trace, $this->trace, $this->shift_vars, $vars),
+                'frames' => Raven_Stacktrace::get_stack_info(
+                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit
+                ),
             );
 
             $exceptions[] = $exc_data;
@@ -384,7 +389,7 @@ class Raven_Client
         if (!isset($data['event_id'])) $data['event_id'] = $this->uuid4();
 
         if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, 1024);
+            $data['message'] = substr($data['message'], 0, $this->message_limit);
         }
 
         $data = array_merge($this->get_default_data(), $data);
@@ -420,7 +425,9 @@ class Raven_Client
 
             if (!isset($data['sentry.interfaces.Stacktrace'])) {
                 $data['sentry.interfaces.Stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info($stack, $this->trace, $this->shift_vars, $vars),
+                    'frames' => Raven_Stacktrace::get_stack_info(
+                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit
+                    ),
                 );
             }
         }
