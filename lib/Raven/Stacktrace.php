@@ -13,7 +13,8 @@ class Raven_Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, $trace=false, $shiftvars=true, $errcontext = null)
+    public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
+                            $frame_var_limit = Raven_Client::MESSAGE_LIMIT)
     {
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
@@ -66,7 +67,7 @@ class Raven_Stacktrace
             } else {
                 if ($trace) {
                     if ($shiftvars) {
-                        $vars = self::get_frame_context($nextframe);
+                        $vars = self::get_frame_context($nextframe, $frame_var_limit);
                     } else {
                         $vars = self::get_caller_frame_context($frame);
                     }
@@ -90,7 +91,7 @@ class Raven_Stacktrace
             if (!empty($vars)) {
                 foreach ($vars as $key => $value) {
                     if (is_string($value) || is_numeric($value)) {
-                        $vars[$key] = substr($value, 0, 1024);
+                        $vars[$key] = substr($value, 0, $frame_var_limit);
                     }
                 }
                 $frame['vars'] = $vars;
@@ -118,7 +119,7 @@ class Raven_Stacktrace
 
     }
 
-    public static function get_frame_context($frame)
+    public static function get_frame_context($frame, $frame_arg_limit = Raven_Client::MESSAGE_LIMIT)
     {
         // The reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
@@ -169,7 +170,7 @@ class Raven_Stacktrace
                 if (is_array($arg)) {
                   foreach ($arg as $key => $value) {
                     if (is_string($value) || is_numeric($value)) {
-                      $arg[$key] = substr($value, 0, 1024);
+                      $arg[$key] = substr($value, 0, $frame_arg_limit);
                     }
                   }
                 }
@@ -184,7 +185,7 @@ class Raven_Stacktrace
         return $args;
     }
 
-    private static function read_source_file($filename, $lineno, $context_lines=5)
+    private static function read_source_file($filename, $lineno, $context_lines = 5)
     {
         $frame = array(
             'prefix' => array(),
