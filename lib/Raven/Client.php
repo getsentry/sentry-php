@@ -689,10 +689,10 @@ class Raven_Client
      */
     private function get_current_url()
     {
-        // When running from commandline.
-        if (php_sapi_name() == "cli") {
-    	    return null;
-	}
+        // When running from commandline the REQUEST_URI is missing.
+        if (!isset($_SERVER['REQUEST_URI']) || !isset($_SERVER['HTTP_HOST'])) {
+            return null;
+        }
 
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
