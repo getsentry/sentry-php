@@ -199,6 +199,25 @@ Defaults to 1024 characters.
 
 This value is used to truncate message and frame variables. However it is not guarantee that length of whole message will be restricted by this value.
 
+``processors``
+~~~~~~~~~~~~~~~~~
+
+An array of classes to use to process data before it is sent to Sentry. By default, Raven_SanitizeDataProcessor is used
+
+``processorOptions``
+~~~~~~~~~~~~~~~~~
+Options that will be passed on to a setProcessorOptions() function in a Raven_Processor sub-class before that Processor is added to the list of processors used by Raven_Client
+
+An example of overriding the regular expressions in Raven_SanitizeDataProcessor is below:
+
+.. code-block:: php
+
+    'processorOptions' => array(
+        'Raven_SanitizeDataProcessor' => array(
+                    'fields_re' => '/(user_password|user_token|user_secret)/i',
+                    'values_re' => '/^(?:\d[ -]*?){15,16}$/'
+                )
+    )
 
 Providing Request Context
 -------------------------

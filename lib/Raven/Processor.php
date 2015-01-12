@@ -4,7 +4,7 @@
  *
  * @package raven
  */
-class Raven_Processor
+abstract class Raven_Processor
 {
     public function __construct(Raven_Client $client)
     {
@@ -13,8 +13,8 @@ class Raven_Processor
 
     /**
      * Process and sanitize data, modifying the existing value if necessary.
+     *
+     * @param array $data   Array of log data
      */
-    public function process(&$data)
-    {
-    }
+    abstract public function process(&$data);
 }

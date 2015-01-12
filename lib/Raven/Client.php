@@ -72,10 +72,7 @@ class Raven_Client
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
 		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
 
-        $this->processors = array();
-        foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
-            $this->processors[] = new $processor($this);
-        }
+        $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
         $this->_user = null;
@@ -94,7 +91,32 @@ class Raven_Client
     }
 
     /**
+     * Sets the Raven_Processor sub-classes to be used when data is processed before being
+     * sent to Sentry.
+     *
+     * @param $options
+     * @return array
+     */
+    public function setProcessorsFromOptions($options){
+        $processors = array();
+        foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
+            $new_processor = new $processor($this);
+
+            if( isset($options['processorOptions']) && is_array($options['processorOptions']) ){
+                if( isset($options['processorOptions'][$processor]) && method_exists($processor, 'setProcessorOptions') ){
+                    $new_processor->setProcessorOptions($options['processorOptions'][$processor]);
+                }
+            }
+            $processors[] = $new_processor;
+        }
+        return $processors;
+    }
+
+    /**
      * Parses a Raven-compatible DSN and returns an array of its values.
+     *
+     * @param string    $dsn    Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @return array            parsed DSN
      */
     public static function parseDSN($dsn)
     {
@@ -457,6 +479,11 @@ class Raven_Client
         $data = Raven_Serializer::serialize($data);
     }
 
+    /**
+     * Process data through all defined Raven_Processor sub-classes
+     *
+     * @param array     $data       Associative array of data to log
+     */
     public function process(&$data)
     {
         foreach ($this->processors as $processor) {
@@ -477,6 +504,11 @@ class Raven_Client
         }
     }
 
+    /**
+     * Wrapper to handle encoding and sending data to all defined Sentry servers
+     *
+     * @param array     $data       Associative array of data to log
+     */
     public function send($data)
     {
         if (is_callable($this->send_callback) && !call_user_func($this->send_callback, $data)) {
@@ -510,6 +542,13 @@ class Raven_Client
         }
     }
 
+    /**
+     * Send data to Sentry
+     *
+     * @param string    $url        Full URL to Sentry
+     * @param array     $data       Associative array of data to log
+     * @param array     $headers    Associative array of headers
+     */
     private function send_remote($url, $data, $headers=array())
     {
         $parts = parse_url($url);
@@ -523,6 +562,13 @@ class Raven_Client
         }
     }
 
+    /**
+     * Send data to Sentry via udp socket
+     *
+     * @param string    $netloc     host:port || host
+     * @param array     $data       Associative array of data to log
+     * @param array     $headers    Associative array of headers
+     */
     private function send_udp($netloc, $data, $headers)
     {
         list($host, $port) = explode(':', $netloc);
@@ -568,6 +614,10 @@ class Raven_Client
 
     /**
      * Send the message over http to the sentry url given
+     *
+     * @param string $url       URL of the Sentry instance to log to
+     * @param array $data       Associative array of data to log
+     * @param array $headers    Associative array of headers
      */
     private function send_http($url, $data, $headers=array())
     {
@@ -580,6 +630,14 @@ class Raven_Client
         }
     }
 
+    /**
+     * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
+     *
+     * @param string    $url        URL of the Sentry instance to log to
+     * @param array     $data       Associative array of data to log
+     * @param array     $headers    Associative array of headers
+     * @return bool
+     */
     private function send_http_asynchronous_curl_exec($url, $data, $headers) {
         // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
@@ -596,6 +654,14 @@ class Raven_Client
         return true; // The exec method is just fire and forget, so just assume it always works
     }
 
+    /**
+     * Send a blocking cURL to Sentry and check for errors from cURL
+     *
+     * @param string    $url        URL of the Sentry instance to log to
+     * @param array     $data       Associative array of data to log
+     * @param array     $headers    Associative array of headers
+     * @return bool
+     */
     private function send_http_synchronous($url, $data, $headers)
     {
         $new_headers = array();
@@ -636,6 +702,15 @@ class Raven_Client
         return $success;
     }
 
+    /**
+     * Generate a Sentry authorization header string
+     *
+     * @param string    $timestamp      Timestamp when the event occurred
+     * @param string    $client         HTTP client name (not Raven_Client object)
+     * @param string    $api_key        Sentry API key
+     * @param string    $secret_key     Sentry API key
+     * @return string
+     */
     protected function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
         $header = array(
@@ -658,6 +733,8 @@ class Raven_Client
 
     /**
      * Generate an uuid4 value
+     *
+     * @return string
      */
     private function uuid4()
     {
@@ -686,6 +763,8 @@ class Raven_Client
 
     /**
      * Return the URL for the current request
+     *
+     * @return string|null
      */
     private function get_current_url()
     {
@@ -700,6 +779,12 @@ class Raven_Client
         return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
 
+    /**
+     * Get the value of a key from $_SERVER
+     *
+     * @param string $key       Key whose value you wish to obtain
+     * @return string           Key's value
+     */
     private function _server_variable($key)
     {
         if (isset($_SERVER[$key])) {
@@ -709,6 +794,12 @@ class Raven_Client
         return '';
     }
 
+    /**
+     * Translate a PHP Error constant into a Sentry log level group
+     *
+     * @param string $severity  PHP E_$x error constant
+     * @return string           Sentry log level group
+     */
     public function translateSeverity($severity) {
         if (is_array($this->severity_map) && isset($this->severity_map[$severity])) {
             return $this->severity_map[$severity];
@@ -737,10 +828,23 @@ class Raven_Client
         return Raven_Client::ERROR;
     }
 
+    /**
+     * Provide a map of PHP Error constants to Sentry logging groups to use instead
+     * of the defaults in translateSeverity()
+     *
+     * @param array $map
+     */
     public function registerSeverityMap($map) {
         $this->severity_map = $map;
     }
 
+    /**
+     * Convenience function for setting a user's ID and Email
+     *
+     * @param string $id            User's ID
+     * @param string|null $email    User's email
+     * @param array $data           Additional user data
+     */
     public function set_user_data($id, $email=null, $data=array()) {
         $this->user_context(array_merge(array(
             'id'    => $id,
@@ -750,6 +854,8 @@ class Raven_Client
 
     /**
      * Sets user context.
+     *
+     * @param array $data   Associative array of user data
      */
     public function user_context($data) {
         $this->context->user = $data;
@@ -757,6 +863,8 @@ class Raven_Client
 
     /**
      * Appends tags context.
+     *
+     * @param array $data   Associative array of tags
      */
     public function tags_context($data) {
         $this->context->tags = array_merge($this->context->tags, $data);
@@ -764,10 +872,17 @@ class Raven_Client
 
     /**
      * Appends additional context.
+     *
+     * @param array $data   Associative array of extra data
      */
     public function extra_context($data) {
         $this->context->extra = array_merge($this->context->extra, $data);
     }
 
-
+    /**
+     * @param array $processors
+     */
+    public function setProcessors(array $processors){
+        $this->processors = $processors;
+    }
 }
