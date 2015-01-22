@@ -69,6 +69,7 @@ class Raven_Client
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
+        $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', false);
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
 		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
 
@@ -551,7 +552,10 @@ class Raven_Client
         }
         if ($this->curl_ssl_version) {
 	        $options[CURLOPT_SSLVERSION] = $this->curl_ssl_version;
-        }        
+        }
+        if ($this->curl_ipv4) {
+            $options[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        }
         if (defined('CURLOPT_TIMEOUT_MS')) {
             // MS is available in curl >= 7.16.2
             $timeout = max(1, ceil(1000 * $this->timeout));
