@@ -69,7 +69,7 @@ class Raven_Client
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
-        $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', false);
+        $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', true);
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
 		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
 
