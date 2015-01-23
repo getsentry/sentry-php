@@ -381,10 +381,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testDoesRegisterProcessors()
     {
         $client = new Dummy_Raven_Client(array(
-            'processors' => array('Raven_Processor'),
+            'processors' => array('Raven_SanitizeDataProcessor'),
         ));
         $this->assertEquals(count($client->processors), 1);
-        $this->assertTrue($client->processors[0] instanceof Raven_Processor);
+        $this->assertTrue($client->processors[0] instanceof Raven_SanitizeDataProcessor);
     }
 
     public function testProcessDoesCallProcessors()
