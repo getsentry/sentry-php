@@ -150,7 +150,7 @@ class Raven_Client
         }
 
         return array(
-            'servers'    => array(sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path)),
+            'servers'    => array(sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project)),
             'project'    => $project,
             'public_key' => $username,
             'secret_key' => $password,
