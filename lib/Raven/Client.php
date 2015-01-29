@@ -780,7 +780,12 @@ class Raven_Client
         $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 
-        return $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
+        $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
+            : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
+            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
+
+        return $schema . $host . $_SERVER['REQUEST_URI'];
     }
 
     /**
