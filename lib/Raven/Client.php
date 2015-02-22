@@ -650,7 +650,7 @@ class Raven_Client
         }
         $cmd .= '-d \''. $data .'\' ';
         $cmd .= '\''. $url .'\' ';
-        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
+        $cmd .= '-m 10 ';  // 10 second timeout for the whole process (connect + send)
         $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
 
         exec($cmd);
