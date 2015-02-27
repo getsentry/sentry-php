@@ -71,6 +71,7 @@ class Raven_Client
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
         $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', true);
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
+        $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
 		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
 
         $this->processors = $this->setProcessorsFromOptions($options);
@@ -589,7 +590,7 @@ class Raven_Client
         $options = array(
             CURLOPT_VERBOSE => false,
             CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
             CURLOPT_CAINFO => $this->ca_cert,
             CURLOPT_USERAGENT => 'raven-php/' . self::VERSION,
         );
