@@ -1,3 +1,14 @@
+0.11.0
+------
+
+- New configuration parameter: 'release'
+- New configuration parameter: 'message_limit'
+- New configuration parameter: 'curl_ssl_version'
+- New configuration parameter: 'curl_ipv4'
+- New configuration parameter: 'verify_ssl'
+- Updated remote endpoint to use modern project-based path.
+- Expanded default sanitizer support to include 'auth_pw' attribute.
+
 0.10.0
 ------
 
