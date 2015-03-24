@@ -70,7 +70,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $client     = new Raven_Client();
         $processor  = new Raven_SanitizeDataProcessor($client);
 
-        $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number)/i','got default fields');
+        $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i','got default fields');
         $this->assertEquals($processor->getValuesRe(),'/^(?:\d[ -]*?){13,16}$/','got default values');
 
         $options = array(
