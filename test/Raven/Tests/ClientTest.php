@@ -72,7 +72,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $result = Raven_Client::parseDsn('http://public:secret@example.com/1');
 
         $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['servers'], array('http://example.com/api/store/'));
+        $this->assertEquals($result['servers'], array('http://example.com/api/1/store/'));
         $this->assertEquals($result['public_key'], 'public');
         $this->assertEquals($result['secret_key'], 'secret');
     }
@@ -82,7 +82,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $result = Raven_Client::parseDsn('https://public:secret@example.com/1');
 
         $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['servers'], array('https://example.com/api/store/'));
+        $this->assertEquals($result['servers'], array('https://example.com/api/1/store/'));
         $this->assertEquals($result['public_key'], 'public');
         $this->assertEquals($result['secret_key'], 'secret');
     }
@@ -92,7 +92,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $result = Raven_Client::parseDsn('http://public:secret@example.com/app/1');
 
         $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['servers'], array('http://example.com/app/api/store/'));
+        $this->assertEquals($result['servers'], array('http://example.com/app/api/1/store/'));
         $this->assertEquals($result['public_key'], 'public');
         $this->assertEquals($result['secret_key'], 'secret');
     }
@@ -102,7 +102,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $result = Raven_Client::parseDsn('http://public:secret@example.com:9000/app/1');
 
         $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['servers'], array('http://example.com:9000/app/api/store/'));
+        $this->assertEquals($result['servers'], array('http://example.com:9000/app/api/1/store/'));
         $this->assertEquals($result['public_key'], 'public');
         $this->assertEquals($result['secret_key'], 'secret');
     }
@@ -157,7 +157,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Raven_Client('http://public:secret@example.com/1');
 
         $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->servers, array('http://example.com/api/1/store/'));
         $this->assertEquals($client->public_key, 'public');
         $this->assertEquals($client->secret_key, 'secret');
     }
@@ -169,7 +169,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
 
         $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->servers, array('http://example.com/api/1/store/'));
         $this->assertEquals($client->public_key, 'public');
         $this->assertEquals($client->secret_key, 'secret');
         $this->assertEquals($client->site, 'foo');
@@ -178,21 +178,23 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testOptionsFirstArgument()
     {
         $client = new Raven_Client(array(
-            'servers' => array('http://example.com/api/store/'),
+            'servers' => array('http://example.com/api/1/store/'),
+            'project' => 1,
         ));
 
-        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->servers, array('http://example.com/api/1/store/'));
     }
 
     public function testOptionsFirstArgumentWithOptions()
     {
         $client = new Raven_Client(array(
-            'servers' => array('http://example.com/api/store/'),
+            'servers' => array('http://example.com/api/1/store/'),
+            'project' => 1,
         ), array(
             'site' => 'foo',
         ));
 
-        $this->assertEquals($client->servers, array('http://example.com/api/store/'));
+        $this->assertEquals($client->servers, array('http://example.com/api/1/store/'));
         $this->assertEquals($client->site, 'foo');
     }
 
