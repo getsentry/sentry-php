@@ -59,7 +59,7 @@ class Raven_ErrorHandler
         }
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {
-            call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);
+            return call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);
         }
     }
 
