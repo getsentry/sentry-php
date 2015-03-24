@@ -5,7 +5,7 @@ develop:
 	make setup-git
 
 test:
-	vendor/bin/phpunit
+	vendor/phpunit/phpunit/phpunit.php
 
 setup-git:
 	git config branch.autosetuprebase always
