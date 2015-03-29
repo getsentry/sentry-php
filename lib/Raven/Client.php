@@ -73,8 +73,8 @@ class Raven_Client
         $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', true);
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
         $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
-		$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
-	$this->count_of_dropped_stacks = Raven_Util::get($options', 'count_of_dropped_stacks', 0);
+	$this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
+	$this->count_of_dropped_stacks = (int) Raven_Util::get($options, 'count_of_dropped_stacks', 0);
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -444,7 +444,10 @@ class Raven_Client
             $stack = debug_backtrace();
 
             // Drop last stack
-            $stack = array_slice($stack, $this->count_of_dropped_stacks + 1);
+            $stacksToDrop = $this->count_of_dropped_stacks + 1;
+            if (count($stack) > $stacksToDrop ) {
+            	$stack = array_slice($stack, $stacksToDrop);
+            }
         }
 
         if (!empty($stack)) {
