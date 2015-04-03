@@ -13,17 +13,9 @@ class SanitizeDataProcessor implements Sanitizer
     const MASK = '********';
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
     const VALUES_RE = '/^(?:\d[ -]*?){13,16}$/';
-
-    private $client;
+    
     private $fields_re;
     private $values_re;
-
-    public function __construct(Raven_Client $client)
-    {
-        $this->client       = $client;
-        $this->fields_re    = self::FIELDS_RE;
-        $this->values_re   = self::VALUES_RE;
-    }
 
     /**
      * Override the default processor options
