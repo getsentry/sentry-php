@@ -1,4 +1,4 @@
-<?php namespace Raven;
+<?php namespace Raven\Util;
 
 /**
  * Storage for additional client context.
@@ -7,10 +7,26 @@
  */
 class Context
 {
-    public function __construct()
-    {
-        $this->clear();
-    }
+    /**
+     * Tags to send with each request
+     *
+     * @var array
+     */
+    public $tags = array();
+
+    /**
+     * Any extra info to send with each request
+     *
+     * @var array
+     */
+    public $extra = array();
+
+    /**
+     * The user associated with this request
+     *
+     * @var mixed
+     */
+    public $user;
 
     /**
      * Clean up existing context.

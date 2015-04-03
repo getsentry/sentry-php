@@ -1,4 +1,4 @@
-<?php namespace Raven;
+<?php namespace Raven\Util;
 
 /*
      * Copyright 2012 Facebook, Inc.

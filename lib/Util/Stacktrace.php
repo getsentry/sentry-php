@@ -1,4 +1,4 @@
-<?php namespace Raven;
+<?php namespace Raven\Util;
 
 /**
  * Small helper class to inspect the stacktrace
