@@ -16,7 +16,7 @@
  */
 
 // TODO(dcramer): handle ca_cert
-class CurlHandler
+class AsyncCurl
 {
     private $join_timeout;
     private $multi_handle;
