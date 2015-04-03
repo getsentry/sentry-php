@@ -24,8 +24,8 @@
         "bin-dir": "bin"
     },
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
+        "psr-4" : {
+            "Raven\\" : "lib/"
         }
     },
     "extra": {
