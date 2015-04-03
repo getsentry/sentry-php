@@ -8,6 +8,8 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+use Raven\Util\Options;
+use Raven\Util\Dsn;
 
 /**
  * Raven PHP Client
@@ -16,183 +18,107 @@
  */
 class Client
 {
-    const VERSION = '0.11.0';
-    const PROTOCOL = '5';
+    /**
+     * Store errors for bulk sending?
+     *
+     * @var bool
+     */
+    public $store = false;
 
-    const DEBUG = 'debug';
-    const INFO = 'info';
-    const WARN = 'warning';
-    const WARNING = 'warning';
-    const ERROR = 'error';
-    const FATAL = 'fatal';
+    /**
+     * Sentry DSN
+     *
+     * @var \Raven\Util\Dsn
+     */
+    protected $dsn;
 
-    const MESSAGE_LIMIT = 1024;
+    /**
+     * Options object
+     *
+     * @var \Raven\Util\Options
+     */
+    protected $options;
 
-    var $severity_map;
-    var $extra_data;
+    protected $lastError;
 
-    var $store_errors_for_bulk_send = false;
+    /**
+     * The user associated with this request.
+     *
+     * @var Context
+     */
+    protected $context;
 
-    public function __construct($options_or_dsn = null, $options = array())
+    /**
+     * Make a Raven client
+     *
+     * @param \Raven\Util\Dsn|string|null $dsn
+     * @param \Raven\Util\Options|array   $options
+     * @throws \InvalidArgumentException
+     */
+    public function __construct($dsn = null, $options = array())
     {
-        if (is_null($options_or_dsn) && ! empty($_SERVER['SENTRY_DSN'])) {
-            // Read from environment
-            $options_or_dsn = $_SERVER['SENTRY_DSN'];
-        }
-        if ( ! is_array($options_or_dsn)) {
-            if ( ! empty($options_or_dsn)) {
-                // Must be a valid DSN
-                $options_or_dsn = self::parseDSN($options_or_dsn);
-            } else {
-                $options_or_dsn = array();
-            }
-        }
-        $options = array_merge($options_or_dsn, $options);
-
-        $this->logger = Raven_Util::get($options, 'logger', 'php');
-        $this->servers = Raven_Util::get($options, 'servers');
-        $this->secret_key = Raven_Util::get($options, 'secret_key');
-        $this->public_key = Raven_Util::get($options, 'public_key');
-        $this->project = Raven_Util::get($options, 'project', 1);
-        $this->auto_log_stacks = (bool)Raven_Util::get($options, 'auto_log_stacks', false);
-        $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
-        $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
-        $this->tags = Raven_Util::get($options, 'tags', array());
-        $this->release = Raven_util::get($options, 'release', null);
-        $this->trace = (bool)Raven_Util::get($options, 'trace', true);
-        $this->timeout = Raven_Util::get($options, 'timeout', 2);
-        $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
-        $this->exclude = Raven_Util::get($options, 'exclude', array());
-        $this->severity_map = null;
-        $this->shift_vars = (bool)Raven_Util::get($options, 'shift_vars', true);
-        $this->http_proxy = Raven_Util::get($options, 'http_proxy');
-        $this->extra_data = Raven_Util::get($options, 'extra', array());
-        $this->send_callback = Raven_Util::get($options, 'send_callback', null);
-        $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
-        $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
-        $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', true);
-        $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
-        $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
-        $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
-
-        $this->processors = $this->setProcessorsFromOptions($options);
-
-        $this->_lasterror = null;
-        $this->_user = null;
-        $this->context = new Raven_Context();
-
-        if ($this->curl_method == 'async') {
-            $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
-        }
-    }
-
-    public static function getDefaultProcessors()
-    {
-        return array(
-            'Raven_SanitizeDataProcessor',
-        );
+        $this->dsn = $this->parseDsn($dsn);
+        $this->options = $this->parseOptions($options);
+        $this->setContext($this->options);
+        $this->setHandler($this->options->handler);
     }
 
     /**
-     * Sets the Raven_Processor sub-classes to be used when data is processed before being
-     * sent to Sentry.
+     * Parse a DSN and return a structured object.
      *
-     * @param $options
-     * @return array
+     * @param \Raven\Util\Dsn|string|null $dsn
+     * @return \Raven\Util\Dsn
      */
-    public function setProcessorsFromOptions($options)
+    public function parseDsn($dsn)
     {
-        $processors = array();
-        foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
-            $new_processor = new $processor($this);
-
-            if (isset($options['processorOptions']) && is_array($options['processorOptions'])) {
-                if (isset($options['processorOptions'][$processor]) && method_exists($processor, 'setProcessorOptions')
-                ) {
-                    $new_processor->setProcessorOptions($options['processorOptions'][$processor]);
-                }
-            }
-            $processors[] = $new_processor;
+        if ($dsn instanceof Dsn)
+        {
+            return $dsn;
         }
-        return $processors;
+
+        if (is_null($dsn) and \Raven\get($_SERVER, "SENTRY_DSN"))
+        {
+            $dsn = $_SERVER['SENTRY_DSN'];
+        }
+
+        return new Dsn($dsn);
     }
 
     /**
-     * Parses a Raven-compatible DSN and returns an array of its values.
+     * Parse options, and return
      *
-     * @param string $dsn Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
-     * @return array            parsed DSN
+     * @param \Raven\Util\Options|array $options
+     * @return \Raven\Util\Options
      */
-    public static function parseDSN($dsn)
+    public function parseOptions($options)
     {
-        $url = parse_url($dsn);
-        $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if ( ! in_array($scheme, array('http', 'https', 'udp'))) {
-            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (! empty($scheme) ? $scheme : '<not set>'));
-        }
-        $netloc = (isset($url['host']) ? $url['host'] : null);
-        $netloc .= (isset($url['port']) ? ':' . $url['port'] : null);
-        $rawpath = (isset($url['path']) ? $url['path'] : null);
-        if ($rawpath) {
-            $pos = strrpos($rawpath, '/', 1);
-            if ($pos !== false) {
-                $path = substr($rawpath, 0, $pos);
-                $project = substr($rawpath, $pos + 1);
-            } else {
-                $path = '';
-                $project = substr($rawpath, 1);
-            }
-        } else {
-            $project = null;
-            $path = '';
-        }
-        $username = (isset($url['user']) ? $url['user'] : null);
-        $password = (isset($url['pass']) ? $url['pass'] : null);
-        if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
-            throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
+        if ($options instanceof Options)
+        {
+            return $options;
         }
 
-        return array(
-            'servers' => array(sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project)),
-            'project' => $project,
-            'public_key' => $username,
-            'secret_key' => $password,
-        );
+        return new Options($options);
     }
 
+    /**
+     * Get the last error seen
+     *
+     * @return mixed
+     */
     public function getLastError()
     {
-        return $this->_lasterror;
+        return $this->lastError;
     }
 
     /**
      * Given an identifier, returns a Sentry searchable string.
+     *
+     * @return string
      */
     public function getIdent($ident)
     {
         // XXX: We don't calculate checksums yet, so we only have the ident.
         return $ident;
-    }
-
-    /**
-     * Deprecated
-     */
-    public function message(
-        $message,
-        $params = array(),
-        $level = self::INFO,
-        $stack = false,
-        $vars = null
-    ) {
-        return $this->captureMessage($message, $params, $level, $stack, $vars);
-    }
-
-    /**
-     * Deprecated
-     */
-    public function exception($exception)
-    {
-        return $this->captureException($exception);
     }
 
     /**
@@ -308,7 +234,7 @@ class Client
             if (method_exists($exception, 'getSeverity')) {
                 $data['level'] = $this->translateSeverity($exception->getSeverity());
             } else {
-                $data['level'] = self::ERROR;
+                $data['level'] = Raven::ERROR;
             }
         }
 
@@ -316,9 +242,9 @@ class Client
     }
 
     /**
-     * Log an query to sentry
+     * Log a query to sentry
      */
-    public function captureQuery($query, $level = self::INFO, $engine = '')
+    public function captureQuery($query, $level = Raven::INFO, $engine = '')
     {
         $data = array(
             'message' => $query,
