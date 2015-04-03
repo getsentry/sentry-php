@@ -1,4 +1,5 @@
-<?php
+<?php namespace Raven;
+
 /*
  * This file is part of Raven.
  *
@@ -13,8 +14,7 @@
  *
  * @package raven
  */
-
-class Raven_Client
+class Client
 {
     const VERSION = '0.11.0';
     const PROTOCOL = '5';

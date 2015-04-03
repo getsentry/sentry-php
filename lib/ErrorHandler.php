@@ -1,4 +1,4 @@
-<?php
+<?php namespace Raven;
 
 /*
  * This file is part of Raven.
@@ -21,7 +21,7 @@
  * @package raven
  */
 
-class Raven_ErrorHandler
+class ErrorHandler
 {
     private $old_exception_handler;
     private $call_existing_exception_handler = false;

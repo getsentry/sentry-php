@@ -1,10 +1,11 @@
-<?php
+<?php namespace Raven;
+
 /**
  * Small helper class to inspect the stacktrace
  *
  * @package raven
  */
-class Raven_Stacktrace
+class Stacktrace
 {
     public static $statements = array(
         'include',

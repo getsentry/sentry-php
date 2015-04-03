@@ -1,4 +1,5 @@
-<?php
+<?php namespace Raven;
+
 /*
  * Copyright 2012 Facebook, Inc.
  *
@@ -24,7 +25,7 @@
  *
  * @package raven
  */
-class Raven_Serializer
+class Serializer
 {
     /**
      * Serialize an object (recursively) into something safe for data

@@ -1,4 +1,5 @@
-<?php
+<?php namespace Raven\Handlers;
+
 /*
  * This file is part of Raven.
  *
@@ -15,7 +16,7 @@
  */
 
 // TODO(dcramer): handle ca_cert
-class Raven_CurlHandler
+class CurlHandler
 {
     private $join_timeout;
     private $multi_handle;

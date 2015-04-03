@@ -1,10 +1,11 @@
-<?php
+<?php namespace Raven;
+
 /**
  * Base class for data processing.
  *
  * @package raven
  */
-abstract class Raven_Processor
+abstract class Processor
 {
     public function __construct(Raven_Client $client)
     {

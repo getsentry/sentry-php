@@ -1,11 +1,11 @@
-<?php
+<?php namespace Raven;
 /**
  * Asterisk out passwords from password fields in frames, http,
  * and basic extra data.
  *
  * @package raven
  */
-class Raven_SanitizeDataProcessor extends Raven_Processor
+class SanitizeDataProcessor extends Processor
 {
     const MASK = '********';
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';

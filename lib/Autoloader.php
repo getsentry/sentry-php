@@ -1,4 +1,4 @@
-<?php
+<?php namespace Raven;
 
 /*
  * This file is part of Raven.
@@ -14,7 +14,7 @@
  *
  * @package raven
  */
-class Raven_Autoloader
+class Autoloader
 {
     /**
      * Registers Raven_Autoloader as an SPL autoloader.

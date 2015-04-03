@@ -1,10 +1,11 @@
-<?php
+<?php namespace Raven;
+
 /**
  * Storage for additional client context.
  *
  * @package raven
  */
-class Raven_Context
+class Context
 {
     public function __construct()
     {
