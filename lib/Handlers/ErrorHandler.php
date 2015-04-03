@@ -8,6 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+use ErrorException;
+use Raven\Contracts\Handler;
+use Exception;
 
 /**
  * Event handlers for exceptions and errors
@@ -21,7 +24,7 @@
  * @package raven
  */
 
-class ErrorHandler
+class ErrorHandler implements Handler
 {
     private $old_exception_handler;
     private $call_existing_exception_handler = false;
@@ -42,7 +45,13 @@ class ErrorHandler
         }
     }
 
-    public function handleException($e, $isError = false, $vars = null)
+    /**
+     * @param \Exception $e       The exception thrown
+     * @param bool       $isError True if $e is an ErrorException
+     * @param null       $vars    Variables to pass to sentry
+     * @return void
+     */
+    public function handleException(Exception $e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
 
@@ -51,7 +60,17 @@ class ErrorHandler
         }
     }
 
-    public function handleError($code, $message, $file = '', $line = 0, $context=array())
+    /**
+     * A method compatible with set_error_handler
+     *
+     * @param int    $code
+     * @param string $message
+     * @param string $file
+     * @param int    $line
+     * @param array  $context
+     * @return mixed
+     */
+    public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
         if ($this->error_types & $code & error_reporting()) {
           $e = new ErrorException($message, 0, $code, $file, $line);
@@ -63,6 +82,11 @@ class ErrorHandler
         }
     }
 
+    /**
+     * Handle a fatal error as a special case.
+     *
+     * @return void
+     */
     public function handleFatalError()
     {
         if (null === $lastError = error_get_last()) {

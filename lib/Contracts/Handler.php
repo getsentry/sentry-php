@@ -17,9 +17,9 @@ interface Handler
      * @param string $file
      * @param int    $line
      * @param array  $context
-     * @return mixed
+     * @return null|mixed
      */
-    public function handleError($code, $message, $file = '', $line = 0, $context = []);
+    public function handleError($code, $message, $file = '', $line = 0, $context = array());
 
     /**
      * Handle a fatal error as a special case.
