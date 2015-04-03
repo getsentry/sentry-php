@@ -1,11 +1,14 @@
 <?php namespace Raven\Sanitizers;
+
+use Raven\Contracts\Sanitizer;
+
 /**
  * Asterisk out passwords from password fields in frames, http,
  * and basic extra data.
  *
  * @package raven
  */
-class SanitizeDataProcessor
+class SanitizeDataProcessor implements Sanitizer
 {
     const MASK = '********';
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
@@ -43,7 +46,7 @@ class SanitizeDataProcessor
      * @param mixed $item       Associative array value
      * @param string $key       Associative array key
      */
-    public function sanitize(&$item, $key)
+    public function process(&$item, $key)
     {
         if (empty($item)) {
             return;
@@ -62,9 +65,9 @@ class SanitizeDataProcessor
         }
     }
 
-    public function process(&$data)
+    public function sanitize(&$data)
     {
-        array_walk_recursive($data, array($this, 'sanitize'));
+        array_walk_recursive($data, [$this, 'sanitize']);
     }
 
     /**
