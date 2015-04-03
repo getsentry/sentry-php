@@ -5,7 +5,8 @@
  *
  * @package raven
  */
-interface Sanitizer {
+interface Sanitizer
+{
 
     /**
      * Sanitize incoming data by reference

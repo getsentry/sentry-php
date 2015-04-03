@@ -14,7 +14,8 @@
  *
  * @package raven
  */
-if ( ! function_exists("Raven\\get")) {
+if ( ! function_exists("Raven\\get"))
+{
 
     /**
      * Safely fetch an element from an array,

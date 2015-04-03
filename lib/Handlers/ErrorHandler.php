@@ -23,7 +23,6 @@ use Exception;
  *
  * @package raven
  */
-
 class ErrorHandler implements Handler
 {
     private $old_exception_handler;
@@ -55,7 +54,7 @@ class ErrorHandler implements Handler
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
 
-        if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
+        if ( ! $isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
         }
     }
@@ -73,8 +72,8 @@ class ErrorHandler implements Handler
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
         if ($this->error_types & $code & error_reporting()) {
-          $e = new ErrorException($message, 0, $code, $file, $line);
-          $this->handleException($e, true, $context);
+            $e = new ErrorException($message, 0, $code, $file, $line);
+            $this->handleException($e, true, $context);
         }
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {
@@ -126,8 +125,9 @@ class ErrorHandler implements Handler
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
     }
 
-    public function detectShutdown() {
-        if (!defined('RAVEN_CLIENT_END_REACHED')) {
+    public function detectShutdown()
+    {
+        if ( ! defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
     }

@@ -14,9 +14,13 @@ class Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
-                            $frame_var_limit = Raven_Client::MESSAGE_LIMIT)
-    {
+    public static function get_stack_info(
+        $frames,
+        $trace = false,
+        $shiftvars = true,
+        $errcontext = null,
+        $frame_var_limit = Raven_Client::MESSAGE_LIMIT
+    ) {
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
          * 'function' is not the function you're in; it's any function being
@@ -27,7 +31,7 @@ class Stacktrace
             $frame = $frames[$i];
             $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
 
-            if (!array_key_exists('file', $frame)) {
+            if ( ! array_key_exists('file', $frame)) {
                 // XXX: Disable capturing of anonymous functions until we can implement a better grouping mechanism.
                 // In our examples these generally didn't help with debugging as the information was found elsewhere
                 // within the exception or the stacktrace
@@ -80,7 +84,7 @@ class Stacktrace
             $frame = array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
-                'lineno' => (int) $context['lineno'],
+                'lineno' => (int)$context['lineno'],
                 'module' => $module,
                 'function' => $nextframe['function'],
                 'pre_context' => $context['prefix'],
@@ -89,7 +93,7 @@ class Stacktrace
             );
             // dont set this as an empty array as PHP will treat it as a numeric array
             // instead of a mapping which goes against the defined Sentry spec
-            if (!empty($vars)) {
+            if ( ! empty($vars)) {
                 foreach ($vars as $key => $value) {
                     if (is_string($value) || is_numeric($value)) {
                         $vars[$key] = substr($value, 0, $frame_var_limit);
@@ -106,14 +110,14 @@ class Stacktrace
 
     public static function get_caller_frame_context($frame)
     {
-        if (!isset($frame['args'])) {
+        if ( ! isset($frame['args'])) {
             return array();
         }
 
         $i = 1;
         $args = array();
         foreach ($frame['args'] as $arg) {
-            $args['param'.$i] = $arg;
+            $args['param' . $i] = $arg;
             $i++;
         }
         return $args;
@@ -124,11 +128,11 @@ class Stacktrace
     {
         // The reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
-        if (!isset($frame['function'])) {
+        if ( ! isset($frame['function'])) {
             return array();
         }
 
-        if (!isset($frame['args'])) {
+        if ( ! isset($frame['args'])) {
             return array();
         }
 
@@ -169,11 +173,11 @@ class Stacktrace
             if (isset($params[$i])) {
                 // Assign the argument by the parameter name
                 if (is_array($arg)) {
-                  foreach ($arg as $key => $value) {
-                    if (is_string($value) || is_numeric($value)) {
-                      $arg[$key] = substr($value, 0, $frame_arg_limit);
+                    foreach ($arg as $key => $value) {
+                        if (is_string($value) || is_numeric($value)) {
+                            $arg[$key] = substr($value, 0, $frame_arg_limit);
+                        }
                     }
-                  }
                 }
                 $args[$params[$i]->name] = $arg;
             } else {
@@ -225,8 +229,8 @@ class Stacktrace
             $file = new SplFileObject($filename);
             $target = max(0, ($lineno - ($context_lines + 1)));
             $file->seek($target);
-            $cur_lineno = $target+1;
-            while (!$file->eof()) {
+            $cur_lineno = $target + 1;
+            while ( ! $file->eof()) {
                 $line = rtrim($file->current(), "\r\n");
                 if ($cur_lineno == $lineno) {
                     $frame['line'] = $line;
@@ -240,7 +244,7 @@ class Stacktrace
                     break;
                 }
                 $file->next();
-             }
+            }
         } catch (RuntimeException $exc) {
             return $frame;
         }

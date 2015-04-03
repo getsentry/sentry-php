@@ -52,12 +52,13 @@ class PasswordSanitizer implements Sanitizer
      */
     protected static function check(&$value, $key)
     {
-        if ( ! is_string($key)) return;
+        if ( ! is_string($key)) {
+            return;
+        }
 
         // Here, strtolower on unicode strings doesn't really matter,
         // because we're matching against our own strings.
-        if (in_array(strtolower($key), static::$keys))
-        {
+        if (in_array(strtolower($key), static::$keys)) {
             $value = static::$mask;
         }
     }
