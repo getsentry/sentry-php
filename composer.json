@@ -15,7 +15,8 @@
         "phpunit/phpunit": "4.5.*"
     },
     "require": {
-        "php": ">=5.3.3"
+        "php": ">=5.3.3",
+        "guzzle/guzzle": "~3.9"
     },
     "bin": [
         "bin/raven"
