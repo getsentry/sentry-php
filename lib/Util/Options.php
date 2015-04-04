@@ -111,17 +111,81 @@ class Options
             return $this->defaults[$name];
         }
 
-        // todo: refactor, use dedicated methods
-        if ($name == "name")
-        {
-            return gethostname();
-        }
+        return $this->{"get" . ucfirst($name)}();
+    }
 
-        if ($name == "site")
+    /**
+     * Get data about the current user
+     *
+     * @return array
+     */
+    public function getUser()
+    {
+        if (is_null($user = \Raven\get($this->options, "user")))
         {
-            return \Raven\get($_SERVER, "SERVER_NAME", "");
-        }
+            if ( ! session_id()) return array();
 
-        throw new InvalidArgumentException(sprintf("%s is not a valid config property", $name));
+            $user = array('id' => session_id());
+
+            if ( ! empty($_SESSION)) {
+                $user['data'] = $_SESSION;
+            }
+        }
+        return array(
+            'sentry.interfaces.User' => $user,
+        );
+    }
+
+    /**
+     * Get this server's hostname
+     *
+     * @return string
+     */
+    public function getHostname()
+    {
+        return gethostname();
+    }
+
+    /**
+     * Get the current site's name
+     *
+     * @return string
+     */
+    public function getSite()
+    {
+        return \Raven\get($_SERVER, "SERVER_NAME", "");
+    }
+
+    /**
+     * Get all options as an array
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        $values = array_merge($this->defaults, $this->options);
+
+        return $values;
+    }
+
+    /**
+     * Serialize our options to json
+     *
+     * @param int $options JSON_* constants
+     * @return string
+     */
+    public function toJson($options = 0)
+    {
+        return json_encode($this->toArray(), $options);
+    }
+
+    /**
+     * String handler for (string) casts
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->toJson();
     }
 }
