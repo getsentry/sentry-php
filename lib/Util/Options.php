@@ -11,7 +11,20 @@ use InvalidArgumentException;
  * @property-read array       $servers
  * @property-read string|null $secret_key
  * @property-read string|null $public_key
- * @property-read
+ * @property-read int|null    $project
+ * @property-read bool        $auto_log_stacks
+ * @property-read array       $tags
+ * @property-read string|null $release
+ * @property-read bool        $trace
+ * @property-read int         $timeout
+ * @property-read int         $message_limit
+ * @property-read array       $exclude
+ * @property-read array|null  $severity_map
+ * @property-read bool        $shift_vars
+ * @property-read array|null  $http_proxy
+ * @property-read array       $extra_data
+ * @property-read callable    $send_callback
+ * @property-read array       $handler
  */
 class Options
 {
