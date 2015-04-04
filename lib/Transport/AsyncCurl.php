@@ -1,4 +1,5 @@
-<?php
+<?php namespace Raven\Handlers;
+
 /*
  * This file is part of Raven.
  *
@@ -15,14 +16,14 @@
  */
 
 // TODO(dcramer): handle ca_cert
-class Raven_CurlHandler
+class AsyncCurl
 {
     private $join_timeout;
     private $multi_handle;
     private $options;
     private $requests;
 
-    public function __construct($options, $join_timeout=5)
+    public function __construct($options, $join_timeout = 5)
     {
         $this->options = $options;
         $this->multi_handle = curl_multi_init();
@@ -37,13 +38,13 @@ class Raven_CurlHandler
         $this->join();
     }
 
-    public function enqueue($url, $data=null, $headers=array())
+    public function enqueue($url, $data = null, $headers = array())
     {
         $ch = curl_init();
 
         $new_headers = array();
         foreach ($headers as $key => $value) {
-            array_push($new_headers, $key .': '. $value);
+            array_push($new_headers, $key . ': ' . $value);
         }
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $new_headers);
@@ -67,11 +68,11 @@ class Raven_CurlHandler
         return $fd;
     }
 
-    public function join($timeout=null)
+    public function join($timeout = null)
     {
-    	if (!isset($timeout)) {
-    		$timeout = $this->join_timeout;
-    	}
+        if ( ! isset($timeout)) {
+            $timeout = $this->join_timeout;
+        }
         $start = time();
         do {
             $this->select();
@@ -94,8 +95,7 @@ class Raven_CurlHandler
                 do {
                     $mrc = curl_multi_exec($this->multi_handle, $active);
                 } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-            }
-            else {
+            } else {
                 return;
             }
         }
@@ -106,7 +106,7 @@ class Raven_CurlHandler
 
             curl_multi_remove_handle($this->multi_handle, $ch);
 
-            if (!isset($this->requests[$fd])) {
+            if ( ! isset($this->requests[$fd])) {
                 return;
             }
 

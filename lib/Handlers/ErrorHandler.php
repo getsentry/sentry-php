@@ -1,4 +1,4 @@
-<?php
+<?php namespace Raven;
 
 /*
  * This file is part of Raven.
@@ -8,6 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+use ErrorException;
+use Raven\Contracts\Handler;
+use Exception;
 
 /**
  * Event handlers for exceptions and errors
@@ -20,8 +23,7 @@
  *
  * @package raven
  */
-
-class Raven_ErrorHandler
+class ErrorHandler implements Handler
 {
     private $old_exception_handler;
     private $call_existing_exception_handler = false;
@@ -42,20 +44,36 @@ class Raven_ErrorHandler
         }
     }
 
-    public function handleException($e, $isError = false, $vars = null)
+    /**
+     * @param \Exception $e       The exception thrown
+     * @param bool       $isError True if $e is an ErrorException
+     * @param null       $vars    Variables to pass to sentry
+     * @return void
+     */
+    public function handleException(Exception $e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
 
-        if (!$isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
+        if ( ! $isError && $this->call_existing_exception_handler && $this->old_exception_handler) {
             call_user_func($this->old_exception_handler, $e);
         }
     }
 
-    public function handleError($code, $message, $file = '', $line = 0, $context=array())
+    /**
+     * A method compatible with set_error_handler
+     *
+     * @param int    $code
+     * @param string $message
+     * @param string $file
+     * @param int    $line
+     * @param array  $context
+     * @return mixed
+     */
+    public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
         if ($this->error_types & $code & error_reporting()) {
-          $e = new ErrorException($message, 0, $code, $file, $line);
-          $this->handleException($e, true, $context);
+            $e = new ErrorException($message, 0, $code, $file, $line);
+            $this->handleException($e, true, $context);
         }
 
         if ($this->call_existing_error_handler && $this->old_error_handler) {
@@ -63,6 +81,11 @@ class Raven_ErrorHandler
         }
     }
 
+    /**
+     * Handle a fatal error as a special case.
+     *
+     * @return void
+     */
     public function handleFatalError()
     {
         if (null === $lastError = error_get_last()) {
@@ -102,8 +125,9 @@ class Raven_ErrorHandler
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
     }
 
-    public function detectShutdown() {
-        if (!defined('RAVEN_CLIENT_END_REACHED')) {
+    public function detectShutdown()
+    {
+        if ( ! defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
     }

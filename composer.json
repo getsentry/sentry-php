@@ -4,7 +4,7 @@
     "description": "A PHP client for Sentry (http://getsentry.com)",
     "keywords": ["log", "logging"],
     "homepage": "http://getsentry.com",
-    "license": "BSD",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "David Cramer",
@@ -12,10 +12,11 @@
         }
     ],
     "require-dev": {
-        "phpunit/phpunit": "3.7.*"
+        "phpunit/phpunit": "4.5.*"
     },
     "require": {
-        "php": ">=5.2.4"
+        "php": ">=5.3.3",
+        "guzzle/guzzle": "~3.9"
     },
     "bin": [
         "bin/raven"
@@ -24,9 +25,12 @@
         "bin-dir": "bin"
     },
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
-        }
+        "psr-4" : {
+            "Raven\\" : "lib/"
+        },
+        "files": [
+            "lib/helpers.php"
+        ]
     },
     "extra": {
         "branch-alias": {
