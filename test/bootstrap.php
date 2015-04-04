@@ -9,9 +9,15 @@
  * file that was distributed with this source code.
  */
 
-error_reporting(E_ALL | E_STRICT);
+if (version_compare(phpversion(), "5.4.0", ">="))
+{
+    error_reporting(E_ALL);
+}
+else
+{
+    error_reporting(E_ALL | E_STRICT);
+}
 
 session_start();
 
-require_once dirname(__FILE__).'/../lib/Raven/Autoloader.php';
-Raven_Autoloader::register();
+require __DIR__ . "/../vendor/autoload.php";
