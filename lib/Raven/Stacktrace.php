@@ -149,16 +149,20 @@ class Raven_Stacktrace
                 return array($frame['args'][0]);
             }
         }
-        if (isset($frame['class'])) {
-            if (method_exists($frame['class'], $frame['function'])) {
-                $reflection = new ReflectionMethod($frame['class'], $frame['function']);
-            } elseif ($frame['type'] === '::') {
-                $reflection = new ReflectionMethod($frame['class'], '__callStatic');
+        try {
+            if (isset($frame['class'])) {
+                if (method_exists($frame['class'], $frame['function'])) {
+                    $reflection = new ReflectionMethod($frame['class'], $frame['function']);
+                } elseif ($frame['type'] === '::') {
+                    $reflection = new ReflectionMethod($frame['class'], '__callStatic');
+                } else {
+                    $reflection = new ReflectionMethod($frame['class'], '__call');
+                }
             } else {
-                $reflection = new ReflectionMethod($frame['class'], '__call');
+                $reflection = new ReflectionFunction($frame['function']);
             }
-        } else {
-            $reflection = new ReflectionFunction($frame['function']);
+        } catch (ReflectionException $e) {
+            return array();
         }
 
         $params = $reflection->getParameters();
