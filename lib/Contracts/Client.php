@@ -62,6 +62,14 @@ interface Client
     public function addSanitizers(array $sanitizers);
 
     /**
+     * Set the stack of sanitizers (replacing any existing)
+     *
+     * @param array $sanitizers
+     * @return $this
+     */
+    public function setSanitizers(array $sanitizers);
+
+    /**
      * Set the handler used to handle errors
      *
      * @param \Raven\Contracts\Handler $handler
