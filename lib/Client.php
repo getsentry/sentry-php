@@ -69,7 +69,7 @@ class Client
      * @param \Raven\Util\Dsn|string|null $dsn
      * @return \Raven\Util\Dsn
      */
-    public function parseDsn($dsn)
+    protected function parseDsn($dsn)
     {
         if ($dsn instanceof Dsn)
         {
@@ -90,7 +90,7 @@ class Client
      * @param \Raven\Util\Options|array $options
      * @return \Raven\Util\Options
      */
-    public function parseOptions($options)
+    protected function parseOptions($options)
     {
         if ($options instanceof Options)
         {
@@ -117,7 +117,7 @@ class Client
      */
     public function getIdent($ident)
     {
-        // XXX: We don't calculate checksums yet, so we only have the ident.
+        // We don't calculate checksums yet, so we only have the ident.
         return $ident;
     }
 
@@ -165,8 +165,6 @@ class Client
      */
     public function captureException($exception, $culprit_or_options = null, $logger = null, $vars = null)
     {
-        $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
-
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
         }
@@ -206,11 +204,6 @@ class Client
             );
 
             array_unshift($trace, $frame_where_exception_thrown);
-
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if ( ! class_exists('Raven_Stacktrace')) {
-                spl_autoload_call('Raven_Stacktrace');
-            }
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
@@ -258,90 +251,6 @@ class Client
             $data['sentry.interfaces.Query']['engine'] = $engine;
         }
         return $this->capture($data, false);
-    }
-
-    protected function is_http_request()
-    {
-        return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
-    }
-
-    protected function get_http_data()
-    {
-        $env = $headers = array();
-
-        foreach ($_SERVER as $key => $value) {
-            if (0 === strpos($key, 'HTTP_')) {
-                if (in_array($key, array('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'))) {
-                    continue;
-                }
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
-            } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH'))) {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))))] = $value;
-            } else {
-                $env[$key] = $value;
-            }
-        }
-
-        $result = array(
-            'method' => $this->_server_variable('REQUEST_METHOD'),
-            'url' => $this->get_current_url(),
-            'query_string' => $this->_server_variable('QUERY_STRING'),
-        );
-
-        // dont set this as an empty array as PHP will treat it as a numeric array
-        // instead of a mapping which goes against the defined Sentry spec
-        if ( ! empty($_POST)) {
-            $result['data'] = $_POST;
-        }
-        if ( ! empty($_COOKIE)) {
-            $result['cookies'] = $_COOKIE;
-        }
-        if ( ! empty($headers)) {
-            $result['headers'] = $headers;
-        }
-        if ( ! empty($env)) {
-            $result['env'] = $env;
-        }
-
-        return array(
-            'sentry.interfaces.Http' => $result,
-        );
-    }
-
-    protected function get_user_data()
-    {
-        $user = $this->context->user;
-        if ($user === null) {
-            if ( ! session_id()) {
-                return array();
-            }
-            $user = array(
-                'id' => session_id(),
-            );
-            if ( ! empty($_SESSION)) {
-                $user['data'] = $_SESSION;
-            }
-        }
-        return array(
-            'sentry.interfaces.User' => $user,
-        );
-    }
-
-    protected function get_extra_data()
-    {
-        return $this->extra_data;
-    }
-
-    public function get_default_data()
-    {
-        return array(
-            'server_name' => $this->name,
-            'project' => $this->project,
-            'site' => $this->site,
-            'logger' => $this->logger,
-            'tags' => $this->tags,
-            'platform' => 'php',
-        );
     }
 
     public function capture($data, $stack, $vars = null)
@@ -410,8 +319,6 @@ class Client
             }
         }
 
-        $this->sanitize($data);
-        $this->process($data);
 
         if ( ! $this->store_errors_for_bulk_send) {
             $this->send($data);
@@ -423,340 +330,6 @@ class Client
         }
 
         return $data['event_id'];
-    }
-
-    public function sanitize(&$data)
-    {
-        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-        if ( ! class_exists('Raven_Serializer')) {
-            spl_autoload_call('Raven_Serializer');
-        }
-
-        $data = Raven_Serializer::serialize($data);
-    }
-
-    /**
-     * Process data through all defined Raven_Processor sub-classes
-     *
-     * @param array $data Associative array of data to log
-     */
-    public function process(&$data)
-    {
-        foreach ($this->processors as $processor) {
-            $processor->process($data);
-        }
-    }
-
-    public function sendUnsentErrors()
-    {
-        if ( ! empty($this->error_data)) {
-            foreach ($this->error_data as $data) {
-                $this->send($data);
-            }
-            unset($this->error_data);
-        }
-        if ($this->store_errors_for_bulk_send) {
-            //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->store_errors_for_bulk_send = ! defined('RAVEN_CLIENT_END_REACHED');
-        }
-    }
-
-    /**
-     * Wrapper to handle encoding and sending data to all defined Sentry servers
-     *
-     * @param array $data Associative array of data to log
-     */
-    public function send($data)
-    {
-        if (is_callable($this->send_callback) && ! call_user_func($this->send_callback, $data)) {
-            // if send_callback returns falsely, end native send
-            return;
-        }
-
-        if ( ! $this->servers) {
-            return;
-        }
-
-        $message = Raven_Compat::json_encode($data);
-
-        if (function_exists("gzcompress")) {
-            $message = gzcompress($message);
-        }
-        $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
-
-        foreach ($this->servers as $url) {
-            $client_string = 'raven-php/' . self::VERSION;
-            $timestamp = microtime(true);
-            $headers = array(
-                'User-Agent' => $client_string,
-                'X-Sentry-Auth' => $this->get_auth_header(
-                    $timestamp, $client_string, $this->public_key,
-                    $this->secret_key),
-                'Content-Type' => 'application/octet-stream'
-            );
-
-            $this->send_remote($url, $message, $headers);
-        }
-    }
-
-    /**
-     * Send data to Sentry
-     *
-     * @param string $url     Full URL to Sentry
-     * @param array  $data    Associative array of data to log
-     * @param array  $headers Associative array of headers
-     */
-    private function send_remote($url, $data, $headers = array())
-    {
-        $parts = parse_url($url);
-        $parts['netloc'] = $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : null);
-
-        if ($parts['scheme'] === 'udp') {
-            $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
-        } else {
-            $this->send_http($url, $data, $headers);
-        }
-    }
-
-    /**
-     * Send data to Sentry via udp socket
-     *
-     * @param string $netloc  host:port || host
-     * @param array  $data    Associative array of data to log
-     * @param array  $headers Associative array of headers
-     */
-    private function send_udp($netloc, $data, $headers)
-    {
-        list($host, $port) = explode(':', $netloc);
-        $raw_data = $headers . "\n\n" . $data;
-
-        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
-        socket_close($sock);
-    }
-
-    protected function get_default_ca_cert()
-    {
-        return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
-    }
-
-    protected function get_curl_options()
-    {
-        $options = array(
-            CURLOPT_VERBOSE => false,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
-            CURLOPT_CAINFO => $this->ca_cert,
-            CURLOPT_USERAGENT => 'raven-php/' . self::VERSION,
-        );
-        if ($this->http_proxy) {
-            $options[CURLOPT_PROXY] = $this->http_proxy;
-        }
-        if ($this->curl_ssl_version) {
-            $options[CURLOPT_SSLVERSION] = $this->curl_ssl_version;
-        }
-        if ($this->curl_ipv4) {
-            $options[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
-        }
-        if (defined('CURLOPT_TIMEOUT_MS')) {
-            // MS is available in curl >= 7.16.2
-            $timeout = max(1, ceil(1000 * $this->timeout));
-            $options[CURLOPT_CONNECTTIMEOUT_MS] = $timeout;
-            $options[CURLOPT_TIMEOUT_MS] = $timeout;
-        } else {
-            // fall back to the lower-precision timeout.
-            $timeout = max(1, ceil($this->timeout));
-            $options[CURLOPT_CONNECTTIMEOUT] = $timeout;
-            $options[CURLOPT_TIMEOUT] = $timeout;
-        }
-        return $options;
-    }
-
-    /**
-     * Send the message over http to the sentry url given
-     *
-     * @param string $url     URL of the Sentry instance to log to
-     * @param array  $data    Associative array of data to log
-     * @param array  $headers Associative array of headers
-     */
-    private function send_http($url, $data, $headers = array())
-    {
-        if ($this->curl_method == 'async') {
-            $this->_curl_handler->enqueue($url, $data, $headers);
-        } elseif ($this->curl_method == 'exec') {
-            $this->send_http_asynchronous_curl_exec($url, $data, $headers);
-        } else {
-            $this->send_http_synchronous($url, $data, $headers);
-        }
-    }
-
-    /**
-     * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
-     *
-     * @param string $url     URL of the Sentry instance to log to
-     * @param array  $data    Associative array of data to log
-     * @param array  $headers Associative array of headers
-     * @return bool
-     */
-    private function send_http_asynchronous_curl_exec($url, $data, $headers)
-    {
-        // TODO(dcramer): support ca_cert
-        $cmd = $this->curl_path . ' -X POST ';
-        foreach ($headers as $key => $value) {
-            $cmd .= '-H \'' . $key . ': ' . $value . '\' ';
-        }
-        $cmd .= '-d \'' . $data . '\' ';
-        $cmd .= '\'' . $url . '\' ';
-        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
-
-        exec($cmd);
-
-        return true; // The exec method is just fire and forget, so just assume it always works
-    }
-
-    /**
-     * Send a blocking cURL to Sentry and check for errors from cURL
-     *
-     * @param string $url     URL of the Sentry instance to log to
-     * @param array  $data    Associative array of data to log
-     * @param array  $headers Associative array of headers
-     * @return bool
-     */
-    private function send_http_synchronous($url, $data, $headers)
-    {
-        $new_headers = array();
-        foreach ($headers as $key => $value) {
-            array_push($new_headers, $key . ': ' . $value);
-        }
-
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $new_headers);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-        $options = $this->get_curl_options();
-        $ca_cert = $options[CURLOPT_CAINFO];
-        unset($options[CURLOPT_CAINFO]);
-        curl_setopt_array($curl, $options);
-
-        curl_exec($curl);
-
-        $errno = curl_errno($curl);
-        // CURLE_SSL_CACERT || CURLE_SSL_CACERT_BADFILE
-        if ($errno == 60 || $errno == 77) {
-            curl_setopt($curl, CURLOPT_CAINFO, $ca_cert);
-            curl_exec($curl);
-        }
-
-        $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $success = ($code == 200);
-        if ( ! $success) {
-            // It'd be nice just to raise an exception here, but it's not very PHP-like
-            $this->_lasterror = curl_error($curl);
-        } else {
-            $this->_lasterror = null;
-        }
-        curl_close($curl);
-
-        return $success;
-    }
-
-    /**
-     * Generate a Sentry authorization header string
-     *
-     * @param string $timestamp  Timestamp when the event occurred
-     * @param string $client     HTTP client name (not Raven_Client object)
-     * @param string $api_key    Sentry API key
-     * @param string $secret_key Sentry API key
-     * @return string
-     */
-    protected function get_auth_header($timestamp, $client, $api_key, $secret_key)
-    {
-        $header = array(
-            sprintf('sentry_timestamp=%F', $timestamp),
-            "sentry_client={$client}",
-            sprintf('sentry_version=%s', self::PROTOCOL),
-        );
-
-        if ($api_key) {
-            $header[] = "sentry_key={$api_key}";
-        }
-
-        if ($secret_key) {
-            $header[] = "sentry_secret={$secret_key}";
-        }
-
-        return sprintf('Sentry %s', implode(', ', $header));
-    }
-
-    /**
-     * Generate an uuid4 value
-     *
-     * @return string
-     */
-    private function uuid4()
-    {
-        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            // 32 bits for "time_low"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-
-            // 16 bits for "time_mid"
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 4
-            mt_rand(0, 0x0fff) | 0x4000,
-
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1
-            mt_rand(0, 0x3fff) | 0x8000,
-
-            // 48 bits for "node"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
-
-        return str_replace('-', '', $uuid);
-    }
-
-    /**
-     * Return the URL for the current request
-     *
-     * @return string|null
-     */
-    private function get_current_url()
-    {
-        // When running from commandline the REQUEST_URI is missing.
-        if ( ! isset($_SERVER['REQUEST_URI'])) {
-            return null;
-        }
-
-        $schema = ( ! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-            || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-
-        // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
-        $host = (! empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (! empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
-                : (! empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
-
-        return $schema . $host . $_SERVER['REQUEST_URI'];
-    }
-
-    /**
-     * Get the value of a key from $_SERVER
-     *
-     * @param string $key Key whose value you wish to obtain
-     * @return string           Key's value
-     */
-    private function _server_variable($key)
-    {
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return '';
     }
 
     /**
