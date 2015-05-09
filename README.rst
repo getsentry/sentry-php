@@ -47,27 +47,25 @@ Install with Composer
 If you're using `Composer <https://getcomposer.org/>`_ to manage
 dependencies, you can add Raven with it.
 
-.. code-block:: json
+::
 
-    {
-        "require": {
-            "raven/raven": "$VERSION"
-        }
-    }
+    $ composer require raven/raven:$VERSION
 
 (replace ``$VERSION`` with one of the available versions on `Packagist <https://packagist.org/packages/raven/raven>`_)
 or to get the latest version off the master branch:
 
-.. code-block:: json
+::
 
-    {
-        "require": {
-            "raven/raven": "dev-master"
-        }
-    }
+    $ composer require raven/raven:dev-master
 
 Note that using unstable versions is not recommended and should be avoided. Also
 you should define a maximum version, e.g. by doing ``>=0.6,<1.0`` or ``~0.6``.
+
+Alternatively, use the ``^`` operator for specifying a version, e.g.,
+
+::
+
+    $ composer require raven/raven:^0.11.0
 
 Composer will take care of the autoloading for you, so if you require the
 ``vendor/autoload.php``, you're good to go.
