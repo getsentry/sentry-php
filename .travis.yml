@@ -12,10 +12,10 @@ matrix:
         - php: hhvm
 
 install:
-  - composer install
+  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer install; fi
 
 script:
-  - bin/phpunit --configuration phpunit.xml.dist
+  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then bin/phpunit; else phpunit; fi
 
 notifications:
   irc:
