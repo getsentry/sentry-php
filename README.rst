@@ -260,7 +260,7 @@ You may now use phpunit :
 
 ::
 
-    $ bin/phpunit
+    $ vendor/bin/phpunit
 
 
 

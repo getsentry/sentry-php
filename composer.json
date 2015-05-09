@@ -20,9 +20,6 @@
     "bin": [
         "bin/raven"
     ],
-    "config": {
-        "bin-dir": "bin"
-    },
     "autoload": {
         "psr-0" : {
             "Raven_" : "lib/"
