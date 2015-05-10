@@ -18,9 +18,3 @@ install:
 
 script:
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/phpunit; else phpunit; fi
-
-notifications:
-  irc:
-    channels: "irc.freenode.org#sentry"
-    on_success: change
-    on_failure: change
