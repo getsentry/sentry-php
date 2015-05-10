@@ -13,6 +13,10 @@ matrix:
     allow_failures:
         - php: hhvm
 
+cache:
+  directories:
+    - $HOME/.composer/cache
+
 install:
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer install; fi
 
