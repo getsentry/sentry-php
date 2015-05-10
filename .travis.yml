@@ -17,7 +17,7 @@ install:
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer install; fi
 
 script:
-  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then bin/phpunit; else phpunit; fi
+  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/phpunit; else phpunit; fi
 
 notifications:
   irc:
