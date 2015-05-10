@@ -319,10 +319,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($exc['values']), 2);
         $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
         $this->assertEquals($exc['values'][1]['value'], 'Child exc');
-
     }
 
-    public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug() {
+    public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
+    {
         if (version_compare(PHP_VERSION, '5.3.0', '<')) {
             $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
         }
@@ -418,7 +418,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
     }
 
-    public function testGetDefaultData() {
+    public function testGetDefaultData()
+    {
         $client = new Dummy_Raven_Client();
         $expected = array(
             'platform' => 'php',
@@ -495,7 +496,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $client->get_http_data());
     }
 
-    public function testGetUserDataWithSetUser() {
+    public function testGetUserDataWithSetUser()
+    {
         $client = new Dummy_Raven_Client();
 
         $id = 'unique_id';
@@ -518,7 +520,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $client->get_user_data());
     }
 
-    public function testGetUserDataWithNoUser() {
+    public function testGetUserDataWithNoUser()
+    {
         $client = new Dummy_Raven_Client();
 
         $expected = array(
@@ -529,7 +532,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $client->get_user_data());
     }
 
-    public function testGetAuthHeader() {
+    public function testGetAuthHeader()
+    {
         $client = new Dummy_Raven_Client();
 
         $clientstring = 'raven-php/test';
@@ -593,19 +597,20 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ), $event['extra']);
     }
 
-    public function cb1($data) {
+    public function cb1($data)
+    {
         $this->assertEquals('test', $data['message']);
         return false;
     }
 
-    public function cb2($data) {
+    public function cb2($data)
+    {
         $this->assertEquals('test', $data['message']);
         return true;
     }
 
     public function testSendCallback()
     {
-
         $client = new Dummy_Raven_Client(array('send_callback' => array($this, 'cb1')));
         $client->captureMessage('test');
         $events = $client->getSentEvents();

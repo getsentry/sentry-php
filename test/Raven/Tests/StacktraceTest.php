@@ -69,8 +69,6 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(11, $frame["lineno"]);
         $this->assertEquals('include_once', $frame["function"]);
         $this->assertEquals('a_test($foo);', $frame["context_line"]);
-
-
     }
 
     public function testSimpleUnshiftedTrace()
@@ -108,8 +106,6 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('include_once', $frame["function"]);
         $this->assertEquals('friend', $frame['vars']['param1']);
         $this->assertEquals('a_test($foo);', $frame["context_line"]);
-
-
     }
 
     public function testShiftedCaptureVars()
@@ -152,8 +148,6 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('include_once', $frame["function"]);
         $this->assertEquals('a_test($foo);', $frame["context_line"]);
         $this->assertEquals($vars, $frame['vars']);
-
-
     }
 
     public function testUnshiftedCaptureVars()
@@ -196,8 +190,6 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('include_once', $frame["function"]);
         $this->assertEquals($vars, $frame['vars']);
         $this->assertEquals('a_test($foo);', $frame["context_line"]);
-
-
     }
 
     public function testDoesFixFrameInfo()

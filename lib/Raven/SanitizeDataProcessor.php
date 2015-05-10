@@ -27,12 +27,13 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
      *
      * @param array $options    Associative array of processor options
      */
-    public function setProcessorOptions(array $options){
-        if( isset($options['fields_re']) ){
+    public function setProcessorOptions(array $options)
+    {
+        if (isset($options['fields_re'])) {
             $this->fields_re = $options['fields_re'];
         }
 
-        if( isset($options['values_re']) ){
+        if (isset($options['values_re'])) {
             $this->values_re = $options['values_re'];
         }
     }
