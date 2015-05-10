@@ -13,6 +13,9 @@ matrix:
     allow_failures:
         - php: hhvm
 
+before_install:
+  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer self-update; fi
+
 install:
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer install; fi
 
