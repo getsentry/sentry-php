@@ -21,11 +21,10 @@ cache:
     - $HOME/.composer/cache
 
 before_install:
-  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer self-update; fi
-
+  - composer self-update
 
 install: travis_retry composer install --no-interaction --prefer-source
 
 script:
-  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run; fi
-  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/phpunit; else phpunit; fi
+  - vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run
+  - vendor/bin/phpunit
