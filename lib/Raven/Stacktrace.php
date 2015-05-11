@@ -116,7 +116,6 @@ class Raven_Stacktrace
             $i++;
         }
         return $args;
-
     }
 
     public static function get_frame_context($frame, $frame_arg_limit = Raven_Client::MESSAGE_LIMIT)
@@ -172,11 +171,11 @@ class Raven_Stacktrace
             if (isset($params[$i])) {
                 // Assign the argument by the parameter name
                 if (is_array($arg)) {
-                  foreach ($arg as $key => $value) {
-                    if (is_string($value) || is_numeric($value)) {
-                      $arg[$key] = substr($value, 0, $frame_arg_limit);
+                    foreach ($arg as $key => $value) {
+                        if (is_string($value) || is_numeric($value)) {
+                            $arg[$key] = substr($value, 0, $frame_arg_limit);
+                        }
                     }
-                  }
                 }
                 $args[$params[$i]->name] = $arg;
             } else {
@@ -243,7 +242,7 @@ class Raven_Stacktrace
                     break;
                 }
                 $file->next();
-             }
+            }
         } catch (RuntimeException $exc) {
             return $frame;
         }

@@ -17,4 +17,5 @@ install:
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then composer install; fi
 
 script:
+  - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run; fi
   - if [[ $TRAVIS_PHP_VERSION != "5.2" ]]; then vendor/bin/phpunit; else phpunit; fi

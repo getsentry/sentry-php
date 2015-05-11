@@ -69,9 +69,9 @@ class Raven_CurlHandler
 
     public function join($timeout=null)
     {
-    	if (!isset($timeout)) {
-    		$timeout = $this->join_timeout;
-    	}
+        if (!isset($timeout)) {
+            $timeout = $this->join_timeout;
+        }
         $start = time();
         do {
             $this->select();
@@ -94,8 +94,7 @@ class Raven_CurlHandler
                 do {
                     $mrc = curl_multi_exec($this->multi_handle, $active);
                 } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-            }
-            else {
+            } else {
                 return;
             }
         }
