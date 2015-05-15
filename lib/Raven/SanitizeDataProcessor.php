@@ -43,15 +43,15 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         foreach ($data as $k => &$v) {
             if (preg_match($this->fields_re, $k)) {
                 if (is_array($v)) {
-                    array_walk_recursive($v, function(&$item, $key) {
+                    array_walk_recursive($v, function (&$item, $key) {
                         $item = self::MASK;
                     });
                 } else {
                     $v = self::MASK;
                 }
-            } else if (is_array($v)) {
+            } elseif (is_array($v)) {
                 $this->process($v);
-            } else if (preg_match($this->values_re, $v)) {
+            } elseif (preg_match($this->values_re, $v)) {
                 $v = self::MASK;
             }
         }
