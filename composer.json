@@ -16,7 +16,8 @@
         "phpunit/phpunit": "^4.6.6"
     },
     "require": {
-        "php": ">=5.2.4"
+        "php": ">=5.2.4",
+        "ext-curl": "*"
     },
     "bin": [
         "bin/raven"
