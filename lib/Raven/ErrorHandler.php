@@ -31,6 +31,16 @@ class Raven_ErrorHandler
     private $send_errors_last = false;
     private $error_types = -1;
 
+    private $defaultErrorTypes = array(
+        E_ERROR,
+        E_PARSE,
+        E_CORE_ERROR,
+        E_CORE_WARNING,
+        E_COMPILE_ERROR,
+        E_COMPILE_WARNING,
+        E_STRICT,
+    );
+
     public function __construct($client, $send_errors_last = false)
     {
         $this->client = $client;
@@ -67,6 +77,24 @@ class Raven_ErrorHandler
         }
     }
 
+    /**
+     * Nothing by default, use it in child classes for catching other types of errors
+     *
+     * @return array
+     */
+    protected function getAdditionalErrorTypesToProcess()
+    {
+        return array();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getErrorTypesToProcess()
+    {
+        return $this->defaultErrorTypes + $this->getAdditionalErrorTypesToProcess();
+    }
+
     public function handleFatalError()
     {
         if (null === $lastError = error_get_last()) {
@@ -75,7 +103,10 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
+        $errors = 0;
+        foreach ($this->getErrorTypesToProcess() as $errorType) {
+            $errors |= $errorType;
+        }
 
         if ($lastError['type'] & $errors) {
             $e = new ErrorException(
