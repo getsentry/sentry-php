@@ -31,6 +31,42 @@ class Raven_ErrorHandler
     private $send_errors_last = false;
     private $error_types = -1;
 
+    /**
+     * @var array
+     * Error types that can be processed by the handler
+     */
+    private $validErrorTypes = array(
+        E_ERROR,
+        E_WARNING,
+        E_PARSE,
+        E_NOTICE,
+        E_CORE_ERROR,
+        E_CORE_WARNING,
+        E_COMPILE_ERROR,
+        E_COMPILE_WARNING,
+        E_USER_ERROR,
+        E_USER_WARNING,
+        E_USER_NOTICE,
+        E_STRICT,
+        E_RECOVERABLE_ERROR,
+        E_DEPRECATED,
+        E_USER_DEPRECATED,
+    );
+
+    /**
+     * @var array
+     * Error types that are always processed by the handler
+     */
+    private $defaultErrorTypes = array(
+        E_ERROR,
+        E_PARSE,
+        E_CORE_ERROR,
+        E_CORE_WARNING,
+        E_COMPILE_ERROR,
+        E_COMPILE_WARNING,
+        E_STRICT,
+    );
+
     public function __construct($client, $send_errors_last = false)
     {
         $this->client = $client;
@@ -67,6 +103,27 @@ class Raven_ErrorHandler
         }
     }
 
+    /**
+     * Nothing by default, use it in child classes for catching other types of errors
+     * Only constants from $this->validErrorTypes can be used
+     *
+     * @return array
+     */
+    protected function getAdditionalErrorTypesToProcess()
+    {
+        return array();
+    }
+
+    /**
+     * @return array
+     */
+    private function getErrorTypesToProcess()
+    {
+        $additionalErrorTypes = array_intersect($this->getAdditionalErrorTypesToProcess(), $this->validErrorTypes);
+        // array_unique so bitwise "or" operation wouldn't fail if some error type gets repeated
+        return array_unique($this->defaultErrorTypes + $additionalErrorTypes);
+    }
+
     public function handleFatalError()
     {
         if (null === $lastError = error_get_last()) {
@@ -75,7 +132,10 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
+        $errors = 0;
+        foreach ($this->getErrorTypesToProcess() as $errorType) {
+            $errors |= $errorType;
+        }
 
         if ($lastError['type'] & $errors) {
             $e = new ErrorException(
