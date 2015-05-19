@@ -697,6 +697,8 @@ class Raven_Client
         foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
         }
+        // XXX(dcramer): Prevent 100-continue response form server (Fixes GH-216)
+        $new_headers[] = 'Expect:';
 
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_POST, 1);
