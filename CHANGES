@@ -1,3 +1,10 @@
+0.12.0
+------
+
+- Bumped protocol version to 6.
+- Fixed an issue with the async curl handler (GH-216).
+- Removed UDP transport.
+
 0.11.0
 ------
 
