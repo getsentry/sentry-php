@@ -126,7 +126,7 @@ class Raven_Client
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if (!in_array($scheme, array('http', 'https', 'udp'))) {
+        if (!in_array($scheme, array('http', 'https'))) {
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
@@ -571,29 +571,7 @@ class Raven_Client
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
-
-        if ($parts['scheme'] === 'udp') {
-            $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
-        } else {
-            $this->send_http($url, $data, $headers);
-        }
-    }
-
-    /**
-     * Send data to Sentry via udp socket
-     *
-     * @param string    $netloc     host:port || host
-     * @param array     $data       Associative array of data to log
-     * @param array     $headers    Associative array of headers
-     */
-    private function send_udp($netloc, $data, $headers)
-    {
-        list($host, $port) = explode(':', $netloc);
-        $raw_data = $headers."\n\n".$data;
-
-        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-        socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
-        socket_close($sock);
+        $this->send_http($url, $data, $headers);
     }
 
     protected function get_default_ca_cert()
