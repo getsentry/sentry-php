@@ -11,7 +11,6 @@
 
 class Raven_Compat
 {
-
     public static function gethostname()
     {
         if (function_exists('gethostname')) {

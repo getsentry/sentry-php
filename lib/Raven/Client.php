@@ -450,10 +450,12 @@ class Raven_Client
             $data['extra']);
 
         // avoid empty arrays (which dont convert to dicts)
-        if (empty($data['extra']))
+        if (empty($data['extra'])) {
             unset($data['extra']);
-        if (empty($data['tags']))
+        }
+        if (empty($data['tags'])) {
             unset($data['tags']);
+        }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === true) {
             $stack = debug_backtrace();
