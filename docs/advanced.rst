@@ -1,11 +1,17 @@
-Installation
-============
+Advanced Topics
+===============
 
-There are different ways in which you can install the library depending on
-your preferences.
+This covers various advanced usage topics for the PHP client.
+
+.. _raven-php-advanced-installation:
+
+Advanced Installation
+---------------------
+
+This covers all methods of installation and a bit more detail.
 
 Install with Composer
----------------------
+`````````````````````
 
 If you're using `Composer <https://getcomposer.org/>`_ to manage
 dependencies, you can add Raven with it.
@@ -37,9 +43,8 @@ avoided. Also you should define a maximum version, e.g. by doing
 Composer will take care of the autoloading for you, so if you require the
 ``vendor/autoload.php``, you're good to go.
 
-
 Install Source from GitHub
---------------------------
+``````````````````````````
 
 To install the source code::
 
