@@ -11,6 +11,9 @@
 
 class Raven_Compat
 {
+    /**
+     * @return string
+     */
     public static function gethostname()
     {
         if (function_exists('gethostname')) {
@@ -20,11 +23,22 @@ class Raven_Compat
         return self::_gethostname();
     }
 
+    /**
+     * @return string
+     */
     public static function _gethostname()
     {
         return php_uname('n');
     }
 
+    /**
+     * @param string $algo
+     * @param string $data
+     * @param string $key
+     * @param bool $raw_output
+     *
+     * @return string
+     */
     public static function hash_hmac($algo, $data, $key, $raw_output=false)
     {
         if (function_exists('hash_hmac')) {
@@ -37,6 +51,13 @@ class Raven_Compat
     /**
      * Implementation from 'KC Cloyd'.
      * See http://nl2.php.net/manual/en/function.hash-hmac.php
+     *
+     * @param string $algo
+     * @param string $data
+     * @param string $key
+     * @param bool $raw_output
+     *
+     * @return string
      */
     public static function _hash_hmac($algo, $data, $key, $raw_output=false)
     {
@@ -66,6 +87,11 @@ class Raven_Compat
     /**
      * Note that we discard the options given to be compatible
      * with PHP < 5.3
+     *
+     * @param mixed $value
+     * @param int $options
+     *
+     * @return string
      */
     public static function json_encode($value, $options=0)
     {
@@ -79,6 +105,10 @@ class Raven_Compat
     /**
      * Implementation taken from
      * http://www.mike-griffiths.co.uk/php-json_encode-alternative/
+     *
+     * @param mixed $value
+     *
+     * @return string
      */
     public static function _json_encode($value)
     {
