@@ -30,42 +30,8 @@ class Raven_ErrorHandler
     private $reservedMemory;
     private $send_errors_last = false;
     private $error_types = -1;
-
-    /**
-     * @var array
-     * Error types that can be processed by the handler
-     */
-    private $validErrorTypes = array(
-        E_ERROR,
-        E_WARNING,
-        E_PARSE,
-        E_NOTICE,
-        E_CORE_ERROR,
-        E_CORE_WARNING,
-        E_COMPILE_ERROR,
-        E_COMPILE_WARNING,
-        E_USER_ERROR,
-        E_USER_WARNING,
-        E_USER_NOTICE,
-        E_STRICT,
-        E_RECOVERABLE_ERROR,
-        E_DEPRECATED,
-        E_USER_DEPRECATED,
-    );
-
-    /**
-     * @var array
-     * Error types that are always processed by the handler
-     */
-    private $defaultErrorTypes = array(
-        E_ERROR,
-        E_PARSE,
-        E_CORE_ERROR,
-        E_CORE_WARNING,
-        E_COMPILE_ERROR,
-        E_COMPILE_WARNING,
-        E_STRICT,
-    );
+    private $shutdown_error_types = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
+    private $reserved_memory_size = 10;
 
     public function __construct($client, $send_errors_last = false)
     {
@@ -103,27 +69,6 @@ class Raven_ErrorHandler
         }
     }
 
-    /**
-     * Nothing by default, use it in child classes for catching other types of errors
-     * Only constants from $this->validErrorTypes can be used
-     *
-     * @return array
-     */
-    protected function getAdditionalErrorTypesToProcess()
-    {
-        return array();
-    }
-
-    /**
-     * @return array
-     */
-    private function getErrorTypesToProcess()
-    {
-        $additionalErrorTypes = array_intersect($this->getAdditionalErrorTypesToProcess(), $this->validErrorTypes);
-        // array_unique so bitwise "or" operation wouldn't fail if some error type gets repeated
-        return array_unique($this->defaultErrorTypes + $additionalErrorTypes);
-    }
-
     public function handleFatalError()
     {
         if (null === $lastError = error_get_last()) {
@@ -132,12 +77,7 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = 0;
-        foreach ($this->getErrorTypesToProcess() as $errorType) {
-            $errors |= $errorType;
-        }
-
-        if ($lastError['type'] & $errors) {
+        if ($lastError['type'] & $this->shutdown_error_types) {
             $e = new ErrorException(
                 @$lastError['message'], @$lastError['type'], @$lastError['type'],
                 @$lastError['file'], @$lastError['line']
@@ -159,11 +99,15 @@ class Raven_ErrorHandler
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
-    public function registerShutdownFunction($reservedMemorySize = 10)
+    public function registerShutdownFunction($shutdown_error_types = null)
     {
+        if ($shutdown_error_types !== null) {
+            $this->shutdown_error_types = $shutdown_error_types;
+        }
+
         register_shutdown_function(array($this, 'handleFatalError'));
 
-        $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
+        $this->reservedMemory = str_repeat('x', 1024 * $this->reserved_memory_size);
     }
 
     public function detectShutdown()
