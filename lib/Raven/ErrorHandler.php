@@ -55,7 +55,7 @@ class Raven_ErrorHandler
 
     /**
      * @var array
-     * Error types that are always processed by the handler
+     * The default Error types that are always processed by the handler. Can be set during construction.
      */
     private $defaultErrorTypes = array(
         E_ERROR,
@@ -67,9 +67,12 @@ class Raven_ErrorHandler
         E_STRICT,
     );
 
-    public function __construct($client, $send_errors_last = false)
+    public function __construct($client, $send_errors_last = false, $default_error_types = null)
     {
         $this->client = $client;
+        if ($default_error_types !== null) {
+            $this->defaultErrorTypes = $default_error_types;
+        }
         register_shutdown_function(array($this, 'detectShutdown'));
         if ($send_errors_last) {
             $this->send_errors_last = true;
