@@ -150,6 +150,45 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($vars, $frame['vars']);
     }
 
+    public function testDoesNotModifyCaptureVars()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . "/resources/a.php",
+                "line" => 11,
+                "function" => "a_test",
+                "args"=> array(
+                    "friend",
+                ),
+            ),
+            array(
+                "file" => dirname(__FILE__) . "/resources/b.php",
+                "line" => 3,
+                "args"=> array(
+                    "/tmp/a.php",
+                ),
+                "function" => "include_once",
+            ),
+        );
+
+        // PHP's errcontext as passed to the error handler contains REFERENCES to any vars that were in the global scope.
+        // Modification of these would be really bad, since if control is returned (non-fatal error) we'll have altered the state of things!
+        $originalFoo = "bloopblarp";
+        $iAmFoo = $originalFoo;
+        $vars = array(
+            "foo" => &$iAmFoo
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars, 5);
+
+        // Check we haven't modified our vars.
+        $this->assertEquals($originalFoo, $vars["foo"]);
+
+        $frame = $frames[1];
+        // Check that we did truncate the variable in our output
+        $this->assertEquals(5, strlen($frame['vars']['foo']));
+    }
+
     public function testUnshiftedCaptureVars()
     {
         $stack = array(
