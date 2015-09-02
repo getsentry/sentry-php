@@ -50,7 +50,7 @@ class Raven_Client
         $options = array_merge($options_or_dsn, $options);
 
         $this->logger = Raven_Util::get($options, 'logger', 'php');
-        $this->servers = Raven_Util::get($options, 'servers');
+        $this->server = Raven_Util::get($options, 'server');
         $this->secret_key = Raven_Util::get($options, 'secret_key');
         $this->public_key = Raven_Util::get($options, 'public_key');
         $this->project = Raven_Util::get($options, 'project', 1);
@@ -152,7 +152,7 @@ class Raven_Client
         }
 
         return array(
-            'servers'    => array(sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project)),
+            'server'     => sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project),
             'project'    => $project,
             'public_key' => $username,
             'secret_key' => $password,
@@ -531,7 +531,7 @@ class Raven_Client
     }
 
     /**
-     * Wrapper to handle encoding and sending data to all defined Sentry servers
+     * Wrapper to handle encoding and sending data to the Sentry API server.
      *
      * @param array     $data       Associative array of data to log
      */
@@ -542,7 +542,7 @@ class Raven_Client
             return;
         }
 
-        if (!$this->servers) {
+        if (!$this->server) {
             return;
         }
 
@@ -553,19 +553,17 @@ class Raven_Client
         }
         $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
 
-        foreach ($this->servers as $url) {
-            $client_string = 'raven-php/' . self::VERSION;
-            $timestamp = microtime(true);
-            $headers = array(
-                'User-Agent' => $client_string,
-                'X-Sentry-Auth' => $this->get_auth_header(
-                    $timestamp, $client_string, $this->public_key,
-                    $this->secret_key),
-                'Content-Type' => 'application/octet-stream'
-            );
+        $client_string = 'raven-php/' . self::VERSION;
+        $timestamp = microtime(true);
+        $headers = array(
+            'User-Agent' => $client_string,
+            'X-Sentry-Auth' => $this->get_auth_header(
+                $timestamp, $client_string, $this->public_key,
+                $this->secret_key),
+            'Content-Type' => 'application/octet-stream'
+        );
 
-            $this->send_remote($url, $message, $headers);
-        }
+        $this->send_remote($this->server, $message, $headers);
     }
 
     /**

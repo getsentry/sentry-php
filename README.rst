@@ -97,7 +97,7 @@ the Sentry master server:
 
     $ bin/raven test https://public:secret@app.getsentry.com/1
     Client configuration:
-    -> servers: [https://sentry.example.com/api/store/]
+    -> server: [https://sentry.example.com/api/store/]
     -> project: 1
     -> public_key: public
     -> secret_key: secret

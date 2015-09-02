@@ -84,7 +84,7 @@ credentials with the Sentry master server::
 
     $ bin/raven test ___DSN___
     Client configuration:
-    -> servers: [___API_URL___]
+    -> server: [___API_URL___]
     -> project: ___PROJECT_ID___
     -> public_key: ___PUBLIC_KEY___
     -> secret_key: ___SECRET_KEY___
