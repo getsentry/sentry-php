@@ -76,6 +76,88 @@ you can also detect that:
         echo "Your reference ID is " . $event_id;
     }
 
+Optional Attributes
+-------------------
+
+With calls to ``captureException`` or ``captureMessage`` additional data
+can be supplied::
+
+  .. code-block:: php
+
+      $client->captureException($ex, array('attr' => 'value'))
+
+.. describe:: extra
+
+    Additional context for this event. Must be a mapping. Children can be any native JSON type.
+
+    .. code-block:: php
+
+        array(
+            'extra' => array('key' => 'value')
+        )
+
+.. describe:: fingerprint
+
+    The fingerprint for grouping this event.
+
+    .. code-block:: php
+
+        array(
+            // dont group events from the same NODE_ENV together
+            'fingerprint' => ['{{ default }}', process.env.NODE_ENV]
+        )
+
+.. describe:: level
+
+    The level of the event. Defaults to ``error``.
+
+    .. code-block:: php
+
+        array(
+            'level' => 'warning'
+        )
+
+    Sentry is aware of the following levels:
+
+    * debug (the least serious)
+    * info
+    * warning
+    * error
+    * fatal (the most serious)
+
+.. describe:: logger
+
+    The logger name for the event.
+
+    .. code-block:: php
+
+        array(
+            'logger' => 'default'
+        )
+
+.. describe:: tags
+
+    Tags to index with this event. Must be a mapping of strings.
+
+    .. code-block:: php
+
+        array(
+            'tags' => array('key' => 'value')
+        )
+
+.. describe:: user
+
+    The acting user.
+
+    .. code-block:: php
+
+        array(
+            'user' => array(
+                'id' => 42,
+                'email' => 'clever-girl'
+            )
+        )
+
 Testing Your Connection
 -----------------------
 
