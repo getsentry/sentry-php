@@ -16,7 +16,7 @@ To configure logging, pop open your ``bootstrap/app.php`` file, and insert the f
         $handler = new Monolog\Handler\RavenHandler($client);
         $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
 
-        $monolog->pushHandler($ravenHandler);
+        $monolog->pushHandler($handler);
     });
 
 Laravel 4.x
@@ -32,4 +32,4 @@ To configure logging, pop open your ``app/start/global.php`` file, and insert th
     $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
 
     $monolog = Log::getMonolog();
-    $monolog->pushHandler($ravenHandler);
+    $monolog->pushHandler($handler);
