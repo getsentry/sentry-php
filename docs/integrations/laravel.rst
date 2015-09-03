@@ -1,9 +1,9 @@
-Laraval
+Laravel
 =======
 
-Laraval supports Monolog out of the box, which also provides a native Sentry handler.
+Laravel supports Monolog out of the box, which also provides a native Sentry handler.
 
-Laraval 5.x
+Laravel 5.x
 -----------
 
 To configure logging, pop open your ``bootstrap/app.php`` file, and insert the following:
@@ -19,7 +19,7 @@ To configure logging, pop open your ``bootstrap/app.php`` file, and insert the f
         $monolog->pushHandler($ravenHandler);
     });
 
-Laraval 4.x
+Laravel 4.x
 -----------
 
 To configure logging, pop open your ``app/start/global.php`` file, and insert the following:
