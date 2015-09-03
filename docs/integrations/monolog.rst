@@ -3,7 +3,7 @@ Monolog
 
 Monolog supports Sentry out of the box, so you'll just need to configure a handler:
 
-.. code-style:: php
+.. sourcecode:: php
 
     $client = new Raven_Client('___DSN___')
 

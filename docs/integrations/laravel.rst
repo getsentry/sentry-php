@@ -8,7 +8,7 @@ Laravel 5.x
 
 To configure logging, pop open your ``bootstrap/app.php`` file, and insert the following:
 
-.. code-style:: php
+.. sourcecode:: php
 
     $app->configureMonologUsing(function($monolog) {
         $client = new Raven_Client('___DSN___')
@@ -24,7 +24,7 @@ Laravel 4.x
 
 To configure logging, pop open your ``app/start/global.php`` file, and insert the following:
 
-.. code-style:: php
+.. sourcecode:: php
 
     $client = new Raven_Client('___DSN___')
 
