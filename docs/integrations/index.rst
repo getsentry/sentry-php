@@ -4,5 +4,5 @@ Integrations
 .. toctree::
    :maxdepth: 1
 
-   laraval
+   laravel
    monolog
