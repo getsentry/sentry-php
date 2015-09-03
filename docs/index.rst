@@ -84,6 +84,7 @@ Want more?  Have a look at the full documentation for more information.
    advanced
    usage
    config
+   integrations
 
 Resources:
 
