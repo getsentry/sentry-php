@@ -6,3 +6,4 @@ Integrations
 
    laravel
    monolog
+   symfony2

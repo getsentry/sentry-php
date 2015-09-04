@@ -33,3 +33,34 @@ To configure logging, pop open your ``app/start/global.php`` file, and insert th
 
     $monolog = Log::getMonolog();
     $monolog->pushHandler($handler);
+
+Adding Context
+--------------
+
+Context can be added via a Monolog processor:
+
+.. sourcecode:: php
+
+    $monolog->pushProcessor(function ($record) {
+        $user = Auth::user();
+
+        // Add the authenticated user
+        if ($user) {
+            $record['context']['user'] = array(
+                'username' => Auth::user()->username,
+                'ip_address' => Request::getClientIp(),
+            );
+        } else {
+            $record['context']['user'] = array(
+                'ip_address' => Request::getClientIp(),
+            );
+        }
+
+        // Add various tags
+        $record['context']['tags'] = array('key' => 'value');
+
+        // Add various generic context
+        $record['extra']['key'] = 'value';
+
+        return $record;
+    });
