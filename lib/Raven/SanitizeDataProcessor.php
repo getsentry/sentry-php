@@ -38,34 +38,23 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
-    /**
-     * Replace any array values with our mask if the field name or the value matches a respective regex
-     *
-     * @param mixed $item       Associative array value
-     * @param string $key       Associative array key
-     */
-    public function sanitize(&$item, $key)
-    {
-        if (empty($item)) {
-            return;
-        }
-
-        if (preg_match($this->values_re, $item)) {
-            $item = self::MASK;
-        }
-
-        if (empty($key)) {
-            return;
-        }
-
-        if (preg_match($this->fields_re, $key)) {
-            $item = self::MASK;
-        }
-    }
-
     public function process(&$data)
     {
-        array_walk_recursive($data, array($this, 'sanitize'));
+        foreach ($data as $k => &$v) {
+            if (preg_match($this->fields_re, $k)) {
+                if (is_array($v)) {
+                    array_walk_recursive($v, function (&$item, $key) {
+                        $item = Raven_SanitizeDataProcessor::MASK;
+                    });
+                } else {
+                    $v = self::MASK;
+                }
+            } elseif (is_array($v)) {
+                $this->process($v);
+            } elseif (preg_match($this->values_re, $v)) {
+                $v = self::MASK;
+            }
+        }
     }
 
     /**

@@ -27,6 +27,30 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
                         '2222',
                         '3333',
                         '4444'
+                    ),
+                    'card_number_string_keys' => array(
+                        'part1' => '1111',
+                        'part2' => '2222',
+                        'part3' => '3333',
+                        'part4' => '4444'
+                    ),
+                    'card_number_nested_further' => array(
+                        array(
+                            'part' => '1',
+                            'number' => '1111'
+                        ),
+                        array(
+                            'part' => '2',
+                            'number' => '2222'
+                        ),
+                        array(
+                            'part' => '3',
+                            'number' => '3333'
+                        ),
+                        array(
+                            'part' => '4',
+                            'number' => '4444'
+                        )
                     )
                 ),
             )
@@ -43,9 +67,6 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['a_password_here']);
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['mypasswd']);
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['authorization']);
-
-        $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
-
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['card_number']['0']);
     }
 
