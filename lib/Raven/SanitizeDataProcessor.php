@@ -19,7 +19,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     {
         $this->client       = $client;
         $this->fields_re    = self::FIELDS_RE;
-        $this->values_re   = self::VALUES_RE;
+        $this->values_re    = self::VALUES_RE;
+        $this->session_cookie_name = ini_get('session.name');
     }
 
     /**
@@ -63,9 +64,25 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
+    public function sanitizeHttp(&$data) {
+        if (empty($data['sentry.interfaces.Http'])) {
+            return;
+        }
+        $http = &$data['sentry.interfaces.Http'];
+        if (empty($http['cookies'])) {
+            return;
+        }
+
+        $cookies = &$http['cookies'];
+        if (!empty($cookies[$this->session_cookie_name])) {
+            $cookies[$this->session_cookie_name] = self::MASK;
+        }
+    }
+
     public function process(&$data)
     {
         array_walk_recursive($data, array($this, 'sanitize'));
+        $this->sanitizeHttp($data);
     }
 
     /**

@@ -49,6 +49,24 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['card_number']['0']);
     }
 
+    public function testDoesFilterSessionId()
+    {
+        $data = array(
+            'sentry.interfaces.Http' => array(
+                'cookies' => array(
+                    ini_get('session.name') => 'abc',
+                ),
+            )
+        );
+
+        $client = new Raven_Client();
+        $processor = new Raven_SanitizeDataProcessor($client);
+        $processor->process($data);
+
+        $cookies = $data['sentry.interfaces.Http']['cookies'];
+        $this->assertEquals($cookies[ini_get('session.name')], Raven_SanitizeDataProcessor::MASK);
+    }
+
     public function testDoesFilterCreditCard()
     {
         $data = array(
