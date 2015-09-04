@@ -293,7 +293,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
 
-        $exc = $event['sentry.interfaces.Exception'];
+        $exc = $event['exception'];
         $this->assertEquals(count($exc['values']), 1);
         $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
         $this->assertEquals($exc['values'][0]['type'], 'Exception');
@@ -326,7 +326,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($events), 1);
         $event = array_pop($events);
 
-        $exc = $event['sentry.interfaces.Exception'];
+        $exc = $event['exception'];
         $this->assertEquals(count($exc['values']), 2);
         $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
         $this->assertEquals($exc['values'][1]['value'], 'Child exc');
@@ -473,7 +473,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         );
 
         $expected = array(
-            'sentry.interfaces.Http' => array(
+            'request' => array(
                 'method' => 'PATCH',
                 'url' => 'https://getsentry.com/welcome/',
                 'query_string' => 'q=bitch&l=en',
@@ -521,7 +521,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->set_user_data($id, $email, $user);
 
         $expected = array(
-            'sentry.interfaces.User' => array(
+            'user' => array(
                 'id' => 'unique_id',
                 'username' => 'my_user',
                 'email' => 'foo@example.com',
@@ -536,7 +536,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
 
         $expected = array(
-            'sentry.interfaces.User' => array(
+            'user' => array(
                 'id' => session_id(),
             )
         );
@@ -569,7 +569,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $event = array_pop($events);
         $this->assertEquals(array(
             'email' => 'foo@example.com',
-        ), $event['sentry.interfaces.User']);
+        ), $event['user']);
     }
 
     public function testCaptureMessageWithTagsContext()

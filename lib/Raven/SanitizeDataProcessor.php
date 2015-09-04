@@ -65,10 +65,10 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     }
 
     public function sanitizeHttp(&$data) {
-        if (empty($data['sentry.interfaces.Http'])) {
+        if (empty($data['request'])) {
             return;
         }
-        $http = &$data['sentry.interfaces.Http'];
+        $http = &$data['request'];
         if (empty($http['cookies'])) {
             return;
         }

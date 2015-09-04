@@ -14,7 +14,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testDoesFilterHttpData()
     {
         $data = array(
-            'sentry.interfaces.Http' => array(
+            'request' => array(
                 'data' => array(
                     'foo' => 'bar',
                     'password' => 'hello',
@@ -36,7 +36,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $vars = $data['sentry.interfaces.Http']['data'];
+        $vars = $data['request']['data'];
         $this->assertEquals($vars['foo'], 'bar');
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['password']);
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['the_secret']);
@@ -52,7 +52,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testDoesFilterSessionId()
     {
         $data = array(
-            'sentry.interfaces.Http' => array(
+            'request' => array(
                 'cookies' => array(
                     ini_get('session.name') => 'abc',
                 ),
@@ -63,7 +63,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $cookies = $data['sentry.interfaces.Http']['cookies'];
+        $cookies = $data['request']['cookies'];
         $this->assertEquals($cookies[ini_get('session.name')], Raven_SanitizeDataProcessor::MASK);
     }
 
@@ -131,7 +131,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testOverridenSanitize($processorOptions, $client_options, $dsn)
     {
         $data = array(
-            'sentry.interfaces.Http' => array(
+            'request' => array(
                 'data' => array(
                     'foo'               => 'bar',
                     'password'          => 'hello',
@@ -157,7 +157,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
 
         $processor->process($data);
 
-        $vars = $data['sentry.interfaces.Http']['data'];
+        $vars = $data['request']['data'];
         $this->assertEquals($vars['foo'], 'bar', 'did not alter foo');
         $this->assertEquals($vars['password'], 'hello', 'did not alter password');
         $this->assertEquals($vars['the_secret'], 'hello', 'did not alter the_secret');

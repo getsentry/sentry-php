@@ -257,7 +257,7 @@ class Raven_Client
                 'module' => $exc->getFile() .':'. $exc->getLine(),
             );
 
-            /**'sentry.interfaces.Exception'
+            /**'exception'
              * Exception::getTrace doesn't store the point at where the exception
              * was thrown, so we have to stuff it in ourselves. Ugh.
              */
@@ -284,7 +284,7 @@ class Raven_Client
         } while ($has_chained_exceptions && $exc = $exc->getPrevious());
 
         $data['message'] = $message;
-        $data['sentry.interfaces.Exception'] = array(
+        $data['exception'] = array(
             'values' => array_reverse($exceptions),
         );
         if ($logger !== null) {
@@ -365,7 +365,7 @@ class Raven_Client
         }
 
         return array(
-            'sentry.interfaces.Http' => $result,
+            'request' => $result,
         );
     }
 
@@ -384,7 +384,7 @@ class Raven_Client
             }
         }
         return array(
-            'sentry.interfaces.User' => $user,
+            'user' => $user,
         );
     }
 
@@ -470,8 +470,8 @@ class Raven_Client
                 spl_autoload_call('Raven_Stacktrace');
             }
 
-            if (!isset($data['sentry.interfaces.Stacktrace'])) {
-                $data['sentry.interfaces.Stacktrace'] = array(
+            if (!isset($data['stacktrace'])) {
+                $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
                         $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit
                     ),
