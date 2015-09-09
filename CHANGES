@@ -1,8 +1,15 @@
+0.13.0
+------
+
+- Updated API to use new style interfaces.
+- Remove session cookie in default processor.
+- Expand docs for Laravel, Symfony2, and Monolog.
+- Default error types can now be set as part of ErrorHandler configuration.
+
 0.12.1
 ------
 
 - Dont send empty values for various context.
-
 
 0.12.0
 ------
