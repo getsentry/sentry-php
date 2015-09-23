@@ -64,7 +64,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
-    public function sanitizeHttp(&$data) {
+    public function sanitizeHttp(&$data)
+    {
         if (empty($data['request'])) {
             return;
         }
