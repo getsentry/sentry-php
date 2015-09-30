@@ -1,42 +1,38 @@
 {
-  "wizards": {
+  "platforms": {
     "php": {
       "name": "PHP",
-      "client_lib": "raven-php",
-      "is_framework": false,
+      "type": "language",
       "doc_link": "",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "index#configuration",
         "usage#capturing-errors"
       ]
     },
-    "php-laravel": {
+    "php.laravel": {
       "name": "Laravel",
-      "client_lib": "raven-php",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/laravel/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/laravel#laravel-5-x"
       ]
     },
-    "php-monolog": {
+    "php.monolog": {
       "name": "Monolog",
-      "client_lib": "raven-php",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/monolog/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/monolog#monolog"
       ]
     },
-    "php-symfony2": {
+    "php.symfony2": {
       "name": "Symfony2",
-      "client_lib": "raven-php",
-      "is_framework": true,
+      "type": "framework",
       "doc_link": "integrations/symfony2/",
-      "snippets": [
+      "wizard": [
         "index#installation",
         "integrations/symfony2#symfony2"
       ]
