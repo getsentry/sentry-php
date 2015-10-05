@@ -76,7 +76,7 @@ class Raven_Stacktrace
                 }
             }
 
-            $frame = array(
+            $data = array(
                 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
                 'lineno' => (int) $context['lineno'],
@@ -97,10 +97,10 @@ class Raven_Stacktrace
                         $cleanVars[$key] = $value;
                     }
                 }
-                $frame['vars'] = $cleanVars;
+                $data['vars'] = $cleanVars;
             }
 
-            $result[] = $frame;
+            $result[] = $data;
         }
 
         return array_reverse($result);
