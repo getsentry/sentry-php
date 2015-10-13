@@ -26,7 +26,7 @@ To configure logging, pop open your ``app/start/global.php`` file, and insert th
 
 .. sourcecode:: php
 
-    $client = new Raven_Client('___DSN___');;
+    $client = new Raven_Client('___DSN___');
 
     $handler = new Monolog\Handler\RavenHandler($client);
     $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
