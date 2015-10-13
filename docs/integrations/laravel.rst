@@ -11,7 +11,7 @@ To configure logging, pop open your ``bootstrap/app.php`` file, and insert the f
 .. sourcecode:: php
 
     $app->configureMonologUsing(function($monolog) {
-        $client = new Raven_Client('___DSN___')
+        $client = new Raven_Client('___DSN___');
 
         $handler = new Monolog\Handler\RavenHandler($client);
         $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
@@ -26,7 +26,7 @@ To configure logging, pop open your ``app/start/global.php`` file, and insert th
 
 .. sourcecode:: php
 
-    $client = new Raven_Client('___DSN___')
+    $client = new Raven_Client('___DSN___');;
 
     $handler = new Monolog\Handler\RavenHandler($client);
     $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
