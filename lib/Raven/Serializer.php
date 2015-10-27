@@ -68,7 +68,7 @@ class Raven_Serializer
             $value = (string) $value;
 
             if (function_exists('mb_convert_encoding')) {
-                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                $value = mb_convert_encoding($value, 'UTF-8', 'auto');
             }
 
             return $value;
