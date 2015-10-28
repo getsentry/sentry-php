@@ -103,8 +103,7 @@ can be supplied::
     .. code-block:: php
 
         array(
-            // dont group events from the same NODE_ENV together
-            'fingerprint' => ['{{ default }}', process.env.NODE_ENV]
+            'fingerprint' => ['{{ default }}', 'other value']
         )
 
 .. describe:: level
