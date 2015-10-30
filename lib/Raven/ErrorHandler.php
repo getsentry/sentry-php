@@ -124,7 +124,7 @@ class Raven_ErrorHandler
     {
         $additionalErrorTypes = array_intersect($this->getAdditionalErrorTypesToProcess(), $this->validErrorTypes);
         // array_unique so bitwise "or" operation wouldn't fail if some error type gets repeated
-        return array_unique($this->defaultErrorTypes + $additionalErrorTypes);
+        return array_unique(array_merge($this->defaultErrorTypes, $additionalErrorTypes));
     }
 
     public function handleFatalError()
