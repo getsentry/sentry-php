@@ -1,0 +1,42 @@
+{
+  "support_level": "production",
+  "platforms": {
+    "php": {
+      "name": "PHP",
+      "type": "language",
+      "doc_link": "",
+      "wizard": [
+        "index#installation",
+        "index#configuration",
+        "usage#capturing-errors"
+      ]
+    },
+    "php.laravel": {
+      "name": "Laravel",
+      "type": "framework",
+      "doc_link": "integrations/laravel/",
+      "wizard": [
+        "index#installation",
+        "integrations/laravel#laravel-5-x"
+      ]
+    },
+    "php.monolog": {
+      "name": "Monolog",
+      "type": "framework",
+      "doc_link": "integrations/monolog/",
+      "wizard": [
+        "index#installation",
+        "integrations/monolog#monolog"
+      ]
+    },
+    "php.symfony2": {
+      "name": "Symfony2",
+      "type": "framework",
+      "doc_link": "integrations/symfony2/",
+      "wizard": [
+        "index#installation",
+        "integrations/symfony2#symfony2"
+      ]
+    }
+  }
+}

@@ -30,7 +30,7 @@ class Raven_Serializer
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
      */
-    public static function serialize($value, $max_depth=6, $_depth=0)
+    public static function serialize($value, $max_depth=9, $_depth=0)
     {
         if (is_object($value) || is_resource($value)) {
             return self::serializeValue($value);
@@ -68,7 +68,7 @@ class Raven_Serializer
             $value = (string) $value;
 
             if (function_exists('mb_convert_encoding')) {
-                $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                $value = mb_convert_encoding($value, 'UTF-8', 'auto');
             }
 
             return $value;
