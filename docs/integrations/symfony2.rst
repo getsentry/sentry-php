@@ -39,26 +39,23 @@ Capturing context can be done via a monolog processor:
 
     namespace Acme\Bundle\AcmeBundle\Monolog;
 
-    use Symfony\Component\DependencyInjection\ContainerInterface;
+    use Symfony\Component\Security\Core\SecurityContext;
     use Acme\Bundle\AcmeBundle\Entity\User;
 
-    class SentryContextProcessor {
+    class SentryContextProcessor
+    {
+        protected $securityContext;
 
-        protected $container;
-
-        public function __construct(ContainerInterface $container)
+        public function __construct(SecurityContext $securityContext)
         {
-            $this->container = $container;
+            $this->securityContext = $securityContext;
         }
 
         public function processRecord($record)
         {
-            $securityContext = $this->container->get('security.context');
-            $user = $securityContext->getToken()->getUser();
+            $user = $this->securityContext->getToken()->getUser();
 
-            if($user instanceof User)
-            {
-
+            if ($user instanceof User) {
                 $record['context']['user'] = array(
                     'name' => $user->getName(),
                     'username' => $user->getUsername(),
@@ -74,7 +71,6 @@ Capturing context can be done via a monolog processor:
 
             return $record;
         }
-
     }
 
 You'll then register the processor in your config:
@@ -84,6 +80,6 @@ You'll then register the processor in your config:
     services:
         monolog.processor.sentry_context:
             class: Applestump\Bundle\ShowsBundle\Monolog\SentryContextProcessor
-            arguments:  ["@service_container"]
+            arguments:  ["@security.context"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
