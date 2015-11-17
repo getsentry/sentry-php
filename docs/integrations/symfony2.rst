@@ -79,7 +79,7 @@ You'll then register the processor in your config:
 
     services:
         monolog.processor.sentry_context:
-            class: Applestump\Bundle\ShowsBundle\Monolog\SentryContextProcessor
+            class: Acme\Bundle\AcmeBundle\Monolog\SentryContextProcessor
             arguments:  ["@security.context"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
