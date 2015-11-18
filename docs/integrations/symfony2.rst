@@ -37,10 +37,10 @@ Capturing context can be done via a monolog processor:
 
 .. sourcecode:: php
 
-    namespace Acme\Bundle\AcmeBundle\Monolog;
+    namespace AppBundle\Monolog;
 
     use Symfony\Component\Security\Core\SecurityContext;
-    use Acme\Bundle\AcmeBundle\Entity\User;
+    use AppBundlee\Entity\User;
 
     class SentryContextProcessor
     {
@@ -79,7 +79,7 @@ You'll then register the processor in your config:
 
     services:
         monolog.processor.sentry_context:
-            class: Acme\Bundle\AcmeBundle\Monolog\SentryContextProcessor
+            class: AppBundle\Monolog\SentryContextProcessor
             arguments:  ["@security.context"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
