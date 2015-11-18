@@ -83,3 +83,6 @@ You'll then register the processor in your config:
             arguments:  ["@security.token_storage"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
+
+
+If you're using Symfony < 2.6 then you need to use ``security.context`` instead of ``security.token_storage``.
