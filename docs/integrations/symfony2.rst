@@ -39,14 +39,14 @@ Capturing context can be done via a monolog processor:
 
     namespace AppBundle\Monolog;
 
-    use AppBundlee\Entity\User;
-    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+    use AppBundle\Entity\User;
+    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
     class SentryContextProcessor
     {
         protected $tokenStorage;
 
-        public function __construct(TokenStorage $tokenStorage)
+        public function __construct(TokenStorageInterface $tokenStorage)
         {
             $this->tokenStorage = $tokenStorage;
         }
