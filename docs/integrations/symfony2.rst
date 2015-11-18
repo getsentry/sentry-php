@@ -37,28 +37,25 @@ Capturing context can be done via a monolog processor:
 
 .. sourcecode:: php
 
-    namespace Acme\Bundle\AcmeBundle\Monolog;
+    namespace AppBundle\Monolog;
 
-    use Symfony\Component\DependencyInjection\ContainerInterface;
-    use Acme\Bundle\AcmeBundle\Entity\User;
+    use AppBundle\Entity\User;
+    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-    class SentryContextProcessor {
+    class SentryContextProcessor
+    {
+        protected $tokenStorage;
 
-        protected $container;
-
-        public function __construct(ContainerInterface $container)
+        public function __construct(TokenStorageInterface $tokenStorage)
         {
-            $this->container = $container;
+            $this->tokenStorage = $tokenStorage;
         }
 
         public function processRecord($record)
         {
-            $securityContext = $this->container->get('security.context');
-            $user = $securityContext->getToken()->getUser();
+            $user = $this->tokenStorage->getToken()->getUser();
 
-            if($user instanceof User)
-            {
-
+            if ($user instanceof User) {
                 $record['context']['user'] = array(
                     'name' => $user->getName(),
                     'username' => $user->getUsername(),
@@ -74,7 +71,6 @@ Capturing context can be done via a monolog processor:
 
             return $record;
         }
-
     }
 
 You'll then register the processor in your config:
@@ -83,7 +79,10 @@ You'll then register the processor in your config:
 
     services:
         monolog.processor.sentry_context:
-            class: Applestump\Bundle\ShowsBundle\Monolog\SentryContextProcessor
-            arguments:  ["@service_container"]
+            class: AppBundle\Monolog\SentryContextProcessor
+            arguments:  ["@security.token_storage"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
+
+
+If you're using Symfony < 2.6 then you need to use ``security.context`` instead of ``security.token_storage``.
