@@ -39,21 +39,21 @@ Capturing context can be done via a monolog processor:
 
     namespace AppBundle\Monolog;
 
-    use Symfony\Component\Security\Core\SecurityContext;
     use AppBundlee\Entity\User;
+    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 
     class SentryContextProcessor
     {
-        protected $securityContext;
+        protected $tokenStorage;
 
-        public function __construct(SecurityContext $securityContext)
+        public function __construct(TokenStorage $tokenStorage)
         {
-            $this->securityContext = $securityContext;
+            $this->tokenStorage = $tokenStorage;
         }
 
         public function processRecord($record)
         {
-            $user = $this->securityContext->getToken()->getUser();
+            $user = $this->tokenStorage->getToken()->getUser();
 
             if ($user instanceof User) {
                 $record['context']['user'] = array(
@@ -80,6 +80,6 @@ You'll then register the processor in your config:
     services:
         monolog.processor.sentry_context:
             class: AppBundle\Monolog\SentryContextProcessor
-            arguments:  ["@security.context"]
+            arguments:  ["@security.token_storage"]
             tags:
                 - { name: monolog.processor, method: processRecord, handler: sentry }
