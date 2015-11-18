@@ -4,7 +4,7 @@
     "description": "A PHP client for Sentry (http://getsentry.com)",
     "keywords": ["log", "logging"],
     "homepage": "http://getsentry.com",
-    "license": "BSD",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "David Cramer",
