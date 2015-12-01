@@ -41,6 +41,16 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return parent::get_user_data();
     }
+
+    /**
+     * Expose the current url method to test it
+     *
+     * @return string
+     */
+    public function test_get_current_url()
+    {
+        return $this->get_current_url();
+    }
 }
 
 class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
@@ -631,5 +641,94 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
+    }
+
+    /**
+     * Set the server array to the test values, check the current url
+     *
+     * @dataProvider currentUrlProvider
+     * @param array $serverData
+     * @param array $options
+     * @param string $expected - the url expected
+     * @param string $message - fail message
+     */
+    public function testCurrentUrl($serverVars, $options, $expected, $message)
+    {
+        $_SERVER = $serverVars;
+
+        $client = new Dummy_Raven_Client($options);
+        $result = $client->test_get_current_url();
+
+        $this->assertSame($expected, $result, $message);
+    }
+
+    /**
+     * Arrays of:
+     *  $_SERVER data
+     *  config
+     *  expected url
+     *  Fail message
+     *
+     * @return array
+     */
+    public function currentUrlProvider()
+    {
+        return array(
+            array(
+                array(),
+                array(),
+                null,
+                'No url expected for empty REQUEST_URI'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                ),
+                array(),
+                'http://example.com/',
+                'The url is expected to be http with the request uri'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'HTTPS' => 'on'
+                ),
+                array(),
+                'https://example.com/',
+                'The url is expected to be https because of HTTPS on'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => '443'
+                ),
+                array(),
+                'https://example.com/',
+                'The url is expected to be https because of the server port'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'X-FORWARDED-PROTO' => 'https'
+                ),
+                array(),
+                'http://example.com/',
+                'The url is expected to be http because the X-Forwarded header is ignored'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'X-FORWARDED-PROTO' => 'https'
+                ),
+                array('trust_x_forwarded_proto' => true),
+                'https://example.com/',
+                'The url is expected to be https because the X-Forwarded header is trusted'
+            )
+        );
     }
 }

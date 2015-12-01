@@ -74,6 +74,7 @@ class Raven_Client
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
         $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
+        $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -781,22 +782,44 @@ class Raven_Client
      *
      * @return string|null
      */
-    private function get_current_url()
+    protected function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
         if (!isset($_SERVER['REQUEST_URI'])) {
             return null;
         }
 
-        $schema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-            || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-
         // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
         $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
-        return $schema . $host . $_SERVER['REQUEST_URI'];
+        $httpS = $this->isHttps() ? 's' : '';
+        return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
+    }
+
+    /**
+     * Was the current request made over https?
+     *
+     * @return bool
+     */
+    protected function isHttps()
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+            return true;
+        }
+
+        if (!empty($this->trust_x_forwarded_proto) &&
+            !empty($_SERVER['X-FORWARDED-PROTO']) &&
+            $_SERVER['X-FORWARDED-PROTO'] === 'https') {
+            return true;
+        }
+
+        return false;
     }
 
     /**
