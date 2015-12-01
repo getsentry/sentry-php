@@ -781,7 +781,7 @@ class Raven_Client
      *
      * @return string|null
      */
-    private function get_current_url()
+    protected function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
         if (!isset($_SERVER['REQUEST_URI'])) {
@@ -802,13 +802,13 @@ class Raven_Client
      *
      * @return bool
      */
-    private function isHttps()
+    protected function isHttps()
     {
         if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
             return true;
         }
 
-        if ($_SERVER['SERVER_PORT'] == 443) {
+        if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
             return true;
         }
 
