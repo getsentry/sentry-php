@@ -869,10 +869,11 @@ class Raven_Client
      */
     public function set_user_data($id, $email=null, $data=array())
     {
-        $this->user_context(array_merge(array(
-            'id'    => $id,
-            'email' => $email,
-        ), $data));
+        $user = array('id' => $id);
+        if (isset($email)) {
+            $user['email'] = $email;
+        }
+        $this->user_context(array_merge($user, $data));
     }
 
     /**
