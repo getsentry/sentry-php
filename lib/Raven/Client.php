@@ -74,6 +74,7 @@ class Raven_Client
         $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
         $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
+        $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -812,7 +813,9 @@ class Raven_Client
             return true;
         }
 
-        if (!empty($_SERVER['X-FORWARDED-PROTO']) && $_SERVER['X-FORWARDED-PROTO'] === 'https') {
+        if (!empty($this->trust_x_forwarded_proto) &&
+            !empty($_SERVER['X-FORWARDED-PROTO']) &&
+            $_SERVER['X-FORWARDED-PROTO'] === 'https') {
             return true;
         }
 
