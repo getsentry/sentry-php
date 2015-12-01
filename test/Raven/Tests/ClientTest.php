@@ -671,47 +671,47 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function currentUrlProvider()
     {
-        return [
-            [
-                [],
+        return array(
+            array(
+                array(),
                 null,
                 'If request uri is not set, expect nothing'
-            ],
-            [
-                [
+            ),
+            array(
+                array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                ],
+                ),
                 'http://example.com/',
                 'Simple http case'
-            ],
-            [
-                [
+            ),
+            array(
+                array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
                     'HTTPS' => 'on'
-                ],
+                ),
                 'https://example.com/',
                 'Simple https case'
-            ],
-            [
-                [
+            ),
+            array(
+                array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
                     'SERVER_PORT' => '443'
-                ],
+                ),
                 'https://example.com/',
                 'Https based on the server port'
-            ],
-            [
-                [
+            ),
+            array(
+                array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
                     'X-FORWARDED-PROTO' => 'https'
-                ],
+                ),
                 'https://example.com/',
                 'Https based on the forwarded protocol'
-            ]
-        ];
+            )
+        );
     }
 }
