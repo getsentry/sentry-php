@@ -41,6 +41,16 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return parent::get_user_data();
     }
+
+    /**
+     * Expose the current url method to test it
+     *
+     * @return string
+     */
+    public function test_get_current_url()
+    {
+        return $this->get_current_url();
+    }
 }
 
 class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
@@ -631,5 +641,77 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
+    }
+
+    /**
+     * Set the server array to the test values, check the current url
+     *
+     * @dataProvider currentUrlProvider
+     * @param array $serverData
+     * @param string $expected - the url expected
+     * @param string $message - fail message
+     */
+    public function testCurrentUrl($serverVars, $expected, $message)
+    {
+        $_SERVER = $serverVars;
+
+        $client = new Dummy_Raven_Client();
+        $result = $client->test_get_current_url();
+
+        $this->assertSame($expected, $result, $message);
+    }
+
+    /**
+     * Arrays of:
+     *  $_SERVER data
+     *  expected url
+     *  Fail message
+     *
+     * @return array
+     */
+    public function currentUrlProvider()
+    {
+        return [
+            [
+                [],
+                null,
+                'If request uri is not set, expect nothing'
+            ],
+            [
+                [
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                ],
+                'http://example.com/',
+                'Simple http case'
+            ],
+            [
+                [
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'HTTPS' => 'on'
+                ],
+                'https://example.com/',
+                'Simple https case'
+            ],
+            [
+                [
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => '443'
+                ],
+                'https://example.com/',
+                'Https based on the server port'
+            ],
+            [
+                [
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'X-FORWARDED-PROTO' => 'https'
+                ],
+                'https://example.com/',
+                'Https based on the forwarded protocol'
+            ]
+        ];
     }
 }
