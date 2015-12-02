@@ -328,11 +328,14 @@ class Raven_Client
     }
 
     /**
-     * NOT just http data - it's the environment/request
+     * Parse the environment data into sentry-expected format
+     *
+     * Always returns environment data, if it's a http request, also returns
+     * request headers, request parameters, post data and cookies
      *
      * @return array
      */
-    protected function get_http_data()
+    protected function get_env_data()
     {
         $result = array();
 
@@ -362,6 +365,14 @@ class Raven_Client
         $result = array_filter($result);
 
         return array('request' => $result);
+    }
+
+    /**
+     * @deprecated replaced by get_env_data
+     */
+    protected function get_http_data()
+    {
+        return $this->get_env_data();
     }
 
     protected function get_user_data()
@@ -424,7 +435,7 @@ class Raven_Client
 
         $data = array_merge($this->get_default_data(), $data);
 
-        $data = array_merge($this->get_http_data(), $data);
+        $data = array_merge($this->get_env_data(), $data);
 
         $data = array_merge($this->get_user_data(), $data);
 
