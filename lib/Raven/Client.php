@@ -333,11 +333,8 @@ class Raven_Client
 
         foreach ($_SERVER as $key => $value) {
             if (0 === strpos($key, 'HTTP_')) {
-                if (in_array($key, array('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'))) {
-                    continue;
-                }
                 $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
-            } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH'))) {
+            } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH')) && $value !== '') {
                 $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))))] = $value;
             } else {
                 $env[$key] = $value;
