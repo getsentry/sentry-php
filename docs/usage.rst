@@ -82,7 +82,7 @@ Optional Attributes
 With calls to ``captureException`` or ``captureMessage`` additional data
 can be supplied::
 
-.. code-block:: php
+    .. code-block:: php
 
       $client->captureException($ex, array('attr' => 'value'))
 
