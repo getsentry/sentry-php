@@ -466,8 +466,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'HTTP_ACCEPT'         => 'text/html',
             'HTTP_ACCEPT_CHARSET' => 'utf-8',
             'HTTP_COOKIE'         => 'cupcake: strawberry',
-            'HTTP_CONTENT_TYPE'   => 'text/xml',
-            'HTTP_CONTENT_LENGTH' => '99',
             'SERVER_PORT'         => '443',
             'SERVER_PROTOCOL'     => 'HTTP/1.1',
             'REQUEST_METHOD'      => 'PATCH',
