@@ -59,6 +59,7 @@ class Raven_Client
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->release = Raven_util::get($options, 'release', null);
+        $this->environment = Raven_util::get($options, 'environment', null);
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
@@ -435,6 +436,9 @@ class Raven_Client
 
         if ($this->release) {
             $data['release'] = $this->release;
+        }
+        if ($this->environment) {
+            $data['environment'] = $this->environment;
         }
 
         $data['tags'] = array_merge(
