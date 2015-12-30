@@ -3,7 +3,7 @@ Symfony2
 
 Symfony2 supports Monolog out of the box, which also provides a native Sentry handler.
 
-Simply add a new handler for Sentry to your config (i.e. in ``config_prod.yaml``), and you're good to go:
+Simply add a new handler for Sentry to your config (i.e. in ``config_prod.yml``), and you're good to go:
 
 .. sourcecode:: yaml
 
