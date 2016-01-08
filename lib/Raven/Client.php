@@ -351,19 +351,20 @@ class Raven_Client
             }
         }
 
-        if (!$this->is_http_request()) {
-            return array('request' => $result);
+        if ($this->is_http_request()) {
+            $result += array(
+                'method' => $this->_server_variable('REQUEST_METHOD'),
+                'url' => $this->get_current_url(),
+                'query_string' => $this->_server_variable('QUERY_STRING'),
+                'data' => $_POST,
+                'cookies' => $_COOKIE
+            );
+        } else {
+            $result['extra']['env'] = $result['env'];
+            unset($result['env']);
         }
 
-        $result += array(
-            'method' => $this->_server_variable('REQUEST_METHOD'),
-            'url' => $this->get_current_url(),
-            'query_string' => $this->_server_variable('QUERY_STRING'),
-            'data' => $_POST,
-            'cookies' => $_COOKIE
-        );
         $result = array_filter($result);
-
         return array('request' => $result);
     }
 
