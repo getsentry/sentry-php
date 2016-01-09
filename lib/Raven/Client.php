@@ -264,12 +264,14 @@ class Raven_Client
              * was thrown, so we have to stuff it in ourselves. Ugh.
              */
             $trace = $exc->getTrace();
-            $frame_where_exception_thrown = array(
-                'file' => $exc->getFile(),
-                'line' => $exc->getLine(),
-            );
-
-            array_unshift($trace, $frame_where_exception_thrown);
+            // Don't include the frame within the error handler for ErrorExceptions
+            if (!($exc instanceof ErrorException)) {
+                $frame_where_exception_thrown = array(
+                    'file' => $exc->getFile(),
+                    'line' => $exc->getLine(),
+                );
+                array_unshift($trace, $frame_where_exception_thrown);
+            }
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
             if (!class_exists('Raven_Stacktrace')) {
