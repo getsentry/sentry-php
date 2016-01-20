@@ -80,82 +80,82 @@ Optional Attributes
 -------------------
 
 With calls to ``captureException`` or ``captureMessage`` additional data
-can be supplied::
+can be supplied:
 
-    .. code-block:: php
+.. code-block:: php
 
-      $client->captureException($ex, array('attr' => 'value'))
+    $client->captureException($ex, array('attr' => 'value'))
 
 .. describe:: extra
 
-    Additional context for this event. Must be a mapping. Children can be any native JSON type.
+Additional context for this event. Must be a mapping. Children can be any native JSON type.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'extra' => array('key' => 'value')
-        )
+    array(
+        'extra' => array('key' => 'value')
+    )
 
 .. describe:: fingerprint
 
-    The fingerprint for grouping this event.
+The fingerprint for grouping this event.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'fingerprint' => ['{{ default }}', 'other value']
-        )
+    array(
+        'fingerprint' => ['{{ default }}', 'other value']
+    )
 
 .. describe:: level
 
-    The level of the event. Defaults to ``error``.
+The level of the event. Defaults to ``error``.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'level' => 'warning'
-        )
+    array(
+        'level' => 'warning'
+    )
 
-    Sentry is aware of the following levels:
+Sentry is aware of the following levels:
 
-    * debug (the least serious)
-    * info
-    * warning
-    * error
-    * fatal (the most serious)
+* debug (the least serious)
+* info
+* warning
+* error
+* fatal (the most serious)
 
 .. describe:: logger
 
-    The logger name for the event.
+The logger name for the event.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'logger' => 'default'
-        )
+    array(
+        'logger' => 'default'
+    )
 
 .. describe:: tags
 
-    Tags to index with this event. Must be a mapping of strings.
+Tags to index with this event. Must be a mapping of strings.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'tags' => array('key' => 'value')
-        )
+    array(
+        'tags' => array('key' => 'value')
+    )
 
 .. describe:: user
 
-    The acting user.
+The acting user.
 
-    .. code-block:: php
+.. code-block:: php
 
-        array(
-            'user' => array(
-                'id' => 42,
-                'email' => 'clever-girl'
-            )
+    array(
+        'user' => array(
+            'id' => 42,
+            'email' => 'clever-girl'
         )
+    )
 
 Testing Your Connection
 -----------------------
