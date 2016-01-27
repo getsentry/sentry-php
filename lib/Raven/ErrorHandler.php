@@ -81,6 +81,7 @@ class Raven_ErrorHandler
             $this->client->store_errors_for_bulk_send = true;
             register_shutdown_function(array($this->client, 'sendUnsentErrors'));
         }
+        $this->error_types = error_reporting();
     }
 
     public function handleException($e, $isError = false, $vars = null)
@@ -99,7 +100,7 @@ class Raven_ErrorHandler
             $this->handleException($e, true, $context);
         }
 
-        if ($this->call_existing_error_handler) {
+        if (error_reporting() & $code && $this->call_existing_error_handler) {
             if ($this->old_error_handler) {
                 return call_user_func($this->old_error_handler, $code, $message, $file, $line, $context);
             } else {
@@ -159,11 +160,11 @@ class Raven_ErrorHandler
 
     public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
     {
-        if ($error_types === null) {
+        if ($error_types == null) {
             $error_type = error_reporting();
         }
         $this->error_types = $error_types;
-        $this->old_error_handler = set_error_handler(array($this, 'handleError'), $error_types);
+        $this->old_error_handler = set_error_handler(array($this, 'handleError'), -1);
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
