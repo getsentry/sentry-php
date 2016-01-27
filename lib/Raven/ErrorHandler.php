@@ -29,11 +29,12 @@ class Raven_ErrorHandler
     private $call_existing_error_handler = false;
     private $reservedMemory;
     private $send_errors_last = false;
-    private $error_types = -1;
+    private $error_types;
 
     /**
      * @var array
-     * Error types that can be processed by the handler
+     * Error types that can be processed by the handler. Only used
+     * by the shutdown fatal handler.
      */
     private $validErrorTypes = array(
         E_ERROR,
@@ -55,7 +56,8 @@ class Raven_ErrorHandler
 
     /**
      * @var array
-     * The default Error types that are always processed by the handler. Can be set during construction.
+     * The default Error types that are always processed.  Only used
+     * by the shutdown fatal handler. Can be set during construction.
      */
     private $defaultErrorTypes = array(
         E_ERROR,
@@ -92,7 +94,7 @@ class Raven_ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
-        if ($this->error_types & $code & error_reporting()) {
+        if ($this->error_types & $code) {
             $e = new ErrorException($message, 0, $code, $file, $line);
             $this->handleException($e, true, $context);
         }
@@ -155,10 +157,13 @@ class Raven_ErrorHandler
         $this->call_existing_exception_handler = $call_existing_exception_handler;
     }
 
-    public function registerErrorHandler($call_existing_error_handler = true, $error_types = -1)
+    public function registerErrorHandler($call_existing_error_handler = true, $error_types = null)
     {
+        if ($error_types === null) {
+            $error_type = error_reporting();
+        }
         $this->error_types = $error_types;
-        $this->old_error_handler = set_error_handler(array($this, 'handleError'), error_reporting());
+        $this->old_error_handler = set_error_handler(array($this, 'handleError'), $error_types);
         $this->call_existing_error_handler = $call_existing_error_handler;
     }
 
