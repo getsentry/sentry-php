@@ -21,6 +21,12 @@ class Raven_Util
      * Because we love Python, this works much like dict.get() in Python.
      *
      * Returns $var from $array if set, otherwise returns $default.
+     *
+     * @param array $array
+     * @param int|string $var
+     * @param int|string|bool|null $default
+     *
+     * @return int|string|bool|null|array
      */
     public static function get($array, $var, $default=null)
     {

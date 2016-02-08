@@ -67,6 +67,14 @@ class Raven_ErrorHandler
         E_STRICT,
     );
 
+    /** @type Raven_Client */
+    private $client;
+
+    /**
+     * @param Raven_Client $client
+     * @param bool|false $send_errors_last
+     * @param null|array $default_error_types
+     */
     public function __construct($client, $send_errors_last = false, $default_error_types = null)
     {
         $this->client = $client;
@@ -81,6 +89,11 @@ class Raven_ErrorHandler
         }
     }
 
+    /**
+     * @param Exception $e
+     * @param bool|false $isError
+     * @param null $vars
+     */
     public function handleException($e, $isError = false, $vars = null)
     {
         $e->event_id = $this->client->getIdent($this->client->captureException($e, null, null, $vars));
@@ -90,6 +103,15 @@ class Raven_ErrorHandler
         }
     }
 
+    /**
+     * @param string $code
+     * @param string $message
+     * @param string $file
+     * @param int $line
+     * @param array $context
+     *
+     * @return bool|mixed|void
+     */
     public function handleError($code, $message, $file = '', $line = 0, $context=array())
     {
         if ($this->error_types & $code & error_reporting()) {

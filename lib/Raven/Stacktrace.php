@@ -13,6 +13,15 @@ class Raven_Stacktrace
         'require_once',
     );
 
+    /**
+     * @param array $frames
+     * @param bool $trace
+     * @param bool $shiftvars
+     * @param array|null $errcontext
+     * @param int $frame_var_limit
+     *
+     * @return array
+     */
     public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
                             $frame_var_limit = Raven_Client::MESSAGE_LIMIT)
     {
@@ -106,6 +115,11 @@ class Raven_Stacktrace
         return array_reverse($result);
     }
 
+    /**
+     * @param array $frame
+     *
+     * @return array
+     */
     public static function get_caller_frame_context($frame)
     {
         if (!isset($frame['args'])) {
@@ -121,6 +135,12 @@ class Raven_Stacktrace
         return $args;
     }
 
+    /**
+     * @param array $frame
+     * @param int $frame_arg_limit
+     *
+     * @return array
+     */
     public static function get_frame_context($frame, $frame_arg_limit = Raven_Client::MESSAGE_LIMIT)
     {
         // The reflection API seems more appropriate if we associate it with the frame
@@ -191,6 +211,13 @@ class Raven_Stacktrace
         return $args;
     }
 
+    /**
+     * @param string $filename
+     * @param int $lineno
+     * @param int $context_lines
+     *
+     * @return array
+     */
     private static function read_source_file($filename, $lineno, $context_lines = 5)
     {
         $frame = array(

@@ -29,6 +29,12 @@ class Raven_Serializer
     /**
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
+     *
+     * @param mixed $value
+     * @param int $max_depth
+     * @param int $_depth
+     *
+     * @return array|int|string
      */
     public static function serialize($value, $max_depth=9, $_depth=0)
     {
@@ -46,6 +52,11 @@ class Raven_Serializer
         }
     }
 
+    /**
+     * @param mixed $value
+     *
+     * @return int|string
+     */
     public static function serializeValue($value)
     {
         if ($value === null) {
