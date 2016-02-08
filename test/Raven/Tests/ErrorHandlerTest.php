@@ -69,16 +69,33 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         trigger_error('Warning', E_USER_WARNING);
     }
 
-    public function testErrorHandlerPropagatesUsingErrorReporting()
+    public function testErrorHandlerPropagates()
     {
         $client = $this->getMock('Client', array('captureException', 'getIdent'));
         $client->expects($this->never())
                ->method('captureException');
 
         $handler = new Raven_ErrorHandler($client);
-        $handler->registerErrorHandler(true, E_NONE);
+        $handler->registerErrorHandler(true, E_DEPRECATED);
 
         error_reporting(E_USER_WARNING);
+        trigger_error('Warning', E_USER_WARNING);
+
+        $this->assertEquals($this->errorHandlerCalled, 1);
+    }
+
+    public function testErrorHandlerRespectsErrorReportingDefault()
+    {
+        $client = $this->getMock('Client', array('captureException', 'getIdent'));
+        $client->expects($this->once())
+               ->method('captureException');
+
+        error_reporting(E_DEPRECATED);
+
+        $handler = new Raven_ErrorHandler($client);
+        $handler->registerErrorHandler(true);
+
+        error_reporting(E_ALL);
         trigger_error('Warning', E_USER_WARNING);
 
         $this->assertEquals($this->errorHandlerCalled, 1);
