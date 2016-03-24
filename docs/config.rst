@@ -32,6 +32,13 @@ The following settings are available for the client:
             'php_version' => phpversion(),
         )
 
+.. describe:: release
+
+    The version of your application (e.g. git SHA)
+
+    .. code-block:: php
+
+        'release' => MyApp::getReleaseVersion(),
 
 .. describe:: curl_method
 
