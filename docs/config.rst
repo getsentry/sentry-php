@@ -40,6 +40,14 @@ The following settings are available for the client:
 
         'release' => MyApp::getReleaseVersion(),
 
+.. describe:: environment
+
+    The environment your application is running in.
+
+    .. code-block:: php
+
+        'environment' => 'production',
+
 .. describe:: curl_method
 
     Defaults to 'sync'.
