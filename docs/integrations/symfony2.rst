@@ -53,14 +53,17 @@ Capturing context can be done via a monolog processor:
 
         public function processRecord($record)
         {
-            $user = $this->tokenStorage->getToken()->getUser();
+            $token = $this->tokenStorage->getToken();
 
-            if ($user instanceof User) {
-                $record['context']['user'] = array(
-                    'name' => $user->getName(),
-                    'username' => $user->getUsername(),
-                    'email' => $user->getEmail(),
-                );
+            if ($token !== null){
+                $user = $token->getUser();
+                if ($user instanceof UserInterface) {
+                    $record['context']['user'] = array(
+                        'name' => $user->getName(),
+                        'username' => $user->getUsername(),
+                        'email' => $user->getEmail(),
+                    );
+                }
             }
 
             // Add various tags
