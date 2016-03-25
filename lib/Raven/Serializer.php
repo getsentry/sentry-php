@@ -30,7 +30,7 @@ class Raven_Serializer
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
      */
-    public static function serialize($value, $max_depth=9, $_depth=0)
+    public static function serialize($value, $max_depth=3, $_depth=0)
     {
         if (is_object($value) || is_resource($value)) {
             return self::serializeValue($value);
@@ -48,6 +48,35 @@ class Raven_Serializer
 
     public static function serializeValue($value)
     {
+        if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
+            return $value;
+        } elseif (is_object($value) || gettype($value) == 'object') {
+            return 'Object '.get_class($value);
+        } elseif (is_resource($value)) {
+            return 'Resource '.get_resource_type($value);
+        } elseif (is_array($value)) {
+            return 'Array of length ' . count($value);
+        } else {
+            $value = (string) $value;
+
+            if (function_exists('mb_convert_encoding')) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'auto');
+            }
+
+            return $value;
+        }
+    }
+}
+
+class Raven_ReprSerializer extends Raven_Serializer
+{
+    /**
+     * Serialize a value recursively into a string-based representation
+     * of the typed PHP value.
+     */
+
+    public static function serializeValue($value)
+    {
         if ($value === null) {
             return 'null';
         } elseif ($value === false) {
@@ -62,8 +91,6 @@ class Raven_Serializer
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
-        } elseif (is_integer($value)) {
-            return (integer) $value;
         } else {
             $value = (string) $value;
 

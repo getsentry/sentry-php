@@ -454,10 +454,18 @@ class Raven_Client
         // avoid empty arrays (which dont convert to dicts)
         if (empty($data['extra'])) {
             unset($data['extra']);
+        } else {
+            $data['extra'] = Raven_Serializer::serialize($data['extra']);
         }
         if (empty($data['tags'])) {
             unset($data['tags']);
+        } else {
+            $data['tags'] = Raven_Serializer::serialize($data['tags']);
         }
+        if (!empty($data['user'])) {
+            $data['user'] = Raven_Serializer::serialize($data['user']);
+        }
+
 
         if ((!$stack && $this->auto_log_stacks) || $stack === true) {
             $stack = debug_backtrace();
@@ -502,8 +510,6 @@ class Raven_Client
         if (!class_exists('Raven_Serializer')) {
             spl_autoload_call('Raven_Serializer');
         }
-
-        $data = Raven_Serializer::serialize($data);
     }
 
     /**

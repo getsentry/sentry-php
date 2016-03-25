@@ -180,7 +180,7 @@ class Raven_Stacktrace
                         }
                     }
                 }
-                $args[$params[$i]->name] = $arg;
+                $args[$params[$i]->name] = Raven_ReprSerializer::serialize($arg);
             } else {
                 // TODO: Sentry thinks of these as context locals, so they must be named
                 // Assign the argument by number
