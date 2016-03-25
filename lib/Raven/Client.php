@@ -662,8 +662,9 @@ class Raven_Client
         $cmd .= '-d \''. $data .'\' ';
         $cmd .= '\''. $url .'\' ';
         $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-        if (!$this->verify_ssl) 
+        if (!$this->verify_ssl) {
             $cmd .= '-k ';
+        }
         $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
 
         exec($cmd);
