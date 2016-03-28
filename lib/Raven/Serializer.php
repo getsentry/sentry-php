@@ -30,40 +30,32 @@ class Raven_Serializer
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
      */
-    public static function serialize($value, $max_depth=9, $_depth=0)
+    public function serialize($value, $max_depth=3, $_depth=0)
     {
         if (is_object($value) || is_resource($value)) {
-            return self::serializeValue($value);
+            return $this->serializeValue($value);
         } elseif ($_depth < $max_depth && is_array($value)) {
             $new = array();
             foreach ($value as $k => $v) {
-                $new[self::serializeValue($k)] = self::serialize($v, $max_depth, $_depth + 1);
+                $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
             }
 
             return $new;
         } else {
-            return self::serializeValue($value);
+            return $this->serializeValue($value);
         }
     }
 
-    public static function serializeValue($value)
+    protected function serializeValue($value)
     {
-        if ($value === null) {
-            return 'null';
-        } elseif ($value === false) {
-            return 'false';
-        } elseif ($value === true) {
-            return 'true';
-        } elseif (is_float($value) && (int) $value == $value) {
-            return $value.'.0';
+        if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
+            return $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
             return 'Object '.get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
-        } elseif (is_integer($value)) {
-            return (integer) $value;
         } else {
             $value = (string) $value;
 
