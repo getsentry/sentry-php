@@ -62,8 +62,8 @@ class Raven_Client
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
         $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
-        $this->release = Raven_util::get($options, 'release', null);
-        $this->environment = Raven_util::get($options, 'environment', null);
+        $this->release = Raven_Util::get($options, 'release', null);
+        $this->environment = Raven_Util::get($options, 'environment', null);
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
@@ -76,10 +76,14 @@ class Raven_Client
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
         $this->curl_ipv4 = Raven_util::get($options, 'curl_ipv4', true);
-        $this->ca_cert = Raven_util::get($options, 'ca_cert', $this->get_default_ca_cert());
-        $this->verify_ssl = Raven_util::get($options, 'verify_ssl', true);
+        $this->ca_cert = Raven_Util::get($options, 'ca_cert', $this->get_default_ca_cert());
+        $this->verify_ssl = Raven_Util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
+        // the base path is used to strip prefixes on filenames in the stacktrace
+        $this->base_path = Raven_Util::get($options, 'base_path', null);
+        // app path is used to determine if code is part of your application
+        $this->app_path = Raven_Util::get($options, 'app_path', null);
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -282,7 +286,8 @@ class Raven_Client
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
-                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit
+                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->base_path,
+                    $this->app_path
                 ),
             );
 

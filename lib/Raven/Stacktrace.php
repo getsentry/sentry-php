@@ -14,7 +14,8 @@ class Raven_Stacktrace
     );
 
     public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
-                            $frame_var_limit = Raven_Client::MESSAGE_LIMIT)
+                                          $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $base_path = null,
+                                          $app_path = null)
     {
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
@@ -86,6 +87,17 @@ class Raven_Stacktrace
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
             );
+
+            // strip base path if present
+            if ($base_path && substr($abs_path, 0, strlen($base_path)) === $base_path) {
+                $data['filename'] = substr($abs_path, strlen($base_path) + 1);
+            }
+
+            // detect in_app based on app path
+            if ($app_path) {
+                $data['in_app'] = (bool)(substr($abs_path, 0, strlen($app_path)) === $app_path);
+            }
+
             // dont set this as an empty array as PHP will treat it as a numeric array
             // instead of a mapping which goes against the defined Sentry spec
             if (!empty($vars)) {
