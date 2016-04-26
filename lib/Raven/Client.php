@@ -35,19 +35,23 @@ class Raven_Client
 
     public function __construct($options_or_dsn=null, $options=array())
     {
-        if (is_null($options_or_dsn) && !empty($_SERVER['SENTRY_DSN'])) {
-            // Read from environment
-            $options_or_dsn = $_SERVER['SENTRY_DSN'];
+        if (is_array($options_or_dsn)) {
+            $options = array_merge($options_or_dsn, $options);
         }
-        if (!is_array($options_or_dsn)) {
-            if (!empty($options_or_dsn)) {
-                // Must be a valid DSN
-                $options_or_dsn = self::parseDSN($options_or_dsn);
-            } else {
-                $options_or_dsn = array();
-            }
+
+        if (!is_array($options_or_dsn) && !empty($options_or_dsn)) {
+            $dsn = $options_or_dsn;
+        } else if (!empty($_SERVER['SENTRY_DSN'])) {
+            $dsn = @$_SERVER['SENTRY_DSN'];
+        } else if (!empty($options['dsn'])) {
+            $dsn = $options['dsn'];
+        } else {
+            $dsn = null;
         }
-        $options = array_merge($options_or_dsn, $options);
+
+        if (!empty($dsn)) {
+            $options = array_merge($options, self::parseDSN($dsn));
+        }
 
         $this->logger = Raven_Util::get($options, 'logger', 'php');
         $this->server = Raven_Util::get($options, 'server');

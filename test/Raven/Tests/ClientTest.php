@@ -195,6 +195,31 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->server, 'http://example.com/api/1/store/');
     }
 
+
+    public function testDsnInOptionsFirstArg()
+    {
+        $client = new Raven_Client(array(
+            'dsn' => 'http://public:secret@example.com/1',
+        ));
+
+        $this->assertEquals($client->project, 1);
+        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
+        $this->assertEquals($client->public_key, 'public');
+        $this->assertEquals($client->secret_key, 'secret');
+    }
+
+    public function testDsnInOptionsSecondArg()
+    {
+        $client = new Raven_Client(null, array(
+            'dsn' => 'http://public:secret@example.com/1',
+        ));
+
+        $this->assertEquals($client->project, 1);
+        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
+        $this->assertEquals($client->public_key, 'public');
+        $this->assertEquals($client->secret_key, 'secret');
+    }
+
     public function testOptionsFirstArgumentWithOptions()
     {
         $client = new Raven_Client(array(
