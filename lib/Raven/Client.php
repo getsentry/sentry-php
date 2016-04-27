@@ -489,10 +489,11 @@ class Raven_Client
                 spl_autoload_call('Raven_Stacktrace');
             }
 
-            if (!isset($data['stacktrace'])) {
+            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit
+                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit,
+                        $this->base_path, $this->app_path
                     ),
                 );
             }
