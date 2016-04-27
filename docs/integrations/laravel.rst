@@ -1,84 +1,118 @@
 Laravel
 =======
 
-Laravel supports Monolog out of the box, which also provides a native Sentry handler.
+Laravel support is managed by the `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_ package.
 
 Laravel 5.x
 -----------
 
-To configure logging, pop open your ``bootstrap/app.php`` file, and insert the following:
+Install the ``sentry/sentry-laravel`` package:
 
-.. sourcecode:: php
+::
 
-    $app->configureMonologUsing(function($monolog) {
-        $client = new Raven_Client('___DSN___');
+    $ composer require sentry/sentry-laravel:*
 
-        $handler = new Monolog\Handler\RavenHandler($client);
-        $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
+Add the Sentry service provider and facade in ``config/app.php``:
 
-        $monolog->pushHandler($handler);
-    });
+::
+
+    'providers' => array(
+        // ...
+        Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
+    )
+
+    'aliases' => array(
+        // ...
+        'Sentry' => Sentry\SentryLaravel\SentryFacade::class,
+    )
+
+Add Sentry reporting to ``App/Exceptions/Handler.php``:
+
+::
+
+    public function report(Exception $e)
+    {
+        app('sentry')->captureException($e);
+        parent::report($e);
+    }
+
+Create the Sentry configuration file (``config/sentry.php``):
+
+::
+
+    $ php artisan vendor:publish --provider="Sentry\SentryLaravel\SentryLaravelServiceProvider"
+
 
 Laravel 4.x
 -----------
 
-To configure logging, pop open your ``app/start/global.php`` file, and insert the following:
+Install the ``sentry/sentry-laravel`` package:
 
-.. sourcecode:: php
+::
 
-    $client = new Raven_Client('___DSN___');
+    $ composer require sentry/sentry-laravel:*
 
-    $handler = new Monolog\Handler\RavenHandler($client);
-    $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
+Add the Sentry service provider and facade in ``config/app.php``:
 
-    $monolog = Log::getMonolog();
-    $monolog->pushHandler($handler);
+::
+
+    'providers' => array(
+        // ...
+        'Sentry\SentryLaravel\SentryLaravelServiceProvider',
+    )
+
+    'aliases' => array(
+        // ...
+        'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
+    )
+
+
+
+Create the Sentry configuration file (``config/sentry.php``):
+
+::
+
+    $ php artisan config:publish sentry/sentry-laravel
+
 
 Lumen 5.x
------------
+---------
 
-To configure logging, pop open your ``bootstrap/app.php`` file, and insert the following:
+Install the ``sentry/sentry-laravel`` package:
 
-.. sourcecode:: php
+::
 
-    $app->configureMonologUsing(function($monolog) {
-        $client = new Raven_Client('___DSN___');
+    $ composer require sentry/sentry-laravel:*
 
-        $handler = new Monolog\Handler\RavenHandler($client);
-        $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
+Register Sentry in ``bootstrap/app.php``:
 
-        $monolog->pushHandler($handler);
+::
 
-        return $monolog;
-    });
 
-Adding Context
---------------
+    $app->register('Sentry\SentryLaravel\SentryLumenServiceProvider');
 
-Context can be added via a Monolog processor:
+    # Sentry must be registered before routes are included
+    require __DIR__ . '/../app/Http/routes.php';
 
-.. sourcecode:: php
+Add Sentry reporting to ``app/Exceptions/Handler.php``:
 
-    $monolog->pushProcessor(function ($record) {
-        $user = Auth::user();
+::
 
-        // Add the authenticated user
-        if ($user) {
-            $record['context']['user'] = array(
-                'username' => Auth::user()->username,
-                'ip_address' => Request::getClientIp(),
-            );
-        } else {
-            $record['context']['user'] = array(
-                'ip_address' => Request::getClientIp(),
-            );
-        }
+    public function report(Exception $e)
+    {
+        app('sentry')->captureException($e);
+        parent::report($e);
+    }
 
-        // Add various tags
-        $record['context']['tags'] = array('key' => 'value');
+Create the Sentry configuration file (``config/sentry.php``):
 
-        // Add various generic context
-        $record['extra']['key'] = 'value';
+::
 
-        return $record;
-    });
+    <?php
+
+    return array(
+        'dsn' => '___DSN___',
+
+        // capture release as git sha
+        // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
+    );
