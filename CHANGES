@@ -1,3 +1,15 @@
+0.14.0
+------
+
+- Added ``prefixes`` option for stripping absolute paths.
+- Removed ``abs_path`` from stacktraces.
+- Added ``app_path`` to specify application root for resolving ``in_app` on frames.
+- Moved Laravel support to ``sentry-laravel`` project.
+- Fixed duplicate stack computation.
+- Added ``dsn`` option to ease configuration.
+- Fixed an issue with the curl async transport.
+- Improved serialization of values.
+
 0.13.0
 ------
 
