@@ -54,10 +54,14 @@ class Raven_Stacktrace
             } else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
                 $abs_path = $frame['file'];
-                $filename = basename($frame['file']);
             }
 
-            $module = $filename;
+            // strip base path if present
+            if ($base_path && substr($abs_path, 0, strlen($base_path)) === $base_path) {
+                $context['filename'] = substr($abs_path, strlen($base_path) + 1);
+            }
+
+            $module = basename($context['filename']);
             if (isset($nextframe['class'])) {
                 $module .= ':' . $nextframe['class'];
             }
@@ -89,11 +93,6 @@ class Raven_Stacktrace
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
             );
-
-            // strip base path if present
-            if ($base_path && substr($abs_path, 0, strlen($base_path)) === $base_path) {
-                $data['filename'] = substr($abs_path, strlen($base_path) + 1);
-            }
 
             // detect in_app based on app path
             if ($app_path) {
