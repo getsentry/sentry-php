@@ -1,5 +1,5 @@
 {
-    "name": "raven/raven",
+    "name": "sentry/sentry",
     "type": "library",
     "description": "A PHP client for Sentry (http://getsentry.com)",
     "keywords": ["log", "logging"],
