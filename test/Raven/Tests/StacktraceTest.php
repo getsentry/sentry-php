@@ -275,7 +275,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, dirname(__FILE__), dirname(__FILE__));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, null, dirname(__FILE__));
 
         $this->assertEquals($frames[0]['in_app'], true);
         $this->assertEquals($frames[1]['in_app'], true);
@@ -296,7 +296,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, dirname(__FILE__));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, array(dirname(__FILE__)));
 
         $this->assertEquals($frames[0]['filename'], 'resources/b.php');
         $this->assertEquals($frames[1]['filename'], 'resources/a.php');

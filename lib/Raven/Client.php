@@ -80,8 +80,8 @@ class Raven_Client
         $this->verify_ssl = Raven_Util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
-        // the base path is used to strip prefixes on filenames in the stacktrace
-        $this->base_path = Raven_Util::get($options, 'base_path', null);
+        // a list of prefixes used to coerce absolute paths into relative
+        $this->prefixes = Raven_Util::get($options, 'prefixes', null);
         // app path is used to determine if code is part of your application
         $this->app_path = Raven_Util::get($options, 'app_path', null);
 
@@ -286,7 +286,7 @@ class Raven_Client
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
-                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->base_path,
+                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
                     $this->app_path
                 ),
             );
@@ -493,7 +493,7 @@ class Raven_Client
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
                         $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit,
-                        $this->base_path, $this->app_path
+                        $this->prefixes, $this->app_path
                     ),
                 );
             }

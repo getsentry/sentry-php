@@ -14,7 +14,7 @@ class Raven_Stacktrace
     );
 
     public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
-                                          $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $base_path = null,
+                                          $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $strip_prefixes = null,
                                           $app_path = null)
     {
         /**
@@ -57,11 +57,9 @@ class Raven_Stacktrace
             }
 
             // strip base path if present
-            if ($base_path && substr($abs_path, 0, strlen($base_path)) === $base_path) {
-                $context['filename'] = substr($abs_path, strlen($base_path) + 1);
-            }
+            $context['filename'] = self::strip_prefixes($context['filename'], $strip_prefixes);
 
-            $module = basename($context['filename']);
+            $module = basename($abs_path);
             if (isset($nextframe['class'])) {
                 $module .= ':' . $nextframe['class'];
             }
@@ -203,6 +201,18 @@ class Raven_Stacktrace
         }
 
         return $args;
+    }
+
+    private static function strip_prefixes($filename, $prefixes)
+    {
+        if ($prefixes === null) return;
+        foreach ($prefixes as $prefix) {
+            if (substr($filename, 0, strlen($prefix)) === $prefix)
+            {
+                return substr($filename, strlen($prefix) + 1);
+            }
+        }
+        return $filename;
     }
 
     private static function read_source_file($filename, $lineno, $context_lines = 5)
