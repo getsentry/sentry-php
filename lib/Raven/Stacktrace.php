@@ -78,7 +78,9 @@ class Raven_Stacktrace
             }
 
             $data = array(
-                'abs_path' => $abs_path,
+                // abs_path isn't overly useful, wastes space, and exposes
+                // filesystem internals
+                // 'abs_path' => $abs_path,
                 'filename' => $context['filename'],
                 'lineno' => (int) $context['lineno'],
                 'module' => $module,
