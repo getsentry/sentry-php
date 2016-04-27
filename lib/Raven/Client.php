@@ -571,7 +571,7 @@ class Raven_Client
         }
         $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
 
-        $client_string = 'raven-php/' . self::VERSION;
+        $client_string = 'sentry-php/' . self::VERSION;
         $timestamp = microtime(true);
         $headers = array(
             'User-Agent' => $client_string,
@@ -610,7 +610,7 @@ class Raven_Client
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
             CURLOPT_CAINFO => $this->ca_cert,
-            CURLOPT_USERAGENT => 'raven-php/' . self::VERSION,
+            CURLOPT_USERAGENT => 'sentry-php/' . self::VERSION,
         );
         if ($this->http_proxy) {
             $options[CURLOPT_PROXY] = $this->http_proxy;

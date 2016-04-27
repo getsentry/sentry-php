@@ -1,11 +1,11 @@
-raven-php
-=========
+sentry-php
+==========
 
-.. image:: https://secure.travis-ci.org/getsentry/raven-php.png?branch=master
-   :target: http://travis-ci.org/getsentry/raven-php
+.. image:: https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master
+   :target: http://travis-ci.org/getsentry/sentry-php
 
 
-raven-php is a PHP client for `Sentry <https://getsentry.com/>`_.
+The official PHP SDK for `Sentry <https://getsentry.com/>`_.
 
 .. code-block:: php
 
@@ -78,7 +78,7 @@ To install the source code:
 
 ::
 
-    $ git clone git://github.com/getsentry/raven-php.git
+    $ git clone git://github.com/getsentry/sentry-php.git
 
 And including it using the autoloader:
 
@@ -267,7 +267,7 @@ You may now use phpunit :
 Resources
 ---------
 
-* `Bug Tracker <http://github.com/getsentry/raven-php/issues>`_
-* `Code <http://github.com/getsentry/raven-php>`_
+* `Bug Tracker <http://github.com/getsentry/sentry-php/issues>`_
+* `Code <http://github.com/getsentry/sentry-php>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
 * `IRC <irc://irc.freenode.net/sentry>`_  (irc.freenode.net, #sentry)

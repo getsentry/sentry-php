@@ -580,14 +580,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client();
 
-        $clientstring = 'raven-php/test';
+        $clientstring = 'sentry-php/test';
         $timestamp = '1234341324.340000';
 
         $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
                     "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
                     "sentry_key=publickey, sentry_secret=secretkey";
 
-        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'raven-php/test', 'publickey', 'secretkey'));
+        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', 'secretkey'));
     }
 
     public function testCaptureMessageWithUserContext()

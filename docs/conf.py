@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# raven-php documentation build configuration file, created by
+# sentry-php documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 21 21:04:27 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'raven-php'
+project = u'sentry-php'
 copyright = u'%s, Functional Software Inc.' % datetime.date.today().year
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_theme = 'classic'
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'raven-phpdoc'
+htmlhelp_basename = 'sentry-phpdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,7 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'raven-php.tex', u'raven-php Documentation',
+  ('index', 'sentry-php.tex', u'sentry-php Documentation',
    u'Functional Software Inc.', 'manual'),
 ]
 
@@ -213,7 +213,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'raven-php', u'raven-php Documentation',
+    ('index', 'sentry-php', u'sentry-php Documentation',
      [u'Functional Software Inc.'], 1)
 ]
 
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'raven-php', u'raven-php Documentation',
-   u'Functional Software Inc.', 'raven-php', 'One line description of project.',
+  ('index', 'sentry-php', u'sentry-php Documentation',
+   u'Functional Software Inc.', 'sentry-php', 'One line description of project.',
    'Miscellaneous'),
 ]
 

@@ -129,7 +129,7 @@ The following settings are available for the client:
                     )
         )
 
-.. _raven-php-request-context:
+.. _sentry-php-request-context:
 
 Providing Request Context
 -------------------------

@@ -3,7 +3,7 @@ Advanced Topics
 
 This covers various advanced usage topics for the PHP client.
 
-.. _raven-php-advanced-installation:
+.. _sentry-php-advanced-installation:
 
 Advanced Installation
 ---------------------
@@ -48,7 +48,7 @@ Install Source from GitHub
 
 To install the source code::
 
-    $ git clone git://github.com/getsentry/raven-php.git
+    $ git clone git://github.com/getsentry/sentry-php.git
 
 And including it using the autoloader:
 
