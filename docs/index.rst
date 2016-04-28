@@ -19,7 +19,7 @@ Installation
 There are various ways to install the PHP integration for Sentry.  The
 recommended way is to use `Composer <http://getcomposer.org/>`__::
 
-    $ composer require "raven/raven"
+    $ composer require "sentry/sentry"
 
 Alternatively you can manually install it:
 

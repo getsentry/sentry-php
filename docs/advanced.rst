@@ -20,19 +20,19 @@ dependencies, you can add Raven with it.
 
     {
         "require": {
-            "raven/raven": "$VERSION"
+            "sentry/sentry": "$VERSION"
         }
     }
 
 (replace ``$VERSION`` with one of the available versions on `Packagist
-<https://packagist.org/packages/raven/raven>`_) or to get the latest
+<https://packagist.org/packages/sentry/sentry>`_) or to get the latest
 version off the master branch:
 
 .. code-block:: json
 
     {
         "require": {
-            "raven/raven": "dev-master"
+            "sentry/sentry": "dev-master"
         }
     }
 

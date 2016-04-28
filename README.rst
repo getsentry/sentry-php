@@ -49,14 +49,14 @@ dependencies, you can add Raven with it.
 
 ::
 
-    $ composer require raven/raven:$VERSION
+    $ composer require sentry/sentry:$VERSION
 
-(replace ``$VERSION`` with one of the available versions on `Packagist <https://packagist.org/packages/raven/raven>`_)
+(replace ``$VERSION`` with one of the available versions on `Packagist <https://packagist.org/packages/sentry/sentry>`_)
 or to get the latest version off the master branch:
 
 ::
 
-    $ composer require raven/raven:dev-master
+    $ composer require sentry/sentry:dev-master
 
 Note that using unstable versions is not recommended and should be avoided. Also
 you should define a maximum version, e.g. by doing ``>=0.6,<1.0`` or ``~0.6``.
@@ -65,7 +65,7 @@ Alternatively, use the ``^`` operator for specifying a version, e.g.,
 
 ::
 
-    $ composer require raven/raven:^0.11.0
+    $ composer require sentry/sentry:^0.11.0
 
 Composer will take care of the autoloading for you, so if you require the
 ``vendor/autoload.php``, you're good to go.
