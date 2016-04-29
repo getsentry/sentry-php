@@ -460,6 +460,11 @@ class Raven_Client
             $this->context->extra,
             $data['extra']);
 
+        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
+        if (!class_exists('Raven_Serializer')) {
+            spl_autoload_call('Raven_Serializer');
+        }
+
         $serializer = new Raven_Serializer();
         // avoid empty arrays (which dont convert to dicts)
         if (empty($data['extra'])) {
@@ -516,10 +521,6 @@ class Raven_Client
 
     public function sanitize(&$data)
     {
-        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-        if (!class_exists('Raven_Serializer')) {
-            spl_autoload_call('Raven_Serializer');
-        }
     }
 
     /**
