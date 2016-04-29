@@ -100,8 +100,10 @@ class Raven_Stacktrace
             // dont set this as an empty array as PHP will treat it as a numeric array
             // instead of a mapping which goes against the defined Sentry spec
             if (!empty($vars)) {
+                $serializer = new Raven_ReprSerializer();
                 $cleanVars = array();
                 foreach ($vars as $key => $value) {
+                    $value = $serializer->serialize($value);
                     if (is_string($value) || is_numeric($value)) {
                         $cleanVars[$key] = substr($value, 0, $frame_var_limit);
                     } else {
@@ -180,7 +182,6 @@ class Raven_Stacktrace
 
         $params = $reflection->getParameters();
 
-        $serializer = new Raven_ReprSerializer();
         $args = array();
         foreach ($frame['args'] as $i => $arg) {
             if (isset($params[$i])) {
@@ -192,7 +193,7 @@ class Raven_Stacktrace
                         }
                     }
                 }
-                $args[$params[$i]->name] = $serializer->serialize($arg);
+                $args[$params[$i]->name] = $arg;
             } else {
                 // TODO: Sentry thinks of these as context locals, so they must be named
                 // Assign the argument by number
