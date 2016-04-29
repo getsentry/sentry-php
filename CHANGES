@@ -1,3 +1,9 @@
+0.15.0
+------
+
+- Fixed some cases where serialization wouldn't happen.
+- Added sdk attribute.
+
 0.14.0
 ------
 
