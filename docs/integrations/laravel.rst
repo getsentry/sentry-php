@@ -48,7 +48,7 @@ Create the Sentry configuration file (``config/sentry.php``):
 
 Add your DSN to ``.env``:
 
-.. code-block::
+.. code-block:: bash
 
     SENTRY_DSN=___DSN___
 
