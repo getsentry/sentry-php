@@ -410,6 +410,10 @@ class Raven_Client
             'logger' => $this->logger,
             'tags' => $this->tags,
             'platform' => 'php',
+            'sdk' => array(
+                'name' => 'sentry-php',
+                'version' => self::VERSION,
+            ),
         );
     }
 

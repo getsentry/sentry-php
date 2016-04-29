@@ -474,6 +474,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'site' => $client->site,
             'logger' => $client->logger,
             'tags' => $client->tags,
+            'sdk' => array(
+                'name' => 'sentry-php',
+                'version' => $client::VERSION,
+            ),
         );
         $this->assertEquals($expected, $client->get_default_data());
     }
