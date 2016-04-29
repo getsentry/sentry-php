@@ -14,7 +14,7 @@ cs:
 cs-dry-run:
 	vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run
 
-test:
+test: cs-dry-run
 	vendor/bin/phpunit
 
 setup-git:
