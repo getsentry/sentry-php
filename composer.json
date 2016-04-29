@@ -20,7 +20,7 @@
         "ext-curl": "*"
     },
     "bin": [
-        "bin/raven"
+        "bin/sentry"
     ],
     "autoload": {
         "psr-0" : {

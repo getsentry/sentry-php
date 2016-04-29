@@ -163,7 +163,7 @@ Testing Your Connection
 The PHP client includes a simple helper script to test your connection and
 credentials with the Sentry master server::
 
-    $ bin/raven test ___DSN___
+    $ bin/sentry test ___DSN___
     Client configuration:
     -> server: [___API_URL___]
     -> project: ___PROJECT_ID___

@@ -95,7 +95,7 @@ the Sentry master server:
 
 .. code-block:: bash
 
-    $ bin/raven test https://public:secret@app.getsentry.com/1
+    $ bin/sentry test https://public:secret@app.getsentry.com/1
     Client configuration:
     -> server: [https://sentry.example.com/api/store/]
     -> project: 1
