@@ -480,6 +480,9 @@ class Raven_Client
         if (!empty($data['user'])) {
             $data['user'] = $serializer->serialize($data['user']);
         }
+        if (!empty($data['request'])) {
+            $data['request'] = $serializer->serialize($data['request']);
+        }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === true) {
             $stack = debug_backtrace();
