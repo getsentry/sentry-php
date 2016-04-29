@@ -205,10 +205,11 @@ class Raven_Stacktrace
 
     private static function strip_prefixes($filename, $prefixes)
     {
-        if ($prefixes === null) return;
+        if ($prefixes === null) {
+            return;
+        }
         foreach ($prefixes as $prefix) {
-            if (substr($filename, 0, strlen($prefix)) === $prefix)
-            {
+            if (substr($filename, 0, strlen($prefix)) === $prefix) {
                 return substr($filename, strlen($prefix) + 1);
             }
         }
