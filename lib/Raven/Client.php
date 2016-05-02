@@ -88,6 +88,7 @@ class Raven_Client
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
+        $this->_last_event_id = null;
         $this->_user = null;
         $this->context = new Raven_Context();
 
@@ -332,6 +333,11 @@ class Raven_Client
         return $this->capture($data, false);
     }
 
+    public function getLastEventID()
+    {
+        return $this->_last_event_id;
+    }
+
     protected function is_http_request()
     {
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
@@ -417,7 +423,7 @@ class Raven_Client
         );
     }
 
-    public function capture($data, $stack, $vars = null)
+    public function capture($data, $stack = null, $vars = null)
     {
         if (!isset($data['timestamp'])) {
             $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
@@ -522,6 +528,8 @@ class Raven_Client
             }
             $this->error_data[] = $data;
         }
+
+        $this->_last_event_id = $data['event_id'];
 
         return $data['event_id'];
     }
