@@ -1,91 +1,42 @@
-Symfony2
-========
+Symfony
+=======
 
-Symfony2 supports Monolog out of the box, which also provides a native Sentry handler.
+Symfony is supported via the `sentry-symfony <https://github.com/getsentry/sentry-symfony>`_ package as a native bundle.
 
-Simply add a new handler for Sentry to your config (i.e. in ``config_prod.yml``), and you're good to go:
+Symfony 2+
+----------
 
-.. sourcecode:: yaml
+Install the ``sentry/sentry-laravel`` package:
 
-    monolog:
-      handlers:
-        main:
-            type:         fingers_crossed
-            action_level: error
-            handler:      grouped_main
+.. code-block:: bash
 
-        sentry:
-            type:  raven
-            dsn:   '___DSN___'
-            level: error
+    $ composer require sentry/sentry-symfony
 
-        # Groups
-        grouped_main:
-            type:    group
-            members: [sentry, streamed_main]
 
-        # Streams
-        streamed_main:
-            type:  stream
-            path:  %kernel.logs_dir%/%kernel.environment%.log
-            level: error
+Enable the bundle in ``app/AppKernel.php``:
 
-Adding Context
---------------
+.. code-block:: php
 
-Capturing context can be done via a monolog processor:
-
-.. sourcecode:: php
-
-    namespace AppBundle\Monolog;
-
-    use AppBundle\Entity\User;
-    use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-
-    class SentryContextProcessor
+    <?php
+    class AppKernel extends Kernel
     {
-        protected $tokenStorage;
-
-        public function __construct(TokenStorageInterface $tokenStorage)
+        public function registerBundles()
         {
-            $this->tokenStorage = $tokenStorage;
+            $bundles = array(
+                // ...
+
+                new Sentry/SentryBundle/SentryBundle(),
+            );
+
+            // ...
         }
 
-        public function processRecord($record)
-        {
-            $token = $this->tokenStorage->getToken();
-
-            if ($token !== null){
-                $user = $token->getUser();
-                if ($user instanceof UserInterface) {
-                    $record['context']['user'] = array(
-                        'name' => $user->getName(),
-                        'username' => $user->getUsername(),
-                        'email' => $user->getEmail(),
-                    );
-                }
-            }
-
-            // Add various tags
-            $record['context']['tags'] = array('key' => 'value');
-
-            // Add various generic context
-            $record['extra']['key'] = 'value';
-
-            return $record;
-        }
+        // ...
     }
 
-You'll then register the processor in your config:
+Add your DSN to ``app/config/config.yml``:
 
-.. sourcecode:: php
+.. code-block:: yaml
 
-    services:
-        monolog.processor.sentry_context:
-            class: AppBundle\Monolog\SentryContextProcessor
-            arguments:  ["@security.token_storage"]
-            tags:
-                - { name: monolog.processor, method: processRecord, handler: sentry }
-
-
-If you're using Symfony < 2.6 then you need to use ``security.context`` instead of ``security.token_storage``.
+    sentry:
+        dsn: "___DSN___"
