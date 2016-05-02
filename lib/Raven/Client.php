@@ -333,6 +333,9 @@ class Raven_Client
         return $this->capture($data, false);
     }
 
+    /**
+     * Return the last captured event's ID or null if none available.
+     */
     public function getLastEventID()
     {
         return $this->_last_event_id;
