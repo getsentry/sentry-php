@@ -58,24 +58,6 @@ takes a message and reports it to sentry.
     // Capture a message
     $event_id = $client->getIdent($client->captureMessage('my log message'));
 
-Give User Feedback
-------------------
-
-The `event_id` returned can be shown to the user to help track down the
-particular exception in Sentry later.  In case reporting to Sentry failed
-you can also detect that:
-
-.. code-block:: php
-
-    if ($client->getLastError() !== null) {
-        echo "Something went very, very wrong";
-        // $client->getLastError() contains the error that occurred
-    } else {
-        // Give the user feedback
-        echo "Sorry, there was an error!";
-        echo "Your reference ID is " . $event_id;
-    }
-
 Optional Attributes
 -------------------
 
@@ -215,6 +197,24 @@ Then in your template you can load up the feedback widget:
 That's it!
 
 For more details on this feature, see the :doc:`User Feedback guide <../../../learn/user-feedback>`.
+
+Handling Failures
+-----------------
+
+The SDK attempts to minimize failures, and when they happen will always try to avoid bubbling them up
+to your application. If you do want to know when an event fails to record, you can use the ``getLastError``
+helper:
+
+.. code-block:: php
+
+    if ($client->getLastError() !== null) {
+        echo "Something went very, very wrong";
+        // $client->getLastError() contains the error that occurred
+    } else {
+        // Give the user feedback
+        echo "Sorry, there was an error!";
+        echo "Your reference ID is " . $event_id;
+    }
 
 Testing Your Connection
 -----------------------
