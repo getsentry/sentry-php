@@ -157,6 +157,65 @@ The acting user.
         )
     )
 
+Getting Back an Event ID
+------------------------
+
+An event id is a globally unique id for the event that was just sent. This
+event id can be used to find the exact event from within Sentry.
+
+This is often used to display for the user and report an error to customer
+service.
+
+.. code-block:: php
+
+    $client->getLastEventID();
+
+.. _php-user-feedback:
+
+User Feedback
+-------------
+
+To enable user feedback for crash reports you will need to create an error handler
+which is aware of the last event ID.
+
+.. sourcecode:: php
+
+    <?php
+
+    $sentry = new \Raven_Client(___DSN___);
+
+    public class App {
+        function error500($exc) {
+            $event_id = $sentry->captureException($exc);
+
+            return $this->render('500.html', array(
+                'sentry_event_id' => $event_id,
+            ), 500);
+        }
+    }
+
+Then in your template you can load up the feedback widget:
+
+.. sourcecode:: html+django
+
+    <!-- Sentry JS SDK 2.1.+ required -->
+    <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+
+    {% if sentry_event_id %}
+      <script>
+      Raven.showReportDialog({
+        eventId: '{{ sentry_event_id }}',
+
+        // use the public DSN (dont include your secret!)
+        dsn: '___PUBLIC_DSN___'
+      });
+      </script>
+    {% endif %}
+
+That's it!
+
+For more details on this feature, see the :doc:`User Feedback guide <../../../learn/user-feedback>`.
+
 Testing Your Connection
 -----------------------
 
