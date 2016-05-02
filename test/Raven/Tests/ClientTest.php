@@ -645,6 +645,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ), $event['extra']);
     }
 
+    public function testGetLastEventID()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->capture(array('message' => 'test', 'event_id' => 'abc'));
+        $this->assertEquals($client->getLastEventID(), 'abc');
+    }
+
     public function cb1($data)
     {
         $this->assertEquals('test', $data['message']);
