@@ -41,6 +41,11 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
      */
     protected function write(array $record)
     {
+        // sentry uses the 'nobreadcrumb' attribute to skip reporting
+        if (!empty($record['context']['nobreadcrumb'])) {
+            return;
+        }
+
         // TODO(dcramer): support $record['context']['exception'] instanceof \Exception
         $crumb = array(
             'level' => $this->logLevels[$record['level']],
