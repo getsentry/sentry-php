@@ -46,12 +46,24 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
             return;
         }
 
-        // TODO(dcramer): support $record['context']['exception'] instanceof \Exception
-        $crumb = array(
-            'level' => $this->logLevels[$record['level']],
-            'category' => $record['channel'],
-            'message' => $record['message'],
-        );
+        if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
+            $exc = $record['context']['exception'];
+            $crumb = array(
+                'level' => $this->logLevels[$record['level']],
+                'category' => $record['channel'],
+                'data' => array(
+                    'type' => get_class($exc),
+                    'value' => $exc->getMessage(),
+                ),
+            );
+        } else {
+            // TODO(dcramer): parse exceptions out of messages and format as above
+            $crumb = array(
+                'level' => $this->logLevels[$record['level']],
+                'category' => $record['channel'],
+                'message' => $record['message'],
+            );
+        }
 
         $this->ravenClient->breadcrumbs->record($crumb);
     }
