@@ -91,6 +91,7 @@ class Raven_Client
         $this->_last_event_id = null;
         $this->_user = null;
         $this->context = new Raven_Context();
+        $this->breadcrumbs = new Raven_Breadcrumbs();
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
@@ -495,6 +496,10 @@ class Raven_Client
         }
         if (!empty($data['request'])) {
             $data['request'] = $serializer->serialize($data['request']);
+        }
+
+        if (!$this->breadcrumbs->is_empty()) {
+            $data['breadcrumbs'] = $this->breadcrumbs->fetch();
         }
 
         if ((!$stack && $this->auto_log_stacks) || $stack === true) {
