@@ -19,6 +19,8 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         Logger::EMERGENCY => Raven_Client::FATAL,
     );
 
+    private $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
+
     /**
      * @var Raven_Client the client object that sends the message to the server
      */
@@ -36,6 +38,15 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         $this->ravenClient = $ravenClient;
     }
 
+    protected function parseException($message)
+    {
+        if (!preg_match($this->excMatch, $message, $matches)) {
+            return;
+        }
+
+        return array($matches[1], $matches[2]);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -49,6 +60,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
             $exc = $record['context']['exception'];
             $crumb = array(
+                'type' => 'error',
                 'level' => $this->logLevels[$record['level']],
                 'category' => $record['channel'],
                 'data' => array(
@@ -58,11 +70,23 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
             );
         } else {
             // TODO(dcramer): parse exceptions out of messages and format as above
-            $crumb = array(
-                'level' => $this->logLevels[$record['level']],
-                'category' => $record['channel'],
-                'message' => $record['message'],
-            );
+            if ($error = $this->parseException($record['message'])) {
+                $crumb = array(
+                    'type' => 'error',
+                    'level' => $this->logLevels[$record['level']],
+                    'category' => $record['channel'],
+                    'data' => array(
+                        'type' => $error[0],
+                        'value' => $error[1],
+                    ),
+                );
+            } else {
+                $crumb = array(
+                    'level' => $this->logLevels[$record['level']],
+                    'category' => $record['channel'],
+                    'message' => $record['message'],
+                );
+            }
         }
 
         $this->ravenClient->breadcrumbs->record($crumb);
