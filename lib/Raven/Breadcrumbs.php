@@ -52,7 +52,7 @@ class Raven_Breadcrumbs
     public function to_json()
     {
         return array(
-            'values' => $this->fetch,
+            'values' => $this->fetch(),
         );
     }
 }
