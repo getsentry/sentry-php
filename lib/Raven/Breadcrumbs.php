@@ -26,6 +26,9 @@ class Raven_Breadcrumbs
 
     public function record($crumb)
     {
+        if (empty($crumb['timestamp'])) {
+            $crumb['timestamp'] = microtime(true);
+        }
         $this->buffer[$this->pos] = $crumb;
         $this->pos = ($this->pos + 1) % $this->size;
         $this->count++;
