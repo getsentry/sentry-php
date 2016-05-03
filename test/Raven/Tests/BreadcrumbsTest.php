@@ -32,10 +32,7 @@ class Raven_Tests_BreadcrumbsTest extends PHPUnit_Framework_TestCase
         $breadcrumbs->record(array('message' => 'test'));
         $json = $breadcrumbs->to_json();
 
-        $this->assertEquals($json, array(
-            'values' => array(
-                0 => array('message' => 'test'),
-            ),
-        ));
+        $this->assertEquals(count($json['values']), 1);
+        $this->assertEquals($json['values'][0]['message'], 'test');
     }
 }
