@@ -1,9 +1,9 @@
 <?php
 
 use Monolog\Logger;
-use Raven_Client;
+use Monolog\Handler\AbstractProcessingHandler;
 
-class Raven_BreadcrumbHandler extends AbstractProcessingHandler
+class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
 {
     /**
      * Translates Monolog log levels to Raven log levels.
@@ -45,7 +45,7 @@ class Raven_BreadcrumbHandler extends AbstractProcessingHandler
         $crumb = array(
             'level' => $this->logLevels[$record['level']],
             'category' => $record['channel'],
-            'message' => $record['formatted'],
+            'message' => $record['message'],
         );
 
         $this->ravenClient->breadcrumbs->record($crumb);

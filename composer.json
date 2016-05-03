@@ -17,7 +17,8 @@
     },
     "require": {
         "php": ">=5.2.4",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "monolog/monolog": "*"
     },
     "bin": [
         "bin/sentry"
