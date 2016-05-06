@@ -92,6 +92,10 @@ class Raven_Client
         $this->_user = null;
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
+        $this->sdk = Raven_Util::get($options, 'sdk', array(
+            'name' => 'sentry-php',
+            'version' => self::VERSION,
+        ));
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
@@ -420,10 +424,7 @@ class Raven_Client
             'logger' => $this->logger,
             'tags' => $this->tags,
             'platform' => 'php',
-            'sdk' => array(
-                'name' => 'sentry-php',
-                'version' => self::VERSION,
-            ),
+            'sdk' => $this->sdk,
         );
     }
 
