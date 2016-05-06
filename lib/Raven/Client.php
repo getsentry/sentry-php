@@ -475,28 +475,22 @@ class Raven_Client
             $this->context->extra,
             $data['extra']);
 
-        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-        if (!class_exists('Raven_Serializer')) {
-            spl_autoload_call('Raven_Serializer');
-        }
-
-        $serializer = new Raven_Serializer();
-        // avoid empty arrays (which dont convert to dicts)
         if (empty($data['extra'])) {
             unset($data['extra']);
         } else {
-            $data['extra'] = $serializer->serialize($data['extra']);
+            $data['extra'] = $data['extra'];
         }
+
         if (empty($data['tags'])) {
             unset($data['tags']);
         } else {
-            $data['tags'] = $serializer->serialize($data['tags']);
+            $data['tags'] = $data['tags'];
         }
         if (!empty($data['user'])) {
-            $data['user'] = $serializer->serialize($data['user']);
+            $data['user'] = $data['user'];
         }
         if (!empty($data['request'])) {
-            $data['request'] = $serializer->serialize($data['request']);
+            $data['request'] = $data['request'];
         }
 
         if (!$this->breadcrumbs->is_empty()) {
