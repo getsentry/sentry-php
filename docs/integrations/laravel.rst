@@ -1,7 +1,7 @@
 Laravel
 =======
 
-Laravel is supported via a native extension, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+Laravel is supported via a native extension, `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_.
 
 Laravel 5.x
 -----------
