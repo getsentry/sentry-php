@@ -216,6 +216,19 @@ helper:
         echo "Your reference ID is " . $event_id;
     }
 
+Breadcrumbs
+-----------
+
+Sentry supports capturing breadcrumbs -- events that happened prior to an issue.
+
+.. code-block:: php
+
+    $client->breadcrumbs->record(array(
+        'message' => 'Authenticating user as ' . $username,
+        'category' => 'auth',
+        'level' => 'info',
+    ));
+
 Testing Your Connection
 -----------------------
 
