@@ -174,6 +174,7 @@ class Raven_ErrorHandler
     {
         $this->old_exception_handler = set_exception_handler(array($this, 'handleException'));
         $this->call_existing_exception_handler = $call_existing_exception_handler;
+        return $this;
     }
 
     /**
@@ -190,6 +191,7 @@ class Raven_ErrorHandler
         }
         $this->old_error_handler = set_error_handler(array($this, 'handleError'), E_ALL);
         $this->call_existing_error_handler = $call_existing_error_handler;
+        return $this;
     }
 
     public function registerShutdownFunction($reservedMemorySize = 10)
@@ -197,6 +199,7 @@ class Raven_ErrorHandler
         register_shutdown_function(array($this, 'handleFatalError'));
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
+        return $this;
     }
 
     public function detectShutdown()

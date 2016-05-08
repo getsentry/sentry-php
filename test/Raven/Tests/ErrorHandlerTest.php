@@ -130,4 +130,18 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         trigger_error('Warning', E_USER_WARNING);
     }
+
+    public function testFluidInterface()
+    {
+        $client = $this->getMock('Client', array('captureException', 'getIdent'));
+        $handler = new Raven_ErrorHandler($client);
+        $result = $handler->registerErrorHandler();
+        $this->assertEquals($result, $handler);
+        $result = $handler->registerExceptionHandler();
+        $this->assertEquals($result, $handler);
+        // TODO(dcramer): cant find a great way to test resetting the shutdown
+        // handler
+        // $result = $handler->registerShutdownHandler();
+        // $this->assertEquals($result, $handler);
+    }
 }
