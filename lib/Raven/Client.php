@@ -28,9 +28,10 @@ class Raven_Client
 
     const MESSAGE_LIMIT = 1024;
 
-    public $severity_map;
+    public $breadcrumbs;
+    public $context;
     public $extra_data;
-
+    public $severity_map;
     public $store_errors_for_bulk_send = false;
 
     public function __construct($options_or_dsn=null, $options=array())
@@ -100,6 +101,50 @@ class Raven_Client
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
         }
+    }
+
+    public function getRelease($value)
+    {
+        return $this->release;
+    }
+
+    public function setRelease($value)
+    {
+        $this->release = $value;
+        return $this;
+    }
+
+    public function getEnvironment($value)
+    {
+        return $this->environment;
+    }
+
+    public function setEnvironment($value)
+    {
+        $this->environment = $value;
+        return $this;
+    }
+
+    public function getAppPath($value)
+    {
+        return $this->app_path;
+    }
+
+    public function setAppPath($value)
+    {
+        $this->app_path = $value;
+        return $this;
+    }
+
+    public function getPrefixes($value)
+    {
+        return $this->prefixes;
+    }
+
+    public function setPrefixes($value)
+    {
+        $this->prefixes = $value;
+        return $this;
     }
 
     public static function getDefaultProcessors()
