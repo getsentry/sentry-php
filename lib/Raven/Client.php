@@ -147,6 +147,17 @@ class Raven_Client
         return $this;
     }
 
+    public function getSendCallback($value)
+    {
+        return $this->send_callback;
+    }
+
+    public function setSendCallback($value)
+    {
+        $this->send_callback = $value;
+        return $this;
+    }
+
     public static function getDefaultProcessors()
     {
         return array(
