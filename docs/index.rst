@@ -1,7 +1,7 @@
 .. sentry:edition:: self
 
-   Raven-PHP
-   =========
+   Sentry-PHP
+   ==========
 
 .. sentry:edition:: on-premise, hosted
 
@@ -10,7 +10,7 @@
     PHP
     ===
 
-Raven-PHP is a PHP client for Sentry supporting PHP 5.3 or higher.  It'a
+The PHP SDK for Sentry supports PHP 5.3 and higher.  It'a
 available as a BSD licensed Open Source library.
 
 Installation

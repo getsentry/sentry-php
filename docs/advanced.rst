@@ -14,7 +14,7 @@ Install with Composer
 `````````````````````
 
 If you're using `Composer <https://getcomposer.org/>`_ to manage
-dependencies, you can add Raven with it.
+dependencies, you can add the Sentry SDK with it.
 
 .. code-block:: json
 

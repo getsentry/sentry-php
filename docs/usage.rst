@@ -1,7 +1,7 @@
 Usage
 =====
 
-Using Raven for PHP is straightforward.  After installation of the library
+Using Sentry with PHP is straightforward.  After installation of the library
 you can directly interface with the client and start submitting data.
 
 Basics
@@ -17,8 +17,8 @@ once and reference it from anywhere you want to interface with Sentry:
 Capturing Errors
 ----------------
 
-The most basic functionality is to use Raven for reporting any uncaught
-exceptions or PHP errors.  As this functionality is common enough, Raven
+The most basic functionality is to use Sentry for reporting any uncaught
+exceptions or PHP errors.  As this functionality is common enough, Sentry
 provides support for this out of the box:
 
 .. code-block:: php
