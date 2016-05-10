@@ -630,8 +630,8 @@ class Raven_Client
      */
     public function send($data)
     {
-        if (is_callable($this->send_callback) && !call_user_func($this->send_callback, $data)) {
-            // if send_callback returns falsely, end native send
+        if (is_callable($this->send_callback) && call_user_func($this->send_callback, $data) === false) {
+            // if send_callback returns false, end native send
             return;
         }
 
