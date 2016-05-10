@@ -229,6 +229,22 @@ Sentry supports capturing breadcrumbs -- events that happened prior to an issue.
         'level' => 'info',
     ));
 
+Filtering Out Errors
+--------------------
+
+Its common that you might want to prevent automatic capture of certain areas. Ideally you simply would avoid calling out to Sentry in that case, but that's often easier said than done. Instead, you can provide a function which the SDK will call before it sends any data, allowing you both to mutate that data, as well as prevent it from being sent to the server.
+
+.. code-block:: php
+
+    $client->setSendCallback(function($data) {
+        $ignore_types = array('Symfony\Component\HttpKernel\Exception\NotFoundHttpException')
+
+        if (isset($data['exception'] && in_array($data['exception']['values'][0]['type'], $ignore_types)
+        {
+            return false;
+        }
+    });
+
 Testing Your Connection
 -----------------------
 
