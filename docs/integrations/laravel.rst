@@ -75,7 +75,6 @@ Add the Sentry service provider and facade in ``config/app.php``:
         'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
     )
 
-
 Create the Sentry configuration file (``config/sentry.php``):
 
 .. code-block:: php
@@ -93,6 +92,14 @@ Add your DSN to ``config/sentry.php``:
 
         // ...
     );
+
+If you wish to wire up Sentry anywhere outside of the standard error handlers, or
+if you need to configure additional settings, you can access the Sentry instance
+through ``$app``:
+
+.. code-block:: php
+
+    $app['sentry']->setRelease(Git::sha());
 
 Lumen 5.x
 ---------
