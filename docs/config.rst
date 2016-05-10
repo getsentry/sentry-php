@@ -32,6 +32,12 @@ The following settings are available for the client:
             'php_version' => phpversion(),
         )
 
+    .. code-block:: php
+
+        $client->tags_context(array(
+            'php_version' => phpversion(),
+        ));
+
 .. describe:: release
 
     The version of your application (e.g. git SHA)
@@ -40,6 +46,10 @@ The following settings are available for the client:
 
         'release' => MyApp::getReleaseVersion(),
 
+    .. code-block:: php
+
+        $client->setRelease(MyApp::getReleaseVersion());
+
 .. describe:: environment
 
     The environment your application is running in.
@@ -47,6 +57,62 @@ The following settings are available for the client:
     .. code-block:: php
 
         'environment' => 'production',
+
+    .. code-block:: php
+
+        $client->setEnvironment('production');
+
+.. describe:: app_path
+
+    The root path to your application code.
+
+    .. code-block:: php
+
+        'app_path' => app_root(),
+
+    .. code-block:: php
+
+        $client->setAppPath(app_root());
+
+.. describe:: prefixes
+
+    Prefixes which should be stripped from filenames to create relative
+    paths.
+
+    .. code-block:: php
+
+        'prefixes' => array(
+            '/www/php/lib',
+        ),
+
+    .. code-block:: php
+
+        $client->setPrefixes(array(
+            '/www/php/lib',
+        ));
+
+.. describe:: send_callback
+
+    A function which will be called whenever data is ready to be sent. Within
+    the function you can mutate the data, or alternatively return ``false`` to
+    instruct the SDK to not send the event.
+
+    .. code-block:: php
+
+        'send_callback' => function($data) {
+            // strip HTTP data
+            @unset($data['request']);
+        },
+
+    .. code-block:: php
+
+        $client->setSendCallback(unction($data) {
+            // dont send events if POST
+            if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            {
+                return false;
+            }
+        });
 
 .. describe:: curl_method
 
