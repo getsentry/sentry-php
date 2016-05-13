@@ -20,6 +20,9 @@
         "ext-curl": "*",
         "monolog/monolog": "*"
     },
+    "conflict": {
+        "raven/raven": "*"
+    },
     "bin": [
         "bin/sentry"
     ],
