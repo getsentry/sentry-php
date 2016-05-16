@@ -77,9 +77,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    public function testParseDsnHttp()
+    public function testParseDSNHttp()
     {
-        $result = Raven_Client::parseDsn('http://public:secret@example.com/1');
+        $result = Raven_Client::ParseDSN('http://public:secret@example.com/1');
 
         $this->assertEquals($result['project'], 1);
         $this->assertEquals($result['server'], 'http://example.com/api/1/store/');
@@ -87,9 +87,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
-    public function testParseDsnHttps()
+    public function testParseDSNHttps()
     {
-        $result = Raven_Client::parseDsn('https://public:secret@example.com/1');
+        $result = Raven_Client::ParseDSN('https://public:secret@example.com/1');
 
         $this->assertEquals($result['project'], 1);
         $this->assertEquals($result['server'], 'https://example.com/api/1/store/');
@@ -97,9 +97,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
-    public function testParseDsnPath()
+    public function testParseDSNPath()
     {
-        $result = Raven_Client::parseDsn('http://public:secret@example.com/app/1');
+        $result = Raven_Client::ParseDSN('http://public:secret@example.com/app/1');
 
         $this->assertEquals($result['project'], 1);
         $this->assertEquals($result['server'], 'http://example.com/app/api/1/store/');
@@ -107,9 +107,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
-    public function testParseDsnPort()
+    public function testParseDSNPort()
     {
-        $result = Raven_Client::parseDsn('http://public:secret@example.com:9000/app/1');
+        $result = Raven_Client::ParseDSN('http://public:secret@example.com:9000/app/1');
 
         $this->assertEquals($result['project'], 1);
         $this->assertEquals($result['server'], 'http://example.com:9000/app/api/1/store/');
@@ -117,30 +117,30 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($result['secret_key'], 'secret');
     }
 
-    public function testParseDsnInvalidScheme()
+    public function testParseDSNInvalidScheme()
     {
         try {
-            Raven_Client::parseDsn('gopher://public:secret@/1');
+            Raven_Client::ParseDSN('gopher://public:secret@/1');
             $this->fail();
         } catch (Exception $e) {
             return;
         }
     }
 
-    public function testParseDsnMissingNetloc()
+    public function testParseDSNMissingNetloc()
     {
         try {
-            Raven_Client::parseDsn('http://public:secret@/1');
+            Raven_Client::ParseDSN('http://public:secret@/1');
             $this->fail();
         } catch (Exception $e) {
             return;
         }
     }
 
-    public function testParseDsnMissingProject()
+    public function testParseDSNMissingProject()
     {
         try {
-            Raven_Client::parseDsn('http://public:secret@example.com');
+            Raven_Client::ParseDSN('http://public:secret@example.com');
             $this->fail();
         } catch (Exception $e) {
             return;
@@ -150,16 +150,16 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testParseDsnMissingPublicKey()
+    public function testParseDSNMissingPublicKey()
     {
-        Raven_Client::parseDsn('http://:secret@example.com/1');
+        Raven_Client::ParseDSN('http://:secret@example.com/1');
     }
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testParseDsnMissingSecretKey()
+    public function testParseDSNMissingSecretKey()
     {
-        Raven_Client::parseDsn('http://public@example.com/1');
+        Raven_Client::ParseDSN('http://public@example.com/1');
     }
 
     public function testDsnFirstArgument()
