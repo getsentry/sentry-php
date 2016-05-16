@@ -22,7 +22,7 @@ Capturing context can be done via a monolog processor:
     $monolog->pushProcessor(function ($record) {
         // record the current user
         $user = Acme::getCurrentUser();
-        $record['user'] = array(
+        $record['context']['user'] = array(
             'name' => $user->getName(),
             'username' => $user->getUsername(),
             'email' => $user->getEmail(),
