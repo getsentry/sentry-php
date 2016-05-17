@@ -25,7 +25,7 @@ Enable the bundle in ``app/AppKernel.php``:
             $bundles = array(
                 // ...
 
-                new Sentry/SentryBundle/SentryBundle(),
+                new Sentry\SentryBundle\SentryBundle(),
             );
 
             // ...
