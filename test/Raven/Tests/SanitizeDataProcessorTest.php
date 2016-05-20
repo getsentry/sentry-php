@@ -22,12 +22,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
                     'a_password_here' => 'hello',
                     'mypasswd' => 'hello',
                     'authorization' => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
-                    'card_number' => array(
-                        '1111',
-                        '2222',
-                        '3333',
-                        '4444'
-                    )
+                    'cvv' => '1234',
+                    'cardNumber' => '232323',
+                    'expirationDate' => '2013-12',
                 ),
             )
         );
@@ -43,6 +40,10 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['a_password_here']);
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['mypasswd']);
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['authorization']);
+
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['cvv']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['cardNumber']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['expirationDate']);
 
         $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
 
@@ -89,7 +90,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $client     = new Raven_Client();
         $processor  = new Raven_SanitizeDataProcessor($client);
 
-        $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
+        $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw|cvv|cardNumber|expirationDate)/i', 'got default fields');
         $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,16}$/', 'got default values');
 
         $options = array(
