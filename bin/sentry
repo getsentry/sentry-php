@@ -76,6 +76,10 @@ function cmd_test($dsn)
 function main() {
     global $argv;
 
+    if (!isset($argv[1])) {
+        exit('Usage: sentry test <dsn>');
+    }
+
     $cmd = $argv[1];
 
     switch ($cmd) {
@@ -83,7 +87,7 @@ function main() {
             cmd_test(@$argv[2]);
             break;
         default:
-            exit('Usage: raven test <dsn>');
+            exit('Usage: sentry test <dsn>');
     }
 }
 
