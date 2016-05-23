@@ -301,4 +301,29 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($frames[0]['filename'], 'resources/b.php');
         $this->assertEquals($frames[1]['filename'], 'resources/a.php');
     }
+
+    public function testNoBasePath()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . "/resources/a.php",
+                "line" => 11,
+                "function" => "a_test",
+            ),
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack);
+        $this->assertEquals($frames[0]['filename'], dirname(__FILE__) . '/resources/a.php');
+    }
+
+    public function testWithEvaldCode()
+    {
+        try {
+            eval("throw new Exception('foobar');");
+        } catch (Exception $ex) {
+            $trace = $ex->getTrace();
+            $frames = Raven_Stacktrace::get_stack_info($trace);
+        }
+        $this->assertEquals($frames[count($frames) -1]['filename'], __FILE__);
+    }
 }
