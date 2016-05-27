@@ -1,3 +1,15 @@
+0.19.0
+------
+
+- Add error_reporting breadcrumb handler.
+
+0.18.0
+------
+
+- Remove session from serialized data.
+- send_callback return value must now be false to prevent capture.
+- Add various getter/setter methods for configuration.
+
 0.17.0
 ------
 
