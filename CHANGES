@@ -1,3 +1,14 @@
+0.17.0
+------
+
+- Don't attempt to serialize fixed SDK inputs.
+- Improvements to breadcrumbs support in Monolog.
+
+0.16.0
+------
+
+- Initial breadcrumbs support with Monolog handler.
+
 0.15.0
 ------
 
