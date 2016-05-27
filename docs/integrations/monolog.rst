@@ -1,6 +1,9 @@
 Monolog
 =======
 
+Capturing Errors
+----------------
+
 Monolog supports Sentry out of the box, so you'll just need to configure a handler:
 
 .. sourcecode:: php
@@ -36,3 +39,16 @@ Capturing context can be done via a monolog processor:
 
         return $record;
     });
+
+
+Breadcrumbs
+-----------
+
+Sentry provides a breadcrumb handler to automatically send logs along as crumbs:
+
+.. sourcecode:: php
+
+    $client = new Raven_Client('___DSN___');
+
+    $handler = new \Raven_Breadcrumbs_MonologHandler($client);
+    $monolog->pushHandler($handler);
