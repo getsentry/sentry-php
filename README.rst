@@ -9,8 +9,9 @@ The official PHP SDK for `Sentry <https://getsentry.com/>`_.
 
 .. code-block:: php
 
-    // Instantiate a new client with a compatible DSN
-    $client = new Raven_Client('http://public:secret@example.com/1');
+    // Instantiate a new client with a compatible DSN and install built-in
+    // handlers
+    $client = (new Raven_Client('http://public:secret@example.com/1'))->install();
 
     // Capture a message
     $event_id = $client->getIdent($client->captureMessage('my log message'));
@@ -31,12 +32,6 @@ The official PHP SDK for `Sentry <https://getsentry.com/>`_.
     // Give the user feedback
     echo "Sorry, there was an error!";
     echo "Your reference ID is " . $event_id;
-
-    // Install error handlers and shutdown function to catch fatal errors
-    $error_handler = new Raven_ErrorHandler($client);
-    $error_handler->registerExceptionHandler();
-    $error_handler->registerErrorHandler();
-    $error_handler->registerShutdownFunction();
 
 Installation
 ------------
