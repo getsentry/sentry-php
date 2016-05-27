@@ -101,6 +101,10 @@ class Raven_Client
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
         }
+
+        if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
+            $this->registerDefaultBreadcrumbHandlers();
+        }
     }
 
     public function getRelease($value)
@@ -400,6 +404,12 @@ class Raven_Client
     public function getLastEventID()
     {
         return $this->_last_event_id;
+    }
+
+    protected function registerDefaultBreadcrumbHandlers()
+    {
+        $handler = new Raven_Breadcrumbs_ErrorHandler($this);
+        $handler->install();
     }
 
     protected function is_http_request()
