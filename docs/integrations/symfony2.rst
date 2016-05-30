@@ -6,7 +6,7 @@ Symfony is supported via the `sentry-symfony <https://github.com/getsentry/sentr
 Symfony 2+
 ----------
 
-Install the ``sentry/sentry-laravel`` package:
+Install the ``sentry/sentry-symfony`` package:
 
 .. code-block:: bash
 
