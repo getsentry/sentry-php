@@ -18,6 +18,7 @@
     "require": {
         "php": ">=5.2.4",
         "ext-curl": "*",
+        "guzzlehttp/guzzle": "^6.0",
         "monolog/monolog": "*"
     },
     "conflict": {

@@ -7,6 +7,8 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * Raven PHP Client
@@ -34,8 +36,13 @@ class Raven_Client
     public $severity_map;
     public $store_errors_for_bulk_send = false;
 
+    /** @var Client  */
+    protected $guzzleClient;
+
     public function __construct($options_or_dsn=null, $options=array())
     {
+        $this->guzzleClient = new Client();
+
         if (is_array($options_or_dsn)) {
             $options = array_merge($options_or_dsn, $options);
         }
@@ -756,21 +763,26 @@ class Raven_Client
     private function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
         // TODO(dcramer): support ca_cert
-        $cmd = $this->curl_path.' -X POST ';
-        foreach ($headers as $key => $value) {
-            $cmd .= '-H \''. $key. ': '. $value. '\' ';
-        }
-        $cmd .= '-d \''. $data .'\' ';
-        $cmd .= '\''. $url .'\' ';
-        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-        if (!$this->verify_ssl) {
-            $cmd .= '-k ';
-        }
-        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
 
-        exec($cmd);
+        $this->guzzleClient->requestAsync(
+            'POST',
+            $url,
+            [
+                'headers' => $headers,
+                'body' => $data,
+                'connect_timeout' => 10,
+                'timeout' => 10,
+            ]
+        )->then(
+            function (Response $response) {
+                $body = (string)$response->getBody();
+            },
+            function (\Exception $e) {
+                $reason = $e->getMessage();
+            }
+        )->wait();
 
-        return true; // The exec method is just fire and forget, so just assume it always works
+        return true; // just fire and forget, so just assume it always works
     }
 
     /**
