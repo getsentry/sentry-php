@@ -51,7 +51,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
             return;
         }
 
-        if (preg_match($this->values_re, $item)) {
+        if (preg_match($this->values_re, (string)$item)) {
             $item = self::MASK;
         }
 
@@ -59,7 +59,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
             return;
         }
 
-        if (preg_match($this->fields_re, $key)) {
+        if (preg_match($this->fields_re, (string)$key)) {
             $item = self::MASK;
         }
     }
