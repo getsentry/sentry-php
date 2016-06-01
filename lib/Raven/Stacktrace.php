@@ -86,7 +86,7 @@ class Raven_Stacktrace
                 'filename' => $context['filename'],
                 'lineno' => (int) $context['lineno'],
                 'module' => $module,
-                'function' => array_key_exists('function', $nextframe) ? $nextframe['function'] : null,
+                'function' => $nextframe && array_key_exists('function', $nextframe) ? $nextframe['function'] : null,
                 'pre_context' => $context['prefix'],
                 'context_line' => $context['line'],
                 'post_context' => $context['suffix'],
