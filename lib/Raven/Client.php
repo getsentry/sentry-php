@@ -605,6 +605,20 @@ class Raven_Client
 
     public function sanitize(&$data)
     {
+        // attempt to sanitize any user provided data
+        $serializer = new Raven_Serializer();
+        if (!empty($data['request'])) {
+            $data['request'] = $serializer->serialize($data['request']);
+        }
+        if (!empty($data['user'])) {
+            $data['user'] = $serializer->serialize($data['user']);
+        }
+        if (!empty($data['extra'])) {
+            $data['extra'] = $serializer->serialize($data['extra']);
+        }
+        if (!empty($data['tags'])) {
+            $data['tags'] = $serializer->serialize($data['tags']);
+        }
     }
 
     /**

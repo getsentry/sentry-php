@@ -609,6 +609,24 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ), $event['user']);
     }
 
+    public function testCaptureMessageWithUnserializableUserData()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->user_context(array(
+            'email' => 'foo@example.com',
+            'data' => array(
+                'error' => new Exception('test'),
+            )
+        ));
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        // we're just asserting that this goes off without a hitch
+        $this->assertEquals(1, count($events));
+        $event = array_pop($events);
+    }
+
     public function testCaptureMessageWithTagsContext()
     {
         $client = new Dummy_Raven_Client();
