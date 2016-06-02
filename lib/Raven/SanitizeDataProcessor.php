@@ -47,7 +47,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
      */
     public function sanitize(&$item, $key)
     {
-        if (empty($item)) {
+        if (empty($item) || !is_scalar($item)) {
             return;
         }
 
