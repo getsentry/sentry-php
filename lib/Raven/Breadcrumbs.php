@@ -38,10 +38,9 @@ class Raven_Breadcrumbs
     {
         $results = array();
         for ($i = 0; $i <= ($this->size - 1); $i++) {
-            $node = @$this->buffer[($this->pos + $i) % $this->size];
-
-            if (isset($node)) {
-                $results[] = $node;
+            $idx = ($this->pos + $i) % $this->size;
+            if (isset($this->buffer[$idx])) {
+                $results[] = $this->buffer[$idx];
             }
         }
         return $results;
