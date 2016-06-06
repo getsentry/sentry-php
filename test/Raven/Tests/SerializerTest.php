@@ -81,4 +81,12 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $result = $serializer->serialize($input, 3);
         $this->assertEquals(array(array(array('Array of length 1'))), $result);
     }
+
+    public function testObjectInArray()
+    {
+        $serializer = new Raven_Serializer();
+        $input = array('foo' => new Raven_Serializer());
+        $result = $serializer->serialize($input);
+        $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
+    }
 }
