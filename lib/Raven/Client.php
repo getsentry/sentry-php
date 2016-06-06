@@ -543,20 +543,15 @@ class Raven_Client
 
         if (empty($data['extra'])) {
             unset($data['extra']);
-        } else {
-            $data['extra'] = $data['extra'];
         }
-
         if (empty($data['tags'])) {
             unset($data['tags']);
-        } else {
-            $data['tags'] = $data['tags'];
         }
-        if (!empty($data['user'])) {
-            $data['user'] = $data['user'];
+        if (empty($data['user'])) {
+            unset($data['user']);
         }
-        if (!empty($data['request'])) {
-            $data['request'] = $data['request'];
+        if (empty($data['request'])) {
+            unset($data['request']);
         }
 
         if (!$this->breadcrumbs->is_empty()) {
