@@ -272,7 +272,6 @@ class Raven_Client
      * @param string $message The message (primary description) for the event.
      * @param array $params params to use when formatting the message.
      * @param array $data Additional attributes to pass with this event (see Sentry docs).
-     * @param boolean $stack Capture a stacktrace for this event.
      */
     public function captureMessage($message, $params=array(), $data=array(),
                             $stack=false, $vars = null)
