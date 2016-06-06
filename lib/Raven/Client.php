@@ -268,8 +268,13 @@ class Raven_Client
 
     /**
      * Log a message to sentry
+     *
+     * @param string $message The message (primary description) for the event.
+     * @param array $params params to use when formatting the message.
+     * @param array $data Additional attributes to pass with this event (see Sentry docs).
+     * @param boolean $stack Capture a stacktrace for this event.
      */
-    public function captureMessage($message, $params=array(), $level_or_options=array(),
+    public function captureMessage($message, $params=array(), $data=array(),
                             $stack=false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
@@ -280,14 +285,13 @@ class Raven_Client
             $formatted_message = $message;
         }
 
-        if ($level_or_options === null) {
+        if ($data === null) {
             $data = array();
-        } elseif (!is_array($level_or_options)) {
+        // support legacy method of passing in a level name as the third arg
+        } elseif (!is_array($data)) {
             $data = array(
-                'level' => $level_or_options,
+                'level' => $data,
             );
-        } else {
-            $data = $level_or_options;
         }
 
         $data['message'] = $formatted_message;
@@ -301,8 +305,11 @@ class Raven_Client
 
     /**
      * Log an exception to sentry
+     *
+     * @param string $exception The Exception object.
+     * @param array $data Additional attributes to pass with this event (see Sentry docs).
      */
-    public function captureException($exception, $culprit_or_options=null, $logger=null, $vars=null)
+    public function captureException($exception, $data=null, $logger=null, $vars=null)
     {
         $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
 
@@ -310,13 +317,12 @@ class Raven_Client
             return null;
         }
 
-        if (!is_array($culprit_or_options)) {
+        if ($data === null) {
             $data = array();
-            if ($culprit_or_options !== null) {
-                $data['culprit'] = $culprit_or_options;
-            }
-        } else {
-            $data = $culprit_or_options;
+        } elseif (!is_array($data)) {
+            $data = array(
+                'culprit' => (string)$data,
+            );
         }
 
         // TODO(dcramer): DRY this up
