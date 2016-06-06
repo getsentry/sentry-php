@@ -58,6 +58,17 @@ takes a message and reports it to sentry.
     // Capture a message
     $event_id = $client->getIdent($client->captureMessage('my log message'));
 
+Note, ``captureMessage`` has a slightly different API than ``captureException`` to support
+parameterized formatting:
+
+.. code-block:: php
+
+    $client->captureMessage('my %s message', array('log'), array(
+        'extra' => array(
+            'foo' => 'bar',
+        ),
+    ));
+
 Optional Attributes
 -------------------
 
