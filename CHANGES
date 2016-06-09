@@ -1,3 +1,9 @@
+0.21.0
+------
+
+- Added ``transport`` option.
+- Added ``install()`` shortcut.
+
 0.20.0
 ------
 
