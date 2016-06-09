@@ -813,7 +813,7 @@ class Raven_Client
      * @param array     $headers    Associative array of headers
      * @return bool
      */
-    private function send_http_asynchronous_curl_exec($url, $data, $headers)
+    protected function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
         // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
