@@ -670,6 +670,18 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->getLastEventID(), 'abc');
     }
 
+    public function testCustomTransport()
+    {
+        $events = array();
+
+        $client = new Raven_Client('https://public:secret@sentry.example.com/1');
+        $client->setTransport(function ($client, $data) use (&$events) {
+            $events[] = $data;
+        });
+        $client->capture(array('message' => 'test', 'event_id' => 'abc'));
+        $this->assertEquals(count($events), 1);
+    }
+
     public function cb1($data)
     {
         $this->assertEquals('test', $data['message']);

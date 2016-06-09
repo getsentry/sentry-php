@@ -133,6 +133,30 @@ The following settings are available for the client:
     Specify the path to the curl binary to be used with the 'exec' curl
     method.
 
+.. describe:: transport
+
+    Set a custom transport to override how Sentry events are sent upstream.
+
+    .. code-block:: php
+
+        'transport' => function($client, $data) {
+            $myHttpClient->send(array(
+                'url'     => $client->getServerEndpoint(),
+                'method'  => 'POST',
+                'headers' => array(
+                    'Content-Encoding' => 'gzip',
+                    'Content-Type'     => 'application/octet-stream',
+                    'User-Agent'       => $client->getUserAgent(),
+                    'X-Sentry-Auth'    => $client->getAuthHeader(),
+                ),
+                'body'    => gzipCompress(jsonEncode($data)),
+            ))
+        },
+
+    .. code-block:: php
+
+        $client->setTransport(...);
+
 .. describe:: trace
 
     Set this to ``false`` to disable reflection tracing (function calling

@@ -17,6 +17,7 @@
 class Raven_Client
 {
     const VERSION = '0.21.x-dev';
+
     const PROTOCOL = '6';
 
     const DEBUG = 'debug';
@@ -85,6 +86,8 @@ class Raven_Client
         $this->prefixes = Raven_Util::get($options, 'prefixes', null);
         // app path is used to determine if code is part of your application
         $this->app_path = Raven_Util::get($options, 'app_path', null);
+        $this->transport = Raven_Util::get($options, 'transport', null);
+        ;
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -171,6 +174,36 @@ class Raven_Client
     public function setSendCallback($value)
     {
         $this->send_callback = $value;
+        return $this;
+    }
+
+    public function getTransport($value)
+    {
+        return $this->transport;
+    }
+
+    public function getServerEndpoint($value)
+    {
+        return $this->server;
+    }
+
+    public function getUserAgent()
+    {
+        return 'sentry-php/' . self::VERSION;
+    }
+
+    /**
+     * Set a custom transport to override how Sentry events are sent upstream.
+     *
+     * The bound function will be called with ``$client`` and ``$data`` arguments
+     * and is responsible for encoding the data, authenticating, and sending
+     * the data to the upstream Sentry server.
+     *
+     * @param function     $value       Function to be called
+     */
+    public function setTransport($value)
+    {
+        $this->transport = $value;
         return $this;
     }
 
@@ -675,6 +708,10 @@ class Raven_Client
             return;
         }
 
+        if ($this->transport) {
+            return call_user_func($this->transport, $this, $data);
+        }
+
         $message = Raven_Compat::json_encode($data);
 
         if (function_exists("gzcompress")) {
@@ -682,13 +719,10 @@ class Raven_Client
         }
         $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
 
-        $client_string = 'sentry-php/' . self::VERSION;
-        $timestamp = microtime(true);
         $headers = array(
-            'User-Agent' => $client_string,
-            'X-Sentry-Auth' => $this->get_auth_header(
-                $timestamp, $client_string, $this->public_key,
-                $this->secret_key),
+            'User-Agent' => $this->getUserAgent(),
+            'X-Sentry-Auth' => $this->getAuthHeader(),
+            'Content-Encoding' => 'gzip',
             'Content-Type' => 'application/octet-stream'
         );
 
@@ -876,6 +910,12 @@ class Raven_Client
 
 
         return sprintf('Sentry %s', implode(', ', $header));
+    }
+
+    public function getAuthHeader($client)
+    {
+        $timestamp = microtime(true);
+        return $this->get_auth_header($timestamp, $this->getUserAgent(), $this->public_key, $this->secret_key);
     }
 
     /**
