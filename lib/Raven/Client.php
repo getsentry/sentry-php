@@ -107,6 +107,18 @@ class Raven_Client
         }
     }
 
+    /**
+     * Installs any available automated hooks (such as error_reporting).
+     */
+    public function install()
+    {
+        $error_handler = new Raven_ErrorHandler($this);
+        $error_handler->registerExceptionHandler();
+        $error_handler->registerErrorHandler();
+        $error_handler->registerShutdownFunction();
+        return $this;
+    }
+
     public function getRelease($value)
     {
         return $this->release;
