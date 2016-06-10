@@ -342,6 +342,7 @@ class Raven_Client
         $data['sentry.interfaces.Message'] = array(
             'message' => $message,
             'params' => $params,
+            'formatted' => $formatted_message,
         );
 
         return $this->capture($data, $stack, $vars);
