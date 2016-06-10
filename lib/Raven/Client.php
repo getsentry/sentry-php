@@ -722,7 +722,6 @@ class Raven_Client
         $headers = array(
             'User-Agent' => $this->getUserAgent(),
             'X-Sentry-Auth' => $this->getAuthHeader(),
-            'Content-Encoding' => 'gzip',
             'Content-Type' => 'application/octet-stream'
         );
 
