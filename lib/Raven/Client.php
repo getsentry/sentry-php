@@ -912,7 +912,7 @@ class Raven_Client
         return sprintf('Sentry %s', implode(', ', $header));
     }
 
-    public function getAuthHeader($client)
+    public function getAuthHeader()
     {
         $timestamp = microtime(true);
         return $this->get_auth_header($timestamp, $this->getUserAgent(), $this->public_key, $this->secret_key);
