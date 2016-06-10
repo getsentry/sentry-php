@@ -288,6 +288,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($event['sentry.interfaces.Message'], array(
             'message' => 'Test Message %s',
             'params' => array('foo'),
+            'formatted' => 'Test Message foo',
         ));
     }
 
