@@ -1,3 +1,10 @@
+0.22.0
+------
+
+- Improve handling of encodings.
+- Improve resiliency of variable serialization.
+- Add 'formatted' attribute to Message interface.
+
 0.21.0
 ------
 
