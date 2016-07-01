@@ -351,7 +351,7 @@ class Raven_Client
     /**
      * Log an exception to sentry
      *
-     * @param string $exception The Exception object.
+     * @param Exception $exception The Exception object.
      * @param array $data Additional attributes to pass with this event (see Sentry docs).
      */
     public function captureException($exception, $data=null, $logger=null, $vars=null)
