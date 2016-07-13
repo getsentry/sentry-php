@@ -665,6 +665,9 @@ class Raven_Client
         if (!empty($data['tags'])) {
             $data['tags'] = $serializer->serialize($data['tags']);
         }
+        if (!empty($data['stacktrace'])) {
+            $data['stacktrace'] = $serializer->serialize($data['stacktrace']);
+        }
     }
 
     /**
