@@ -26,6 +26,29 @@
  */
 class Raven_Serializer
 {
+    /*
+     * The default mb detect order
+     *
+     * @see http://php.net/manual/en/function.mb-detect-encoding.php
+     */
+    const DEFAULT_MB_DETECT_ORDER = 'UTF-8, ASCII, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4, ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10, ISO-8859-13, ISO-8859-14, ISO-8859-15, ISO-8859-16, Windows-1251, Windows-1252, Windows-1254';
+
+    /**
+     * This is the default mb detect order for the detection of encoding
+     *
+     * @var string
+     */
+    private $mb_detect_order= self::DEFAULT_MB_DETECT_ORDER;
+
+    /**
+     * @param null|string $mb_detect_order
+     */
+    public function __construct($mb_detect_order = null)
+    {
+        if ($mb_detect_order != null) {
+            $this->mb_detect_order = $mb_detect_order;
+        }
+    }
     /**
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
@@ -58,15 +81,35 @@ class Raven_Serializer
             return 'Array of length ' . count($value);
         } else {
             $value = (string) $value;
-
             if (function_exists('mb_detect_encoding')
                 && function_exists('mb_convert_encoding')
-                && $currentEncoding = mb_detect_encoding($value, 'auto')
+                && $currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)
             ) {
                 $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
             }
 
             return $value;
         }
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getMbDetectOrder()
+    {
+        return $this->mb_detect_order;
+    }
+
+    /**
+     * @param string $mb_detect_order
+     *
+     * @return Raven_Serializer
+     */
+    public function setMbDetectOrder($mb_detect_order)
+    {
+        $this->mb_detect_order = $mb_detect_order;
+
+        return $this;
     }
 }
