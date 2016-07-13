@@ -87,7 +87,7 @@ class Raven_Client
         // app path is used to determine if code is part of your application
         $this->app_path = Raven_Util::get($options, 'app_path', null);
         $this->transport = Raven_Util::get($options, 'transport', null);
-        ;
+        $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
 
         $this->processors = $this->setProcessorsFromOptions($options);
 
@@ -652,7 +652,7 @@ class Raven_Client
     public function sanitize(&$data)
     {
         // attempt to sanitize any user provided data
-        $serializer = new Raven_Serializer();
+        $serializer = new Raven_Serializer($this->mb_detect_order);
         if (!empty($data['request'])) {
             $data['request'] = $serializer->serialize($data['request']);
         }
@@ -665,6 +665,11 @@ class Raven_Client
         if (!empty($data['tags'])) {
             $data['tags'] = $serializer->serialize($data['tags']);
         }
+        if (!empty($data['stacktrace']) && !empty($data['stacktrace']['frames'])) {
+            $data['stacktrace']['frames'] = $serializer->serialize($data['stacktrace']['frames']);
+        }
+
+        $serializer->serialize($data);
     }
 
     /**
