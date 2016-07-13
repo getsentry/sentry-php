@@ -43,7 +43,7 @@ class Raven_Serializer
     /**
      * @param null|string $mb_detect_order
      */
-    public function __construct ($mb_detect_order = null)
+    public function __construct($mb_detect_order = null)
     {
         if ($mb_detect_order != null) {
             $this->mb_detect_order = $mb_detect_order;
