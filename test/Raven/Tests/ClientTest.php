@@ -17,7 +17,7 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return $this->__sent_events;
     }
-    public function send($data)
+    public function send(&$data)
     {
         if (is_callable($this->send_callback) && !call_user_func($this->send_callback, $data)) {
             // if send_callback returns falsely, end native send
@@ -695,6 +695,12 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         return true;
     }
 
+    public function cb3(&$data)
+    {
+        unset($data['message']);
+        return true;
+    }
+
     public function testSendCallback()
     {
         $client = new Dummy_Raven_Client(array('send_callback' => array($this, 'cb1')));
@@ -706,6 +712,12 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
+
+        $client = new Dummy_Raven_Client(array('send_callback' => array($this, 'cb3')));
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(1, count($events));
+        $this->assertEquals(empty($events[0]['message']), true);
     }
 
     /**
