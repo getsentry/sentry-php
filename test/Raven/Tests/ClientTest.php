@@ -19,7 +19,7 @@ class Dummy_Raven_Client extends Raven_Client
     }
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && !call_user_func($this->send_callback, $data)) {
+        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
             // if send_callback returns falsely, end native send
             return;
         }
