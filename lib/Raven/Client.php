@@ -82,13 +82,13 @@ class Raven_Client
         $this->verify_ssl = Raven_Util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
-        // a list of prefixes used to coerce absolute paths into relative
-        $this->prefixes = Raven_Util::get($options, 'prefixes', null);
-        // app path is used to determine if code is part of your application
         $this->transport = Raven_Util::get($options, 'transport', null);
         $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
 
+        // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
+        // a list of prefixes used to coerce absolute paths into relative
+        $this->setPrefixes(Raven_Util::get($options, 'prefixes', null));
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
@@ -162,7 +162,7 @@ class Raven_Client
 
     public function setPrefixes($value)
     {
-        $this->prefixes = $value;
+        $this->prefixes = $value ? array_map('realpath', $value) : $value;
         return $this;
     }
 
