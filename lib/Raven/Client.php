@@ -122,7 +122,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getRelease($value)
+    public function getRelease()
     {
         return $this->release;
     }
@@ -133,7 +133,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getEnvironment($value)
+    public function getEnvironment()
     {
         return $this->environment;
     }
@@ -144,7 +144,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getAppPath($value)
+    public function getAppPath()
     {
         return $this->app_path;
     }
@@ -155,7 +155,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getPrefixes($value)
+    public function getPrefixes()
     {
         return $this->prefixes;
     }
@@ -166,7 +166,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getSendCallback($value)
+    public function getSendCallback()
     {
         return $this->send_callback;
     }
@@ -177,7 +177,7 @@ class Raven_Client
         return $this;
     }
 
-    public function getTransport($value)
+    public function getTransport()
     {
         return $this->transport;
     }
