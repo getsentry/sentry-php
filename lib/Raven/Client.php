@@ -85,10 +85,10 @@ class Raven_Client
         // a list of prefixes used to coerce absolute paths into relative
         $this->prefixes = Raven_Util::get($options, 'prefixes', null);
         // app path is used to determine if code is part of your application
-        $this->app_path = Raven_Util::get($options, 'app_path', null);
         $this->transport = Raven_Util::get($options, 'transport', null);
         $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
 
+        $this->setAppPath(Raven_Util::get($options, 'app_path', null));
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
@@ -151,7 +151,7 @@ class Raven_Client
 
     public function setAppPath($value)
     {
-        $this->app_path = $value;
+        $this->app_path = $value ? realpath($value) : null;
         return $this;
     }
 
