@@ -529,15 +529,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                     'Content-Type'    => 'text/xml',
                     'Content-Length'  => '99',
                 ),
-                'env' => array(
-                    'REDIRECT_STATUS' => '200',
-                    'SERVER_PORT'     => '443',
-                    'SERVER_PROTOCOL' => 'HTTP/1.1',
-                    'REQUEST_METHOD'  => 'PATCH',
-                    'QUERY_STRING'    => 'q=bitch&l=en',
-                    'REQUEST_URI'     => '/welcome/',
-                    'SCRIPT_NAME'     => '/index.php',
-                ),
             )
         );
 
