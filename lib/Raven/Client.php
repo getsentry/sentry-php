@@ -470,15 +470,13 @@ class Raven_Client
 
     protected function get_http_data()
     {
-        $env = $headers = array();
+        $headers = array();
 
         foreach ($_SERVER as $key => $value) {
             if (0 === strpos($key, 'HTTP_')) {
                 $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
             } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH')) && $value !== '') {
                 $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))))] = $value;
-            } else {
-                $env[$key] = $value;
             }
         }
 
@@ -498,9 +496,6 @@ class Raven_Client
         }
         if (!empty($headers)) {
             $result['headers'] = $headers;
-        }
-        if (!empty($env)) {
-            $result['env'] = $env;
         }
 
         return array(
