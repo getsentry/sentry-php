@@ -33,9 +33,9 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return parent::get_auth_header($timestamp, $client, $api_key, $secret_key);
     }
-    public function get_http_data()
+    public function get_env_data()
     {
-        return parent::get_http_data();
+        return parent::get_env_data();
     }
     public function get_user_data()
     {
@@ -483,10 +483,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $client->get_default_data());
     }
 
-    /**
-     * @backupGlobals
-     */
-    public function testGetHttpData()
+    public function testGetEnvData()
     {
         $_SERVER = array(
             'REDIRECT_STATUS'     => '200',
@@ -542,7 +539,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $this->assertEquals($expected, $client->get_http_data());
+        $this->assertEquals($expected, $client->get_env_data());
     }
 
     public function testGetUserDataWithSetUser()
