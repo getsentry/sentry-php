@@ -686,6 +686,28 @@ class Raven_Client
         }
     }
 
+    public function encode(&$data)
+    {
+        $message = Raven_Compat::json_encode($data, JSON_FORCE_OBJECT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+        if ($message === false) {
+            if (function_exists('json_last_error_msg')) {
+                $this->_lasterror = json_last_error_msg();
+            } else {
+                $this->_lasterror = json_last_error();
+            }
+            return false;
+        }
+
+        if (function_exists("gzcompress")) {
+            $message = gzcompress($message);
+        }
+
+        // PHP's builtin curl_* function are happy without this, but the exec method requires it
+        $message = base64_encode($message);
+
+        return $message;
+    }
+
     /**
      * Wrapper to handle encoding and sending data to the Sentry API server.
      *
@@ -706,12 +728,7 @@ class Raven_Client
             return call_user_func($this->transport, $this, $data);
         }
 
-        $message = Raven_Compat::json_encode($data);
-
-        if (function_exists("gzcompress")) {
-            $message = gzcompress($message);
-        }
-        $message = base64_encode($message); // PHP's builtin curl_* function are happy without this, but the exec method requires it
+        $message = $this->encode($data);
 
         $headers = array(
             'User-Agent' => $this->getUserAgent(),

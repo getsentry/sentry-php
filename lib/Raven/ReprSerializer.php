@@ -35,16 +35,7 @@ class Raven_ReprSerializer extends Raven_Serializer
         } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
         } else {
-            $value = (string) $value;
-
-            if (function_exists('mb_detect_encoding')
-                && function_exists('mb_convert_encoding')
-                && $currentEncoding = mb_detect_encoding($value, $this->getMbDetectOrder())
-            ) {
-                $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
-            }
-
-            return $value;
+            return $this->serializeString($value);
         }
     }
 }

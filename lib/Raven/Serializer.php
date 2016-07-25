@@ -74,6 +74,23 @@ class Raven_Serializer
         }
     }
 
+    protected function serializeString($value)
+    {
+        $value = (string) $value;
+        if (function_exists('mb_detect_encoding')
+            && function_exists('mb_convert_encoding')
+        ) {
+            // we always gurantee this is coerced, even if we can't detect encoding
+            if ($currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)) {
+                $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
+            } else {
+                $value = mb_convert_encoding($value, 'UTF-8');
+            }
+        }
+
+        return $value;
+    }
+
     protected function serializeValue($value)
     {
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
@@ -85,15 +102,7 @@ class Raven_Serializer
         } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
         } else {
-            $value = (string) $value;
-            if (function_exists('mb_detect_encoding')
-                && function_exists('mb_convert_encoding')
-                && $currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)
-            ) {
-                $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
-            }
-
-            return $value;
+            return $this->serializeString($value);
         }
     }
 
