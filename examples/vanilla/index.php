@@ -16,12 +16,25 @@ function setupSentry()
         ->install();
 }
 
-function createError()
+function createCrumbs()
 {
     echo($undefined['foobar']);
+    echo($undefined['bizbaz']);
 
+}
+
+function createError()
+{
     1 / 0;
 }
 
+
+function createException()
+{
+    throw new Exception('example exception');
+}
+
 setupSentry();
+createCrumbs();
 createError();
+createException();
