@@ -20,7 +20,6 @@ function createCrumbs()
 {
     echo($undefined['foobar']);
     echo($undefined['bizbaz']);
-
 }
 
 function createError()
