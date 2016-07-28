@@ -370,12 +370,6 @@ class Raven_Client
             );
         }
 
-        // TODO(dcramer): DRY this up
-        $message = $exception->getMessage();
-        if (empty($message)) {
-            $message = get_class($exception);
-        }
-
         $exc = $exception;
         do {
             $exc_data = array(
@@ -411,7 +405,6 @@ class Raven_Client
             $exceptions[] = $exc_data;
         } while ($has_chained_exceptions && $exc = $exc->getPrevious());
 
-        $data['message'] = $message;
         $data['exception'] = array(
             'values' => array_reverse($exceptions),
         );
