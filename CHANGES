@@ -1,3 +1,13 @@
+1.0.0
+-----
+
+- Removed deprecated error codes configuration from ErrorHandler.
+- Removed env data from HTTP interface.
+- Removed 'message' attribute from exceptions'.
+- appPath and prefixes are now resolved fully.
+- Fixed various getter methods requiring invalid args.
+- Fixed data mutation with 'send_callback'.
+
 0.22.0
 ------
 
