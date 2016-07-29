@@ -62,11 +62,22 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and except th
 
     class Handler extends ExceptionHandler
     {
+        private $sentryID;
+
+        public function report(Exception $e)
+        {
+            if ($this->shouldReport($e)) {
+                // bind the event ID for Feedback
+                $this->sentryID = app('sentry')->captureException($e);
+            }
+            parent::report($e);
+        }
+
         // ...
         public function render($request, Exception $e)
         {
             return response()->view('errors.500', [
-                'sentryID' => app('sentry')->getLastEventID(),
+                'sentryID' => $this->sentryID,
             ], 500);
         }
     }
