@@ -52,6 +52,48 @@ Add your DSN to ``.env``:
 
     SENTRY_DSN=___DSN___
 
+Finally, if you wish to wire up User Feedback, you can do so by creating a custom
+error response. To do this, open up ``App/Exceptions/Handler.php`` and except the
+``render`` method:
+
+.. code-block:: php
+
+    <?php
+
+    class Handler extends ExceptionHandler
+    {
+        // ...
+        public function render($request, Exception $e)
+        {
+            return response()->view('errors.500', [
+                'sentryID' => app('sentry')->getLastEventID(),
+            ], 500);
+        }
+    }
+
+Next, create ``resources/views/errors/500.blade.php``, and embed the feedback code::
+
+.. code-block:: blade
+
+    <div class="content">
+        <div class="title">Something went wrong.</div>
+        @unless(empty($sentryID))
+            <!-- Sentry JS SDK 2.1.+ required -->
+            <script src="https://cdn.ravenjs.com/3.3.0/raven.min.js"></script>
+
+            <script>
+            Raven.showReportDialog({
+                eventId: '{{ $sentryID }}',
+
+                // use the public DSN (dont include your secret!)
+                dsn: '___PUBLIC_DSN___'
+            });
+            </script>
+        @endunless
+    </div>
+
+That's it!
+
 Laravel 4.x
 -----------
 
