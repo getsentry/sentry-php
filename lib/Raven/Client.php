@@ -16,7 +16,7 @@
 
 class Raven_Client
 {
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     const PROTOCOL = '6';
 
