@@ -96,11 +96,6 @@ class Raven_ErrorHandler
 
         unset($this->reservedMemory);
 
-        $errors = 0;
-        foreach ($this->getErrorTypesToProcess() as $errorType) {
-            $errors |= $errorType;
-        }
-
         if (error_reporting() !== 0) {
             $error_types = $this->error_types;
             if ($error_types === null) {
