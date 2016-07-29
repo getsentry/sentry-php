@@ -84,7 +84,7 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and except th
 
 Next, create ``resources/views/errors/500.blade.php``, and embed the feedback code:
 
-.. code-block:: blade
+.. code-block:: html
 
     <div class="content">
         <div class="title">Something went wrong.</div>
