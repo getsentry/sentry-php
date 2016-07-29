@@ -130,6 +130,21 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         trigger_error('Warning', E_USER_WARNING);
     }
+    public function testHandleFatalError()
+    {
+        $client = $this->getMock('Client', array('captureException'));
+        $client->expects($this->once())
+               ->method('captureException');
+
+        $handler = new Raven_ErrorHandler($client);
+
+        # http://php.net/manual/en/function.error-get-last.php#113518
+        set_error_handler('var_dump', 0);
+        @$undef_var;
+        restore_error_handler();
+
+        $handler->handleFatalError();
+    }
 
     public function testFluidInterface()
     {
