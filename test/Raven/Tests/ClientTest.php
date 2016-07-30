@@ -8,6 +8,19 @@
  * file that was distributed with this source code.
  */
 
+function simple_function($a=null, $b=null, $c=null)
+{
+    assert(0);
+}
+
+function invalid_encoding()
+{
+    $fp = fopen(__DIR__ . '/../../data/binary', 'r');
+    simple_function(fread($fp, 64));
+    fclose($fp);
+}
+
+
 // XXX: Is there a better way to stub the client?
 class Dummy_Raven_Client extends Raven_Client
 {
@@ -425,6 +438,22 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureException($ex, 'test');
         $events = $client->getSentEvents();
         $this->assertEquals(count($events), 0);
+    }
+
+    public function testCaptureExceptionInvalidUTF8()
+    {
+        $client = new Dummy_Raven_Client();
+        try {
+            invalid_encoding();
+        } catch (Exception $ex) {
+            $client->captureException($ex);
+        }
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+
+        // if this fails to encode it returns false
+        $message = $client->encode($events[0]);
+        $this->assertNotEquals($message, false, $client->getLastError());
     }
 
     public function testDoesRegisterProcessors()
