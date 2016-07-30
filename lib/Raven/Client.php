@@ -35,6 +35,8 @@ class Raven_Client
     public $severity_map;
     public $store_errors_for_bulk_send = false;
 
+    private $error_handler;
+
     public function __construct($options_or_dsn=null, $options=array())
     {
         if (is_array($options_or_dsn)) {
@@ -115,10 +117,13 @@ class Raven_Client
      */
     public function install()
     {
-        $error_handler = new Raven_ErrorHandler($this);
-        $error_handler->registerExceptionHandler();
-        $error_handler->registerErrorHandler();
-        $error_handler->registerShutdownFunction();
+        if ($this->error_handler) {
+            throw new Raven_Exception(sprintf('%s->install() must only be called once', get_class($this)));
+        }
+        $this->error_handler = new Raven_ErrorHandler($this);
+        $this->error_handler->registerExceptionHandler();
+        $this->error_handler->registerErrorHandler();
+        $this->error_handler->registerShutdownFunction();
         return $this;
     }
 

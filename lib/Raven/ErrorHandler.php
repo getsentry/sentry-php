@@ -143,6 +143,7 @@ class Raven_ErrorHandler
         return $this;
     }
 
+    // TODO(dcramer): this should be in Client
     public function detectShutdown()
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {

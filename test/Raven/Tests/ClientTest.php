@@ -703,6 +703,17 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($events), 1);
     }
 
+    /**
+     * @expectedException Raven_Exception
+     * @expectedExceptionMessage Raven_Client->install() must only be called once
+     */
+    public function testCannotInstallTwice()
+    {
+        $client = new Raven_Client('https://public:secret@sentry.example.com/1');
+        $client->install();
+        $client->install();
+    }
+
     public function cb1($data)
     {
         $this->assertEquals('test', $data['message']);
