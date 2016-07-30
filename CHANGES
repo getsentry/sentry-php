@@ -1,3 +1,10 @@
+1.1.0
+-----
+
+- Uncoercable values should no longer prevent exceptions from sending
+  to the Sentry server.
+- ``install()`` can no longer be called multiple times.
+
 1.0.0
 -----
 
