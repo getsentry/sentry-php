@@ -273,6 +273,3 @@ credentials with the Sentry master server::
     -> event ID: f1765c9aed4f4ceebe5a93df9eb2d34f
 
     Done!
-
-.. note:: The CLI enforces the synchronous option on HTTP requests whereas
-   the default configuration is asynchronous.
