@@ -33,8 +33,6 @@ Alternatively you can manually install it:
         require_once '/path/to/Raven/library/Raven/Autoloader.php';
         Raven_Autoloader::register();
 
-For more methods have a look at :ref:`sentry-php-advanced-installation`.
-
 Configuration
 -------------
 
@@ -81,7 +79,6 @@ Want more?  Have a look at the full documentation for more information.
    :maxdepth: 2
    :titlesonly:
 
-   advanced
    usage
    config
    integrations/index
