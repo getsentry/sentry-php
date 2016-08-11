@@ -12,21 +12,26 @@ once and reference it from anywhere you want to interface with Sentry:
 
 .. code-block:: php
 
-    $client = new Raven_Client('___DSN___');
+    $sentryClient = new Raven_Client('___DSN___');
+
 
 Capturing Errors
 ----------------
 
-The most basic functionality is to use Sentry for reporting any uncaught
-exceptions or PHP errors.  As this functionality is common enough, Sentry
-provides support for this out of the box:
+Sentry includes basic functionality for reporting any uncaught
+exceptions or PHP errors. This is done via the error handler,
+and appropriate hooks for each of PHP's built-in reporting:
 
 .. code-block:: php
 
-    $error_handler = new Raven_ErrorHandler($client);
+    $error_handler = new Raven_ErrorHandler($sentryClient);
     $error_handler->registerExceptionHandler();
     $error_handler->registerErrorHandler();
     $error_handler->registerShutdownFunction();
+
+.. note:: Calling ``install()`` on a Raven_Client instance will automatically
+          register these handlers.
+
 
 Reporting Exceptions
 --------------------
@@ -37,37 +42,39 @@ If you want to report exceptions manually you can use the
 .. code-block:: php
 
     // Basic Reporting
-    $event_id = $client->getIdent($client->captureException($ex));
+    $sentryClient->captureException($ex);
 
     // Provide some additional data with an exception
-    $event_id = $client->getIdent($client->captureException($ex, array(
+    $sentryClient->captureException($ex, array(
         'extra' => array(
             'php_version' => phpversion()
         ),
-    )));
+    ));
 
-Reporting Messages
-------------------
 
-Sometimes you don't have a PHP error but something bad happened and you
+Reporting Other Errors
+----------------------
+
+Sometimes you don't have an actual exception object, but something bad happened and you
 want to report it anyways.  This is where `captureMessage` comes in.  It
 takes a message and reports it to sentry.
 
 .. code-block:: php
 
     // Capture a message
-    $event_id = $client->getIdent($client->captureMessage('my log message'));
+    $sentryClient->captureMessage('my log message');
 
 Note, ``captureMessage`` has a slightly different API than ``captureException`` to support
 parameterized formatting:
 
 .. code-block:: php
 
-    $client->captureMessage('my %s message', array('log'), array(
+    $sentryClient->captureMessage('my %s message', array('log'), array(
         'extra' => array(
             'foo' => 'bar',
         ),
     ));
+
 
 Optional Attributes
 -------------------
@@ -77,7 +84,10 @@ can be supplied:
 
 .. code-block:: php
 
-    $client->captureException($ex, array('attr' => 'value'))
+    $sentryClient->captureException($ex, array(
+        'attr' => 'value',
+    ));
+
 
 .. describe:: extra
 
@@ -161,7 +171,7 @@ service.
 
 .. code-block:: php
 
-    $client->getLastEventID();
+    $sentryClient->getLastEventID();
 
 .. _php-user-feedback:
 
@@ -209,6 +219,7 @@ That's it!
 
 For more details on this feature, see the :doc:`User Feedback guide <../../../learn/user-feedback>`.
 
+
 Handling Failures
 -----------------
 
@@ -218,14 +229,15 @@ helper:
 
 .. code-block:: php
 
-    if ($client->getLastError() !== null) {
+    if ($sentryClient->getLastError() !== null) {
         echo "Something went very, very wrong";
-        // $client->getLastError() contains the error that occurred
+        // $sentryClient->getLastError() contains the error that occurred
     } else {
         // Give the user feedback
         echo "Sorry, there was an error!";
         echo "Your reference ID is " . $event_id;
     }
+
 
 Breadcrumbs
 -----------
@@ -234,11 +246,12 @@ Sentry supports capturing breadcrumbs -- events that happened prior to an issue.
 
 .. code-block:: php
 
-    $client->breadcrumbs->record(array(
+    $sentryClient->breadcrumbs->record(array(
         'message' => 'Authenticating user as ' . $username,
         'category' => 'auth',
         'level' => 'info',
     ));
+
 
 Filtering Out Errors
 --------------------
@@ -247,7 +260,7 @@ Its common that you might want to prevent automatic capture of certain areas. Id
 
 .. code-block:: php
 
-    $client->setSendCallback(function($data) {
+    $sentryClient->setSendCallback(function($data) {
         $ignore_types = array('Symfony\Component\HttpKernel\Exception\NotFoundHttpException')
 
         if (isset($data['exception'] && in_array($data['exception']['values'][0]['type'], $ignore_types)
@@ -255,6 +268,29 @@ Its common that you might want to prevent automatic capture of certain areas. Id
             return false;
         }
     });
+
+
+Error Control Operators
+-----------------------
+
+In PHP its fairly common to use the `suppression operator <http://php.net/manual/en/language.operators.errorcontrol.php>`_
+to avoid bubbling up handled errors:
+
+.. code-block:: php
+
+    $my_file = @file('non_existent_file');
+
+In these situations, Sentry will never capture the error. If you wish to capture it at that stage
+you'd need to manually call out to the PHP client:
+
+.. code-block:: php
+
+    $my_file = @file('non_existent_file');
+    if (!$my_file) {
+        // ...
+        $sentryClient->captureLastError();
+    }
+
 
 Testing Your Connection
 -----------------------
