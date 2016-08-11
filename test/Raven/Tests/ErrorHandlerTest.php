@@ -146,6 +146,25 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $handler->handleFatalError();
     }
 
+    public function testHandleFatalErrorDuplicate()
+    {
+        $client = $this->getMock('Client', array('captureException'));
+        $client->expects($this->once())
+               ->method('captureException');
+
+        $handler = new Raven_ErrorHandler($client);
+
+        # http://php.net/manual/en/function.error-get-last.php#113518
+        set_error_handler('var_dump', 0);
+        @$undef_var;
+        restore_error_handler();
+
+        $error = error_get_last();
+
+        $handler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
+        $handler->handleFatalError();
+    }
+
     public function testFluidInterface()
     {
         $client = $this->getMock('Client', array('captureException', 'getIdent'));

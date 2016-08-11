@@ -428,6 +428,24 @@ class Raven_Client
         return $this->capture($data, $trace, $vars);
     }
 
+
+    /**
+     * Capture the most recent error (obtained with ``error_get_last``).
+     */
+    public function captureLastError()
+    {
+        if (null === $error = error_get_last()) {
+            return;
+        }
+
+        $e = new ErrorException(
+            @$error['message'], 0, @$error['type'],
+            @$error['file'], @$error['line']
+        );
+
+        return $this->captureException($e);
+    }
+
     /**
      * Log an query to sentry
      */
