@@ -262,6 +262,7 @@ You may now use phpunit :
 Resources
 ---------
 
+* `Documentation <https://docs.getsentry.com/hosted/clients/php/>`_
 * `Bug Tracker <http://github.com/getsentry/sentry-php/issues>`_
 * `Code <http://github.com/getsentry/sentry-php>`_
 * `Mailing List <https://groups.google.com/group/getsentry>`_
