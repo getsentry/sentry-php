@@ -261,7 +261,7 @@ Its common that you might want to prevent automatic capture of certain areas. Id
 .. code-block:: php
 
     $sentryClient->setSendCallback(function($data) {
-        $ignore_types = array('Symfony\Component\HttpKernel\Exception\NotFoundHttpException')
+        $ignore_types = array('Symfony\Component\HttpKernel\Exception\NotFoundHttpException');
 
         if (isset($data['exception'] && in_array($data['exception']['values'][0]['type'], $ignore_types)
         {
