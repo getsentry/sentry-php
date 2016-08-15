@@ -51,11 +51,9 @@ class Raven_ErrorHandler
 
         $this->client = $client;
         $this->error_types = $error_types;
-        register_shutdown_function(array($this, 'detectShutdown'));
         if ($send_errors_last) {
             $this->send_errors_last = true;
             $this->client->store_errors_for_bulk_send = true;
-            register_shutdown_function(array($this->client, 'sendUnsentErrors'));
         }
     }
 
@@ -181,13 +179,5 @@ class Raven_ErrorHandler
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
         return $this;
-    }
-
-    // TODO(dcramer): this should be in Client
-    public function detectShutdown()
-    {
-        if (!defined('RAVEN_CLIENT_END_REACHED')) {
-            define('RAVEN_CLIENT_END_REACHED', true);
-        }
     }
 }
