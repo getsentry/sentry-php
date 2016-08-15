@@ -96,6 +96,7 @@ class Raven_Client
         $this->_lasterror = null;
         $this->_last_event_id = null;
         $this->_user = null;
+        $this->_pending_events = null;
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
         $this->sdk = Raven_Util::get($options, 'sdk', array(
@@ -110,6 +111,8 @@ class Raven_Client
         if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
             $this->registerDefaultBreadcrumbHandlers();
         }
+
+        register_shutdown_function(array($this, 'onShutdown'));
     }
 
     /**
@@ -649,10 +652,7 @@ class Raven_Client
         if (!$this->store_errors_for_bulk_send) {
             $this->send($data);
         } else {
-            if (empty($this->error_data)) {
-                $this->error_data = array();
-            }
-            $this->error_data[] = $data;
+            $this->_pending_events[] = $data;
         }
 
         $this->_last_event_id = $data['event_id'];
@@ -697,12 +697,10 @@ class Raven_Client
 
     public function sendUnsentErrors()
     {
-        if (!empty($this->error_data)) {
-            foreach ($this->error_data as $data) {
-                $this->send($data);
-            }
-            unset($this->error_data);
+        foreach ($this->_pending_events as $data) {
+            $this->send($data);
         }
+        $this->_pending_events = array();
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
@@ -1090,6 +1088,7 @@ class Raven_Client
     /**
      * Convenience function for setting a user's ID and Email
      *
+     * @deprecated
      * @param string $id            User's ID
      * @param string|null $email    User's email
      * @param array $data           Additional user data
@@ -1101,6 +1100,17 @@ class Raven_Client
             $user['email'] = $email;
         }
         $this->user_context(array_merge($user, $data));
+    }
+
+    public function onShutdown()
+    {
+        if (!defined('RAVEN_CLIENT_END_REACHED')) {
+            define('RAVEN_CLIENT_END_REACHED', true);
+        }
+        $this->sendUnsentErrors();
+        if ($this->curl_method == 'async') {
+            $this->_curl_handler->join();
+        }
     }
 
     /**
