@@ -96,7 +96,7 @@ class Raven_Client
         $this->_lasterror = null;
         $this->_last_event_id = null;
         $this->_user = null;
-        $this->_pending_events = null;
+        $this->_pending_events = array();
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
         $this->sdk = Raven_Util::get($options, 'sdk', array(
