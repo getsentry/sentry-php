@@ -679,6 +679,9 @@ class Raven_Client
         if (!empty($data['stacktrace']) && !empty($data['stacktrace']['frames'])) {
             $data['stacktrace']['frames'] = $serializer->serialize($data['stacktrace']['frames']);
         }
+        if (!empty($data['exception'])) {
+            $data['exception'] = $serializer->serialize($data['exception'], 7);
+        }
 
         $serializer->serialize($data);
     }
