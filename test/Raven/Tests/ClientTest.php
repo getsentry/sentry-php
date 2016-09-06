@@ -684,7 +684,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ), $event['extra']);
     }
 
-    public function testCaptureExceptionInLatin1File()
+    public function testCaptureExceptionContainingLatin1()
     {
         // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
         $options = array(
@@ -692,7 +692,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                 'ISO-8859-1', 'ASCII', 'UTF-8'
             )
         );
-        
+
         $client = new Dummy_Raven_Client($options);
 
         // we need a non-utf8 string here.
@@ -706,6 +706,37 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $event = array_pop($events);
 
         $this->assertEquals($event['exception']['values'][0]['value'], $utf8String);
+    }
+
+
+    public function testCaptureExceptionInLatin1File()
+    {
+        // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
+        $options = array(
+            'mb_detect_order' => array(
+                'ISO-8859-1', 'ASCII', 'UTF-8'
+            )
+        );
+
+        $client = new Dummy_Raven_Client($options);
+
+        require_once(__DIR__.'/resources/captureExceptionInLatin1File.php');
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+
+        $stackTrace = array_pop($event['exception']['values'][0]['stacktrace']['frames']);
+
+        $utf8String = "// äöü";
+        $found = false;
+        foreach ($stackTrace['pre_context'] as $line) {
+            if ($line == $utf8String) {
+                $found = true;
+                break;
+            }
+        }
+
+        $this->assertEquals($found, true);
     }
 
     public function testGetLastEventID()
