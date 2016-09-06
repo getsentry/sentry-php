@@ -687,8 +687,12 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testCaptureExceptionInLatin1File()
     {
         // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
-        $options = ['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']];
-
+        $options = array(
+            'mb_detect_order' => array(
+                'ISO-8859-1', 'ASCII', 'UTF-8'
+            )
+        );
+        
         $client = new Dummy_Raven_Client($options);
 
         // we need a non-utf8 string here.
