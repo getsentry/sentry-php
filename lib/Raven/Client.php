@@ -682,8 +682,6 @@ class Raven_Client
         if (!empty($data['exception'])) {
             $data['exception'] = $serializer->serialize($data['exception'], 7);
         }
-
-        $serializer->serialize($data);
     }
 
     /**
