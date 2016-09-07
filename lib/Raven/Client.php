@@ -410,8 +410,8 @@ class Raven_Client
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
-                    $trace, $this->serializer, $this->reprSerializer, $this->trace, $this->shift_vars, $vars,
-                    $this->message_limit, $this->prefixes, $this->app_path, $this->serializer
+                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
+                    $this->app_path, $this->serializer, $this->reprSerializer
                 ),
             );
 
@@ -644,8 +644,8 @@ class Raven_Client
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->serializer, $this->reprSerializer, $this->trace, $this->shift_vars, $vars,
-                        $this->message_limit, $this->prefixes, $this->app_path, $this->serializer
+                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
+                        $this->app_path, $this->serializer, $this->reprSerializer
                     ),
                 );
             }

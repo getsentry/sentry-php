@@ -57,7 +57,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true);
 
         $frame = $frames[0];
         $this->assertEquals('b.php', $frame["module"]);
@@ -92,7 +92,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, false);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, false);
 
         $frame = $frames[0];
         $this->assertEquals('b.php', $frame["module"]);
@@ -134,7 +134,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             "baz" => "zoom"
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, true, $vars);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars);
 
         $frame = $frames[0];
         $this->assertEquals('b.php', $frame["module"]);
@@ -179,7 +179,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             "foo" => &$iAmFoo
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, true, $vars, 5);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars, 5);
 
         // Check we haven't modified our vars.
         $this->assertEquals($originalFoo, $vars["foo"]);
@@ -215,7 +215,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             "baz" => "zoom"
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, false, $vars);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, false, $vars);
 
         $frame = $frames[0];
         $this->assertEquals('b.php', $frame["module"]);
@@ -240,7 +240,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
          */
         $stack = raven_test_create_stacktrace();
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true);
         // just grab the last few frames
         $frames = array_slice($frames, -5);
         $frame = $frames[0];
@@ -275,7 +275,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, null, null, 0, null, dirname(__FILE__));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, null, dirname(__FILE__));
 
         $this->assertEquals($frames[0]['in_app'], true);
         $this->assertEquals($frames[1]['in_app'], true);
@@ -296,7 +296,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer(), true, null, null, 0, array(dirname(__FILE__)));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, array(dirname(__FILE__)));
 
         $this->assertEquals($frames[0]['filename'], 'resources/b.php');
         $this->assertEquals($frames[1]['filename'], 'resources/a.php');
@@ -312,7 +312,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, new Raven_Serializer(), new Raven_ReprSerializer());
+        $frames = Raven_Stacktrace::get_stack_info($stack);
         $this->assertEquals($frames[0]['filename'], dirname(__FILE__) . '/resources/a.php');
     }
 
@@ -322,7 +322,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             eval("throw new Exception('foobar');");
         } catch (Exception $ex) {
             $trace = $ex->getTrace();
-            $frames = Raven_Stacktrace::get_stack_info($trace, new Raven_Serializer(), new Raven_ReprSerializer());
+            $frames = Raven_Stacktrace::get_stack_info($trace);
         }
         $this->assertEquals($frames[count($frames) -1]['filename'], __FILE__);
     }

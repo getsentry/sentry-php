@@ -13,10 +13,14 @@ class Raven_Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, Raven_Serializer $serializer, Raven_ReprSerializer $reprSerializer, $trace = false, $shiftvars = true, $errcontext = null,
+    public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
                                           $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $strip_prefixes = null,
-                                          $app_path = null)
+                                          $app_path = null, Raven_Serializer $serializer = null,
+                                          Raven_ReprSerializer $reprSerializer = null)
     {
+        $serializer = $serializer ?: new Raven_Serializer();
+        $reprSerializer = $reprSerializer ?: new Raven_ReprSerializer();
+
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
          * 'function' is not the function you're in; it's any function being
