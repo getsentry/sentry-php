@@ -37,6 +37,9 @@ class Raven_Client
 
     private $error_handler;
 
+    private $serializer;
+    private $reprSerializer;
+
     public function __construct($options_or_dsn=null, $options=array())
     {
         if (is_array($options_or_dsn)) {
@@ -103,6 +106,8 @@ class Raven_Client
             'name' => 'sentry-php',
             'version' => self::VERSION,
         ));
+        $this->serializer = new Raven_Serializer($this->mb_detect_order);
+        $this->reprSerializer = new Raven_ReprSerializer($this->mb_detect_order);
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
@@ -381,7 +386,7 @@ class Raven_Client
         $exc = $exception;
         do {
             $exc_data = array(
-                'value' => $exc->getMessage(),
+                'value' => $this->serializer->serialize($exc->getMessage()),
                 'type' => get_class($exc),
                 'module' => $exc->getFile() .':'. $exc->getLine(),
             );
@@ -405,8 +410,8 @@ class Raven_Client
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
-                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
-                    $this->app_path
+                    $trace, $this->serializer, $this->reprSerializer, $this->trace, $this->shift_vars, $vars,
+                    $this->message_limit, $this->prefixes, $this->app_path, $this->serializer
                 ),
             );
 
@@ -639,8 +644,8 @@ class Raven_Client
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit,
-                        $this->prefixes, $this->app_path
+                        $stack, $this->serializer, $this->reprSerializer, $this->trace, $this->shift_vars, $vars,
+                        $this->message_limit, $this->prefixes, $this->app_path, $this->serializer
                     ),
                 );
             }
@@ -663,24 +668,20 @@ class Raven_Client
     public function sanitize(&$data)
     {
         // attempt to sanitize any user provided data
-        $serializer = new Raven_Serializer($this->mb_detect_order);
         if (!empty($data['request'])) {
-            $data['request'] = $serializer->serialize($data['request']);
+            $data['request'] = $this->serializer->serialize($data['request']);
         }
         if (!empty($data['user'])) {
-            $data['user'] = $serializer->serialize($data['user']);
+            $data['user'] = $this->serializer->serialize($data['user']);
         }
         if (!empty($data['extra'])) {
-            $data['extra'] = $serializer->serialize($data['extra']);
+            $data['extra'] = $this->serializer->serialize($data['extra']);
         }
         if (!empty($data['tags'])) {
-            $data['tags'] = $serializer->serialize($data['tags']);
+            $data['tags'] = $this->serializer->serialize($data['tags']);
         }
         if (!empty($data['stacktrace']) && !empty($data['stacktrace']['frames'])) {
-            $data['stacktrace']['frames'] = $serializer->serialize($data['stacktrace']['frames']);
-        }
-        if (!empty($data['exception'])) {
-            $data['exception'] = $serializer->serialize($data['exception'], 7);
+            $data['stacktrace']['frames'] = $this->serializer->serialize($data['stacktrace']['frames']);
         }
     }
 

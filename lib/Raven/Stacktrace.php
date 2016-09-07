@@ -13,7 +13,7 @@ class Raven_Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
+    public static function get_stack_info($frames, Raven_Serializer $serializer, Raven_ReprSerializer $reprSerializer, $trace = false, $shiftvars = true, $errcontext = null,
                                           $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $strip_prefixes = null,
                                           $app_path = null)
     {
@@ -87,9 +87,9 @@ class Raven_Stacktrace
                 'lineno' => (int) $context['lineno'],
                 'module' => $module,
                 'function' => isset($nextframe['function']) ? $nextframe['function'] : null,
-                'pre_context' => $context['prefix'],
+                'pre_context' => $serializer->serialize($context['prefix']),
                 'context_line' => $context['line'],
-                'post_context' => $context['suffix'],
+                'post_context' => $serializer->serialize($context['suffix']),
             );
 
             // detect in_app based on app path
@@ -100,10 +100,9 @@ class Raven_Stacktrace
             // dont set this as an empty array as PHP will treat it as a numeric array
             // instead of a mapping which goes against the defined Sentry spec
             if (!empty($vars)) {
-                $serializer = new Raven_ReprSerializer();
                 $cleanVars = array();
                 foreach ($vars as $key => $value) {
-                    $value = $serializer->serialize($value);
+                    $value = $reprSerializer->serialize($value);
                     if (is_string($value) || is_numeric($value)) {
                         $cleanVars[$key] = substr($value, 0, $frame_var_limit);
                     } else {
