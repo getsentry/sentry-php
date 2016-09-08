@@ -1,3 +1,12 @@
+1.2.0
+-----
+
+- Handle non-latin encoding in source code and exception values (#342)
+- Ensure pending events are sent on shutdown by default (#338)
+- Add ``captureLastError`` helper (#334)
+- Dont report duplicate errors with fatal error handler (#334)
+- Enforce maximum length for string serialization (#329)
+
 1.1.0
 -----
 
