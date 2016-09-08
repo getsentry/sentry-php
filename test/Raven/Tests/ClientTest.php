@@ -684,6 +684,61 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ), $event['extra']);
     }
 
+    public function testCaptureExceptionContainingLatin1()
+    {
+        // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
+        $options = array(
+            'mb_detect_order' => array(
+                'ISO-8859-1', 'ASCII', 'UTF-8'
+            )
+        );
+
+        $client = new Dummy_Raven_Client($options);
+
+        // we need a non-utf8 string here.
+        // nobody writes non-utf8 in exceptions, but it is the easiest way to test.
+        // in real live non-utf8 may be somewhere in the exception's stacktrace
+        $utf8String = 'äöü';
+        $latin1String = utf8_decode($utf8String);
+        $client->captureException(new \Exception($latin1String));
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+
+        $this->assertEquals($event['exception']['values'][0]['value'], $utf8String);
+    }
+
+
+    public function testCaptureExceptionInLatin1File()
+    {
+        // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
+        $options = array(
+            'mb_detect_order' => array(
+                'ISO-8859-1', 'ASCII', 'UTF-8'
+            )
+        );
+
+        $client = new Dummy_Raven_Client($options);
+
+        require_once(__DIR__.'/resources/captureExceptionInLatin1File.php');
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+
+        $stackTrace = array_pop($event['exception']['values'][0]['stacktrace']['frames']);
+
+        $utf8String = "// äöü";
+        $found = false;
+        foreach ($stackTrace['pre_context'] as $line) {
+            if ($line == $utf8String) {
+                $found = true;
+                break;
+            }
+        }
+
+        $this->assertEquals($found, true);
+    }
+
     public function testGetLastEventID()
     {
         $client = new Dummy_Raven_Client();
