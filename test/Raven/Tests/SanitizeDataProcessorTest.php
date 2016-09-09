@@ -191,7 +191,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    public function testPrivateKeysAreSanitizedByDefault ()
+    public function testPrivateKeysAreSanitizedByDefault()
     {
         $data = array(
             'public_key'  => '-----BEGIN PUBLIC KEY-----
