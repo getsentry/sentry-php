@@ -9,7 +9,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
 {
     const MASK = '********';
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
-    const VALUES_RE = '/^(?:\d[ -]*?){13,16}$/';
+    const VALUES_RE = '/\d[\d -]{11,17}\d|-----BEGIN([A-Z ]*)PRIVATE KEY-----.*?-----END\\1PRIVATE KEY-----/s';
 
     private $fields_re;
     private $values_re;
@@ -56,8 +56,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
             return;
         }
 
-        if (preg_match($this->values_re, $item)) {
-            $item = self::MASK;
+        if (preg_match($this->values_re, $item, $matches)) {
+            $item = str_replace($matches[0], self::MASK, $item);
         }
 
         if (empty($key)) {
