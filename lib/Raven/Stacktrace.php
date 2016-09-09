@@ -92,7 +92,7 @@ class Raven_Stacktrace
                 'module' => $module,
                 'function' => isset($nextframe['function']) ? $nextframe['function'] : null,
                 'pre_context' => $serializer->serialize($context['prefix']),
-                'context_line' => $context['line'],
+                'context_line' => $serializer->serialize($context['line']),
                 'post_context' => $serializer->serialize($context['suffix']),
             );
 
