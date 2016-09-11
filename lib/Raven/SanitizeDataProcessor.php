@@ -47,6 +47,10 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
      */
     public function sanitize(&$item, $key)
     {
+        if ($key === 'release') {
+            return;
+        }
+
         if (empty($item)) {
             return;
         }
