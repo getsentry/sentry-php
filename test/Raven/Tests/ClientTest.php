@@ -773,6 +773,27 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($events), 1);
     }
 
+
+    public function testAppPathLinux()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->setAppPath('/foo/bar');
+
+        $this->assertEquals($client->getAppPath(), '/foo/bar/');
+
+        $client->setAppPath('/foo/baz/');
+
+        $this->assertEquals($client->getAppPath(), '/foo/baz/');
+    }
+
+    public function testAppPathWindows()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->setAppPath('C:\\foo\\bar\\');
+
+        $this->assertEquals($client->getAppPath(), 'C:\\foo\\bar\\');
+    }
+
     /**
      * @expectedException Raven_Exception
      * @expectedExceptionMessage Raven_Client->install() must only be called once
