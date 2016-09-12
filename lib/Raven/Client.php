@@ -164,7 +164,21 @@ class Raven_Client
 
     public function setAppPath($value)
     {
-        $this->app_path = $value ? realpath($value) : null;
+        if ($value) {
+            $path = @realpath($value);
+            if ($path === false) {
+                $path = $value;
+            }
+            // we need app_path to have a trailing slash otherwise
+            // base path detection becomes complex if the same
+            // prefix is matched
+            if (substr($path, 0, 1) === '/' && substr($path, -1, 1) !== '/') {
+                $path = $path . '/';
+            }
+            $this->app_path = $path;
+        } else {
+            $this->app_path = null;
+        }
         return $this;
     }
 
