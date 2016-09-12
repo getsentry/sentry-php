@@ -103,7 +103,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
     // Because we cannot **know** that a user silenced an error, we always
     // defer to respecting the error reporting settings.
-    public function testSilentErrorsAreReported()
+    public function testSilentErrorsAreNotReported()
     {
         $client = $this->getMock('Client', array('captureException', 'getIdent'));
         $client->expects($this->never())
