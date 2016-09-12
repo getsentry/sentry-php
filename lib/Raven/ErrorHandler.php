@@ -68,15 +68,18 @@ class Raven_ErrorHandler
 
     public function handleError($type, $message, $file = '', $line = 0, $context = array())
     {
+        // we always need to bind _last_handled_error in the case of a suppressed
+        // error getting passed to handleFatalError
+        $e = new ErrorException($message, 0, $type, $file, $line);
+        $this->_last_handled_error = $e;
+
         if (error_reporting() !== 0) {
             $error_types = $this->error_types;
             if ($error_types === null) {
                 $error_types = error_reporting();
             }
             if ($error_types & $type) {
-                $e = new ErrorException($message, 0, $type, $file, $line);
                 $this->handleException($e, true, $context);
-                $this->_last_handled_error = $e;
             }
         }
         if ($this->call_existing_error_handler) {

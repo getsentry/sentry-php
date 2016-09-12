@@ -115,6 +115,9 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $handler->registerErrorHandler(false);
 
         @trigger_error('Silent', E_USER_WARNING);
+
+        // also ensure it doesnt get reported by the fatal handler
+        $handler->handleFatalError();
     }
 
     public function testErrorHandlerDefaultsErrorReporting()
