@@ -47,10 +47,6 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
      */
     public function sanitize(&$item, $key)
     {
-        if ($key === 'release') {
-            return;
-        }
-
         if (empty($item)) {
             return;
         }
@@ -68,26 +64,51 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
+    public function sanitizeException(&$data)
+    {
+        foreach ($data['exception']['values'] as &$value) {
+            return $this->sanitizeStacktrace($value['stacktrace']);
+        }
+    }
+
     public function sanitizeHttp(&$data)
     {
-        if (empty($data['request'])) {
-            return;
-        }
         $http = &$data['request'];
-        if (empty($http['cookies'])) {
-            return;
+        if (!empty($http['cookies'])) {
+            $cookies = &$http['cookies'];
+            if (!empty($cookies[$this->session_cookie_name])) {
+                $cookies[$this->session_cookie_name] = self::MASK;
+            }
         }
+        if (!empty($http['data'])) {
+            array_walk_recursive($http['data'], array($this, 'sanitize'));
+        }
+    }
 
-        $cookies = &$http['cookies'];
-        if (!empty($cookies[$this->session_cookie_name])) {
-            $cookies[$this->session_cookie_name] = self::MASK;
+    public function sanitizeStacktrace(&$data)
+    {
+        foreach ($data['frames'] as &$frame) {
+            if (empty($frame['vars'])) {
+                continue;
+            }
+            array_walk_recursive($frame['vars'], array($this, 'sanitize'));
         }
     }
 
     public function process(&$data)
     {
-        array_walk_recursive($data, array($this, 'sanitize'));
-        $this->sanitizeHttp($data);
+        if (!empty($data['exception'])) {
+            $this->sanitizeException($data);
+        }
+        if (!empty($data['stacktrace'])) {
+            $this->sanitizeStacktrace($data['stacktrace']);
+        }
+        if (!empty($data['request'])) {
+            $this->sanitizeHttp($data);
+        }
+        if (!empty($data['extra'])) {
+            array_walk_recursive($data['extra'], array($this, 'sanitize'));
+        }
     }
 
     /**

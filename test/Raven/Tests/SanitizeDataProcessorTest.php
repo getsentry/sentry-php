@@ -70,14 +70,16 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testDoesFilterCreditCard()
     {
         $data = array(
-            'ccnumba' => '4242424242424242'
+            'extra' => array(
+                'ccnumba' => '4242424242424242',
+            ),
         );
 
         $client = new Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data['ccnumba']);
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data['extra']['ccnumba']);
     }
 
     /**
