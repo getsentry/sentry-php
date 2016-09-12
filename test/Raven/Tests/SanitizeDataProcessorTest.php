@@ -70,7 +70,8 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testDoesFilterCreditCard()
     {
         $data = array(
-            'ccnumba' => '4242424242424242'
+            'ccnumba'     => '4242424242424242',
+            'log_message' => 'log message containing PAN 6759649826438453 more log',
         );
 
         $client = new Raven_Client();
@@ -78,6 +79,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $processor->process($data);
 
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data['ccnumba']);
+        $this->assertEquals('log message containing PAN '.Raven_SanitizeDataProcessor::MASK.' more log', $data['log_message']);
     }
 
     /**
@@ -89,8 +91,8 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $client     = new Raven_Client();
         $processor  = new Raven_SanitizeDataProcessor($client);
 
-        $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
-        $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,16}$/', 'got default values');
+        $this->assertEquals($processor->getFieldsRe(), Raven_SanitizeDataProcessor::FIELDS_RE, 'got default fields');
+        $this->assertEquals($processor->getValuesRe(), Raven_SanitizeDataProcessor::VALUES_RE, 'got default values');
 
         $options = array(
             'fields_re' => '/(api_token)/i',
@@ -140,10 +142,6 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
                     'mypasswd'          => 'hello',
                     'api_token'         => 'nioenio3nrio3jfny89nby9bhr#RML#R',
                     'authorization'     => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
-                    'card_number'   => array(
-                        '1111111111111111',
-                        '2222',
-                    )
                 ),
             )
         );
@@ -165,9 +163,6 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($vars['mypasswd'], 'hello', 'did not alter mypasswd');
         $this->assertEquals($vars['authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=', 'did not alter authorization');
         $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['api_token'], 'masked api_token');
-
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['card_number']['0'], 'masked card_number[0]');
-        $this->assertEquals($vars['card_number']['1'], $vars['card_number']['1'], 'did not alter card_number[1]');
     }
 
     /**
@@ -194,5 +189,42 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         return array(
             array($processorOptions, $client_options, $dsn)
         );
+    }
+
+    public function testPrivateKeysAreSanitizedByDefault()
+    {
+        $data = array(
+            'public_key'  => '-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA6A6TQjlPyMurLh/igZY4
+izA9sJgeZ7s5+nGydO4AI9k33gcy2DObZuadWRMnDwc3uH/qoAPw/mo3KOcgEtxU
+xdwiQeATa3HVPcQDCQiKm8xIG2Ny0oUbR0IFNvClvx7RWnPEMk05CuvsL0AA3eH5
+xn02Yg0JTLgZEtUT3whwFm8CAwEAAQ==
+-----END PUBLIC KEY-----',
+            'private_key' => '-----BEGIN PRIVATE KEY-----
+MIIJRAIBADANBgkqhkiG9w0BAQEFAASCCS4wggkqAgEAAoICAQCoNFY4P+EeIXl0
+mLpO+i8uFqAaEFQ8ZX2VVpA13kNEHuiWXC3HPlQ+7G+O3XmAsO+Wf/xY6pCSeQ8h
+mLpO+i8uFqAaEFQ8ZX2VVpA13kNEHuiWXC3HPlQ+7G+O3XmAsO+Wf/xY6pCSeQ8h
+-----END PRIVATE KEY-----',
+            'encrypted_private_key' => '-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIJjjBABgkqhkiG9w0BBQ0wMzAbBgkqhkiG9w0BBQwwDgQIWVhErdQOFVoCAggA
+IrlYQUV1ig4U3viYh1Y8viVvRlANKICvgj4faYNH36UterkfDjzMonb/cXNeJEOS
+YgorM2Pfuec5vtPRPKd88+Ds/ktIlZhjJwnJjHQMX+lSw5t0/juna2sLH2dpuAbi
+PSk=
+-----END ENCRYPTED PRIVATE KEY-----',
+            'rsa_private_key' => '-----BEGIN RSA PRIVATE KEY-----
++wn9Iu+zgamKDUu22xc45F2gdwM04rTITlZgjAs6U1zcvOzGxk8mWJD5MqFWwAtF
+zN87YGV0VMTG6ehxnkI4Fg6i0JPU3QIDAQABAoICAQCoCPjlYrODRU+vd2YeU/gM
+THd+9FBxiHLGXNKhG/FRSyREXEt+NyYIf/0cyByc9tNksat794ddUqnLOg0vwSkv
+-----END RSA PRIVATE KEY-----',
+         'not_a_key' => 'decafbad'
+        );
+
+        $processor = new Raven_SanitizeDataProcessor(new Raven_Client());
+        $processor->process($data);
+
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data["private_key"]);
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data["encrypted_private_key"]);
+        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data["rsa_private_key"]);
+        $this->assertEquals('decafbad', $data["not_a_key"]);
     }
 }

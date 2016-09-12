@@ -6,6 +6,11 @@
  */
 abstract class Raven_Processor
 {
+    /**
+     * @var Raven_Client
+     */
+    private $client;
+
     public function __construct(Raven_Client $client)
     {
         $this->client = $client;
