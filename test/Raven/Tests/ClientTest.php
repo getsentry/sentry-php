@@ -290,6 +290,21 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($event['message'], 'Test Message foo');
     }
 
+    public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->setRelease(20160909144742);
+
+        $this->assertEquals(20160909144742, $client->getRelease());
+
+        $client->captureMessage('Test Message %s', array('foo'));
+        $events = $client->getSentEvents();
+        $this->assertEquals(count($events), 1);
+        $event = array_pop($events);
+        $this->assertEquals($event['release'], 20160909144742);
+        $this->assertEquals($event['message'], 'Test Message foo');
+    }
+
     public function testCaptureMessageSetsInterface()
     {
         $client = new Dummy_Raven_Client();
