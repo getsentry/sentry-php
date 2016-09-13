@@ -80,7 +80,7 @@ class Raven_Serializer
         if (function_exists('mb_detect_encoding')
             && function_exists('mb_convert_encoding')
         ) {
-            // we always gurantee this is coerced, even if we can't detect encoding
+            // we always guarantee this is coerced, even if we can't detect encoding
             if ($currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)) {
                 $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
             } else {
