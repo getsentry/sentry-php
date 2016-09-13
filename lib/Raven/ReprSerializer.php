@@ -10,7 +10,7 @@
  */
 
 /**
- * Serializes a value into a representation that should reasonable suggest
+ * Serializes a value into a representation that should reasonably suggest
  * both the type and value, and be serializable into JSON.
  * @package raven
  */
