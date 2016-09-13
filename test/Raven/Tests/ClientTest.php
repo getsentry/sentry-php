@@ -754,6 +754,19 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($found, true);
     }
 
+    public function testCaptureLastError()
+    {
+        $client = new Dummy_Raven_Client();
+
+        @$undefined;
+
+        $client->captureLastError();
+        $events = $client->getSentEvents();
+        $this->assertEquals(1, count($events));
+        $event = array_pop($events);
+        $this->assertEquals($event['exception']['values'][0]['value'], 'Undefined variable: undefined');
+    }
+
     public function testGetLastEventID()
     {
         $client = new Dummy_Raven_Client();
