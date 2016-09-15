@@ -686,16 +686,18 @@ class Raven_Client
             $data['request'] = $this->serializer->serialize($data['request']);
         }
         if (!empty($data['user'])) {
-            $data['user'] = $this->serializer->serialize($data['user']);
+            $data['user'] = $this->serializer->serialize($data['user'], 3);
         }
         if (!empty($data['extra'])) {
             $data['extra'] = $this->serializer->serialize($data['extra']);
         }
         if (!empty($data['tags'])) {
-            $data['tags'] = $this->serializer->serialize($data['tags']);
+            foreach ($data['tags'] as $key => $value) {
+                $data['tags'][$key] = @(string)$value;
+            }
         }
-        if (!empty($data['stacktrace']) && !empty($data['stacktrace']['frames'])) {
-            $data['stacktrace']['frames'] = $this->serializer->serialize($data['stacktrace']['frames']);
+        if (!empty($data['contexts'])) {
+            $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
         }
     }
 

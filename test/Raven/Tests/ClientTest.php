@@ -786,7 +786,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($events), 1);
     }
 
-
     public function testAppPathLinux()
     {
         $client = new Dummy_Raven_Client();
@@ -855,6 +854,56 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(empty($events[0]['message']), true);
     }
 
+    public function testSanitizeExtra()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('extra' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(2), 3
+                ),
+            ),
+        ));
+        $client->sanitize($data);
+
+        $this->assertEquals($data, array('extra' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, 'Array of length 1', 3
+                ),
+            ),
+        )));
+    }
+
+    public function testSanitizeTags()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('tags' => array(
+            'foo' => 'bar',
+            'baz' => array('biz'),
+        ));
+        $client->sanitize($data);
+
+        $this->assertEquals($data, array('tags' => array(
+            'foo' => 'bar',
+            'baz' => 'Array',
+        )));
+    }
+
+    public function testSanitizeUser()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('user' => array(
+            'email' => 'foo@example.com',
+        ));
+        $client->sanitize($data);
+
+        $this->assertEquals($data, array('user' => array(
+            'email' => 'foo@example.com',
+        )));
+    }
     /**
      * Set the server array to the test values, check the current url
      *
