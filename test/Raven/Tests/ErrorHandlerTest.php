@@ -18,6 +18,10 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $this->errorLevel = error_reporting();
         $this->errorHandlerCalled = false;
         $this->existingErrorHandler = set_error_handler(array($this, 'errorHandler'), -1);
+        // improves the reliability of tests
+        if (function_exists('error_clear_last')) {
+            error_clear_last();
+        }
     }
 
     public function errorHandler()
@@ -27,8 +31,10 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
-        // XXX(dcramer): this isn't great as it doesnt restore the old error reporting level
-        set_error_handler(array($this, 'errorHandler'), error_reporting());
+        restore_exception_handler();
+        set_error_handler($this->existingErrorHandler);
+        // // XXX(dcramer): this isn't great as it doesnt restore the old error reporting level
+        // set_error_handler(array($this, 'errorHandler'), error_reporting());
         error_reporting($this->errorLevel);
     }
 
@@ -103,18 +109,35 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
     // Because we cannot **know** that a user silenced an error, we always
     // defer to respecting the error reporting settings.
-    public function testSilentErrorsAreNotReported()
+    public function testSilentErrorsAreNotReportedWithGlobal()
     {
         $client = $this->getMock('Client', array('captureException'));
         $client->expects($this->never())
                ->method('captureException');
 
-        error_reporting(E_USER_WARNING);
+        error_reporting(E_ALL);
 
         $handler = new Raven_ErrorHandler($client);
-        $handler->registerErrorHandler(false);
+        $handler->registerErrorHandler(true);
 
-        @trigger_error('Silent', E_USER_WARNING);
+        @$undefined;
+
+        // also ensure it doesnt get reported by the fatal handler
+        $handler->handleFatalError();
+    }
+
+    // Because we cannot **know** that a user silenced an error, we always
+    // defer to respecting the error reporting settings.
+    public function testSilentErrorsAreNotReportedWithLocal()
+    {
+        $client = $this->getMock('Client', array('captureException'));
+        $client->expects($this->never())
+               ->method('captureException');
+
+        $handler = new Raven_ErrorHandler($client);
+        $handler->registerErrorHandler(true, E_ALL);
+
+        @$my_array[2];
 
         // also ensure it doesnt get reported by the fatal handler
         $handler->handleFatalError();

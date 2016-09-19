@@ -69,9 +69,12 @@ class Raven_ErrorHandler
     public function handleError($type, $message, $file = '', $line = 0, $context = array())
     {
         // we always need to bind _last_handled_error in the case of a suppressed
-        // error getting passed to handleFatalError
+        // error getting passed to handleFatalError. In PHP 5.x it seems that
+        // ``error_get_last`` is not always populated, so we instead always bind
+        // it to the last value (rather than whatever error we're handling now)
+        $this->_last_handled_error = error_get_last();
+
         $e = new ErrorException($message, 0, $type, $file, $line);
-        $this->_last_handled_error = $e;
 
         if (error_reporting() !== 0) {
             $error_types = $this->error_types;
@@ -82,6 +85,7 @@ class Raven_ErrorHandler
                 $this->handleException($e, true, $context);
             }
         }
+
         if ($this->call_existing_error_handler) {
             if ($this->old_error_handler !== null) {
                 return call_user_func(
@@ -112,24 +116,16 @@ class Raven_ErrorHandler
                 $error_types = error_reporting();
             }
             if ($error_types & $error['type']) {
+                // ensure that if this error was reported via handleError that
+                // we don't duplicate it here
+                if ($this->_last_handled_error === $error) {
+                    return;
+                }
+
                 $e = new ErrorException(
                     @$error['message'], 0, @$error['type'],
                     @$error['file'], @$error['line']
                 );
-
-                // ensure that if this error was reported via handleError that
-                // we don't duplicate it here
-                if ($this->_last_handled_error) {
-                    $le = $this->_last_handled_error;
-                    if ($e->getMessage() === $le->getMessage() &&
-                        $e->getSeverity() === $le->getSeverity() &&
-                        $e->getLine() === $le->getLine() &&
-                        $e->getFile() === $le->getFile()
-                    ) {
-                        return;
-                    }
-                }
-
                 $this->handleException($e, true);
             }
         }
