@@ -281,6 +281,30 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($frames[1]['in_app'], true);
     }
 
+    public function testInAppWithExclusion()
+    {
+        $stack = array(
+            array(
+                "file" => dirname(__FILE__) . '/resources/foo/a.php',
+                "line" => 11,
+                "function" => "a_test",
+            ),
+            array(
+                "file" => dirname(__FILE__) . '/resources/bar/b.php',
+                "line" => 3,
+                "function" => "include_once",
+            ),
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info(
+            $stack, true, null, null, 0, null, dirname(__FILE__),
+            array(dirname(__FILE__) . '/resources/bar/'));
+
+        // stack gets reversed
+        $this->assertEquals($frames[0]['in_app'], false);
+        $this->assertEquals($frames[1]['in_app'], true);
+    }
+
     public function testBasePath()
     {
         $stack = array(

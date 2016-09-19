@@ -13,9 +13,15 @@ class Raven_Stacktrace
         'require_once',
     );
 
-    public static function get_stack_info($frames, $trace = false, $shiftvars = true, $errcontext = null,
-                                          $frame_var_limit = Raven_Client::MESSAGE_LIMIT, $strip_prefixes = null,
-                                          $app_path = null, Raven_Serializer $serializer = null,
+    public static function get_stack_info($frames,
+                                          $trace = false,
+                                          $shiftvars = true,
+                                          $errcontext = null,
+                                          $frame_var_limit = Raven_Client::MESSAGE_LIMIT,
+                                          $strip_prefixes = null,
+                                          $app_path = null,
+                                          $excluded_app_paths = null,
+                                          Raven_Serializer $serializer = null,
                                           Raven_ReprSerializer $reprSerializer = null)
     {
         $serializer = $serializer ?: new Raven_Serializer();
@@ -98,7 +104,16 @@ class Raven_Stacktrace
 
             // detect in_app based on app path
             if ($app_path) {
-                $data['in_app'] = (bool)(substr($abs_path, 0, strlen($app_path)) === $app_path);
+                $in_app = (bool)(substr($abs_path, 0, strlen($app_path)) === $app_path);
+                if ($in_app && $excluded_app_paths) {
+                    foreach ($excluded_app_paths as $path) {
+                        if (substr($abs_path, 0, strlen($path)) === $path) {
+                            $in_app = false;
+                            break;
+                        }
+                    }
+                }
+                $data['in_app'] = $in_app;
             }
 
             // dont set this as an empty array as PHP will treat it as a numeric array

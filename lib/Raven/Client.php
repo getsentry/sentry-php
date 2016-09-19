@@ -92,6 +92,7 @@ class Raven_Client
 
         // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
+        $this->setExcludedAppPaths(Raven_Util::get($options, 'excluded_app_paths', null));
         // a list of prefixes used to coerce absolute paths into relative
         $this->setPrefixes(Raven_Util::get($options, 'prefixes', null));
         $this->processors = $this->setProcessorsFromOptions($options);
@@ -157,6 +158,21 @@ class Raven_Client
         return $this;
     }
 
+    private function _convertPath($value)
+    {
+        $path = @realpath($value);
+        if ($path === false) {
+            $path = $value;
+        }
+        // we need app_path to have a trailing slash otherwise
+        // base path detection becomes complex if the same
+        // prefix is matched
+        if (substr($path, 0, 1) === '/' && substr($path, -1, 1) !== '/') {
+            $path = $path . '/';
+        }
+        return $path;
+    }
+
     public function getAppPath()
     {
         return $this->app_path;
@@ -165,23 +181,27 @@ class Raven_Client
     public function setAppPath($value)
     {
         if ($value) {
-            $path = @realpath($value);
-            if ($path === false) {
-                $path = $value;
-            }
-            // we need app_path to have a trailing slash otherwise
-            // base path detection becomes complex if the same
-            // prefix is matched
-            if (substr($path, 0, 1) === '/' && substr($path, -1, 1) !== '/') {
-                $path = $path . '/';
-            }
-            $this->app_path = $path;
+            $this->app_path = $this->_convertPath($value);
         } else {
             $this->app_path = null;
         }
         return $this;
     }
 
+    public function getExcludedAppPaths()
+    {
+        return $this->excluded_app_paths;
+    }
+
+    public function setExcludedAppPaths($value)
+    {
+        if ($value) {
+            $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : $value;
+        } else {
+            $this->excluded_app_paths = null;
+        }
+        return $this;
+    }
     public function getPrefixes()
     {
         return $this->prefixes;
@@ -189,7 +209,7 @@ class Raven_Client
 
     public function setPrefixes($value)
     {
-        $this->prefixes = $value ? array_map('realpath', $value) : $value;
+        $this->prefixes = $value ? array_map(array($this, '_convertPath'), $value) : $value;
         return $this;
     }
 
@@ -425,7 +445,7 @@ class Raven_Client
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
                     $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
-                    $this->app_path, $this->serializer, $this->reprSerializer
+                    $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
                 ),
             );
 
@@ -659,7 +679,7 @@ class Raven_Client
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
                         $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
-                        $this->app_path, $this->serializer, $this->reprSerializer
+                        $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
                     ),
                 );
             }
