@@ -1,3 +1,11 @@
+1.3.0
+-----
+
+- Fixed an issue causing the error suppression operator to not be respected (#335)
+- Fixed some serialization behavior (#352)
+- Fixed an issue with app paths and trailing slashes (#350)
+- Handle non-latin encoding with source code context line (#345)
+
 1.2.0
 -----
 
