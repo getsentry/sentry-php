@@ -108,9 +108,9 @@ class Raven_Stacktrace
                 foreach ($vars as $key => $value) {
                     $value = $reprSerializer->serialize($value);
                     if (is_string($value) || is_numeric($value)) {
-                        $cleanVars[$key] = substr($value, 0, $frame_var_limit);
+                        $cleanVars[(string)$key] = substr($value, 0, $frame_var_limit);
                     } else {
-                        $cleanVars[$key] = $value;
+                        $cleanVars[(string)$key] = $value;
                     }
                 }
                 $data['vars'] = $cleanVars;
@@ -164,7 +164,7 @@ class Raven_Stacktrace
                 return array();
             } else {
                 // Sanitize the file path
-                return array($frame['args'][0]);
+                return array('param1' => $frame['args'][0]);
             }
         }
         try {
@@ -198,9 +198,7 @@ class Raven_Stacktrace
                 }
                 $args[$params[$i]->name] = $arg;
             } else {
-                // TODO: Sentry thinks of these as context locals, so they must be named
-                // Assign the argument by number
-                // $args[$i] = $arg;
+                $args['param'.$i] = $arg;
             }
         }
 
