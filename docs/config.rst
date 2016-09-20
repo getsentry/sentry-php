@@ -74,6 +74,18 @@ The following settings are available for the client:
 
         $client->setAppPath(app_root());
 
+.. describe:: excluded_app_paths
+
+    Paths to exclude from app_path detection.
+
+    .. code-block:: php
+
+        'excluded_app_paths' => array(app_root() . '/cache'),
+
+    .. code-block:: php
+
+        $client->setExcludedAppPaths(array(app_root() . '/cache'));
+
 .. describe:: prefixes
 
     Prefixes which should be stripped from filenames to create relative
