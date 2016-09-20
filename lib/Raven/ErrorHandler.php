@@ -48,7 +48,6 @@ class Raven_ErrorHandler
      * A 'null' value implies "whatever error_reporting is at time of error".
      */
     private $error_types = null;
-    private $_last_handled_error = null;
 
     public function __construct($client, $send_errors_last = false, $error_types = null,
                                 $__error_types = null)
@@ -81,12 +80,6 @@ class Raven_ErrorHandler
         // The following error types cannot be handled with a user defined function: E_ERROR,
         // E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, and
         // most of E_STRICT raised in the file where set_error_handler() is called.
-
-        // we always need to bind _last_handled_error in the case of a suppressed
-        // error getting passed to handleFatalError. In PHP 5.x it seems that
-        // ``error_get_last`` is not always populated, so we instead always bind
-        // it to the last value (rather than whatever error we're handling now)
-        $this->_last_handled_error = error_get_last();
 
         $e = new ErrorException($message, 0, $type, $file, $line);
 
