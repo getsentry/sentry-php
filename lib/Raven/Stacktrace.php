@@ -135,16 +135,16 @@ class Raven_Stacktrace
         // The reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
         if (!isset($frame['function'])) {
-            return $this->get_default_context($frame, $frame_arg_limit);
+            return self::get_default_context($frame, $frame_arg_limit);
         }
         if (strpos($frame['function'], '__lambda_func') !== false) {
-            return $this->get_default_context($frame, $frame_arg_limit);
+            return self::get_default_context($frame, $frame_arg_limit);
         }
         if (isset($frame['class']) && $frame['class'] == 'Closure') {
-            return $this->get_default_context($frame, $frame_arg_limit);
+            return self::get_default_context($frame, $frame_arg_limit);
         }
         if (strpos($frame['function'], '{closure}') !== false) {
-            return $this->get_default_context($frame, $frame_arg_limit);
+            return self::get_default_context($frame, $frame_arg_limit);
         }
         if (in_array($frame['function'], self::$statements)) {
             if (empty($frame['args'])) {
@@ -168,7 +168,7 @@ class Raven_Stacktrace
                 $reflection = new ReflectionFunction($frame['function']);
             }
         } catch (ReflectionException $e) {
-            return $this->get_default_context($frame, $frame_arg_limit);
+            return self::get_default_context($frame, $frame_arg_limit);
         }
 
         $params = $reflection->getParameters();
