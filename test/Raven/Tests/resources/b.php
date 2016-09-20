@@ -1,3 +1,2 @@
 <?php
-// filename: /tmp/b.php
-include_once '/tmp/a.php';
+include_once 'a.php';

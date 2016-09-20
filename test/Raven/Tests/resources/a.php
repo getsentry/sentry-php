@@ -1,6 +1,4 @@
 <?php
-// filename: /tmp/a.php
-
 function a_test($str)
 {
     echo "\nHi: $str";

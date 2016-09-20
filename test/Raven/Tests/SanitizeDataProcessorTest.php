@@ -32,7 +32,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $client = new Raven_Client();
+        $client = new Dummy_Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -59,7 +59,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $client = new Raven_Client();
+        $client = new Dummy_Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -75,7 +75,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $client = new Raven_Client();
+        $client = new Dummy_Raven_Client();
         $processor = new Raven_SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -88,7 +88,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
      */
     public function testSettingProcessorOptions()
     {
-        $client     = new Raven_Client();
+        $client     = new Dummy_Raven_Client();
         $processor  = new Raven_SanitizeDataProcessor($client);
 
         $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
@@ -114,7 +114,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
      */
     public function testOverrideOptions($processorOptions, $client_options, $dsn)
     {
-        $client = new Raven_Client($dsn, $client_options);
+        $client = new Dummy_Raven_Client($dsn, $client_options);
         $processor = $client->processors[0];
 
         $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);
@@ -150,7 +150,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $client = new Raven_Client($dsn, $client_options);
+        $client = new Dummy_Raven_Client($dsn, $client_options);
         $processor = $client->processors[0];
 
         $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);

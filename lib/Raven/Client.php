@@ -94,7 +94,7 @@ class Raven_Client
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
         $this->setExcludedAppPaths(Raven_Util::get($options, 'excluded_app_paths', null));
         // a list of prefixes used to coerce absolute paths into relative
-        $this->setPrefixes(Raven_Util::get($options, 'prefixes', null));
+        $this->setPrefixes(Raven_Util::get($options, 'prefixes', $this->getDefaultPrefixes()));
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
@@ -156,6 +156,12 @@ class Raven_Client
     {
         $this->environment = $value;
         return $this;
+    }
+
+    private function getDefaultPrefixes()
+    {
+        $value = get_include_path();
+        return explode(':', $value);
     }
 
     private function _convertPath($value)
@@ -422,7 +428,6 @@ class Raven_Client
             $exc_data = array(
                 'value' => $this->serializer->serialize($exc->getMessage()),
                 'type' => get_class($exc),
-                'module' => $exc->getFile() .':'. $exc->getLine(),
             );
 
             /**'exception'
@@ -444,7 +449,7 @@ class Raven_Client
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
-                    $trace, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
+                    $trace, $this->trace, $vars, $this->message_limit, $this->prefixes,
                     $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
                 ),
             );
@@ -678,7 +683,7 @@ class Raven_Client
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = array(
                     'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->trace, $this->shift_vars, $vars, $this->message_limit, $this->prefixes,
+                        $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
                         $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
                     ),
                 );
