@@ -39,115 +39,34 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
     public function testSimpleTrace()
     {
         $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-                "args"=> array(
-                    "friend",
-                ),
+          array(
+            'file' => dirname(__FILE__) . '/resources/a.php',
+            'line' => 9,
+            'function' => 'a_test',
+            'args' => array('friend'),
+          ),
+          array(
+            'file' => dirname(__FILE__) . '/resources/b.php',
+            'line' => 2,
+            'args' => array(
+              dirname(__FILE__) . '/resources/a.php',
             ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "args"=> array(
-                    "/tmp/a.php",
-                ),
-                "function" => "include_once",
-            ),
+            'function' => 'include_once',
+          )
         );
 
         $frames = Raven_Stacktrace::get_stack_info($stack, true);
 
         $frame = $frames[0];
-        $this->assertEquals('b.php', $frame["module"]);
-        $this->assertEquals(3, $frame["lineno"]);
-        $this->assertNull($frame["function"]);
-        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
-        $frame = $frames[1];
-        $this->assertEquals('a.php', $frame["module"]);
-        $this->assertEquals(11, $frame["lineno"]);
-        $this->assertEquals('include_once', $frame["function"]);
-        $this->assertEquals('a_test($foo);', $frame["context_line"]);
-    }
-
-    public function testSimpleUnshiftedTrace()
-    {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-                "args"=> array(
-                    "friend",
-                ),
-            ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "args"=> array(
-                    "/tmp/a.php",
-                ),
-                "function" => "include_once",
-            ),
-        );
-
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, false);
-
-        $frame = $frames[0];
-        $this->assertEquals('b.php', $frame["module"]);
-        $this->assertEquals(3, $frame["lineno"]);
-        $this->assertNull($frame["function"]);
-        $this->assertEquals('/tmp/a.php', $frame['vars']['param1']);
-        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
-        $frame = $frames[1];
-        $this->assertEquals('a.php', $frame["module"]);
-        $this->assertEquals(11, $frame["lineno"]);
-        $this->assertEquals('include_once', $frame["function"]);
-        $this->assertEquals('friend', $frame['vars']['param1']);
-        $this->assertEquals('a_test($foo);', $frame["context_line"]);
-    }
-
-    public function testShiftedCaptureVars()
-    {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-                "args"=> array(
-                    "friend",
-                ),
-            ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "args"=> array(
-                    "/tmp/a.php",
-                ),
-                "function" => "include_once",
-            ),
-        );
-
-        $vars = array(
-            "foo" => "bar",
-            "baz" => "zoom"
-        );
-
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars);
-
-        $frame = $frames[0];
-        $this->assertEquals('b.php', $frame["module"]);
-        $this->assertEquals(3, $frame["lineno"]);
-        $this->assertNull($frame["function"]);
-        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
+        $this->assertEquals(2, $frame['lineno']);
+        $this->assertNull($frame['function']);
+        $this->assertEquals("include_once 'a.php';", $frame['context_line']);
         $this->assertFalse(isset($frame['vars']));
         $frame = $frames[1];
-        $this->assertEquals('a.php', $frame["module"]);
-        $this->assertEquals(11, $frame["lineno"]);
-        $this->assertEquals('include_once', $frame["function"]);
-        $this->assertEquals('a_test($foo);', $frame["context_line"]);
-        $this->assertEquals($vars, $frame['vars']);
+        $this->assertEquals(9, $frame['lineno']);
+        $this->assertEquals('include_once', $frame['function']);
+        $this->assertEquals('a_test($foo);', $frame['context_line']);
+        $this->assertEquals(dirname(__FILE__) . '/resources/a.php', $frame['vars']['param1']);
     }
 
     public function testDoesNotModifyCaptureVars()
@@ -179,56 +98,14 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             "foo" => &$iAmFoo
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, true, $vars, 5);
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, $vars, 5);
 
         // Check we haven't modified our vars.
-        $this->assertEquals($originalFoo, $vars["foo"]);
+        $this->assertEquals($originalFoo, $vars['foo']);
 
         $frame = $frames[1];
         // Check that we did truncate the variable in our output
-        $this->assertEquals(5, strlen($frame['vars']['foo']));
-    }
-
-    public function testUnshiftedCaptureVars()
-    {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-                "args"=> array(
-                    "friend",
-                ),
-            ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "args"=> array(
-                    "/tmp/a.php",
-                ),
-                "function" => "include_once",
-            ),
-        );
-
-        $vars = array(
-            "foo" => "bar",
-            "baz" => "zoom"
-        );
-
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, false, $vars);
-
-        $frame = $frames[0];
-        $this->assertEquals('b.php', $frame["module"]);
-        $this->assertEquals(3, $frame["lineno"]);
-        $this->assertNull($frame["function"]);
-        $this->assertEquals(array('param1' => '/tmp/a.php'), $frame['vars']);
-        $this->assertEquals("include_once '/tmp/a.php';", $frame["context_line"]);
-        $frame = $frames[1];
-        $this->assertEquals('a.php', $frame["module"]);
-        $this->assertEquals(11, $frame["lineno"]);
-        $this->assertEquals('include_once', $frame["function"]);
-        $this->assertEquals($vars, $frame['vars']);
-        $this->assertEquals('a_test($foo);', $frame["context_line"]);
+        $this->assertEquals(strlen($frame['vars']['foo']), 5);
     }
 
     public function testDoesFixFrameInfo()
@@ -242,21 +119,18 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
 
         $frames = Raven_Stacktrace::get_stack_info($stack, true);
         // just grab the last few frames
-        $frames = array_slice($frames, -5);
+        $frames = array_slice($frames, -6);
         $frame = $frames[0];
-        $this->assertEquals('StacktraceTest.php:Raven_Tests_StacktraceTest', $frame['module']);
-        $this->assertEquals('testDoesFixFrameInfo', $frame['function']);
-        $frame = $frames[1];
-        $this->assertEquals('StacktraceTest.php', $frame['module']);
         $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
-        $frame = $frames[2];
-        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $frame = $frames[1];
         $this->assertEquals('raven_test_recurse', $frame['function']);
+        $frame = $frames[2];
+        $this->assertEquals('call_user_func', $frame['function']);
         $frame = $frames[3];
-        $this->assertEquals('StacktraceTest.php', $frame['module']);
         $this->assertEquals('raven_test_recurse', $frame['function']);
         $frame = $frames[4];
-        $this->assertEquals('StacktraceTest.php', $frame['module']);
+        $this->assertEquals('call_user_func', $frame['function']);
+        $frame = $frames[5];
         $this->assertEquals('raven_test_recurse', $frame['function']);
     }
 
@@ -275,7 +149,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, null, dirname(__FILE__));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, 0, null, dirname(__FILE__));
 
         $this->assertEquals($frames[0]['in_app'], true);
         $this->assertEquals($frames[1]['in_app'], true);
@@ -297,7 +171,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         );
 
         $frames = Raven_Stacktrace::get_stack_info(
-            $stack, true, null, null, 0, null, dirname(__FILE__),
+            $stack, true, null, 0, null, dirname(__FILE__) . '/',
             array(dirname(__FILE__) . '/resources/bar/'));
 
         // stack gets reversed
@@ -313,17 +187,11 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
                 "line" => 11,
                 "function" => "a_test",
             ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "function" => "include_once",
-            ),
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, null, 0, array(dirname(__FILE__)));
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, 0, array(dirname(__FILE__) . '/'));
 
-        $this->assertEquals($frames[0]['filename'], 'resources/b.php');
-        $this->assertEquals($frames[1]['filename'], 'resources/a.php');
+        $this->assertEquals($frames[0]['filename'], 'resources/a.php');
     }
 
     public function testNoBasePath()

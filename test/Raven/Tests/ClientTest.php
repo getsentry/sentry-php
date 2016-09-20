@@ -54,6 +54,10 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return parent::get_user_data();
     }
+    // short circuit breadcrumbs
+    public function registerDefaultBreadcrumbHandlers()
+    {
+    }
 
     /**
      * Expose the current url method to test it
@@ -177,7 +181,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testDsnFirstArgument()
     {
-        $client = new Raven_Client('http://public:secret@example.com/1');
+        $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
 
         $this->assertEquals($client->project, 1);
         $this->assertEquals($client->server, 'http://example.com/api/1/store/');
@@ -187,7 +191,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testDsnFirstArgumentWithOptions()
     {
-        $client = new Raven_Client('http://public:secret@example.com/1', array(
+        $client = new Dummy_Raven_Client('http://public:secret@example.com/1', array(
             'site' => 'foo',
         ));
 
@@ -200,7 +204,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testOptionsFirstArgument()
     {
-        $client = new Raven_Client(array(
+        $client = new Dummy_Raven_Client(array(
             'server' => 'http://example.com/api/1/store/',
             'project' => 1,
         ));
@@ -211,7 +215,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testDsnInOptionsFirstArg()
     {
-        $client = new Raven_Client(array(
+        $client = new Dummy_Raven_Client(array(
             'dsn' => 'http://public:secret@example.com/1',
         ));
 
@@ -223,7 +227,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testDsnInOptionsSecondArg()
     {
-        $client = new Raven_Client(null, array(
+        $client = new Dummy_Raven_Client(null, array(
             'dsn' => 'http://public:secret@example.com/1',
         ));
 
@@ -235,7 +239,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testOptionsFirstArgumentWithOptions()
     {
-        $client = new Raven_Client(array(
+        $client = new Dummy_Raven_Client(array(
             'server' => 'http://example.com/api/1/store/',
             'project' => 1,
         ), array(
@@ -361,13 +365,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(count($exc['values']), 1);
         $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
         $this->assertEquals($exc['values'][0]['type'], 'Exception');
-        $this->assertFalse(empty($exc['values'][0]['module']));
 
         $this->assertFalse(empty($exc['values'][0]['stacktrace']['frames']));
         $frames = $exc['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
         $this->assertTrue($frame['lineno'] > 0);
-        $this->assertEquals($frame['module'], 'ClientTest.php:Raven_Tests_ClientTest');
         $this->assertEquals($frame['function'], 'create_exception');
         $this->assertFalse(isset($frame['vars']));
         $this->assertEquals($frame['context_line'], '            throw new Exception(\'Foo bar\');');
@@ -778,7 +780,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $events = array();
 
-        $client = new Raven_Client('https://public:secret@sentry.example.com/1');
+        // transport test requires default client
+        $client = new Raven_Client('https://public:secret@sentry.example.com/1', array(
+            'install_default_breadcrumb_handlers' => false,
+        ));
         $client->setTransport(function ($client, $data) use (&$events) {
             $events[] = $data;
         });
@@ -812,7 +817,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testCannotInstallTwice()
     {
-        $client = new Raven_Client('https://public:secret@sentry.example.com/1');
+        $client = new Dummy_Raven_Client('https://public:secret@sentry.example.com/1');
         $client->install();
         $client->install();
     }

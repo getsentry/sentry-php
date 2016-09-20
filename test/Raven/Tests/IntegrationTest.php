@@ -28,6 +28,10 @@ class DummyIntegration_Raven_Client extends Raven_Client
     {
         return true;
     }
+    // short circuit breadcrumbs
+    public function registerDefaultBreadcrumbHandlers()
+    {
+    }
 }
 
 class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
@@ -60,6 +64,6 @@ class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($exc['value'], 'mkdir(): No such file or directory');
         $stack = $exc['stacktrace']['frames'];
         $lastFrame = $stack[count($stack) - 1];
-        $this->assertEquals(@$lastFrame['filename'], __file__);
+        $this->assertEquals(@$lastFrame['filename'], 'test/Raven/Tests/IntegrationTest.php');
     }
 }
