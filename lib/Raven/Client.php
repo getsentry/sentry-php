@@ -76,7 +76,6 @@ class Raven_Client
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
         $this->severity_map = null;
-        $this->shift_vars = (bool) Raven_Util::get($options, 'shift_vars', true);
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
