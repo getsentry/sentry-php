@@ -32,6 +32,15 @@ class Raven_ErrorHandler
     private $call_existing_error_handler = false;
     private $reservedMemory;
     private $send_errors_last = false;
+    private $fatal_error_types = array(
+        E_ERROR,
+        E_PARSE,
+        E_CORE_ERROR,
+        E_CORE_WARNING,
+        E_COMPILE_ERROR,
+        E_COMPILE_WARNING,
+        E_STRICT,
+    );
 
     /**
      * @var array
@@ -68,6 +77,11 @@ class Raven_ErrorHandler
 
     public function handleError($type, $message, $file = '', $line = 0, $context = array())
     {
+        // http://php.net/set_error_handler
+        // The following error types cannot be handled with a user defined function: E_ERROR,
+        // E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, and
+        // most of E_STRICT raised in the file where set_error_handler() is called.
+
         // we always need to bind _last_handled_error in the case of a suppressed
         // error getting passed to handleFatalError. In PHP 5.x it seems that
         // ``error_get_last`` is not always populated, so we instead always bind
@@ -104,30 +118,18 @@ class Raven_ErrorHandler
 
     public function handleFatalError()
     {
+        unset($this->reservedMemory);
+
         if (null === $error = error_get_last()) {
             return;
         }
 
-        unset($this->reservedMemory);
-
-        if (error_reporting() !== 0) {
-            $error_types = $this->error_types;
-            if ($error_types === null) {
-                $error_types = error_reporting();
-            }
-            if ($error_types & $error['type']) {
-                // ensure that if this error was reported via handleError that
-                // we don't duplicate it here
-                if ($this->_last_handled_error === $error) {
-                    return;
-                }
-
-                $e = new ErrorException(
-                    @$error['message'], 0, @$error['type'],
-                    @$error['file'], @$error['line']
-                );
-                $this->handleException($e, true);
-            }
+        if ($error['type'] & $this->fatal_error_types) {
+            $e = new ErrorException(
+                @$error['message'], 0, @$error['type'],
+                @$error['file'], @$error['line']
+            );
+            $this->handleException($e, true);
         }
     }
 
