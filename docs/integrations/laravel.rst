@@ -196,3 +196,36 @@ Create the Sentry configuration file (``config/sentry.php``):
     // capture release as git sha
     // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
     );
+
+Available Settings
+------------------
+
+The following settings are available for the client:
+
+.. describe:: dsn
+
+    The DSN to authenticate with Sentry.
+
+    .. code-block:: php
+
+        'dsn' => '___DSN___',
+
+.. describe:: release
+
+    The version of your application (e.g. git SHA)
+
+    .. code-block:: php
+
+        'release' => MyApp::getReleaseVersion(),
+
+
+.. describe:: breadcrumbs.sql_bindings
+
+    Capturing bindings on SQL queries.
+
+    Defaults to ``true``.
+
+    .. code-block:: php
+
+        'breadcrumbs.sql_bindings' => false,
+
