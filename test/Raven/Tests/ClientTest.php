@@ -435,17 +435,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($event['culprit'], 'test');
     }
 
-    public function testCaptureExceptionHandlesCulpritAsSecondArg()
-    {
-        $client = new Dummy_Raven_Client();
-        $ex = $this->create_exception();
-        $client->captureException($ex, 'test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
-        $event = array_pop($events);
-        $this->assertEquals($event['culprit'], 'test');
-    }
-
     public function testCaptureExceptionHandlesExcludeOption()
     {
         $client = new Dummy_Raven_Client(array(
@@ -514,6 +503,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testGetDefaultData()
     {
         $client = new Dummy_Raven_Client();
+        $client->transaction->push('test');
         $expected = array(
             'platform' => 'php',
             'project' => $client->project,
@@ -525,6 +515,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                 'name' => 'sentry-php',
                 'version' => $client::VERSION,
             ),
+            'culprit' => 'test',
         );
         $this->assertEquals($expected, $client->get_default_data());
     }
