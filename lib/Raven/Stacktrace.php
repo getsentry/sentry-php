@@ -114,6 +114,10 @@ class Raven_Stacktrace
 
     public static function get_default_context($frame, $frame_arg_limit = Raven_Client::MESSAGE_LIMIT)
     {
+        if (!isset($frame['args'])) {
+            return array();
+        }
+
         $i = 1;
         $args = array();
         foreach ($frame['args'] as $arg) {
