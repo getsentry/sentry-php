@@ -115,8 +115,8 @@ class Raven_Client
         }
 
         $this->transaction = new Raven_TransactionStack();
-        if ($this->is_http_request() && isset($_SERVER['REQUEST_URI'])) {
-            $this->transaction->push($_SERVER['REQUEST_URI']);
+        if ($this->is_http_request() && isset($_SERVER['PATH_INFO'])) {
+            $this->transaction->push($_SERVER['PATH_INFO']);
         }
 
         if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
