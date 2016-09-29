@@ -102,6 +102,7 @@ class Raven_Client
         $this->_pending_events = array();
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
+
         $this->sdk = Raven_Util::get($options, 'sdk', array(
             'name' => 'sentry-php',
             'version' => self::VERSION,
@@ -111,6 +112,11 @@ class Raven_Client
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
+        }
+
+        $this->transaction = new Raven_TransactionStack();
+        if ($this->is_http_request() && isset($_SERVER['REQUEST_URI'])) {
+            $this->transaction->push($_SERVER['REQUEST_URI']);
         }
 
         if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
@@ -416,10 +422,6 @@ class Raven_Client
 
         if ($data === null) {
             $data = array();
-        } elseif (!is_array($data)) {
-            $data = array(
-                'culprit' => (string)$data,
-            );
         }
 
         $exc = $exception;
@@ -599,6 +601,7 @@ class Raven_Client
             'tags' => $this->tags,
             'platform' => 'php',
             'sdk' => $this->sdk,
+            'culprit' => $this->transaction->peek(),
         );
     }
 
