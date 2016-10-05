@@ -35,7 +35,7 @@
       "doc_link": "integrations/symfony2/",
       "wizard": [
         "index#installation",
-        "integrations/symfony2#symfony2"
+        "integrations/symfony2#symfony-2"
       ]
     }
   }
