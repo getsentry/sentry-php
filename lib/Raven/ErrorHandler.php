@@ -81,14 +81,13 @@ class Raven_ErrorHandler
         // E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, and
         // most of E_STRICT raised in the file where set_error_handler() is called.
 
-        $e = new ErrorException($message, 0, $type, $file, $line);
-
         if (error_reporting() !== 0) {
             $error_types = $this->error_types;
             if ($error_types === null) {
                 $error_types = error_reporting();
             }
             if ($error_types & $type) {
+                $e = new ErrorException($message, 0, $type, $file, $line);
                 $this->handleException($e, true, $context);
             }
         }
