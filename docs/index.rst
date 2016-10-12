@@ -10,7 +10,7 @@
     PHP
     ===
 
-The PHP SDK for Sentry supports PHP 5.3 and higher.  It'a
+The PHP SDK for Sentry supports PHP 5.3 and higher.  It's
 available as a BSD licensed Open Source library.
 
 Installation
