@@ -475,7 +475,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $data = array("key"=>"value");
 
-        $processor = $this->getMock('Processor', array('process'));
+        $processor = $this->getMockBuilder('Processor')
+                          ->setMethods(array('process'))
+                          ->getMock();
         $processor->expects($this->once())
                ->method('process')
                ->with($data);
