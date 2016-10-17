@@ -881,6 +881,24 @@ class Raven_Client
         }
     }
 
+    protected function buildCurlCommand($url, $data, $headers)
+    {
+        // TODO(dcramer): support ca_cert
+        $cmd = $this->curl_path.' -X POST ';
+        foreach ($headers as $key => $value) {
+            $cmd .= '-H ' . escapeshellarg(key) . ': '. escapeshellarg($value). ' ';
+        }
+        $cmd .= '-d ' . escapeshellarg($data) . ' ';
+        $cmd .= escapeshellarg($url) . ' ';
+        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
+        if (!$this->verify_ssl) {
+            $cmd .= '-k ';
+        }
+        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
+
+        return $cmd;
+    }
+
     /**
      * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
      *
@@ -891,21 +909,7 @@ class Raven_Client
      */
     private function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
-        // TODO(dcramer): support ca_cert
-        $cmd = $this->curl_path.' -X POST ';
-        foreach ($headers as $key => $value) {
-            $cmd .= '-H \''. $key. ': '. $value. '\' ';
-        }
-        $cmd .= '-d \''. $data .'\' ';
-        $cmd .= '\''. $url .'\' ';
-        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-        if (!$this->verify_ssl) {
-            $cmd .= '-k ';
-        }
-        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
-
-        exec($cmd);
-
+        exec($this->buildCurlCommand($url, $data, $headers));
         return true; // The exec method is just fire and forget, so just assume it always works
     }
 
