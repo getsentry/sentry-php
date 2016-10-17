@@ -54,6 +54,10 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return parent::get_user_data();
     }
+    public function buildCurlCommand($url, $data, $headers)
+    {
+        return parent::buildCurlCommand($url, $data, $headers);
+    }
     // short circuit breadcrumbs
     public function registerDefaultBreadcrumbHandlers()
     {
@@ -901,6 +905,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($data, array('user' => array(
             'email' => 'foo@example.com',
         )));
+    }
+
+    public function testBuildCurlCommandEscapesInput()
+    {
+        $data = '{"foo": "\'; ls;"}';
+        $client = new Dummy_Raven_Client();
+        $result = $client->buildCurlCommand('http://foo.com', $data, array());
+        $this->assertEquals($result, 'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &');
     }
     /**
      * Set the server array to the test values, check the current url
