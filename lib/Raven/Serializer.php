@@ -104,12 +104,26 @@ class Raven_Serializer
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+            return $this->expandArray($value);
         } else {
             return $this->serializeString($value);
         }
     }
 
+    protected function expandArray(array $vars) {
+        $cleanVars = array();
+        if (!empty($vars)) {
+            foreach ($vars as $key => $value) {
+                $value = (new Raven_ReprSerializer())->serialize($value);
+                if (is_string($value) || is_numeric($value)) {
+                    $cleanVars[(string)$key] = substr($value, 0, Raven_Client::MESSAGE_LIMIT);
+                } else {
+                    $cleanVars[(string)$key] = $value;
+                }
+            }
+        }
+        return $cleanVars;
+    }
 
     /**
      * @return string
