@@ -886,7 +886,7 @@ class Raven_Client
         // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
         foreach ($headers as $key => $value) {
-            $cmd .= '-H ' . escapeshellarg(key) . ': '. escapeshellarg($value). ' ';
+            $cmd .= "-H '" . $key . ": " . $value . "' ";
         }
         $cmd .= '-d ' . escapeshellarg($data) . ' ';
         $cmd .= escapeshellarg($url) . ' ';
@@ -909,7 +909,8 @@ class Raven_Client
      */
     private function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
-        exec($this->buildCurlCommand($url, $data, $headers));
+        $cmd = $this->buildCurlCommand($url, $data, $headers);
+        exec($cmd);
         return true; // The exec method is just fire and forget, so just assume it always works
     }
 
