@@ -100,29 +100,14 @@ class Raven_Serializer
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
             return $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
-            return 'Object '.get_class($value);
+            return $value;
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return $this->expandArray($value);
+            return $value;
         } else {
             return $this->serializeString($value);
         }
-    }
-
-    protected function expandArray(array $vars) {
-        $cleanVars = array();
-        if (!empty($vars)) {
-            foreach ($vars as $key => $value) {
-                $value = (new Raven_ReprSerializer())->serialize($value);
-                if (is_string($value) || is_numeric($value)) {
-                    $cleanVars[(string)$key] = substr($value, 0, Raven_Client::MESSAGE_LIMIT);
-                } else {
-                    $cleanVars[(string)$key] = $value;
-                }
-            }
-        }
-        return $cleanVars;
     }
 
     /**
