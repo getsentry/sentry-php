@@ -80,7 +80,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
                 $cookies[$this->session_cookie_name] = self::MASK;
             }
         }
-        if (!empty($http['data'])) {
+        if (!empty($http['data']) && is_array($http['data'])) {
             array_walk_recursive($http['data'], array($this, 'sanitize'));
         }
     }
