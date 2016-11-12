@@ -886,7 +886,7 @@ class Raven_Client
         // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
         foreach ($headers as $key => $value) {
-            $cmd .= '-H ' . escapeshellarg(key) . ': '. escapeshellarg($value). ' ';
+            $cmd .= '-H ' . escapeshellarg($key) . ': '. escapeshellarg($value). ' ';
         }
         $cmd .= '-d ' . escapeshellarg($data) . ' ';
         $cmd .= escapeshellarg($url) . ' ';
