@@ -31,6 +31,8 @@ class Raven_ErrorHandler
     private $old_error_handler;
     private $call_existing_error_handler = false;
     private $reservedMemory;
+    /** @var Raven_Client */
+    private $client;
     private $send_errors_last = false;
     private $fatal_error_types = array(
         E_ERROR,
@@ -106,6 +108,7 @@ class Raven_ErrorHandler
                 return false;
             }
         }
+        return true;
     }
 
     public function handleFatalError()
@@ -146,7 +149,8 @@ class Raven_ErrorHandler
      *
      * @param bool $call_existing Call any existing errors handlers after processing
      *                            this instance.
-     * @return array
+     * @param array $error_types All error types that should be sent.
+     * @return $this
      */
     public function registerErrorHandler($call_existing = true, $error_types = null)
     {
