@@ -35,10 +35,11 @@ class Raven_Client
     public $severity_map;
     public $store_errors_for_bulk_send = false;
 
-    private $error_handler;
+    protected $error_handler;
+    protected $error_types;
 
-    private $serializer;
-    private $reprSerializer;
+    protected $serializer;
+    protected $reprSerializer;
 
     public function __construct($options_or_dsn=null, $options=array())
     {
@@ -88,6 +89,7 @@ class Raven_Client
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
         $this->transport = Raven_Util::get($options, 'transport', null);
         $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
+        $this->error_types = Raven_Util::get($options, 'error_types', null);
 
         // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
@@ -134,7 +136,7 @@ class Raven_Client
         if ($this->error_handler) {
             throw new Raven_Exception(sprintf('%s->install() must only be called once', get_class($this)));
         }
-        $this->error_handler = new Raven_ErrorHandler($this);
+        $this->error_handler = new Raven_ErrorHandler($this, false, $this->error_types);
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
