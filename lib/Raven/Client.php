@@ -460,6 +460,7 @@ class Raven_Client
             $exceptions[] = $exc_data;
         } while ($has_chained_exceptions && $exc = $exc->getPrevious());
 
+        $data['message'] = $exception->getMessage();
         $data['exception'] = array(
             'values' => array_reverse($exceptions),
         );
