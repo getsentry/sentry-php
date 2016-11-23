@@ -573,7 +573,7 @@ class Raven_Client
     {
         $user = $this->context->user;
         if ($user === null) {
-            if (!session_id()) {
+            if (!function_exists('session_id') || !session_id()) {
                 return array();
             }
             $user = array(
