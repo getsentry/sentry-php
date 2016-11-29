@@ -24,12 +24,21 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array('1', '2', '3'), $result);
     }
 
+    public function testStdClassAreArrays()
+    {
+        $serializer = new Raven_Serializer();
+        $input = new stdClass();
+        $input->foo = 'BAR';
+        $result = $serializer->serialize($input);
+        $this->assertEquals(array('foo' => 'BAR'), $result);
+    }
+
     public function testObjectsAreStrings()
     {
         $serializer = new Raven_Serializer();
-        $input = new Raven_StacktraceTestObject();
+        $input = new Raven_SerializerTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven_StacktraceTestObject', $result);
+        $this->assertEquals('Object Raven_SerializerTestObject', $result);
     }
 
     public function testIntsAreInts()
