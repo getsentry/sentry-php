@@ -914,6 +914,24 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $result = $client->buildCurlCommand('http://foo.com', $data, array());
         $this->assertEquals($result, 'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &');
     }
+
+    public function testUserContextWithoutMerge()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->user_context(array('foo' => 'bar'), false);
+        $client->user_context(array('baz' => 'bar'), false);
+        $this->assertEquals($client->context->user, array('baz' => 'bar'));
+    }
+
+    public function testUserContextWithMerge()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->user_context(array('foo' => 'bar'), true);
+        $client->user_context(array('baz' => 'bar'), true);
+        $this->assertEquals($client->context->user, array('foo' => 'bar', 'baz' => 'bar'));
+    }
+
+
     /**
      * Set the server array to the test values, check the current url
      *

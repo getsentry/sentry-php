@@ -1168,10 +1168,15 @@ class Raven_Client
      * Sets user context.
      *
      * @param array $data   Associative array of user data
+     * @param bool $merge   Merge existing context with new context
      */
-    public function user_context($data)
+    public function user_context($data, $merge=true)
     {
-        $this->context->user = $data;
+        if ($merge && $this->context->user !== null) {
+            $this->context->user = array_merge($this->context->user, $data);
+        } else {
+            $this->context->user = $data;
+        }
     }
 
     /**
