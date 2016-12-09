@@ -1,3 +1,13 @@
+1.6.0
+-----
+
+- Improved serialization of certain types to be more restrictive.
+- ``error_types`` can now be configured via ``RavenClient``.
+- Class serialization has been expanded to include attributes.
+- The session extension is no longer required.
+- Monolog is no longer a required dependency.
+- ``user_context`` now merges by default.
+
 1.5.0
 -----
 
