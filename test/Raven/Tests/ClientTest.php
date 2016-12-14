@@ -931,6 +931,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($client->context->user, array('foo' => 'bar', 'baz' => 'bar'));
     }
 
+    public function testUserContextWithMergeAndNull()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->user_context(array('foo' => 'bar'), true);
+        $client->user_context(null, true);
+        $this->assertEquals($client->context->user, array('foo' => 'bar'));
+    }
 
     /**
      * Set the server array to the test values, check the current url
