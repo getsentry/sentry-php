@@ -1173,6 +1173,10 @@ class Raven_Client
     public function user_context($data, $merge=true)
     {
         if ($merge && $this->context->user !== null) {
+            // bail if data is null
+            if (!$data) {
+                return;
+            }
             $this->context->user = array_merge($this->context->user, $data);
         } else {
             $this->context->user = $data;
