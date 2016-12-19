@@ -428,7 +428,7 @@ class Raven_Client
     {
         //avoid errors other than specific path
         $exception_file = $exception->getFile();
-        if (isset($this->strict_error_capture_path) && !empty($this->strict_error_capture_path) && stripos($exception_file, $this->strict_error_capture_path) === FALSE) {
+        if (isset($this->strict_error_capture_path) && !empty($this->strict_error_capture_path) && stripos($exception_file, $this->strict_error_capture_path) === false) {
             return null;
         }
 
