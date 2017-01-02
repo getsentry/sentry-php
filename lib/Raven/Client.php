@@ -16,6 +16,8 @@
 
 class Raven_Client
 {
+    const PARDIR = DIRECTORY_SEPARATOR;
+
     const VERSION = '1.7.x-dev';
 
     const PROTOCOL = '6';
@@ -180,8 +182,8 @@ class Raven_Client
         // we need app_path to have a trailing slash otherwise
         // base path detection becomes complex if the same
         // prefix is matched
-        if (substr($path, 0, 1) === '/' && substr($path, -1, 1) !== '/') {
-            $path = $path . '/';
+        if (substr($path, 0, 1) === self::PARDIR && substr($path, -1, 1) !== self::PARDIR) {
+            $path = $path . self::PARDIR;
         }
         return $path;
     }
