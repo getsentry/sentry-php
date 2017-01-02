@@ -170,7 +170,7 @@ class Raven_Client
     private function getDefaultPrefixes()
     {
         $value = get_include_path();
-        return explode(':', $value);
+        return explode(PATH_SEPARATOR, $value);
     }
 
     private function _convertPath($value)

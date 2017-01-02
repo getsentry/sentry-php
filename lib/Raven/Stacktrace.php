@@ -79,10 +79,11 @@ class Raven_Stacktrace
 
             // detect in_app based on app path
             if ($app_path) {
-                $in_app = (bool)(substr($abs_path, 0, strlen($app_path)) === $app_path);
+                $norm_abs_path = @realpath($abs_path) ?: $abs_path;
+                $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
                 if ($in_app && $excluded_app_paths) {
                     foreach ($excluded_app_paths as $path) {
-                        if (substr($abs_path, 0, strlen($path)) === $path) {
+                        if (substr($norm_abs_path, 0, strlen($path)) === $path) {
                             $in_app = false;
                             break;
                         }
