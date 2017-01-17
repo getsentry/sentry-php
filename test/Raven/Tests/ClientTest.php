@@ -375,6 +375,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $frame = $frames[count($frames) - 1];
         $this->assertTrue($frame['lineno'] > 0);
         $this->assertEquals($frame['function'], 'create_exception');
+        $this->assertEquals($event['message'], 'Foo bar');
         $this->assertFalse(isset($frame['vars']));
         $this->assertEquals($frame['context_line'], '            throw new Exception(\'Foo bar\');');
         $this->assertFalse(empty($frame['pre_context']));
