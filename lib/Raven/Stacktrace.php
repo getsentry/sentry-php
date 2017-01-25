@@ -122,10 +122,7 @@ class Raven_Stacktrace
         $i = 1;
         $args = array();
         foreach ($frame['args'] as $arg) {
-            if (is_string($arg) || is_numeric($arg)) {
-                $arg = substr($arg, 0, $frame_arg_limit);
-            }
-            $args['param'.$i] = $arg;
+            $args['param'.$i] = self::serialize_argument($arg, $frame_arg_limit);
             $i++;
         }
         return $args;
@@ -157,7 +154,9 @@ class Raven_Stacktrace
                 return array();
             } else {
                 // Sanitize the file path
-                return array('param1' => $frame['args'][0]);
+                return array(
+                    'param1' => self::serialize_argument($frame['args'][0], $frame_arg_limit),
+                );
             }
         }
         try {
@@ -180,15 +179,9 @@ class Raven_Stacktrace
 
         $args = array();
         foreach ($frame['args'] as $i => $arg) {
+            $arg = self::serialize_argument($arg, $frame_arg_limit);
             if (isset($params[$i])) {
                 // Assign the argument by the parameter name
-                if (is_array($arg)) {
-                    foreach ($arg as $key => $value) {
-                        if (is_string($value) || is_numeric($value)) {
-                            $arg[$key] = substr($value, 0, $frame_arg_limit);
-                        }
-                    }
-                }
                 $args[$params[$i]->name] = $arg;
             } else {
                 $args['param'.$i] = $arg;
@@ -196,6 +189,25 @@ class Raven_Stacktrace
         }
 
         return $args;
+    }
+
+    private static function serialize_argument($arg, $frame_arg_limit)
+    {
+        if (is_array($arg)) {
+            $_arg = array();
+            foreach ($arg as $key => $value) {
+                if (is_string($value) || is_numeric($value)) {
+                    $_arg[$key] = substr($value, 0, $frame_arg_limit);
+                } else {
+                    $_arg[$key] = $value;
+                }
+            }
+            return $_arg;
+        } elseif (is_string($arg) || is_numeric($arg)) {
+            return substr($arg, 0, $frame_arg_limit);
+        } else {
+            return $arg;
+        }
     }
 
     private static function strip_prefixes($filename, $prefixes)

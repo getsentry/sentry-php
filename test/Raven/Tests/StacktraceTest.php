@@ -71,41 +71,34 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
 
     public function testDoesNotModifyCaptureVars()
     {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-                "args"=> array(
-                    "friend",
-                ),
-            ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "args"=> array(
-                    "/tmp/a.php",
-                ),
-                "function" => "include_once",
-            ),
-        );
 
         // PHP's errcontext as passed to the error handler contains REFERENCES to any vars that were in the global scope.
         // Modification of these would be really bad, since if control is returned (non-fatal error) we'll have altered the state of things!
-        $originalFoo = "bloopblarp";
-        $iAmFoo = $originalFoo;
-        $vars = array(
-            "foo" => &$iAmFoo
+        $originalFoo = 'bloopblarp';
+        $newFoo = $originalFoo;
+        $nestedArray = array(
+            'key' => 'xxxxxxxxxx',
         );
 
-        $frames = Raven_Stacktrace::get_stack_info($stack, true, $vars, 5);
+        $frame = array(
+            "file" => dirname(__FILE__) . "/resources/a.php",
+            "line" => 9,
+            "args"=> array(
+                &$newFoo,
+                &$nestedArray,
+            ),
+            "function" => "a_test",
+        );
+
+        $result = Raven_Stacktrace::get_frame_context($frame, 5);
 
         // Check we haven't modified our vars.
-        $this->assertEquals($originalFoo, $vars['foo']);
+        $this->assertEquals($originalFoo, 'bloopblarp');
+        $this->assertEquals($nestedArray['key'], 'xxxxxxxxxx');
 
-        $frame = $frames[1];
         // Check that we did truncate the variable in our output
-        $this->assertEquals(strlen($frame['vars']['foo']), 5);
+        $this->assertEquals($result['param1'], 'bloop');
+        $this->assertEquals($result['param2']['key'], 'xxxxx');
     }
 
     public function testDoesFixFrameInfo()
