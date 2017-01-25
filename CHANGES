@@ -1,6 +1,8 @@
 1.7.0
 -----
 
+- Corrected some issues with argument serialization in stacktraces.
+
 1.6.0
 -----
 
