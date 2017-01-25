@@ -559,9 +559,21 @@ class Raven_Client
         if (!empty($_POST)) {
             $result['data'] = $_POST;
         }
+        
+        // if the $_POST super global is empty, try to retrieve a json string 
+        if(empty($_POST)){
+            try {
+                $data = file_get_contents( 'php://input' );
+                $result['data'] = json_decode( $data, true );
+            } catch ( Exception $exception ) {
+                // do nothing
+            }
+        }
+        
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
         }
+        
         if (!empty($headers)) {
             $result['headers'] = $headers;
         }
