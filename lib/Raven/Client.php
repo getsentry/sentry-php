@@ -561,11 +561,11 @@ class Raven_Client
         }
         
         // if the $_POST super global is empty, try to retrieve a json string
-        if(empty($_POST)) {
+        if (empty($_POST)) {
             try {
                 $data = file_get_contents('php://input');
                 $result['data'] = json_decode($data, true);
-            } catch(\Exception $exception) {
+            } catch (\Exception $exception) {
                 // do nothing
             }
         }
