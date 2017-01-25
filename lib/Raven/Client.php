@@ -565,7 +565,7 @@ class Raven_Client
             try {
                 $data = file_get_contents('php://input');
                 $result['data'] = json_decode($data, true);
-            } catch (\Exception $exception) {
+            } catch(\Exception $exception) {
                 // do nothing
             }
         }
