@@ -1,3 +1,9 @@
+1.6.2
+-----
+
+- Fixed behavior where fatal errors weren't correctly being reported in most situations.
+
+
 1.6.1
 -----
 
