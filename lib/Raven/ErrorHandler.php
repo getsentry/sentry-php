@@ -61,10 +61,16 @@ class Raven_ErrorHandler
 
         $this->client = $client;
         $this->error_types = $error_types;
+        $this->fatal_error_types = array_reduce($this->fatal_error_types, array($this, 'bitwiseOr'));
         if ($send_errors_last) {
             $this->send_errors_last = true;
             $this->client->store_errors_for_bulk_send = true;
         }
+    }
+
+    public function bitwiseOr($a, $b)
+    {
+        return $a | $b;
     }
 
     public function handleException($e, $isError = false, $vars = null)
@@ -119,13 +125,18 @@ class Raven_ErrorHandler
             return;
         }
 
-        if ($error['type'] & $this->fatal_error_types) {
+        if ($this->shouldCaptureFatalError($error['type'])) {
             $e = new ErrorException(
                 @$error['message'], 0, @$error['type'],
                 @$error['file'], @$error['line']
             );
             $this->handleException($e, true);
         }
+    }
+
+    public function shouldCaptureFatalError($type)
+    {
+        return $type & $this->fatal_error_types;
     }
 
     /**

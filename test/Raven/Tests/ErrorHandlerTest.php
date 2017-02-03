@@ -157,6 +157,18 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $handler->handleFatalError();
     }
 
+    public function testShouldCaptureFatalErrorBehavior()
+    {
+        $client = $this->getMockBuilder('Client')
+                       ->setMethods(array('captureException'))
+                       ->getMock();
+        $handler = new Raven_ErrorHandler($client);
+
+        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), true);
+
+        $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
+    }
+
     public function testErrorHandlerDefaultsErrorReporting()
     {
         $client = $this->getMockBuilder('Client')
