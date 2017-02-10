@@ -5,6 +5,7 @@
 - The default exception handler will now re-raise exceptions when
   ``call_existing`` is true and no exception handler is registered (#421).
 - Collect User.ip_address automatically (#419).
+- Added a processor to remove web cookies and another to remove HTTP body data for POST, PUT, PATCH and DELETE requests. They will be enabled by default in ``2.0`` (#405).
 
 1.6.2
 -----

@@ -380,7 +380,7 @@ class Raven_Client
     public static function getDefaultProcessors()
     {
         return array(
-            'Raven_SanitizeDataProcessor',
+            'Raven_Processor_SanitizeDataProcessor',
         );
     }
 
