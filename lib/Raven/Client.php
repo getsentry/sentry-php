@@ -128,7 +128,7 @@ class Raven_Client
         $this->project = Raven_Util::get($options, 'project', 1);
         $this->auto_log_stacks = (bool) Raven_Util::get($options, 'auto_log_stacks', false);
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
-        $this->site = Raven_Util::get($options, 'site', $this->_server_variable('SERVER_NAME'));
+        $this->site = Raven_Util::get($options, 'site', self::_server_variable('SERVER_NAME'));
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->release = Raven_Util::get($options, 'release', null);
         $this->environment = Raven_Util::get($options, 'environment', null);
@@ -155,7 +155,7 @@ class Raven_Client
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
         $this->setExcludedAppPaths(Raven_Util::get($options, 'excluded_app_paths', null));
         // a list of prefixes used to coerce absolute paths into relative
-        $this->setPrefixes(Raven_Util::get($options, 'prefixes', $this->getDefaultPrefixes()));
+        $this->setPrefixes(Raven_Util::get($options, 'prefixes', static::getDefaultPrefixes()));
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
@@ -225,13 +225,13 @@ class Raven_Client
         return $this;
     }
 
-    private function getDefaultPrefixes()
+    private static function getDefaultPrefixes()
     {
         $value = get_include_path();
         return explode(PATH_SEPARATOR, $value);
     }
 
-    private function _convertPath($value)
+    private static function _convertPath($value)
     {
         $path = @realpath($value);
         if ($path === false) {
@@ -254,7 +254,7 @@ class Raven_Client
     public function setAppPath($value)
     {
         if ($value) {
-            $this->app_path = $this->_convertPath($value);
+            $this->app_path = static::_convertPath($value);
         } else {
             $this->app_path = null;
         }
@@ -312,7 +312,7 @@ class Raven_Client
         return $this->server;
     }
 
-    public function getUserAgent()
+    public static function getUserAgent()
     {
         return 'sentry-php/' . self::VERSION;
     }
@@ -353,7 +353,7 @@ class Raven_Client
     public function setProcessorsFromOptions($options)
     {
         $processors = array();
-        foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
+        foreach (Raven_util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
             /**
              * @var Raven_Processor        $new_processor
              * @var Raven_Processor|string $processor
@@ -642,9 +642,9 @@ class Raven_Client
         }
 
         $result = array(
-            'method' => $this->_server_variable('REQUEST_METHOD'),
+            'method' => self::_server_variable('REQUEST_METHOD'),
             'url' => $this->get_current_url(),
-            'query_string' => $this->_server_variable('QUERY_STRING'),
+            'query_string' => self::_server_variable('QUERY_STRING'),
         );
 
         // dont set this as an empty array as PHP will treat it as a numeric array
@@ -717,7 +717,7 @@ class Raven_Client
             $data['extra'] = array();
         }
         if (!isset($data['event_id'])) {
-            $data['event_id'] = $this->uuid4();
+            $data['event_id'] = static::uuid4();
         }
 
         if (isset($data['message'])) {
@@ -899,7 +899,7 @@ class Raven_Client
         $message = $this->encode($data);
 
         $headers = array(
-            'User-Agent' => $this->getUserAgent(),
+            'User-Agent' => static::getUserAgent(),
             'X-Sentry-Auth' => $this->getAuthHeader(),
             'Content-Type' => 'application/octet-stream'
         );
@@ -1074,7 +1074,7 @@ class Raven_Client
      * @param string $secret_key Sentry API key
      * @return string
      */
-    protected function get_auth_header($timestamp, $client, $api_key, $secret_key)
+    protected static function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
         $header = array(
             sprintf('sentry_timestamp=%F', $timestamp),
@@ -1097,7 +1097,7 @@ class Raven_Client
     public function getAuthHeader()
     {
         $timestamp = microtime(true);
-        return $this->get_auth_header($timestamp, $this->getUserAgent(), $this->public_key, $this->secret_key);
+        return $this->get_auth_header($timestamp, static::getUserAgent(), $this->public_key, $this->secret_key);
     }
 
     /**
@@ -1105,7 +1105,7 @@ class Raven_Client
      *
      * @return string
      */
-    private function uuid4()
+    private static function uuid4()
     {
         $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
@@ -1181,7 +1181,7 @@ class Raven_Client
      * @param string $key Key whose value you wish to obtain
      * @return string     Key's value
      */
-    private function _server_variable($key)
+    private static function _server_variable($key)
     {
         if (isset($_SERVER[$key])) {
             return $_SERVER[$key];

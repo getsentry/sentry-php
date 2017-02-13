@@ -42,7 +42,7 @@ class Dummy_Raven_Client extends Raven_Client
     {
         return true;
     }
-    public function get_auth_header($timestamp, $client, $api_key, $secret_key)
+    public static function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
         return parent::get_auth_header($timestamp, $client, $api_key, $secret_key);
     }
