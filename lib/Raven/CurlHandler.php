@@ -84,7 +84,9 @@ class Raven_CurlHandler
         } while ($timeout !== 0 && time() - $start < $timeout);
     }
 
-    // http://se2.php.net/manual/en/function.curl-multi-exec.php
+    /**
+     * @doc http://php.net/manual/en/function.curl-multi-exec.php
+     */
     private function select()
     {
         do {

@@ -34,6 +34,9 @@ class Raven_Client
     public $breadcrumbs;
     public $context;
     public $extra_data;
+    /**
+     * @var array|null
+     */
     public $severity_map;
     public $store_errors_for_bulk_send = false;
 
@@ -42,6 +45,61 @@ class Raven_Client
 
     protected $serializer;
     protected $reprSerializer;
+
+    /**
+     * @var string
+     */
+    protected $app_path;
+    /**
+     * @var array
+     */
+    protected $prefixes;
+    /**
+     * @var array
+     */
+    protected $excluded_app_paths;
+    /**
+     * @var Callable
+     */
+    protected $transport;
+
+    var $logger;
+    var $server;
+    var $secret_key;
+    var $public_key;
+    var $project;
+    var $auto_log_stacks;
+    var $name;
+    var $site;
+    var $tags;
+    var $release;
+    var $environment;
+    var $trace;
+    var $timeout;
+    var $message_limit;
+    var $exclude;
+    var $http_proxy;
+    protected $send_callback;
+    var $curl_method;
+    var $curl_path;
+    var $curl_ipv4;
+    var $ca_cert;
+    var $verify_ssl;
+    var $curl_ssl_version;
+    var $trust_x_forwarded_proto;
+    var $mb_detect_order;
+    /**
+     * @var Raven_Processor[]
+     */
+    var $processors;
+    /**
+     * @var string|integer|null
+     */
+    var $_lasterror;
+    var $_last_event_id;
+    var $_user;
+    var $_pending_events;
+    var $sdk;
 
     public function __construct($options_or_dsn=null, $options=array())
     {
@@ -217,11 +275,16 @@ class Raven_Client
         }
         return $this;
     }
+
     public function getPrefixes()
     {
         return $this->prefixes;
     }
 
+    /**
+     * @param array $value
+     * @return $this
+     */
     public function setPrefixes($value)
     {
         $this->prefixes = $value ? array_map(array($this, '_convertPath'), $value) : $value;
@@ -261,7 +324,8 @@ class Raven_Client
      * and is responsible for encoding the data, authenticating, and sending
      * the data to the upstream Sentry server.
      *
-     * @param function     $value       Function to be called
+     * @param Callable $value Function to be called
+     * @return Raven_Client
      */
     public function setTransport($value)
     {
@@ -269,6 +333,9 @@ class Raven_Client
         return $this;
     }
 
+    /**
+     * @return string[]|Raven_Processor[]
+     */
     public static function getDefaultProcessors()
     {
         return array(
@@ -281,12 +348,16 @@ class Raven_Client
      * sent to Sentry.
      *
      * @param $options
-     * @return array
+     * @return Raven_Processor[]
      */
     public function setProcessorsFromOptions($options)
     {
         $processors = array();
         foreach (Raven_util::get($options, 'processors', self::getDefaultProcessors()) as $processor) {
+            /**
+             * @var Raven_Processor        $new_processor
+             * @var Raven_Processor|string $processor
+             */
             $new_processor = new $processor($this);
 
             if (isset($options['processorOptions']) && is_array($options['processorOptions'])) {
@@ -349,6 +420,9 @@ class Raven_Client
 
     /**
      * Given an identifier, returns a Sentry searchable string.
+     *
+     * @param mixed $ident
+     * @return mixed
      */
     public function getIdent($ident)
     {
@@ -357,7 +431,13 @@ class Raven_Client
     }
 
     /**
-     * Deprecated
+     * @param string $message The message (primary description) for the event.
+     * @param array $params params to use when formatting the message.
+     * @param string $level Log level group
+     * @param boolean|array $stack
+     * @param mixed $vars
+     * @return string|null
+     * @deprecated
      */
     public function message($message, $params=array(), $level=self::INFO,
                             $stack=false, $vars = null)
@@ -366,7 +446,9 @@ class Raven_Client
     }
 
     /**
-     * Deprecated
+     * @param Exception $exception
+     * @return string|null
+     * @deprecated
      */
     public function exception($exception)
     {
@@ -379,6 +461,9 @@ class Raven_Client
      * @param string $message The message (primary description) for the event.
      * @param array $params params to use when formatting the message.
      * @param array $data Additional attributes to pass with this event (see Sentry docs).
+     * @param boolean|array $stack
+     * @param mixed $vars
+     * @return string|null
      */
     public function captureMessage($message, $params=array(), $data=array(),
                             $stack=false, $vars = null)
@@ -415,6 +500,9 @@ class Raven_Client
      *
      * @param Exception $exception The Exception object.
      * @param array $data Additional attributes to pass with this event (see Sentry docs).
+     * @param mixed $logger
+     * @param mixed $vars
+     * @return string|null
      */
     public function captureException($exception, $data=null, $logger=null, $vars=null)
     {
@@ -483,11 +571,12 @@ class Raven_Client
 
     /**
      * Capture the most recent error (obtained with ``error_get_last``).
+     * @return string|null
      */
     public function captureLastError()
     {
         if (null === $error = error_get_last()) {
-            return;
+            return null;
         }
 
         $e = new ErrorException(
@@ -500,6 +589,9 @@ class Raven_Client
 
     /**
      * Log an query to sentry
+     * @param string|null $query
+     * @param string $level
+     * @param string $engine
      */
     public function captureQuery($query, $level=self::INFO, $engine = '')
     {
@@ -756,6 +848,10 @@ class Raven_Client
         }
     }
 
+    /**
+     * @param string $data
+     * @return string|boolean
+     */
     public function encode(&$data)
     {
         $message = Raven_Compat::json_encode($data);
@@ -795,7 +891,8 @@ class Raven_Client
         }
 
         if ($this->transport) {
-            return call_user_func($this->transport, $this, $data);
+            call_user_func($this->transport, $this, $data);
+            return;
         }
 
         $message = $this->encode($data);
@@ -813,7 +910,7 @@ class Raven_Client
      * Send data to Sentry
      *
      * @param string    $url        Full URL to Sentry
-     * @param array     $data       Associative array of data to log
+     * @param array|string $data    Associative array of data to log
      * @param array     $headers    Associative array of headers
      */
     private function send_remote($url, $data, $headers=array())
@@ -871,7 +968,7 @@ class Raven_Client
      * Send the message over http to the sentry url given
      *
      * @param string $url       URL of the Sentry instance to log to
-     * @param array $data       Associative array of data to log
+     * @param array|string $data Associative array of data to log
      * @param array $headers    Associative array of headers
      */
     private function send_http($url, $data, $headers=array())
@@ -907,7 +1004,7 @@ class Raven_Client
      * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
      *
      * @param string    $url        URL of the Sentry instance to log to
-     * @param array     $data       Associative array of data to log
+     * @param array|string $data    Associative array of data to log
      * @param array     $headers    Associative array of headers
      * @return bool
      */
@@ -921,7 +1018,7 @@ class Raven_Client
      * Send a blocking cURL to Sentry and check for errors from cURL
      *
      * @param string    $url        URL of the Sentry instance to log to
-     * @param array     $data       Associative array of data to log
+     * @param array|string $data   Associative array of data to log
      * @param array     $headers    Associative array of headers
      * @return bool
      */

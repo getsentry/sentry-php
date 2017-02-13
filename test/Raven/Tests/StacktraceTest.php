@@ -209,6 +209,9 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
             $trace = $ex->getTrace();
             $frames = Raven_Stacktrace::get_stack_info($trace);
         }
+        /**
+         * @var array $frames
+         */
         $this->assertEquals($frames[count($frames) -1]['filename'], __FILE__);
     }
 }

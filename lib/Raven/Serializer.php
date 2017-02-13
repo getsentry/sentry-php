@@ -54,9 +54,15 @@ class Raven_Serializer
             $this->mb_detect_order = $mb_detect_order;
         }
     }
+
     /**
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
+     *
+     * @param mixed $value
+     * @param integer $max_depth
+     * @param integer $_depth
+     * @return string|boolean|double|integer|null|object|array
      */
     public function serialize($value, $max_depth=3, $_depth=0)
     {
@@ -94,6 +100,10 @@ class Raven_Serializer
         return $value;
     }
 
+    /**
+     * @param mixed $value
+     * @return string|boolean|double|integer|null
+     */
     protected function serializeValue($value)
     {
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {

@@ -943,7 +943,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      * Set the server array to the test values, check the current url
      *
      * @dataProvider currentUrlProvider
-     * @param array $serverData
+     * @param array $serverVars
      * @param array $options
      * @param string $expected - the url expected
      * @param string $message - fail message
