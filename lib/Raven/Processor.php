@@ -21,7 +21,7 @@ abstract class Raven_Processor
     /**
      * Process and sanitize data, modifying the existing value if necessary.
      *
-     * @param array $data   Array of log data
+     * @param array $data Array of log data
      */
     abstract public function process(&$data);
 

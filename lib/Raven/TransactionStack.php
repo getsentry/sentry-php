@@ -38,7 +38,7 @@ class Raven_TransactionStack
      * @param string|null $context
      * @return mixed
      */
-    public function pop($context=null)
+    public function pop($context = null)
     {
         if (!$context) {
             return array_pop($this->stack);

@@ -11,15 +11,13 @@ class Raven_Breadcrumbs_ErrorHandler
 
     /**
      * @param Raven_Client $ravenClient
-     * @param int          $level       The minimum logging level at which this handler will be triggered
-     * @param Boolean      $bubble      Whether the messages that are handled can bubble up the stack or not
      */
     public function __construct(Raven_Client $ravenClient)
     {
         $this->ravenClient = $ravenClient;
     }
 
-    public function handleError($code, $message, $file = '', $line = 0, $context=array())
+    public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
         $this->ravenClient->breadcrumbs->record(array(
             'category' => 'error_reporting',

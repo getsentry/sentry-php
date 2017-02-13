@@ -43,7 +43,7 @@ class Raven_Serializer
      *
      * @var string
      */
-    private $mb_detect_order= self::DEFAULT_MB_DETECT_ORDER;
+    private $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
     /**
      * @param null|string $mb_detect_order
@@ -60,11 +60,11 @@ class Raven_Serializer
      * sanitization and encoding.
      *
      * @param mixed $value
-     * @param integer $max_depth
-     * @param integer $_depth
-     * @return string|boolean|double|integer|null|object|array
+     * @param int   $max_depth
+     * @param int   $_depth
+     * @return string|bool|double|int|null|object|array
      */
-    public function serialize($value, $max_depth=3, $_depth=0)
+    public function serialize($value, $max_depth = 3, $_depth = 0)
     {
         $className = is_object($value) ? get_class($value) : null;
         $toArray = is_array($value) || $className === 'stdClass';
@@ -102,7 +102,7 @@ class Raven_Serializer
 
     /**
      * @param mixed $value
-     * @return string|boolean|double|integer|null
+     * @return string|bool|double|int|null
      */
     protected function serializeValue($value)
     {

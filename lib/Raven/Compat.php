@@ -25,7 +25,7 @@ class Raven_Compat
         return php_uname('n');
     }
 
-    public static function hash_hmac($algo, $data, $key, $raw_output=false)
+    public static function hash_hmac($algo, $data, $key, $raw_output = false)
     {
         if (function_exists('hash_hmac')) {
             return hash_hmac($algo, $data, $key, $raw_output);
@@ -36,9 +36,9 @@ class Raven_Compat
 
     /**
      * Implementation from 'KC Cloyd'.
-     * See http://php.net/manual/en/function.hash-hmac.php
+     * @doc http://php.net/manual/en/function.hash-hmac.php
      */
-    public static function _hash_hmac($algo, $data, $key, $raw_output=false)
+    public static function _hash_hmac($algo, $data, $key, $raw_output = false)
     {
         $algo = strtolower($algo);
         $pack = 'H'.strlen($algo('test'));
@@ -66,11 +66,12 @@ class Raven_Compat
     /**
      * Note that we discard the options given to be compatible
      * with PHP < 5.3
+     *
      * @param mixed $value
-     * @param integer $options
+     * @param int   $options
      * @return string
      */
-    public static function json_encode($value, $options=0)
+    public static function json_encode($value, $options = 0)
     {
         if (function_exists('json_encode')) {
             return json_encode($value);
@@ -82,6 +83,7 @@ class Raven_Compat
     /**
      * Implementation taken from
      * http://www.mike-griffiths.co.uk/php-json_encode-alternative/
+     *
      * @param mixed $value
      * @return string
      */

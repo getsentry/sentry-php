@@ -93,7 +93,7 @@ class Raven_Client
      */
     var $processors;
     /**
-     * @var string|integer|null
+     * @var string|int|null
      */
     var $_lasterror;
     var $_last_event_id;
@@ -101,7 +101,7 @@ class Raven_Client
     var $_pending_events;
     var $sdk;
 
-    public function __construct($options_or_dsn=null, $options=array())
+    public function __construct($options_or_dsn = null, $options = array())
     {
         if (is_array($options_or_dsn)) {
             $options = array_merge($options_or_dsn, $options);
@@ -283,7 +283,7 @@ class Raven_Client
 
     /**
      * @param array $value
-     * @return $this
+     * @return Raven_Client
      */
     public function setPrefixes($value)
     {
@@ -373,8 +373,8 @@ class Raven_Client
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
      *
-     * @param string    $dsn    Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
-     * @return array            parsed DSN
+     * @param string $dsn Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @return array      parsed DSN
      */
     public static function parseDSN($dsn)
     {
@@ -384,7 +384,7 @@ class Raven_Client
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
-        $netloc.= (isset($url['port']) ? ':'.$url['port'] : null);
+        $netloc .= (isset($url['port']) ? ':'.$url['port'] : null);
         $rawpath = (isset($url['path']) ? $url['path'] : null);
         if ($rawpath) {
             $pos = strrpos($rawpath, '/', 1);
@@ -431,16 +431,16 @@ class Raven_Client
     }
 
     /**
-     * @param string $message The message (primary description) for the event.
-     * @param array $params params to use when formatting the message.
-     * @param string $level Log level group
-     * @param boolean|array $stack
-     * @param mixed $vars
+     * @param string     $message The message (primary description) for the event.
+     * @param array      $params  params to use when formatting the message.
+     * @param string     $level   Log level group
+     * @param bool|array $stack
+     * @param mixed      $vars
      * @return string|null
      * @deprecated
      */
-    public function message($message, $params=array(), $level=self::INFO,
-                            $stack=false, $vars = null)
+    public function message($message, $params = array(), $level = self::INFO,
+                            $stack = false, $vars = null)
     {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
     }
@@ -458,15 +458,15 @@ class Raven_Client
     /**
      * Log a message to sentry
      *
-     * @param string $message The message (primary description) for the event.
-     * @param array $params params to use when formatting the message.
-     * @param array $data Additional attributes to pass with this event (see Sentry docs).
-     * @param boolean|array $stack
-     * @param mixed $vars
+     * @param string     $message The message (primary description) for the event.
+     * @param array      $params  params to use when formatting the message.
+     * @param array      $data    Additional attributes to pass with this event (see Sentry docs).
+     * @param bool|array $stack
+     * @param mixed      $vars
      * @return string|null
      */
-    public function captureMessage($message, $params=array(), $data=array(),
-                            $stack=false, $vars = null)
+    public function captureMessage($message, $params = array(), $data = array(),
+                            $stack = false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
@@ -499,12 +499,12 @@ class Raven_Client
      * Log an exception to sentry
      *
      * @param Exception $exception The Exception object.
-     * @param array $data Additional attributes to pass with this event (see Sentry docs).
-     * @param mixed $logger
-     * @param mixed $vars
+     * @param array     $data      Additional attributes to pass with this event (see Sentry docs).
+     * @param mixed     $logger
+     * @param mixed     $vars
      * @return string|null
      */
-    public function captureException($exception, $data=null, $logger=null, $vars=null)
+    public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
         $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
 
@@ -589,11 +589,12 @@ class Raven_Client
 
     /**
      * Log an query to sentry
+     *
      * @param string|null $query
-     * @param string $level
-     * @param string $engine
+     * @param string      $level
+     * @param string      $engine
      */
-    public function captureQuery($query, $level=self::INFO, $engine = '')
+    public function captureQuery($query, $level = self::INFO, $engine = '')
     {
         $data = array(
             'message' => $query,
@@ -827,7 +828,7 @@ class Raven_Client
     /**
      * Process data through all defined Raven_Processor sub-classes
      *
-     * @param array     $data       Associative array of data to log
+     * @param array $data Associative array of data to log
      */
     public function process(&$data)
     {
@@ -850,7 +851,7 @@ class Raven_Client
 
     /**
      * @param string $data
-     * @return string|boolean
+     * @return string|bool
      */
     public function encode(&$data)
     {
@@ -909,11 +910,11 @@ class Raven_Client
     /**
      * Send data to Sentry
      *
-     * @param string    $url        Full URL to Sentry
+     * @param string       $url     Full URL to Sentry
      * @param array|string $data    Associative array of data to log
-     * @param array     $headers    Associative array of headers
+     * @param array        $headers Associative array of headers
      */
-    private function send_remote($url, $data, $headers=array())
+    private function send_remote($url, $data, $headers = array())
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
@@ -967,11 +968,11 @@ class Raven_Client
     /**
      * Send the message over http to the sentry url given
      *
-     * @param string $url       URL of the Sentry instance to log to
-     * @param array|string $data Associative array of data to log
-     * @param array $headers    Associative array of headers
+     * @param string       $url     URL of the Sentry instance to log to
+     * @param array|string $data    Associative array of data to log
+     * @param array        $headers Associative array of headers
      */
-    private function send_http($url, $data, $headers=array())
+    private function send_http($url, $data, $headers = array())
     {
         if ($this->curl_method == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
@@ -1003,9 +1004,9 @@ class Raven_Client
     /**
      * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
      *
-     * @param string    $url        URL of the Sentry instance to log to
+     * @param string       $url     URL of the Sentry instance to log to
      * @param array|string $data    Associative array of data to log
-     * @param array     $headers    Associative array of headers
+     * @param array        $headers Associative array of headers
      * @return bool
      */
     private function send_http_asynchronous_curl_exec($url, $data, $headers)
@@ -1017,9 +1018,9 @@ class Raven_Client
     /**
      * Send a blocking cURL to Sentry and check for errors from cURL
      *
-     * @param string    $url        URL of the Sentry instance to log to
-     * @param array|string $data   Associative array of data to log
-     * @param array     $headers    Associative array of headers
+     * @param string       $url     URL of the Sentry instance to log to
+     * @param array|string $data    Associative array of data to log
+     * @param array        $headers Associative array of headers
      * @return bool
      */
     private function send_http_synchronous($url, $data, $headers)
@@ -1067,10 +1068,10 @@ class Raven_Client
     /**
      * Generate a Sentry authorization header string
      *
-     * @param string    $timestamp      Timestamp when the event occurred
-     * @param string    $client         HTTP client name (not Raven_Client object)
-     * @param string    $api_key        Sentry API key
-     * @param string    $secret_key     Sentry API key
+     * @param string $timestamp  Timestamp when the event occurred
+     * @param string $client     HTTP client name (not Raven_Client object)
+     * @param string $api_key    Sentry API key
+     * @param string $secret_key Sentry API key
      * @return string
      */
     protected function get_auth_header($timestamp, $client, $api_key, $secret_key)
@@ -1177,8 +1178,8 @@ class Raven_Client
     /**
      * Get the value of a key from $_SERVER
      *
-     * @param string $key       Key whose value you wish to obtain
-     * @return string           Key's value
+     * @param string $key Key whose value you wish to obtain
+     * @return string     Key's value
      */
     private function _server_variable($key)
     {
@@ -1192,8 +1193,8 @@ class Raven_Client
     /**
      * Translate a PHP Error constant into a Sentry log level group
      *
-     * @param string $severity  PHP E_$x error constant
-     * @return string           Sentry log level group
+     * @param string $severity PHP E_$x error constant
+     * @return string          Sentry log level group
      */
     public function translateSeverity($severity)
     {
@@ -1239,11 +1240,11 @@ class Raven_Client
      * Convenience function for setting a user's ID and Email
      *
      * @deprecated
-     * @param string $id            User's ID
-     * @param string|null $email    User's email
-     * @param array $data           Additional user data
+     * @param string      $id    User's ID
+     * @param string|null $email User's email
+     * @param array       $data  Additional user data
      */
-    public function set_user_data($id, $email=null, $data=array())
+    public function set_user_data($id, $email = null, $data = array())
     {
         $user = array('id' => $id);
         if (isset($email)) {
@@ -1266,10 +1267,10 @@ class Raven_Client
     /**
      * Sets user context.
      *
-     * @param array $data   Associative array of user data
-     * @param bool $merge   Merge existing context with new context
+     * @param array $data  Associative array of user data
+     * @param bool  $merge Merge existing context with new context
      */
-    public function user_context($data, $merge=true)
+    public function user_context($data, $merge = true)
     {
         if ($merge && $this->context->user !== null) {
             // bail if data is null
@@ -1285,7 +1286,7 @@ class Raven_Client
     /**
      * Appends tags context.
      *
-     * @param array $data   Associative array of tags
+     * @param array $data Associative array of tags
      */
     public function tags_context($data)
     {
@@ -1295,7 +1296,7 @@ class Raven_Client
     /**
      * Appends additional context.
      *
-     * @param array $data   Associative array of extra data
+     * @param array $data Associative array of extra data
      */
     public function extra_context($data)
     {

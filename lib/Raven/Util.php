@@ -27,7 +27,7 @@ class Raven_Util
      * @param mixed  $default
      * @return mixed
      */
-    public static function get($array, $var, $default=null)
+    public static function get($array, $var, $default = null)
     {
         if (isset($array[$var])) {
             return $array[$var];

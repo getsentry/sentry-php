@@ -26,7 +26,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     /**
      * Override the default processor options
      *
-     * @param array $options    Associative array of processor options
+     * @param array $options Associative array of processor options
      */
     public function setProcessorOptions(array $options)
     {
@@ -42,8 +42,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     /**
      * Replace any array values with our mask if the field name or the value matches a respective regex
      *
-     * @param mixed $item       Associative array value
-     * @param string $key       Associative array key
+     * @param mixed  $item Associative array value
+     * @param string $key  Associative array key
      */
     public function sanitize(&$item, $key)
     {
