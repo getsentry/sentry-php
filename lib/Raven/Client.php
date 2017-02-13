@@ -143,7 +143,7 @@ class Raven_Client
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
         $this->curl_ipv4 = Raven_Util::get($options, 'curl_ipv4', true);
-        $this->ca_cert = Raven_Util::get($options, 'ca_cert', $this->get_default_ca_cert());
+        $this->ca_cert = Raven_Util::get($options, 'ca_cert', static::get_default_ca_cert());
         $this->verify_ssl = Raven_Util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
@@ -914,14 +914,14 @@ class Raven_Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    private function send_remote($url, $data, $headers = array())
+    protected function send_remote($url, $data, $headers = array())
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
         $this->send_http($url, $data, $headers);
     }
 
-    protected function get_default_ca_cert()
+    protected static function get_default_ca_cert()
     {
         return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
     }
@@ -972,7 +972,7 @@ class Raven_Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    private function send_http($url, $data, $headers = array())
+    protected function send_http($url, $data, $headers = array())
     {
         if ($this->curl_method == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
@@ -1009,7 +1009,7 @@ class Raven_Client
      * @param array        $headers Associative array of headers
      * @return bool
      */
-    private function send_http_asynchronous_curl_exec($url, $data, $headers)
+    protected function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
         exec($this->buildCurlCommand($url, $data, $headers));
         return true; // The exec method is just fire and forget, so just assume it always works
@@ -1023,7 +1023,7 @@ class Raven_Client
      * @param array        $headers Associative array of headers
      * @return bool
      */
-    private function send_http_synchronous($url, $data, $headers)
+    protected function send_http_synchronous($url, $data, $headers)
     {
         $new_headers = array();
         foreach ($headers as $key => $value) {
@@ -1105,7 +1105,7 @@ class Raven_Client
      *
      * @return string
      */
-    private static function uuid4()
+    protected static function uuid4()
     {
         $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
