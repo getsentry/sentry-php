@@ -16,6 +16,8 @@ class Raven_Tests_TransactionStackTest extends PHPUnit_Framework_TestCase
     {
         $stack = new Raven_TransactionStack();
         $stack->push('hello');
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
+        /** @noinspection PhpUnusedLocalVariableInspection */
         $foo = $stack->push('foo');
         $stack->push('bar');
         $stack->push('world');
@@ -25,5 +27,9 @@ class Raven_Tests_TransactionStackTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($stack->peek(), 'hello');
         $this->assertEquals($stack->pop(), 'hello');
         $this->assertEquals($stack->peek(), null);
+
+        $stack->clear();
+        $this->assertInternalType('array', $stack->stack);
+        $this->assertEquals(0, count($stack->stack));
     }
 }

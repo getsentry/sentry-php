@@ -12,6 +12,8 @@
 class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 {
     private $errorLevel;
+    private $errorHandlerCalled;
+    private $existingErrorHandler;
 
     public function setUp()
     {

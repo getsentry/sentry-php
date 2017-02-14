@@ -145,7 +145,7 @@ class Raven_ErrorHandler
      *
      * @param bool $call_existing Call any existing exception handlers after processing
      *                            this instance.
-     * @return $this
+     * @return Raven_ErrorHandler
      */
     public function registerExceptionHandler($call_existing = true)
     {
@@ -158,10 +158,10 @@ class Raven_ErrorHandler
      * Register a handler which will intercept standard PHP errors and report them to the
      * associated Sentry client.
      *
-     * @param bool $call_existing Call any existing errors handlers after processing
-     *                            this instance.
-     * @param array $error_types All error types that should be sent.
-     * @return $this
+     * @param bool  $call_existing Call any existing errors handlers after processing
+     *                             this instance.
+     * @param array $error_types   All error types that should be sent.
+     * @return Raven_ErrorHandler
      */
     public function registerErrorHandler($call_existing = true, $error_types = null)
     {
@@ -179,7 +179,7 @@ class Raven_ErrorHandler
      *
      * @param int $reservedMemorySize Number of kilobytes memory space to reserve,
      *                                which is utilized when handling fatal errors.
-     * @return $this
+     * @return Raven_ErrorHandler
      */
     public function registerShutdownFunction($reservedMemorySize = 10)
     {

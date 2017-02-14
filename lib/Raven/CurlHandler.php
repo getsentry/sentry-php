@@ -22,7 +22,7 @@ class Raven_CurlHandler
     private $options;
     private $requests;
 
-    public function __construct($options, $join_timeout=5)
+    public function __construct($options, $join_timeout = 5)
     {
         $this->options = $options;
         $this->multi_handle = curl_multi_init();
@@ -37,7 +37,7 @@ class Raven_CurlHandler
         $this->join();
     }
 
-    public function enqueue($url, $data=null, $headers=array())
+    public function enqueue($url, $data = null, $headers = array())
     {
         $ch = curl_init();
 
@@ -69,7 +69,7 @@ class Raven_CurlHandler
         return $fd;
     }
 
-    public function join($timeout=null)
+    public function join($timeout = null)
     {
         if (!isset($timeout)) {
             $timeout = $this->join_timeout;
@@ -84,7 +84,9 @@ class Raven_CurlHandler
         } while ($timeout !== 0 && time() - $start < $timeout);
     }
 
-    // http://se2.php.net/manual/en/function.curl-multi-exec.php
+    /**
+     * @doc http://php.net/manual/en/function.curl-multi-exec.php
+     */
     private function select()
     {
         do {

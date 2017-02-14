@@ -83,7 +83,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers setProcessorOptions
+     * @covers Raven_SanitizeDataProcessor::setProcessorOptions
      *
      */
     public function testSettingProcessorOptions()
@@ -115,6 +115,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public function testOverrideOptions($processorOptions, $client_options, $dsn)
     {
         $client = new Dummy_Raven_Client($dsn, $client_options);
+        /**
+         * @var Raven_SanitizeDataProcessor $processor
+         */
         $processor = $client->processors[0];
 
         $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);
@@ -151,6 +154,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client($dsn, $client_options);
+        /**
+         * @var Raven_SanitizeDataProcessor $processor
+         */
         $processor = $client->processors[0];
 
         $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);

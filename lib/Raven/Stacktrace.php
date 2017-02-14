@@ -240,7 +240,7 @@ class Raven_Stacktrace
         // Code which is eval'ed have a modified filename.. Extract the
         // correct filename + linenumber from the string.
         $matches = array();
-        $matched = preg_match("/^(.*?)\((\d+)\) : eval\(\)'d code$/",
+        $matched = preg_match("/^(.*?)\\((\\d+)\\) : eval\\(\\)'d code$/",
             $filename, $matches);
         if ($matched) {
             $frame['filename'] = $filename = $matches[1];
@@ -251,7 +251,7 @@ class Raven_Stacktrace
         // "</path/to/filename>(<lineno>) : runtime-created function"
         // Extract the correct filename + linenumber from the string.
         $matches = array();
-        $matched = preg_match("/^(.*?)\((\d+)\) : runtime-created function$/",
+        $matched = preg_match("/^(.*?)\\((\\d+)\\) : runtime-created function$/",
             $filename, $matches);
         if ($matched) {
             $frame['filename'] = $filename = $matches[1];

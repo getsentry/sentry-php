@@ -29,7 +29,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
     /**
      * @param Raven_Client $ravenClient
      * @param int          $level       The minimum logging level at which this handler will be triggered
-     * @param Boolean      $bubble      Whether the messages that are handled can bubble up the stack or not
+     * @param bool         $bubble      Whether the messages that are handled can bubble up the stack or not
      */
     public function __construct(Raven_Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
     {
@@ -38,13 +38,17 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         $this->ravenClient = $ravenClient;
     }
 
+    /**
+     * @param string $message
+     * @return array|null
+     */
     protected function parseException($message)
     {
-        if (!preg_match($this->excMatch, $message, $matches)) {
-            return;
+        if (preg_match($this->excMatch, $message, $matches)) {
+            return array($matches[1], $matches[2]);
         }
 
-        return array($matches[1], $matches[2]);
+        return null;
     }
 
     /**
@@ -58,6 +62,9 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         }
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
+            /**
+             * @var Exception $exc
+             */
             $exc = $record['context']['exception'];
             $crumb = array(
                 'type' => 'error',

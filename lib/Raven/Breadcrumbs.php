@@ -16,6 +16,14 @@
 
 class Raven_Breadcrumbs
 {
+    public $count;
+    public $pos;
+    public $size;
+    /**
+     * @var array[]
+     */
+    public $buffer;
+
     public function __construct($size = 100)
     {
         $this->count = 0;
@@ -34,6 +42,9 @@ class Raven_Breadcrumbs
         $this->count++;
     }
 
+    /**
+     * @return array[]
+     */
     public function fetch()
     {
         $results = array();
