@@ -46,7 +46,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $serializer = new Raven_Serializer();
         $input = 1;
         $result = $serializer->serialize($input);
-        $this->assertTrue(is_integer($result));
+        $this->assertInternalType('integer', $result);
         $this->assertEquals(1, $result);
     }
 
@@ -55,7 +55,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $serializer = new Raven_Serializer();
         $input = 1.5;
         $result = $serializer->serialize($input);
-        $this->assertTrue(is_float($result));
+        $this->assertInternalType('double', $result);
         $this->assertEquals(1.5, $result);
     }
 
@@ -64,13 +64,11 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $serializer = new Raven_Serializer();
         $input = true;
         $result = $serializer->serialize($input);
-        $this->assertTrue(is_bool($result));
-        $this->assertEquals(true, $result);
+        $this->assertTrue($result);
 
         $input = false;
         $result = $serializer->serialize($input);
-        $this->assertTrue(is_bool($result));
-        $this->assertEquals(false, $result);
+        $this->assertFalse($result);
     }
 
     public function testNull()
@@ -78,8 +76,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $serializer = new Raven_Serializer();
         $input = null;
         $result = $serializer->serialize($input);
-        $this->assertTrue(is_null($result));
-        $this->assertEquals(null, $result);
+        $this->assertNull($result);
     }
 
     public function testRecursionMaxDepth()
@@ -97,5 +94,54 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $input = array('foo' => new Raven_Serializer());
         $result = $serializer->serialize($input);
         $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
+    }
+
+    /**
+     * @covers Raven_Serializer::serializeString
+     */
+    public function testBrokenEncoding()
+    {
+        $serializer = new Raven_Serializer();
+        foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
+            $input = pack('H*', $key);
+            $result = $serializer->serialize($input);
+            $this->assertInternalType('string', $result);
+            if (function_exists('mb_detect_encoding')) {
+                $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
+            }
+        }
+    }
+
+    /**
+     * @covers Raven_Serializer::serializeString
+     */
+    public function testLongString()
+    {
+        $serializer = new Raven_Serializer();
+        for ($i = 0; $i < 100; $i++) {
+            foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
+                $input = '';
+                for ($i = 0; $i < $length; $i++) {
+                    $input .= chr(mt_rand(0, 255));
+                }
+                $result = $serializer->serialize($input);
+                $this->assertInternalType('string', $result);
+                $this->assertLessThanOrEqual(1024, strlen($result));
+            }
+        }
+    }
+
+    /**
+     * @covers Raven_Serializer::serializeValue
+     */
+    public function testSerializeValueResource()
+    {
+        $serializer = new Raven_Serializer();
+        $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
+        $fo = fopen($filename, 'wb');
+
+        $result = $serializer->serialize($fo);
+        $this->assertInternalType('string', $result);
+        $this->assertEquals('Resource stream', $result);
     }
 }

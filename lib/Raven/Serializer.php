@@ -122,6 +122,7 @@ class Raven_Serializer
 
     /**
      * @return string
+     * @codeCoverageIgnore
      */
     public function getMbDetectOrder()
     {
@@ -132,6 +133,7 @@ class Raven_Serializer
      * @param string $mb_detect_order
      *
      * @return Raven_Serializer
+     * @codeCoverageIgnore
      */
     public function setMbDetectOrder($mb_detect_order)
     {
