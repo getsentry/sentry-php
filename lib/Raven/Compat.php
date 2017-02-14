@@ -75,17 +75,37 @@ class Raven_Compat
      *
      * @param mixed $value
      * @param int   $options
+     * @param int   $depth Set the maximum depth
      * @return string
      */
-    public static function json_encode($value, $options = 0)
+    public static function json_encode($value, $options = 0, $depth = 512)
     {
         if (function_exists('json_encode')) {
-            return json_encode($value);
+            if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+                return json_encode($value);
+            } elseif (version_compare(PHP_VERSION, '5.5.0', '<')) {
+                return json_encode($value, $options);
+            } else {
+                return json_encode($value, $options, $depth);
+            }
         }
 
         // @codeCoverageIgnoreStart
-        return self::_json_encode($value);
+        return self::_json_encode($value, $depth);
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param mixed $value
+     * @param int   $depth Set the maximum depth
+     * @return string|false
+     */
+    public static function _json_encode($value, $depth = 513)
+    {
+        if (ini_get('xdebug.extended_info') !== false) {
+            ini_set('xdebug.max_nesting_level', 2048);
+        }
+        return self::_json_encode_lowlevel($value, $depth);
     }
 
     /**
@@ -93,9 +113,10 @@ class Raven_Compat
      * http://www.mike-griffiths.co.uk/php-json_encode-alternative/
      *
      * @param mixed $value
-     * @return string
+     * @param int   $depth Set the maximum depth
+     * @return string|false
      */
-    public static function _json_encode($value)
+    private static function _json_encode_lowlevel($value, $depth)
     {
         static $jsonReplaces = array(
             array('\\', '/', "\n", "\t", "\r", "\f", '"'),
@@ -112,7 +133,6 @@ class Raven_Compat
         }
 
         if (is_scalar($value)) {
-
             // Always use '.' for floats.
             if (is_float($value)) {
                 return floatval(str_replace(',', '.', strval($value)));
@@ -123,6 +143,8 @@ class Raven_Compat
             } else {
                 return $value;
             }
+        } elseif ($depth <= 1) {
+            return false;
         }
 
         $isList = true;
@@ -135,13 +157,21 @@ class Raven_Compat
         $result = array();
         if ($isList) {
             foreach ($value as $v) {
-                $result[] = self::_json_encode($v);
+                $this_value = self::_json_encode($v, $depth - 1);
+                if ($this_value === false) {
+                    return false;
+                }
+                $result[] = $this_value;
             }
 
             return '[' . join(',', $result) . ']';
         } else {
             foreach ($value as $k => $v) {
-                $result[] = self::_json_encode($k) . ':' . self::_json_encode($v);
+                $this_value = self::_json_encode($v, $depth - 1);
+                if ($this_value === false) {
+                    return false;
+                }
+                $result[] = self::_json_encode($k, $depth - 1).':'.$this_value;
             }
 
             return '{' . join(',', $result) . '}';

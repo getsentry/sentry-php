@@ -1737,7 +1737,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    public function testEncode()
+    public function testEncodeTooDepth()
     {
         $client = new Dummy_Raven_Client();
         $data_broken = array();
@@ -1745,13 +1745,26 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $data_broken = array($data_broken);
         }
         $value = $client->encode($data_broken);
-        $this->assertFalse($value);
-        unset($data_broken);
+        if (!function_exists('json_encode') or version_compare(PHP_VERSION, '5.5.0', '>=')) {
+            $this->assertFalse($value, 'Broken data encoded successfully with '.
+                (function_exists('json_encode') ? 'native method' : 'Raven_Compat::_json_encode'));
+        } else {
+            if ($value !== false) {
+                $this->markTestSkipped();
+            } else {
+                $this->assertEquals('eJyLjh4Fo2AUjFgQOwpGwSgYuQAA3Q7g1w==', $value, 'Native json_encode error');
+            }
+        }
+    }
 
+    public function testEncode()
+    {
+        $client = new Dummy_Raven_Client();
         $data = array('some' => (object)array('value' => 'data'), 'foo' => array('bar', null, 123), false);
         $json_stringify = Raven_Compat::json_encode($data);
         $value = $client->encode($data);
-        $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value);
+        $this->assertNotFalse($value);
+        $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, 'Raven_Client::encode returned malformed data');
         $decoded = base64_decode($value);
         $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
         if (function_exists("gzcompress")) {
