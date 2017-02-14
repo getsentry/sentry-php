@@ -77,7 +77,9 @@ class Raven_Compat
             return json_encode($value);
         }
 
+        // @codeCoverageIgnoreStart
         return self::_json_encode($value);
+        // @codeCoverageIgnoreEnd
     }
 
     /**

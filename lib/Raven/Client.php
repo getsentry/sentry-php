@@ -32,6 +32,9 @@ class Raven_Client
     const MESSAGE_LIMIT = 1024;
 
     public $breadcrumbs;
+    /**
+     * @var Raven_Context
+     */
     public $context;
     public $extra_data;
     /**
@@ -51,11 +54,11 @@ class Raven_Client
      */
     protected $app_path;
     /**
-     * @var array
+     * @var string[]
      */
     protected $prefixes;
     /**
-     * @var array
+     * @var string[]|null
      */
     protected $excluded_app_paths;
     /**
@@ -64,6 +67,9 @@ class Raven_Client
     protected $transport;
 
     var $logger;
+    /**
+     * @var string Full URL to Sentry
+     */
     var $server;
     var $secret_key;
     var $public_key;
@@ -100,6 +106,10 @@ class Raven_Client
     var $_user;
     var $_pending_events;
     var $sdk;
+    /**
+     * @var Raven_CurlHandler
+     */
+    protected $_curl_handler;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -143,7 +153,7 @@ class Raven_Client
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
         $this->curl_path = Raven_Util::get($options, 'curl_path', 'curl');
         $this->curl_ipv4 = Raven_Util::get($options, 'curl_ipv4', true);
-        $this->ca_cert = Raven_Util::get($options, 'ca_cert', $this->get_default_ca_cert());
+        $this->ca_cert = Raven_Util::get($options, 'ca_cert', static::get_default_ca_cert());
         $this->verify_ssl = Raven_Util::get($options, 'verify_ssl', true);
         $this->curl_ssl_version = Raven_Util::get($options, 'curl_ssl_version');
         $this->trust_x_forwarded_proto = Raven_Util::get($options, 'trust_x_forwarded_proto');
@@ -270,11 +280,7 @@ class Raven_Client
 
     public function setExcludedAppPaths($value)
     {
-        if ($value) {
-            $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : $value;
-        } else {
-            $this->excluded_app_paths = null;
-        }
+        $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : null;
         return $this;
     }
 
@@ -309,7 +315,7 @@ class Raven_Client
         return $this->transport;
     }
 
-    public function getServerEndpoint($value)
+    public function getServerEndpoint($value = '')
     {
         return $this->server;
     }
@@ -425,6 +431,7 @@ class Raven_Client
      *
      * @param mixed $ident
      * @return mixed
+     * @codeCoverageIgnore
      */
     public function getIdent($ident)
     {
@@ -440,6 +447,7 @@ class Raven_Client
      * @param mixed      $vars
      * @return string|null
      * @deprecated
+     * @codeCoverageIgnore
      */
     public function message($message, $params = array(), $level = self::INFO,
                             $stack = false, $vars = null)
@@ -451,6 +459,7 @@ class Raven_Client
      * @param Exception $exception
      * @return string|null
      * @deprecated
+     * @codeCoverageIgnore
      */
     public function exception($exception)
     {
@@ -539,7 +548,9 @@ class Raven_Client
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
             if (!class_exists('Raven_Stacktrace')) {
+                // @codeCoverageIgnoreStart
                 spl_autoload_call('Raven_Stacktrace');
+                // @codeCoverageIgnoreEnd
             }
 
             $exc_data['stacktrace'] = array(
@@ -626,7 +637,11 @@ class Raven_Client
         $handler->install();
     }
 
-    protected function is_http_request()
+    /**
+     * @return bool
+     * @codeCoverageIgnore
+     */
+    protected static function is_http_request()
     {
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
@@ -854,7 +869,7 @@ class Raven_Client
     }
 
     /**
-     * @param string $data
+     * @param array $data
      * @return string|bool
      */
     public function encode(&$data)
@@ -864,7 +879,9 @@ class Raven_Client
             if (function_exists('json_last_error_msg')) {
                 $this->_lasterror = json_last_error_msg();
             } else {
+                // @codeCoverageIgnoreStart
                 $this->_lasterror = json_last_error();
+                // @codeCoverageIgnoreEnd
             }
             return false;
         }
@@ -918,14 +935,14 @@ class Raven_Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    private function send_remote($url, $data, $headers = array())
+    protected function send_remote($url, $data, $headers = array())
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
         $this->send_http($url, $data, $headers);
     }
 
-    protected function get_default_ca_cert()
+    protected static function get_default_ca_cert()
     {
         return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
     }
@@ -976,7 +993,7 @@ class Raven_Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    private function send_http($url, $data, $headers = array())
+    protected function send_http($url, $data, $headers = array())
     {
         if ($this->curl_method == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
@@ -1013,7 +1030,7 @@ class Raven_Client
      * @param array        $headers Associative array of headers
      * @return bool
      */
-    private function send_http_asynchronous_curl_exec($url, $data, $headers)
+    protected function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
         exec($this->buildCurlCommand($url, $data, $headers));
         return true; // The exec method is just fire and forget, so just assume it always works
@@ -1027,7 +1044,7 @@ class Raven_Client
      * @param array        $headers Associative array of headers
      * @return bool
      */
-    private function send_http_synchronous($url, $data, $headers)
+    protected function send_http_synchronous($url, $data, $headers)
     {
         $new_headers = array();
         foreach ($headers as $key => $value) {
@@ -1109,7 +1126,7 @@ class Raven_Client
      *
      * @return string
      */
-    private static function uuid4()
+    protected static function uuid4()
     {
         $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
@@ -1247,6 +1264,7 @@ class Raven_Client
      * @param string      $id    User's ID
      * @param string|null $email User's email
      * @param array       $data  Additional user data
+     * @codeCoverageIgnore
      */
     public function set_user_data($id, $email = null, $data = array())
     {

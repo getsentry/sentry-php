@@ -24,7 +24,7 @@ class DummyIntegration_Raven_Client extends Raven_Client
         }
         $this->__sent_events[] = $data;
     }
-    public function is_http_request()
+    public static function is_http_request()
     {
         return true;
     }
