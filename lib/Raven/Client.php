@@ -177,8 +177,10 @@ class Raven_Client
         }
 
         $this->transaction = new Raven_TransactionStack();
-        if ($this->is_http_request() && isset($_SERVER['PATH_INFO'])) {
+        if (static::is_http_request() && isset($_SERVER['PATH_INFO'])) {
+            // @codeCoverageIgnoreStart
             $this->transaction->push($_SERVER['PATH_INFO']);
+            // @codeCoverageIgnoreEnd
         }
 
         if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
@@ -726,7 +728,7 @@ class Raven_Client
 
         $data = array_merge($this->get_default_data(), $data);
 
-        if ($this->is_http_request()) {
+        if (static::is_http_request()) {
             $data = array_merge($this->get_http_data(), $data);
         }
 
@@ -776,7 +778,9 @@ class Raven_Client
         if (!empty($stack)) {
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
             if (!class_exists('Raven_Stacktrace')) {
+                // @codeCoverageIgnoreStart
                 spl_autoload_call('Raven_Stacktrace');
+                // @codeCoverageIgnoreEnd
             }
 
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
