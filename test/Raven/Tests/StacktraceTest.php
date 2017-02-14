@@ -30,7 +30,12 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
     {
         $stack = raven_test_create_stacktrace(array('biz', 'baz'), 0);
 
-        $frame = $stack[2];
+        if (isset($stack[0]['function']) and ($stack[0]['function'] == 'call_user_func')) {
+            $offset = 2;
+        } else {
+            $offset = 1;
+        }
+        $frame = $stack[$offset];
         $params = Raven_Stacktrace::get_frame_context($frame);
         $this->assertEquals($params['args'], array('biz', 'baz'));
         $this->assertEquals($params['times'], 0);
@@ -39,20 +44,20 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
     public function testSimpleTrace()
     {
         $stack = array(
-          array(
-            'file' => dirname(__FILE__) . '/resources/a.php',
-            'line' => 9,
-            'function' => 'a_test',
-            'args' => array('friend'),
-          ),
-          array(
-            'file' => dirname(__FILE__) . '/resources/b.php',
-            'line' => 2,
-            'args' => array(
-              dirname(__FILE__) . '/resources/a.php',
+            array(
+                'file'     => dirname(__FILE__).'/resources/a.php',
+                'line'     => 9,
+                'function' => 'a_test',
+                'args'     => array('friend'),
             ),
-            'function' => 'include_once',
-          )
+            array(
+                'file'     => dirname(__FILE__).'/resources/b.php',
+                'line'     => 2,
+                'args'     => array(
+                    dirname(__FILE__).'/resources/a.php',
+                ),
+                'function' => 'include_once',
+            )
         );
 
         $frames = Raven_Stacktrace::get_stack_info($stack, true);
@@ -113,18 +118,39 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $frames = Raven_Stacktrace::get_stack_info($stack, true);
         // just grab the last few frames
         $frames = array_slice($frames, -6);
-        $frame = $frames[0];
-        $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
-        $frame = $frames[1];
-        $this->assertEquals('raven_test_recurse', $frame['function']);
-        $frame = $frames[2];
-        $this->assertEquals('call_user_func', $frame['function']);
-        $frame = $frames[3];
-        $this->assertEquals('raven_test_recurse', $frame['function']);
-        $frame = $frames[4];
-        $this->assertEquals('call_user_func', $frame['function']);
-        $frame = $frames[5];
-        $this->assertEquals('raven_test_recurse', $frame['function']);
+        $skip_call_user_func_fix = false;
+        if (version_compare(PHP_VERSION, '7.0', '>=')) {
+            $skip_call_user_func_fix = true;
+            foreach ($frames as &$frame) {
+                if (isset($frame['function']) and ($frame['function'] == 'call_user_func')) {
+                    $skip_call_user_func_fix = false;
+                    break;
+                }
+            }
+            unset($frame);
+        }
+
+        if ($skip_call_user_func_fix) {
+            $frame = $frames[3];
+            $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
+            $frame = $frames[4];
+            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $frame = $frames[5];
+            $this->assertEquals('raven_test_recurse', $frame['function']);
+        } else {
+            $frame = $frames[0];
+            $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
+            $frame = $frames[1];
+            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $frame = $frames[2];
+            $this->assertEquals('call_user_func', $frame['function']);
+            $frame = $frames[3];
+            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $frame = $frames[4];
+            $this->assertEquals('call_user_func', $frame['function']);
+            $frame = $frames[5];
+            $this->assertEquals('raven_test_recurse', $frame['function']);
+        }
     }
 
     public function testInApp()

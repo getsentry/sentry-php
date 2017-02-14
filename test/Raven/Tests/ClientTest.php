@@ -643,7 +643,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testCaptureExceptionInvalidUTF8()
     {
-        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+        if (version_compare(PHP_VERSION, '7.0', '>=')) {
             if (ini_get('zend.assertions') != 1) {
                 $this->markTestSkipped('Production environment does not execute asserts');
                 return;
@@ -1792,7 +1792,16 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $debug_backtrace = $this->_debug_backtrace;
         set_error_handler($previous, E_ALL);
         $this->assertTrue($u);
-        $this->assertEquals('Raven_Breadcrumbs_ErrorHandler', $debug_backtrace[2]['class']);
+        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func')
+            and version_compare(PHP_VERSION, '7.0', '>=')
+        ) {
+            $offset = 2;
+        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
+            $offset = 1;
+        } else {
+            $offset = 2;
+        }
+        $this->assertEquals('Raven_Breadcrumbs_ErrorHandler', $debug_backtrace[$offset]['class']);
     }
 
     private $_closure_called = false;
