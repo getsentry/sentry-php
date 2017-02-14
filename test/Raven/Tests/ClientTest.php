@@ -1753,11 +1753,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $value = $client->encode($data);
         $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value);
         $decoded = base64_decode($value);
+        $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
         if (function_exists("gzcompress")) {
             $decoded = gzuncompress($decoded);
+            $this->assertEquals($json_stringify, $decoded, 'Can not decompress compressed blob');
+        } else {
+            $this->assertEquals($json_stringify, $decoded);
         }
-
-        $this->assertEquals($json_stringify, $decoded);
     }
 
     /**
