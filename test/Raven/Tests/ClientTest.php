@@ -641,11 +641,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(0, count($events));
     }
 
-    /**
-     * @covers Raven_Client::captureException
-     */
     public function testCaptureExceptionInvalidUTF8()
     {
+        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+            if (ini_get('zend.assertions') != 1) {
+                $this->markTestSkipped('Production environment does not execute asserts');
+                return;
+            }
+        }
         $client = new Dummy_Raven_Client();
         try {
             invalid_encoding();
@@ -657,7 +660,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         // if this fails to encode it returns false
         $message = $client->encode($events[0]);
-        $this->assertNotEquals($message, false, $client->getLastError());
+        $this->assertNotFalse($message, $client->getLastError());
     }
 
     /**
