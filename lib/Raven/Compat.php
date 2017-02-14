@@ -36,6 +36,12 @@ class Raven_Compat
 
     /**
      * Implementation from 'KC Cloyd'.
+     *
+     * @param string $algo       Name of selected hashing algorithm
+     * @param string $data       Message to be hashed
+     * @param string $key        Shared secret key used for generating the HMAC variant of the message digest
+     * @param bool   $raw_output Must be binary
+     * @return string
      * @doc http://php.net/manual/en/function.hash-hmac.php
      */
     public static function _hash_hmac($algo, $data, $key, $raw_output = false)

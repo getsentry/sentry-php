@@ -48,5 +48,7 @@ class Raven_TransactionStack
                 return $context;
             }
         }
+        // @codeCoverageIgnoreStart
     }
+    // @codeCoverageIgnoreEnd
 }
