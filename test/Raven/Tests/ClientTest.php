@@ -116,6 +116,44 @@ class Dummy_Raven_Client_With_Overrided_Direct_Send extends Raven_Client
     }
 }
 
+class Dummy_Raven_Client_No_Http extends Dummy_Raven_Client
+{
+    /**
+     * @return bool
+     */
+    public static function is_http_request()
+    {
+        return false;
+    }
+}
+
+class Dummy_Raven_Client_With_Sync_Override extends Raven_Client
+{
+    private static $_test_data = null;
+
+    static function get_test_data()
+    {
+        if (is_null(self::$_test_data)) {
+            self::$_test_data = '';
+            for ($i = 0; $i < 128; $i++) {
+                self::$_test_data .= chr(mt_rand(ord('a'), ord('z')));
+            }
+        }
+
+        return self::$_test_data;
+    }
+
+    static function test_filename()
+    {
+        return sys_get_temp_dir().'/clientraven.tmp';
+    }
+
+    protected function buildCurlCommand($url, $data, $headers)
+    {
+        return 'echo '.escapeshellarg(self::get_test_data()).' > '.self::test_filename();
+    }
+}
+
 class Dummy_Raven_CurlHandler extends Raven_CurlHandler
 {
     var $_set_url;
@@ -147,6 +185,14 @@ class Dummy_Raven_CurlHandler extends Raven_CurlHandler
 
 class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 {
+    function tearDown()
+    {
+        parent::tearDown();
+        if (file_exists(Dummy_Raven_Client_With_Sync_Override::test_filename())) {
+            unlink(Dummy_Raven_Client_With_Sync_Override::test_filename());
+        }
+    }
+
     private function create_exception()
     {
         try {
@@ -1143,6 +1189,64 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers Raven_Client::sanitize
+     */
+    public function testSanitizeRequest()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('request' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(2), 3
+                ),
+            ),
+        ));
+        $client->sanitize($data);
+
+        $this->assertEquals($data, array('request' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, 'Array of length 1', 3
+                ),
+            ),
+        )));
+    }
+
+    /**
+     * @covers Raven_Client::sanitize
+     */
+    public function testSanitizeContexts()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('contexts' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+        $client->sanitize($data);
+
+        $this->assertEquals($data, array('contexts' => array(
+            'context' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array('Array of length 2', 2),
+                    ), 3
+                ),
+            ),
+        )));
+    }
+
+    /**
      * @covers Raven_Client::buildCurlCommand
      */
     public function testBuildCurlCommandEscapesInput()
@@ -1707,6 +1811,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     /**
      * @covers Raven_Client::onShutdown
      * @covers Raven_Client::sendUnsentErrors
+     * @covers Raven_Client::capture
      */
     function testOnShutdown()
     {
@@ -1833,4 +1938,183 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($this->_closure_called);
         $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
     }
+
+    /**
+     * @covers Raven_Client::get_user_data
+     */
+    function testGet_user_data()
+    {
+        // step 1
+        $client = new Dummy_Raven_Client();
+        $output = $client->get_user_data();
+        $this->assertInternalType('array', $output);
+        $this->assertArrayHasKey('user', $output);
+        $this->assertArrayHasKey('id', $output['user']);
+        $session_old = $_SESSION;
+
+        // step 2
+        $session_id = session_id();
+        session_write_close();
+        session_id('');
+        $output = $client->get_user_data();
+        $this->assertInternalType('array', $output);
+        $this->assertEquals(0, count($output));
+
+        // step 3
+        session_id($session_id);
+        @session_start(array('use_cookies' => false,));
+        $_SESSION = array('foo' => 'bar');
+        $output = $client->get_user_data();
+        $this->assertInternalType('array', $output);
+        $this->assertArrayHasKey('user', $output);
+        $this->assertArrayHasKey('id', $output['user']);
+        $this->assertArrayHasKey('data', $output['user']);
+        $this->assertArrayHasKey('foo', $output['user']['data']);
+        $this->assertEquals('bar', $output['user']['data']['foo']);
+        $_SESSION = $session_old;
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     * @covers Raven_Client::setRelease
+     * @covers Raven_Client::setEnvironment
+     */
+    public function testCaptureLevel()
+    {
+        foreach ([Raven_Client::MESSAGE_LIMIT * 3, 100] as $length) {
+            $message = '';
+            for ($i = 0; $i < $length; $i++) {
+                $message .= chr($i % 256);
+            }
+            $client = new Dummy_Raven_Client();
+            $client->capture(array('message' => $message,));
+            $events = $client->getSentEvents();
+            $this->assertEquals(count($events), 1);
+            $event = array_pop($events);
+
+            $this->assertEquals('error', $event['level']);
+            $this->assertEquals(substr($message, 0, min(Raven_Client::MESSAGE_LIMIT, $length)), $event['message']);
+            $this->assertArrayNotHasKey('release', $event);
+            $this->assertArrayNotHasKey('environment', $event);
+        }
+
+        $client = new Dummy_Raven_Client();
+        $client->capture(array('message' => 'foobar',));
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $input = $client->get_http_data();
+        $this->assertEquals($input['request'], $event['request']);
+        $this->assertArrayNotHasKey('release', $event);
+        $this->assertArrayNotHasKey('environment', $event);
+
+        $client = new Dummy_Raven_Client();
+        $client->capture(array('message' => 'foobar', 'request' => array('foo' => 'bar'),));
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(array('foo' => 'bar'), $event['request']);
+        $this->assertArrayNotHasKey('release', $event);
+        $this->assertArrayNotHasKey('environment', $event);
+
+        foreach ([false, true] as $u1) {
+            foreach ([false, true] as $u2) {
+                $client = new Dummy_Raven_Client();
+                if ($u1) {
+                    $client->setRelease('foo');
+                }
+                if ($u2) {
+                    $client->setEnvironment('bar');
+                }
+                $client->capture(array('message' => 'foobar',));
+                $events = $client->getSentEvents();
+                $event = array_pop($events);
+                if ($u1) {
+                    $this->assertEquals('foo', $event['release']);
+                } else {
+                    $this->assertArrayNotHasKey('release', $event);
+                }
+                if ($u2) {
+                    $this->assertEquals('bar', $event['environment']);
+                } else {
+                    $this->assertArrayNotHasKey('environment', $event);
+                }
+            }
+        }
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testCaptureNoUserAndRequest()
+    {
+        $client = new Dummy_Raven_Client_No_Http(null, array(
+            'install_default_breadcrumb_handlers' => false,
+        ));
+        $session_id = session_id();
+        session_write_close();
+        session_id('');
+        $client->capture(array('user' => '', 'request' => ''));
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertArrayNotHasKey('user', $event);
+        $this->assertArrayNotHasKey('request', $event);
+
+        // step 3
+        session_id($session_id);
+        @session_start(array('use_cookies' => false,));
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testCaptureNonEmptyBreadcrumb()
+    {
+        $client = new Dummy_Raven_Client();
+        $ts1 = microtime(true);
+        $client->breadcrumbs->record(array('foo' => 'bar'));
+        $client->breadcrumbs->record(array('honey' => 'clover'));
+        $client->capture(array());
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        foreach ($event['breadcrumbs'] as &$crumb) {
+            $this->assertGreaterThanOrEqual($ts1, $crumb['timestamp']);
+            unset($crumb['timestamp']);
+        }
+        $this->assertEquals(array(
+            array('foo' => 'bar'),
+            array('honey' => 'clover'),
+        ), $event['breadcrumbs']);
+    }
+
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testCaptureAutoLogStacks()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->capture(array('auto_log_stacks' => true), true);
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertArrayHasKey('stacktrace', $event);
+        $this->assertInternalType('array', $event['stacktrace']['frames']);
+    }
+
+    /**
+     * @covers Raven_Client::send_http_asynchronous_curl_exec
+     */
+    public function testSend_http_asynchronous_curl_exec(){
+        $client = new Dummy_Raven_Client_With_Sync_Override(
+            'http://public:secret@example.com/1', array(
+                'curl_method' => 'exec',
+                'install_default_breadcrumb_handlers' => false,
+            )
+        );
+        if (file_exists(Dummy_Raven_Client_With_Sync_Override::test_filename())) {
+            unlink(Dummy_Raven_Client_With_Sync_Override::test_filename());
+        }
+        $client->captureMessage('foobar');
+        $test_data = Dummy_Raven_Client_With_Sync_Override::get_test_data();
+        $this->assertStringEqualsFile(Dummy_Raven_Client_With_Sync_Override::test_filename(), $test_data."\n");
+    }
+
 }
