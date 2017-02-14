@@ -102,12 +102,12 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     public function testBrokenEncoding()
     {
         $serializer = new Raven_Serializer();
-        foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
+        foreach (array('7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90') as $key) {
             $input = pack('H*', $key);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);
             if (function_exists('mb_detect_encoding')) {
-                $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
+                $this->assertContains(mb_detect_encoding($result), array('ASCII', 'UTF-8'));
             }
         }
     }
@@ -119,7 +119,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     {
         $serializer = new Raven_Serializer();
         for ($i = 0; $i < 100; $i++) {
-            foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
+            foreach (array(100, 1000, 1010, 1024, 1050, 1100, 10000) as $length) {
                 $input = '';
                 for ($i = 0; $i < $length; $i++) {
                     $input .= chr(mt_rand(0, 255));

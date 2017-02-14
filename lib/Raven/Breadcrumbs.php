@@ -16,13 +16,13 @@
 
 class Raven_Breadcrumbs
 {
-    var $count;
-    var $pos;
-    var $size;
+    public $count;
+    public $pos;
+    public $size;
     /**
      * @var array[]
      */
-    var $buffer;
+    public $buffer;
 
     public function __construct($size = 100)
     {

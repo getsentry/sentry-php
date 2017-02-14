@@ -66,46 +66,46 @@ class Raven_Client
      */
     protected $transport;
 
-    var $logger;
+    public $logger;
     /**
      * @var string Full URL to Sentry
      */
-    var $server;
-    var $secret_key;
-    var $public_key;
-    var $project;
-    var $auto_log_stacks;
-    var $name;
-    var $site;
-    var $tags;
-    var $release;
-    var $environment;
-    var $trace;
-    var $timeout;
-    var $message_limit;
-    var $exclude;
-    var $http_proxy;
+    public $server;
+    public $secret_key;
+    public $public_key;
+    public $project;
+    public $auto_log_stacks;
+    public $name;
+    public $site;
+    public $tags;
+    public $release;
+    public $environment;
+    public $trace;
+    public $timeout;
+    public $message_limit;
+    public $exclude;
+    public $http_proxy;
     protected $send_callback;
-    var $curl_method;
-    var $curl_path;
-    var $curl_ipv4;
-    var $ca_cert;
-    var $verify_ssl;
-    var $curl_ssl_version;
-    var $trust_x_forwarded_proto;
-    var $mb_detect_order;
+    public $curl_method;
+    public $curl_path;
+    public $curl_ipv4;
+    public $ca_cert;
+    public $verify_ssl;
+    public $curl_ssl_version;
+    public $trust_x_forwarded_proto;
+    public $mb_detect_order;
     /**
      * @var Raven_Processor[]
      */
-    var $processors;
+    public $processors;
     /**
      * @var string|int|null
      */
-    var $_lasterror;
-    var $_last_event_id;
-    var $_user;
-    var $_pending_events;
-    var $sdk;
+    public $_lasterror;
+    public $_last_event_id;
+    public $_user;
+    public $_pending_events;
+    public $sdk;
     /**
      * @var Raven_CurlHandler
      */

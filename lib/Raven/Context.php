@@ -9,15 +9,15 @@ class Raven_Context
     /**
      * @var array
      */
-    var $tags;
+    public $tags;
     /**
      * @var array
      */
-    var $extra;
+    public $extra;
     /**
      * @var array|null
      */
-    var $user;
+    public $user;
 
     public function __construct()
     {
