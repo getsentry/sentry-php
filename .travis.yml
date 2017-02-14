@@ -6,14 +6,36 @@ php:
   - 5.5
   - 5.6
   - 7.0
+  - 7.1
   - nightly
   - hhvm
 
 matrix:
   allow_failures:
+    - php: 7.1
     - php: hhvm
     - php: nightly
   fast_finish: true
+  include:
+    - php: 7.0
+      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
+    - php: 7.0
+      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
+    - php: 7.1
+      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
+    - php: 7.1
+      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
+    - php: nightly
+      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
+    - php: nightly
+      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
+  exclude:
+    - php: hhvm
+      env: REMOVE_XDEBUG="1"
+
+env:
+  - REMOVE_XDEBUG="0"
+  - REMOVE_XDEBUG="1"
 
 sudo: false
 
@@ -22,6 +44,8 @@ cache:
     - $HOME/.composer/cache
 
 before_install:
+  - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
+  - if [ "$DISABLE_ASSERTIONS" = "1" ]; then echo 'zend.assertions = -1' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]]; then pecl install uopz; fi
   - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]]; then echo "extension=uopz.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - composer self-update
