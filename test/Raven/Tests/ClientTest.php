@@ -219,40 +219,40 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $result = Raven_Client::ParseDSN('http://public:secret@example.com/1');
 
-        $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['server'], 'http://example.com/api/1/store/');
-        $this->assertEquals($result['public_key'], 'public');
-        $this->assertEquals($result['secret_key'], 'secret');
+        $this->assertEquals(1, $result['project']);
+        $this->assertEquals('http://example.com/api/1/store/', $result['server']);
+        $this->assertEquals('public', $result['public_key']);
+        $this->assertEquals('secret', $result['secret_key']);
     }
 
     public function testParseDSNHttps()
     {
         $result = Raven_Client::ParseDSN('https://public:secret@example.com/1');
 
-        $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['server'], 'https://example.com/api/1/store/');
-        $this->assertEquals($result['public_key'], 'public');
-        $this->assertEquals($result['secret_key'], 'secret');
+        $this->assertEquals(1, $result['project']);
+        $this->assertEquals('https://example.com/api/1/store/', $result['server']);
+        $this->assertEquals('public', $result['public_key']);
+        $this->assertEquals('secret', $result['secret_key']);
     }
 
     public function testParseDSNPath()
     {
         $result = Raven_Client::ParseDSN('http://public:secret@example.com/app/1');
 
-        $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['server'], 'http://example.com/app/api/1/store/');
-        $this->assertEquals($result['public_key'], 'public');
-        $this->assertEquals($result['secret_key'], 'secret');
+        $this->assertEquals(1, $result['project']);
+        $this->assertEquals('http://example.com/app/api/1/store/', $result['server']);
+        $this->assertEquals('public', $result['public_key']);
+        $this->assertEquals('secret', $result['secret_key']);
     }
 
     public function testParseDSNPort()
     {
         $result = Raven_Client::ParseDSN('http://public:secret@example.com:9000/app/1');
 
-        $this->assertEquals($result['project'], 1);
-        $this->assertEquals($result['server'], 'http://example.com:9000/app/api/1/store/');
-        $this->assertEquals($result['public_key'], 'public');
-        $this->assertEquals($result['secret_key'], 'secret');
+        $this->assertEquals(1, $result['project']);
+        $this->assertEquals('http://example.com:9000/app/api/1/store/', $result['server']);
+        $this->assertEquals('public', $result['public_key']);
+        $this->assertEquals('secret', $result['secret_key']);
     }
 
     public function testParseDSNInvalidScheme()
@@ -307,10 +307,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
 
-        $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->public_key, 'public');
-        $this->assertEquals($client->secret_key, 'secret');
+        $this->assertEquals(1, $client->project);
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('public', $client->public_key);
+        $this->assertEquals('secret', $client->secret_key);
     }
 
     /**
@@ -322,11 +322,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'site' => 'foo',
         ));
 
-        $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->public_key, 'public');
-        $this->assertEquals($client->secret_key, 'secret');
-        $this->assertEquals($client->site, 'foo');
+        $this->assertEquals(1, $client->project);
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('public', $client->public_key);
+        $this->assertEquals('secret', $client->secret_key);
+        $this->assertEquals('foo', $client->site);
     }
 
     /**
@@ -339,7 +339,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'project' => 1,
         ));
 
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
     }
 
 
@@ -352,10 +352,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'dsn' => 'http://public:secret@example.com/1',
         ));
 
-        $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->public_key, 'public');
-        $this->assertEquals($client->secret_key, 'secret');
+        $this->assertEquals(1, $client->project);
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('public', $client->public_key);
+        $this->assertEquals('secret', $client->secret_key);
     }
 
     /**
@@ -367,10 +367,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'dsn' => 'http://public:secret@example.com/1',
         ));
 
-        $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->public_key, 'public');
-        $this->assertEquals($client->secret_key, 'secret');
+        $this->assertEquals(1, $client->project);
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('public', $client->public_key);
+        $this->assertEquals('secret', $client->secret_key);
     }
 
     /**
@@ -385,8 +385,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'site' => 'foo',
         ));
 
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->site, 'foo');
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('foo', $client->site);
     }
 
     /**
@@ -398,9 +398,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['extra']['foo'], 'bar');
+        $this->assertEquals('bar', $event['extra']['foo']);
     }
 
     /**
@@ -412,9 +412,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'), null);
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['extra']['foo'], 'bar');
+        $this->assertEquals('bar', $event['extra']['foo']);
     }
 
     /**
@@ -426,7 +426,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
         $this->assertEquals(array_key_exists('extra', $event), false);
     }
@@ -440,9 +440,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s');
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['message'], 'Test Message %s');
+        $this->assertEquals('Test Message %s', $event['message']);
     }
 
     /**
@@ -454,9 +454,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['message'], 'Test Message foo');
+        $this->assertEquals('Test Message foo', $event['message']);
     }
 
     /**
@@ -471,10 +471,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['release'], 20160909144742);
-        $this->assertEquals($event['message'], 'Test Message foo');
+        $this->assertEquals(20160909144742, $event['release']);
+        $this->assertEquals('Test Message foo', $event['message']);
     }
 
     /**
@@ -486,13 +486,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['sentry.interfaces.Message'], array(
+        $this->assertEquals(array(
             'message' => 'Test Message %s',
             'params' => array('foo'),
             'formatted' => 'Test Message foo',
-        ));
+        ), $event['sentry.interfaces.Message']);
         $this->assertEquals('Test Message foo', $event['message']);
     }
 
@@ -508,10 +508,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             'extra' => array('foo' => 'bar')
         ));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
-        $this->assertEquals($event['extra']['foo'], 'bar');
+        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
+        $this->assertEquals('bar', $event['extra']['foo']);
         $this->assertEquals('Test Message foo', $event['message']);
     }
 
@@ -524,9 +524,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $client->captureMessage('Test Message %s', array('foo'), Dummy_Raven_Client::WARNING);
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
+        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
         $this->assertEquals('Test Message foo', $event['message']);
     }
 
@@ -541,21 +541,21 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureException($ex);
 
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
 
         $exc = $event['exception'];
-        $this->assertEquals(count($exc['values']), 1);
-        $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
-        $this->assertEquals($exc['values'][0]['type'], 'Exception');
+        $this->assertEquals(1, count($exc['values']));
+        $this->assertEquals('Foo bar', $exc['values'][0]['value']);
+        $this->assertEquals('Exception', $exc['values'][0]['type']);
 
         $this->assertFalse(empty($exc['values'][0]['stacktrace']['frames']));
         $frames = $exc['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
         $this->assertTrue($frame['lineno'] > 0);
-        $this->assertEquals($frame['function'], 'create_exception');
+        $this->assertEquals('create_exception', $frame['function']);
         $this->assertFalse(isset($frame['vars']));
-        $this->assertEquals($frame['context_line'], '            throw new Exception(\'Foo bar\');');
+        $this->assertEquals('            throw new Exception(\'Foo bar\');', $frame['context_line']);
         $this->assertFalse(empty($frame['pre_context']));
         $this->assertFalse(empty($frame['post_context']));
     }
@@ -575,13 +575,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureException($ex);
 
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
 
         $exc = $event['exception'];
-        $this->assertEquals(count($exc['values']), 2);
-        $this->assertEquals($exc['values'][0]['value'], 'Foo bar');
-        $this->assertEquals($exc['values'][1]['value'], 'Child exc');
+        $this->assertEquals(2, count($exc['values']));
+        $this->assertEquals('Foo bar', $exc['values'][0]['value']);
+        $this->assertEquals('Child exc', $exc['values'][1]['value']);
     }
 
     /**
@@ -604,13 +604,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $events = $client->getSentEvents();
 
         $event = array_pop($events);
-        $this->assertEquals($event['level'], Dummy_Raven_Client::ERROR);
+        $this->assertEquals(Dummy_Raven_Client::ERROR, $event['level']);
 
         $event = array_pop($events);
-        $this->assertEquals($event['level'], Dummy_Raven_Client::INFO);
+        $this->assertEquals(Dummy_Raven_Client::INFO, $event['level']);
 
         $event = array_pop($events);
-        $this->assertEquals($event['level'], Dummy_Raven_Client::WARNING);
+        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
     }
 
     /**
@@ -622,9 +622,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $ex = $this->create_exception();
         $client->captureException($ex, array('culprit' => 'test'));
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['culprit'], 'test');
+        $this->assertEquals('test', $event['culprit']);
     }
 
     /**
@@ -638,7 +638,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $ex = $this->create_exception();
         $client->captureException($ex, 'test');
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 0);
+        $this->assertEquals(0, count($events));
     }
 
     /**
@@ -653,7 +653,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $client->captureException($ex);
         }
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
 
         // if this fails to encode it returns false
         $message = $client->encode($events[0]);
@@ -668,8 +668,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client(array(
             'processors' => array('Raven_SanitizeDataProcessor'),
         ));
-        $this->assertEquals(count($client->processors), 1);
-        $this->assertTrue($client->processors[0] instanceof Raven_SanitizeDataProcessor);
+        $this->assertEquals(1, count($client->processors));
+        $this->assertInstanceOf('Raven_SanitizeDataProcessor', $client->processors[0]);
     }
 
     public function testProcessDoesCallProcessors()
@@ -697,7 +697,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $defaults = Dummy_Raven_Client::getDefaultProcessors();
 
-        $this->assertEquals(count($client->processors), count($defaults));
+        $this->assertEquals(count($defaults), count($client->processors));
     }
 
     /**
@@ -971,7 +971,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $events = $client->getSentEvents();
         $event = array_pop($events);
 
-        $this->assertEquals($event['exception']['values'][0]['value'], $utf8String);
+        $this->assertEquals($utf8String, $event['exception']['values'][0]['value']);
     }
 
 
@@ -1002,7 +1002,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        $this->assertEquals($found, true);
+        $this->assertTrue($found);
     }
 
     /**
@@ -1020,7 +1020,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals($event['exception']['values'][0]['value'], 'Undefined variable: undefined');
+        $this->assertEquals('Undefined variable: undefined', $event['exception']['values'][0]['value']);
     }
 
     /**
@@ -1030,7 +1030,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client();
         $client->capture(array('message' => 'test', 'event_id' => 'abc'));
-        $this->assertEquals($client->getLastEventID(), 'abc');
+        $this->assertEquals('abc', $client->getLastEventID());
     }
 
     /**
@@ -1048,7 +1048,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $events[] = $data;
         });
         $client->capture(array('message' => 'test', 'event_id' => 'abc'));
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
     }
 
     /**
@@ -1059,11 +1059,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $client->setAppPath('/foo/bar');
 
-        $this->assertEquals($client->getAppPath(), '/foo/bar/');
+        $this->assertEquals('/foo/bar/', $client->getAppPath());
 
         $client->setAppPath('/foo/baz/');
 
-        $this->assertEquals($client->getAppPath(), '/foo/baz/');
+        $this->assertEquals('/foo/baz/', $client->getAppPath());
     }
 
     /**
@@ -1074,7 +1074,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $client->setAppPath('C:\\foo\\bar\\');
 
-        $this->assertEquals($client->getAppPath(), 'C:\\foo\\bar\\');
+        $this->assertEquals('C:\\foo\\bar\\', $client->getAppPath());
     }
 
     /**
@@ -1125,7 +1125,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
-        $this->assertEquals(empty($events[0]['message']), true);
+        $this->assertTrue(empty($events[0]['message']));
     }
 
     /**
@@ -1144,14 +1144,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $client->sanitize($data);
 
-        $this->assertEquals($data, array('extra' => array(
+        $this->assertEquals(array('extra' => array(
             'context' => array(
                 'line' => 1216,
                 'stack' => array(
                     1, 'Array of length 1', 3
                 ),
             ),
-        )));
+        )), $data);
     }
 
     /**
@@ -1166,10 +1166,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $client->sanitize($data);
 
-        $this->assertEquals($data, array('tags' => array(
+        $this->assertEquals(array('tags' => array(
             'foo' => 'bar',
             'baz' => 'Array',
-        )));
+        )), $data);
     }
 
     /**
@@ -1183,9 +1183,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $client->sanitize($data);
 
-        $this->assertEquals($data, array('user' => array(
+        $this->assertEquals(array('user' => array(
             'email' => 'foo@example.com',
-        )));
+        )), $data);
     }
 
     /**
@@ -1204,14 +1204,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $client->sanitize($data);
 
-        $this->assertEquals($data, array('request' => array(
+        $this->assertEquals(array('request' => array(
             'context' => array(
                 'line' => 1216,
                 'stack' => array(
                     1, 'Array of length 1', 3
                 ),
             ),
-        )));
+        )), $data);
     }
 
     /**
@@ -1233,7 +1233,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $client->sanitize($data);
 
-        $this->assertEquals($data, array('contexts' => array(
+        $this->assertEquals(array('contexts' => array(
             'context' => array(
                 'line' => 1216,
                 'stack' => array(
@@ -1243,7 +1243,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                     ), 3
                 ),
             ),
-        )));
+        )), $data);
     }
 
     /**
@@ -1254,17 +1254,17 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $data = '{"foo": "\'; ls;"}';
         $client = new Dummy_Raven_Client();
         $result = $client->buildCurlCommand('http://foo.com', $data, array());
-        $this->assertEquals($result, 'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &');
+        $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
         $result = $client->buildCurlCommand('http://foo.com', $data, array('key' => 'value'));
-        $this->assertEquals($result, 'curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &');
+        $this->assertEquals('curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
         $client->verify_ssl = false;
         $result = $client->buildCurlCommand('http://foo.com', $data, array());
-        $this->assertEquals($result, 'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &');
+        $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &', $result);
 
         $result = $client->buildCurlCommand('http://foo.com', $data, array('key' => 'value'));
-        $this->assertEquals($result, 'curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &');
+        $this->assertEquals('curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &', $result);
     }
 
     /**
@@ -1275,7 +1275,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $client->user_context(array('foo' => 'bar'), false);
         $client->user_context(array('baz' => 'bar'), false);
-        $this->assertEquals($client->context->user, array('baz' => 'bar'));
+        $this->assertEquals(array('baz' => 'bar'), $client->context->user);
     }
 
     /**
@@ -1286,7 +1286,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $client->user_context(array('foo' => 'bar'), true);
         $client->user_context(array('baz' => 'bar'), true);
-        $this->assertEquals($client->context->user, array('foo' => 'bar', 'baz' => 'bar'));
+        $this->assertEquals(array('foo' => 'bar', 'baz' => 'bar'), $client->context->user);
     }
 
     /**
@@ -1297,7 +1297,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $client->user_context(array('foo' => 'bar'), true);
         $client->user_context(null, true);
-        $this->assertEquals($client->context->user, array('foo' => 'bar'));
+        $this->assertEquals(array('foo' => 'bar'), $client->context->user);
     }
 
     /**
@@ -1629,7 +1629,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureException(new Exception(), null, 'foobar');
 
         $events = $client->getSentEvents();
-        $this->assertEquals(count($events), 1);
+        $this->assertEquals(1, count($events));
         $event = array_pop($events);
         $this->assertEquals('foobar', $event['logger']);
     }
@@ -1686,7 +1686,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $reflection = new ReflectionProperty('Raven_CurlHandler', 'options');
         $reflection->setAccessible(true);
-        $this->assertEquals($client->get_curl_options(), $reflection->getValue($object));
+        $this->assertEquals($reflection->getValue($object), $client->get_curl_options());
 
         // step 2
         $ch = new Dummy_Raven_CurlHandler();
@@ -1705,10 +1705,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $_SERVER['SENTRY_DSN'] = 'http://public:secret@example.com/1';
         $client = new Dummy_Raven_Client();
-        $this->assertEquals($client->project, 1);
-        $this->assertEquals($client->server, 'http://example.com/api/1/store/');
-        $this->assertEquals($client->public_key, 'public');
-        $this->assertEquals($client->secret_key, 'secret');
+        $this->assertEquals(1, $client->project);
+        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertEquals('public', $client->public_key);
+        $this->assertEquals('secret', $client->secret_key);
     }
 
     /**
@@ -1989,7 +1989,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $client = new Dummy_Raven_Client();
             $client->capture(array('message' => $message,));
             $events = $client->getSentEvents();
-            $this->assertEquals(count($events), 1);
+            $this->assertEquals(1, count($events));
             $event = array_pop($events);
 
             $this->assertEquals('error', $event['level']);
