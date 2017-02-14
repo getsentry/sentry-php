@@ -1013,6 +1013,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testCaptureLastError()
     {
+        if (function_exists('error_clear_last')) {
+            error_clear_last();
+        }
         $client = new Dummy_Raven_Client();
         $this->assertNull($client->captureLastError());
         $this->assertEquals(0, count($client->getSentEvents()));
