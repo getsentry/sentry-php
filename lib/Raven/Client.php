@@ -32,6 +32,9 @@ class Raven_Client
     const MESSAGE_LIMIT = 1024;
 
     public $breadcrumbs;
+    /**
+     * @var Raven_Context
+     */
     public $context;
     public $extra_data;
     /**
@@ -51,11 +54,11 @@ class Raven_Client
      */
     protected $app_path;
     /**
-     * @var array
+     * @var string[]
      */
     protected $prefixes;
     /**
-     * @var array
+     * @var string[]|null
      */
     protected $excluded_app_paths;
     /**
@@ -64,6 +67,9 @@ class Raven_Client
     protected $transport;
 
     var $logger;
+    /**
+     * @var string Full URL to Sentry
+     */
     var $server;
     var $secret_key;
     var $public_key;
@@ -100,6 +106,10 @@ class Raven_Client
     var $_user;
     var $_pending_events;
     var $sdk;
+    /**
+     * @var Raven_CurlHandler
+     */
+    protected $_curl_handler;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -177,8 +187,10 @@ class Raven_Client
         }
 
         $this->transaction = new Raven_TransactionStack();
-        if ($this->is_http_request() && isset($_SERVER['PATH_INFO'])) {
+        if (self::is_http_request() && isset($_SERVER['PATH_INFO'])) {
+            // @codeCoverageIgnoreStart
             $this->transaction->push($_SERVER['PATH_INFO']);
+            // @codeCoverageIgnoreEnd
         }
 
         if (Raven_Util::get($options, 'install_default_breadcrumb_handlers', true)) {
@@ -268,11 +280,7 @@ class Raven_Client
 
     public function setExcludedAppPaths($value)
     {
-        if ($value) {
-            $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : $value;
-        } else {
-            $this->excluded_app_paths = null;
-        }
+        $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : null;
         return $this;
     }
 
@@ -307,7 +315,7 @@ class Raven_Client
         return $this->transport;
     }
 
-    public function getServerEndpoint($value)
+    public function getServerEndpoint($value = '')
     {
         return $this->server;
     }
@@ -423,6 +431,7 @@ class Raven_Client
      *
      * @param mixed $ident
      * @return mixed
+     * @codeCoverageIgnore
      */
     public function getIdent($ident)
     {
@@ -438,6 +447,7 @@ class Raven_Client
      * @param mixed      $vars
      * @return string|null
      * @deprecated
+     * @codeCoverageIgnore
      */
     public function message($message, $params = array(), $level = self::INFO,
                             $stack = false, $vars = null)
@@ -449,6 +459,7 @@ class Raven_Client
      * @param Exception $exception
      * @return string|null
      * @deprecated
+     * @codeCoverageIgnore
      */
     public function exception($exception)
     {
@@ -537,7 +548,9 @@ class Raven_Client
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
             if (!class_exists('Raven_Stacktrace')) {
+                // @codeCoverageIgnoreStart
                 spl_autoload_call('Raven_Stacktrace');
+                // @codeCoverageIgnoreEnd
             }
 
             $exc_data['stacktrace'] = array(
@@ -624,7 +637,11 @@ class Raven_Client
         $handler->install();
     }
 
-    protected function is_http_request()
+    /**
+     * @return bool
+     * @codeCoverageIgnore
+     */
+    protected static function is_http_request()
     {
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
@@ -726,7 +743,7 @@ class Raven_Client
 
         $data = array_merge($this->get_default_data(), $data);
 
-        if ($this->is_http_request()) {
+        if (self::is_http_request()) {
             $data = array_merge($this->get_http_data(), $data);
         }
 
@@ -850,7 +867,7 @@ class Raven_Client
     }
 
     /**
-     * @param string $data
+     * @param array $data
      * @return string|bool
      */
     public function encode(&$data)
@@ -860,7 +877,9 @@ class Raven_Client
             if (function_exists('json_last_error_msg')) {
                 $this->_lasterror = json_last_error_msg();
             } else {
+                // @codeCoverageIgnoreStart
                 $this->_lasterror = json_last_error();
+                // @codeCoverageIgnoreEnd
             }
             return false;
         }
@@ -1243,6 +1262,7 @@ class Raven_Client
      * @param string      $id    User's ID
      * @param string|null $email User's email
      * @param array       $data  Additional user data
+     * @codeCoverageIgnore
      */
     public function set_user_data($id, $email = null, $data = array())
     {
