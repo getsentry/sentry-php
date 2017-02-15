@@ -34,6 +34,17 @@
             "Raven_" : "lib/"
         }
     },
+    "scripts": {
+        "tests": [
+            "vendor/bin/phpunit --verbose"
+        ],
+        "tests-report": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html test/html-report"
+        ],
+        "phpcs": [
+            "vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run"
+        ]
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "1.7.x-dev"
