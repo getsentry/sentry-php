@@ -822,19 +822,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $id = 'unique_id';
         $email = 'foo@example.com';
-
-        $user = array(
-            'username' => 'my_user',
-        );
-
-        // @todo переписать
-        $client->set_user_data($id, $email, $user);
+        $client->user_context(array('id' => $id, 'email' => $email, 'username' => 'my_user', ));
 
         $expected = array(
             'user' => array(
-                'id' => 'unique_id',
+                'id' => $id,
                 'username' => 'my_user',
-                'email' => 'foo@example.com',
+                'email' => $email,
             )
         );
 
@@ -1458,7 +1452,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         $property_method__convert_path = new ReflectionMethod('Raven_Client', '_convertPath');
         $property_method__convert_path->setAccessible(true);
-        // @todo зависит от версии php. Вставить сюда closure
         $callable = array($this, 'stabClosureVoid');
 
         $data = array(
@@ -1568,7 +1561,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $property = new ReflectionMethod('Raven_Client', '_convertPath');
         $property->setAccessible(true);
-        // @todo
+
+        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar'));
+        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar/'));
+        $this->assertEquals('foo/bar', $property->invoke(null, 'foo/bar'));
+        $this->assertEquals('foo/bar/', $property->invoke(null, 'foo/bar/'));
+        $this->assertEquals(dirname(__DIR__).'/', $property->invoke(null, __DIR__.'/../'));
+        $this->assertEquals(dirname(dirname(__DIR__)).'/', $property->invoke(null, __DIR__.'/../../'));
     }
 
     /**
