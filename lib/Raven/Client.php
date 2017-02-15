@@ -16,8 +16,6 @@
 
 class Raven_Client
 {
-    const PARDIR = DIRECTORY_SEPARATOR;
-
     const VERSION = '1.7.x-dev';
 
     const PROTOCOL = '6';
@@ -102,6 +100,10 @@ class Raven_Client
      * @var string|int|null
      */
     public $_lasterror;
+    /**
+     * @var object|null
+     */
+    protected $_last_sentry_error;
     public $_last_event_id;
     public $_user;
     public $_pending_events;
@@ -110,6 +112,14 @@ class Raven_Client
      * @var Raven_CurlHandler
      */
     protected $_curl_handler;
+    /**
+     * @var resource|null
+     */
+    protected $_curl_instance;
+    /**
+     * @var bool
+     */
+    protected $_shutdown_function_has_been_set;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -169,11 +179,14 @@ class Raven_Client
         $this->processors = $this->setProcessorsFromOptions($options);
 
         $this->_lasterror = null;
+        $this->_last_sentry_error = null;
+        $this->_curl_instance = null;
         $this->_last_event_id = null;
         $this->_user = null;
         $this->_pending_events = array();
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
+        $this->_shutdown_function_has_been_set = false;
 
         $this->sdk = Raven_Util::get($options, 'sdk', array(
             'name' => 'sentry-php',
@@ -197,7 +210,25 @@ class Raven_Client
             $this->registerDefaultBreadcrumbHandlers();
         }
 
-        register_shutdown_function(array($this, 'onShutdown'));
+        if (Raven_Util::get($options, 'install_shutdown_handler', true)) {
+            $this->registerShutdownFunction();
+        }
+    }
+
+    public function __destruct()
+    {
+        // Force close curl resource
+        $this->close_curl_resource();
+    }
+
+    /**
+     * Destruct all objects contain link to this object
+     *
+     * This method can not delete shutdown handler
+     */
+    public function close_all_children_link()
+    {
+        $this->processors = array();
     }
 
     /**
@@ -252,8 +283,8 @@ class Raven_Client
         // we need app_path to have a trailing slash otherwise
         // base path detection becomes complex if the same
         // prefix is matched
-        if (substr($path, 0, 1) === self::PARDIR && substr($path, -1, 1) !== self::PARDIR) {
-            $path = $path . self::PARDIR;
+        if (substr($path, 0, 1) === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR) {
+            $path = $path.DIRECTORY_SEPARATOR;
         }
         return $path;
     }
@@ -369,7 +400,9 @@ class Raven_Client
             $new_processor = new $processor($this);
 
             if (isset($options['processorOptions']) && is_array($options['processorOptions'])) {
-                if (isset($options['processorOptions'][$processor]) && method_exists($processor, 'setProcessorOptions')) {
+                if (isset($options['processorOptions'][$processor])
+                    && method_exists($processor, 'setProcessorOptions')
+                ) {
                     $new_processor->setProcessorOptions($options['processorOptions'][$processor]);
                 }
             }
@@ -381,15 +414,20 @@ class Raven_Client
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
      *
-     * @param string $dsn Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @param string $dsn Raven compatible DSN
      * @return array      parsed DSN
+     *
+     * @doc http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
      */
     public static function parseDSN($dsn)
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https'))) {
-            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
+            throw new InvalidArgumentException(
+                'Unsupported Sentry DSN scheme: '.
+                (!empty($scheme) ? $scheme : '<not set>')
+            );
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
         $netloc .= (isset($url['port']) ? ':'.$url['port'] : null);
@@ -637,6 +675,14 @@ class Raven_Client
         $handler->install();
     }
 
+    protected function registerShutdownFunction()
+    {
+        if (!$this->_shutdown_function_has_been_set) {
+            $this->_shutdown_function_has_been_set = true;
+            register_shutdown_function(array($this, 'onShutdown'));
+        }
+    }
+
     /**
      * @return bool
      * @codeCoverageIgnore
@@ -652,9 +698,12 @@ class Raven_Client
 
         foreach ($_SERVER as $key => $value) {
             if (0 === strpos($key, 'HTTP_')) {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
+                $header_key =
+                    str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+                $headers[$header_key] = $value;
             } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH')) && $value !== '') {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))))] = $value;
+                $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
+                $headers[$header_key] = $value;
             }
         }
 
@@ -903,7 +952,9 @@ class Raven_Client
      */
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
+        if (is_callable($this->send_callback)
+            && call_user_func_array($this->send_callback, array(&$data)) === false
+        ) {
             // if send_callback returns false, end native send
             return;
         }
@@ -947,6 +998,10 @@ class Raven_Client
         return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
     }
 
+    /**
+     * @return array
+     * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+     */
     protected function get_curl_options()
     {
         $options = array(
@@ -971,7 +1026,7 @@ class Raven_Client
 
             // some versions of PHP 5.3 don't have this defined correctly
             if (!defined('CURLOPT_CONNECTTIMEOUT_MS')) {
-                //see http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+                //see stackoverflow link in the phpdoc
                 define('CURLOPT_CONNECTTIMEOUT_MS', 156);
             }
 
@@ -1053,35 +1108,47 @@ class Raven_Client
         // XXX(dcramer): Prevent 100-continue response form server (Fixes GH-216)
         $new_headers[] = 'Expect:';
 
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $new_headers);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        if (is_null($this->_curl_instance)) {
+            $this->_curl_instance = curl_init($url);
+        }
+        curl_setopt($this->_curl_instance, CURLOPT_POST, 1);
+        curl_setopt($this->_curl_instance, CURLOPT_HTTPHEADER, $new_headers);
+        curl_setopt($this->_curl_instance, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($this->_curl_instance, CURLOPT_RETURNTRANSFER, true);
 
         $options = $this->get_curl_options();
-        $ca_cert = $options[CURLOPT_CAINFO];
-        unset($options[CURLOPT_CAINFO]);
-        curl_setopt_array($curl, $options);
-
-        curl_exec($curl);
-
-        $errno = curl_errno($curl);
-        // CURLE_SSL_CACERT || CURLE_SSL_CACERT_BADFILE
-        if ($errno == 60 || $errno == 77) {
-            curl_setopt($curl, CURLOPT_CAINFO, $ca_cert);
-            curl_exec($curl);
-        }
-
-        $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $success = ($code == 200);
-        if (!$success) {
-            // It'd be nice just to raise an exception here, but it's not very PHP-like
-            $this->_lasterror = curl_error($curl);
+        if (isset($options[CURLOPT_CAINFO])) {
+            $ca_cert = $options[CURLOPT_CAINFO];
+            unset($options[CURLOPT_CAINFO]);
         } else {
-            $this->_lasterror = null;
+            $ca_cert = null;
         }
-        curl_close($curl);
+        curl_setopt_array($this->_curl_instance, $options);
+
+        $buffer = curl_exec($this->_curl_instance);
+
+        $errno = curl_errno($this->_curl_instance);
+        // CURLE_SSL_CACERT || CURLE_SSL_CACERT_BADFILE
+        if ((($errno == 60) || ($errno == 77)) && !is_null($ca_cert)) {
+            curl_setopt($this->_curl_instance, CURLOPT_CAINFO, $ca_cert);
+            $buffer = curl_exec($this->_curl_instance);
+        }
+        if ($errno != 0) {
+            $this->_lasterror = curl_error($this->_curl_instance);
+            $this->_last_sentry_error = null;
+            return false;
+        }
+
+        $code = curl_getinfo($this->_curl_instance, CURLINFO_HTTP_CODE);
+        $success = ($code == 200);
+        if ($success) {
+            $this->_lasterror = null;
+            $this->_last_sentry_error = null;
+        } else {
+            // It'd be nice just to raise an exception here, but it's not very PHP-like
+            $this->_lasterror = curl_error($this->_curl_instance);
+            $this->_last_sentry_error = @json_decode($buffer);
+        }
 
         return $success;
     }
@@ -1118,7 +1185,9 @@ class Raven_Client
     public function getAuthHeader()
     {
         $timestamp = microtime(true);
-        return $this->get_auth_header($timestamp, static::getUserAgent(), $this->public_key, $this->secret_key);
+        return $this->get_auth_header(
+            $timestamp, static::getUserAgent(), $this->public_key, $this->secret_key
+        );
     }
 
     /**
@@ -1331,5 +1400,29 @@ class Raven_Client
     public function setProcessors(array $processors)
     {
         $this->processors = $processors;
+    }
+
+    /**
+     * @return object|null
+     */
+    public function getLastSentryError()
+    {
+        return $this->_last_sentry_error;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getShutdownFunctionHasBeenSet()
+    {
+        return $this->_shutdown_function_has_been_set;
+    }
+
+    public function close_curl_resource()
+    {
+        if (!is_null($this->_curl_instance)) {
+            curl_close($this->_curl_instance);
+            $this->_curl_instance = null;
+        }
     }
 }

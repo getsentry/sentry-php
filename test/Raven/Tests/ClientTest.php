@@ -25,11 +25,14 @@ function invalid_encoding()
 class Dummy_Raven_Client extends Raven_Client
 {
     private $__sent_events = array();
+    public $dummy_breadcrumbs_handlers_has_set = false;
+    public $dummy_shutdown_handlers_has_set = false;
 
     public function getSentEvents()
     {
         return $this->__sent_events;
     }
+
     public function send(&$data)
     {
         if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
@@ -38,29 +41,41 @@ class Dummy_Raven_Client extends Raven_Client
         }
         $this->__sent_events[] = $data;
     }
+
     public static function is_http_request()
     {
         return true;
     }
+
     public static function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
         return parent::get_auth_header($timestamp, $client, $api_key, $secret_key);
     }
+
     public function get_http_data()
     {
         return parent::get_http_data();
     }
+
     public function get_user_data()
     {
         return parent::get_user_data();
     }
+
     public function buildCurlCommand($url, $data, $headers)
     {
         return parent::buildCurlCommand($url, $data, $headers);
     }
+
     // short circuit breadcrumbs
     public function registerDefaultBreadcrumbHandlers()
     {
+        $this->dummy_breadcrumbs_handlers_has_set = true;
+    }
+
+    public function registerShutdownFunction()
+    {
+        $this->dummy_shutdown_handlers_has_set = true;
     }
 
     /**
@@ -81,6 +96,7 @@ class Dummy_Raven_Client_With_Overrided_Direct_Send extends Raven_Client
     public $_set_url;
     public $_set_data;
     public $_set_headers;
+    public static $_close_curl_resource_called = false;
 
     public function send_http_asynchronous_curl_exec($url, $data, $headers)
     {
@@ -113,6 +129,12 @@ class Dummy_Raven_Client_With_Overrided_Direct_Send extends Raven_Client
     public function set_curl_handler(Raven_CurlHandler $value)
     {
         $this->_curl_handler = $value;
+    }
+
+    public function close_curl_resource()
+    {
+        parent::close_curl_resource();
+        self::$_close_curl_resource_called = true;
     }
 }
 
@@ -341,7 +363,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals('http://example.com/api/1/store/', $client->server);
     }
-
 
     /**
      * @covers Raven_Client::__construct
@@ -801,19 +822,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $id = 'unique_id';
         $email = 'foo@example.com';
-
-        $user = array(
-            'username' => 'my_user',
-        );
-
-        // @todo переписать
-        $client->set_user_data($id, $email, $user);
+        $client->user_context(array('id' => $id, 'email' => $email, 'username' => 'my_user', ));
 
         $expected = array(
             'user' => array(
-                'id' => 'unique_id',
+                'id' => $id,
                 'username' => 'my_user',
-                'email' => 'foo@example.com',
+                'email' => $email,
             )
         );
 
@@ -1429,13 +1444,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      * @covers Raven_Client::getLastEventID
      * @covers Raven_Client::get_extra_data
      * @covers Raven_Client::setProcessors
+     * @covers Raven_Client::getLastSentryError
+     * @covers Raven_Client::getShutdownFunctionHasBeenSet
      */
     public function testGettersAndSetters()
     {
         $client = new Dummy_Raven_Client();
         $property_method__convert_path = new ReflectionMethod('Raven_Client', '_convertPath');
         $property_method__convert_path->setAccessible(true);
-        // @todo зависит от версии php. Вставить сюда closure
         $callable = array($this, 'stabClosureVoid');
 
         $data = array(
@@ -1461,11 +1477,14 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             array('_lasterror', null, null, ),
             array('_lasterror', null, 'value', ),
             array('_lasterror', null, mt_rand(100, 999), ),
+            array('_last_sentry_error', null, (object)array('error' => 'test',), ),
             array('_last_event_id', null, mt_rand(100, 999), ),
             array('_last_event_id', null, 'value', ),
             array('extra_data', '_extra_data', array('key' => 'value'), ),
             array('processors', 'processors', array(), ),
             array('processors', 'processors', array('key' => 'value'), ),
+            array('_shutdown_function_has_been_set', null, true),
+            array('_shutdown_function_has_been_set', null, false),
         );
         foreach ($data as &$datum) {
             $this->subTestGettersAndSettersDatum($client, $datum);
@@ -1542,7 +1561,13 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $property = new ReflectionMethod('Raven_Client', '_convertPath');
         $property->setAccessible(true);
-        // @todo
+
+        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar'));
+        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar/'));
+        $this->assertEquals('foo/bar', $property->invoke(null, 'foo/bar'));
+        $this->assertEquals('foo/bar/', $property->invoke(null, 'foo/bar/'));
+        $this->assertEquals(dirname(__DIR__).'/', $property->invoke(null, __DIR__.'/../'));
+        $this->assertEquals(dirname(dirname(__DIR__)).'/', $property->invoke(null, __DIR__.'/../../'));
     }
 
     /**
@@ -1970,6 +1995,43 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers Raven_Client::__construct
+     */
+    public function test__construct_handlers()
+    {
+        foreach (array(true, false) as $u1) {
+            foreach (array(true, false) as $u2) {
+                $client = new Dummy_Raven_Client(
+                    null, array(
+                        'install_default_breadcrumb_handlers' => $u1,
+                        'install_shutdown_handler' => $u2,
+                    )
+                );
+                $this->assertEquals($u1, $client->dummy_breadcrumbs_handlers_has_set);
+                $this->assertEquals($u2, $client->dummy_shutdown_handlers_has_set);
+            }
+        }
+    }
+
+    /**
+     * @covers Raven_Client::__destruct
+     * @covers Raven_Client::close_all_children_link
+     */
+    public function test__destruct_calls_close_functions()
+    {
+        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
+            'http://public:secret@example.com/1', array(
+                'install_default_breadcrumb_handlers' => false,
+                'install_shutdown_handler' => false,
+            )
+        );
+        $client::$_close_curl_resource_called = false;
+        $client->close_all_children_link();
+        unset($client);
+        $this->assertTrue(Dummy_Raven_Client_With_Overrided_Direct_Send::$_close_curl_resource_called);
+    }
+
+    /**
      * @covers Raven_Client::get_user_data
      */
     public function testGet_user_data()
@@ -2146,5 +2208,22 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->captureMessage('foobar');
         $test_data = Dummy_Raven_Client_With_Sync_Override::get_test_data();
         $this->assertStringEqualsFile(Dummy_Raven_Client_With_Sync_Override::test_filename(), $test_data."\n");
+    }
+
+    /**
+     * @covers Raven_Client::close_curl_resource
+     */
+    public function testClose_curl_resource()
+    {
+        $raven = new Dummy_Raven_Client();
+        $reflection = new ReflectionProperty('Raven_Client', '_curl_instance');
+        $reflection->setAccessible(true);
+        $ch = curl_init();
+        $reflection->setValue($raven, $ch);
+        unset($ch);
+
+        $this->assertInternalType('resource', $reflection->getValue($raven));
+        $raven->close_curl_resource();
+        $this->assertNull($reflection->getValue($raven));
     }
 }
