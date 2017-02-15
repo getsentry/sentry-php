@@ -400,7 +400,9 @@ class Raven_Client
             $new_processor = new $processor($this);
 
             if (isset($options['processorOptions']) && is_array($options['processorOptions'])) {
-                if (isset($options['processorOptions'][$processor]) && method_exists($processor, 'setProcessorOptions')) {
+                if (isset($options['processorOptions'][$processor])
+                    && method_exists($processor, 'setProcessorOptions')
+                ) {
                     $new_processor->setProcessorOptions($options['processorOptions'][$processor]);
                 }
             }
@@ -412,15 +414,20 @@ class Raven_Client
     /**
      * Parses a Raven-compatible DSN and returns an array of its values.
      *
-     * @param string $dsn Raven compatible DSN: http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @param string $dsn Raven compatible DSN
      * @return array      parsed DSN
+     *
+     * @doc http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
      */
     public static function parseDSN($dsn)
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https'))) {
-            throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
+            throw new InvalidArgumentException(
+                'Unsupported Sentry DSN scheme: '.
+                (!empty($scheme) ? $scheme : '<not set>')
+            );
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
         $netloc .= (isset($url['port']) ? ':'.$url['port'] : null);
@@ -691,9 +698,12 @@ class Raven_Client
 
         foreach ($_SERVER as $key => $value) {
             if (0 === strpos($key, 'HTTP_')) {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))))] = $value;
+                $header_key =
+                    str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+                $headers[$header_key] = $value;
             } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH')) && $value !== '') {
-                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))))] = $value;
+                $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
+                $headers[$header_key] = $value;
             }
         }
 
@@ -942,7 +952,9 @@ class Raven_Client
      */
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
+        if (is_callable($this->send_callback)
+            && call_user_func_array($this->send_callback, array(&$data)) === false
+        ) {
             // if send_callback returns false, end native send
             return;
         }
@@ -986,6 +998,10 @@ class Raven_Client
         return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
     }
 
+    /**
+     * @return array
+     * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+     */
     protected function get_curl_options()
     {
         $options = array(
@@ -1010,7 +1026,7 @@ class Raven_Client
 
             // some versions of PHP 5.3 don't have this defined correctly
             if (!defined('CURLOPT_CONNECTTIMEOUT_MS')) {
-                //see http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+                //see stackoverflow link in the phpdoc
                 define('CURLOPT_CONNECTTIMEOUT_MS', 156);
             }
 
@@ -1169,7 +1185,9 @@ class Raven_Client
     public function getAuthHeader()
     {
         $timestamp = microtime(true);
-        return $this->get_auth_header($timestamp, static::getUserAgent(), $this->public_key, $this->secret_key);
+        return $this->get_auth_header(
+            $timestamp, static::getUserAgent(), $this->public_key, $this->secret_key
+        );
     }
 
     /**
