@@ -21,6 +21,9 @@
         "ext-curl": "*"
     },
     "suggest": {
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
