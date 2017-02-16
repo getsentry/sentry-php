@@ -32,7 +32,7 @@ class Raven_Autoloader
      */
     public static function autoload($class)
     {
-        if (0 !== strpos($class, 'Raven')) {
+        if (substr($class, 0, 6) == 'Raven_') {
             return;
         }
 
