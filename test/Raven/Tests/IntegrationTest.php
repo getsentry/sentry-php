@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class DummyIntegration_Raven_Client extends Raven_Client
+class DummyIntegration_Raven_Client extends \Raven\Client
 {
     private $__sent_events = array();
 

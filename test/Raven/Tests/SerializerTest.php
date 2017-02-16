@@ -18,7 +18,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 {
     public function testArraysAreArrays()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = array(1, 2, 3);
         $result = $serializer->serialize($input);
         $this->assertEquals(array('1', '2', '3'), $result);
@@ -26,7 +26,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testStdClassAreArrays()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = new stdClass();
         $input->foo = 'BAR';
         $result = $serializer->serialize($input);
@@ -35,7 +35,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testObjectsAreStrings()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = new Raven_SerializerTestObject();
         $result = $serializer->serialize($input);
         $this->assertEquals('Object Raven_SerializerTestObject', $result);
@@ -43,7 +43,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testIntsAreInts()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = 1;
         $result = $serializer->serialize($input);
         $this->assertInternalType('integer', $result);
@@ -52,7 +52,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testFloats()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = 1.5;
         $result = $serializer->serialize($input);
         $this->assertInternalType('double', $result);
@@ -61,7 +61,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testBooleans()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = true;
         $result = $serializer->serialize($input);
         $this->assertTrue($result);
@@ -73,7 +73,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testNull()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = null;
         $result = $serializer->serialize($input);
         $this->assertNull($result);
@@ -81,7 +81,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testRecursionMaxDepth()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $input = array();
         $input[] = &$input;
         $result = $serializer->serialize($input, 3);
@@ -90,18 +90,18 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
 
     public function testObjectInArray()
     {
-        $serializer = new Raven_Serializer();
-        $input = array('foo' => new Raven_Serializer());
+        $serializer = new \Raven\Serializer();
+        $input = array('foo' => new \Raven\Serializer());
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
+        $this->assertEquals(array('foo' => 'Object Raven\\Serializer'), $result);
     }
 
     /**
-     * @covers Raven_Serializer::serializeString
+     * @covers \Raven\Serializer::serializeString
      */
     public function testBrokenEncoding()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         foreach (array('7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90') as $key) {
             $input = pack('H*', $key);
             $result = $serializer->serialize($input);
@@ -113,11 +113,11 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_Serializer::serializeString
+     * @covers \Raven\Serializer::serializeString
      */
     public function testLongString()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         for ($i = 0; $i < 100; $i++) {
             foreach (array(100, 1000, 1010, 1024, 1050, 1100, 10000) as $length) {
                 $input = '';
@@ -132,11 +132,11 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_Serializer::serializeValue
+     * @covers \Raven\Serializer::serializeValue
      */
     public function testSerializeValueResource()
     {
-        $serializer = new Raven_Serializer();
+        $serializer = new \Raven\Serializer();
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
         $fo = fopen($filename, 'wb');
 

@@ -9,20 +9,26 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven;
+
 /**
  * Autoloads Raven classes.
  *
  * @package raven
  */
-class Raven_Autoloader
+class Autoloader
 {
     /**
-     * Registers Raven_Autoloader as an SPL autoloader.
+     * Registers \Raven\Autoloader as an SPL autoloader.
      */
     public static function register()
     {
         ini_set('unserialize_callback_func', 'spl_autoload_call');
-        spl_autoload_register(array('Raven_Autoloader', 'autoload'));
+        spl_autoload_register(
+            function ($class) {
+                Autoloader::autoload($class);
+            }
+        );
     }
 
     /**
@@ -32,14 +38,14 @@ class Raven_Autoloader
      */
     public static function autoload($class)
     {
-        if (0 !== strpos($class, 'Raven')) {
+        if (0 !== strpos($class, 'Raven\\')) {
             return;
         }
 
-        $file = dirname(__FILE__).'/../'.str_replace(array('_', "\0"), array('/', ''), $class).'.php';
+        $file = dirname(__FILE__).'/../'.str_replace(array('\\', "\0"), array('/', ''), $class).'.php';
         if (is_file($file)) {
             /** @noinspection PhpIncludeInspection */
-            require $file;
+            require_once $file;
         }
     }
 }
