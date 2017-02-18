@@ -11,6 +11,10 @@
 
 namespace Raven;
 
+/**
+ * @package Raven
+ * @deprecated
+ */
 class Compat
 {
     public static function gethostname()

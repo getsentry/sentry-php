@@ -6,8 +6,8 @@ error_reporting(E_ALL | E_STRICT);
 
 // TODO: if we could get rid of this and have composer figure things out it'd make it
 // a bit more sane
-require(dirname(__file__) . '/../lib/Raven/Autoloader.php');
-Raven_Autoloader::register();
+require(__DIR__ . '/../lib/Raven/Autoloader.php');
+\Raven\Autoloader::register();
 
 function raven_cli_test($command, $args)
 {
@@ -27,12 +27,12 @@ function cmd_test($dsn)
 
     // Parse DSN as a test
     try {
-        $parsed = Raven_Client::parseDSN($dsn);
+        \Raven\Client::parseDSN($dsn);
     } catch (InvalidArgumentException $ex) {
         exit("ERROR: There was an error parsing your DSN:\n  " . $ex->getMessage());
     }
 
-    $client = new Raven_Client($dsn, array(
+    $client = new \Raven\Client($dsn, array(
         'trace' => true,
         'curl_method' => 'sync',
         'app_path' => realpath(__DIR__ . '/..'),

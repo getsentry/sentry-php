@@ -38,7 +38,11 @@ class Autoloader
      */
     public static function autoload($class)
     {
-        if (substr($class, 0, 6) !== 'Raven\\') {
+        if (substr($class, 0, 6) == 'Raven_') {
+            // legacy call
+            require_once 'Legacy.php';
+            return;
+        } elseif (substr($class, 0, 6) !== 'Raven\\') {
             return;
         }
 

@@ -149,7 +149,7 @@ class Client
         $this->public_key = \Raven\Util::get($options, 'public_key');
         $this->project = \Raven\Util::get($options, 'project', 1);
         $this->auto_log_stacks = (bool) \Raven\Util::get($options, 'auto_log_stacks', false);
-        $this->name = \Raven\Util::get($options, 'name', \Raven\Compat::gethostname());
+        $this->name = \Raven\Util::get($options, 'name', gethostname());
         $this->site = \Raven\Util::get($options, 'site', self::_server_variable('SERVER_NAME'));
         $this->tags = \Raven\Util::get($options, 'tags', array());
         $this->release = \Raven\Util::get($options, 'release', null);
@@ -925,7 +925,7 @@ class Client
      */
     public function encode(&$data)
     {
-        $message = \Raven\Compat::json_encode($data);
+        $message = json_encode($data);
         if ($message === false) {
             if (function_exists('json_last_error_msg')) {
                 $this->_lasterror = json_last_error_msg();
