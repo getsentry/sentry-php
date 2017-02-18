@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven;
+
 /**
  * Asynchronous Curl connection manager.
  *
@@ -15,7 +17,7 @@
  */
 
 // TODO(dcramer): handle ca_cert
-class Raven_CurlHandler
+class CurlHandler
 {
     private $join_timeout;
     private $multi_handle;

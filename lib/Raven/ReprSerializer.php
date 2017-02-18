@@ -8,13 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+namespace Raven;
 
 /**
  * Serializes a value into a representation that should reasonably suggest
  * both the type and value, and be serializable into JSON.
  * @package raven
  */
-class Raven_ReprSerializer extends Raven_Serializer
+class ReprSerializer extends \Raven\Serializer
 {
     protected function serializeValue($value)
     {

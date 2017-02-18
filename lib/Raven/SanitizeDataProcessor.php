@@ -1,11 +1,13 @@
 <?php
+namespace Raven;
+
 /**
  * Asterisk out passwords from password fields in frames, http,
  * and basic extra data.
  *
  * @package raven
  */
-class Raven_SanitizeDataProcessor extends Raven_Processor
+class SanitizeDataProcessor extends \Raven\Processor
 {
     const MASK = '********';
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
@@ -15,7 +17,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     private $values_re;
     protected $session_cookie_name;
 
-    public function __construct(Raven_Client $client)
+    public function __construct(\Raven\Client $client)
     {
         parent::__construct($client);
         $this->fields_re    = self::FIELDS_RE;
