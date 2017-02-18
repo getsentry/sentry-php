@@ -1,5 +1,7 @@
 <?php
 
+@trigger_error('The Raven_* class is deprecated since version 1.7 and will be removed in 2.0. Use the Raven\\* classes instead.', E_USER_DEPRECATED);
+
 /**
  * @deprecated
  */
@@ -14,7 +16,7 @@ class Raven_Client extends \Raven\Client
 {
 }
 
-/**
+/** @noinspection PhpDeprecationInspection
  * @deprecated
  */
 class Raven_Compat extends \Raven\Compat

@@ -17,7 +17,7 @@
         "monolog/monolog": "*"
     },
     "require": {
-        "php": ">=5.3.2",
+        "php": ">=5.3.3",
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
