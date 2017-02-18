@@ -120,9 +120,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
          */
         $processor = $client->processors[0];
 
-        $this->assertInstanceOf('\Raven\\SanitizeDataProcessor', $processor);
-        $this->assertEquals($processor->getFieldsRe(), $processorOptions['\Raven\\SanitizeDataProcessor']['fields_re'], 'overwrote fields');
-        $this->assertEquals($processor->getValuesRe(), $processorOptions['\Raven\\SanitizeDataProcessor']['values_re'], 'overwrote values');
+        $this->assertInstanceOf('\\Raven\\SanitizeDataProcessor', $processor);
+        $this->assertEquals($processor->getFieldsRe(), $processorOptions['\\Raven\\SanitizeDataProcessor']['fields_re'], 'overwrote fields');
+        $this->assertEquals($processor->getValuesRe(), $processorOptions['\\Raven\\SanitizeDataProcessor']['values_re'], 'overwrote values');
     }
 
     /**
@@ -159,9 +159,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
          */
         $processor = $client->processors[0];
 
-        $this->assertInstanceOf('\Raven\\SanitizeDataProcessor', $processor);
-        $this->assertEquals($processor->getFieldsRe(), $processorOptions['\Raven\\SanitizeDataProcessor']['fields_re'], 'overwrote fields');
-        $this->assertEquals($processor->getValuesRe(), $processorOptions['\Raven\\SanitizeDataProcessor']['values_re'], 'overwrote values');
+        $this->assertInstanceOf('\\Raven\\SanitizeDataProcessor', $processor);
+        $this->assertEquals($processor->getFieldsRe(), $processorOptions['\\Raven\\SanitizeDataProcessor']['fields_re'], 'overwrote fields');
+        $this->assertEquals($processor->getValuesRe(), $processorOptions['\\Raven\\SanitizeDataProcessor']['values_re'], 'overwrote values');
 
         $processor->process($data);
 
@@ -186,14 +186,14 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public static function overrideDataProvider()
     {
         $processorOptions = array(
-            '\Raven\\SanitizeDataProcessor' => array(
+            '\\Raven\\SanitizeDataProcessor' => array(
                 'fields_re' => '/(api_token)/i',
                 'values_re' => '/^(?:\d[ -]*?){15,16}$/'
             )
         );
 
         $client_options = array(
-            'processors' => array('\Raven\\SanitizeDataProcessor'),
+            'processors' => array('\\Raven\\SanitizeDataProcessor'),
             'processorOptions' => $processorOptions
         );
 

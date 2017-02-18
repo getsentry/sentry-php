@@ -690,10 +690,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testDoesRegisterProcessors()
     {
         $client = new Dummy_Raven_Client(array(
-            'processors' => array('\Raven\\SanitizeDataProcessor'),
+            'processors' => array('\\Raven\\SanitizeDataProcessor'),
         ));
         $this->assertEquals(1, count($client->processors));
-        $this->assertInstanceOf('\Raven\\SanitizeDataProcessor', $client->processors[0]);
+        $this->assertInstanceOf('\\Raven\\SanitizeDataProcessor', $client->processors[0]);
     }
 
     public function testProcessDoesCallProcessors()
@@ -731,7 +731,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $defaults = Dummy_Raven_Client::getDefaultProcessors();
 
-        $this->assertTrue(in_array('\Raven\\SanitizeDataProcessor', $defaults));
+        $this->assertTrue(in_array('\\Raven\\SanitizeDataProcessor', $defaults));
     }
 
     /**
@@ -1417,7 +1417,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testUuid4()
     {
-        $method = new ReflectionMethod('\Raven\\Client', 'uuid4');
+        $method = new ReflectionMethod('\\Raven\\Client', 'uuid4');
         $method->setAccessible(true);
         for ($i = 0; $i < 1000; $i++) {
             $this->assertRegExp('/^[0-9a-z-]+$/', $method->invoke(null));
@@ -1450,7 +1450,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testGettersAndSetters()
     {
         $client = new Dummy_Raven_Client();
-        $property_method__convert_path = new ReflectionMethod('\Raven\\Client', '_convertPath');
+        $property_method__convert_path = new ReflectionMethod('\\Raven\\Client', '_convertPath');
         $property_method__convert_path->setAccessible(true);
         $callable = array($this, 'stabClosureVoid');
 
@@ -1509,7 +1509,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $method_get_name = 'get'.$function_name;
         $method_set_name = 'set'.$function_name;
-        $property = new ReflectionProperty('\Raven\\Client', $property_name);
+        $property = new ReflectionProperty('\\Raven\\Client', $property_name);
         $property->setAccessible(true);
 
         if (method_exists($client, $method_set_name)) {
@@ -1524,7 +1524,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         if (method_exists($client, $method_get_name)) {
             $property->setValue($client, $value_out);
-            $reflection = new ReflectionMethod('\Raven\Client', $method_get_name);
+            $reflection = new ReflectionMethod('\\Raven\Client', $method_get_name);
             if ($reflection->isPublic()) {
                 $actual_value = $client->$method_get_name();
                 $this->assertMixedValueAndArray($value_out, $actual_value);
@@ -1559,7 +1559,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function test_convertPath()
     {
-        $property = new ReflectionMethod('\Raven\Client', '_convertPath');
+        $property = new ReflectionMethod('\\Raven\Client', '_convertPath');
         $property->setAccessible(true);
 
         $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar'));
@@ -1579,7 +1579,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $this->assertInternalType('string', $class_name);
             $this->assertTrue(class_exists($class_name));
             $reflection = new ReflectionClass($class_name);
-            $this->assertTrue($reflection->isSubclassOf('\Raven\\Processor'));
+            $this->assertTrue($reflection->isSubclassOf('\\Raven\\Processor'));
             $this->assertFalse($reflection->isAbstract());
         }
     }
@@ -1589,7 +1589,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testGet_default_ca_cert()
     {
-        $reflection = new ReflectionMethod('\Raven\Client', 'get_default_ca_cert');
+        $reflection = new ReflectionMethod('\\Raven\Client', 'get_default_ca_cert');
         $reflection->setAccessible(true);
         $this->assertFileExists($reflection->invoke(null));
     }
@@ -1600,7 +1600,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testTranslateSeverity()
     {
-        $reflection = new ReflectionProperty('\Raven\Client', 'severity_map');
+        $reflection = new ReflectionProperty('\\Raven\Client', 'severity_map');
         $reflection->setAccessible(true);
         $client = new Dummy_Raven_Client();
 
@@ -1748,7 +1748,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function test_server_variable()
     {
-        $method = new ReflectionMethod('\Raven\Client', '_server_variable');
+        $method = new ReflectionMethod('\\Raven\Client', '_server_variable');
         $method->setAccessible(true);
         foreach ($_SERVER as $key => $value) {
             $actual = $method->invoke(null, $key);
@@ -1778,7 +1778,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $value = $client->encode($data_broken);
         if (!function_exists('json_encode') or version_compare(PHP_VERSION, '5.5.0', '>=')) {
             $this->assertFalse($value, 'Broken data encoded successfully with '.
-                (function_exists('json_encode') ? 'native method' : '\Raven\\Compat::_json_encode'));
+                (function_exists('json_encode') ? 'native method' : '\\Raven\\Compat::_json_encode'));
         } else {
             if ($value !== false) {
                 $this->markTestSkipped();
@@ -1795,7 +1795,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $json_stringify = \Raven\Compat::json_encode($data);
         $value = $client->encode($data);
         $this->assertNotFalse($value);
-        $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, '\Raven\\Client::encode returned malformed data');
+        $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, '\\Raven\\Client::encode returned malformed data');
         $decoded = base64_decode($value);
         $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
         if (function_exists("gzcompress")) {
@@ -2216,7 +2216,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testClose_curl_resource()
     {
         $raven = new Dummy_Raven_Client();
-        $reflection = new ReflectionProperty('\Raven\Client', '_curl_instance');
+        $reflection = new ReflectionProperty('\\Raven\Client', '_curl_instance');
         $reflection->setAccessible(true);
         $ch = curl_init();
         $reflection->setValue($raven, $ch);

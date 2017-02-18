@@ -380,7 +380,7 @@ class Client
     public static function getDefaultProcessors()
     {
         return array(
-            '\Raven\SanitizeDataProcessor',
+            '\\Raven\\SanitizeDataProcessor',
         );
     }
 
@@ -587,9 +587,9 @@ class Client
             array_unshift($trace, $frame_where_exception_thrown);
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\Raven\Stacktrace')) {
+            if (!class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
-                spl_autoload_call('\Raven\Stacktrace');
+                spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
             }
 
@@ -843,9 +843,9 @@ class Client
 
         if (!empty($stack)) {
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\Raven\Stacktrace')) {
+            if (!class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
-                spl_autoload_call('\Raven\Stacktrace');
+                spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
             }
 
