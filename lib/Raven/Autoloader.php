@@ -53,3 +53,5 @@ class Autoloader
         }
     }
 }
+
+require_once 'LegacyAutoloader.php';
