@@ -1812,6 +1812,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testRegisterDefaultBreadcrumbHandlers()
     {
+        if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
+            $this->markTestSkipped('HHVM stacktrace behaviour');
+            return;
+        }
         $previous = set_error_handler(array($this, 'stabClosureErrorHandler'), E_USER_NOTICE);
         new Raven_Client(null, array());
         $this->_closure_called = false;
