@@ -120,6 +120,12 @@ class Raven_Client
      * @var bool
      */
     protected $_shutdown_function_has_been_set;
+    private $serialization_depth = array(
+        'request' => 3,
+        'user' => 3,
+        'extra' => 3,
+        'contexts' => 5,
+    );
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -212,6 +218,19 @@ class Raven_Client
 
         if (Raven_Util::get($options, 'install_shutdown_handler', true)) {
             $this->registerShutdownFunction();
+        }
+
+        if (null !== $serialization_depth_request = Raven_Util::get($options, 'serialization_depth_request')) {
+            $this->serialization_depth['request'] = $serialization_depth_request;
+        }
+        if (null !== $serialization_depth_user = Raven_Util::get($options, 'serialization_depth_user')) {
+            $this->serialization_depth['user'] = $serialization_depth_user;
+        }
+        if (null !== $serialization_depth_extra = Raven_Util::get($options, 'serialization_depth_extra')) {
+            $this->serialization_depth['extra'] = $serialization_depth_extra;
+        }
+        if (null !== $serialization_depth_contexts = Raven_Util::get($options, 'serialization_depth_contexts')) {
+            $this->serialization_depth['contexts'] = $serialization_depth_contexts;
         }
     }
 
@@ -568,7 +587,7 @@ class Raven_Client
         $exc = $exception;
         do {
             $exc_data = array(
-                'value' => $this->serializer->serialize($exc->getMessage()),
+                'value' => $this->serializer->serialize($exc->getMessage(), 1),
                 'type' => get_class($exc),
             );
 
@@ -875,13 +894,13 @@ class Raven_Client
     {
         // attempt to sanitize any user provided data
         if (!empty($data['request'])) {
-            $data['request'] = $this->serializer->serialize($data['request']);
+            $data['request'] = $this->serializer->serialize($data['request'], $this->serialization_depth['request']);
         }
         if (!empty($data['user'])) {
-            $data['user'] = $this->serializer->serialize($data['user'], 3);
+            $data['user'] = $this->serializer->serialize($data['user'], $this->serialization_depth['user']);
         }
         if (!empty($data['extra'])) {
-            $data['extra'] = $this->serializer->serialize($data['extra']);
+            $data['extra'] = $this->serializer->serialize($data['extra'], $this->serialization_depth['extra']);
         }
         if (!empty($data['tags'])) {
             foreach ($data['tags'] as $key => $value) {
@@ -889,7 +908,7 @@ class Raven_Client
             }
         }
         if (!empty($data['contexts'])) {
-            $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
+            $data['contexts'] = $this->serializer->serialize($data['contexts'], $this->serialization_depth['contexts']);
         }
     }
 
