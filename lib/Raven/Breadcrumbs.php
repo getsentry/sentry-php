@@ -26,9 +26,14 @@ class Raven_Breadcrumbs
 
     public function __construct($size = 100)
     {
+        $this->size = $size;
+        $this->reset();
+    }
+
+    public function reset()
+    {
         $this->count = 0;
         $this->pos = 0;
-        $this->size = $size;
         $this->buffer = array();
     }
 
