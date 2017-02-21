@@ -108,6 +108,11 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
 
     public function testDoesFixFrameInfo()
     {
+        if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
+            $this->markTestSkipped('HHVM stacktrace behaviour');
+            return;
+        }
+
         /**
          * PHP's way of storing backstacks seems bass-ackwards to me
          * 'function' is not the function you're in; it's any function being
