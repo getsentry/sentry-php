@@ -7,6 +7,7 @@
 - Collect User.ip_address automatically (#419).
 - Added a processor to remove web cookies and another to remove HTTP body data for POST, PUT, PATCH and DELETE requests. They will be enabled by default in ``2.0`` (#405).
 - Added a processor to sanitize HTTP headers (e.g. the Authorization header) (#428).
+- Added a processor to remove ``pre_context``, ``context_line`` and ``post_context`` informations from reported exceptions (#429).
 
 1.6.2
 -----
