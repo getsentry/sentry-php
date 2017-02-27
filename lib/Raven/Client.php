@@ -740,6 +740,9 @@ class Raven_Client
             $user = array(
                 'id' => session_id(),
             );
+            if (!empty($_SERVER['REMOTE_ADDR'])) {
+                $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
+            }
             if (!empty($_SESSION)) {
                 $user['data'] = $_SESSION;
             }
