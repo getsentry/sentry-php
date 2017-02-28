@@ -100,6 +100,48 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($this->errorHandlerCalled, 1);
     }
 
+    public function testExceptionHandlerPropagatesToNative()
+    {
+        $client = $this->getMockBuilder('Client')
+                       ->setMethods(array('captureException'))
+                       ->getMock();
+        $client->expects($this->exactly(2))
+               ->method('captureException')
+               ->with($this->isInstanceOf('Exception'));
+
+        $handler = new Raven_ErrorHandler($client);
+        
+        set_exception_handler(null);
+        $handler->registerExceptionHandler(false);
+
+        $testException = new Exception('Test exception');
+
+        $didRethrow = false;
+        try {
+            $handler->handleException($testException);
+        } catch (Exception $e) {
+            $didRethrow = true;
+        }
+
+        $this->assertFalse($didRethrow);
+
+        set_exception_handler(null);
+        $handler->registerExceptionHandler(true);
+
+        $didRethrow = false;
+        $rethrownException = null;
+        try {
+            $handler->handleException($testException);
+        } catch (Exception $e) {
+            $didRethrow = true;
+            $rethrownException = $e;
+        }
+
+        $this->assertTrue($didRethrow);
+        $this->assertSame($testException, $rethrownException);
+
+    }
+
     public function testErrorHandlerRespectsErrorReportingDefault()
     {
         $client = $this->getMockBuilder('Client')
