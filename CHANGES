@@ -1,9 +1,10 @@
 1.7.0
 -----
 
-- Corrected some issues with argument serialization in stacktraces.
+- Corrected some issues with argument serialization in stacktraces (#399).
 - The default exception handler will now re-raise exceptions when
-  ``call_existing`` is true and no exception handler is registered.
+  ``call_existing`` is true and no exception handler is registered (#421).
+- Collect User.ip_address automatically (#419).
 
 1.6.2
 -----
