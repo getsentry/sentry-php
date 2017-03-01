@@ -139,7 +139,6 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         $this->assertTrue($didRethrow);
         $this->assertSame($testException, $rethrownException);
-
     }
 
     public function testErrorHandlerRespectsErrorReportingDefault()
