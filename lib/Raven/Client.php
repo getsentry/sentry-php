@@ -78,6 +78,7 @@ class Raven_Client
     public $tags;
     public $release;
     public $environment;
+    public $sample_rate;
     public $trace;
     public $timeout;
     public $message_limit;
@@ -152,6 +153,7 @@ class Raven_Client
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->release = Raven_Util::get($options, 'release', null);
         $this->environment = Raven_Util::get($options, 'environment', null);
+        $this->sample_rate = Raven_Util::get($options, 'sample_rate', 1);
         $this->trace = (bool) Raven_Util::get($options, 'trace', true);
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
@@ -968,6 +970,11 @@ class Raven_Client
 
         if ($this->transport) {
             call_user_func($this->transport, $this, $data);
+            return;
+        }
+
+        // should this event be sampled?
+        if (rand(1, 100) / 100.0 > $this->sample_rate) {
             return;
         }
 
