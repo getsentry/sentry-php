@@ -11,8 +11,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
     const VALUES_RE = '/^(?:\d[ -]*?){13,16}$/';
 
-    private $fields_re;
-    private $values_re;
+    protected $fields_re;
+    protected $values_re;
     protected $session_cookie_name;
 
     public function __construct(Raven_Client $client)
