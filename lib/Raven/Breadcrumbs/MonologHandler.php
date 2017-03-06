@@ -8,7 +8,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
     /**
      * Translates Monolog log levels to Raven log levels.
      */
-    private $logLevels = array(
+    protected $logLevels = array(
         Logger::DEBUG     => Raven_Client::DEBUG,
         Logger::INFO      => Raven_Client::INFO,
         Logger::NOTICE    => Raven_Client::INFO,
@@ -19,7 +19,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
         Logger::EMERGENCY => Raven_Client::FATAL,
     );
 
-    private $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
+    protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
 
     /**
      * @var Raven_Client the client object that sends the message to the server

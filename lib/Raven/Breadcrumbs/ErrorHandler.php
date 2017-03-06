@@ -2,7 +2,7 @@
 
 class Raven_Breadcrumbs_ErrorHandler
 {
-    private $existingHandler;
+    protected $existingHandler;
 
     /**
      * @var Raven_Client the client object that sends the message to the server
