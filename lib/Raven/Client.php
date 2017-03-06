@@ -976,7 +976,7 @@ class Client
         }
 
         // should this event be sampled?
-        if (rand(1, 100) / 100.0 > $this->sample_rate) {
+        if (mt_rand(1, 100) / 100.0 > $this->sample_rate) {
             return;
         }
 

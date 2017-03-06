@@ -2230,4 +2230,66 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $raven->close_curl_resource();
         $this->assertNull($reflection->getValue($raven));
     }
+
+    /**
+     * @covers \Raven\Client::send
+     */
+    public function testSampleRateAbsolute()
+    {
+        // step 1
+        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
+            'http://public:secret@example.com/1', array(
+                'curl_method'                         => 'foobar',
+                'install_default_breadcrumb_handlers' => false,
+                'sample_rate'                         => 0,
+            )
+        );
+        for ($i = 0; $i < 1000; $i++) {
+            $client->captureMessage('foobar');
+            $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+        }
+
+        // step 2
+        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
+            'http://public:secret@example.com/1', array(
+                'curl_method'                         => 'foobar',
+                'install_default_breadcrumb_handlers' => false,
+                'sample_rate'                         => 1,
+            )
+        );
+        for ($i = 0; $i < 1000; $i++) {
+            $client->captureMessage('foobar');
+            $this->assertTrue($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+        }
+    }
+
+    /**
+     * @covers \Raven\Client::send
+     */
+    public function testSampleRatePrc()
+    {
+        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
+            'http://public:secret@example.com/1', array(
+                'curl_method'                         => 'foobar',
+                'install_default_breadcrumb_handlers' => false,
+                'sample_rate'                         => 0.5,
+            )
+        );
+        $u_true = false;
+        $u_false = false;
+        for ($i = 0; $i < 1000; $i++) {
+            $client->captureMessage('foobar');
+            if ($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called) {
+                $u_true = true;
+            } else {
+                $u_false = true;
+            }
+
+            if ($u_true or $u_false) {
+                return;
+            }
+        }
+
+        $this->fail('sample_rate=0.5 can not produce fails and successes at the same time');
+    }
 }
