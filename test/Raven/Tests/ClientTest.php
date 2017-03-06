@@ -1776,9 +1776,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $data_broken = array($data_broken);
         }
         $value = $client->encode($data_broken);
-        if (!function_exists('json_encode') or version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $this->assertFalse($value, 'Broken data encoded successfully with '.
-                (function_exists('json_encode') ? 'native method' : '\\Raven\\Compat::_json_encode'));
+        if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
+            $this->assertFalse($value, 'Broken data encoded successfully with native method');
         } else {
             if ($value !== false) {
                 $this->markTestSkipped();
@@ -1792,7 +1791,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client();
         $data = array('some' => (object)array('value' => 'data'), 'foo' => array('bar', null, 123), false);
-        $json_stringify = \Raven\Compat::json_encode($data);
+        $json_stringify = json_encode($data);
         $value = $client->encode($data);
         $this->assertNotFalse($value);
         $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, '\\Raven\\Client::encode returned malformed data');
