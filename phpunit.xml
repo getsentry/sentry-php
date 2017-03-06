@@ -8,11 +8,11 @@
          processIsolation="false"
          stopOnFailure="false"
          syntaxCheck="false"
-         bootstrap="test/bootstrap.php"
+         bootstrap="tests/bootstrap.php"
 >
   <testsuites>
     <testsuite name="Raven Test Suite">
-      <directory>./test/Raven/</directory>
+      <directory>./tests/Raven/</directory>
     </testsuite>
   </testsuites>
 
