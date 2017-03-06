@@ -15,6 +15,8 @@
  * limitations under the License.
 */
 
+namespace Raven;
+
 /**
  * This helper is based on code from Facebook's Phabricator project
  *
@@ -24,7 +26,7 @@
  *
  * @package raven
  */
-class Raven_Serializer
+class Serializer
 {
     /*
      * The default mb detect order
@@ -132,7 +134,7 @@ class Raven_Serializer
     /**
      * @param string $mb_detect_order
      *
-     * @return Raven_Serializer
+     * @return \Raven\Serializer
      * @codeCoverageIgnore
      */
     public function setMbDetectOrder($mb_detect_order)

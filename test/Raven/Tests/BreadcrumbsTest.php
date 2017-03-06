@@ -13,7 +13,7 @@ class Raven_Tests_BreadcrumbsTest extends PHPUnit_Framework_TestCase
 {
     public function testBuffer()
     {
-        $breadcrumbs = new Raven_Breadcrumbs(10);
+        $breadcrumbs = new \Raven\Breadcrumbs(10);
         for ($i = 0; $i <= 10; $i++) {
             $breadcrumbs->record(array('message' => $i));
         }
@@ -28,7 +28,7 @@ class Raven_Tests_BreadcrumbsTest extends PHPUnit_Framework_TestCase
 
     public function testJson()
     {
-        $breadcrumbs = new Raven_Breadcrumbs(1);
+        $breadcrumbs = new \Raven\Breadcrumbs(1);
         $breadcrumbs->record(array('message' => 'test'));
         $json = $breadcrumbs->to_json();
 

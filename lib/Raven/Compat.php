@@ -9,7 +9,13 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Compat
+namespace Raven;
+
+/**
+ * @package Raven
+ * @deprecated
+ */
+class Compat
 {
     public static function gethostname()
     {

@@ -1,18 +1,20 @@
 <?php
 
-class Raven_Breadcrumbs_ErrorHandler
+namespace Raven\Breadcrumbs;
+
+class ErrorHandler
 {
     private $existingHandler;
 
     /**
-     * @var Raven_Client the client object that sends the message to the server
+     * @var \Raven\Client the client object that sends the message to the server
      */
     protected $ravenClient;
 
     /**
-     * @param Raven_Client $ravenClient
+     * @param \Raven\Client $ravenClient
      */
-    public function __construct(Raven_Client $ravenClient)
+    public function __construct(\Raven\Client $ravenClient)
     {
         $this->ravenClient = $ravenClient;
     }

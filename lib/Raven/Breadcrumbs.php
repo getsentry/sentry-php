@@ -8,13 +8,15 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven;
+
 /**
  * Raven Breadcrumbs
  *
  * @package raven
  */
 
-class Raven_Breadcrumbs
+class Breadcrumbs
 {
     public $count;
     public $pos;

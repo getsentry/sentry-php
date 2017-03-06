@@ -1,4 +1,6 @@
 <?php
-class Raven_Exception extends Exception
+namespace Raven;
+
+class Exception extends \Exception
 {
 }
