@@ -39,6 +39,12 @@ class Raven_Serializer
     const WESTERN_MB_DETECT_ORDER = 'UTF-8, ASCII, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4, ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10, ISO-8859-13, ISO-8859-14, ISO-8859-15, ISO-8859-16, Windows-1251, Windows-1252, Windows-1254';
 
     /**
+     * Default maximum depth when serializing arrays/objects
+     *
+     */
+    const DEFAULT_MAX_DEPTH = 3;
+
+    /**
      * This is the default mb detect order for the detection of encoding
      *
      * @var string
@@ -46,12 +52,23 @@ class Raven_Serializer
     protected $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
     /**
-     * @param null|string $mb_detect_order
+     * The maximum depth when serializing arrays/objects
+     *
+     * @var
      */
-    public function __construct($mb_detect_order = null)
+    protected $max_depth = self::DEFAULT_MAX_DEPTH;
+
+    /**
+     * @param null|string $mb_detect_order
+     * @param null|int    $max_depth
+     */
+    public function __construct($mb_detect_order = null, $max_depth = null )
     {
         if ($mb_detect_order != null) {
             $this->mb_detect_order = $mb_detect_order;
+        }
+        if ( null !== $max_depth ) {
+            $this->max_depth = $max_depth;
         }
     }
 
@@ -64,8 +81,9 @@ class Raven_Serializer
      * @param int   $_depth
      * @return string|bool|double|int|null|object|array
      */
-    public function serialize($value, $max_depth = 3, $_depth = 0)
+    public function serialize($value, $max_depth = null, $_depth = 0)
     {
+        $max_depth = null === $max_depth ? $this->max_depth : $max_depth;
         $className = is_object($value) ? get_class($value) : null;
         $toArray = is_array($value) || $className === 'stdClass';
         if ($toArray && $_depth < $max_depth) {
