@@ -690,10 +690,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testDoesRegisterProcessors()
     {
         $client = new Dummy_Raven_Client(array(
-            'processors' => array('Raven_SanitizeDataProcessor'),
+            'processors' => array('Raven_Processor_SanitizeDataProcessor'),
         ));
+
         $this->assertEquals(1, count($client->processors));
-        $this->assertInstanceOf('Raven_SanitizeDataProcessor', $client->processors[0]);
+        $this->assertInstanceOf('Raven_Processor_SanitizeDataProcessor', $client->processors[0]);
     }
 
     public function testProcessDoesCallProcessors()
@@ -729,9 +730,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testDefaultProcessorsContainSanitizeDataProcessor()
     {
-        $defaults = Dummy_Raven_Client::getDefaultProcessors();
-
-        $this->assertTrue(in_array('Raven_SanitizeDataProcessor', $defaults));
+        $this->assertContains('Raven_Processor_SanitizeDataProcessor', Dummy_Raven_Client::getDefaultProcessors());
     }
 
     /**
@@ -2095,7 +2094,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         }
 
         $client = new Dummy_Raven_Client();
-        $client->capture(array('message' => 'foobar', ));
+        $client->capture(array('message' => 'foobar'));
         $events = $client->getSentEvents();
         $event = array_pop($events);
         $input = $client->get_http_data();
