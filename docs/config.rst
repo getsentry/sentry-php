@@ -128,7 +128,7 @@ The following settings are available for the client:
 
     .. code-block:: php
 
-        $client->setSendCallback(unction($data) {
+        $client->setSendCallback(function($data) {
             // dont send events if POST
             if ($_SERVER['REQUEST_METHOD'] === 'POST')
             {
