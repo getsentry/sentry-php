@@ -3,6 +3,23 @@ sentry-php
 
 .. image:: https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master
    :target: http://travis-ci.org/getsentry/sentry-php
+   :alt: Build Status
+
+.. image:: https://img.shields.io/packagist/dt/sentry/sentry.svg?style=flat-square
+   :target: https://packagist.org/packages/sentry/sentry
+   :alt: Total Downloads
+
+.. image:: https://img.shields.io/packagist/dm/sentry/sentry.svg?style=flat-square
+   :target: https://packagist.org/packages/sentry/sentry
+   :alt: Downloads per month
+
+.. image:: https://img.shields.io/packagist/v/sentry/sentry.svg?style=flat-square
+   :target: https://packagist.org/packages/sentry/sentry
+   :alt: Latest stable version
+
+.. image:: http://img.shields.io/packagist/l/sentry/sentry.svg?style=flat-square
+   :target: https://packagist.org/packages/sentry/sentry
+   :alt: License
 
 
 The official PHP SDK for `Sentry <https://getsentry.com/>`_.
