@@ -1,3 +1,9 @@
+<p align="center">
+    <a href="https://symfony.com" target="_blank" align="center">
+        <img src="https://a0wx592cvgzripj.global.ssl.fastly.net/_static/f9c485ccdb254095d3cac55524daba0a/getsentry/images/branding/svg/sentry-horizontal-black.svg" width="280">
+    </a>
+</p>
+
 # Sentry for PHP
 
 [![Build Status](https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master)](http://travis-ci.org/getsentry/sentry-php)
@@ -45,11 +51,11 @@ Other packages exists to integrate this SDK into the most common frameworks.
 
 ## Community
 
-- Documentation <https://docs.getsentry.com/hosted/clients/php/>
-- Bug Tracker <http://github.com/getsentry/sentry-php/issues>
-- Code <http://github.com/getsentry/sentry-php>
-- Mailing List <https://groups.google.com/group/getsentry>
-- IRC <irc://irc.freenode.net/sentry> (irc.freenode.net, #sentry)
+- [Documentation](https://docs.getsentry.com/hosted/clients/php/)
+- [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
+- [Code](http://github.com/getsentry/sentry-php)
+- [Mailing List](https://groups.google.com/group/getsentry)
+- [IRC](irc://irc.freenode.net/sentry) (irc.freenode.net, #sentry)
 
 
 Contributing
