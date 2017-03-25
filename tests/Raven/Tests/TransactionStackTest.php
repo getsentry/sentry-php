@@ -14,7 +14,7 @@ class Raven_Tests_TransactionStackTest extends PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
-        $stack = new Raven_TransactionStack();
+        $stack = new \Raven\TransactionStack();
         $stack->push('hello');
         /** @noinspection PhpVoidFunctionResultUsedInspection */
         /** @noinspection PhpUnusedLocalVariableInspection */

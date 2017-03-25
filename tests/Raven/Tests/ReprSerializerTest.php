@@ -13,7 +13,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 {
     public function testArraysAreArrays()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = array(1, 2, 3);
         $result = $serializer->serialize($input);
         $this->assertEquals(array('1', '2', '3'), $result);
@@ -21,7 +21,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testObjectsAreStrings()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = new Raven_StacktraceTestObject();
         $result = $serializer->serialize($input);
         $this->assertEquals('Object Raven_StacktraceTestObject', $result);
@@ -29,7 +29,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testIntsAreInts()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = 1;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
@@ -38,7 +38,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testFloats()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = 1.5;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
@@ -47,7 +47,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testBooleans()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = true;
         $result = $serializer->serialize($input);
         $this->assertEquals('true', $result);
@@ -60,7 +60,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testNull()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = null;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
@@ -69,7 +69,7 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
 
     public function testRecursionMaxDepth()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $input = array();
         $input[] = &$input;
         $result = $serializer->serialize($input, 3);
@@ -77,11 +77,11 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_ReprSerializer::serializeValue
+     * @covers \Raven\ReprSerializer::serializeValue
      */
     public function testSerializeValueResource()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
         $fo = fopen($filename, 'wb');
 
@@ -91,11 +91,11 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_ReprSerializer::serializeValue
+     * @covers \Raven\ReprSerializer::serializeValue
      */
     public function testSerializeRoundedFloat()
     {
-        $serializer = new Raven_ReprSerializer();
+        $serializer = new \Raven\ReprSerializer();
 
         $result = $serializer->serialize((double)1);
         $this->assertInternalType('string', $result);

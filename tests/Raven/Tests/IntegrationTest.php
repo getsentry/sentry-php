@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class DummyIntegration_Raven_Client extends Raven_Client
+class DummyIntegration_Raven_Client extends \Raven\Client
 {
     private $__sent_events = array();
 
@@ -64,6 +64,6 @@ class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($exc['value'], 'mkdir(): No such file or directory');
         $stack = $exc['stacktrace']['frames'];
         $lastFrame = $stack[count($stack) - 1];
-        $this->assertEquals(@$lastFrame['filename'], 'test/Raven/Tests/IntegrationTest.php');
+        $this->assertEquals(@$lastFrame['filename'], 'tests/Raven/Tests/IntegrationTest.php');
     }
 }

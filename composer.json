@@ -17,13 +17,13 @@
         "monolog/monolog": "*"
     },
     "require": {
-        "php": ">=5.2.4",
-        "ext-curl": "*"
-    },
-    "suggest": {
+        "php": ">=5.3.3",
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
+        "ext-curl": "*"
+    },
+    "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
@@ -33,8 +33,8 @@
         "bin/sentry"
     ],
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
+        "psr-4" : {
+            "Raven\\" : "lib/Raven/"
         }
     },
     "scripts": {
@@ -42,7 +42,7 @@
             "vendor/bin/phpunit --verbose"
         ],
         "tests-report": [
-            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html test/html-report"
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html tests/html-report"
         ],
         "phpcs": [
             "vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run"
