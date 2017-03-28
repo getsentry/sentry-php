@@ -19,10 +19,10 @@ namespace Raven;
 // TODO(dcramer): handle ca_cert
 class CurlHandler
 {
-    private $join_timeout;
-    private $multi_handle;
-    private $options;
-    private $requests;
+    protected $join_timeout;
+    protected $multi_handle;
+    protected $options;
+    protected $requests;
 
     public function __construct($options, $join_timeout = 5)
     {
@@ -89,7 +89,7 @@ class CurlHandler
     /**
      * @doc http://php.net/manual/en/function.curl-multi-exec.php
      */
-    private function select()
+    protected function select()
     {
         do {
             $mrc = curl_multi_exec($this->multi_handle, $active);
