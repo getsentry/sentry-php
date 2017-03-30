@@ -1,4 +1,5 @@
 <?php
+
 namespace Raven;
 
 /**
@@ -8,16 +9,33 @@ namespace Raven;
  */
 abstract class Processor
 {
-    protected $client;
     /**
-     * \Raven\Processor constructor.
+     * This constant defines the mask string used to strip sensitive informations.
+     */
+    const STRING_MASK = '********';
+
+    /**
+     * @var \Raven\Client The Raven client
+     */
+    protected $client;
+
+    /**
+     * Class constructor.
      *
-     * @param \Raven\Client $client
-     * @codeCoverageIgnore
+     * @param \Raven\Client $client The Raven client
      */
     public function __construct(\Raven\Client $client)
     {
         $this->client = $client;
+    }
+
+    /**
+     * Override the default processor options
+     *
+     * @param array $options Associative array of processor options
+     */
+    public function setProcessorOptions(array $options)
+    {
     }
 
     /**
@@ -26,11 +44,4 @@ abstract class Processor
      * @param array $data Array of log data
      */
     abstract public function process(&$data);
-
-    /**
-     * Override the default processor options
-     *
-     * @param array $options Associative array of processor options
-     */
-    abstract public function setProcessorOptions(array $options);
 }

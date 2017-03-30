@@ -28,15 +28,15 @@ namespace Raven;
 // currently are not used outside of the fatal handler.
 class ErrorHandler
 {
-    private $old_exception_handler;
-    private $call_existing_exception_handler = false;
-    private $old_error_handler;
-    private $call_existing_error_handler = false;
-    private $reservedMemory;
+    protected $old_exception_handler;
+    protected $call_existing_exception_handler = false;
+    protected $old_error_handler;
+    protected $call_existing_error_handler = false;
+    protected $reservedMemory;
     /** @var \Raven\Client */
-    private $client;
-    private $send_errors_last = false;
-    private $fatal_error_types = array(
+    protected $client;
+    protected $send_errors_last = false;
+    protected $fatal_error_types = array(
         E_ERROR,
         E_PARSE,
         E_CORE_ERROR,
@@ -51,7 +51,7 @@ class ErrorHandler
      * Error types which should be processed by the handler.
      * A 'null' value implies "whatever error_reporting is at time of error".
      */
-    private $error_types = null;
+    protected $error_types = null;
 
     public function __construct($client, $send_errors_last = false, $error_types = null,
                                 $__error_types = null)

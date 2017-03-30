@@ -9,7 +9,7 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
     /**
      * Translates Monolog log levels to Raven log levels.
      */
-    private $logLevels = array(
+    protected $logLevels = array(
         Logger::DEBUG     => \Raven\Client::DEBUG,
         Logger::INFO      => \Raven\Client::INFO,
         Logger::NOTICE    => \Raven\Client::INFO,
@@ -20,7 +20,7 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
         Logger::EMERGENCY => \Raven\Client::FATAL,
     );
 
-    private $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
+    protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
 
     /**
      * @var \Raven\Client the client object that sends the message to the server

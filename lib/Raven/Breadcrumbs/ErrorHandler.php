@@ -4,7 +4,7 @@ namespace Raven\Breadcrumbs;
 
 class ErrorHandler
 {
-    private $existingHandler;
+    protected $existingHandler;
 
     /**
      * @var \Raven\Client the client object that sends the message to the server

@@ -45,7 +45,7 @@ class Serializer
      *
      * @var string
      */
-    private $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
+    protected $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
     /**
      * @param null|string $mb_detect_order

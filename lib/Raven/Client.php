@@ -382,7 +382,7 @@ class Client
     public static function getDefaultProcessors()
     {
         return array(
-            '\\Raven\\SanitizeDataProcessor',
+            '\\Raven\\Processor\\SanitizeDataProcessor',
         );
     }
 
