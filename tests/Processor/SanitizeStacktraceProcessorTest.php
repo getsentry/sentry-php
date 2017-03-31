@@ -9,12 +9,15 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests;
+
+use Raven\Client;
 use Raven\Processor\SanitizeStacktraceProcessor;
 
-class Raven_Tests_SanitizeStacktraceProcessorTest extends PHPUnit_Framework_TestCase
+class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var \Raven\Client|PHPUnit_Framework_MockObject_MockObject
+     * @var Client|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $client;
 
@@ -25,8 +28,8 @@ class Raven_Tests_SanitizeStacktraceProcessorTest extends PHPUnit_Framework_Test
 
     protected function setUp()
     {
-        $this->client = $this->getMockBuilder('Raven\Client')
-            ->setMethods(array_diff($this->getClassMethods('Raven\Client'), array('captureException', 'capture', 'get_default_data', 'get_http_data', 'get_user_data', 'get_extra_data')))
+        $this->client = $this->getMockBuilder(Client::class)
+            ->setMethods(array_diff($this->getClassMethods(Client::class), array('captureException', 'capture', 'get_default_data', 'get_http_data', 'get_user_data', 'get_extra_data')))
             ->getMock();
 
         $this->client->store_errors_for_bulk_send = true;
@@ -101,7 +104,7 @@ class Raven_Tests_SanitizeStacktraceProcessorTest extends PHPUnit_Framework_Test
      */
     private function getClassMethods($className)
     {
-        $class = new ReflectionClass($className);
+        $class = new \ReflectionClass($className);
         $methods = array();
 
         foreach ($class->getMethods() as $method) {

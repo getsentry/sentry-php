@@ -9,9 +9,12 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests;
+
+use Raven\Client;
 use Raven\Processor\RemoveHttpBodyProcessor;
 
-class Raven_Tests_RemoveHttpBodyProcessorTest extends \PHPUnit_Framework_TestCase
+class RemoveHttpBodyProcessorTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var RemoveHttpBodyProcessor|\PHPUnit_Framework_MockObject_MockObject
@@ -20,8 +23,8 @@ class Raven_Tests_RemoveHttpBodyProcessorTest extends \PHPUnit_Framework_TestCas
 
     protected function setUp()
     {
-        /** @var \Raven\Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder('Raven\Client')
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
             ->getMock();
 

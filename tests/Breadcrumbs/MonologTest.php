@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_MonologBreadcrumbHandlerTest extends PHPUnit_Framework_TestCase
+namespace Raven\Tests\Breadcrumbs;
+
+class MonologTest extends \PHPUnit_Framework_TestCase
 {
     protected function getSampleErrorMessage()
     {
@@ -40,7 +42,7 @@ EOF;
         ));
         $handler = new \Raven\Breadcrumbs\MonologHandler($client);
 
-        $logger = new Monolog\Logger('sentry');
+        $logger = new \Monolog\Logger('sentry');
         $logger->pushHandler($handler);
         $logger->addWarning('Foo');
 
@@ -58,7 +60,7 @@ EOF;
         ));
         $handler = new \Raven\Breadcrumbs\MonologHandler($client);
 
-        $logger = new Monolog\Logger('sentry');
+        $logger = new \Monolog\Logger('sentry');
         $logger->pushHandler($handler);
         $logger->addError($this->getSampleErrorMessage());
 

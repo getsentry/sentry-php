@@ -9,23 +9,29 @@
  * file that was distributed with this source code.
  */
 
-use Raven\Processor\RemoveCookiesProcessor;
+namespace Raven\Tests;
 
-class Raven_Tests_RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
+use Raven\Client;
+use Raven\Processor\SanitizeHttpHeadersProcessor;
+
+class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var RemoveCookiesProcessor|\PHPUnit_Framework_MockObject_MockObject
+     * @var SanitizeHttpHeadersProcessor|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $processor;
 
     protected function setUp()
     {
-        /** @var \Raven\Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder('Raven\Client')
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->processor = new RemoveCookiesProcessor($client);
+        $this->processor = new SanitizeHttpHeadersProcessor($client);
+        $this->processor->setProcessorOptions(array(
+            'sanitize_http_headers' => array('User-Defined-Header'),
+        ));
     }
 
     /**
@@ -44,33 +50,35 @@ class Raven_Tests_RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
             array(
                 array(
                     'request' => array(
-                        'foo' => 'bar',
+                        'headers' => array(
+                            'Authorization' => 'foo',
+                            'AnotherHeader' => 'bar',
+                        ),
                     ),
                 ),
                 array(
                     'request' => array(
-                        'foo' => 'bar',
+                        'headers' => array(
+                            'Authorization' => SanitizeHttpHeadersProcessor::STRING_MASK,
+                            'AnotherHeader' => 'bar',
+                        ),
                     ),
                 ),
             ),
             array(
                 array(
                     'request' => array(
-                        'foo' => 'bar',
-                        'cookies' => 'baz',
                         'headers' => array(
-                            'Cookie' => 'bar',
-                            'AnotherHeader' => 'foo',
+                            'User-Defined-Header' => 'foo',
+                            'AnotherHeader' => 'bar',
                         ),
                     ),
                 ),
                 array(
                     'request' => array(
-                        'foo' => 'bar',
-                        'cookies' => RemoveCookiesProcessor::STRING_MASK,
                         'headers' => array(
-                            'Cookie' => RemoveCookiesProcessor::STRING_MASK,
-                            'AnotherHeader' => 'foo',
+                            'User-Defined-Header' => SanitizeHttpHeadersProcessor::STRING_MASK,
+                            'AnotherHeader' => 'bar',
                         ),
                     ),
                 ),

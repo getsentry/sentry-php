@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests;
+
 class DummyIntegration_Raven_Client extends \Raven\Client
 {
     private $__sent_events = array();
@@ -34,16 +36,16 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     }
 }
 
-class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
 {
     private function create_chained_exception()
     {
         try {
-            throw new Exception('Foo bar');
-        } catch (Exception $ex) {
+            throw new \Exception('Foo bar');
+        } catch (\Exception $ex) {
             try {
-                throw new Exception('Child exc', 0, $ex);
-            } catch (Exception $ex2) {
+                throw new \Exception('Child exc', 0, $ex);
+            } catch (\Exception $ex2) {
                 return $ex2;
             }
         }
@@ -64,6 +66,6 @@ class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($exc['value'], 'mkdir(): No such file or directory');
         $stack = $exc['stacktrace']['frames'];
         $lastFrame = $stack[count($stack) - 1];
-        $this->assertEquals(@$lastFrame['filename'], 'tests/Raven/Tests/IntegrationTest.php');
+        $this->assertEquals(@$lastFrame['filename'], 'tests/IntegrationTest.php');
     }
 }

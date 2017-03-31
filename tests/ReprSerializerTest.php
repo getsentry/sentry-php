@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
+namespace Raven\Tests;
+
+class ReprSerializerTest extends \PHPUnit_Framework_TestCase
 {
     public function testArraysAreArrays()
     {
@@ -22,9 +24,9 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
     public function testObjectsAreStrings()
     {
         $serializer = new \Raven\ReprSerializer();
-        $input = new Raven_StacktraceTestObject();
+        $input = new \Raven\Tests\StacktraceTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven_StacktraceTestObject', $result);
+        $this->assertEquals('Object Raven\Tests\StacktraceTestObject', $result);
     }
 
     public function testIntsAreInts()

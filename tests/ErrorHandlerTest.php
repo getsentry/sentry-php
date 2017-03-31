@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
+namespace Raven\Tests;
+
+class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
 {
     private $errorLevel;
     private $errorHandlerCalled;
@@ -62,7 +64,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
 
-        $e = new ErrorException('message', 0, E_WARNING, '', 0);
+        $e = new \ErrorException('message', 0, E_WARNING, '', 0);
 
         $handler = new \Raven\ErrorHandler($client);
         $handler->handleException($e);
@@ -109,17 +111,17 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                ->method('captureException')
                ->with($this->isInstanceOf('Exception'));
 
-        $handler = new Raven\ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         
         set_exception_handler(null);
         $handler->registerExceptionHandler(false);
 
-        $testException = new Exception('Test exception');
+        $testException = new \Exception('Test exception');
 
         $didRethrow = false;
         try {
             $handler->handleException($testException);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $didRethrow = true;
         }
 
@@ -132,7 +134,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $rethrownException = null;
         try {
             $handler->handleException($testException);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $didRethrow = true;
             $rethrownException = $e;
         }
