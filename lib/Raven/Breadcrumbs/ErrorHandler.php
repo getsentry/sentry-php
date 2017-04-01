@@ -21,15 +21,10 @@ class ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context = [])
     {
-        $this->ravenClient->breadcrumbs->record([
-            'category' => 'error_reporting',
-            'message' => $message,
-            'level' => $this->ravenClient->translateSeverity($code),
-            'data' => [
-                'code' => $code,
-                'line' => $line,
-                'file' => $file,
-            ],
+        $this->ravenClient->leaveBreadcrumb($this->ravenClient->translateSeverity($code), Breadcrumb::TYPE_ERROR, 'error_reporting', $message, [
+            'code' => $code,
+            'line' => $line,
+            'file' => $file,
         ]);
 
         if ($this->existingHandler !== null) {

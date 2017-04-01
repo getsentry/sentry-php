@@ -9,24 +9,28 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests\Breadcrumbs;
+
+use Raven\Client;
 use Raven\ClientBuilder;
 
-class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends PHPUnit_Framework_TestCase
+class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
         $client = $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
-        ])->getClient();
+        ]);
 
-        $handler = new \Raven\Breadcrumbs\ErrorHandler($client);
-        $handler->handleError(E_WARNING, 'message');
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
 
-        $crumbs = $client->breadcrumbs->fetch();
+        /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
+        $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
 
-        $this->assertCount(1, $crumbs);
-        $this->assertEquals($crumbs[0]['message'], 'message');
-        $this->assertEquals($crumbs[0]['category'], 'error_reporting');
-        $this->assertEquals($crumbs[0]['level'], 'warning');
+        $this->assertCount(1, $breadcrumbs);
+
+        $this->assertEquals($breadcrumbs[0]->getMessage(), 'message');
+        $this->assertEquals($breadcrumbs[0]->getLevel(), Client::LEVEL_WARNING);
+        $this->assertEquals($breadcrumbs[0]->getCategory(), 'error_reporting');
     }
 }

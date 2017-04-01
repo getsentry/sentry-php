@@ -13,9 +13,11 @@ namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
 use Raven\Breadcrumbs\MonologHandler;
+use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Client;
 use Raven\ClientBuilder;
 
-class MonologTest extends \PHPUnit_Framework_TestCase
+class MonologHandlerTest extends \PHPUnit_Framework_TestCase
 {
     protected function getSampleErrorMessage()
     {
@@ -49,14 +51,18 @@ EOF;
 
         $logger = new Logger('sentry');
         $logger->pushHandler($handler);
-        $logger->addWarning('Foo');
+        $logger->addWarning('foo');
 
-        $crumbs = $client->breadcrumbs->fetch();
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
 
-        $this->assertCount(1, $crumbs);
-        $this->assertEquals($crumbs[0]['message'], 'Foo');
-        $this->assertEquals($crumbs[0]['category'], 'sentry');
-        $this->assertEquals($crumbs[0]['level'], 'warning');
+        /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
+        $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
+
+        $this->assertCount(1, $breadcrumbs);
+
+        $this->assertEquals($breadcrumbs[0]->getMessage(), 'foo');
+        $this->assertEquals($breadcrumbs[0]->getLevel(), Client::LEVEL_WARNING);
+        $this->assertEquals($breadcrumbs[0]->getCategory(), 'sentry');
     }
 
     public function testErrorInMessage()
@@ -71,12 +77,18 @@ EOF;
         $logger->pushHandler($handler);
         $logger->addError($this->getSampleErrorMessage());
 
-        $crumbs = $client->breadcrumbs->fetch();
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
 
-        $this->assertCount(1, $crumbs);
-        $this->assertEquals($crumbs[0]['data']['type'], 'Exception');
-        $this->assertEquals($crumbs[0]['data']['value'], 'An unhandled exception');
-        $this->assertEquals($crumbs[0]['category'], 'sentry');
-        $this->assertEquals($crumbs[0]['level'], 'error');
+        /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
+        $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
+
+        $this->assertCount(1, $breadcrumbs);
+
+        $metaData = $breadcrumbs[0]->getMetadata();
+
+        $this->assertEquals($breadcrumbs[0]->getType(), Breadcrumb::TYPE_ERROR);
+        $this->assertEquals($breadcrumbs[0]->getLevel(), Client::LEVEL_ERROR);
+        $this->assertEquals($breadcrumbs[0]->getCategory(), 'sentry');
+        $this->assertEquals($metaData['value'], 'An unhandled exception');
     }
 }
