@@ -9,8 +9,9 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests;
 
-class Raven_Tests_TransactionStackTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_TransactionStackTest extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {

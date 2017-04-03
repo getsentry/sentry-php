@@ -10,15 +10,15 @@
          syntaxCheck="false"
          bootstrap="tests/bootstrap.php"
 >
-  <testsuites>
-    <testsuite name="Raven Test Suite">
-      <directory>./tests/Raven/</directory>
-    </testsuite>
-  </testsuites>
+    <testsuites>
+        <testsuite name="Raven Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
 
-  <filter>
-    <whitelist>
-      <directory suffix=".php">./lib/Raven/</directory>
-    </whitelist>
-  </filter>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">lib</directory>
+        </whitelist>
+    </filter>
 </phpunit>

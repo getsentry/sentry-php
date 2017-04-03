@@ -9,11 +9,13 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven\Tests;
+
 function raven_test_recurse($times, $callback)
 {
     $times -= 1;
     if ($times > 0) {
-        return call_user_func('raven_test_recurse', $times, $callback);
+        return call_user_func('\Raven\Tests\raven_test_recurse', $times, $callback);
     }
 
     return call_user_func($callback);
@@ -24,7 +26,7 @@ function raven_test_create_stacktrace($args=null, $times=3)
     return raven_test_recurse($times, 'debug_backtrace');
 }
 
-class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_StacktraceTest extends \PHPUnit_Framework_TestCase
 {
     public function testCanTraceParamContext()
     {
@@ -137,24 +139,24 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
 
         if ($skip_call_user_func_fix) {
             $frame = $frames[3];
-            $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_create_stacktrace', $frame['function']);
             $frame = $frames[4];
-            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
             $frame = $frames[5];
-            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
         } else {
             $frame = $frames[0];
-            $this->assertEquals('raven_test_create_stacktrace', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_create_stacktrace', $frame['function']);
             $frame = $frames[1];
-            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
             $frame = $frames[2];
             $this->assertEquals('call_user_func', $frame['function']);
             $frame = $frames[3];
-            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
             $frame = $frames[4];
             $this->assertEquals('call_user_func', $frame['function']);
             $frame = $frames[5];
-            $this->assertEquals('raven_test_recurse', $frame['function']);
+            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
         }
     }
 
@@ -236,7 +238,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
     {
         try {
             eval("throw new Exception('foobar');");
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $trace = $ex->getTrace();
             $frames = \Raven\Stacktrace::get_stack_info($trace);
         }

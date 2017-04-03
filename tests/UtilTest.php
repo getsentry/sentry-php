@@ -9,12 +9,14 @@
  * file that was distributed with this source code.
  */
 
-class Raven_StacktraceTestObject
+namespace Raven\Tests;
+
+class StacktraceTestObject
 {
     private $foo = 'bar';
 }
 
-class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_UtilTest extends \PHPUnit_Framework_TestCase
 {
     public function testGetReturnsDefaultOnMissing()
     {

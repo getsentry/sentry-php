@@ -8,7 +8,9 @@
  * file that was distributed with this source code.
  */
 
-function simple_function($a=null, $b=null, $c=null)
+namespace Raven\Tests;
+
+function simple_function($a = null, $b = null, $c = null)
 {
     assert(0);
 }
@@ -205,7 +207,7 @@ class Dummy_Raven_CurlHandler extends \Raven\CurlHandler
     }
 }
 
-class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
 {
     public function tearDown()
     {
@@ -218,8 +220,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     private function create_exception()
     {
         try {
-            throw new Exception('Foo bar');
-        } catch (Exception $ex) {
+            throw new \Exception('Foo bar');
+        } catch (\Exception $ex) {
             return $ex;
         }
     }
@@ -227,11 +229,11 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     private function create_chained_exception()
     {
         try {
-            throw new Exception('Foo bar');
-        } catch (Exception $ex) {
+            throw new \Exception('Foo bar');
+        } catch (\Exception $ex) {
             try {
-                throw new Exception('Child exc', 0, $ex);
-            } catch (Exception $ex2) {
+                throw new \Exception('Child exc', 0, $ex);
+            } catch (\Exception $ex2) {
                 return $ex2;
             }
         }
@@ -282,7 +284,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         try {
             \Raven\Client::ParseDSN('gopher://public:secret@/1');
             $this->fail();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return;
         }
     }
@@ -292,7 +294,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         try {
             \Raven\Client::ParseDSN('http://public:secret@/1');
             $this->fail();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return;
         }
     }
@@ -302,20 +304,20 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         try {
             \Raven\Client::ParseDSN('http://public:secret@example.com');
             $this->fail();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return;
         }
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \InvalidArgumentException
      */
     public function testParseDSNMissingPublicKey()
     {
         \Raven\Client::ParseDSN('http://:secret@example.com/1');
     }
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \InvalidArgumentException
      */
     public function testParseDSNMissingSecretKey()
     {
@@ -576,7 +578,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($frame['lineno'] > 0);
         $this->assertEquals('create_exception', $frame['function']);
         $this->assertFalse(isset($frame['vars']));
-        $this->assertEquals('            throw new Exception(\'Foo bar\');', $frame['context_line']);
+        $this->assertEquals('            throw new \Exception(\'Foo bar\');', $frame['context_line']);
         $this->assertFalse(empty($frame['pre_context']));
         $this->assertFalse(empty($frame['post_context']));
     }
@@ -615,9 +617,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         }
 
         $client = new Dummy_Raven_Client();
-        $e1 = new ErrorException('First', 0, E_DEPRECATED);
-        $e2 = new ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
-        $e3 = new ErrorException('Third', 0, E_ERROR, __FILE__, __LINE__, $e2);
+        $e1 = new \ErrorException('First', 0, E_DEPRECATED);
+        $e2 = new \ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
+        $e3 = new \ErrorException('Third', 0, E_ERROR, __FILE__, __LINE__, $e2);
 
         $client->captureException($e1);
         $client->captureException($e2);
@@ -673,7 +675,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client = new Dummy_Raven_Client();
         try {
             invalid_encoding();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $client->captureException($ex);
         }
         $events = $client->getSentEvents();
@@ -909,7 +911,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $client->user_context(array(
             'email' => 'foo@example.com',
             'data' => array(
-                'error' => new Exception('test'),
+                'error' => new \Exception('test'),
             )
         ));
 
@@ -1098,7 +1100,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Raven\Exception
+     * @expectedException \Raven\Exception
      * @expectedExceptionMessage Raven_Client->install() must only be called once
      */
     public function testCannotInstallTwice()
@@ -1416,7 +1418,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testUuid4()
     {
-        $method = new ReflectionMethod('\\Raven\\Client', 'uuid4');
+        $method = new \ReflectionMethod('\\Raven\\Client', 'uuid4');
         $method->setAccessible(true);
         for ($i = 0; $i < 1000; $i++) {
             $this->assertRegExp('/^[0-9a-z-]+$/', $method->invoke(null));
@@ -1449,7 +1451,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testGettersAndSetters()
     {
         $client = new Dummy_Raven_Client();
-        $property_method__convert_path = new ReflectionMethod('\\Raven\\Client', '_convertPath');
+        $property_method__convert_path = new \ReflectionMethod('\\Raven\\Client', '_convertPath');
         $property_method__convert_path->setAccessible(true);
         $callable = array($this, 'stabClosureVoid');
 
@@ -1508,7 +1510,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         $method_get_name = 'get'.$function_name;
         $method_set_name = 'set'.$function_name;
-        $property = new ReflectionProperty('\\Raven\\Client', $property_name);
+        $property = new \ReflectionProperty('\\Raven\\Client', $property_name);
         $property->setAccessible(true);
 
         if (method_exists($client, $method_set_name)) {
@@ -1523,7 +1525,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
         if (method_exists($client, $method_get_name)) {
             $property->setValue($client, $value_out);
-            $reflection = new ReflectionMethod('\\Raven\Client', $method_get_name);
+            $reflection = new \ReflectionMethod('\\Raven\Client', $method_get_name);
             if ($reflection->isPublic()) {
                 $actual_value = $client->$method_get_name();
                 $this->assertMixedValueAndArray($value_out, $actual_value);
@@ -1558,7 +1560,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function test_convertPath()
     {
-        $property = new ReflectionMethod('\\Raven\Client', '_convertPath');
+        $property = new \ReflectionMethod('\\Raven\Client', '_convertPath');
         $property->setAccessible(true);
 
         $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar'));
@@ -1577,7 +1579,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         foreach (\Raven\Client::getDefaultProcessors() as $class_name) {
             $this->assertInternalType('string', $class_name);
             $this->assertTrue(class_exists($class_name));
-            $reflection = new ReflectionClass($class_name);
+            $reflection = new \ReflectionClass($class_name);
             $this->assertTrue($reflection->isSubclassOf('\\Raven\\Processor'));
             $this->assertFalse($reflection->isAbstract());
         }
@@ -1588,7 +1590,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testGet_default_ca_cert()
     {
-        $reflection = new ReflectionMethod('\\Raven\Client', 'get_default_ca_cert');
+        $reflection = new \ReflectionMethod('\\Raven\Client', 'get_default_ca_cert');
         $reflection->setAccessible(true);
         $this->assertFileExists($reflection->invoke(null));
     }
@@ -1599,7 +1601,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testTranslateSeverity()
     {
-        $reflection = new ReflectionProperty('\\Raven\Client', 'severity_map');
+        $reflection = new \ReflectionProperty('\\Raven\Client', 'severity_map');
         $reflection->setAccessible(true);
         $client = new Dummy_Raven_Client();
 
@@ -1656,7 +1658,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testCaptureExceptionWithLogger()
     {
         $client = new Dummy_Raven_Client();
-        $client->captureException(new Exception(), null, 'foobar');
+        $client->captureException(new \Exception(), null, 'foobar');
 
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
@@ -1714,7 +1716,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertInternalType('object', $object);
         $this->assertEquals('Raven\\CurlHandler', get_class($object));
 
-        $reflection = new ReflectionProperty('Raven\\CurlHandler', 'options');
+        $reflection = new \ReflectionProperty('Raven\\CurlHandler', 'options');
         $reflection->setAccessible(true);
         $this->assertEquals($reflection->getValue($object), $client->get_curl_options());
 
@@ -1747,7 +1749,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function test_server_variable()
     {
-        $method = new ReflectionMethod('\\Raven\Client', '_server_variable');
+        $method = new \ReflectionMethod('\\Raven\Client', '_server_variable');
         $method->setAccessible(true);
         foreach ($_SERVER as $key => $value) {
             $actual = $method->invoke(null, $key);
@@ -2218,7 +2220,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
     public function testClose_curl_resource()
     {
         $raven = new Dummy_Raven_Client();
-        $reflection = new ReflectionProperty('\\Raven\Client', '_curl_instance');
+        $reflection = new \ReflectionProperty('\\Raven\Client', '_curl_instance');
         $reflection->setAccessible(true);
         $ch = curl_init();
         $reflection->setValue($raven, $ch);

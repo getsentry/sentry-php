@@ -630,7 +630,9 @@ class Client
      */
     public function captureLastError()
     {
-        if (null === $error = error_get_last()) {
+        $error = error_get_last();
+
+        if (null === $error || !isset($error['message'][0])) {
             return null;
         }
 

@@ -9,12 +9,14 @@
  * file that was distributed with this source code.
  */
 
-class Raven_SerializerTestObject
+namespace Raven\Tests;
+
+class SerializerTestObject
 {
     private $foo = 'bar';
 }
 
-class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_SerializerTest extends \PHPUnit_Framework_TestCase
 {
     public function testArraysAreArrays()
     {
@@ -27,7 +29,7 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     public function testStdClassAreArrays()
     {
         $serializer = new \Raven\Serializer();
-        $input = new stdClass();
+        $input = new \stdClass();
         $input->foo = 'BAR';
         $result = $serializer->serialize($input);
         $this->assertEquals(array('foo' => 'BAR'), $result);
@@ -36,9 +38,9 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
     public function testObjectsAreStrings()
     {
         $serializer = new \Raven\Serializer();
-        $input = new Raven_SerializerTestObject();
+        $input = new \Raven\Tests\SerializerTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven_SerializerTestObject', $result);
+        $this->assertEquals('Object Raven\Tests\SerializerTestObject', $result);
     }
 
     public function testIntsAreInts()
