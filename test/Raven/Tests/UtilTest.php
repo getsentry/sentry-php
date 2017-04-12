@@ -44,11 +44,11 @@ class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
             return true;
         };
 
-        $results = [
+        $results = array(
             Raven_Util::getCallableParamNum($fn_one),
             Raven_Util::getCallableParamNum($fn_two),
             Raven_Util::getCallableParamNum($fn_three)
-        ];
+        );
 
         $this->assertEquals(array(0, 2, 4), $results);
     }
