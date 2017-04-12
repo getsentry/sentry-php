@@ -45,8 +45,13 @@ class Raven_Util
      *
      * @return int
      */
-    public static function getCallableParamNum(callable $callable)
+    public static function getCallableParamNum($callable)
     {
+        if (!is_callable($callable)) {
+            // PHP5.3 does not support typehint `callable` so we do it this way.
+            throw new InvalidArgumentException('Callable expected');
+        }
+
         $reflection_fn = new ReflectionFunction($callable);
 
         return (int) $reflection_fn->getNumberOfRequiredParameters();
