@@ -35,4 +35,20 @@ class Raven_Util
 
         return $default;
     }
+
+    /**
+     * Determine how many parameters a callable/Closure expects when it is called.
+     *
+     * Only checks required parameters.
+     *
+     * @param callable $callable The callable to check
+     *
+     * @return int
+     */
+    public static function getCallableParamNum(callable $callable)
+    {
+        $reflection_fn = new ReflectionFunction($callable);
+
+        return (int) $reflection_fn->getNumberOfRequiredParameters();
+    }
 }
