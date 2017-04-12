@@ -50,6 +50,6 @@ class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
             Raven_Util::getCallableParamNum($fn_three)
         ];
 
-        $this->assertEquals([0, 2, 4], $results);
+        $this->assertEquals(array(0, 2, 4), $results);
     }
 }
