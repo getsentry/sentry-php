@@ -33,7 +33,7 @@ class Raven_ReprSerializer extends Raven_Serializer
             if (method_exists($value, 'toSentry')) {
                 $repr .= ' ' . $this->serializeValue($value->toSentry());
             } elseif (method_exists($value, 'toDebugContext')) {
-                $repr .= ' ' . $this->serializeValue($value->toSentry());
+                $repr .= ' ' . $this->serializeValue($value->toDebugContext());
             }
             return $repr;
         } elseif (is_resource($value)) {
