@@ -314,21 +314,9 @@ class Client
      *
      * @return string|null
      */
-    public function captureMessage(
-        $message,
-        $params = [],
-        $data = [],
-        $stack = false,
-        $vars = null
-    ) {
-        // Gracefully handle messages which contain formatting characters, but were not
-        // intended to be used with formatting.
-        if (!empty($params)) {
-            $formatted_message = vsprintf($message, $params);
-        } else {
-            $formatted_message = $message;
-        }
-
+    public function captureMessage($message, $params = array(), $data = array(),
+                            $stack = false, $vars = null)
+    {
         if ($data === null) {
             $data = [];
             // support legacy method of passing in a level name as the third arg
@@ -338,12 +326,10 @@ class Client
             ];
         }
 
-        $data['message'] = $formatted_message;
-        $data['sentry.interfaces.Message'] = [
+        $data['sentry.interfaces.Message'] = array(
             'message' => $message,
             'params' => $params,
-            'formatted' => $formatted_message,
-        ];
+        );
 
         return $this->capture($data, $stack, $vars);
     }
@@ -389,8 +375,8 @@ class Client
 
             $this->autoloadRavenStacktrace();
 
-            $exceptionData['stacktrace'] = [
-                'frames' => Stacktrace::fromBacktrace(
+            $exc_data['stacktrace'] = [
+                'frames' => Stacktrace::createFromBacktrace(
                     $this,
                     $exception->getTrace(),
                     $exception->getFile(),
@@ -531,9 +517,7 @@ class Client
             $result['headers'] = $headers;
         }
 
-        return [
-            'request' => $result,
-        ];
+        return $result;
     }
 
     protected function getUserData()
@@ -554,9 +538,7 @@ class Client
             }
         }
 
-        return [
-            'user' => $user,
-        ];
+        return $user;
     }
 
     public function getDefaultData()
@@ -577,68 +559,43 @@ class Client
 
     public function capture($data, $stack = null, $vars = null)
     {
-        if (!isset($data['timestamp'])) {
-            $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
+        $event = new Event($this->config);
+        $event->setTagsContext(array_merge($this->context->tags, isset($data['tags']) ? $data['tags'] : []));
+        $event->setUserContext(array_merge($this->get_user_data(), isset($data['user']) ? $data['user'] : []));
+        $event->setExtraContext(array_merge($this->context->extra, isset($data['extra']) ? $data['extra'] : []));
+
+        if (static::is_http_request()) {
+            $event->setRequest(isset($data['request']) ? $data['request'] : $this->get_http_data());
         }
-        if (!isset($data['level'])) {
-            $data['level'] = self::LEVEL_ERROR;
+
+        if (isset($data['culprit'])) {
+            $event->setCulprit($data['culprit']);
+        } else {
+            $event->setCulprit($this->transaction->peek());
         }
-        if (!isset($data['tags'])) {
-            $data['tags'] = [];
+
+        if (isset($data['level'])) {
+            $event->setLevel($data['level']);
         }
-        if (!isset($data['extra'])) {
-            $data['extra'] = [];
-        }
-        if (!isset($data['event_id'])) {
-            $data['event_id'] = static::uuid4();
+
+        if (isset($data['logger'])) {
+            $event->setLogger($data['logger']);
         }
 
         if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, self::MESSAGE_LIMIT);
+            $event->setMessage(substr($data['message'], 0, static::MESSAGE_LIMIT));
         }
 
-        $data = array_merge($this->getDefaultData(), $data);
-
-        if (static::isHttpRequest()) {
-            $data = array_merge($this->getHttpData(), $data);
+        if (isset($data['sentry.interfaces.Message'])) {
+            $event->setMessage(substr($data['sentry.interfaces.Message']['message'], 0, static::MESSAGE_LIMIT), $data['sentry.interfaces.Message']['params']);
         }
 
-        $data = array_merge($this->getUserData(), $data);
-
-        if (!empty($this->config->getRelease())) {
-            $data['release'] = $this->config->getRelease();
+        if (isset($data['exception'])) {
+            $event->setException($data['exception']);
         }
 
-        if (!empty($this->config->getCurrentEnvironment())) {
-            $data['environment'] = $this->config->getCurrentEnvironment();
-        }
-
-        $data['tags'] = array_merge(
-            $this->config->getTags(),
-            $this->context->getTags(),
-            $data['tags']
-        );
-
-        $data['extra'] = array_merge(
-            $this->context->getExtraData(),
-            $data['extra']
-        );
-
-        if (empty($data['extra'])) {
-            unset($data['extra']);
-        }
-        if (empty($data['tags'])) {
-            unset($data['tags']);
-        }
-        if (empty($data['user'])) {
-            unset($data['user']);
-        }
-        if (empty($data['request'])) {
-            unset($data['request']);
-        }
-
-        if (null !== $this->recorder) {
-            $data['breadcrumbs'] = iterator_to_array($this->recorder);
+        foreach ($this->recorder as $breadcrumb) {
+            $event->addBreadcrumb($breadcrumb);
         }
 
         if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
@@ -652,16 +609,15 @@ class Client
             $this->autoloadRavenStacktrace();
 
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
-                $data['stacktrace'] = [
-                    'frames' => Stacktrace::fromBacktrace(
-                        $this,
-                        $stack,
-                        isset($stack['file']) ? $stack['file'] : __FILE__,
-                        isset($stack['line']) ? $stack['line'] : __LINE__ - 2
-                    )->getFrames(),
-                ];
+                $data['stacktrace'] = Stacktrace::createFromBacktrace($this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__, isset($stack['line']) ? $stack['line'] : __LINE__);
             }
         }
+
+        if (isset($data['stacktrace'])) {
+            $event->setStacktrace($data['stacktrace']);
+        }
+
+        $data = $event->toArray();
 
         $this->sanitize($data);
         $this->process($data);
@@ -702,7 +658,7 @@ class Client
     /**
      * Process data through all defined \Raven\Processor sub-classes.
      *
-     * @param array $data Associative array of data to log
+     * @param array $data Associative array of data to logf
      */
     public function process(&$data)
     {
@@ -788,41 +744,7 @@ class Client
     }
 
     /**
-     * Generate an uuid4 value.
-     *
-     * @return string
-     */
-    protected static function uuid4()
-    {
-        $uuid = sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            // 32 bits for "time_low"
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_mid"
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 4
-            mt_rand(0, 0x0fff) | 0x4000,
-
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1
-            mt_rand(0, 0x3fff) | 0x8000,
-
-            // 48 bits for "node"
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
-
-        return str_replace('-', '', $uuid);
-    }
-
-    /**
-     * Return the URL for the current request.
+     * Return the URL for the current request
      *
      * @return string|null
      */

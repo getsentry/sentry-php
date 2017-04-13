@@ -65,6 +65,20 @@ class Stacktrace implements \JsonSerializable
         $this->reprSerializer = $client->getReprSerializer();
     }
 
+	/**
+	 * Creates a new instance of this class using the current backtrace data.
+	 *
+	 * @param Client $client The Raven client
+	 *
+	 * @return static
+	 */
+    public static function create(Client $client)
+    {
+    	$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+
+    	return static::createFromBacktrace($client, $backtrace, __FILE__, __LINE__);
+    }
+
     /**
      * Creates a new instance of this class from the given backtrace.
      *
@@ -75,7 +89,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return static
      */
-    public static function fromBacktrace(Client $client, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Client $client, array $backtrace, $file, $line)
     {
         $stacktrace = new static($client);
 

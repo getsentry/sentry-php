@@ -20,6 +20,7 @@
         "php-http/discovery": "~1.2",
         "php-http/httplug": "~1.1",
         "psr/http-message-implementation": "~1.0",
+        "ramsey/uuid": "~3.6",
         "symfony/options-resolver": "~2.7|~3.0"
     },
     "require-dev": {

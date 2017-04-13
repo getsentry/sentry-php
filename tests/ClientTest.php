@@ -16,6 +16,8 @@ use Http\Mock\Client as MockClient;
 use Http\Promise\Promise;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidFactory;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
@@ -271,8 +273,8 @@ class ClientTest extends TestCase
 
         $client->captureMessage('foo %s', ['bar']);
 
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['message']['formatted']);
     }
 
     public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
@@ -284,24 +286,9 @@ class ClientTest extends TestCase
 
         $client->captureMessage('foo %s', ['bar']);
 
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
-        $this->assertEquals('1.2.3', $client->pendingEvents[0]['release']);
-    }
-
-    public function testCaptureMessageSetsInterface()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('foo %s', ['bar']);
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
-        $this->assertArrayHasKey('sentry.interfaces.Message', $client->pendingEvents[0]);
-        $this->assertEquals('foo bar', $client->pendingEvents[0]['sentry.interfaces.Message']['formatted']);
-        $this->assertEquals('foo %s', $client->pendingEvents[0]['sentry.interfaces.Message']['message']);
-        $this->assertEquals(['bar'], $client->pendingEvents[0]['sentry.interfaces.Message']['params']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['message']['formatted']);
+        $this->assertEquals('1.2.3', $client->_pending_events[0]['release']);
     }
 
     public function testCaptureMessageHandlesOptionsAsThirdArg()
@@ -314,10 +301,10 @@ class ClientTest extends TestCase
             'extra' => ['foo' => 'bar'],
         ]);
 
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->pendingEvents[0]['level']);
-        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
-        $this->assertEquals('Test Message foo', $client->pendingEvents[0]['message']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
+        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']['formatted']);
     }
 
     public function testCaptureMessageHandlesLevelAsThirdArg()
@@ -327,9 +314,9 @@ class ClientTest extends TestCase
 
         $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::LEVEL_WARNING);
 
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->pendingEvents[0]['level']);
-        $this->assertEquals('Test Message foo', $client->pendingEvents[0]['message']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']['formatted']);
     }
 
     /**
@@ -511,24 +498,22 @@ class ClientTest extends TestCase
         ];
 
         $expected = [
-            'request' => [
-                'method' => 'PATCH',
-                'url' => 'https://getsentry.com/welcome/',
-                'query_string' => 'q=bitch&l=en',
-                'data' => [
-                    'stamp' => '1c',
-                ],
-                'cookies' => [
-                    'donut' => 'chocolat',
-                ],
-                'headers' => [
-                    'Host' => 'getsentry.com',
-                    'Accept' => 'text/html',
-                    'Accept-Charset' => 'utf-8',
-                    'Cookie' => 'cupcake: strawberry',
-                    'Content-Type' => 'text/xml',
-                    'Content-Length' => '99',
-                ],
+            'method' => 'PATCH',
+            'url' => 'https://getsentry.com/welcome/',
+            'query_string' => 'q=bitch&l=en',
+            'data' => [
+                'stamp'           => '1c',
+            ],
+            'cookies' => [
+                'donut'           => 'chocolat',
+            ],
+            'headers' => [
+                'Host'            => 'getsentry.com',
+                'Accept'          => 'text/html',
+                'Accept-Charset'  => 'utf-8',
+                'Cookie'          => 'cupcake: strawberry',
+                'Content-Type'    => 'text/xml',
+                'Content-Length'  => '99',
             ],
         ];
 
@@ -695,15 +680,22 @@ class ClientTest extends TestCase
 
     public function testGetLastEventID()
     {
+    	/** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
+    	$uuidFactory = $this->createMock(UuidFactory::class);
+    	$uuidFactory->expects($this->once())
+		    ->method('uuid4')
+		    ->willReturn(Uuid::fromString('ddbd643a-5190-4cce-a6ce-3098506f9d33'));
+
+    	Uuid::setFactory($uuidFactory);
+
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->capture([
-            'message' => 'test',
-            'event_id' => 'abc',
-        ]);
+        $client->capture(['message' => 'test']);
 
-        $this->assertEquals('abc', $client->getLastEventId());
+        $this->assertEquals('ddbd643a51904ccea6ce3098506f9d33', $client->getLastEventID());
+
+        Uuid::setFactory(new UuidFactory());
     }
 
     public function testCustomTransport()
@@ -1117,18 +1109,6 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @covers \Raven\Client::uuid4()
-     */
-    public function testUuid4()
-    {
-        $method = new \ReflectionMethod('\\Raven\\Client', 'uuid4');
-        $method->setAccessible(true);
-        for ($i = 0; $i < 1000; ++$i) {
-            $this->assertRegExp('/^[0-9a-z-]+$/', $method->invoke(null));
-        }
-    }
-
-    /**
      * @covers \Raven\Client::getLastError
      * @covers \Raven\Client::getLastEventId
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
@@ -1474,8 +1454,7 @@ class ClientTest extends TestCase
         $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
         $output = $client->getUserData();
         $this->assertInternalType('array', $output);
-        $this->assertArrayHasKey('user', $output);
-        $this->assertArrayHasKey('id', $output['user']);
+        $this->assertArrayHasKey('id', $output);
         $session_old = $_SESSION;
 
         // step 2
@@ -1492,11 +1471,10 @@ class ClientTest extends TestCase
         $_SESSION = ['foo' => 'bar'];
         $output = $client->getUserData();
         $this->assertInternalType('array', $output);
-        $this->assertArrayHasKey('user', $output);
-        $this->assertArrayHasKey('id', $output['user']);
-        $this->assertArrayHasKey('data', $output['user']);
-        $this->assertArrayHasKey('foo', $output['user']['data']);
-        $this->assertEquals('bar', $output['user']['data']['foo']);
+        $this->assertArrayHasKey('id', $output);
+        $this->assertArrayHasKey('data', $output);
+        $this->assertArrayHasKey('foo', $output['data']);
+        $this->assertEquals('bar', $output['data']['foo']);
         $_SESSION = $session_old;
     }
 
@@ -1535,8 +1513,8 @@ class ClientTest extends TestCase
 
         $input = $client->getHttpData();
 
-        $this->assertEquals($input['request'], $client->pendingEvents[0]['request']);
-        $this->assertArrayNotHasKey('release', $client->pendingEvents[0]);
+        $this->assertEquals($input, $client->_pending_events[0]['request']);
+        $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
 
         $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
         $client->storeErrorsForBulkSend = true;
@@ -1594,7 +1572,7 @@ class ClientTest extends TestCase
         session_write_close();
         session_id('');
 
-        $client->capture(['user' => '', 'request' => '']);
+        $client->capture(['user' => [], 'request' => []]);
 
         $this->assertCount(1, $client->pendingEvents);
         $this->assertArrayNotHasKey('user', $client->pendingEvents[0]);
