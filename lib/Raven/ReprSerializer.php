@@ -32,6 +32,8 @@ class Raven_ReprSerializer extends Raven_Serializer
             $repr = 'Object ' . get_class($value);
             if (method_exists($value, 'toSentry')) {
                 $repr .= ' ' . $this->serializeValue($value->toSentry());
+            } elseif (method_exists($value, 'toDebugContext')) {
+                $repr .= ' ' . $this->serializeValue($value->toSentry());
             }
             return $repr;
         } elseif (is_resource($value)) {
