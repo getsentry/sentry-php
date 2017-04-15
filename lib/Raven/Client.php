@@ -542,6 +542,9 @@ class Raven_Client
             'params' => $params,
             'formatted' => $formatted_message,
         );
+        if (!array_has_key('extra', $data)) {
+            $data['extra'] = $params;
+        }
 
         return $this->capture($data, $stack, $vars);
     }
