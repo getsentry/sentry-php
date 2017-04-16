@@ -1238,7 +1238,7 @@ class Raven_Client
     protected function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
-        if (!isset($_SERVER['REQUEST_URI'])) {
+        if (!isset($_SERVER['REQUEST_URI']) || !isset($_SERVER['HTTP_HOST'])) {
             return null;
         }
 
