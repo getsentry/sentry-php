@@ -48,6 +48,11 @@ class Serializer
     protected $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
     /**
+     * @var boolean $_all_object_serialize
+     */
+    protected $_all_object_serialize = false;
+
+    /**
      * @param null|string $mb_detect_order
      */
     public function __construct($mb_detect_order = null)
@@ -69,7 +74,8 @@ class Serializer
     public function serialize($value, $max_depth = 3, $_depth = 0)
     {
         $className = is_object($value) ? get_class($value) : null;
-        $toArray = is_array($value) || $className === 'stdClass';
+        $toArray = (is_array($value) or ($className == 'stdClass') or
+            (is_object($value) and $this->_all_object_serialize));
         if ($toArray && $_depth < $max_depth) {
             $new = array();
             foreach ($value as $k => $v) {
@@ -142,5 +148,21 @@ class Serializer
         $this->mb_detect_order = $mb_detect_order;
 
         return $this;
+    }
+
+    /**
+     * @param boolean $value
+     */
+    public function setAllObjectSerialize($value)
+    {
+        $this->_all_object_serialize = $value;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getAllObjectSerialize()
+    {
+        return $this->_all_object_serialize;
     }
 }

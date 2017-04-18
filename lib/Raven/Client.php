@@ -123,6 +123,10 @@ class Client
      * @var bool
      */
     protected $_shutdown_function_has_been_set;
+    /**
+     * @var \Raven\TransactionStack
+     */
+    public $transaction;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -198,6 +202,10 @@ class Client
         ));
         $this->serializer = new \Raven\Serializer($this->mb_detect_order);
         $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
+        if (\Raven\Util::get($options, 'serialize_all_object', false)) {
+            $this->serializer->setAllObjectSerialize(true);
+            $this->reprSerializer->setAllObjectSerialize(true);
+        }
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new \Raven\CurlHandler($this->get_curl_options());

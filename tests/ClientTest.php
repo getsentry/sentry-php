@@ -1179,6 +1179,70 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
     /**
      * @covers \Raven\Client::sanitize
      */
+    public function testSanitizeObjects()
+    {
+        $client = new Dummy_Raven_Client(
+            null, [
+                'serialize_all_object' => true,
+            ]
+        );
+        $clone = new Dummy_Raven_Client();
+        $data = array(
+            'extra' => array(
+                'object' => $clone,
+            ),
+        );
+
+        $reflection = new \ReflectionClass($clone);
+        $expected = [];
+        foreach ($reflection->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+            $value = $property->getValue($clone);
+            if (is_array($value)) {
+                $property->setValue($clone, []);
+                $expected[$property->getName()] = [];
+                continue;
+            }
+            if (!is_object($value)) {
+                $expected[$property->getName()] = $value;
+                continue;
+            }
+
+            $new_value = [];
+            $reflection2 = new \ReflectionClass($value);
+            foreach ($reflection2->getProperties(\ReflectionProperty::IS_PUBLIC) as $property2) {
+                $sub_value = $property2->getValue($value);
+                if (is_array($sub_value)) {
+                    $new_value[$property2->getName()] = 'Array of length '.count($sub_value);
+                    continue;
+                }
+                if (is_object($sub_value)) {
+                    $sub_value = null;
+                    $property2->setValue($value, null);
+                }
+                $new_value[$property2->getName()] = $sub_value;
+            }
+
+            ksort($new_value);
+            $expected[$property->getName()] = $new_value;
+            unset($reflection2, $property2, $sub_value, $new_value);
+        }
+        unset($reflection, $property, $value, $reflection, $clone);
+        ksort($expected);
+
+        $client->sanitize($data);
+        ksort($data['extra']['object']);
+        foreach ($data['extra']['object'] as $key => &$value) {
+            if (is_array($value)) {
+                ksort($value);
+            }
+        }
+
+        $this->assertEquals(array('extra' => array('object' => $expected)), $data);
+    }
+
+    /**
+     * @covers \Raven\Client::sanitize
+     */
     public function testSanitizeTags()
     {
         $client = new Dummy_Raven_Client();
