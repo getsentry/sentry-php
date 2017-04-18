@@ -236,6 +236,26 @@ class Client
     }
 
     /**
+     * Gets the representation serialier.
+     *
+     * @return ReprSerializer
+     */
+    public function getReprSerializer()
+    {
+        return $this->reprSerializer;
+    }
+
+    /**
+     * Gets the serializer.
+     *
+     * @return Serializer
+     */
+    public function getSerializer()
+    {
+        return $this->serializer;
+    }
+
+    /**
      * Installs any available automated hooks (such as error_reporting).
      */
     public function install()
@@ -596,10 +616,7 @@ class Client
             }
 
             $exc_data['stacktrace'] = array(
-                'frames' => \Raven\Stacktrace::get_stack_info(
-                    $trace, $this->trace, $vars, $this->message_limit, $this->prefixes,
-                    $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
-                ),
+                'frames' => Stacktrace::fromBacktrace($this, $exception->getTrace(), $exception->getFile(), $exception->getLine())->getFrames(),
             );
 
             $exceptions[] = $exc_data;
@@ -858,10 +875,7 @@ class Client
 
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = array(
-                    'frames' => \Raven\Stacktrace::get_stack_info(
-                        $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
-                        $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
-                    ),
+                    'frames' => Stacktrace::fromBacktrace($this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__, isset($stack['line']) ? $stack['line'] : __LINE__)->getFrames(),
                 );
             }
         }

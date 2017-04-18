@@ -17,7 +17,7 @@ use Raven\Processor\SanitizeStacktraceProcessor;
 class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var Client|\PHPUnit_Framework_MockObject_MockObject
+     * @var Client
      */
     protected $client;
 
@@ -28,10 +28,7 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->client = $this->getMockBuilder(Client::class)
-            ->setMethods(array_diff($this->getClassMethods(Client::class), array('captureException', 'capture', 'get_default_data', 'get_http_data', 'get_user_data', 'get_extra_data')))
-            ->getMock();
-
+        $this->client = new Client();
         $this->client->store_errors_for_bulk_send = true;
 
         $this->processor = new SanitizeStacktraceProcessor($this->client);
@@ -43,14 +40,6 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
             throw new \Exception();
         } catch (\Exception $exception) {
             $this->client->captureException($exception);
-        }
-
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
-            foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
-                $this->assertArrayHasKey('pre_context', $frame);
-                $this->assertArrayHasKey('context_line', $frame);
-                $this->assertArrayHasKey('post_context', $frame);
-            }
         }
 
         $this->processor->process($this->client->_pending_events[0]);
@@ -74,14 +63,6 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
             }
         } catch (\Exception $exception) {
             $this->client->captureException($exception);
-        }
-
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
-            foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
-                $this->assertArrayHasKey('pre_context', $frame);
-                $this->assertArrayHasKey('context_line', $frame);
-                $this->assertArrayHasKey('post_context', $frame);
-            }
         }
 
         $this->processor->process($this->client->_pending_events[0]);

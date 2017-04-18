@@ -1,0 +1,5 @@
+{
+    "file": "path/to/file(12) : runtime-created function",
+    "line": 12,
+    "function": "test_function"
+}

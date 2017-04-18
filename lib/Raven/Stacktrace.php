@@ -1,166 +1,344 @@
 <?php
+
+/*
+ * This file is part of Raven.
+ *
+ * (c) Sentry Team
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Raven;
 
 /**
- * Small helper class to inspect the stacktrace
+ * This class contains all the information about an error stacktrace.
  *
- * @package raven
+ * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class Stacktrace
+class Stacktrace implements \JsonSerializable
 {
-    public static $statements = array(
+    /**
+     * This constant defines the default number of lines of code to include.
+     */
+    const CONTEXT_NUM_LINES = 5;
+
+    /**
+     * @var Client The Raven client
+     */
+    protected $client;
+
+    /**
+     * @var Serializer The serializer
+     */
+    protected $serializer;
+
+    /**
+     * @var ReprSerializer The representation serializer
+     */
+    protected $reprSerializer;
+
+    /**
+     * @var array The frames that compose the stacktrace
+     */
+    protected $frames = [];
+
+    /**
+     * @var array The list of functions to import a file
+     */
+    protected static $importStatements = [
         'include',
         'include_once',
         'require',
         'require_once',
-    );
+    ];
 
-    public static function get_stack_info($frames,
-                                          $trace = false,
-                                          $errcontext = null,
-                                          $frame_var_limit = \Raven\Client::MESSAGE_LIMIT,
-                                          $strip_prefixes = null,
-                                          $app_path = null,
-                                          $excluded_app_paths = null,
-                                          \Raven\Serializer $serializer = null,
-                                          \Raven\ReprSerializer $reprSerializer = null)
+    /**
+     * Constructor.
+     *
+     * @param Client $client The Raven client
+     */
+    public function __construct(Client $client)
     {
-        $serializer = $serializer ?: new \Raven\Serializer();
-        $reprSerializer = $reprSerializer ?: new \Raven\ReprSerializer();
-
-        /**
-         * PHP stores calls in the stacktrace, rather than executing context. Sentry
-         * wants to know "when Im calling this code, where am I", and PHP says "I'm
-         * calling this function" not "I'm in this function". Due to that, we shift
-         * the context for a frame up one, meaning the variables (which are the calling
-         * args) come from the previous frame.
-         */
-        $result = array();
-        for ($i = 0; $i < count($frames); $i++) {
-            $frame = isset($frames[$i]) ? $frames[$i] : null;
-            $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
-
-            if (!array_key_exists('file', $frame)) {
-                if (!empty($frame['class'])) {
-                    $context['line'] = sprintf('%s%s%s',
-                        $frame['class'], $frame['type'], $frame['function']);
-                } else {
-                    $context['line'] = sprintf('%s(anonymous)', $frame['function']);
-                }
-                $abs_path = '';
-                $context['prefix'] = '';
-                $context['suffix'] = '';
-                $context['filename'] = $filename = '[Anonymous function]';
-                $context['lineno'] = 0;
-            } else {
-                $context = self::read_source_file($frame['file'], $frame['line']);
-                $abs_path = $frame['file'];
-            }
-
-            // strip base path if present
-            $context['filename'] = self::strip_prefixes($context['filename'], $strip_prefixes);
-            if ($i === 0 && isset($errcontext)) {
-                // If we've been given an error context that can be used as the vars for the first frame.
-                $vars = $errcontext;
-            } else {
-                if ($trace) {
-                    $vars = self::get_frame_context($nextframe, $frame_var_limit);
-                } else {
-                    $vars = array();
-                }
-            }
-
-            $data = array(
-                'filename' => $context['filename'],
-                'lineno' => (int) $context['lineno'],
-                'function' => isset($nextframe['function']) ? $nextframe['function'] : null,
-                'pre_context' => $serializer->serialize($context['prefix']),
-                'context_line' => $serializer->serialize($context['line']),
-                'post_context' => $serializer->serialize($context['suffix']),
-            );
-
-            // detect in_app based on app path
-            if ($app_path) {
-                $norm_abs_path = @realpath($abs_path) ?: $abs_path;
-                $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
-                if ($in_app && $excluded_app_paths) {
-                    foreach ($excluded_app_paths as $path) {
-                        if (substr($norm_abs_path, 0, strlen($path)) === $path) {
-                            $in_app = false;
-                            break;
-                        }
-                    }
-                }
-                $data['in_app'] = $in_app;
-            }
-
-            // dont set this as an empty array as PHP will treat it as a numeric array
-            // instead of a mapping which goes against the defined Sentry spec
-            if (!empty($vars)) {
-                $cleanVars = array();
-                foreach ($vars as $key => $value) {
-                    $value = $reprSerializer->serialize($value);
-                    if (is_string($value) || is_numeric($value)) {
-                        $cleanVars[(string)$key] = substr($value, 0, $frame_var_limit);
-                    } else {
-                        $cleanVars[(string)$key] = $value;
-                    }
-                }
-                $data['vars'] = $cleanVars;
-            }
-
-            $result[] = $data;
-        }
-
-        return array_reverse($result);
+        $this->client = $client;
+        $this->serializer = $client->getSerializer();
+        $this->reprSerializer = $client->getReprSerializer();
     }
 
-    public static function get_default_context($frame, $frame_arg_limit = \Raven\Client::MESSAGE_LIMIT)
+    /**
+     * Creates a new instance of this class from the given backtrace.
+     *
+     * @param Client $client    The Raven client
+     * @param array  $backtrace The backtrace
+     * @param string $file      The file that originated the backtrace
+     * @param string $line      The line at which the backtrace originated
+     *
+     * @return static
+     */
+    public static function fromBacktrace(Client $client, array $backtrace, $file, $line)
     {
-        if (!isset($frame['args'])) {
-            return array();
+        $stacktrace = new static($client);
+
+        foreach ($backtrace as $frame) {
+            $stacktrace->addFrame($file, $line, $frame);
+
+            $file = isset($frame['file']) ? $frame['file'] : '[internal]';
+            $line = isset($frame['line']) ? $frame['line'] : 0;
         }
 
-        $i = 1;
-        $args = array();
-        foreach ($frame['args'] as $arg) {
-            $args['param'.$i] = self::serialize_argument($arg, $frame_arg_limit);
-            $i++;
-        }
-        return $args;
+        // Add a final stackframe for the first method ever of this stacktrace
+        $stacktrace->addFrame($file, $line, []);
+
+        return $stacktrace;
     }
 
-    public static function get_frame_context($frame, $frame_arg_limit = \Raven\Client::MESSAGE_LIMIT)
+    /**
+     * Gets the stacktrace frames.
+     *
+     * @return array[]
+     */
+    public function getFrames()
+    {
+        return $this->frames;
+    }
+
+    /**
+     * Adds a new frame to the stacktrace.
+     *
+     * @param string $file           The file where the frame originated
+     * @param int    $line           The line at which the frame originated
+     * @param array  $backtraceFrame The data of the frame to add
+     */
+    public function addFrame($file, $line, array $backtraceFrame)
+    {
+        // The $file argument can be any of these formats:
+        // </path/to/filename>
+        // </path/to/filename>(<line number>) : eval()'d code
+        // </path/to/filename>(<line number>) : runtime-created function
+        if (preg_match('/^(.*)\((\d+)\) : (?:eval\(\)\'d code|runtime-created function)$/', $file, $matches)) {
+            $file = $matches[1];
+            $line = $matches[2];
+        }
+
+        $frame = array_merge(
+            [
+                'filename' => $this->stripPrefixFromFilePath($file),
+                'lineno' => (int) $line,
+                'function' => isset($backtraceFrame['class']) ? sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']) : (isset($backtraceFrame['function']) ? $backtraceFrame['function'] : null),
+            ],
+            self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES)
+        );
+
+        if (null !== $this->client->getAppPath()) {
+            $excludedAppPaths = $this->client->getExcludedAppPaths();
+            $absoluteFilePath = @realpath($file) ?: $file;
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getAppPath());
+
+            if ($isApplicationFile && !empty($excludedAppPaths)) {
+                foreach ($excludedAppPaths as $path) {
+                    if (0 === strpos($absoluteFilePath, $path)) {
+                        $frame['in_app'] = $isApplicationFile;
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        $frameArguments = self::getFrameArguments($backtraceFrame);
+
+        if (!empty($frameArguments)) {
+            foreach ($frameArguments as $argumentName => $argumentValue) {
+                $argumentValue = $this->reprSerializer->serialize($argumentValue);
+
+                if (is_string($argumentValue) || is_numeric($argumentValue)) {
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_LIMIT);
+                } else {
+                    $frameArguments[(string) $argumentName] = $argumentValue;
+                }
+            }
+
+            $frame['vars'] = $frameArguments;
+        }
+
+        array_unshift($this->frames, $frame);
+    }
+
+    /**
+     * Removes the frame at the given index from the stacktrace.
+     *
+     * @param int $index The index of the frame
+     *
+     * @throws \OutOfBoundsException If the index is out of range
+     */
+    public function removeFrame($index)
+    {
+        if (!isset($this->frames[$index])) {
+            throw new \OutOfBoundsException('Invalid frame index to remove.');
+        }
+
+        array_splice($this->frames, $index, 1);
+    }
+
+    /**
+     * Gets the stacktrace frames (this is the same as calling the getFrames
+     * method).
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->frames;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Gets an excerpt of the source code around a given line.
+     *
+     * @param string $path       The file path
+     * @param int    $lineNumber The line to centre about
+     * @param int    $linesNum   The number of lines to fetch
+     *
+     * @return array
+     */
+    protected function getSourceCodeExcerpt($path, $lineNumber, $linesNum)
+    {
+        $frame = [
+            'pre_context' => [],
+            'context_line' => '',
+            'post_context' => [],
+        ];
+
+        if (!is_file($path) || !is_readable($path)) {
+            return [];
+        }
+
+        $target = max(0, ($lineNumber - ($linesNum + 1)));
+        $currentLineNumber = $target + 1;
+
+        try {
+            $file = new \SplFileObject($path);
+            $file->seek($target);
+
+            while (!$file->eof()) {
+                $line = rtrim($file->current(), "\r\n");
+
+                if ($currentLineNumber == $lineNumber) {
+                    $frame['context_line'] = $line;
+                } elseif ($currentLineNumber < $lineNumber) {
+                    $frame['pre_context'][] = $line;
+                } elseif ($currentLineNumber > $lineNumber) {
+                    $frame['post_context'][] = $line;
+                }
+
+                ++$currentLineNumber;
+
+                if ($currentLineNumber > $lineNumber + $linesNum) {
+                    break;
+                }
+
+                $file->next();
+            }
+        } catch (\Exception $ex) {
+        }
+
+        $frame['pre_context'] = $this->serializer->serialize($frame['pre_context']);
+        $frame['context_line'] = $this->serializer->serialize($frame['context_line']);
+        $frame['post_context'] = $this->serializer->serialize($frame['post_context']);
+
+        return $frame;
+    }
+
+    /**
+     * Removes from the given file path the specified prefixes.
+     *
+     * @param string $filePath The path to the file
+     *
+     * @return string
+     */
+    protected function stripPrefixFromFilePath($filePath)
+    {
+        foreach ($this->client->getPrefixes() as $prefix) {
+            if (0 === strpos($filePath, $prefix)) {
+                return substr($filePath, strlen($prefix));
+            }
+        }
+
+        return $filePath;
+    }
+
+    /**
+     * Gets the values of the arguments of the given stackframe.
+     *
+     * @param array $frame          The frame from where arguments are retrieved
+     * @param int   $maxValueLength The maximum string length to get from the arguments values
+     *
+     * @return array
+     */
+    protected static function getFrameArgumentsValues($frame, $maxValueLength = Client::MESSAGE_LIMIT)
     {
         if (!isset($frame['args'])) {
-            return array();
+            return [];
+        }
+
+        $result = [];
+
+        for ($i = 0; $i < count($frame['args']); ++$i) {
+            $result['param' . ($i + 1)] = self::serializeArgument($frame['args'][$i], $maxValueLength);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Gets the arguments of the given stackframe.
+     *
+     * @param array $frame          The frame from where arguments are retrieved
+     * @param int   $maxValueLength The maximum string length to get from the arguments values
+     *
+     * @return array
+     */
+    public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_LIMIT)
+    {
+        if (!isset($frame['args'])) {
+            return [];
         }
 
         // The Reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
         if (!isset($frame['function'])) {
-            return self::get_default_context($frame, $frame_arg_limit);
+            return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
-        if (strpos($frame['function'], '__lambda_func') !== false) {
-            return self::get_default_context($frame, $frame_arg_limit);
+
+        if (false !== strpos($frame['function'], '__lambda_func')) {
+            return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
-        if (isset($frame['class']) && $frame['class'] == 'Closure') {
-            return self::get_default_context($frame, $frame_arg_limit);
+
+        if (false !== strpos($frame['function'], '{closure}')) {
+            return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
-        if (strpos($frame['function'], '{closure}') !== false) {
-            return self::get_default_context($frame, $frame_arg_limit);
+
+        if (isset($frame['class']) && 'Closure' === $frame['class']) {
+            return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
-        if (in_array($frame['function'], self::$statements)) {
+
+        if (in_array($frame['function'], static::$importStatements, true)) {
             if (empty($frame['args'])) {
-                // No arguments
-                return array();
-            } else {
-                // Sanitize the file path
-                return array(
-                    'param1' => self::serialize_argument($frame['args'][0], $frame_arg_limit),
-                );
+                return [];
             }
+
+            return [
+                'param1' => self::serializeArgument($frame['args'][0], $maxValueLength),
+            ];
         }
+
         try {
             if (isset($frame['class'])) {
                 if (method_exists($frame['class'], $frame['function'])) {
@@ -173,117 +351,45 @@ class Stacktrace
             } else {
                 $reflection = new \ReflectionFunction($frame['function']);
             }
-        } catch (\ReflectionException $e) {
-            return self::get_default_context($frame, $frame_arg_limit);
+        } catch (\ReflectionException $ex) {
+            return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
 
         $params = $reflection->getParameters();
+        $args = [];
 
-        $args = array();
-        foreach ($frame['args'] as $i => $arg) {
-            $arg = self::serialize_argument($arg, $frame_arg_limit);
-            if (isset($params[$i])) {
+        foreach ($frame['args'] as $index => $arg) {
+            $arg = self::serializeArgument($arg, $maxValueLength);
+
+            if (isset($params[$index])) {
                 // Assign the argument by the parameter name
-                $args[$params[$i]->name] = $arg;
+                $args[$params[$index]->name] = $arg;
             } else {
-                $args['param'.$i] = $arg;
+                $args['param' . $index] = $arg;
             }
         }
 
         return $args;
     }
 
-    private static function serialize_argument($arg, $frame_arg_limit)
+    protected static function serializeArgument($arg, $maxValueLength)
     {
         if (is_array($arg)) {
-            $_arg = array();
+            $result = [];
+
             foreach ($arg as $key => $value) {
                 if (is_string($value) || is_numeric($value)) {
-                    $_arg[$key] = substr($value, 0, $frame_arg_limit);
+                    $result[$key] = substr($value, 0, $maxValueLength);
                 } else {
-                    $_arg[$key] = $value;
+                    $result[$key] = $value;
                 }
             }
-            return $_arg;
+
+            return $result;
         } elseif (is_string($arg) || is_numeric($arg)) {
-            return substr($arg, 0, $frame_arg_limit);
+            return substr($arg, 0, $maxValueLength);
         } else {
             return $arg;
         }
-    }
-
-    private static function strip_prefixes($filename, $prefixes)
-    {
-        if ($prefixes === null) {
-            return $filename;
-        }
-        foreach ($prefixes as $prefix) {
-            if (substr($filename, 0, strlen($prefix)) === $prefix) {
-                return substr($filename, strlen($prefix));
-            }
-        }
-        return $filename;
-    }
-
-    private static function read_source_file($filename, $lineno, $context_lines = 5)
-    {
-        $frame = array(
-            'prefix' => array(),
-            'line' => '',
-            'suffix' => array(),
-            'filename' => $filename,
-            'lineno' => $lineno,
-        );
-
-        if ($filename === null || $lineno === null) {
-            return $frame;
-        }
-
-        // Code which is eval'ed have a modified filename.. Extract the
-        // correct filename + linenumber from the string.
-        $matches = array();
-        $matched = preg_match("/^(.*?)\\((\\d+)\\) : eval\\(\\)'d code$/",
-            $filename, $matches);
-        if ($matched) {
-            $frame['filename'] = $filename = $matches[1];
-            $frame['lineno'] = $lineno = $matches[2];
-        }
-
-        // In the case of an anonymous function, the filename is sent as:
-        // "</path/to/filename>(<lineno>) : runtime-created function"
-        // Extract the correct filename + linenumber from the string.
-        $matches = array();
-        $matched = preg_match("/^(.*?)\\((\\d+)\\) : runtime-created function$/",
-            $filename, $matches);
-        if ($matched) {
-            $frame['filename'] = $filename = $matches[1];
-            $frame['lineno'] = $lineno = $matches[2];
-        }
-
-        try {
-            $file = new \SplFileObject($filename);
-            $target = max(0, ($lineno - ($context_lines + 1)));
-            $file->seek($target);
-            $cur_lineno = $target+1;
-            while (!$file->eof()) {
-                $line = rtrim($file->current(), "\r\n");
-                if ($cur_lineno == $lineno) {
-                    $frame['line'] = $line;
-                } elseif ($cur_lineno < $lineno) {
-                    $frame['prefix'][] = $line;
-                } elseif ($cur_lineno > $lineno) {
-                    $frame['suffix'][] = $line;
-                }
-                $cur_lineno++;
-                if ($cur_lineno > $lineno + $context_lines) {
-                    break;
-                }
-                $file->next();
-            }
-        } catch (\RuntimeException $exc) {
-            return $frame;
-        }
-
-        return $frame;
     }
 }
