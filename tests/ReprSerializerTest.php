@@ -11,45 +11,60 @@
 
 namespace Raven\Tests;
 
-class ReprSerializerTest extends \PHPUnit_Framework_TestCase
+require_once 'SerializerAbstractTest.php';
+
+class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
 {
-    public function testArraysAreArrays()
+    /**
+     * @return string
+     */
+    protected static function get_test_class()
     {
-        $serializer = new \Raven\ReprSerializer();
-        $input = array(1, 2, 3);
-        $result = $serializer->serialize($input);
-        $this->assertEquals(array('1', '2', '3'), $result);
+        return '\\Raven\\ReprSerializer';
     }
 
-    public function testObjectsAreStrings()
+    /**
+     * @param boolean $serialize_all_objects
+     * @dataProvider dataGetBaseParam
+     */
+    public function testIntsAreInts($serialize_all_objects)
     {
         $serializer = new \Raven\ReprSerializer();
-        $input = new \Raven\Tests\StacktraceTestObject();
-        $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven\Tests\StacktraceTestObject', $result);
-    }
-
-    public function testIntsAreInts()
-    {
-        $serializer = new \Raven\ReprSerializer();
+        if ($serialize_all_objects) {
+            $serializer->setAllObjectSerialize(true);
+        }
         $input = 1;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
         $this->assertEquals(1, $result);
     }
 
-    public function testFloats()
+    /**
+     * @param boolean $serialize_all_objects
+     * @dataProvider dataGetBaseParam
+     */
+    public function testFloats($serialize_all_objects)
     {
         $serializer = new \Raven\ReprSerializer();
+        if ($serialize_all_objects) {
+            $serializer->setAllObjectSerialize(true);
+        }
         $input = 1.5;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
         $this->assertEquals('1.5', $result);
     }
 
-    public function testBooleans()
+    /**
+     * @param boolean $serialize_all_objects
+     * @dataProvider dataGetBaseParam
+     */
+    public function testBooleans($serialize_all_objects)
     {
         $serializer = new \Raven\ReprSerializer();
+        if ($serialize_all_objects) {
+            $serializer->setAllObjectSerialize(true);
+        }
         $input = true;
         $result = $serializer->serialize($input);
         $this->assertEquals('true', $result);
@@ -60,44 +75,33 @@ class ReprSerializerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('false', $result);
     }
 
-    public function testNull()
+    /**
+     * @param boolean $serialize_all_objects
+     * @dataProvider dataGetBaseParam
+     */
+    public function testNull($serialize_all_objects)
     {
         $serializer = new \Raven\ReprSerializer();
+        if ($serialize_all_objects) {
+            $serializer->setAllObjectSerialize(true);
+        }
         $input = null;
         $result = $serializer->serialize($input);
         $this->assertInternalType('string', $result);
         $this->assertEquals('null', $result);
     }
 
-    public function testRecursionMaxDepth()
-    {
-        $serializer = new \Raven\ReprSerializer();
-        $input = array();
-        $input[] = &$input;
-        $result = $serializer->serialize($input, 3);
-        $this->assertEquals(array(array(array('Array of length 1'))), $result);
-    }
-
     /**
+     * @param boolean $serialize_all_objects
+     * @dataProvider dataGetBaseParam
      * @covers \Raven\ReprSerializer::serializeValue
      */
-    public function testSerializeValueResource()
+    public function testSerializeRoundedFloat($serialize_all_objects)
     {
         $serializer = new \Raven\ReprSerializer();
-        $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
-        $fo = fopen($filename, 'wb');
-
-        $result = $serializer->serialize($fo);
-        $this->assertInternalType('string', $result);
-        $this->assertEquals('Resource stream', $result);
-    }
-
-    /**
-     * @covers \Raven\ReprSerializer::serializeValue
-     */
-    public function testSerializeRoundedFloat()
-    {
-        $serializer = new \Raven\ReprSerializer();
+        if ($serialize_all_objects) {
+            $serializer->setAllObjectSerialize(true);
+        }
 
         $result = $serializer->serialize((double)1);
         $this->assertInternalType('string', $result);

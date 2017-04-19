@@ -11,6 +11,11 @@ namespace Raven;
 
 class TransactionStack
 {
+    /**
+     * @var array $stack
+     */
+    public $stack;
+
     public function __construct()
     {
         $this->stack = array();
