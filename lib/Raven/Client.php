@@ -203,8 +203,7 @@ class Client
         $this->serializer = new \Raven\Serializer($this->mb_detect_order);
         $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
         if (\Raven\Util::get($options, 'serialize_all_object', false)) {
-            $this->serializer->setAllObjectSerialize(true);
-            $this->reprSerializer->setAllObjectSerialize(true);
+            $this->setAllObjectSerialize(true);
         }
 
         if ($this->curl_method == 'async') {
@@ -1446,5 +1445,11 @@ class Client
             curl_close($this->_curl_instance);
             $this->_curl_instance = null;
         }
+    }
+
+    public function setAllObjectSerialize($value)
+    {
+        $this->serializer->setAllObjectSerialize($value);
+        $this->reprSerializer->setAllObjectSerialize($value);
     }
 }

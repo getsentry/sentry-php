@@ -11,6 +11,12 @@
 
 namespace Raven\Tests;
 
+/**
+ * Class SerializerTestObject
+ *
+ * @package Raven\Tests
+ * @property mixed $keys
+ */
 class SerializerTestObject
 {
     private $foo = 'bar';
@@ -194,6 +200,107 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
 
         $result = $serializer->serialize([[[[]]]], 3);
         $this->assertEquals([[['Array of length 0']]], $result);
+    }
+
+    public function dataRecursionInObjects()
+    {
+        $data = [];
+        // case 1
+        $object = new SerializerTestObject;
+        $object->key = $object;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => 'Object Raven\Tests\SerializerTestObject'],
+        ];
+
+        // case 2
+        $object = new SerializerTestObject;
+        $object2 = new SerializerTestObject;
+        $object2->key = $object;
+        $object->key = $object2;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => ['key' => 'Object Raven\Tests\SerializerTestObject']],
+        ];
+
+        // case 3
+        $object = new SerializerTestObject;
+        $object2 = new SerializerTestObject;
+        $object2->key = 'foobar';
+        $object->key = $object2;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => ['key' => 'foobar']],
+        ];
+
+        // case 4
+        $object3 = new SerializerTestObject;
+        $object3->key = 'foobar';
+        $object2 = new SerializerTestObject;
+        $object2->key = $object3;
+        $object = new SerializerTestObject;
+        $object->key = $object2;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => ['key' => ['key' => 'foobar']]],
+        ];
+
+        // case 5
+        $object4 = new SerializerTestObject;
+        $object4->key = 'foobar';
+        $object3 = new SerializerTestObject;
+        $object3->key = $object4;
+        $object2 = new SerializerTestObject;
+        $object2->key = $object3;
+        $object = new SerializerTestObject;
+        $object->key = $object2;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject']]],
+        ];
+
+        // case 6
+        $object3 = new SerializerTestObject;
+        $object2 = new SerializerTestObject;
+        $object2->key = $object3;
+        $object2->keys = 'keys';
+        $object = new SerializerTestObject;
+        $object->key = $object2;
+        $object3->key = $object2;
+        $data[] = [
+            'object'           => $object,
+            'result_serialize' => ['key' => ['key'  => ['key' => 'Object Raven\\Tests\\SerializerTestObject'],
+                                             'keys' => 'keys']],
+        ];
+
+        //
+        foreach ($data as &$datum) {
+            if (!isset($datum['result_serialize_object'])) {
+                $datum['result_serialize_object'] = $datum['result_serialize'];
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param object $object
+     * @param array  $result_serialize
+     * @param array  $result_serialize_object
+     *
+     * @dataProvider dataRecursionInObjects
+     */
+    public function testRecursionInObjects($object, $result_serialize, $result_serialize_object)
+    {
+        $class_name = static::get_test_class();
+        /** @var \Raven\Serializer $serializer **/
+        $serializer = new $class_name();
+        $serializer->setAllObjectSerialize(true);
+
+        $result1 = $serializer->serialize($object, 3);
+        $result2 = $serializer->serializeObject($object, 3);
+        $this->assertEquals($result_serialize, $result1);
+        $this->assertEquals($result_serialize_object, $result2);
     }
 
     public function testRecursionMaxDepthForObject()

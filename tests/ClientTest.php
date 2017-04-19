@@ -10,6 +10,9 @@
 
 namespace Raven\Tests;
 
+use Raven\Client;
+use Raven\Serializer;
+
 function simple_function($a = null, $b = null, $c = null)
 {
     assert(0);
@@ -2355,5 +2358,33 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         }
 
         $this->fail('sample_rate=0.5 can not produce fails and successes at the same time');
+    }
+
+    /**
+     * @covers \Raven\Client::setAllObjectSerialize
+     */
+    public function testSetAllObjectSerialize()
+    {
+        $client = new \Raven\Client;
+
+        $ref1 = new \ReflectionProperty($client, 'serializer');
+        $ref1->setAccessible(true);
+        $ref2 = new \ReflectionProperty($client, 'reprSerializer');
+        $ref2->setAccessible(true);
+
+        /**
+         * @var \Raven\Serializer $o1
+         * @var \Raven\Serializer $o2
+         */
+        $o1 = $ref1->getValue($client);
+        $o2 = $ref2->getValue($client);
+
+        $client->setAllObjectSerialize(true);
+        $this->assertTrue($o1->getAllObjectSerialize());
+        $this->assertTrue($o2->getAllObjectSerialize());
+
+        $client->setAllObjectSerialize(false);
+        $this->assertFalse($o1->getAllObjectSerialize());
+        $this->assertFalse($o2->getAllObjectSerialize());
     }
 }

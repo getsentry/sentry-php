@@ -73,18 +73,50 @@ class Serializer
      */
     public function serialize($value, $max_depth = 3, $_depth = 0)
     {
-        $className = is_object($value) ? get_class($value) : null;
-        $toArray = (is_array($value) or ($className == 'stdClass') or
-            (is_object($value) and $this->_all_object_serialize));
-        if ($toArray && $_depth < $max_depth) {
-            $new = array();
-            foreach ($value as $k => $v) {
-                $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
+        if ($_depth < $max_depth) {
+            if (is_array($value)) {
+                $new = array();
+                foreach ($value as $k => $v) {
+                    $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
+                }
+
+                return $new;
             }
 
-            return $new;
+            if (is_object($value)) {
+                if ((get_class($value) == 'stdClass') or $this->_all_object_serialize) {
+                    return $this->serializeObject($value, $max_depth, $_depth, []);
+                }
+            }
         }
         return $this->serializeValue($value);
+    }
+
+    /**
+     * @param object   $object
+     * @param integer  $max_depth
+     * @param integer  $_depth
+     * @param string[] $hashes
+     *
+     * @return array|string
+     */
+    public function serializeObject($object, $max_depth = 3, $_depth = 0, $hashes = [])
+    {
+        if (($_depth >= $max_depth) or in_array(spl_object_hash($object), $hashes)) {
+            return $this->serializeValue($object);
+        }
+        $hashes[] = spl_object_hash($object);
+        $return = [];
+        foreach ($object as $key => &$value) {
+            if (is_object($value)) {
+                $new_value = $this->serializeObject($value, $max_depth, $_depth + 1, $hashes);
+            } else {
+                $new_value = $this->serialize($value, $max_depth, $_depth + 1);
+            }
+            $return[$key] = $new_value;
+        }
+
+        return $return;
     }
 
     protected function serializeString($value)
