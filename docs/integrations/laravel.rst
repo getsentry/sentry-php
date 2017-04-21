@@ -202,16 +202,16 @@ Testing with Artisan
 
 You can test your configuration using the provided ``artisan`` command:
 
-```bash
-$ php artisan sentry:test
-[sentry] Client configuration:
--> server: https://app.getsentry.com/api/3235/store/
--> project: 3235
--> public_key: e9ebbd88548a441288393c457ec90441
--> secret_key: 399aaee02d454e2ca91351f29bdc3a07
-[sentry] Generating test event
-[sentry] Sending test event with ID: 5256614438cf4e0798dc9688e9545d94
-```
+.. code-block:: bash
+
+    $ php artisan sentry:test
+    [sentry] Client configuration:
+    -> server: https://app.getsentry.com/api/3235/store/
+    -> project: 3235
+    -> public_key: e9ebbd88548a441288393c457ec90441
+    -> secret_key: 399aaee02d454e2ca91351f29bdc3a07
+    [sentry] Generating test event
+    [sentry] Sending test event with ID: 5256614438cf4e0798dc9688e9545d94
 
 Adding Context
 --------------
@@ -220,42 +220,42 @@ The mechanism to add context will vary depending on which version of Laravel you
 
 In the following example, we'll use a middleware:
 
-```php
-namespace App\Http\Middleware;
+.. code-block:: php
 
-use Closure;
+    namespace App\Http\Middleware;
 
-class SentryContext
-{
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @param  \Closure                 $next
-     *
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
+    use Closure;
+
+    class SentryContext
     {
-        if (app()->bound('sentry')) {
-            /** @var \Raven_Client $sentry */
-            $sentry = app('sentry');
+        /**
+         * Handle an incoming request.
+         *
+         * @param  \Illuminate\Http\Request $request
+         * @param  \Closure                 $next
+         *
+         * @return mixed
+         */
+        public function handle($request, Closure $next)
+        {
+            if (app()->bound('sentry')) {
+                /** @var \Raven_Client $sentry */
+                $sentry = app('sentry');
 
-            // Add user context
-            if (auth()->check()) {
-                $sentry->user_context([...]);
-            } else {
-                $sentry->user_context(['id' => null]);
+                // Add user context
+                if (auth()->check()) {
+                    $sentry->user_context([...]);
+                } else {
+                    $sentry->user_context(['id' => null]);
+                }
+
+                // Add tags context
+                $sentry->tags_context([...]);
             }
 
-            // Add tags context
-            $sentry->tags_context([...]);
+            return $next($request);
         }
-
-        return $next($request);
     }
-}
-```
 
 Configuration
 -------------
