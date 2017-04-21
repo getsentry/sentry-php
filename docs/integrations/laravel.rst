@@ -197,8 +197,68 @@ Create the Sentry configuration file (``config/sentry.php``):
     // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
     );
 
-Available Settings
-------------------
+Testing with Artisan
+--------------------
+
+You can test your configuration using the provided ``artisan`` command:
+
+```bash
+$ php artisan sentry:test
+[sentry] Client configuration:
+-> server: https://app.getsentry.com/api/3235/store/
+-> project: 3235
+-> public_key: e9ebbd88548a441288393c457ec90441
+-> secret_key: 399aaee02d454e2ca91351f29bdc3a07
+[sentry] Generating test event
+[sentry] Sending test event with ID: 5256614438cf4e0798dc9688e9545d94
+```
+
+Adding Context
+--------------
+
+The mechanism to add context will vary depending on which version of Laravel you're using, but the general approach is the same. Find a good entry point to your application in which the context you want to add is available, ideally early in the process.
+
+In the following example, we'll use a middleware:
+
+```php
+namespace App\Http\Middleware;
+
+use Closure;
+
+class SentryContext
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure                 $next
+     *
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        if (app()->bound('sentry')) {
+            /** @var \Raven_Client $sentry */
+            $sentry = app('sentry');
+
+            // Add user context
+            if (auth()->check()) {
+                $sentry->user_context([...]);
+            } else {
+                $sentry->user_context(['id' => null]);
+            }
+
+            // Add tags context
+            $sentry->tags_context([...]);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+Configuration
+-------------
 
 The following settings are available for the client:
 
@@ -221,11 +281,22 @@ The following settings are available for the client:
 
 .. describe:: breadcrumbs.sql_bindings
 
-    Capturing bindings on SQL queries.
+    Capture bindings on SQL queries.
 
     Defaults to ``true``.
 
     .. code-block:: php
 
         'breadcrumbs.sql_bindings' => false,
+
+
+.. describe:: user_context
+
+    Capture user_context automatically.
+
+    Defaults to ``true``.
+
+    .. code-block:: php
+
+        'user_context' => false,
 
