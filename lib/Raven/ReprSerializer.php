@@ -28,14 +28,14 @@ class Raven_ReprSerializer extends Raven_Serializer
             return $value.'.0';
         } elseif (is_integer($value) || is_float($value)) {
             return (string) $value;
-        } elseif (is_object($value) || gettype($value) == 'object') {
-            $repr = 'Object ' . get_class($value);
-            if (method_exists($value, 'toSentry')) {
-                $repr .= ' ' . $this->serializeValue($value->toSentry());
-            } elseif (method_exists($value, 'toDebugContext')) {
-                $repr .= ' ' . $this->serializeValue($value->toDebugContext());
+        } elseif (is_object($value) || gettype($value) === 'object') {
+            if ($value instanceof Raven_Serializable) {
+                return $value->toSentry();
             }
-            return $repr;
+            if (method_exists($value, 'toDebugContext')) {
+                return $value->toDebugContext();
+            }
+            return 'Object ' . get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {

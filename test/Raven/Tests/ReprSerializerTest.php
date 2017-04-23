@@ -109,4 +109,45 @@ class Raven_Tests_ReprSerializerTest extends PHPUnit_Framework_TestCase
         $this->assertInternalType('string', $result);
         $this->assertEquals('12345.0', $result);
     }
+
+    /**
+     * @dataProvider serializableDataProvider
+     */
+    public function testSerializeSerializableObject($expected)
+    {
+        $serializer = new Raven_ReprSerializer();
+
+        $mock = $this->getMockBuilder('Raven_Serializable')
+                     ->getMock();
+        $mock->method('toSentry')->willReturn($expected);
+
+        $result = $serializer->serialize($mock);
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider serializableDataProvider
+     */
+    public function testGenericSerializableObject($expected)
+    {
+        $serializer = new Raven_ReprSerializer();
+
+        $mock = $this->getMockBuilder('stdClass')
+                     ->setMethods(array('toDebugContext'))
+                     ->getMock();
+        $mock->method('toDebugContext')->willReturn($expected);
+
+        $result = $serializer->serialize($mock);
+        $this->assertEquals($expected, $result);
+    }
+
+    public function serializableDataProvider()
+    {
+        return array(
+            array(123),
+            array('test'),
+            array(array('test', 123)),
+            array(array('hello' => 'world')),
+        );
+    }
 }
