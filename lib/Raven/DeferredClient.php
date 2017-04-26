@@ -1,11 +1,13 @@
 <?php
 
+namespace Raven;
+
 /**
  * Raven PHP Client
  *
  * @package raven
  */
-class Raven_DeferredClient extends Raven_Client
+class DeferredClient extends Client
 {
     const INITIAL_REQUEST_LIMIT = 1000;
     protected $_queue_subfolder_name;
@@ -22,11 +24,11 @@ class Raven_DeferredClient extends Raven_Client
 
     public function __construct($options_or_dsn = null, $options = array())
     {
-        $options['install_shutdown_handler'] = Raven_Util::get($options, 'install_shutdown_handler', false);
-        $this->_queue_folder_name = Raven_Util::get($options, 'queue_folder_name', sys_get_temp_dir());
-        $this->_queue_subfolder_name = Raven_Util::get($options, 'queue_subfolder_name', null);
+        $options['install_shutdown_handler'] = Util::get($options, 'install_shutdown_handler', false);
+        $this->_queue_folder_name = Util::get($options, 'queue_folder_name', sys_get_temp_dir());
+        $this->_queue_subfolder_name = Util::get($options, 'queue_subfolder_name', null);
         parent::__construct($options_or_dsn, $options);
-        $this->_request_limit = Raven_Util::get($options, 'request_limit', self::INITIAL_REQUEST_LIMIT);
+        $this->_request_limit = Util::get($options, 'request_limit', self::INITIAL_REQUEST_LIMIT);
         $this->store_errors_for_bulk_send = true;
     }
 
@@ -233,7 +235,7 @@ class Raven_DeferredClient extends Raven_Client
 
     /**
      * @param int|null $value
-     * @return Raven_DeferredClient
+     * @return DeferredClient
      */
     public function setRequestLimit($value)
     {
@@ -248,7 +250,7 @@ class Raven_DeferredClient extends Raven_Client
 
     /**
      * @param string|null $value
-     * @return Raven_DeferredClient
+     * @return DeferredClient
      */
     public function setQueueSubfolderName($value)
     {
@@ -263,7 +265,7 @@ class Raven_DeferredClient extends Raven_Client
 
     /**
      * @param string $value
-     * @return Raven_DeferredClient
+     * @return DeferredClient
      */
     public function setQueueFolderName($value)
     {

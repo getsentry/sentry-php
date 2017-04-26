@@ -1,6 +1,8 @@
 <?php
 
-class Dummy_DeferredClient extends Raven_DeferredClient
+namespace Raven;
+
+class Dummy_DeferredClient extends DeferredClient
 {
     public $_send_remote_call_count = 0;
     public $_inner_limit_before_false = null;
@@ -15,7 +17,7 @@ class Dummy_DeferredClient extends Raven_DeferredClient
 
     public function __construct($options_or_dsn = null, array $options = array())
     {
-        $options['install_default_breadcrumb_handlers'] = Raven_Util::get(
+        $options['install_default_breadcrumb_handlers'] = Util::get(
             $options, 'install_default_breadcrumb_handlers', false
         );
         parent::__construct($options_or_dsn, $options);
@@ -60,7 +62,7 @@ class Dummy_DeferredClient extends Raven_DeferredClient
         if ($this->get_filenames_for_delete_count() == 0) {
             return true;
         }
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
 
         $ids = array();
@@ -79,7 +81,7 @@ class Dummy_DeferredClient extends Raven_DeferredClient
     }
 }
 
-class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_DeferredClientTest extends \PHPUnit_Framework_TestCase
 {
     public function tearDown()
     {
@@ -156,7 +158,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    private function subTestGettersAndSettersDatum(Raven_DeferredClient $client, $datum)
+    private function subTestGettersAndSettersDatum(DeferredClient $client, $datum)
     {
         if (count($datum) == 3) {
             list($property_name, $function_name, $value_in) = $datum;
@@ -170,7 +172,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
 
         $method_get_name = 'get'.$function_name;
         $method_set_name = 'set'.$function_name;
-        $property = new ReflectionProperty('Raven_DeferredClient', $property_name);
+        $property = new \ReflectionProperty('\\Raven\\DeferredClient', $property_name);
         $property->setAccessible(true);
 
         if (method_exists($client, $method_set_name)) {
@@ -185,7 +187,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
 
         if (method_exists($client, $method_get_name)) {
             $property->setValue($client, $value_out);
-            $reflection = new ReflectionMethod('Raven_DeferredClient', $method_get_name);
+            $reflection = new \ReflectionMethod('\\Raven\\DeferredClient', $method_get_name);
             if ($reflection->isPublic()) {
                 $actual_value = $client->$method_get_name();
                 $this->assertEquals($value_out, $actual_value);
@@ -206,7 +208,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::get_folder_with_queue
+     * @covers DeferredClient::get_folder_with_queue
      * @backupGlobals
      */
     public function testGet_folder_with_queue()
@@ -229,7 +231,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::create_queue_folder_if_need
+     * @covers DeferredClient::create_queue_folder_if_need
      * @backupGlobals
      */
     public function testCreate_queue_folder_if_need()
@@ -245,23 +247,23 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
         $client->setQueueSubfolderName('piece');
         $u = false;
         try {
-            $reflection = new ReflectionMethod('Raven_DeferredClient', 'create_queue_folder_if_need');
+            $reflection = new \ReflectionMethod('\\Raven\\DeferredClient', 'create_queue_folder_if_need');
             $reflection->setAccessible(true);
             $reflection->invoke($client);
         } catch (Exception $e) {
             $u = true;
         }
         $this->assertFileExists($filename);
-        $this->assertTrue($u, 'Raven_DeferredClient::create_queue_folder_if_need didn\'t throw exception');
+        $this->assertTrue($u, '\\Raven\\DeferredClient::create_queue_folder_if_need didn\'t throw exception');
         unlink($filename);
     }
 
     /**
-     * @covers Raven_DeferredClient::create_queue_folder_if_need
+     * @covers DeferredClient::create_queue_folder_if_need
      */
     private function create_queue_folder_if_need_subtest()
     {
-        $reflection = new ReflectionMethod('Raven_DeferredClient', 'create_queue_folder_if_need');
+        $reflection = new \ReflectionMethod('\\Raven\\DeferredClient', 'create_queue_folder_if_need');
         $reflection->setAccessible(true);
 
         foreach (range(1, 3) as $length) {
@@ -336,11 +338,11 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::direct_send_to_server
+     * @covers ::direct_send_to_server
      */
     public function testDirect_send_to_server_with_no_server()
     {
-        $reflection = new ReflectionMethod('Raven_DeferredClient', 'direct_send_to_server');
+        $reflection = new \ReflectionMethod('\\Raven\\DeferredClient', 'direct_send_to_server');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient(
             null, array(
@@ -354,11 +356,11 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::direct_send_to_server
+     * @covers DeferredClient::direct_send_to_server
      */
     public function testDirect_send_to_server_with_server()
     {
-        $reflection = new ReflectionMethod('Raven_DeferredClient', 'direct_send_to_server');
+        $reflection = new \ReflectionMethod('\\Raven\\DeferredClient', 'direct_send_to_server');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient(
             'http://public:secret@example.com/1', array(
@@ -373,12 +375,12 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::get_events_count
-     * @covers Raven_DeferredClient::get_filenames_for_delete_count
+     * @covers DeferredClient::get_events_count
+     * @covers DeferredClient::get_filenames_for_delete_count
      */
     public function testGet_events_count()
     {
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient('http://public:secret@example.com/1');
 
@@ -405,7 +407,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
 
     public function testRead_all_queue_non_existed_folder()
     {
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient();
         $client->setQueueSubfolderName('long_non_existed_folder_'.self::generate_hash_trivial(20));
@@ -416,7 +418,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
 
     public function testRead_all_queue_broken_data()
     {
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient();
         $client->setQueueFolderName(sys_get_temp_dir());
@@ -434,12 +436,12 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::read_all_queue
-     * @covers Raven_DeferredClient::send_all_loaded_events_from_queue
+     * @covers DeferredClient::read_all_queue
+     * @covers DeferredClient::send_all_loaded_events_from_queue
      */
     public function testRead_all_queue_store()
     {
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
         $client2 = new Dummy_DeferredClient(
             null, array(
@@ -496,8 +498,8 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers Raven_DeferredClient::read_all_queue
-     * @covers Raven_DeferredClient::send_all_loaded_events_from_queue
+     * @covers DeferredClient::read_all_queue
+     * @covers DeferredClient::send_all_loaded_events_from_queue
      */
     public function testSend_too_much_events()
     {
@@ -536,8 +538,8 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
 
 
     /**
-     * @covers Raven_DeferredClient::read_all_queue
-     * @covers Raven_DeferredClient::send_all_loaded_events_from_queue
+     * @covers DeferredClient::read_all_queue
+     * @covers DeferredClient::send_all_loaded_events_from_queue
      */
     public function testSend_too_much_file()
     {
@@ -648,7 +650,7 @@ class Raven_Tests_DeferredClientTest extends PHPUnit_Framework_TestCase
         $client->store_pending_events_to_queue();
 
         //
-        $reflection = new ReflectionProperty('Raven_DeferredClient', '_event_for_delete');
+        $reflection = new \ReflectionProperty('\\Raven\\DeferredClient', '_event_for_delete');
         $reflection->setAccessible(true);
         $client = new Dummy_DeferredClient(
             null, array(
