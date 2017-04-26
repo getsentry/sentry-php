@@ -1,37 +1,38 @@
 <?php
 
-use Monolog\Logger;
-use Monolog\Handler\AbstractProcessingHandler;
+namespace Raven\Breadcrumbs;
 
-class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
+use \Monolog\Logger;
+
+class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
 {
     /**
      * Translates Monolog log levels to Raven log levels.
      */
-    private $logLevels = array(
-        Logger::DEBUG     => Raven_Client::DEBUG,
-        Logger::INFO      => Raven_Client::INFO,
-        Logger::NOTICE    => Raven_Client::INFO,
-        Logger::WARNING   => Raven_Client::WARNING,
-        Logger::ERROR     => Raven_Client::ERROR,
-        Logger::CRITICAL  => Raven_Client::FATAL,
-        Logger::ALERT     => Raven_Client::FATAL,
-        Logger::EMERGENCY => Raven_Client::FATAL,
+    protected $logLevels = array(
+        Logger::DEBUG     => \Raven\Client::DEBUG,
+        Logger::INFO      => \Raven\Client::INFO,
+        Logger::NOTICE    => \Raven\Client::INFO,
+        Logger::WARNING   => \Raven\Client::WARNING,
+        Logger::ERROR     => \Raven\Client::ERROR,
+        Logger::CRITICAL  => \Raven\Client::FATAL,
+        Logger::ALERT     => \Raven\Client::FATAL,
+        Logger::EMERGENCY => \Raven\Client::FATAL,
     );
 
-    private $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
+    protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
 
     /**
-     * @var Raven_Client the client object that sends the message to the server
+     * @var \Raven\Client the client object that sends the message to the server
      */
     protected $ravenClient;
 
     /**
-     * @param Raven_Client $ravenClient
-     * @param int          $level       The minimum logging level at which this handler will be triggered
-     * @param bool         $bubble      Whether the messages that are handled can bubble up the stack or not
+     * @param \Raven\Client $ravenClient
+     * @param int           $level  The minimum logging level at which this handler will be triggered
+     * @param bool          $bubble Whether the messages that are handled can bubble up the stack or not
      */
-    public function __construct(Raven_Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
+    public function __construct(\Raven\Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
     {
         parent::__construct($level, $bubble);
 
@@ -63,7 +64,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
             /**
-             * @var Exception $exc
+             * @var \Exception $exc
              */
             $exc = $record['context']['exception'];
             $crumb = array(

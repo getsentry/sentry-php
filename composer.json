@@ -2,7 +2,7 @@
     "name": "sentry/sentry",
     "type": "library",
     "description": "A PHP client for Sentry (http://getsentry.com)",
-    "keywords": ["log", "logging"],
+    "keywords": ["log", "logging", "error-monitoring", "error-handler", "crash-reporting", "crash-reports"],
     "homepage": "http://getsentry.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -12,12 +12,15 @@
         }
     ],
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^1.8.0",
+        "friendsofphp/php-cs-fixer": "~2.1",
         "phpunit/phpunit": "^4.8 || ^5.0",
         "monolog/monolog": "*"
     },
     "require": {
-        "php": ">=5.2.4",
+        "php": ">=5.5",
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
         "ext-curl": "*"
     },
     "suggest": {
@@ -30,13 +33,32 @@
         "bin/sentry"
     ],
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
+        "psr-4" : {
+            "Raven\\" : "lib/Raven/"
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Raven\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "tests": [
+            "vendor/bin/phpunit --verbose"
+        ],
+        "tests-report": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html tests/html-report"
+        ],
+        "phpcs": [
+            "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
+        ]
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.7.x-dev"
+            "dev-master": "2.0.x-dev"
         }
     }
 }

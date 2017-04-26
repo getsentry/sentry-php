@@ -1,32 +1,49 @@
 <?php
+
+/*
+ * This file is part of Raven.
+ *
+ * (c) Sentry Team
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Raven\Processor;
+
+use Raven\Client;
+use Raven\Processor;
+
 /**
  * Asterisk out passwords from password fields in frames, http,
  * and basic extra data.
  *
  * @package raven
  */
-class Raven_SanitizeDataProcessor extends Raven_Processor
+class SanitizeDataProcessor extends Processor
 {
-    const MASK = '********';
+    const MASK = self::STRING_MASK;
     const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
     const VALUES_RE = '/^(?:\d[ -]*?){13,16}$/';
 
-    private $fields_re;
-    private $values_re;
+    protected $fields_re;
+    protected $values_re;
     protected $session_cookie_name;
 
-    public function __construct(Raven_Client $client)
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct(Client $client)
     {
         parent::__construct($client);
-        $this->fields_re    = self::FIELDS_RE;
-        $this->values_re    = self::VALUES_RE;
+
+        $this->fields_re = self::FIELDS_RE;
+        $this->values_re = self::VALUES_RE;
         $this->session_cookie_name = ini_get('session.name');
     }
 
     /**
-     * Override the default processor options
-     *
-     * @param array $options Associative array of processor options
+     * {@inheritdoc}
      */
     public function setProcessorOptions(array $options)
     {
@@ -42,8 +59,8 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     /**
      * Replace any array values with our mask if the field name or the value matches a respective regex
      *
-     * @param mixed  $item Associative array value
-     * @param string $key  Associative array key
+     * @param mixed $item       Associative array value
+     * @param string $key       Associative array key
      */
     public function sanitize(&$item, $key)
     {
@@ -52,7 +69,7 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
 
         if (preg_match($this->values_re, $item)) {
-            $item = self::MASK;
+            $item = self::STRING_MASK;
         }
 
         if (empty($key)) {
@@ -60,13 +77,10 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
 
         if (preg_match($this->fields_re, $key)) {
-            $item = self::MASK;
+            $item = self::STRING_MASK;
         }
     }
 
-    /** @noinspection PhpInconsistentReturnPointsInspection
-     * @param array $data
-     */
     public function sanitizeException(&$data)
     {
         foreach ($data['exception']['values'] as &$value) {
@@ -77,10 +91,10 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
     public function sanitizeHttp(&$data)
     {
         $http = &$data['request'];
-        if (!empty($http['cookies'])) {
+        if (!empty($http['cookies']) && is_array($http['cookies'])) {
             $cookies = &$http['cookies'];
             if (!empty($cookies[$this->session_cookie_name])) {
-                $cookies[$this->session_cookie_name] = self::MASK;
+                $cookies[$this->session_cookie_name] = self::STRING_MASK;
             }
         }
         if (!empty($http['data']) && is_array($http['data'])) {
@@ -98,6 +112,9 @@ class Raven_SanitizeDataProcessor extends Raven_Processor
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function process(&$data)
     {
         if (!empty($data['exception'])) {

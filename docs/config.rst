@@ -103,6 +103,16 @@ The following settings are available for the client:
             '/www/php/lib',
         ));
 
+.. describe:: sample_rate
+
+    The sampling factor to apply to events. A value of 0.00 will deny sending
+    any events, and a value of 1.00 will send 100% of events.
+
+    .. code-block:: php
+
+        // send 50% of events
+        'sample_rate' => 0.5,
+
 .. describe:: send_callback
 
     A function which will be called whenever data is ready to be sent. Within
@@ -118,7 +128,7 @@ The following settings are available for the client:
 
     .. code-block:: php
 
-        $client->setSendCallback(unction($data) {
+        $client->setSendCallback(function($data) {
             // dont send events if POST
             if ($_SERVER['REQUEST_METHOD'] === 'POST')
             {

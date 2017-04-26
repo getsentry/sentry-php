@@ -8,13 +8,15 @@
  * file that was distributed with this source code.
  */
 
+namespace Raven;
+
 /**
  * Raven Breadcrumbs
  *
  * @package raven
  */
 
-class Raven_Breadcrumbs
+class Breadcrumbs
 {
     public $count;
     public $pos;
@@ -26,9 +28,14 @@ class Raven_Breadcrumbs
 
     public function __construct($size = 100)
     {
+        $this->size = $size;
+        $this->reset();
+    }
+
+    public function reset()
+    {
         $this->count = 0;
         $this->pos = 0;
-        $this->size = $size;
         $this->buffer = array();
     }
 

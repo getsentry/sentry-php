@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
+namespace Raven\Tests;
+
+class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
 {
     private $errorLevel;
     private $errorHandlerCalled;
@@ -49,7 +51,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
 
-        $handler = new Raven_ErrorHandler($client, E_ALL);
+        $handler = new \Raven\ErrorHandler($client, E_ALL);
         $handler->handleError(E_WARNING, 'message');
     }
 
@@ -62,9 +64,9 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                ->method('captureException')
                ->with($this->isInstanceOf('ErrorException'));
 
-        $e = new ErrorException('message', 0, E_WARNING, '', 0);
+        $e = new \ErrorException('message', 0, E_WARNING, '', 0);
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->handleException($e);
     }
 
@@ -76,7 +78,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $client->expects($this->once())
                ->method('captureException');
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(false, -1);
 
         error_reporting(E_USER_WARNING);
@@ -91,13 +93,54 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $client->expects($this->never())
                ->method('captureException');
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(true, E_DEPRECATED);
 
         error_reporting(E_USER_WARNING);
         trigger_error('Warning', E_USER_WARNING);
 
         $this->assertEquals($this->errorHandlerCalled, 1);
+    }
+
+    public function testExceptionHandlerPropagatesToNative()
+    {
+        $client = $this->getMockBuilder('Client')
+                       ->setMethods(array('captureException'))
+                       ->getMock();
+        $client->expects($this->exactly(2))
+               ->method('captureException')
+               ->with($this->isInstanceOf('Exception'));
+
+        $handler = new \Raven\ErrorHandler($client);
+        
+        set_exception_handler(null);
+        $handler->registerExceptionHandler(false);
+
+        $testException = new \Exception('Test exception');
+
+        $didRethrow = false;
+        try {
+            $handler->handleException($testException);
+        } catch (\Exception $e) {
+            $didRethrow = true;
+        }
+
+        $this->assertFalse($didRethrow);
+
+        set_exception_handler(null);
+        $handler->registerExceptionHandler(true);
+
+        $didRethrow = false;
+        $rethrownException = null;
+        try {
+            $handler->handleException($testException);
+        } catch (\Exception $e) {
+            $didRethrow = true;
+            $rethrownException = $e;
+        }
+
+        $this->assertTrue($didRethrow);
+        $this->assertSame($testException, $rethrownException);
     }
 
     public function testErrorHandlerRespectsErrorReportingDefault()
@@ -110,7 +153,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         error_reporting(E_DEPRECATED);
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(true);
 
         error_reporting(E_ALL);
@@ -131,7 +174,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         error_reporting(E_ALL);
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(true);
 
         @$undefined;
@@ -150,7 +193,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $client->expects($this->never())
                ->method('captureException');
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(true, E_ALL);
 
         @$my_array[2];
@@ -164,7 +207,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $client = $this->getMockBuilder('Client')
                        ->setMethods(array('captureException'))
                        ->getMock();
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
 
         $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), true);
 
@@ -181,7 +224,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
 
         error_reporting(E_USER_ERROR);
 
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $handler->registerErrorHandler(false);
 
         trigger_error('Warning', E_USER_WARNING);
@@ -192,7 +235,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
         $client = $this->getMockBuilder('Client')
                        ->setMethods(array('captureException'))
                        ->getMock();
-        $handler = new Raven_ErrorHandler($client);
+        $handler = new \Raven\ErrorHandler($client);
         $result = $handler->registerErrorHandler();
         $this->assertEquals($result, $handler);
         $result = $handler->registerExceptionHandler();

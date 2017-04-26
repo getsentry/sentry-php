@@ -1,19 +1,17 @@
 language: php
 
 php:
-  - 5.3
-  - 5.4
   - 5.5
   - 5.6
   - 7.0
   - 7.1
   - nightly
-  - hhvm
+  - hhvm-3.12
 
 matrix:
   allow_failures:
     - php: 7.1
-    - php: hhvm
+    - php: hhvm-3.12
     - php: nightly
   fast_finish: true
   include:
@@ -27,10 +25,15 @@ matrix:
       env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
     - php: nightly
       env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
-    - php: nightly
-      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
+    - php: hhvm-3.12
+      env: REMOVE_XDEBUG="0" HHVM="1"
+      dist: trusty
   exclude:
-    - php: hhvm
+    - php: hhvm-3.12
+      env: REMOVE_XDEBUG="0"
+    - php: hhvm-3.12
+      env: REMOVE_XDEBUG="1"
+    - php: nightly
       env: REMOVE_XDEBUG="1"
 
 env:
@@ -46,12 +49,12 @@ cache:
 before_install:
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
   - if [ "$DISABLE_ASSERTIONS" = "1" ]; then echo 'zend.assertions = -1' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]]; then pecl install uopz; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]]; then echo "extension=uopz.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then pecl install uopz; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then echo "extension=uopz.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - composer self-update
 
 install: travis_retry composer install --no-interaction --prefer-source
 
 script:
-  - vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run
-  - vendor/bin/phpunit --verbose
+  - composer phpcs
+  - composer tests

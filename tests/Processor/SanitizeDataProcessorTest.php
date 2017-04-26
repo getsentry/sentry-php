@@ -9,7 +9,11 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
+namespace Raven\Tests;
+
+use Raven\Processor\SanitizeDataProcessor;
+
+class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
 {
     public function testDoesFilterHttpData()
     {
@@ -33,20 +37,20 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $processor = new Raven_SanitizeDataProcessor($client);
+        $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
         $vars = $data['request']['data'];
         $this->assertEquals($vars['foo'], 'bar');
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['password']);
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['the_secret']);
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['a_password_here']);
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['mypasswd']);
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['authorization']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['password']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['the_secret']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['a_password_here']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['mypasswd']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['authorization']);
 
         $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
 
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['card_number']['0']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['card_number']['0']);
     }
 
     public function testDoesFilterSessionId()
@@ -60,11 +64,11 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $processor = new Raven_SanitizeDataProcessor($client);
+        $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
         $cookies = $data['request']['cookies'];
-        $this->assertEquals($cookies[ini_get('session.name')], Raven_SanitizeDataProcessor::MASK);
+        $this->assertEquals($cookies[ini_get('session.name')], SanitizeDataProcessor::STRING_MASK);
     }
 
     public function testDoesFilterCreditCard()
@@ -76,20 +80,16 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $processor = new Raven_SanitizeDataProcessor($client);
+        $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $data['extra']['ccnumba']);
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $data['extra']['ccnumba']);
     }
 
-    /**
-     * @covers Raven_SanitizeDataProcessor::setProcessorOptions
-     *
-     */
     public function testSettingProcessorOptions()
     {
         $client     = new Dummy_Raven_Client();
-        $processor  = new Raven_SanitizeDataProcessor($client);
+        $processor  = new SanitizeDataProcessor($client);
 
         $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
         $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,16}$/', 'got default values');
@@ -116,13 +116,13 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     {
         $client = new Dummy_Raven_Client($dsn, $client_options);
         /**
-         * @var Raven_SanitizeDataProcessor $processor
+         * @var SanitizeDataProcessor $processor
          */
         $processor = $client->processors[0];
 
-        $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);
-        $this->assertEquals($processor->getFieldsRe(), $processorOptions['Raven_SanitizeDataProcessor']['fields_re'], 'overwrote fields');
-        $this->assertEquals($processor->getValuesRe(), $processorOptions['Raven_SanitizeDataProcessor']['values_re'], 'overwrote values');
+        $this->assertInstanceOf(SanitizeDataProcessor::class, $processor);
+        $this->assertEquals($processor->getFieldsRe(), $processorOptions[SanitizeDataProcessor::class]['fields_re'], 'overwrote fields');
+        $this->assertEquals($processor->getValuesRe(), $processorOptions[SanitizeDataProcessor::class]['values_re'], 'overwrote values');
     }
 
     /**
@@ -155,13 +155,13 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
 
         $client = new Dummy_Raven_Client($dsn, $client_options);
         /**
-         * @var Raven_SanitizeDataProcessor $processor
+         * @var SanitizeDataProcessor $processor
          */
         $processor = $client->processors[0];
 
-        $this->assertInstanceOf('Raven_SanitizeDataProcessor', $processor);
-        $this->assertEquals($processor->getFieldsRe(), $processorOptions['Raven_SanitizeDataProcessor']['fields_re'], 'overwrote fields');
-        $this->assertEquals($processor->getValuesRe(), $processorOptions['Raven_SanitizeDataProcessor']['values_re'], 'overwrote values');
+        $this->assertInstanceOf(SanitizeDataProcessor::class, $processor);
+        $this->assertEquals($processor->getFieldsRe(), $processorOptions[SanitizeDataProcessor::class]['fields_re'], 'overwrote fields');
+        $this->assertEquals($processor->getValuesRe(), $processorOptions[SanitizeDataProcessor::class]['values_re'], 'overwrote values');
 
         $processor->process($data);
 
@@ -172,9 +172,9 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($vars['a_password_here'], 'hello', 'did not alter a_password_here');
         $this->assertEquals($vars['mypasswd'], 'hello', 'did not alter mypasswd');
         $this->assertEquals($vars['authorization'], 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=', 'did not alter authorization');
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['api_token'], 'masked api_token');
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['api_token'], 'masked api_token');
 
-        $this->assertEquals(Raven_SanitizeDataProcessor::MASK, $vars['card_number']['0'], 'masked card_number[0]');
+        $this->assertEquals(SanitizeDataProcessor::STRING_MASK, $vars['card_number']['0'], 'masked card_number[0]');
         $this->assertEquals($vars['card_number']['1'], $vars['card_number']['1'], 'did not alter card_number[1]');
     }
 
@@ -186,14 +186,14 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
     public static function overrideDataProvider()
     {
         $processorOptions = array(
-            'Raven_SanitizeDataProcessor' => array(
+            SanitizeDataProcessor::class => array(
                 'fields_re' => '/(api_token)/i',
                 'values_re' => '/^(?:\d[ -]*?){15,16}$/'
             )
         );
 
         $client_options = array(
-            'processors' => array('Raven_SanitizeDataProcessor'),
+            'processors' => array(SanitizeDataProcessor::class),
             'processorOptions' => $processorOptions
         );
 
