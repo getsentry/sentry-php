@@ -11,8 +11,8 @@
 [![Downloads per month](https://img.shields.io/packagist/dm/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
 [![Latest stable version](https://img.shields.io/packagist/v/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
 [![License](http://img.shields.io/packagist/l/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/getsentry/sentry-php/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
-[![Code Coverage](https://scrutinizer-ci.com/g/getsentry/sentry-php/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
+[![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
+[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed

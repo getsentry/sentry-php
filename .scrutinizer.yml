@@ -2,22 +2,18 @@ tools:
     php_sim: false
     php_pdepend: true
     php_analyzer: true
+    php_code_coverage: true
+    external_code_coverage:
+        timeout: 2400 # There can be another pull request in progress
+        runs: 6 # PHP 5.3 + PHP 5.4 + PHP 5.5 + PHP 5.6 + PHP 7.0 * 2
 
 build:
     environment:
         php:
             version: 5.6.0
-    tests:
-        override:
-            -
-                command: 'vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-clover test/clover.xml'
-                coverage:
-                    file: 'test/clover.xml'
-                    format: 'clover'
-    environment:
         redis: false
         postgresql: false
         mongodb: false
 
 filter:
-    excluded_paths: [vendor/*, test/*, bin/*, docs/*, examples/*, test/*]
+    excluded_paths: [vendor/*, test/*, bin/*, docs/*, examples/*]
