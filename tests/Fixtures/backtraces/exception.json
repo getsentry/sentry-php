@@ -1,0 +1,18 @@
+{
+    "file": "path/to/file",
+    "line": 12,
+    "backtrace": [
+        {
+            "file": "path/to/file",
+            "function": "triggerError",
+            "line": 7,
+            "class": "TestClass"
+        },
+        {
+            "file": "path/to/file",
+            "line": 16,
+            "class": "TestClass",
+            "function": "crashyFunction"
+        }
+    ]
+}

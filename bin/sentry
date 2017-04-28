@@ -4,10 +4,7 @@
 // Maximize error reporting
 error_reporting(E_ALL | E_STRICT);
 
-// TODO: if we could get rid of this and have composer figure things out it'd make it
-// a bit more sane
-require(__DIR__ . '/../lib/Raven/Autoloader.php');
-\Raven\Autoloader::register();
+require(__DIR__ . '/../vendor/autoload.php');
 
 function raven_cli_test($command, $args)
 {

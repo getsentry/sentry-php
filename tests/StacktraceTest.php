@@ -11,74 +11,232 @@
 
 namespace Raven\Tests;
 
-function raven_test_recurse($times, $callback)
+use Raven\Client;
+use Raven\Stacktrace;
+
+class StacktraceTest extends \PHPUnit_Framework_TestCase
 {
-    $times -= 1;
-    if ($times > 0) {
-        return call_user_func('\Raven\Tests\raven_test_recurse', $times, $callback);
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    protected function setUp()
+    {
+        $this->client = new Client();
     }
 
-    return call_user_func($callback);
-}
-
-function raven_test_create_stacktrace($args=null, $times=3)
-{
-    return raven_test_recurse($times, 'debug_backtrace');
-}
-
-class Raven_Tests_StacktraceTest extends \PHPUnit_Framework_TestCase
-{
-    public function testCanTraceParamContext()
+    public function testGetFramesAndToArray()
     {
-        $stack = raven_test_create_stacktrace(array('biz', 'baz'), 0);
+        $stacktrace = new Stacktrace($this->client);
 
-        if (isset($stack[0]['function']) and ($stack[0]['function'] == 'call_user_func')) {
-            $offset = 2;
-        } else {
-            $offset = 1;
+        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
+        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(2, $frames);
+        $this->assertEquals($frames, $stacktrace->toArray());
+        $this->assertFrameEquals($frames[0], 'TestClass::test_function', 'path/to/file', 2);
+        $this->assertFrameEquals($frames[1], 'test_function', 'path/to/file', 1);
+    }
+
+    public function testStacktraceJsonSerialization()
+    {
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
+        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertJsonStringEqualsJsonString(json_encode($frames), json_encode($stacktrace));
+    }
+
+    public function testAddFrame()
+    {
+        $stacktrace = new Stacktrace($this->client);
+        $frames = [
+            $this->getJsonFixture('frames/eval.json'),
+            $this->getJsonFixture('frames/runtime_created.json'),
+            $this->getJsonFixture('frames/function.json'),
+        ];
+
+        foreach ($frames as $frame) {
+            $stacktrace->addFrame($frame['file'], $frame['line'], $frame);
         }
-        $frame = $stack[$offset];
-        $params = \Raven\Stacktrace::get_frame_context($frame);
-        $this->assertEquals($params['args'], array('biz', 'baz'));
-        $this->assertEquals($params['times'], 0);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(3, $frames);
+        $this->assertFrameEquals($frames[0], 'TestClass::test_function', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[1], 'test_function', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[2], 'test_function', 'path/to/file', 12);
     }
 
-    public function testSimpleTrace()
+    public function testAddFrameSerializesMethodArguments()
     {
-        $stack = array(
-            array(
-                'file'     => dirname(__FILE__).'/resources/a.php',
-                'line'     => 9,
-                'function' => 'a_test',
-                'args'     => array('friend'),
-            ),
-            array(
-                'file'     => dirname(__FILE__).'/resources/b.php',
-                'line'     => 2,
-                'args'     => array(
-                    dirname(__FILE__).'/resources/a.php',
-                ),
-                'function' => 'include_once',
-            )
-        );
+        $stacktrace = new Stacktrace($this->client);
+        $stacktrace->addFrame('path/to/file', 12, [
+            'file' => 'path/to/file',
+            'line' => 12,
+            'function' => 'test_function',
+            'args' => [1, 'foo']
+        ]);
 
-        $frames = \Raven\Stacktrace::get_stack_info($stack, true);
+        $frames = $stacktrace->getFrames();
 
-        $frame = $frames[0];
-        $this->assertEquals(2, $frame['lineno']);
-        $this->assertNull($frame['function']);
-        $this->assertEquals("include_once 'a.php';", $frame['context_line']);
-        $this->assertFalse(isset($frame['vars']));
-        $frame = $frames[1];
-        $this->assertEquals(9, $frame['lineno']);
-        $this->assertEquals('include_once', $frame['function']);
-        $this->assertEquals('a_test($foo);', $frame['context_line']);
-        $this->assertEquals(dirname(__FILE__) . '/resources/a.php', $frame['vars']['param1']);
+        $this->assertCount(1, $frames);
+        $this->assertFrameEquals($frames[0], 'test_function', 'path/to/file', 12);
+        $this->assertEquals(['param1' => 1, 'param2' => 'foo'], $frames[0]['vars']);
     }
 
-    public function testDoesNotModifyCaptureVars()
+    public function testAddFrameStripsPath()
     {
+        $this->client->setPrefixes(['path/to/', 'path/to/app']);
 
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame('path/to/app/file', 12, ['function' => 'test_function_parent_parent_parent']);
+        $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function_parent_parent']);
+        $stacktrace->addFrame('path/not/of/app/path/to/file', 12, ['function' => 'test_function_parent']);
+        $stacktrace->addFrame('path/not/of/app/to/file', 12, ['function' => 'test_function']);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertFrameEquals($frames[0], 'test_function', 'path/not/of/app/to/file', 12);
+        $this->assertFrameEquals($frames[1], 'test_function_parent', 'path/not/of/app/path/to/file', 12);
+        $this->assertFrameEquals($frames[2], 'test_function_parent_parent', 'file', 12);
+        $this->assertFrameEquals($frames[3], 'test_function_parent_parent_parent', 'app/file', 12);
+    }
+
+    public function testAddFrameMarksAsInApp()
+    {
+        $this->client->setAppPath('path/to');
+        $this->client->setExcludedAppPaths(['path/to/excluded/path']);
+
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function']);
+        $stacktrace->addFrame('path/to/excluded/path/to/file', 12, ['function' => 'test_function']);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertArrayHasKey('in_app', $frames[0]);
+        $this->assertTrue($frames[0]['in_app']);
+        $this->assertArrayNotHasKey('in_app', $frames[1]);
+    }
+
+    public function testAddFrameReadsCodeFromShortFile()
+    {
+        $fileContent = explode("\n", $this->getFixture('code/ShortFile.php'));
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame($this->getFixturePath('code/ShortFile.php'), 3, ['function' => '[unknown]']);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(1, $frames);
+        $this->assertCount(2, $frames[0]['pre_context']);
+        $this->assertCount(2, $frames[0]['post_context']);
+
+        for ($i = 0; $i < 2; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i]), $frames[0]['pre_context'][$i]);
+        }
+
+        $this->assertEquals(rtrim($fileContent[2]), $frames[0]['context_line']);
+
+        for ($i = 0; $i < 2; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + 3]), $frames[0]['post_context'][$i]);
+        }
+    }
+
+    public function testAddFrameReadsCodeFromLongFile()
+    {
+        $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
+            'function' => '[unknown]',
+        ]);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(1, $frames);
+        $this->assertCount(5, $frames[0]['pre_context']);
+        $this->assertCount(5, $frames[0]['post_context']);
+
+        for ($i = 0; $i < 5; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + 2]), $frames[0]['pre_context'][$i]);
+        }
+
+        $this->assertEquals(rtrim($fileContent[7]), $frames[0]['context_line']);
+
+        for ($i = 0; $i < 5; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]['post_context'][$i]);
+        }
+    }
+
+    /**
+     * @dataProvider removeFrameDataProvider
+     */
+    public function testRemoveFrame($index, $throwException)
+    {
+        if ($throwException) {
+            $this->setExpectedException(\OutOfBoundsException::class, 'Invalid frame index to remove.');
+        }
+
+        $stacktrace = new Stacktrace($this->client);
+
+        $stacktrace->addFrame('path/to/file', 12, [
+            'function' => 'test_function_parent',
+        ]);
+
+        $stacktrace->addFrame('path/to/file', 12, [
+            'function' => 'test_function',
+        ]);
+
+        $this->assertCount(2, $stacktrace->getFrames());
+
+        $stacktrace->removeFrame($index);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(1, $frames);
+        $this->assertFrameEquals($frames[0], 'test_function_parent', 'path/to/file', 12);
+    }
+
+    public function removeFrameDataProvider()
+    {
+        return [
+            [-1, true],
+            [2, true],
+            [0, false],
+        ];
+    }
+
+    public function testFromBacktrace()
+    {
+        $fixture = $this->getJsonFixture('backtraces/exception.json');
+        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+
+        $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
+        $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
+        $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
+    }
+
+    public function testFromBacktraceWithAnonymousFrame()
+    {
+        $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
+        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+
+        $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
+        $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
+        $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
+    }
+
+    public function testGetFrameArgumentsDoesNotModifyCapturedArgs()
+    {
         // PHP's errcontext as passed to the error handler contains REFERENCES to any vars that were in the global scope.
         // Modification of these would be really bad, since if control is returned (non-fatal error) we'll have altered the state of things!
         $originalFoo = 'bloopblarp';
@@ -97,7 +255,7 @@ class Raven_Tests_StacktraceTest extends \PHPUnit_Framework_TestCase
             "function" => "a_test",
         );
 
-        $result = \Raven\Stacktrace::get_frame_context($frame, 5);
+        $result = Stacktrace::getFrameArguments($frame, 5);
 
         // Check we haven't modified our vars.
         $this->assertEquals($originalFoo, 'bloopblarp');
@@ -108,143 +266,25 @@ class Raven_Tests_StacktraceTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($result['param2']['key'], 'xxxxx');
     }
 
-    public function testDoesFixFrameInfo()
+    protected function getFixturePath($file)
     {
-        if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
-            $this->markTestSkipped('HHVM stacktrace behaviour');
-            return;
-        }
-
-        /**
-         * PHP's way of storing backstacks seems bass-ackwards to me
-         * 'function' is not the function you're in; it's any function being
-         * called, so we have to shift 'function' down by 1. Ugh.
-         */
-        $stack = raven_test_create_stacktrace();
-
-        $frames = \Raven\Stacktrace::get_stack_info($stack, true);
-        // just grab the last few frames
-        $frames = array_slice($frames, -6);
-        $skip_call_user_func_fix = false;
-        if (version_compare(PHP_VERSION, '7.0', '>=')) {
-            $skip_call_user_func_fix = true;
-            foreach ($frames as &$frame) {
-                if (isset($frame['function']) and ($frame['function'] == 'call_user_func')) {
-                    $skip_call_user_func_fix = false;
-                    break;
-                }
-            }
-            unset($frame);
-        }
-
-        if ($skip_call_user_func_fix) {
-            $frame = $frames[3];
-            $this->assertEquals('Raven\Tests\raven_test_create_stacktrace', $frame['function']);
-            $frame = $frames[4];
-            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
-            $frame = $frames[5];
-            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
-        } else {
-            $frame = $frames[0];
-            $this->assertEquals('Raven\Tests\raven_test_create_stacktrace', $frame['function']);
-            $frame = $frames[1];
-            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
-            $frame = $frames[2];
-            $this->assertEquals('call_user_func', $frame['function']);
-            $frame = $frames[3];
-            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
-            $frame = $frames[4];
-            $this->assertEquals('call_user_func', $frame['function']);
-            $frame = $frames[5];
-            $this->assertEquals('Raven\Tests\raven_test_recurse', $frame['function']);
-        }
+        return realpath(__DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . $file);
     }
 
-    public function testInApp()
+    protected function getFixture($file)
     {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-            ),
-            array(
-                "file" => dirname(__FILE__) . "/resources/b.php",
-                "line" => 3,
-                "function" => "include_once",
-            ),
-        );
-
-        $frames = \Raven\Stacktrace::get_stack_info($stack, true, null, 0, null, dirname(__FILE__));
-
-        $this->assertEquals($frames[0]['in_app'], true);
-        $this->assertEquals($frames[1]['in_app'], true);
+        return file_get_contents($this->getFixturePath($file));
     }
 
-    public function testInAppWithExclusion()
+    protected function getJsonFixture($file)
     {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . '/resources/foo/a.php',
-                "line" => 11,
-                "function" => "a_test",
-            ),
-            array(
-                "file" => dirname(__FILE__) . '/resources/bar/b.php',
-                "line" => 3,
-                "function" => "include_once",
-            ),
-        );
-
-        $frames = \Raven\Stacktrace::get_stack_info(
-            $stack, true, null, 0, null, dirname(__FILE__) . '/',
-            array(dirname(__FILE__) . '/resources/bar/'));
-
-        // stack gets reversed
-        $this->assertEquals($frames[0]['in_app'], false);
-        $this->assertEquals($frames[1]['in_app'], true);
+        return json_decode($this->getFixture($file), true);
     }
 
-    public function testBasePath()
+    protected function assertFrameEquals($frame, $method, $file, $line)
     {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-            ),
-        );
-
-        $frames = \Raven\Stacktrace::get_stack_info($stack, true, null, 0, array(dirname(__FILE__) . '/'));
-
-        $this->assertEquals($frames[0]['filename'], 'resources/a.php');
-    }
-
-    public function testNoBasePath()
-    {
-        $stack = array(
-            array(
-                "file" => dirname(__FILE__) . "/resources/a.php",
-                "line" => 11,
-                "function" => "a_test",
-            ),
-        );
-
-        $frames = \Raven\Stacktrace::get_stack_info($stack);
-        $this->assertEquals($frames[0]['filename'], dirname(__FILE__) . '/resources/a.php');
-    }
-
-    public function testWithEvaldCode()
-    {
-        try {
-            eval("throw new Exception('foobar');");
-        } catch (\Exception $ex) {
-            $trace = $ex->getTrace();
-            $frames = \Raven\Stacktrace::get_stack_info($trace);
-        }
-        /**
-         * @var array $frames
-         */
-        $this->assertEquals($frames[count($frames) -1]['filename'], __FILE__);
+        $this->assertSame($method, $frame['function']);
+        $this->assertSame($file, $frame['filename']);
+        $this->assertSame($line, $frame['lineno']);
     }
 }

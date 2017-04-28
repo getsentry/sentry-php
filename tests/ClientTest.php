@@ -579,7 +579,7 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $frames = $exc['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
         $this->assertTrue($frame['lineno'] > 0);
-        $this->assertEquals('create_exception', $frame['function']);
+        $this->assertEquals('Raven\Tests\Raven_Tests_ClientTest::create_exception', $frame['function']);
         $this->assertFalse(isset($frame['vars']));
         $this->assertEquals('            throw new \Exception(\'Foo bar\');', $frame['context_line']);
         $this->assertFalse(empty($frame['pre_context']));
@@ -1008,7 +1008,7 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
 
         $client = new Dummy_Raven_Client($options);
 
-        require_once(__DIR__.'/resources/captureExceptionInLatin1File.php');
+        require_once(__DIR__ . '/Fixtures/code/Latin1File.php');
 
         $events = $client->getSentEvents();
         $event = array_pop($events);

@@ -1,0 +1,5 @@
+{
+    "file": "path/to/file(12) : eval()'d code",
+    "line": 12,
+    "function": "test_function"
+}
