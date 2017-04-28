@@ -8,7 +8,7 @@
 abstract class Raven_Processor
 {
     /**
-     * This constant defines the mask string used to strip sensitive informations.
+     * This constant defines the mask string used to strip sensitive information.
      */
     const STRING_MASK = '********';
 
