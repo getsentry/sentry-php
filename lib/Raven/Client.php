@@ -14,11 +14,12 @@ namespace Raven;
  * Raven PHP Client
  *
  * @package raven
+ * @doc https://docs.sentry.io/clients/php/config/
  */
 
 class Client
 {
-    const VERSION = '1.7.x-dev';
+    const VERSION = '2.0.x-dev';
 
     const PROTOCOL = '6';
 
@@ -29,74 +30,176 @@ class Client
     const ERROR = 'error';
     const FATAL = 'fatal';
 
+    /**
+     * Default message limit
+     */
     const MESSAGE_LIMIT = 1024;
 
+    /**
+     * @var \Raven\Breadcrumbs
+     */
     public $breadcrumbs;
     /**
      * @var \Raven\Context
      */
     public $context;
+    /**
+     * @var \Raven\TransactionStack
+     */
+    public $transaction;
+    /**
+     * @var array $extra_data
+     */
     public $extra_data;
     /**
-     * @var array|null
+     * @var string[]|null
      */
     public $severity_map;
     public $store_errors_for_bulk_send = false;
 
+    /**
+     * @var \Raven\ErrorHandler $error_handler
+     */
     protected $error_handler;
+    /**
+     * @var integer|null bit mask for error_reporting used in ErrorHandler::handleError
+     */
     protected $error_types;
 
+    /**
+     * @var \Raven\Serializer $serializer
+     */
     protected $serializer;
+    /**
+     * @var \Raven\Serializer $serializer
+     */
     protected $reprSerializer;
 
     /**
-     * @var string
+     * @var string $app_path The root path to your application code
      */
     protected $app_path;
     /**
-     * @var string[]
+     * @var string[] $prefixes Prefixes which should be stripped from filenames to create relative paths
      */
     protected $prefixes;
     /**
-     * @var string[]|null
+     * @var string[]|null Paths to exclude from app_path detection
      */
     protected $excluded_app_paths;
     /**
-     * @var Callable
+     * @var Callable Set a custom transport to override how Sentry events are sent upstream
      */
     protected $transport;
 
+    /**
+     * @var string $logger Adjust the default logger name for messages
+     */
     public $logger;
     /**
-     * @var string Full URL to Sentry
+     * @var string Full URL to Sentry (not a DSN)
+     * @doc https://docs.sentry.io/quickstart/
      */
     public $server;
+    /**
+     * @var string $secret_key Password in Sentry Server
+     */
     public $secret_key;
+    /**
+     * @var string $public_key Password in Sentry Server
+     */
     public $public_key;
+    /**
+     * @var integer $project This project ID in Sentry Server
+     */
     public $project;
+    /**
+     * @var boolean $auto_log_stacks Fill stacktrace by debug_backtrace()
+     */
     public $auto_log_stacks;
+    /**
+     * @var string $name Override the default value for the server’s hostname
+     */
     public $name;
+    /**
+     * @var string $site SERVER_NAME (not a HTTP_HOST)
+     */
     public $site;
+    /**
+     * @var array $tags An array of tags to apply to events in this context
+     */
     public $tags;
+    /**
+     * @var mixed $release The version of your application (e.g. git SHA)
+     */
     public $release;
+    /**
+     * @var string $environment The environment your application is running in
+     */
     public $environment;
+    /**
+     * @var double The sampling factor to apply to events. A value of 0.00 will deny sending
+     * any events, and a value of 1.00 will send 100% of events
+     */
     public $sample_rate;
+    /**
+     * @var boolean $trace Set this to false to disable reflection tracing
+     * (function calling arguments) in stacktraces
+     */
     public $trace;
+    /**
+     * @var double $timeout Timeout for sending data
+     */
     public $timeout;
+    /**
+     * @var string $message_limit This value is used to truncate message and frame variables.
+     * However it is not guarantee that length of whole message will be restricted by this value
+     */
     public $message_limit;
+    /**
+     * @var string[] $exclude Excluded exceptions classes
+     */
     public $exclude;
     public $http_proxy;
+    /**
+     * @var Callable $send_callback A function which will be called whenever data is ready to be sent.
+     * Within the function you can mutate the data, or alternatively return false to instruct the SDK
+     * to not send the event
+     */
     protected $send_callback;
+    /**
+     * @var string $curl_method
+     * sync (default): send requests immediately when they’re made
+     * async: uses a curl_multi handler for best-effort asynchronous submissions
+     * exec: asynchronously send events by forking a curl process for each item
+     */
     public $curl_method;
+    /**
+     * @var string $curl_path Specify the path to the curl binary to be used with the ‘exec’ curl method
+     */
     public $curl_path;
+    /**
+     * @var boolean $curl_ipv4 Resolve domain only with IPv4
+     * @todo change to $curl_ipresolve, http://php.net/manual/ru/function.curl-setopt.php
+     */
     public $curl_ipv4;
+    /**
+     * @var string $ca_cert The path to the CA certificate bundle
+     */
     public $ca_cert;
+    /**
+     * @var boolean $verify_ssl
+     */
     public $verify_ssl;
+    /**
+     * @var mixed The SSL version (2 or 3) to use. By default PHP will try to determine this itself,
+     * although in some cases this must be set manually
+     */
     public $curl_ssl_version;
     public $trust_x_forwarded_proto;
     public $mb_detect_order;
     /**
-     * @var \Raven\Processor[]
+     * @var \Raven\Processor[] $processors An array of classes to use to process data before it is sent to Sentry
      */
     public $processors;
     /**
@@ -109,7 +212,13 @@ class Client
     protected $_last_sentry_error;
     public $_last_event_id;
     public $_user;
+    /**
+     * @var array[] $_pending_events
+     */
     public $_pending_events;
+    /**
+     * @var array User Agent showed in Sentry
+     */
     public $sdk;
     /**
      * @var \Raven\CurlHandler
@@ -123,10 +232,6 @@ class Client
      * @var bool
      */
     protected $_shutdown_function_has_been_set;
-    /**
-     * @var \Raven\TransactionStack
-     */
-    public $transaction;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
@@ -147,37 +252,73 @@ class Client
         if (!empty($dsn)) {
             $options = array_merge($options, self::parseDSN($dsn));
         }
+        unset($dsn);
+        $this->init_with_options($options);
 
-        $this->logger = \Raven\Util::get($options, 'logger', 'php');
-        $this->server = \Raven\Util::get($options, 'server');
-        $this->secret_key = \Raven\Util::get($options, 'secret_key');
-        $this->public_key = \Raven\Util::get($options, 'public_key');
-        $this->project = \Raven\Util::get($options, 'project', 1);
-        $this->auto_log_stacks = (bool) \Raven\Util::get($options, 'auto_log_stacks', false);
-        $this->name = \Raven\Util::get($options, 'name', gethostname());
-        $this->site = \Raven\Util::get($options, 'site', self::_server_variable('SERVER_NAME'));
-        $this->tags = \Raven\Util::get($options, 'tags', array());
-        $this->release = \Raven\Util::get($options, 'release', null);
-        $this->environment = \Raven\Util::get($options, 'environment', null);
-        $this->sample_rate = \Raven\Util::get($options, 'sample_rate', 1);
-        $this->trace = (bool) \Raven\Util::get($options, 'trace', true);
-        $this->timeout = \Raven\Util::get($options, 'timeout', 2);
-        $this->message_limit = \Raven\Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
-        $this->exclude = \Raven\Util::get($options, 'exclude', array());
+        if (\Raven\Util::get($options, 'install_default_breadcrumb_handlers', true)) {
+            $this->registerDefaultBreadcrumbHandlers();
+        }
+
+        if (\Raven\Util::get($options, 'install_shutdown_handler', true)) {
+            $this->registerShutdownFunction();
+        }
+    }
+
+    /**
+     * @param array $options
+     */
+    public function init_with_options($options)
+    {
+        foreach (
+            [
+                ['logger', 'php',],
+                ['server',],
+                ['secret_key',],
+                ['public_key',],
+                ['project',1,],
+                ['auto_log_stacks', false,],
+                ['name', gethostname()],
+                ['site', self::_server_variable('SERVER_NAME')],
+                ['tags', []],
+                ['release', []],
+                ['environment'],
+                ['sample_rate', 1],
+                ['trace', true],
+                ['timeout', 2],
+                ['message_limit', self::MESSAGE_LIMIT],
+                ['exclude', []],
+                ['http_proxy'],
+                ['extra_data', [], 'extra'],
+                ['send_callback'],
+
+                ['curl_method', 'sync'],
+                ['curl_path', 'curl'],
+                ['curl_ipv4', true],
+                ['ca_cert', static::get_default_ca_cert()],
+                ['verify_ssl', true],
+                ['curl_ssl_version'],
+                ['trust_x_forwarded_proto'],
+                ['transport'],
+                ['mb_detect_order'],
+                ['error_types'],
+            ] as &$set
+        ) {
+            if (count($set) == 1) {
+                $set = [$set[0], null, null];
+            } elseif (count($set) == 2) {
+                $set[] = null;
+            }
+
+            list($object_key, $default_value, $array_key) = $set;
+            if (is_null($array_key)) {
+                $array_key = $object_key;
+            }
+
+            // @todo It should be isset or array_key_exists?
+            $this->{$object_key} = isset($options[$array_key]) ? $options[$array_key] : $default_value;
+        }
+        $this->auto_log_stacks = (boolean)$this->auto_log_stacks;
         $this->severity_map = null;
-        $this->http_proxy = \Raven\Util::get($options, 'http_proxy');
-        $this->extra_data = \Raven\Util::get($options, 'extra', array());
-        $this->send_callback = \Raven\Util::get($options, 'send_callback', null);
-        $this->curl_method = \Raven\Util::get($options, 'curl_method', 'sync');
-        $this->curl_path = \Raven\Util::get($options, 'curl_path', 'curl');
-        $this->curl_ipv4 = \Raven\Util::get($options, 'curl_ipv4', true);
-        $this->ca_cert = \Raven\Util::get($options, 'ca_cert', static::get_default_ca_cert());
-        $this->verify_ssl = \Raven\Util::get($options, 'verify_ssl', true);
-        $this->curl_ssl_version = \Raven\Util::get($options, 'curl_ssl_version');
-        $this->trust_x_forwarded_proto = \Raven\Util::get($options, 'trust_x_forwarded_proto');
-        $this->transport = \Raven\Util::get($options, 'transport', null);
-        $this->mb_detect_order = \Raven\Util::get($options, 'mb_detect_order', null);
-        $this->error_types = \Raven\Util::get($options, 'error_types', null);
 
         // app path is used to determine if code is part of your application
         $this->setAppPath(\Raven\Util::get($options, 'app_path', null));
@@ -215,14 +356,6 @@ class Client
             // @codeCoverageIgnoreStart
             $this->transaction->push($_SERVER['PATH_INFO']);
             // @codeCoverageIgnoreEnd
-        }
-
-        if (\Raven\Util::get($options, 'install_default_breadcrumb_handlers', true)) {
-            $this->registerDefaultBreadcrumbHandlers();
-        }
-
-        if (\Raven\Util::get($options, 'install_shutdown_handler', true)) {
-            $this->registerShutdownFunction();
         }
     }
 
