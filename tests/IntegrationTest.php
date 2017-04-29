@@ -12,7 +12,7 @@ namespace Raven\Tests;
 
 class DummyIntegration_Raven_Client extends \Raven\Client
 {
-    private $__sent_events = array();
+    private $__sent_events = [];
 
     public function getSentEvents()
     {
@@ -20,7 +20,7 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     }
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
+        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, [&$data]) === false) {
             // if send_callback returns falsely, end native send
             return;
         }

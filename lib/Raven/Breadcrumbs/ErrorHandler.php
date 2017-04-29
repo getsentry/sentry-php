@@ -19,18 +19,18 @@ class ErrorHandler
         $this->ravenClient = $ravenClient;
     }
 
-    public function handleError($code, $message, $file = '', $line = 0, $context = array())
+    public function handleError($code, $message, $file = '', $line = 0, $context = [])
     {
-        $this->ravenClient->breadcrumbs->record(array(
+        $this->ravenClient->breadcrumbs->record([
             'category' => 'error_reporting',
             'message' => $message,
             'level' => $this->ravenClient->translateSeverity($code),
-            'data' => array(
+            'data' => [
                 'code' => $code,
                 'line' => $line,
                 'file' => $file,
-            ),
-        ));
+            ],
+        ]);
 
         if ($this->existingHandler !== null) {
             return call_user_func($this->existingHandler, $code, $message, $file, $line, $context);
@@ -41,7 +41,7 @@ class ErrorHandler
 
     public function install()
     {
-        $this->existingHandler = set_error_handler(array($this, 'handleError'), E_ALL);
+        $this->existingHandler = set_error_handler([$this, 'handleError'], E_ALL);
         return $this;
     }
 }

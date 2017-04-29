@@ -75,25 +75,4 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
             }
         }
     }
-
-    /**
-     * Gets all the public and abstracts methods of a given class.
-     *
-     * @param string $className The FCQN of the class
-     *
-     * @return array
-     */
-    private function getClassMethods($className)
-    {
-        $class = new \ReflectionClass($className);
-        $methods = array();
-
-        foreach ($class->getMethods() as $method) {
-            if ($method->isPublic() || $method->isAbstract()) {
-                $methods[] = $method->getName();
-            }
-        }
-
-        return $methods;
-    }
 }

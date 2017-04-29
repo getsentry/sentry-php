@@ -37,9 +37,9 @@ EOF;
 
     public function testSimple()
     {
-        $client = new \Raven\Client(array(
+        $client = new \Raven\Client([
             'install_default_breadcrumb_handlers' => false,
-        ));
+        ]);
         $handler = new \Raven\Breadcrumbs\MonologHandler($client);
 
         $logger = new \Monolog\Logger('sentry');
@@ -55,9 +55,9 @@ EOF;
 
     public function testErrorInMessage()
     {
-        $client = new \Raven\Client(array(
+        $client = new \Raven\Client([
             'install_default_breadcrumb_handlers' => false,
-        ));
+        ]);
         $handler = new \Raven\Breadcrumbs\MonologHandler($client);
 
         $logger = new \Monolog\Logger('sentry');

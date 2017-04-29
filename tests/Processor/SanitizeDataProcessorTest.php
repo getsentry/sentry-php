@@ -17,24 +17,24 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
 {
     public function testDoesFilterHttpData()
     {
-        $data = array(
-            'request' => array(
-                'data' => array(
+        $data = [
+            'request' => [
+                'data' => [
                     'foo' => 'bar',
                     'password' => 'hello',
                     'the_secret' => 'hello',
                     'a_password_here' => 'hello',
                     'mypasswd' => 'hello',
                     'authorization' => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
-                    'card_number' => array(
+                    'card_number' => [
                         '1111',
                         '2222',
                         '3333',
                         '4444'
-                    )
-                ),
-            )
-        );
+                    ]
+                ],
+            ]
+        ];
 
         $client = new Dummy_Raven_Client();
         $processor = new SanitizeDataProcessor($client);
@@ -55,13 +55,13 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function testDoesFilterSessionId()
     {
-        $data = array(
-            'request' => array(
-                'cookies' => array(
+        $data = [
+            'request' => [
+                'cookies' => [
                     ini_get('session.name') => 'abc',
-                ),
-            )
-        );
+                ],
+            ]
+        ];
 
         $client = new Dummy_Raven_Client();
         $processor = new SanitizeDataProcessor($client);
@@ -73,11 +73,11 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function testDoesFilterCreditCard()
     {
-        $data = array(
-            'extra' => array(
+        $data = [
+            'extra' => [
                 'ccnumba' => '4242424242424242',
-            ),
-        );
+            ],
+        ];
 
         $client = new Dummy_Raven_Client();
         $processor = new SanitizeDataProcessor($client);
@@ -94,10 +94,10 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
         $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,16}$/', 'got default values');
 
-        $options = array(
+        $options = [
             'fields_re' => '/(api_token)/i',
             'values_re' => '/^(?:\d[ -]*?){15,16}$/'
-        );
+        ];
 
         $processor->setProcessorOptions($options);
 
@@ -135,9 +135,9 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
      */
     public function testOverridenSanitize($processorOptions, $client_options, $dsn)
     {
-        $data = array(
-            'request' => array(
-                'data' => array(
+        $data = [
+            'request' => [
+                'data' => [
                     'foo'               => 'bar',
                     'password'          => 'hello',
                     'the_secret'        => 'hello',
@@ -145,13 +145,13 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
                     'mypasswd'          => 'hello',
                     'api_token'         => 'nioenio3nrio3jfny89nby9bhr#RML#R',
                     'authorization'     => 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
-                    'card_number'   => array(
+                    'card_number'   => [
                         '1111111111111111',
                         '2222',
-                    )
-                ),
-            )
-        );
+                    ]
+                ],
+            ]
+        ];
 
         $client = new Dummy_Raven_Client($dsn, $client_options);
         /**
@@ -185,22 +185,22 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
      */
     public static function overrideDataProvider()
     {
-        $processorOptions = array(
-            SanitizeDataProcessor::class => array(
+        $processorOptions = [
+            SanitizeDataProcessor::class => [
                 'fields_re' => '/(api_token)/i',
-                'values_re' => '/^(?:\d[ -]*?){15,16}$/'
-            )
-        );
+                'values_re' => '/^(?:\d[ -]*?){15,16}$/',
+            ],
+        ];
 
-        $client_options = array(
-            'processors' => array(SanitizeDataProcessor::class),
+        $client_options = [
+            'processors' => [SanitizeDataProcessor::class],
             'processorOptions' => $processorOptions
-        );
+        ];
 
         $dsn = 'http://9aaa31f9a05b4e72aaa06aa8157a827a:9aa7aa82a9694a08a1a7589a2a035a9a@sentry.domain.tld/1';
 
-        return array(
-            array($processorOptions, $client_options, $dsn)
-        );
+        return [
+            [$processorOptions, $client_options, $dsn]
+        ];
     }
 }

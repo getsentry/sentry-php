@@ -36,7 +36,7 @@ class ErrorHandler
     /** @var \Raven\Client */
     protected $client;
     protected $send_errors_last = false;
-    protected $fatal_error_types = array(
+    protected $fatal_error_types = [
         E_ERROR,
         E_PARSE,
         E_CORE_ERROR,
@@ -44,7 +44,7 @@ class ErrorHandler
         E_COMPILE_ERROR,
         E_COMPILE_WARNING,
         E_STRICT,
-    );
+    ];
 
     /**
      * @var array
@@ -63,7 +63,7 @@ class ErrorHandler
 
         $this->client = $client;
         $this->error_types = $error_types;
-        $this->fatal_error_types = array_reduce($this->fatal_error_types, array($this, 'bitwiseOr'));
+        $this->fatal_error_types = array_reduce($this->fatal_error_types, [$this, 'bitwiseOr']);
         if ($send_errors_last) {
             $this->send_errors_last = true;
             $this->client->store_errors_for_bulk_send = true;
@@ -88,7 +88,7 @@ class ErrorHandler
         }
     }
 
-    public function handleError($type, $message, $file = '', $line = 0, $context = array())
+    public function handleError($type, $message, $file = '', $line = 0, $context = [])
     {
         // http://php.net/set_error_handler
         // The following error types cannot be handled with a user defined function: E_ERROR,
@@ -155,7 +155,7 @@ class ErrorHandler
      */
     public function registerExceptionHandler($call_existing = true)
     {
-        $this->old_exception_handler = set_exception_handler(array($this, 'handleException'));
+        $this->old_exception_handler = set_exception_handler([$this, 'handleException']);
         $this->call_existing_exception_handler = $call_existing;
         return $this;
     }
@@ -174,7 +174,7 @@ class ErrorHandler
         if ($error_types !== null) {
             $this->error_types = $error_types;
         }
-        $this->old_error_handler = set_error_handler(array($this, 'handleError'), E_ALL);
+        $this->old_error_handler = set_error_handler([$this, 'handleError'], E_ALL);
         $this->call_existing_error_handler = $call_existing;
         return $this;
     }
@@ -189,7 +189,7 @@ class ErrorHandler
      */
     public function registerShutdownFunction($reservedMemorySize = 10)
     {
-        register_shutdown_function(array($this, 'handleFatalError'));
+        register_shutdown_function([$this, 'handleFatalError']);
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
         return $this;

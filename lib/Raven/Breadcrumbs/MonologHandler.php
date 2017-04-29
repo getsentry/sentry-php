@@ -9,7 +9,7 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
     /**
      * Translates Monolog log levels to Raven log levels.
      */
-    protected $logLevels = array(
+    protected $logLevels = [
         Logger::DEBUG     => \Raven\Client::DEBUG,
         Logger::INFO      => \Raven\Client::INFO,
         Logger::NOTICE    => \Raven\Client::INFO,
@@ -18,7 +18,7 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
         Logger::CRITICAL  => \Raven\Client::FATAL,
         Logger::ALERT     => \Raven\Client::FATAL,
         Logger::EMERGENCY => \Raven\Client::FATAL,
-    );
+    ];
 
     protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
 
@@ -46,7 +46,7 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
     protected function parseException($message)
     {
         if (preg_match($this->excMatch, $message, $matches)) {
-            return array($matches[1], $matches[2]);
+            return [$matches[1], $matches[2]];
         }
 
         return null;
@@ -67,33 +67,33 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
              * @var \Exception $exc
              */
             $exc = $record['context']['exception'];
-            $crumb = array(
+            $crumb = [
                 'type' => 'error',
                 'level' => $this->logLevels[$record['level']],
                 'category' => $record['channel'],
-                'data' => array(
+                'data' => [
                     'type' => get_class($exc),
                     'value' => $exc->getMessage(),
-                ),
-            );
+                ],
+            ];
         } else {
             // TODO(dcramer): parse exceptions out of messages and format as above
             if ($error = $this->parseException($record['message'])) {
-                $crumb = array(
+                $crumb = [
                     'type' => 'error',
                     'level' => $this->logLevels[$record['level']],
                     'category' => $record['channel'],
-                    'data' => array(
+                    'data' => [
                         'type' => $error[0],
                         'value' => $error[1],
-                    ),
-                );
+                    ],
+                ];
             } else {
-                $crumb = array(
+                $crumb = [
                     'level' => $this->logLevels[$record['level']],
                     'category' => $record['channel'],
                     'message' => $record['message'],
-                );
+                ];
             }
         }
 

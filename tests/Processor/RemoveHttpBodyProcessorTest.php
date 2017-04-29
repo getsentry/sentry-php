@@ -43,84 +43,76 @@ class RemoveHttpBodyProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function processDataProvider()
     {
-        return array(
-            array(
-                array(
-                    'request' => array(
+        return [
+            [
+                [
+                    'request' => [
                         'method' => 'POST',
-                        'data' => array(
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
                         'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
                         'method' => 'PUT',
-                        'data' => array(
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
                         'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
                         'method' => 'PATCH',
-                        'data' => array(
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
+                        ],
+                    ],
+                ],
+                [
+                    'request' => [
                         'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
                         'method' => 'DELETE',
-                        'data' => array(
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
                         'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
                         'method' => 'GET',
-                        'data' => array(
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
-                        'data' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
+                        'data' => [
                             'foo' => 'bar',
-                        ),
-                    ),
-                ),
-            ),
-        );
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

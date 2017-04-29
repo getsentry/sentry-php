@@ -18,12 +18,12 @@ class TransactionStack
 
     public function __construct()
     {
-        $this->stack = array();
+        $this->stack = [];
     }
 
     public function clear()
     {
-        $this->stack = array();
+        $this->stack = [];
     }
 
     public function peek()

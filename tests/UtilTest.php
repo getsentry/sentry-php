@@ -20,14 +20,14 @@ class Raven_Tests_UtilTest extends \PHPUnit_Framework_TestCase
 {
     public function testGetReturnsDefaultOnMissing()
     {
-        $input = array('foo' => 'bar');
+        $input = ['foo' => 'bar'];
         $result = \Raven\Util::get($input, 'baz', 'foo');
         $this->assertEquals('foo', $result);
     }
 
     public function testGetReturnsPresentValuesEvenWhenEmpty()
     {
-        $input = array('foo' => '');
+        $input = ['foo' => ''];
         $result = \Raven\Util::get($input, 'foo', 'bar');
         $this->assertEquals('', $result);
     }

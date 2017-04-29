@@ -43,41 +43,38 @@ class RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function processDataProvider()
     {
-        return array(
-            array(
-                array(
-                    'request' => array(
+        return [
+            [
+                [
+                    'request' => [
                         'foo' => 'bar',
-                    ),
-                ),
-                array(
-                    'request' => array(
+                    ],
+                ], [
+                    'request' => [
                         'foo' => 'bar',
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
-                        'foo' => 'bar',
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
+                        'foo'     => 'bar',
                         'cookies' => 'baz',
-                        'headers' => array(
-                            'Cookie' => 'bar',
+                        'headers' => [
+                            'Cookie'        => 'bar',
                             'AnotherHeader' => 'foo',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
-                        'foo' => 'bar',
+                        ],
+                    ],
+                ], [
+                    'request' => [
+                        'foo'     => 'bar',
                         'cookies' => RemoveCookiesProcessor::STRING_MASK,
-                        'headers' => array(
-                            'Cookie' => RemoveCookiesProcessor::STRING_MASK,
+                        'headers' => [
+                            'Cookie'        => RemoveCookiesProcessor::STRING_MASK,
                             'AnotherHeader' => 'foo',
-                        ),
-                    ),
-                ),
-            ),
-        );
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

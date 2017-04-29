@@ -27,7 +27,9 @@ final class RemoveHttpBodyProcessor extends Processor
      */
     public function process(&$data)
     {
-        if (isset($data['request'], $data['request']['method']) && in_array(strtoupper($data['request']['method']), array('POST', 'PUT', 'PATCH', 'DELETE'))) {
+        if (isset($data['request'], $data['request']['method'])
+            && in_array(strtoupper($data['request']['method']), ['POST', 'PUT', 'PATCH', 'DELETE'])
+        ) {
             $data['request']['data'] = self::STRING_MASK;
         }
     }

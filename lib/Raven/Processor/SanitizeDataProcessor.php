@@ -84,7 +84,7 @@ class SanitizeDataProcessor extends Processor
     public function sanitizeException(&$data)
     {
         foreach ($data['exception']['values'] as &$value) {
-            return $this->sanitizeStacktrace($value['stacktrace']);
+            $this->sanitizeStacktrace($value['stacktrace']);
         }
     }
 
@@ -98,7 +98,7 @@ class SanitizeDataProcessor extends Processor
             }
         }
         if (!empty($http['data']) && is_array($http['data'])) {
-            array_walk_recursive($http['data'], array($this, 'sanitize'));
+            array_walk_recursive($http['data'], [$this, 'sanitize']);
         }
     }
 
@@ -108,7 +108,7 @@ class SanitizeDataProcessor extends Processor
             if (empty($frame['vars'])) {
                 continue;
             }
-            array_walk_recursive($frame['vars'], array($this, 'sanitize'));
+            array_walk_recursive($frame['vars'], [$this, 'sanitize']);
         }
     }
 
@@ -127,7 +127,7 @@ class SanitizeDataProcessor extends Processor
             $this->sanitizeHttp($data);
         }
         if (!empty($data['extra'])) {
-            array_walk_recursive($data['extra'], array($this, 'sanitize'));
+            array_walk_recursive($data['extra'], [$this, 'sanitize']);
         }
     }
 

@@ -233,7 +233,7 @@ class Client
      */
     protected $_shutdown_function_has_been_set;
 
-    public function __construct($options_or_dsn = null, $options = array())
+    public function __construct($options_or_dsn = null, $options = [])
     {
         if (is_array($options_or_dsn)) {
             $options = array_merge($options_or_dsn, $options);
@@ -332,15 +332,15 @@ class Client
         $this->_curl_instance = null;
         $this->_last_event_id = null;
         $this->_user = null;
-        $this->_pending_events = array();
+        $this->_pending_events = [];
         $this->context = new \Raven\Context();
         $this->breadcrumbs = new \Raven\Breadcrumbs();
         $this->_shutdown_function_has_been_set = false;
 
-        $this->sdk = \Raven\Util::get($options, 'sdk', array(
+        $this->sdk = \Raven\Util::get($options, 'sdk', [
             'name' => 'sentry-php',
             'version' => self::VERSION,
-        ));
+        ]);
         $this->serializer = new \Raven\Serializer($this->mb_detect_order);
         $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
         if (\Raven\Util::get($options, 'serialize_all_object', false)) {
@@ -372,7 +372,7 @@ class Client
      */
     public function close_all_children_link()
     {
-        $this->processors = array();
+        $this->processors = [];
     }
 
     /**
@@ -475,7 +475,7 @@ class Client
 
     public function setExcludedAppPaths($value)
     {
-        $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : null;
+        $this->excluded_app_paths = $value ? array_map([$this, '_convertPath'], $value) : null;
         return $this;
     }
 
@@ -490,7 +490,7 @@ class Client
      */
     public function setPrefixes($value)
     {
-        $this->prefixes = $value ? array_map(array($this, '_convertPath'), $value) : $value;
+        $this->prefixes = $value ? array_map([$this, '_convertPath'], $value) : $value;
         return $this;
     }
 
@@ -541,9 +541,9 @@ class Client
      */
     public static function getDefaultProcessors()
     {
-        return array(
+        return [
             '\\Raven\\Processor\\SanitizeDataProcessor',
-        );
+        ];
     }
 
     /**
@@ -555,7 +555,7 @@ class Client
      */
     public function setProcessorsFromOptions($options)
     {
-        $processors = array();
+        $processors = [];
         foreach (\Raven\util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
             /**
              * @var \Raven\Processor        $new_processor
@@ -587,10 +587,10 @@ class Client
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if (!in_array($scheme, array('http', 'https'))) {
+        if (!in_array($scheme, ['http', 'https'])) {
             throw new \InvalidArgumentException(
                 'Unsupported Sentry DSN scheme: '.
-                (!empty($scheme) ? $scheme : '<not set>')
+                (!empty($scheme) ? $scheme : /** @lang text */'<not set>')
             );
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
@@ -615,12 +615,12 @@ class Client
             throw new \InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
         }
 
-        return array(
+        return [
             'server'     => sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project),
             'project'    => $project,
             'public_key' => $username,
             'secret_key' => $password,
-        );
+        ];
     }
 
     public function getLastError()
@@ -651,7 +651,7 @@ class Client
      * @deprecated
      * @codeCoverageIgnore
      */
-    public function message($message, $params = array(), $level = self::INFO,
+    public function message($message, $params = [], $level = self::INFO,
                             $stack = false, $vars = null)
     {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
@@ -678,7 +678,7 @@ class Client
      * @param mixed      $vars
      * @return string|null
      */
-    public function captureMessage($message, $params = array(), $data = array(),
+    public function captureMessage($message, $params = [], $data = [],
                             $stack = false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
@@ -690,20 +690,20 @@ class Client
         }
 
         if ($data === null) {
-            $data = array();
+            $data = [];
         // support legacy method of passing in a level name as the third arg
         } elseif (!is_array($data)) {
-            $data = array(
+            $data = [
                 'level' => $data,
-            );
+            ];
         }
 
         $data['message'] = $formatted_message;
-        $data['sentry.interfaces.Message'] = array(
+        $data['sentry.interfaces.Message'] = [
             'message' => $message,
             'params' => $params,
             'formatted' => $formatted_message,
-        );
+        ];
 
         return $this->capture($data, $stack, $vars);
     }
@@ -726,25 +726,25 @@ class Client
         }
 
         if ($data === null) {
-            $data = array();
+            $data = [];
         }
 
         $exc = $exception;
         do {
-            $exc_data = array(
+            $exc_data = [
                 'value' => $this->serializer->serialize($exc->getMessage()),
                 'type' => get_class($exc),
-            );
+            ];
 
             /**'exception'
              * Exception::getTrace doesn't store the point at where the exception
              * was thrown, so we have to stuff it in ourselves. Ugh.
              */
             $trace = $exc->getTrace();
-            $frame_where_exception_thrown = array(
+            $frame_where_exception_thrown = [
                 'file' => $exc->getFile(),
                 'line' => $exc->getLine(),
-            );
+            ];
 
             array_unshift($trace, $frame_where_exception_thrown);
 
@@ -755,16 +755,18 @@ class Client
                 // @codeCoverageIgnoreEnd
             }
 
-            $exc_data['stacktrace'] = array(
-                'frames' => Stacktrace::fromBacktrace($this, $exception->getTrace(), $exception->getFile(), $exception->getLine())->getFrames(),
-            );
+            $exc_data['stacktrace'] = [
+                'frames' => Stacktrace::fromBacktrace(
+                    $this, $exception->getTrace(), $exception->getFile(), $exception->getLine()
+                )->getFrames(),
+            ];
 
             $exceptions[] = $exc_data;
         } while ($has_chained_exceptions && $exc = $exc->getPrevious());
 
-        $data['exception'] = array(
+        $data['exception'] = [
             'values' => array_reverse($exceptions),
-        );
+        ];
         if ($logger !== null) {
             $data['logger'] = $logger;
         }
@@ -810,13 +812,13 @@ class Client
      */
     public function captureQuery($query, $level = self::INFO, $engine = '')
     {
-        $data = array(
+        $data = [
             'message' => $query,
             'level' => $level,
-            'sentry.interfaces.Query' => array(
+            'sentry.interfaces.Query' => [
                 'query' => $query
-            )
-        );
+            ]
+        ];
 
         if ($engine !== '') {
             $data['sentry.interfaces.Query']['engine'] = $engine;
@@ -842,7 +844,7 @@ class Client
     {
         if (!$this->_shutdown_function_has_been_set) {
             $this->_shutdown_function_has_been_set = true;
-            register_shutdown_function(array($this, 'onShutdown'));
+            register_shutdown_function([$this, 'onShutdown']);
         }
     }
 
@@ -857,24 +859,24 @@ class Client
 
     protected function get_http_data()
     {
-        $headers = array();
+        $headers = [];
 
         foreach ($_SERVER as $key => $value) {
             if (0 === strpos($key, 'HTTP_')) {
                 $header_key =
                     str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
                 $headers[$header_key] = $value;
-            } elseif (in_array($key, array('CONTENT_TYPE', 'CONTENT_LENGTH')) && $value !== '') {
+            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH']) && $value !== '') {
                 $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
                 $headers[$header_key] = $value;
             }
         }
 
-        $result = array(
+        $result = [
             'method' => self::_server_variable('REQUEST_METHOD'),
             'url' => $this->get_current_url(),
             'query_string' => self::_server_variable('QUERY_STRING'),
-        );
+        ];
 
         // dont set this as an empty array as PHP will treat it as a numeric array
         // instead of a mapping which goes against the defined Sentry spec
@@ -888,9 +890,9 @@ class Client
             $result['headers'] = $headers;
         }
 
-        return array(
+        return [
             'request' => $result,
-        );
+        ];
     }
 
     protected function get_user_data()
@@ -898,11 +900,11 @@ class Client
         $user = $this->context->user;
         if ($user === null) {
             if (!function_exists('session_id') || !session_id()) {
-                return array();
+                return [];
             }
-            $user = array(
+            $user = [
                 'id' => session_id(),
-            );
+            ];
             if (!empty($_SERVER['REMOTE_ADDR'])) {
                 $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
             }
@@ -910,9 +912,9 @@ class Client
                 $user['data'] = $_SESSION;
             }
         }
-        return array(
+        return [
             'user' => $user,
-        );
+        ];
     }
 
     protected function get_extra_data()
@@ -922,7 +924,7 @@ class Client
 
     public function get_default_data()
     {
-        return array(
+        return [
             'server_name' => $this->name,
             'project' => $this->project,
             'site' => $this->site,
@@ -931,7 +933,7 @@ class Client
             'platform' => 'php',
             'sdk' => $this->sdk,
             'culprit' => $this->transaction->peek(),
-        );
+        ];
     }
 
     public function capture($data, $stack = null, $vars = null)
@@ -943,10 +945,10 @@ class Client
             $data['level'] = self::ERROR;
         }
         if (!isset($data['tags'])) {
-            $data['tags'] = array();
+            $data['tags'] = [];
         }
         if (!isset($data['extra'])) {
-            $data['extra'] = array();
+            $data['extra'] = [];
         }
         if (!isset($data['event_id'])) {
             $data['event_id'] = static::uuid4();
@@ -1014,9 +1016,12 @@ class Client
             }
 
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
-                $data['stacktrace'] = array(
-                    'frames' => Stacktrace::fromBacktrace($this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__, isset($stack['line']) ? $stack['line'] : __LINE__)->getFrames(),
-                );
+                $data['stacktrace'] = [
+                    'frames' => Stacktrace::fromBacktrace(
+                        $this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__,
+                        isset($stack['line']) ? $stack['line'] : __LINE__ - 2
+                    )->getFrames(),
+                ];
             }
         }
 
@@ -1073,7 +1078,7 @@ class Client
         foreach ($this->_pending_events as $data) {
             $this->send($data);
         }
-        $this->_pending_events = array();
+        $this->_pending_events = [];
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
@@ -1116,7 +1121,7 @@ class Client
     public function send(&$data)
     {
         if (is_callable($this->send_callback)
-            && call_user_func_array($this->send_callback, array(&$data)) === false
+            && call_user_func_array($this->send_callback, [&$data]) === false
         ) {
             // if send_callback returns false, end native send
             return;
@@ -1138,11 +1143,11 @@ class Client
 
         $message = $this->encode($data);
 
-        $headers = array(
+        $headers = [
             'User-Agent' => static::getUserAgent(),
             'X-Sentry-Auth' => $this->getAuthHeader(),
             'Content-Type' => 'application/octet-stream'
-        );
+        ];
 
         $this->send_remote($this->server, $message, $headers);
     }
@@ -1154,7 +1159,7 @@ class Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    protected function send_remote($url, $data, $headers = array())
+    protected function send_remote($url, $data, $headers = [])
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
@@ -1169,16 +1174,17 @@ class Client
     /**
      * @return array
      * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+     * @doc https://3v4l.org/4I7F5
      */
     protected function get_curl_options()
     {
-        $options = array(
+        $options = [
             CURLOPT_VERBOSE => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
             CURLOPT_CAINFO => $this->ca_cert,
             CURLOPT_USERAGENT => 'sentry-php/' . self::VERSION,
-        );
+        ];
         if ($this->http_proxy) {
             $options[CURLOPT_PROXY] = $this->http_proxy;
         }
@@ -1192,7 +1198,7 @@ class Client
             // MS is available in curl >= 7.16.2
             $timeout = max(1, ceil(1000 * $this->timeout));
 
-            // some versions of PHP 5.3 don't have this defined correctly
+            // None of the versions of PHP contains this constant
             if (!defined('CURLOPT_CONNECTTIMEOUT_MS')) {
                 //see stackoverflow link in the phpdoc
                 define('CURLOPT_CONNECTTIMEOUT_MS', 156);
@@ -1216,7 +1222,7 @@ class Client
      * @param array|string $data    Associative array of data to log
      * @param array        $headers Associative array of headers
      */
-    protected function send_http($url, $data, $headers = array())
+    protected function send_http($url, $data, $headers = [])
     {
         if ($this->curl_method == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
@@ -1269,7 +1275,7 @@ class Client
      */
     protected function send_http_synchronous($url, $data, $headers)
     {
-        $new_headers = array();
+        $new_headers = [];
         foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
         }
@@ -1332,11 +1338,11 @@ class Client
      */
     protected static function get_auth_header($timestamp, $client, $api_key, $secret_key)
     {
-        $header = array(
+        $header = [
             sprintf('sentry_timestamp=%F', $timestamp),
             "sentry_client={$client}",
             sprintf('sentry_version=%s', self::PROTOCOL),
-        );
+        ];
 
         if ($api_key) {
             $header[] = "sentry_key={$api_key}";
@@ -1487,7 +1493,7 @@ class Client
      * Provide a map of PHP Error constants to Sentry logging groups to use instead
      * of the defaults in translateSeverity()
      *
-     * @param array $map
+     * @param string[] $map
      */
     public function registerSeverityMap($map)
     {
@@ -1503,9 +1509,9 @@ class Client
      * @param array       $data  Additional user data
      * @codeCoverageIgnore
      */
-    public function set_user_data($id, $email = null, $data = array())
+    public function set_user_data($id, $email = null, $data = [])
     {
-        $user = array('id' => $id);
+        $user = ['id' => $id];
         if (isset($email)) {
             $user['email'] = $email;
         }

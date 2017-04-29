@@ -12,7 +12,7 @@ function setupSentry()
     $object = new \Raven\Client(SENTRY_DSN);
     $object->setAppPath(__DIR__)
            ->setRelease(\Raven\Client::VERSION)
-           ->setPrefixes(array(__DIR__))
+           ->setPrefixes([__DIR__])
            ->install();
 }
 
