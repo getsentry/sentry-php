@@ -11,6 +11,7 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 
@@ -18,9 +19,12 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
-        $client = $client = ClientBuilder::create([
+        $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
-        ]);
+        ])->getClient();
+
+        $handler = new ErrorHandler($client);
+        $handler->handleError(E_WARNING, 'message');
 
         $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
 

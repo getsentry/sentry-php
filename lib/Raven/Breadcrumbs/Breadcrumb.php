@@ -95,6 +95,22 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
+     * Creates a new instance of this class configured with the given params.
+     *
+     * @param string      $level    The error level of the breadcrumb
+     * @param string      $type     The type of the breadcrumb
+     * @param string      $category The category of the breadcrumb
+     * @param string|null $message  Optional text message
+     * @param array       $metaData Additional information about the breadcrumb
+     *
+     * @return static
+     */
+    public static function create($level, $type, $category, $message = null, array $metaData = [])
+    {
+        return new static($level, $type, $category, $message, $metaData);
+    }
+
+    /**
      * Gets the breadcrumb type.
      *
      * @return string
@@ -102,6 +118,20 @@ final class Breadcrumb implements \JsonSerializable
     public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * Sets the type of the breadcrumb
+     *
+     * @param string $type The type
+     *
+     * @return $this
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
     }
 
     /**
@@ -115,6 +145,24 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
+     * Sets the error level of the breadcrumb.
+     *
+     * @param string $level The level
+     *
+     * @return $this
+     */
+    public function setLevel($level)
+    {
+        if (!in_array($level, self::getLevels(), true)) {
+            throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
+        }
+
+        $this->level = $level;
+
+        return $this;
+    }
+
+    /**
      * Gets the breadcrumb category.
      *
      * @return string
@@ -122,6 +170,18 @@ final class Breadcrumb implements \JsonSerializable
     public function getCategory()
     {
         return $this->category;
+    }
+
+    /**
+     * Sets the breadcrumb category.
+     *
+     * @return $this
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+
+        return $this;
     }
 
     /**

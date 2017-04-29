@@ -15,6 +15,7 @@ use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Psr\Http\Message\ResponseInterface;
+use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\Breadcrumbs\RecorderInterface;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
@@ -72,11 +73,6 @@ class Client
      * This constant defines the client's user-agent string
      */
     const USER_AGENT = 'sentry-php/' . self::VERSION;
-
-    /**
-     * @var Breadcrumbs The breadcrumbs
-     */
-    public $breadcrumbs;
 
     /**
      * @var Context The context
@@ -167,7 +163,7 @@ class Client
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->context = new Context();
-        $this->breadcrumbs = new Recorder();
+        $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
@@ -201,21 +197,17 @@ class Client
     }
 
     /**
-     * Record the given breadcrumb.
+     * Records the given breadcrumb.
      *
-     * @param string      $level    The error level of the breadcrumb
-     * @param string      $type     The type of the breadcrumb
-     * @param string      $category The category of the breadcrumb
-     * @param string|null $message  Optional text message
-     * @param array       $metaData Additional information about the breadcrumb
+     * @param Breadcrumb $breadcrumb The breadcrumb instance
      */
-    public function leaveBreadcrumb($level, $type, $category, $message = null, array $metaData = [])
+    public function leaveBreadcrumb(Breadcrumb $breadcrumb)
     {
-        $this->recorder->record(new Breadcrumb($level, $type, $category, $message, $metaData));
+        $this->recorder->record($breadcrumb);
     }
 
     /**
-     * Clear all recorded breadcrumbs.
+     * Clears all recorded breadcrumbs.
      */
     public function clearBreadcrumbs()
     {
@@ -320,7 +312,7 @@ class Client
      * @deprecated
      * @codeCoverageIgnore
      */
-    public function message($message, $params = array(), $level = self::LEVEL_INFO,
+    public function message($message, $params = [], $level = self::LEVEL_INFO,
                             $stack = false, $vars = null)
     {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
@@ -914,6 +906,8 @@ class Client
             return $this->severity_map[$severity];
         }
         switch ($severity) {
+            case E_DEPRECATED:         return \Raven\Client::LEVEL_WARNING;
+            case E_USER_DEPRECATED:    return \Raven\Client::LEVEL_WARNING;
             case E_ERROR:              return \Raven\Client::LEVEL_ERROR;
             case E_WARNING:            return \Raven\Client::LEVEL_WARNING;
             case E_PARSE:              return \Raven\Client::LEVEL_ERROR;
