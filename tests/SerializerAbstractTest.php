@@ -23,6 +23,13 @@ abstract class SerializerAbstractTest extends TestCase
         return '';
     }
 
+    /**
+     * This method is only existed because of testSerializeCallable
+     */
+    public static function setUpBeforeClass()
+    {
+    }
+
     public function dataGetBaseParam()
     {
         return [
@@ -46,6 +53,9 @@ abstract class SerializerAbstractTest extends TestCase
         $input = [1, 2, 3];
         $result = $serializer->serialize($input);
         $this->assertEquals(['1', '2', '3'], $result);
+
+        $result = $serializer->serialize(['\\Raven\\Client', 'getUserAgent']);
+        $this->assertEquals(['\\Raven\\Client', 'getUserAgent'], $result);
     }
 
     /**
@@ -288,7 +298,9 @@ abstract class SerializerAbstractTest extends TestCase
         $result1 = $serializer->serialize($object, 3);
         $result2 = $serializer->serializeObject($object, 3);
         $this->assertEquals($result_serialize, $result1);
+        $this->assertTrue(in_array(gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']));
         $this->assertEquals($result_serialize_object, $result2);
+        $this->assertTrue(in_array(gettype($result2), ['array', 'string',]));
     }
 
     public function testRecursionMaxDepthForObject()
@@ -437,6 +449,146 @@ abstract class SerializerAbstractTest extends TestCase
         $this->assertEquals('Прекратит {clipped}', $clipped);
         $this->assertNotNull(json_encode($clipped));
         $this->assertSame(JSON_ERROR_NONE, json_last_error());
+    }
+
+
+    public function dataSerializeCallable()
+    {
+        $closure1 = function (array $param1) {
+            return $param1 * 2;
+        };
+        $closure2 = function ($param1a) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+        $closure4 = function (callable $param1c) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+        $closure5 = function (\stdClass $param1d) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+        $closure6 = function (\stdClass $param1e = null) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+        $closure7 = function (array &$param1f) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+        $closure8 = function (array &$param1g = null) {
+            throw new \Exception('Don\'t even think about invoke me');
+        };
+
+        if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+            $data = [
+                [
+                    'callable' => $closure1,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
+                ], [
+                    'callable' => $closure2,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [mixed|null param1a]',
+                ], [
+                    'callable' => $closure4,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
+                ], [
+                    'callable' => $closure5,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [stdClass param1d]',
+                ], [
+                    'callable' => $closure6,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [stdClass|null [param1e]]',
+                ], [
+                    'callable' => $closure7,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
+                ], [
+                    'callable' => $closure8,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
+                ], [
+                    'callable' => [$this, 'dataSerializeCallable'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::dataSerializeCallable []',
+                ], [
+                    'callable' => ['\\Raven\\Client', 'getUserAgent'],
+                    'expected' => 'Callable Raven\Client::getUserAgent []',
+                ], [
+                    'callable' => ['\\PHPUnit_Framework_TestCase', 'setUpBeforeClass'],
+                    'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
+                ], [
+                    'callable' => [$this, 'setUpBeforeClass'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                ], [
+                    'callable' => [self::class, 'setUpBeforeClass'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                ],
+            ];
+            require_once('php70_serializing.inc');
+
+            if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
+                require_once('php71_serializing.inc');
+            }
+
+            return $data;
+        } else {
+            return [
+                [
+                    'callable' => $closure1,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
+                ], [
+                    'callable' => $closure2,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [param1a]',
+                ], [
+                    'callable' => $closure4,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
+                ], [
+                    'callable' => $closure5,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [param1d]',
+                ], [
+                    'callable' => $closure6,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [[param1e]]',
+                ], [
+                    'callable' => $closure7,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
+                ], [
+                    'callable' => $closure8,
+                    'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
+                ], [
+                    'callable' => [$this, 'dataSerializeCallable'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::dataSerializeCallable []',
+                ], [
+                    'callable' => ['\\Raven\\Client', 'getUserAgent'],
+                    'expected' => 'Callable Raven\Client::getUserAgent []',
+                ], [
+                    'callable' => ['\\PHPUnit_Framework_TestCase', 'setUpBeforeClass'],
+                    'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
+                ], [
+                    'callable' => [$this, 'setUpBeforeClass'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                ], [
+                    'callable' => [self::class, 'setUpBeforeClass'],
+                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                ],
+            ];
+        }
+    }
+
+    /**
+     * @param Callable $callable
+     * @param string   $expected
+     *
+     * @dataProvider dataSerializeCallable
+     */
+    public function testSerializeCallable($callable, $expected)
+    {
+        $class_name = static::get_test_class();
+        /** @var \Raven\Serializer $serializer **/
+        $serializer = new $class_name();
+        $actual = $serializer->serializeCallable($callable);
+        $this->assertEquals($expected, $actual);
+
+        $actual2 = $serializer->serialize($callable);
+        $actual3 = $serializer->serialize([$callable]);
+        if (is_array($callable)) {
+            $this->assertInternalType('array', $actual2);
+            $this->assertInternalType('array', $actual3);
+        } else {
+            $this->assertEquals($expected, $actual2);
+            $this->assertEquals([$expected], $actual3);
+        }
     }
 }
 
