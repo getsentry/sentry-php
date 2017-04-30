@@ -241,19 +241,19 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         // Modification of these would be really bad, since if control is returned (non-fatal error) we'll have altered the state of things!
         $originalFoo = 'bloopblarp';
         $newFoo = $originalFoo;
-        $nestedArray = array(
+        $nestedArray = [
             'key' => 'xxxxxxxxxx',
-        );
+        ];
 
-        $frame = array(
+        $frame = [
             "file" => dirname(__FILE__) . "/resources/a.php",
             "line" => 9,
-            "args"=> array(
+            "args"=> [
                 &$newFoo,
                 &$nestedArray,
-            ),
+            ],
             "function" => "a_test",
-        );
+        ];
 
         $result = Stacktrace::getFrameArguments($frame, 5);
 

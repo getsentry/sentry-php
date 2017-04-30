@@ -54,9 +54,9 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
-        $input = array(1, 2, 3);
+        $input = [1, 2, 3];
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('1', '2', '3'), $result);
+        $this->assertEquals(['1', '2', '3'], $result);
     }
 
     /**
@@ -74,7 +74,7 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $input = new \stdClass();
         $input->foo = 'BAR';
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => 'BAR'), $result);
+        $this->assertEquals(['foo' => 'BAR'], $result);
     }
 
     public function testObjectsAreStrings()
@@ -95,7 +95,7 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $serializer->setAllObjectSerialize(true);
         $input = new \Raven\Tests\SerializerTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('key' => 'value'), $result);
+        $this->assertEquals(['key' => 'value'], $result);
     }
 
     /**
@@ -184,10 +184,10 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
-        $input = array();
+        $input = [];
         $input[] = &$input;
         $result = $serializer->serialize($input, 3);
-        $this->assertEquals(array(array(array('Array of length 1'))), $result);
+        $this->assertEquals([[['Array of length 1']]], $result);
 
         $result = $serializer->serialize([], 3);
         $this->assertEquals([], $result);
@@ -327,9 +327,9 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $class_name = static::get_test_class();
         /** @var \Raven\Serializer $serializer **/
         $serializer = new $class_name();
-        $input = array('foo' => new \Raven\Tests\SerializerTestObject());
+        $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => 'Object Raven\\Tests\\SerializerTestObject'), $result);
+        $this->assertEquals(['foo' => 'Object Raven\\Tests\\SerializerTestObject'], $result);
     }
 
     public function testObjectInArraySerializeAll()
@@ -338,9 +338,9 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         /** @var \Raven\Serializer $serializer **/
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
-        $input = array('foo' => new \Raven\Tests\SerializerTestObject());
+        $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => array('key' => 'value')), $result);
+        $this->assertEquals(['foo' => ['key' => 'value']], $result);
     }
 
     /**
@@ -355,12 +355,12 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
-        foreach (array('7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90') as $key) {
+        foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
             $input = pack('H*', $key);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);
             if (function_exists('mb_detect_encoding')) {
-                $this->assertContains(mb_detect_encoding($result), array('ASCII', 'UTF-8'));
+                $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
             }
         }
     }
@@ -378,7 +378,7 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
             $serializer->setAllObjectSerialize(true);
         }
         for ($i = 0; $i < 100; $i++) {
-            foreach (array(100, 1000, 1010, 1024, 1050, 1100, 10000) as $length) {
+            foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
                 $input = '';
                 for ($i = 0; $i < $length; $i++) {
                     $input .= chr(mt_rand(0, 255));

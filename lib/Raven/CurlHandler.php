@@ -28,10 +28,10 @@ class CurlHandler
     {
         $this->options = $options;
         $this->multi_handle = curl_multi_init();
-        $this->requests = array();
+        $this->requests = [];
         $this->join_timeout = 5;
 
-        register_shutdown_function(array($this, 'join'));
+        register_shutdown_function([$this, 'join']);
     }
 
     public function __destruct()
@@ -39,11 +39,11 @@ class CurlHandler
         $this->join();
     }
 
-    public function enqueue($url, $data = null, $headers = array())
+    public function enqueue($url, $data = null, $headers = [])
     {
         $ch = curl_init();
 
-        $new_headers = array();
+        $new_headers = [];
         foreach ($headers as $key => $value) {
             array_push($new_headers, $key .': '. $value);
         }

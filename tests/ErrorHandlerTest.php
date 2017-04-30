@@ -21,7 +21,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     {
         $this->errorLevel = error_reporting();
         $this->errorHandlerCalled = false;
-        $this->existingErrorHandler = set_error_handler(array($this, 'errorHandler'), -1);
+        $this->existingErrorHandler = set_error_handler([$this, 'errorHandler'], -1);
         // improves the reliability of tests
         if (function_exists('error_clear_last')) {
             error_clear_last();
@@ -38,14 +38,14 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
         restore_exception_handler();
         set_error_handler($this->existingErrorHandler);
         // // XXX(dcramer): this isn't great as it doesnt restore the old error reporting level
-        // set_error_handler(array($this, 'errorHandler'), error_reporting());
+        // set_error_handler([$this, 'errorHandler'], error_reporting());
         error_reporting($this->errorLevel);
     }
 
     public function testErrorsAreLoggedAsExceptions()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException', 'sendUnsentErrors'))
+                       ->setMethods(['captureException', 'sendUnsentErrors'])
                        ->getMock();
         $client->expects($this->once())
                ->method('captureException')
@@ -58,7 +58,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testExceptionsAreLogged()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->once())
                ->method('captureException')
@@ -73,7 +73,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testErrorHandlerPassErrorReportingPass()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->once())
                ->method('captureException');
@@ -88,7 +88,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testErrorHandlerPropagates()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->never())
                ->method('captureException');
@@ -105,7 +105,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testExceptionHandlerPropagatesToNative()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->exactly(2))
                ->method('captureException')
@@ -146,7 +146,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testErrorHandlerRespectsErrorReportingDefault()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->once())
                ->method('captureException');
@@ -167,7 +167,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testSilentErrorsAreNotReportedWithGlobal()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->never())
                ->method('captureException');
@@ -188,7 +188,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testSilentErrorsAreNotReportedWithLocal()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->never())
                ->method('captureException');
@@ -205,7 +205,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testShouldCaptureFatalErrorBehavior()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $handler = new \Raven\ErrorHandler($client);
 
@@ -217,7 +217,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testErrorHandlerDefaultsErrorReporting()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $client->expects($this->never())
                ->method('captureException');
@@ -233,7 +233,7 @@ class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
     public function testFluidInterface()
     {
         $client = $this->getMockBuilder('Client')
-                       ->setMethods(array('captureException'))
+                       ->setMethods(['captureException'])
                        ->getMock();
         $handler = new \Raven\ErrorHandler($client);
         $result = $handler->registerErrorHandler();

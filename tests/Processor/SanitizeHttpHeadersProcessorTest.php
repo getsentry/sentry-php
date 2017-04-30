@@ -29,9 +29,9 @@ class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $this->processor = new SanitizeHttpHeadersProcessor($client);
-        $this->processor->setProcessorOptions(array(
-            'sanitize_http_headers' => array('User-Defined-Header'),
-        ));
+        $this->processor->setProcessorOptions([
+            'sanitize_http_headers' => ['User-Defined-Header'],
+        ]);
     }
 
     /**
@@ -46,43 +46,40 @@ class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function processDataProvider()
     {
-        return array(
-            array(
-                array(
-                    'request' => array(
-                        'headers' => array(
+        return [
+            [
+                [
+                    'request' => [
+                        'headers' => [
                             'Authorization' => 'foo',
                             'AnotherHeader' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
-                        'headers' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
+                        'headers' => [
                             'Authorization' => SanitizeHttpHeadersProcessor::STRING_MASK,
                             'AnotherHeader' => 'bar',
-                        ),
-                    ),
-                ),
-            ),
-            array(
-                array(
-                    'request' => array(
-                        'headers' => array(
+                        ],
+                    ],
+                ],
+            ], [
+                [
+                    'request' => [
+                        'headers' => [
                             'User-Defined-Header' => 'foo',
                             'AnotherHeader' => 'bar',
-                        ),
-                    ),
-                ),
-                array(
-                    'request' => array(
-                        'headers' => array(
+                        ],
+                    ],
+                ], [
+                    'request' => [
+                        'headers' => [
                             'User-Defined-Header' => SanitizeHttpHeadersProcessor::STRING_MASK,
                             'AnotherHeader' => 'bar',
-                        ),
-                    ),
-                ),
-            ),
-        );
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

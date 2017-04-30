@@ -75,7 +75,7 @@ class Serializer
     {
         if ($_depth < $max_depth) {
             if (is_array($value)) {
-                $new = array();
+                $new = [];
                 foreach ($value as $k => $v) {
                     $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
                 }

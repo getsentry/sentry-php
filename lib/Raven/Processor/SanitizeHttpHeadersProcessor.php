@@ -25,7 +25,7 @@ final class SanitizeHttpHeadersProcessor extends Processor
     /**
      * @var string[] $httpHeadersToSanitize The list of HTTP headers to sanitize
      */
-    private $httpHeadersToSanitize = array();
+    private $httpHeadersToSanitize = [];
 
     /**
      * {@inheritdoc}
@@ -40,7 +40,10 @@ final class SanitizeHttpHeadersProcessor extends Processor
      */
     public function setProcessorOptions(array $options)
     {
-        $this->httpHeadersToSanitize = array_merge($this->getDefaultHeaders(), isset($options['sanitize_http_headers']) ? $options['sanitize_http_headers'] : array());
+        $this->httpHeadersToSanitize = array_merge(
+            $this->getDefaultHeaders(),
+            isset($options['sanitize_http_headers']) ? $options['sanitize_http_headers'] : []
+        );
     }
 
     /**
@@ -64,6 +67,6 @@ final class SanitizeHttpHeadersProcessor extends Processor
      */
     private function getDefaultHeaders()
     {
-        return array('Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN');
+        return ['Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN'];
     }
 }

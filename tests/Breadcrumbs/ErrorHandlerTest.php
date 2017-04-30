@@ -13,9 +13,9 @@ class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends PHPUnit_Framework_Te
 {
     public function testSimple()
     {
-        $client = new \Raven\Client(array(
+        $client = new \Raven\Client([
             'install_default_breadcrumb_handlers' => false,
-        ));
+        ]);
 
         $handler = new \Raven\Breadcrumbs\ErrorHandler($client);
         $handler->handleError(E_WARNING, 'message');
