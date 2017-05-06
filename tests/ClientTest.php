@@ -10,9 +10,6 @@
 
 namespace Raven\Tests;
 
-use Raven\Client;
-use Raven\Serializer;
-
 function simple_function($a = null, $b = null, $c = null)
 {
     assert(0);
@@ -2388,5 +2385,138 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $client->setAllObjectSerialize(false);
         $this->assertFalse($o1->getAllObjectSerialize());
         $this->assertFalse($o2->getAllObjectSerialize());
+    }
+
+    public function dataDefaultSerializer()
+    {
+        return [['init_with_objects' => false], ['init_with_objects' => true],];
+    }
+
+    /**
+     * @param boolean $init_with_objects
+     *
+     * @dataProvider dataDefaultSerializer
+     */
+    public function testDefaultSerializer($init_with_objects)
+    {
+        if ($init_with_objects) {
+            $client = new \Raven\Client(
+                null, [
+                    'serializer'     => new \Raven\Serializer(),
+                    'reprSerializer' => new \Raven\ReprSerializer(),
+                ]
+            );
+        } else {
+            $client = new \Raven\Client;
+        }
+        $this->assertEquals([1, 2, 3], $client->getSerializer()->serialize([1, 2, 3]));
+        $this->assertEquals([1, 2, 3], $client->getReprSerializer()->serialize([1, 2, 3]));
+        $this->assertTrue($client->getSerializer()->serialize(true));
+        $this->assertEquals('true', $client->getReprSerializer()->serialize(true));
+    }
+
+    public function dataExceptionOnMalformedSerializer()
+    {
+        return [
+            [
+                'property'       => 'serializer',
+                'after_creation' => false,
+            ], [
+                'property'       => 'serializer',
+                'after_creation' => true,
+            ], [
+                'property'       => 'reprSerializer',
+                'after_creation' => false,
+            ], [
+                'property'       => 'reprSerializer',
+                'after_creation' => true,
+            ],
+        ];
+    }
+
+    /**
+     * @param string  $property
+     * @param boolean $after_creation
+     *
+     * @expectedException \PHPUnit_Framework_Exception
+     * @dataProvider dataExceptionOnMalformedSerializer
+     */
+    public function testExceptionOnMalformedSerializer($property, $after_creation)
+    {
+        if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+            $this->markTestSkipped('PHP 7.0.0 contain different error');
+        }
+        if (!$after_creation) {
+            new \Raven\Client(null, [$property => $this,]);
+        } else {
+            $client = new \Raven\Client(null, []);
+            $method = 'set'.$property;
+            $client->$method($this);
+        }
+    }
+
+    /**
+     * @param string  $property
+     * @param boolean $after_creation
+     *
+     * @expectedException \TypeError
+     * @dataProvider dataExceptionOnMalformedSerializer
+     */
+    public function testExceptionOnMalformedSerializerPHP70($property, $after_creation)
+    {
+        if (version_compare(PHP_VERSION, '7.0.0', '<')) {
+            $this->markTestSkipped('PHP 5.6.0 contain different error');
+        }
+        if (!$after_creation) {
+            new \Raven\Client(null, [$property => $this,]);
+        } else {
+            $client = new \Raven\Client(null, []);
+            $method = 'set'.$property;
+            $client->$method($this);
+        }
+    }
+
+    public function dataOurSerializer()
+    {
+        return [['after_creation' => true,], ['after_creation' => false,],];
+    }
+
+    /**
+     * @param boolean $after_creation
+     *
+     * @dataProvider dataOurSerializer
+     */
+    public function testOurSerializer($after_creation)
+    {
+        $serializer = $this->getMockBuilder('\\Raven\\SerializerInterface')
+                        ->setMethods(['serialize'])->getMock();
+        $serializer->expects($this->atLeastOnce())->method('serialize');
+
+        /**
+         * @var \Raven\SerializerInterface|\PHPUnit_Framework_MockObject_MockObject $serializer
+         */
+        if ($after_creation) {
+            $client = new Dummy_Raven_Client();
+            $client->setSerializer($serializer);
+            $client->setReprSerializer($serializer);
+        } else {
+            $client = new Dummy_Raven_Client(
+                null, [
+                    'serializer'     => $serializer,
+                    'reprSerializer' => $serializer,
+                ]
+            );
+        }
+
+        foreach (['bar', $this, 'tobe', null, false] as &$value) {
+            $client->captureMessage(
+                'Test Message %s', ['foo'], [
+                    'extra' => [
+                        'foo' => $value,
+                    ],
+                ]
+            );
+            $serializer->__phpunit_verify();
+        }
     }
 }

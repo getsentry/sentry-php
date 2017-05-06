@@ -186,19 +186,19 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         }
         $input = [];
         $input[] = &$input;
-        $result = $serializer->serialize($input, 3);
+        $result = $serializer->serialize($input, ['max_depth' => 3]);
         $this->assertEquals([[['Array of length 1']]], $result);
 
-        $result = $serializer->serialize([], 3);
+        $result = $serializer->serialize([], ['max_depth' => 3]);
         $this->assertEquals([], $result);
 
-        $result = $serializer->serialize([[]], 3);
+        $result = $serializer->serialize([[]], ['max_depth' => 3]);
         $this->assertEquals([[]], $result);
 
-        $result = $serializer->serialize([[[]]], 3);
+        $result = $serializer->serialize([[[]]], ['max_depth' => 3]);
         $this->assertEquals([[[]]], $result);
 
-        $result = $serializer->serialize([[[[]]]], 3);
+        $result = $serializer->serialize([[[[]]]], ['max_depth' => 3]);
         $this->assertEquals([[['Array of length 0']]], $result);
     }
 
@@ -297,7 +297,7 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
 
-        $result1 = $serializer->serialize($object, 3);
+        $result1 = $serializer->serialize($object, ['max_depth' => 3]);
         $result2 = $serializer->serializeObject($object, 3);
         $this->assertEquals($result_serialize, $result1);
         $this->assertEquals($result_serialize_object, $result2);
@@ -310,14 +310,17 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
 
-        $result = $serializer->serialize((object)['key' => (object)['key' => 12345]], 3);
+        $result = $serializer->serialize((object)['key' => (object)['key' => 12345]], ['max_depth' => 3]);
         $this->assertEquals(['key' => ['key' => 12345]], $result);
 
-        $result = $serializer->serialize((object)['key' => (object)['key' => (object)['key' => 12345]]], 3);
+        $result = $serializer->serialize(
+            (object)['key' => (object)['key' => (object)['key' => 12345]]],
+            ['max_depth' => 3]
+        );
         $this->assertEquals(['key' => ['key' => ['key' => 12345]]], $result);
 
         $result = $serializer->serialize(
-            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]], 3
+            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]], ['max_depth' => 3]
         );
         $this->assertEquals(['key' => ['key' => ['key' => 'Object stdClass']]], $result);
     }

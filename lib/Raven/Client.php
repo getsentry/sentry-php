@@ -67,11 +67,11 @@ class Client
     protected $error_types;
 
     /**
-     * @var \Raven\Serializer $serializer
+     * @var SerializerInterface $serializer
      */
     protected $serializer;
     /**
-     * @var \Raven\Serializer $serializer
+     * @var SerializerInterface $serializer
      */
     protected $reprSerializer;
 
@@ -341,8 +341,16 @@ class Client
             'name' => 'sentry-php',
             'version' => self::VERSION,
         ]);
-        $this->serializer = new \Raven\Serializer($this->mb_detect_order);
-        $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
+        if (isset($options['serializer'])) {
+            $this->setSerializer($options['serializer']);
+        } else {
+            $this->serializer = new \Raven\Serializer($this->mb_detect_order);
+        }
+        if (isset($options['reprSerializer'])) {
+            $this->setReprSerializer($options['reprSerializer']);
+        } else {
+            $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
+        }
         if (\Raven\Util::get($options, 'serialize_all_object', false)) {
             $this->setAllObjectSerialize(true);
         }
@@ -378,21 +386,31 @@ class Client
     /**
      * Gets the representation serialier.
      *
-     * @return ReprSerializer
+     * @return SerializerInterface
      */
     public function getReprSerializer()
     {
         return $this->reprSerializer;
     }
 
+    public function setReprSerializer(SerializerInterface $serializer)
+    {
+        $this->reprSerializer = $serializer;
+    }
+
     /**
      * Gets the serializer.
      *
-     * @return Serializer
+     * @return SerializerInterface
      */
     public function getSerializer()
     {
         return $this->serializer;
+    }
+
+    public function setSerializer(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
     }
 
     /**
@@ -1046,7 +1064,7 @@ class Client
             $data['request'] = $this->serializer->serialize($data['request']);
         }
         if (!empty($data['user'])) {
-            $data['user'] = $this->serializer->serialize($data['user'], 3);
+            $data['user'] = $this->serializer->serialize($data['user'], ['max_depth' => 3]);
         }
         if (!empty($data['extra'])) {
             $data['extra'] = $this->serializer->serialize($data['extra']);
@@ -1057,7 +1075,7 @@ class Client
             }
         }
         if (!empty($data['contexts'])) {
-            $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
+            $data['contexts'] = $this->serializer->serialize($data['contexts'], ['max_depth' => 5]);
         }
     }
 
@@ -1602,7 +1620,11 @@ class Client
 
     public function setAllObjectSerialize($value)
     {
-        $this->serializer->setAllObjectSerialize($value);
-        $this->reprSerializer->setAllObjectSerialize($value);
+        if (method_exists($this->serializer, 'setAllObjectSerialize')) {
+            $this->serializer->setAllObjectSerialize($value);
+        }
+        if (method_exists($this->reprSerializer, 'setAllObjectSerialize')) {
+            $this->reprSerializer->setAllObjectSerialize($value);
+        }
     }
 }

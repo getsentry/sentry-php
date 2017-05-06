@@ -29,7 +29,7 @@ class Stacktrace implements \JsonSerializable
     protected $client;
 
     /**
-     * @var Serializer The serializer
+     * @var SerializerInterface The serializer
      */
     protected $serializer;
 
