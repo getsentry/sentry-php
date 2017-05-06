@@ -10,7 +10,12 @@
 
 namespace Raven\Tests;
 
+use Composer\CaBundle\CaBundle;
+use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
+use Raven\Configuration;
+use Raven\CurlHandler;
+use Raven\Processor\SanitizeDataProcessor;
 
 function simple_function($a = null, $b = null, $c = null)
 {
@@ -23,7 +28,6 @@ function invalid_encoding()
     simple_function(fread($fp, 64));
     fclose($fp);
 }
-
 
 // XXX: Is there a better way to stub the client?
 class Dummy_Raven_Client extends \Raven\Client
@@ -39,10 +43,10 @@ class Dummy_Raven_Client extends \Raven\Client
 
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, [&$data]) === false) {
-            // if send_callback returns falsely, end native send
+        if (!$this->config->shouldCapture($data)) {
             return;
         }
+
         $this->__sent_events[] = $data;
     }
 
@@ -209,7 +213,7 @@ class Dummy_Raven_CurlHandler extends \Raven\CurlHandler
     }
 }
 
-class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
     protected static $_folder = null;
 
@@ -354,318 +358,122 @@ organization           = "Sentry"
         }
     }
 
-    public function testParseDSNHttp()
-    {
-        $result = \Raven\Client::ParseDSN('http://public:secret@example.com/1');
-
-        $this->assertEquals(1, $result['project']);
-        $this->assertEquals('http://example.com/api/1/store/', $result['server']);
-        $this->assertEquals('public', $result['public_key']);
-        $this->assertEquals('secret', $result['secret_key']);
-    }
-
-    public function testParseDSNHttps()
-    {
-        $result = \Raven\Client::ParseDSN('https://public:secret@example.com/1');
-
-        $this->assertEquals(1, $result['project']);
-        $this->assertEquals('https://example.com/api/1/store/', $result['server']);
-        $this->assertEquals('public', $result['public_key']);
-        $this->assertEquals('secret', $result['secret_key']);
-    }
-
-    public function testParseDSNPath()
-    {
-        $result = \Raven\Client::ParseDSN('http://public:secret@example.com/app/1');
-
-        $this->assertEquals(1, $result['project']);
-        $this->assertEquals('http://example.com/app/api/1/store/', $result['server']);
-        $this->assertEquals('public', $result['public_key']);
-        $this->assertEquals('secret', $result['secret_key']);
-    }
-
-    public function testParseDSNPort()
-    {
-        $result = \Raven\Client::ParseDSN('http://public:secret@example.com:9000/app/1');
-
-        $this->assertEquals(1, $result['project']);
-        $this->assertEquals('http://example.com:9000/app/api/1/store/', $result['server']);
-        $this->assertEquals('public', $result['public_key']);
-        $this->assertEquals('secret', $result['secret_key']);
-    }
-
-    public function testParseDSNInvalidScheme()
-    {
-        try {
-            \Raven\Client::ParseDSN('gopher://public:secret@/1');
-            $this->fail();
-        } catch (\Exception $e) {
-            return;
-        }
-    }
-
-    public function testParseDSNMissingNetloc()
-    {
-        try {
-            \Raven\Client::ParseDSN('http://public:secret@/1');
-            $this->fail();
-        } catch (\Exception $e) {
-            return;
-        }
-    }
-
-    public function testParseDSNMissingProject()
-    {
-        try {
-            \Raven\Client::ParseDSN('http://public:secret@example.com');
-            $this->fail();
-        } catch (\Exception $e) {
-            return;
-        }
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testParseDSNMissingPublicKey()
-    {
-        \Raven\Client::ParseDSN('http://:secret@example.com/1');
-    }
-    /**
-     * @expectedException \InvalidArgumentException
-     */
-    public function testParseDSNMissingSecretKey()
-    {
-        \Raven\Client::ParseDSN('http://public@example.com/1');
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testDsnFirstArgument()
-    {
-        $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
-
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testDsnFirstArgumentWithOptions()
-    {
-        $client = new Dummy_Raven_Client('http://public:secret@example.com/1', [
-            'site' => 'foo',
-        ]);
-
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
-        $this->assertEquals('foo', $client->site);
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testOptionsFirstArgument()
-    {
-        $client = new Dummy_Raven_Client([
-            'server' => 'http://example.com/api/1/store/',
-            'project' => 1,
-        ]);
-
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testDsnInOptionsFirstArg()
-    {
-        $client = new Dummy_Raven_Client([
-            'dsn' => 'http://public:secret@example.com/1',
-        ]);
-
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testDsnInOptionsSecondArg()
-    {
-        $client = new Dummy_Raven_Client(null, [
-            'dsn' => 'http://public:secret@example.com/1',
-        ]);
-
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     */
-    public function testOptionsFirstArgumentWithOptions()
-    {
-        $client = new Dummy_Raven_Client([
-            'server' => 'http://example.com/api/1/store/',
-            'project' => 1,
-        ], [
-            'site' => 'foo',
-        ]);
-
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('foo', $client->site);
-    }
-
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testOptionsExtraData()
     {
-        $client = new Dummy_Raven_Client(['extra' => ['foo' => 'bar']]);
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
+        $client->extra_context(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('bar', $event['extra']['foo']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testOptionsExtraDataWithNull()
     {
-        $client = new Dummy_Raven_Client(['extra' => ['foo' => 'bar']]);
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
+        $client->extra_context(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo'], null);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('bar', $event['extra']['foo']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testEmptyExtraData()
     {
-        $client = new Dummy_Raven_Client(['extra' => []]);
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->captureMessage('Test Message %s', ['foo']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals(array_key_exists('extra', $event), false);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertArrayNotHasKey('extra', $client->_pending_events[0]);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageDoesHandleUninterpolatedMessage()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
 
-        $client->captureMessage('Test Message %s');
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('Test Message %s', $event['message']);
+        $client->store_errors_for_bulk_send = true;
+
+        $client->captureMessage('foo %s');
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo %s', $client->_pending_events[0]['message']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageDoesHandleInterpolatedMessage()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
 
-        $client->captureMessage('Test Message %s', ['foo']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('Test Message foo', $event['message']);
+        $client->store_errors_for_bulk_send = true;
+
+        $client->captureMessage('foo %s', ['bar']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
     {
-        $client = new Dummy_Raven_Client();
-        $client->setRelease(20160909144742);
+        $config = new Configuration(['release' => '1.2.3']);
+        $client = new Client($config);
 
-        $this->assertEquals(20160909144742, $client->getRelease());
+        $this->assertEquals('1.2.3', $client->getConfig()->getRelease());
 
-        $client->captureMessage('Test Message %s', ['foo']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals(20160909144742, $event['release']);
-        $this->assertEquals('Test Message foo', $event['message']);
+        $client->store_errors_for_bulk_send = true;
+
+        $client->captureMessage('foo %s', ['bar']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
+        $this->assertEquals('1.2.3', $client->_pending_events[0]['release']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageSetsInterface()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
-        $client->captureMessage('Test Message %s', ['foo']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals([
-            'message' => 'Test Message %s',
-            'params' => ['foo'],
-            'formatted' => 'Test Message foo',
-        ], $event['sentry.interfaces.Message']);
-        $this->assertEquals('Test Message foo', $event['message']);
+        $client->captureMessage('foo %s', ['bar']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
+        $this->assertArrayHasKey('sentry.interfaces.Message', $client->_pending_events[0]);
+        $this->assertEquals('foo bar', $client->_pending_events[0]['sentry.interfaces.Message']['formatted']);
+        $this->assertEquals('foo %s', $client->_pending_events[0]['sentry.interfaces.Message']['message']);
+        $this->assertEquals(['bar'], $client->_pending_events[0]['sentry.interfaces.Message']['params']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageHandlesOptionsAsThirdArg()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->captureMessage('Test Message %s', ['foo'], [
             'level' => Dummy_Raven_Client::WARNING,
             'extra' => ['foo' => 'bar']
         ]);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
-        $this->assertEquals('bar', $event['extra']['foo']);
-        $this->assertEquals('Test Message foo', $event['message']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(Dummy_Raven_Client::WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
+        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageHandlesLevelAsThirdArg()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::WARNING);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
-        $this->assertEquals('Test Message foo', $event['message']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(Dummy_Raven_Client::WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
     }
 
     /**
@@ -674,56 +482,53 @@ organization           = "Sentry"
     public function testCaptureExceptionSetsInterfaces()
     {
         # TODO: it'd be nice if we could mock the stacktrace extraction function here
-        $client = new Dummy_Raven_Client();
-        $ex = $this->create_exception();
-        $client->captureException($ex);
+        $client = new Dummy_Raven_Client(new Configuration());
+        $client->captureException($this->create_exception());
 
         $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
+
+        $this->assertCount(1, $events);
+
         $event = array_pop($events);
 
         $exc = $event['exception'];
+
         $this->assertEquals(1, count($exc['values']));
         $this->assertEquals('Foo bar', $exc['values'][0]['value']);
         $this->assertEquals('Exception', $exc['values'][0]['type']);
 
-        $this->assertFalse(empty($exc['values'][0]['stacktrace']['frames']));
+        $this->assertNotEmpty($exc['values'][0]['stacktrace']['frames']);
+
         $frames = $exc['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
+
         $this->assertTrue($frame['lineno'] > 0);
-        $this->assertEquals('Raven\Tests\Raven_Tests_ClientTest::create_exception', $frame['function']);
+        $this->assertEquals('Raven\Tests\ClientTest::create_exception', $frame['function']);
         $this->assertFalse(isset($frame['vars']));
         $this->assertEquals('            throw new \Exception(\'Foo bar\');', $frame['context_line']);
         $this->assertFalse(empty($frame['pre_context']));
         $this->assertFalse(empty($frame['post_context']));
     }
 
-    /**
-     * @covers \Raven\Client::captureException
-     */
     public function testCaptureExceptionChainedException()
     {
         # TODO: it'd be nice if we could mock the stacktrace extraction function here
-        $client = new Dummy_Raven_Client();
-        $ex = $this->create_chained_exception();
-        $client->captureException($ex);
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
+        $client->captureException($this->create_chained_exception());
 
-        $exc = $event['exception'];
-        $this->assertEquals(2, count($exc['values']));
-        $this->assertEquals('Foo bar', $exc['values'][0]['value']);
-        $this->assertEquals('Child exc', $exc['values'][1]['value']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertCount(2, $client->_pending_events[0]['exception']['values']);
+        $this->assertEquals('Foo bar', $client->_pending_events[0]['exception']['values'][0]['value']);
+        $this->assertEquals('Child exc', $client->_pending_events[0]['exception']['values'][1]['value']);
     }
 
-    /**
-     * @covers \Raven\Client::captureException
-     */
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         $e1 = new \ErrorException('First', 0, E_DEPRECATED);
         $e2 = new \ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
         $e3 = new \ErrorException('Third', 0, E_ERROR, __FILE__, __LINE__, $e2);
@@ -731,138 +536,100 @@ organization           = "Sentry"
         $client->captureException($e1);
         $client->captureException($e2);
         $client->captureException($e3);
-        $events = $client->getSentEvents();
 
-        $event = array_pop($events);
-        $this->assertEquals(Dummy_Raven_Client::ERROR, $event['level']);
-
-        $event = array_pop($events);
-        $this->assertEquals(Dummy_Raven_Client::INFO, $event['level']);
-
-        $event = array_pop($events);
-        $this->assertEquals(Dummy_Raven_Client::WARNING, $event['level']);
+        $this->assertCount(3, $client->_pending_events);
+        $this->assertEquals(Client::WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals(Client::INFO, $client->_pending_events[1]['level']);
+        $this->assertEquals(Client::ERROR, $client->_pending_events[2]['level']);
     }
 
-    /**
-     * @covers \Raven\Client::captureException
-     */
     public function testCaptureExceptionHandlesOptionsAsSecondArg()
     {
-        $client = new Dummy_Raven_Client();
-        $ex = $this->create_exception();
-        $client->captureException($ex, ['culprit' => 'test']);
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('test', $event['culprit']);
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
+        $client->captureException($this->create_exception(), ['culprit' => 'test']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('test', $client->_pending_events[0]['culprit']);
     }
 
-    /**
-     * @covers \Raven\Client::captureException
-     */
     public function testCaptureExceptionHandlesExcludeOption()
     {
-        $client = new Dummy_Raven_Client([
-            'exclude' => ['Exception'],
-        ]);
-        $ex = $this->create_exception();
-        $client->captureException($ex, 'test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(0, count($events));
+        $client = new Client(new Configuration(['excluded_exceptions' => ['Exception']]));
+        $client->store_errors_for_bulk_send = true;
+
+        $client->captureException($this->create_exception(), 'test');
+
+        $this->assertEmpty($client->_pending_events);
     }
 
     public function testCaptureExceptionInvalidUTF8()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         try {
             invalid_encoding();
         } catch (\Exception $ex) {
             $client->captureException($ex);
         }
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
 
-        // if this fails to encode it returns false
-        $message = $client->encode($events[0]);
-        $this->assertNotFalse($message, $client->getLastError());
+        $this->assertCount(1, $client->_pending_events);
+
+        $this->assertNotFalse($client->encode($client->_pending_events[0]));
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     */
     public function testDoesRegisterProcessors()
     {
-        $client = new Dummy_Raven_Client([
-            'processors' => ['\\Raven\\Processor\\SanitizeDataProcessor'],
-        ]);
+        $client = new Client(new Configuration(['processors' => [SanitizeDataProcessor::class]]));
 
-        $this->assertEquals(1, count($client->processors));
-        $this->assertInstanceOf('\\Raven\\Processor\\SanitizeDataProcessor', $client->processors[0]);
+        $this->assertInstanceOf(SanitizeDataProcessor::class, $this->getObjectAttribute($client, 'processors')[0]);
     }
 
     public function testProcessDoesCallProcessors()
     {
-        $data = ["key"=>"value"];
+        $data = ['key' => 'value'];
 
         $processor = $this->getMockBuilder('Processor')
-                          ->setMethods(['process'])
-                          ->getMock();
-        $processor->expects($this->once())
-               ->method('process')
-               ->with($data);
+            ->setMethods(['process'])
+            ->getMock();
 
-        $client = new Dummy_Raven_Client();
-        $client->processors[] = $processor;
+        $processor->expects($this->once())
+            ->method('process')
+            ->with($data);
+
+        $client = new Dummy_Raven_Client(new Configuration());
+
+        $client->setProcessors([$processor]);
         $client->process($data);
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     * @covers \Raven\Client::getDefaultProcessors
-     */
-    public function testDefaultProcessorsAreUsed()
-    {
-        $client = new Dummy_Raven_Client();
-        $defaults = Dummy_Raven_Client::getDefaultProcessors();
-
-        $this->assertEquals(count($defaults), count($client->processors));
-    }
-
-    /**
-     * @covers \Raven\Client::getDefaultProcessors
-     */
-    public function testDefaultProcessorsContainSanitizeDataProcessor()
-    {
-        $this->assertContains('\\Raven\\Processor\\SanitizeDataProcessor', Dummy_Raven_Client::getDefaultProcessors());
-    }
-
-    /**
-     * @covers \Raven\Client::__construct
-     * @covers \Raven\Client::get_default_data
-     */
     public function testGetDefaultData()
     {
-        $client = new Dummy_Raven_Client();
+        $config = new Configuration();
+        $client = new Client($config);
+
         $client->transaction->push('test');
+
         $expected = [
             'platform' => 'php',
-            'project' => $client->project,
-            'server_name' => $client->name,
-            'site' => $client->site,
-            'logger' => $client->logger,
-            'tags' => $client->tags,
+            'project' => $config->getProjectId(),
+            'server_name' => $config->getServerName(),
+            'logger' => $config->getLogger(),
+            'tags' => $config->getTags(),
+            'culprit' => 'test',
             'sdk' => [
                 'name' => 'sentry-php',
                 'version' => $client::VERSION,
             ],
-            'culprit' => 'test',
         ];
+
         $this->assertEquals($expected, $client->get_default_data());
     }
 
     /**
      * @backupGlobals
-     * @covers \Raven\Client::get_http_data
      */
     public function testGetHttpData()
     {
@@ -910,54 +677,44 @@ organization           = "Sentry"
             ]
         ];
 
-        $client = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client(new Configuration());
+
         $this->assertEquals($expected, $client->get_http_data());
     }
 
-    /**
-     * @covers \Raven\Client::user_context
-     * @covers \Raven\Client::get_user_data
-     */
-    public function testGetUserDataWithSetUser()
+    public function testCaptureMessageWithUserData()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
-        $id = 'unique_id';
-        $email = 'foo@example.com';
-        $client->user_context(['id' => $id, 'email' => $email, 'username' => 'my_user', ]);
+        $client->user_context([
+            'id' => 'unique_id',
+            'email' => 'foo@example.com',
+            'username' => 'my_user'
+        ]);
 
-        $expected = [
-            'user' => [
-                'id' => $id,
-                'username' => 'my_user',
-                'email' => $email,
-            ]
-        ];
+        $client->captureMessage('foo');
 
-        $this->assertEquals($expected, $client->get_user_data());
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('unique_id', $client->_pending_events[0]['user']['id']);
+        $this->assertEquals('my_user', $client->_pending_events[0]['user']['username']);
+        $this->assertEquals('foo@example.com', $client->_pending_events[0]['user']['email']);
     }
 
-    /**
-     * @covers \Raven\Client::get_user_data
-     */
-    public function testGetUserDataWithNoUser()
+    public function testCaptureMessageWithNoUserData()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
-        $expected = [
-            'user' => [
-                'id' => session_id(),
-            ]
-        ];
-        $this->assertEquals($expected, $client->get_user_data());
+        $client->captureMessage('foo');
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(session_id(), $client->_pending_events[0]['user']['id']);
     }
 
-    /**
-     * @covers \Raven\Client::get_auth_header
-     */
     public function testGet_Auth_Header()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client(new Configuration());
 
         $clientstring = 'sentry-php/test';
         $timestamp = '1234341324.340000';
@@ -969,12 +726,9 @@ organization           = "Sentry"
         $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', 'secretkey'));
     }
 
-    /**
-     * @covers \Raven\Client::getAuthHeader
-     */
     public function testGetAuthHeader()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client(new Configuration());
         $ts1 = microtime(true);
         $header = $client->getAuthHeader();
         $ts2 = microtime(true);
@@ -984,102 +738,57 @@ organization           = "Sentry"
         $this->assertLessThanOrEqual($ts2, (double)$a[1]);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
-    public function testCaptureMessageWithUserContext()
-    {
-        $client = new Dummy_Raven_Client();
-
-        $client->user_context(['email' => 'foo@example.com']);
-
-        $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals([
-            'email' => 'foo@example.com',
-        ], $event['user']);
-    }
-
-    /**
-     * @covers \Raven\Client::captureMessage
-     */
     public function testCaptureMessageWithUnserializableUserData()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->user_context([
             'email' => 'foo@example.com',
             'data' => [
                 'error' => new \Exception('test'),
-            ]
+            ],
         ]);
 
         $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        // we're just asserting that this goes off without a hitch
-        $this->assertEquals(1, count($events));
-        array_pop($events);
+
+        $this->assertCount(1, $client->_pending_events);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     * @covers \Raven\Client::tags_context
-     */
     public function testCaptureMessageWithTagsContext()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->tags_context(['foo' => 'bar']);
         $client->tags_context(['biz' => 'boz']);
         $client->tags_context(['biz' => 'baz']);
 
         $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals([
-            'foo' => 'bar',
-            'biz' => 'baz',
-        ], $event['tags']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->_pending_events[0]['tags']);
     }
 
-    /**
-     * @covers \Raven\Client::captureMessage
-     * @covers \Raven\Client::extra_context
-     */
     public function testCaptureMessageWithExtraContext()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
         $client->extra_context(['foo' => 'bar']);
         $client->extra_context(['biz' => 'boz']);
         $client->extra_context(['biz' => 'baz']);
 
         $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals([
-            'foo' => 'bar',
-            'biz' => 'baz',
-        ], $event['extra']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->_pending_events[0]['extra']);
     }
 
-    /**
-     * @covers \Raven\Client::captureException
-     */
     public function testCaptureExceptionContainingLatin1()
     {
-        // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
-        $options = [
-            'mb_detect_order' => [
-                'ISO-8859-1', 'ASCII', 'UTF-8'
-            ]
-        ];
-
-        $client = new Dummy_Raven_Client($options);
+        $client = new Client(new Configuration(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]));
+        $client->store_errors_for_bulk_send = true;
 
         // we need a non-utf8 string here.
         // nobody writes non-utf8 in exceptions, but it is the easiest way to test.
@@ -1088,36 +797,30 @@ organization           = "Sentry"
         $latin1String = utf8_decode($utf8String);
         $client->captureException(new \Exception($latin1String));
 
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-
-        $this->assertEquals($utf8String, $event['exception']['values'][0]['value']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals($utf8String, $client->_pending_events[0]['exception']['values'][0]['value']);
     }
-
 
     public function testCaptureExceptionInLatin1File()
     {
-        // If somebody has a non-utf8 codebase, she/he should add the encoding to the detection order
-        $options = [
-            'mb_detect_order' => [
-                'ISO-8859-1', 'ASCII', 'UTF-8'
-            ]
-        ];
-
-        $client = new Dummy_Raven_Client($options);
+        $client = new Client(new Configuration(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]));
+        $client->store_errors_for_bulk_send = true;
 
         require_once(__DIR__ . '/Fixtures/code/Latin1File.php');
 
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-
-        $stackTrace = array_pop($event['exception']['values'][0]['stacktrace']['frames']);
+        $frames = $client->_pending_events[0]['exception']['values'][0]['stacktrace']['frames'];
 
         $utf8String = "// äöü";
         $found = false;
-        foreach ($stackTrace['pre_context'] as $line) {
-            if ($line == $utf8String) {
+
+        foreach ($frames as $frame) {
+            if (!isset($frame['pre_context'])) {
+                continue;
+            }
+
+            if (in_array($utf8String, $frame['pre_context'])) {
                 $found = true;
+
                 break;
             }
         }
@@ -1125,140 +828,136 @@ organization           = "Sentry"
         $this->assertTrue($found);
     }
 
-    /**
-     * @covers \Raven\Client::captureLastError
-     */
     public function testCaptureLastError()
     {
         if (function_exists('error_clear_last')) {
             error_clear_last();
         }
-        $client = new Dummy_Raven_Client();
+
+        $client = new Dummy_Raven_Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         $this->assertNull($client->captureLastError());
-        $this->assertEquals(0, count($client->getSentEvents()));
+        $this->assertEmpty($client->getSentEvents());
 
         /** @var $undefined */
         /** @noinspection PhpExpressionResultUnusedInspection */
         @$undefined;
 
         $client->captureLastError();
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('Undefined variable: undefined', $event['exception']['values'][0]['value']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('Undefined variable: undefined', $client->_pending_events[0]['exception']['values'][0]['value']);
     }
 
-    /**
-     * @covers \Raven\Client::getLastEventID
-     */
     public function testGetLastEventID()
     {
-        $client = new Dummy_Raven_Client();
-        $client->capture(['message' => 'test', 'event_id' => 'abc']);
+        $client = new Client(new Configuration());
+        $client->capture([
+            'message' => 'test',
+            'event_id' => 'abc'
+        ]);
+
         $this->assertEquals('abc', $client->getLastEventID());
     }
 
-    /**
-     * @covers \Raven\Client::setTransport
-     */
     public function testCustomTransport()
     {
         $events = [];
 
-        // transport test requires default client
-        $client = new \Raven\Client('https://public:secret@sentry.example.com/1', [
+        $client = new Client(new Configuration([
+            'server' => 'https://public:secret@sentry.example.com/1',
             'install_default_breadcrumb_handlers' => false,
-        ]);
-        $client->setTransport(function ($client, $data) use (&$events) {
+        ]));
+
+        $client->getConfig()->setTransport(function ($client, $data) use (&$events) {
             $events[] = $data;
         });
+
         $client->capture(['message' => 'test', 'event_id' => 'abc']);
-        $this->assertEquals(1, count($events));
+
+        $this->assertCount(1, $events);
     }
 
-    /**
-     * @covers \Raven\Client::setAppPath
-     */
     public function testAppPathLinux()
     {
-        $client = new Dummy_Raven_Client();
-        $client->setAppPath('/foo/bar');
+        $client = new Client(new Configuration(['project_root' => '/foo/bar']));
 
-        $this->assertEquals('/foo/bar/', $client->getAppPath());
+        $this->assertEquals('/foo/bar/', $client->getConfig()->getProjectRoot());
 
-        $client->setAppPath('/foo/baz/');
+        $client->getConfig()->setProjectRoot('/foo/baz/');
 
-        $this->assertEquals('/foo/baz/', $client->getAppPath());
+        $this->assertEquals('/foo/baz/', $client->getConfig()->getProjectRoot());
     }
 
-    /**
-     * @covers \Raven\Client::setAppPath
-     */
     public function testAppPathWindows()
     {
-        $client = new Dummy_Raven_Client();
-        $client->setAppPath('C:\\foo\\bar\\');
+        $client = new Client(new Configuration(['project_root' => 'C:\\foo\\bar\\']));
 
-        $this->assertEquals('C:\\foo\\bar\\', $client->getAppPath());
+        $this->assertEquals('C:\\foo\\bar\\', $client->getConfig()->getProjectRoot());
     }
 
     /**
      * @expectedException \Raven\Exception
-     * @expectedExceptionMessage Raven_Client->install() must only be called once
+     * @expectedExceptionMessage Raven\Client->install() must only be called once
      */
     public function testCannotInstallTwice()
     {
-        $client = new Dummy_Raven_Client('https://public:secret@sentry.example.com/1');
+        $client = new Client(new Configuration());
+
         $client->install();
         $client->install();
     }
 
-    public function cb1($data)
-    {
-        $this->assertEquals('test', $data['message']);
-        return false;
-    }
-
-    public function cb2($data)
-    {
-        $this->assertEquals('test', $data['message']);
-        return true;
-    }
-
-    public function cb3(&$data)
-    {
-        unset($data['message']);
-        return true;
-    }
-
-    /**
-     * @covers \Raven\Client::send
-     */
     public function testSendCallback()
     {
-        $client = new Dummy_Raven_Client(['send_callback' => [$this, 'cb1']]);
-        $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(0, count($events));
+        $client = new Dummy_Raven_Client(new Configuration([
+            'should_capture' => function ($data) {
+                $this->assertEquals('test', $data['message']);
 
-        $client = new Dummy_Raven_Client(['send_callback' => [$this, 'cb2']]);
-        $client->captureMessage('test');
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
+                return false;
+            }
+        ]));
 
-        $client = new Dummy_Raven_Client(['send_callback' => [$this, 'cb3']]);
         $client->captureMessage('test');
+
         $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $this->assertTrue(empty($events[0]['message']));
+
+        $this->assertEmpty($events);
+
+        $client = new Dummy_Raven_Client(new Configuration([
+            'should_capture' => function ($data) {
+                $this->assertEquals('test', $data['message']);
+
+                return true;
+            }
+        ]));
+
+        $client->captureMessage('test');
+
+        $events = $client->getSentEvents();
+
+        $this->assertCount(1, $events);
+
+        $client = new Dummy_Raven_Client(new Configuration([
+            'should_capture' => function (&$data) {
+                unset($data['message']);
+
+                return true;
+            }
+        ]));
+
+        $client->captureMessage('test');
+
+        $events = $client->getSentEvents();
+
+        $this->assertCount(1, $events);
+        $this->assertArrayNotHasKey('message', $events[0]);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeExtra()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['extra' => [
             'context' => [
                 'line' => 1216,
@@ -1279,17 +978,10 @@ organization           = "Sentry"
         ]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeObjects()
     {
-        $client = new Dummy_Raven_Client(
-            null, [
-                'serialize_all_object' => true,
-            ]
-        );
-        $clone = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client(new Configuration(['serialize_all_object' => true]));
+        $clone = new Client(new Configuration());
         $data = [
             'extra' => [
                 'object' => $clone,
@@ -1343,12 +1035,9 @@ organization           = "Sentry"
         $this->assertEquals(['extra' => ['object' => $expected]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeTags()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['tags' => [
             'foo' => 'bar',
             'baz' => ['biz'],
@@ -1361,12 +1050,9 @@ organization           = "Sentry"
         ]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeUser()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['user' => [
             'email' => 'foo@example.com',
         ]];
@@ -1377,12 +1063,9 @@ organization           = "Sentry"
         ]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeRequest()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['request' => [
             'context' => [
                 'line' => 1216,
@@ -1403,12 +1086,9 @@ organization           = "Sentry"
         ]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::sanitize
-     */
     public function testSanitizeContexts()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['contexts' => [
             'context' => [
                 'line' => 1216,
@@ -1435,65 +1115,62 @@ organization           = "Sentry"
         ]], $data);
     }
 
-    /**
-     * @covers \Raven\Client::buildCurlCommand
-     */
     public function testBuildCurlCommandEscapesInput()
     {
         $data = '{"foo": "\'; ls;"}';
-        $client = new Dummy_Raven_Client();
-        $client->timeout = 5;
+        $client = new Dummy_Raven_Client(new Configuration(['timeout' => 5]));
         $result = $client->buildCurlCommand('http://foo.com', $data, []);
-        $folder = realpath(__DIR__.'/../lib/Raven/data');
-        $this->assertEquals(
-            'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 --cacert \''.$folder.
-            '/cacert.pem\' > /dev/null 2>&1 &', $result
-        );
-        $client->ca_cert = null;
+        $folder = CaBundle::getSystemCaRootBundlePath();
+        $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 --cacert \''.$folder.'\' > /dev/null 2>&1 &', $result);
+
+        $client->getConfig()->setSslCaFile(null);
+
         $result = $client->buildCurlCommand('http://foo.com', $data, []);
+
         $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
         $result = $client->buildCurlCommand('http://foo.com', $data, ['key' => 'value']);
+
         $this->assertEquals('curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
-        $client->verify_ssl = false;
+        $client->getConfig()->setSslVerificationEnabled(false);
+
         $result = $client->buildCurlCommand('http://foo.com', $data, []);
+
         $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &', $result);
 
         $result = $client->buildCurlCommand('http://foo.com', $data, ['key' => 'value']);
+
         $this->assertEquals('curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &', $result);
     }
 
-    /**
-     * @covers \Raven\Client::user_context
-     */
     public function testUserContextWithoutMerge()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+
         $client->user_context(['foo' => 'bar'], false);
         $client->user_context(['baz' => 'bar'], false);
+
         $this->assertEquals(['baz' => 'bar'], $client->context->user);
     }
 
-    /**
-     * @covers \Raven\Client::user_context
-     */
     public function testUserContextWithMerge()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+
         $client->user_context(['foo' => 'bar'], true);
         $client->user_context(['baz' => 'bar'], true);
+
         $this->assertEquals(['foo' => 'bar', 'baz' => 'bar'], $client->context->user);
     }
 
-    /**
-     * @covers \Raven\Client::user_context
-     */
     public function testUserContextWithMergeAndNull()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+
         $client->user_context(['foo' => 'bar'], true);
         $client->user_context(null, true);
+
         $this->assertEquals(['foo' => 'bar'], $client->context->user);
     }
 
@@ -1512,7 +1189,7 @@ organization           = "Sentry"
     {
         $_SERVER = $serverVars;
 
-        $client = new Dummy_Raven_Client($options);
+        $client = new Dummy_Raven_Client(new Configuration($options));
         $result = $client->test_get_current_url();
 
         $this->assertSame($expected, $result, $message);
@@ -1601,64 +1278,23 @@ organization           = "Sentry"
     }
 
     /**
-     * @covers \Raven\Client::getEnvironment
-     * @covers \Raven\Client::setEnvironment
-     * @covers \Raven\Client::getRelease
-     * @covers \Raven\Client::setRelease
-     * @covers \Raven\Client::getAppPath
-     * @covers \Raven\Client::setAppPath
-     * @covers \Raven\Client::getExcludedAppPaths
-     * @covers \Raven\Client::setExcludedAppPaths
-     * @covers \Raven\Client::getPrefixes
-     * @covers \Raven\Client::setPrefixes
-     * @covers \Raven\Client::getSendCallback
-     * @covers \Raven\Client::setSendCallback
-     * @covers \Raven\Client::getTransport
-     * @covers \Raven\Client::setTransport
-     * @covers \Raven\Client::getServerEndpoint
      * @covers \Raven\Client::getLastError
      * @covers \Raven\Client::getLastEventID
-     * @covers \Raven\Client::get_extra_data
-     * @covers \Raven\Client::setProcessors
      * @covers \Raven\Client::getLastSentryError
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
      */
     public function testGettersAndSetters()
     {
-        $client = new Dummy_Raven_Client();
-        $property_method__convert_path = new \ReflectionMethod('\\Raven\\Client', '_convertPath');
-        $property_method__convert_path->setAccessible(true);
+        $client = new Client(new Configuration());
         $callable = [$this, 'stabClosureVoid'];
 
         $data = [
-            ['environment', null, 'value', ],
-            ['environment', null, null, ],
-            ['release', null, 'value', ],
-            ['release', null, null, ],
-            ['app_path', null, 'value', $property_method__convert_path->invoke($client, 'value')],
-            ['app_path', null, null,],
-            ['app_path', null, false, null,],
-            ['excluded_app_paths', null, ['value'],
-             [$property_method__convert_path->invoke($client, 'value')]],
-            ['excluded_app_paths', null, [], null],
-            ['excluded_app_paths', null, null],
-            ['prefixes', null, ['value'], [$property_method__convert_path->invoke($client, 'value')]],
-            ['prefixes', null, []],
-            ['send_callback', null, $callable],
-            ['send_callback', null, null],
-            ['transport', null, $callable],
-            ['transport', null, null],
-            ['server', 'ServerEndpoint', 'http://example.com/'],
-            ['server', 'ServerEndpoint', 'http://example.org/'],
             ['_lasterror', null, null,],
             ['_lasterror', null, 'value',],
             ['_lasterror', null, mt_rand(100, 999),],
             ['_last_sentry_error', null, (object)['error' => 'test',],],
             ['_last_event_id', null, mt_rand(100, 999),],
             ['_last_event_id', null, 'value',],
-            ['extra_data', '_extra_data', ['key' => 'value'],],
-            ['processors', 'processors', [],],
-            ['processors', 'processors', ['key' => 'value'],],
             ['_shutdown_function_has_been_set', null, true],
             ['_shutdown_function_has_been_set', null, false],
         ];
@@ -1666,7 +1302,7 @@ organization           = "Sentry"
             $this->subTestGettersAndSettersDatum($client, $datum);
         }
         foreach ($data as &$datum) {
-            $client = new Dummy_Raven_Client();
+            $client = new Dummy_Raven_Client(new Configuration());
             $this->subTestGettersAndSettersDatum($client, $datum);
         }
     }
@@ -1731,46 +1367,6 @@ organization           = "Sentry"
     }
 
     /**
-     * @covers \Raven\Client::_convertPath
-     */
-    public function test_convertPath()
-    {
-        $property = new \ReflectionMethod('\\Raven\Client', '_convertPath');
-        $property->setAccessible(true);
-
-        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar'));
-        $this->assertEquals('/foo/bar/', $property->invoke(null, '/foo/bar/'));
-        $this->assertEquals('foo/bar', $property->invoke(null, 'foo/bar'));
-        $this->assertEquals('foo/bar/', $property->invoke(null, 'foo/bar/'));
-        $this->assertEquals(dirname(__DIR__).'/', $property->invoke(null, __DIR__.'/../'));
-        $this->assertEquals(dirname(dirname(__DIR__)).'/', $property->invoke(null, __DIR__.'/../../'));
-    }
-
-    /**
-     * @covers \Raven\Client::getDefaultProcessors
-     */
-    public function testGetDefaultProcessors()
-    {
-        foreach (\Raven\Client::getDefaultProcessors() as $class_name) {
-            $this->assertInternalType('string', $class_name);
-            $this->assertTrue(class_exists($class_name));
-            $reflection = new \ReflectionClass($class_name);
-            $this->assertTrue($reflection->isSubclassOf('\\Raven\\Processor'));
-            $this->assertFalse($reflection->isAbstract());
-        }
-    }
-
-    /**
-     * @covers \Raven\Client::get_default_ca_cert
-     */
-    public function testGet_default_ca_cert()
-    {
-        $reflection = new \ReflectionMethod('\\Raven\Client', 'get_default_ca_cert');
-        $reflection->setAccessible(true);
-        $this->assertFileExists($reflection->invoke(null));
-    }
-
-    /**
      * @covers \Raven\Client::translateSeverity
      * @covers \Raven\Client::registerSeverityMap
      */
@@ -1778,7 +1374,7 @@ organization           = "Sentry"
     {
         $reflection = new \ReflectionProperty('\\Raven\Client', 'severity_map');
         $reflection->setAccessible(true);
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
 
         $predefined = [E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
                        E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
@@ -1820,100 +1416,72 @@ organization           = "Sentry"
         $this->assertEquals('error', $client->translateSeverity(123457));
     }
 
-    /**
-     * @covers \Raven\Client::getUserAgent
-     */
     public function testGetUserAgent()
     {
-        $this->assertRegExp('|^[0-9a-z./_-]+$|i', \Raven\Client::getUserAgent());
+        $this->assertRegExp('|^[0-9a-z./_-]+$|i', Client::getUserAgent());
     }
 
     public function testCaptureExceptionWithLogger()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         $client->captureException(new \Exception(), null, 'foobar');
 
-        $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
-        $event = array_pop($events);
-        $this->assertEquals('foobar', $event['logger']);
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertEquals('foobar', $client->_pending_events[0]['logger']);
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     * @covers \Raven\Client::send
-     * @covers \Raven\Client::send_remote
-     * @covers \Raven\Client::send_http
-     */
     public function testCurl_method()
     {
-        // step 1
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
+
         $client->captureMessage('foobar');
+
         $this->assertTrue($client->_send_http_synchronous);
         $this->assertFalse($client->_send_http_asynchronous_curl_exec_called);
 
-        // step 2
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'exec',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
         $client->captureMessage('foobar');
         $this->assertFalse($client->_send_http_synchronous);
         $this->assertTrue($client->_send_http_asynchronous_curl_exec_called);
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     * @covers \Raven\Client::send
-     * @covers \Raven\Client::send_remote
-     * @covers \Raven\Client::send_http
-     */
     public function testCurl_method_async()
     {
-        // step 1
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'async',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
+
         $object = $client->get_curl_handler();
-        $this->assertInternalType('object', $object);
-        $this->assertEquals('Raven\\CurlHandler', get_class($object));
 
-        $reflection = new \ReflectionProperty('Raven\\CurlHandler', 'options');
-        $reflection->setAccessible(true);
-        $this->assertEquals($reflection->getValue($object), $client->get_curl_options());
+        $this->assertInstanceOf(CurlHandler::class, $object);
+        $this->assertAttributeEquals($client->get_curl_options(), 'options', $object);
 
-        // step 2
         $ch = new Dummy_Raven_CurlHandler();
+
         $client->set_curl_handler($ch);
         $client->captureMessage('foobar');
+
         $this->assertFalse($client->_send_http_synchronous);
         $this->assertFalse($client->_send_http_asynchronous_curl_exec_called);
         $this->assertTrue($ch->_enqueue_called);
-    }
-
-    /**
-     * @backupGlobals
-     * @covers \Raven\Client::__construct
-     */
-    public function testConstructWithServerDSN()
-    {
-        $_SERVER['SENTRY_DSN'] = 'http://public:secret@example.com/1';
-        $client = new Dummy_Raven_Client();
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
     }
 
     /**
@@ -1944,7 +1512,7 @@ organization           = "Sentry"
 
     public function testEncode()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
         $data = ['some' => (object)['value' => 'data'], 'foo' => ['bar', null, 123], false];
         $json_stringify = json_encode($data);
         $value = $client->encode($data);
@@ -1960,34 +1528,34 @@ organization           = "Sentry"
         }
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     * @covers \Raven\Client::registerDefaultBreadcrumbHandlers
-     */
     public function testRegisterDefaultBreadcrumbHandlers()
     {
         if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
             $this->markTestSkipped('HHVM stacktrace behaviour');
+
             return;
         }
+
         $previous = set_error_handler([$this, 'stabClosureErrorHandler'], E_USER_NOTICE);
-        new \Raven\Client(null, []);
+
+        new Client(new Configuration());
+
         $this->_closure_called = false;
+
         trigger_error('foobar', E_USER_NOTICE);
-        $u = $this->_closure_called;
-        $debug_backtrace = $this->_debug_backtrace;
         set_error_handler($previous, E_ALL);
-        $this->assertTrue($u);
-        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func')
-            and version_compare(PHP_VERSION, '7.0', '>=')
-        ) {
+
+        $this->assertTrue($this->_closure_called);
+
+        if (isset($this->_debug_backtrace[1]['function']) && ($this->_debug_backtrace[1]['function'] == 'call_user_func') && version_compare(PHP_VERSION, '7.0', '>=')) {
             $offset = 2;
         } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
             $offset = 1;
         } else {
             $offset = 2;
         }
-        $this->assertEquals('Raven\\Breadcrumbs\\ErrorHandler', $debug_backtrace[$offset]['class']);
+
+        $this->assertEquals(ErrorHandler::class, $this->_debug_backtrace[$offset]['class']);
     }
 
     private $_closure_called = false;
@@ -2021,19 +1589,15 @@ organization           = "Sentry"
         return true;
     }
 
-    /**
-     * @covers \Raven\Client::onShutdown
-     * @covers \Raven\Client::sendUnsentErrors
-     * @covers \Raven\Client::capture
-     */
     public function testOnShutdown()
     {
         // step 1
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
         $this->assertEquals(0, count($client->_pending_events));
         $client->_pending_events[] = ['foo' => 'bar'];
@@ -2062,10 +1626,11 @@ organization           = "Sentry"
         // step 1
         $client = null;
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'async',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
         $ch = new Dummy_Raven_CurlHandler();
         $client->set_curl_handler($ch);
@@ -2075,127 +1640,134 @@ organization           = "Sentry"
         $this->assertTrue($ch->_join_called);
     }
 
-    /**
-     * @covers \Raven\Client::send
-     */
-    public function testNonWorkingSendSendCallback()
+    public function testSendChecksShouldCaptureOption()
     {
-        // step 1
+        $this->_closure_called = false;
+
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+                'should_capture' => function () {
+                    $this->_closure_called = true;
+
+                    return false;
+                },
+            ])
         );
-        $this->_closure_called = false;
-        $client->setSendCallback([$this, 'stabClosureNull']);
-        $this->assertFalse($this->_closure_called);
+
         $data = ['foo' => 'bar'];
+
         $client->send($data);
+
         $this->assertTrue($this->_closure_called);
-        $this->assertTrue($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
-        // step 2
-        $this->_closure_called = false;
-        $client->_send_http_synchronous = false;
-        $client->_send_http_asynchronous_curl_exec_called = false;
-        $client->setSendCallback([$this, 'stabClosureFalse']);
-        $this->assertFalse($this->_closure_called);
-        $data = ['foo' => 'bar'];
-        $client->send($data);
-        $this->assertTrue($this->_closure_called);
-        $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+        $this->assertFalse($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called);
     }
 
-    /**
-     * @covers \Raven\Client::send
-     */
-    public function testNonWorkingSendDSNEmpty()
+    public function testSendFailsWhenNoServerIsConfigured()
     {
-        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
-                'curl_method' => 'foobar',
-                'install_default_breadcrumb_handlers' => false,
-            ]
-        );
-        $client->server = null;
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
+            ->setConstructorArgs([new Configuration()])
+            ->getMock();
+
+        $client->expects($this->never())
+            ->method('encode');
+
         $data = ['foo' => 'bar'];
+
         $client->send($data);
-        $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
     }
 
-    /**
-     * @covers \Raven\Client::send
-     */
     public function testNonWorkingSendSetTransport()
     {
-        // step 1
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
+
         $this->_closure_called = false;
-        $client->setTransport([$this, 'stabClosureNull']);
+
+        $client->getConfig()->setTransport([$this, 'stabClosureNull']);
+
         $this->assertFalse($this->_closure_called);
+
         $data = ['foo' => 'bar'];
+
         $client->send($data);
+
         $this->assertTrue($this->_closure_called);
-        $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
-        // step 2
+        $this->assertFalse($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called);
+
         $this->_closure_called = false;
-        $client->setSendCallback([$this, 'stabClosureFalse']);
+
+        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
+                'curl_method' => 'foobar',
+                'install_default_breadcrumb_handlers' => false,
+                'should_capture' => function () {
+                    $this->_closure_called = true;
+
+                    return false;
+                }
+            ])
+        );
+
         $this->assertFalse($this->_closure_called);
+
         $data = ['foo' => 'bar'];
+
         $client->send($data);
+
         $this->assertTrue($this->_closure_called);
-        $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+        $this->assertFalse($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called);
     }
 
-    /**
-     * @covers \Raven\Client::__construct
-     */
     public function test__construct_handlers()
     {
         foreach ([true, false] as $u1) {
             foreach ([true, false] as $u2) {
                 $client = new Dummy_Raven_Client(
-                    null, [
+                    new Configuration([
                         'install_default_breadcrumb_handlers' => $u1,
                         'install_shutdown_handler' => $u2,
-                    ]
+                    ])
                 );
+
                 $this->assertEquals($u1, $client->dummy_breadcrumbs_handlers_has_set);
                 $this->assertEquals($u2, $client->dummy_shutdown_handlers_has_set);
             }
         }
     }
 
-    /**
-     * @covers \Raven\Client::__destruct
-     * @covers \Raven\Client::close_all_children_link
-     */
     public function test__destruct_calls_close_functions()
     {
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'install_default_breadcrumb_handlers' => false,
                 'install_shutdown_handler' => false,
-            ]
+            ])
         );
+
         $client::$_close_curl_resource_called = false;
+
         $client->close_all_children_link();
+
         unset($client);
+
         $this->assertTrue(Dummy_Raven_Client_With_Overrided_Direct_Send::$_close_curl_resource_called);
     }
 
-    /**
-     * @covers \Raven\Client::get_user_data
-     */
     public function testGet_user_data()
     {
         // step 1
-        $client = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client(new Configuration());
         $output = $client->get_user_data();
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
@@ -2224,222 +1796,227 @@ organization           = "Sentry"
         $_SESSION = $session_old;
     }
 
-    /**
-     * @covers \Raven\Client::capture
-     * @covers \Raven\Client::setRelease
-     * @covers \Raven\Client::setEnvironment
-     */
     public function testCaptureLevel()
     {
-        foreach ([\Raven\Client::MESSAGE_LIMIT * 3, 100] as $length) {
+        foreach ([Client::MESSAGE_LIMIT * 3, 100] as $length) {
             $message = '';
+
             for ($i = 0; $i < $length; $i++) {
                 $message .= chr($i % 256);
             }
-            $client = new Dummy_Raven_Client();
-            $client->capture(['message' => $message, ]);
-            $events = $client->getSentEvents();
-            $this->assertEquals(1, count($events));
-            $event = array_pop($events);
 
-            $this->assertEquals('error', $event['level']);
-            $this->assertEquals(substr($message, 0, min(\Raven\Client::MESSAGE_LIMIT, $length)), $event['message']);
-            $this->assertArrayNotHasKey('release', $event);
-            $this->assertArrayNotHasKey('environment', $event);
+            $client = new Client(new Configuration());
+            $client->store_errors_for_bulk_send = true;
+
+            $client->capture(['message' => $message]);
+
+            $this->assertCount(1, $client->_pending_events);
+            $this->assertEquals('error', $client->_pending_events[0]['level']);
+            $this->assertEquals(substr($message, 0, min(\Raven\Client::MESSAGE_LIMIT, $length)), $client->_pending_events[0]['message']);
+            $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
         }
 
-        $client = new Dummy_Raven_Client();
-        $client->capture(['message' => 'foobar', ]);
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-        $input = $client->get_http_data();
-        $this->assertEquals($input['request'], $event['request']);
-        $this->assertArrayNotHasKey('release', $event);
-        $this->assertArrayNotHasKey('environment', $event);
+        $client = new Dummy_Raven_Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
 
-        $client = new Dummy_Raven_Client();
-        $client->capture(['message' => 'foobar', 'request' => ['foo' => 'bar'], ]);
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-        $this->assertEquals(['foo' => 'bar'], $event['request']);
-        $this->assertArrayNotHasKey('release', $event);
-        $this->assertArrayNotHasKey('environment', $event);
+        $client->capture(['message' => 'foobar']);
+
+        $input = $client->get_http_data();
+
+        $this->assertEquals($input['request'], $client->_pending_events[0]['request']);
+        $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
+
+        $client = new Dummy_Raven_Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
+        $client->capture(['message' => 'foobar', 'request' => ['foo' => 'bar']]);
+
+        $this->assertEquals(['foo' => 'bar'], $client->_pending_events[0]['request']);
+        $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
 
         foreach ([false, true] as $u1) {
             foreach ([false, true] as $u2) {
-                $client = new Dummy_Raven_Client();
+                $options = [];
+
                 if ($u1) {
-                    $client->setRelease('foo');
+                    $options['release'] = 'foo';
                 }
+
                 if ($u2) {
-                    $client->setEnvironment('bar');
+                    $options['current_environment'] = 'bar';
                 }
-                $client->capture(['message' => 'foobar', ]);
-                $events = $client->getSentEvents();
-                $event = array_pop($events);
+
+                $client = new Client(new Configuration($options));
+                $client->store_errors_for_bulk_send = true;
+
+                $client->capture(['message' => 'foobar']);
+
                 if ($u1) {
-                    $this->assertEquals('foo', $event['release']);
+                    $this->assertEquals('foo', $client->_pending_events[0]['release']);
                 } else {
-                    $this->assertArrayNotHasKey('release', $event);
+                    $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
                 }
+
                 if ($u2) {
-                    $this->assertEquals('bar', $event['environment']);
-                } else {
-                    $this->assertArrayNotHasKey('environment', $event);
+                    $this->assertEquals('bar', $client->_pending_events[0]['environment']);
                 }
             }
         }
     }
 
-    /**
-     * @covers \Raven\Client::capture
-     */
     public function testCaptureNoUserAndRequest()
     {
-        $client = new Dummy_Raven_Client_No_Http(null, [
-            'install_default_breadcrumb_handlers' => false,
-        ]);
+        $client = new Dummy_Raven_Client_No_Http(new Configuration(['install_default_breadcrumb_handlers' => false]));
+        $client->store_errors_for_bulk_send = true;
+
         $session_id = session_id();
+
         session_write_close();
         session_id('');
-        $client->capture(['user' => '', 'request' => '']);
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-        $this->assertArrayNotHasKey('user', $event);
-        $this->assertArrayNotHasKey('request', $event);
 
-        // step 3
+        $client->capture(['user' => '', 'request' => '']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertArrayNotHasKey('user', $client->_pending_events[0]);
+        $this->assertArrayNotHasKey('request', $client->_pending_events[0]);
+
         session_id($session_id);
-        @session_start(['use_cookies' => false, ]);
+        @session_start(['use_cookies' => false]);
     }
 
-    /**
-     * @covers \Raven\Client::capture
-     */
     public function testCaptureNonEmptyBreadcrumb()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         $ts1 = microtime(true);
+
         $client->breadcrumbs->record(['foo' => 'bar']);
         $client->breadcrumbs->record(['honey' => 'clover']);
+
         $client->capture([]);
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-        foreach ($event['breadcrumbs'] as &$crumb) {
+
+        foreach ($client->_pending_events[0]['breadcrumbs'] as &$crumb) {
             $this->assertGreaterThanOrEqual($ts1, $crumb['timestamp']);
+
             unset($crumb['timestamp']);
         }
+
         $this->assertEquals([
             ['foo' => 'bar'],
             ['honey' => 'clover'],
-        ], $event['breadcrumbs']);
+        ], $client->_pending_events[0]['breadcrumbs']);
     }
 
-
-    /**
-     * @covers \Raven\Client::capture
-     */
     public function testCaptureAutoLogStacks()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Client(new Configuration());
+        $client->store_errors_for_bulk_send = true;
+
         $client->capture(['auto_log_stacks' => true], true);
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
-        $this->assertArrayHasKey('stacktrace', $event);
-        $this->assertInternalType('array', $event['stacktrace']['frames']);
+
+        $this->assertCount(1, $client->_pending_events);
+        $this->assertArrayHasKey('stacktrace', $client->_pending_events[0]);
+        $this->assertInternalType('array', $client->_pending_events[0]['stacktrace']['frames']);
     }
 
-    /**
-     * @covers \Raven\Client::send_http_asynchronous_curl_exec
-     */
     public function testSend_http_asynchronous_curl_exec()
     {
         $client = new Dummy_Raven_Client_With_Sync_Override(
-            'http://public:secret@example.com/1', [
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
                 'curl_method' => 'exec',
                 'install_default_breadcrumb_handlers' => false,
-            ]
+            ])
         );
+
         if (file_exists(Dummy_Raven_Client_With_Sync_Override::test_filename())) {
             unlink(Dummy_Raven_Client_With_Sync_Override::test_filename());
         }
+
         $client->captureMessage('foobar');
+
         $test_data = Dummy_Raven_Client_With_Sync_Override::get_test_data();
-        $this->assertStringEqualsFile(Dummy_Raven_Client_With_Sync_Override::test_filename(), $test_data."\n");
+
+        $this->assertStringEqualsFile(Dummy_Raven_Client_With_Sync_Override::test_filename(), $test_data . "\n");
     }
 
-    /**
-     * @covers \Raven\Client::close_curl_resource
-     */
     public function testClose_curl_resource()
     {
-        $raven = new Dummy_Raven_Client();
-        $reflection = new \ReflectionProperty('\\Raven\Client', '_curl_instance');
+        $client = new Client(new Configuration());
+
+        $reflection = new \ReflectionProperty(Client::class, '_curl_instance');
         $reflection->setAccessible(true);
+
         $ch = curl_init();
-        $reflection->setValue($raven, $ch);
+
+        $reflection->setValue($client, $ch);
+
         unset($ch);
 
-        $this->assertInternalType('resource', $reflection->getValue($raven));
-        $raven->close_curl_resource();
-        $this->assertNull($reflection->getValue($raven));
+        $this->assertInternalType('resource', $reflection->getValue($client));
+
+        $client->close_curl_resource();
+
+        $this->assertNull($reflection->getValue($client));
     }
 
-    /**
-     * @covers \Raven\Client::send
-     */
     public function testSampleRateAbsolute()
     {
-        // step 1
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
-                'curl_method'                         => 'foobar',
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
+                'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-                'sample_rate'                         => 0,
-            ]
+                'sample_rate' => 0,
+            ])
         );
+
         for ($i = 0; $i < 1000; $i++) {
             $client->captureMessage('foobar');
-            $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+
+            $this->assertFalse($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called);
         }
 
-        // step 2
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
-                'curl_method'                         => 'foobar',
+            new Configuration([
+                'server' => 'http://public:secret@example.com/1',
+                'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-                'sample_rate'                         => 1,
-            ]
+                'sample_rate' => 1,
+            ])
         );
+
         for ($i = 0; $i < 1000; $i++) {
             $client->captureMessage('foobar');
-            $this->assertTrue($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
+
+            $this->assertTrue($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called);
         }
     }
 
-    /**
-     * @covers \Raven\Client::send
-     */
     public function testSampleRatePrc()
     {
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            'http://public:secret@example.com/1', [
-                'curl_method'                         => 'foobar',
+            new Configuration([
+                'sample_rate' => 0.5,
+                'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
-                'sample_rate'                         => 0.5,
-            ]
+            ])
         );
+
         $u_true = false;
         $u_false = false;
+
         for ($i = 0; $i < 1000; $i++) {
             $client->captureMessage('foobar');
-            if ($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called) {
+
+            if ($client->_send_http_synchronous || $client->_send_http_asynchronous_curl_exec_called) {
                 $u_true = true;
             } else {
                 $u_false = true;
             }
 
-            if ($u_true or $u_false) {
+            if ($u_true || $u_false) {
                 return;
             }
         }
@@ -2447,32 +2024,19 @@ organization           = "Sentry"
         $this->fail('sample_rate=0.5 can not produce fails and successes at the same time');
     }
 
-    /**
-     * @covers \Raven\Client::setAllObjectSerialize
-     */
     public function testSetAllObjectSerialize()
     {
-        $client = new \Raven\Client;
-
-        $ref1 = new \ReflectionProperty($client, 'serializer');
-        $ref1->setAccessible(true);
-        $ref2 = new \ReflectionProperty($client, 'reprSerializer');
-        $ref2->setAccessible(true);
-
-        /**
-         * @var \Raven\Serializer $o1
-         * @var \Raven\Serializer $o2
-         */
-        $o1 = $ref1->getValue($client);
-        $o2 = $ref2->getValue($client);
+        $client = new Client(new Configuration());
 
         $client->setAllObjectSerialize(true);
-        $this->assertTrue($o1->getAllObjectSerialize());
-        $this->assertTrue($o2->getAllObjectSerialize());
+
+        $this->assertTrue($client->getSerializer()->getAllObjectSerialize());
+        $this->assertTrue($client->getReprSerializer()->getAllObjectSerialize());
 
         $client->setAllObjectSerialize(false);
-        $this->assertFalse($o1->getAllObjectSerialize());
-        $this->assertFalse($o2->getAllObjectSerialize());
+
+        $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
+        $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
     }
 
     /**
@@ -2505,7 +2069,7 @@ organization           = "Sentry"
         $block1 = [];
         $block1[] = [
             'options'        => [
-                'dsn' => 'http://login:password@127.0.0.1:{port}/5',
+                'server' => 'http://login:password@127.0.0.1:{port}/5',
             ],
             'server_options' => [],
             'timeout'        => 0,
@@ -2513,7 +2077,7 @@ organization           = "Sentry"
         ];
         $block1[] = [
             'options'        => [
-                'dsn'         => 'http://login:password@127.0.0.1:{port}/5',
+                'server'         => 'http://login:password@127.0.0.1:{port}/5',
                 'curl_method' => 'async',
             ],
             'server_options' => [],
@@ -2522,7 +2086,7 @@ organization           = "Sentry"
         ];
         $block1[] = [
             'options'        => [
-                'dsn'         => 'http://login:password@127.0.0.1:{port}/5',
+                'server'         => 'http://login:password@127.0.0.1:{port}/5',
                 'curl_method' => 'exec',
             ],
             'server_options' => [],
@@ -2541,8 +2105,8 @@ organization           = "Sentry"
         $block_ssl = [['options' => [], 'server_options' => [], 'timeout' => 0, 'is_failed' => false]];
         $block_ssl[] = [
             'options'        => [
-                'dsn'     => 'http://login:password@127.0.0.1:{port}/5',
-                'ca_cert' => '{folder}/crt_a1.crt',
+                'server'     => 'http://login:password@127.0.0.1:{port}/5',
+                'ssl_ca_file' => '{folder}/crt_a1.crt',
             ],
             'server_options' => [
                 'ssl_server_certificate_file' => '{folder}/crt_a4.c.crt',
@@ -2567,8 +2131,8 @@ organization           = "Sentry"
                     'timeout'        => max($b1['timeout'], $b2['timeout']),
                     'is_failed'      => ($b1['is_failed'] or $b2['is_failed']),
                 ];
-                if (isset($datum['options']['ca_cert'])) {
-                    $datum['options']['dsn'] = str_replace('http://', 'https://', $datum['options']['dsn']);
+                if (isset($datum['options']['ssl_ca_file'])) {
+                    $datum['options']['server'] = str_replace('http://', 'https://', $datum['options']['server']);
                 }
 
                 $data[] = $datum;
@@ -2602,10 +2166,10 @@ organization           = "Sentry"
         unset($value);
 
         $port = self::get_port();
-        $sentry_options['dsn'] = str_replace('{port}', $port, $sentry_options['dsn']);
+        $sentry_options['server'] = str_replace('{port}', $port, $sentry_options['server']);
         $sentry_options['timeout'] = 10;
 
-        $client = new Client($sentry_options);
+        $client = new Client(new Configuration($sentry_options));
         $output_filename = tempnam(self::$_folder, 'output_http_');
         foreach (
             [
@@ -2681,7 +2245,6 @@ organization           = "Sentry"
         }
         $body = json_decode($body);
         $this->assertEquals(5, $body->project);
-        $this->assertEquals('', $body->site);
         $this->assertEquals('Test Message', $body->message);
         $this->assertEquals($event, $body->event_id);
         $this->assertEquals($extra, (array)$body->extra);

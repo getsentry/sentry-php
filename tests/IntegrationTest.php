@@ -10,6 +10,8 @@
 
 namespace Raven\Tests;
 
+use Raven\Configuration;
+
 class DummyIntegration_Raven_Client extends \Raven\Client
 {
     private $__sent_events = [];
@@ -20,7 +22,7 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     }
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, [&$data]) === false) {
+        if (false === $this->config->shouldCapture($data)) {
             // if send_callback returns falsely, end native send
             return;
         }
@@ -53,7 +55,9 @@ class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function testCaptureSimpleError()
     {
-        $client = new DummyIntegration_Raven_Client('https://public:secret@example.com/1');
+        $client = new DummyIntegration_Raven_Client(new Configuration([
+            'server' => 'https://public:secret@example.com/1',
+        ]));
 
         @mkdir('/no/way');
 

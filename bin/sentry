@@ -22,36 +22,13 @@ function cmd_test($dsn)
         exit('ERROR: Missing DSN value');
     }
 
-    // Parse DSN as a test
-    try {
-        \Raven\Client::parseDSN($dsn);
-    } catch (InvalidArgumentException $ex) {
-        exit("ERROR: There was an error parsing your DSN:\n  " . $ex->getMessage());
-    }
-
-    $client = new \Raven\Client($dsn, array(
-        'trace' => true,
+    $config = new \Raven\Configuration([
+        'server' => $dsn,
         'curl_method' => 'sync',
-        'app_path' => realpath(__DIR__ . '/..'),
-        'base_path' => realpath(__DIR__ . '/..'),
-    ));
+        'project_root' => realpath(__DIR__ . '/..'),
+    ]);
 
-    $config = get_object_vars($client);
-    $required_keys = array('server', 'project', 'public_key', 'secret_key');
-
-    echo "Client configuration:\n";
-    foreach ($required_keys as $key) {
-        if (empty($config[$key])) {
-          exit("ERROR: Missing configuration for $key");
-        }
-        if (is_array($config[$key])) {
-            echo "-> $key: [".implode(", ", $config[$key])."]\n";
-        } else {
-            echo "-> $key: $config[$key]\n";
-        }
-
-    }
-    echo "\n";
+    $client = new \Raven\Client($config);
 
     echo "Sending a test event:\n";
 
@@ -70,7 +47,8 @@ function cmd_test($dsn)
 }
 
 
-function main() {
+function main()
+{
     global $argv;
 
     if (!isset($argv[1])) {

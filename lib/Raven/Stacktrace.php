@@ -129,10 +129,10 @@ class Stacktrace implements \JsonSerializable
             self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES)
         );
 
-        if (null !== $this->client->getAppPath()) {
-            $excludedAppPaths = $this->client->getExcludedAppPaths();
+        if (null !== $this->client->getConfig()->getProjectRoot()) {
+            $excludedAppPaths = $this->client->getConfig()->getExcludedProjectPaths();
             $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getAppPath());
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getConfig()->getProjectRoot());
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
@@ -210,15 +210,15 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getSourceCodeExcerpt($path, $lineNumber, $linesNum)
     {
+        if (!is_file($path) || !is_readable($path)) {
+            return [];
+        }
+
         $frame = [
             'pre_context' => [],
             'context_line' => '',
             'post_context' => [],
         ];
-
-        if (!is_file($path) || !is_readable($path)) {
-            return [];
-        }
 
         $target = max(0, ($lineNumber - ($linesNum + 1)));
         $currentLineNumber = $target + 1;
@@ -265,7 +265,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function stripPrefixFromFilePath($filePath)
     {
-        foreach ($this->client->getPrefixes() as $prefix) {
+        foreach ($this->client->getConfig()->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
                 return substr($filePath, strlen($prefix));
             }

@@ -12,6 +12,7 @@
 namespace Raven\Tests;
 
 use Raven\Client;
+use Raven\Configuration;
 use Raven\Stacktrace;
 
 class StacktraceTest extends \PHPUnit_Framework_TestCase
@@ -23,7 +24,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->client = new Client();
+        $this->client = new Client(new Configuration());
     }
 
     public function testGetFramesAndToArray()
@@ -93,7 +94,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     public function testAddFrameStripsPath()
     {
-        $this->client->setPrefixes(['path/to/', 'path/to/app']);
+        $this->client->getConfig()->setPrefixes(['path/to/', 'path/to/app']);
 
         $stacktrace = new Stacktrace($this->client);
 
@@ -112,8 +113,8 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     public function testAddFrameMarksAsInApp()
     {
-        $this->client->setAppPath('path/to');
-        $this->client->setExcludedAppPaths(['path/to/excluded/path']);
+        $this->client->getConfig()->setProjectRoot('path/to');
+        $this->client->getConfig()->setExcludedProjectPaths(['path/to/excluded/path']);
 
         $stacktrace = new Stacktrace($this->client);
 

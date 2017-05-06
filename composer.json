@@ -11,7 +11,6 @@
             "email": "dcramer@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
     "require-dev": {
         "friendsofphp/php-cs-fixer": "~2.1",
         "phpunit/phpunit": "^4.8 || ^5.0",
@@ -24,7 +23,9 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "composer/ca-bundle": "~1.0",
+        "symfony/options-resolver": "~2.7|~3.0"
     },
     "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
