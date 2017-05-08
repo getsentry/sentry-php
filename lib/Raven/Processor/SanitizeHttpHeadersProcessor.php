@@ -59,6 +59,6 @@ final class Raven_Processor_SanitizeHttpHeadersProcessor extends Raven_Processor
      */
     private function getDefaultHeaders()
     {
-        return array('Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN');
+        return array('Authorization', 'Proxy-Authorization', 'X-Authorization', 'Cookie', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN');
     }
 }
