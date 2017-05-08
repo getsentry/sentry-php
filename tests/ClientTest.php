@@ -591,10 +591,6 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCaptureExceptionChainedException()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-            $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
-        }
-
         # TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = new Dummy_Raven_Client();
         $ex = $this->create_chained_exception();
@@ -615,10 +611,6 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-            $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
-        }
-
         $client = new Dummy_Raven_Client();
         $e1 = new \ErrorException('First', 0, E_DEPRECATED);
         $e2 = new \ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
@@ -1677,10 +1669,8 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $predefined = [E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
                        E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
                        E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, ];
-        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
-            $predefined[] = E_DEPRECATED;
-            $predefined[] = E_USER_DEPRECATED;
-        }
+        $predefined[] = E_DEPRECATED;
+        $predefined[] = E_USER_DEPRECATED;
         $predefined_values = ['debug', 'info', 'warning', 'warning', 'error', 'fatal', ];
 
         // step 1
@@ -1835,25 +1825,6 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
             $actual = $method->invoke(null, $key);
             $this->assertNotNull($actual);
             $this->assertEquals('', $actual);
-        }
-    }
-
-    public function testEncodeTooDepth()
-    {
-        $client = new Dummy_Raven_Client();
-        $data_broken = [];
-        for ($i = 0; $i < 1024; $i++) {
-            $data_broken = [$data_broken];
-        }
-        $value = $client->encode($data_broken);
-        if (version_compare(PHP_VERSION, '5.5.0', '>=')) {
-            $this->assertFalse($value, 'Broken data encoded successfully with native method');
-        } else {
-            if ($value !== false) {
-                $this->markTestSkipped();
-            } else {
-                $this->assertEquals('eJyLjh4Fo2AUjFgQOwpGwSgYuQAA3Q7g1w==', $value, 'Native json_encode error');
-            }
         }
     }
 

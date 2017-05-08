@@ -719,8 +719,6 @@ class Client
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
-        $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
-
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
         }
@@ -762,7 +760,7 @@ class Client
             ];
 
             $exceptions[] = $exc_data;
-        } while ($has_chained_exceptions && $exc = $exc->getPrevious());
+        } while ($exc = $exc->getPrevious());
 
         $data['exception'] = [
             'values' => array_reverse($exceptions),
@@ -1479,12 +1477,8 @@ class Client
             case E_USER_NOTICE:        return \Raven\Client::INFO;
             case E_STRICT:             return \Raven\Client::INFO;
             case E_RECOVERABLE_ERROR:  return \Raven\Client::ERROR;
-        }
-        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
-            switch ($severity) {
             case E_DEPRECATED:         return \Raven\Client::WARN;
             case E_USER_DEPRECATED:    return \Raven\Client::WARN;
-          }
         }
         return \Raven\Client::ERROR;
     }
