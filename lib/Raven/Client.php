@@ -233,6 +233,42 @@ class Client
      */
     protected $_shutdown_function_has_been_set;
 
+    /**
+     * Client constructor.
+     * To post to sentry the SENTRY_DSN server variable must be set or the DSN has to be passed to the
+     * Raven_Client or in the 'servers' option.
+     *
+     * The options consist of:
+     *   - logger            The logger name (default: php)
+     *   - servers           One or more URLs to Sentry
+     *   - secret_key        password or secret key for the Sentry server (can also be extracted from DSN)
+     *   - public_key        username or api key for the Sentry server (can also be extracted from DSN)
+     *   - project           project id for the Sentry server (can also be extracted from DSN)
+     *   - auto_log_stacks   toggle generate stack if no stack is passed to capture function
+     *   - name              hostname (default: actual hostname)
+     *   - site              site (default: $_SERVER['SERVER_NAME'])
+     *   - tags              Tags to send to Sentry
+     *   - release           release identifier
+     *   - trace             boolean to toggle reflection tracing in stacktraces (default: true)
+     *   - timeout           timeout in seconds (default: 2)
+     *   - message_limit     limit for the values of sentry parameters (default: 1024)
+     *   - exclude           Excluded exceptions
+     *   - shift_vars        Shift variables in stack trace (default: true)
+     *   - http_proxy        HTTP proxy address
+     *   - extra             Extra data to send to Sentry
+     *   - send_callback     Callable which is called before the data is sent to Sentry
+     *   - curl_method       sync, async or exec (default: sync)
+     *   - curl_path         Path to curl for async sending
+     *   - curl_ipv4         Toggle force ipv4 (default: true)
+     *   - ca_cert           Path to CA certificate (defaults to packaged certificate)
+     *   - verify_ssl        Toggle verify SSL certificate (default: true)
+     *   - curl_ssl_version  Define which SSL version (2 or 3) to use with curl
+     *   - processors        Array of classes to use to process data before it is sent to Sentry
+     *   - processorOptions  Options passed to the processor
+     *
+     * @param array|string|null $options_or_dsn
+     * @param array             $options
+     */
     public function __construct($options_or_dsn = null, $options = [])
     {
         if (is_array($options_or_dsn)) {
@@ -652,7 +688,7 @@ class Client
      * @codeCoverageIgnore
      */
     public function message($message, $params = [], $level = self::INFO,
-                            $stack = false, $vars = null)
+        $stack = false, $vars = null)
     {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
     }
@@ -679,7 +715,7 @@ class Client
      * @return string|null
      */
     public function captureMessage($message, $params = [], $data = [],
-                            $stack = false, $vars = null)
+        $stack = false, $vars = null)
     {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
@@ -691,7 +727,7 @@ class Client
 
         if ($data === null) {
             $data = [];
-        // support legacy method of passing in a level name as the third arg
+            // support legacy method of passing in a level name as the third arg
         } elseif (!is_array($data)) {
             $data = [
                 'level' => $data,
@@ -1407,7 +1443,7 @@ class Client
         // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
         $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
-            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
+                : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
         $httpS = $this->isHttps() ? 's' : '';
         return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
