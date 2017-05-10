@@ -232,6 +232,10 @@ class Client
      * @var bool
      */
     protected $_shutdown_function_has_been_set;
+    /**
+     * @var string|null
+     */
+    protected $_strict_error_capture_path;
 
     /**
      * Client constructor.
@@ -357,8 +361,8 @@ class Client
         $this->severity_map = null;
 
         // app path is used to determine if code is part of your application
-        $this->setAppPath(\Raven\Util::get($options, 'app_path', null));
-        $this->setExcludedAppPaths(\Raven\Util::get($options, 'excluded_app_paths', null));
+        // get errors only from a specific path
+        $this->setStrictErrorCapturePath(\Raven\Util::get($options, 'strict_error_capture_path', null));
         // a list of prefixes used to coerce absolute paths into relative
         $this->setPrefixes(\Raven\Util::get($options, 'prefixes', static::getDefaultPrefixes()));
         $this->processors = $this->setProcessorsFromOptions($options);
@@ -501,6 +505,12 @@ class Client
         } else {
             $this->app_path = null;
         }
+        return $this;
+    }
+
+    public function setStrictErrorCapturePath($value)
+    {
+        $this->_strict_error_capture_path = !empty($value) ? $this->_convertPath($value) : null;
         return $this;
     }
 
@@ -755,6 +765,14 @@ class Client
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
+        // avoid errors other than specific path
+        $exception_file = $exception->getFile();
+        if (!empty($this->_strict_error_capture_path)
+            && (stripos($exception_file, $this->_strict_error_capture_path) === false)
+        ) {
+            return null;
+        }
+
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
         }
@@ -791,7 +809,7 @@ class Client
 
             $exc_data['stacktrace'] = [
                 'frames' => Stacktrace::fromBacktrace(
-                    $this, $exception->getTrace(), $exception->getFile(), $exception->getLine()
+                    $this, $exception->getTrace(), $exception_file, $exception->getLine()
                 )->getFrames(),
             ];
 
