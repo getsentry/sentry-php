@@ -11,6 +11,7 @@
 namespace Raven\Tests;
 
 use Raven\Client;
+use Raven\Exception;
 use Raven\Serializer;
 
 function simple_function($a = null, $b = null, $c = null)
@@ -2359,5 +2360,59 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $client->setAllObjectSerialize(false);
         $this->assertFalse($o1->getAllObjectSerialize());
         $this->assertFalse($o2->getAllObjectSerialize());
+    }
+
+    public function dataCapturePathOfExceptions()
+    {
+        $data = [
+            ['path' => null, 'result' => true],
+            ['path' => '', 'result' => true],
+            ['path' => __DIR__.'/../amaifoobar', 'result' => false],
+            ['path' => __DIR__.'/../tests', 'result' => true],
+            ['path' => __DIR__.'/../', 'result' => true],
+            ['path' => __DIR__.'/../../', 'result' => true],
+            ['path' => __DIR__.'/../../../tests', 'result' => false],
+            ['path' => '/', 'result' => true],
+
+            ['path' => __DIR__, 'result' => true],
+            ['path' => realpath(__DIR__.'/../'), 'result' => true],
+            ['path' => realpath(__DIR__.'/../../'), 'result' => true],
+        ];
+
+        $full_data = $data;
+        foreach ($data as &$datum) {
+            if (!empty($datum['path']) and (mb_substr($datum['path'], -1) != '/')) {
+                $datum['path'] .= '/';
+                $full_data[] = $datum;
+            }
+        }
+        // @todo We should decide how to handle soft links with files
+
+        return $full_data;
+    }
+
+    /**
+     * @param  string|null $path
+     * @param  boolean     $result
+     *
+     * @covers \Raven\Client::captureException
+     * @covers \Raven\Client::setStrictErrorCapturePath()
+     *
+     * @dataProvider dataCapturePathOfExceptions
+     */
+    public function testCapturePathOfExceptions($path, $result)
+    {
+        $client = new Dummy_Raven_Client(['extra' => ['foo' => 'bar']]);
+        $client->setStrictErrorCapturePath($path);
+
+        $client->captureException($this->create_exception());
+        $events = $client->getSentEvents();
+        if ($result) {
+            $this->assertEquals(1, count($events));
+            $event = array_pop($events);
+            $this->assertEquals('bar', $event['extra']['foo']);
+        } else {
+            $this->assertEmpty($events);
+        }
     }
 }
