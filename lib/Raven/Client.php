@@ -715,10 +715,16 @@ class Raven_Client
             'query_string' => self::_server_variable('QUERY_STRING'),
         );
 
-        // dont set this as an empty array as PHP will treat it as a numeric array
+        // don't set this as an empty array as PHP will treat it as a numeric array
         // instead of a mapping which goes against the defined Sentry spec
-        if (!empty($_POST)) {
-            $result['data'] = $_POST;
+        // when request method is POST, PUT, or PATCH, we should do like this
+        if (in_array($result['method'], array('POST', 'PUT', 'PATCH'), true)) {
+            if (!empty($_POST)) {
+                $result['data'] = $_POST;
+            } else {
+                $raw_post_data = file_get_contents('php://input');
+                $raw_post_data && array_push($result['data'], array('_Raw_Post_Data' => $raw_post_data));
+            }
         }
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
