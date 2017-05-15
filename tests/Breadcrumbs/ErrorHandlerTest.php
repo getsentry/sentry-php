@@ -20,7 +20,7 @@ class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends PHPUnit_Framework_Te
         $handler = new \Raven\Breadcrumbs\ErrorHandler($client);
         $handler->handleError(E_WARNING, 'message');
 
-        $crumbs = $client->breadcrumbs->fetch();
+        $crumbs = $client->getBreadcrumbs()->fetch();
         $this->assertEquals(count($crumbs), 1);
         $this->assertEquals($crumbs[0]['message'], 'message');
         $this->assertEquals($crumbs[0]['category'], 'error_reporting');

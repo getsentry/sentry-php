@@ -97,6 +97,6 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
             }
         }
 
-        $this->ravenClient->breadcrumbs->record($crumb);
+        $this->ravenClient->getBreadcrumbs()->record($crumb);
     }
 }

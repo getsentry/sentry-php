@@ -21,7 +21,7 @@ class ErrorHandler
 
     public function handleError($code, $message, $file = '', $line = 0, $context = [])
     {
-        $this->ravenClient->breadcrumbs->record([
+        $this->ravenClient->getBreadcrumbs()->record([
             'category' => 'error_reporting',
             'message' => $message,
             'level' => $this->ravenClient->translateSeverity($code),

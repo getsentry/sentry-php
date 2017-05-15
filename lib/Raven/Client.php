@@ -38,23 +38,23 @@ class Client
     /**
      * @var \Raven\Breadcrumbs
      */
-    public $breadcrumbs;
+    protected $breadcrumbs;
     /**
      * @var \Raven\Context
      */
-    public $context;
+    protected $context;
     /**
      * @var \Raven\TransactionStack
      */
-    public $transaction;
+    protected $transaction;
     /**
      * @var array $extra_data
      */
-    public $extra_data;
+    protected $extra_data;
     /**
      * @var string[]|null
      */
-    public $severity_map;
+    protected $severity_map;
     public $store_errors_for_bulk_send = false;
 
     /**
@@ -95,72 +95,73 @@ class Client
     /**
      * @var string $logger Adjust the default logger name for messages
      */
-    public $logger;
+    protected $logger;
     /**
      * @var string Full URL to Sentry (not a DSN)
      * @doc https://docs.sentry.io/quickstart/
      */
-    public $server;
+    protected $server;
     /**
      * @var string $secret_key Password in Sentry Server
      */
-    public $secret_key;
+    protected $secret_key;
     /**
      * @var string $public_key Password in Sentry Server
      */
-    public $public_key;
+    protected $public_key;
     /**
      * @var integer $project This project ID in Sentry Server
      */
-    public $project;
+    protected $project;
     /**
      * @var boolean $auto_log_stacks Fill stacktrace by debug_backtrace()
      */
-    public $auto_log_stacks;
+    protected $auto_log_stacks;
     /**
      * @var string $name Override the default value for the server’s hostname
      */
-    public $name;
+    protected $name;
     /**
      * @var string $site SERVER_NAME (not a HTTP_HOST)
      */
-    public $site;
+    protected $site;
     /**
      * @var array $tags An array of tags to apply to events in this context
      */
-    public $tags;
+    protected $tags;
     /**
      * @var mixed $release The version of your application (e.g. git SHA)
      */
-    public $release;
+    protected $release;
     /**
      * @var string $environment The environment your application is running in
      */
-    public $environment;
+    protected $environment;
     /**
      * @var double The sampling factor to apply to events. A value of 0.00 will deny sending
      * any events, and a value of 1.00 will send 100% of events
      */
-    public $sample_rate;
+    protected $sample_rate;
     /**
      * @var boolean $trace Set this to false to disable reflection tracing
      * (function calling arguments) in stacktraces
+     * @todo Проверить используется ли это
      */
-    public $trace;
+    protected $trace;
     /**
      * @var double $timeout Timeout for sending data
      */
-    public $timeout;
+    protected $timeout;
     /**
      * @var string $message_limit This value is used to truncate message and frame variables.
      * However it is not guarantee that length of whole message will be restricted by this value
      */
-    public $message_limit;
+    protected $message_limit;
     /**
      * @var string[] $exclude Excluded exceptions classes
      */
-    public $exclude;
-    public $http_proxy;
+    protected $exclude;
+    protected $http_proxy;
     /**
      * @var Callable $send_callback A function which will be called whenever data is ready to be sent.
      * Within the function you can mutate the data, or alternatively return false to instruct the SDK
@@ -173,53 +174,53 @@ class Client
      * async: uses a curl_multi handler for best-effort asynchronous submissions
      * exec: asynchronously send events by forking a curl process for each item
      */
-    public $curl_method;
+    protected $curl_method;
     /**
      * @var string $curl_path Specify the path to the curl binary to be used with the ‘exec’ curl method
      */
-    public $curl_path;
+    protected $curl_path;
     /**
      * @var boolean $curl_ipv4 Resolve domain only with IPv4
      * @todo change to $curl_ipresolve, http://php.net/manual/ru/function.curl-setopt.php
      */
-    public $curl_ipv4;
+    protected $curl_ipv4;
     /**
      * @var string $ca_cert The path to the CA certificate bundle
      */
-    public $ca_cert;
+    protected $ca_cert;
     /**
      * @var boolean $verify_ssl
      */
-    public $verify_ssl;
+    protected $verify_ssl;
     /**
      * @var mixed The SSL version (2 or 3) to use. By default PHP will try to determine this itself,
      * although in some cases this must be set manually
      */
-    public $curl_ssl_version;
-    public $trust_x_forwarded_proto;
-    public $mb_detect_order;
+    protected $curl_ssl_version;
+    protected $trust_x_forwarded_proto;
+    protected $mb_detect_order;
     /**
      * @var \Raven\Processor[] $processors An array of classes to use to process data before it is sent to Sentry
      */
-    public $processors;
+    protected $processors;
     /**
      * @var string|int|null
      */
-    public $_lasterror;
+    protected $_lasterror;
     /**
      * @var object|null
      */
     protected $_last_sentry_error;
-    public $_last_event_id;
-    public $_user;
+    protected $_last_event_id;
+    protected $_user;
     /**
      * @var array[] $_pending_events
      */
-    public $_pending_events;
+    protected $_pending_events;
     /**
      * @var array User Agent showed in Sentry
      */
-    public $sdk;
+    protected $sdk;
     /**
      * @var \Raven\CurlHandler
      */
@@ -267,7 +268,7 @@ class Client
     /**
      * @param array $options
      */
-    public function init_with_options($options)
+    protected function init_with_options($options)
     {
         foreach (
             [
@@ -915,7 +916,7 @@ class Client
         ];
     }
 
-    protected function get_extra_data()
+    protected function getExtra_data()
     {
         return $this->extra_data;
     }
@@ -934,7 +935,7 @@ class Client
         ];
     }
 
-    public function capture($data, $stack = null, $vars = null)
+    public function capture($data, $stack = null)
     {
         if (!isset($data['timestamp'])) {
             $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
@@ -977,7 +978,7 @@ class Client
             $data['tags']);
 
         $data['extra'] = array_merge(
-            $this->get_extra_data(),
+            $this->getExtra_data(),
             $this->context->extra,
             $data['extra']);
 
@@ -1064,7 +1065,7 @@ class Client
      *
      * @param array $data Associative array of data to log
      */
-    public function process(&$data)
+    protected function process(&$data)
     {
         foreach ($this->processors as $processor) {
             $processor->process($data);
@@ -1087,7 +1088,7 @@ class Client
      * @param array $data
      * @return string|bool
      */
-    public function encode(&$data)
+    protected function encode(&$data)
     {
         $message = json_encode($data);
         if ($message === false) {
@@ -1354,7 +1355,7 @@ class Client
         return sprintf('Sentry %s', implode(', ', $header));
     }
 
-    public function getAuthHeader()
+    protected function getAuthHeader()
     {
         $timestamp = microtime(true);
         return $this->get_auth_header(
@@ -1584,6 +1585,14 @@ class Client
     public function getShutdownFunctionHasBeenSet()
     {
         return $this->_shutdown_function_has_been_set;
+    }
+
+    /**
+     * @return Breadcrumbs
+     */
+    public function getBreadcrumbs()
+    {
+        return $this->breadcrumbs;
     }
 
     public function close_curl_resource()

@@ -30,7 +30,7 @@ class Raven_Tests_TransactionStackTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($stack->peek(), null);
 
         $stack->clear();
-        $this->assertInternalType('array', $stack->stack);
-        $this->assertEquals(0, count($stack->stack));
+        $this->assertAttributeInternalType('array', 'stack', $stack);
+        $this->assertAttributeCount(0, 'stack', $stack);
     }
 }

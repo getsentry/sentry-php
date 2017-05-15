@@ -46,7 +46,7 @@ EOF;
         $logger->pushHandler($handler);
         $logger->addWarning('Foo');
 
-        $crumbs = $client->breadcrumbs->fetch();
+        $crumbs = $client->getBreadcrumbs()->fetch();
         $this->assertEquals(count($crumbs), 1);
         $this->assertEquals($crumbs[0]['message'], 'Foo');
         $this->assertEquals($crumbs[0]['category'], 'sentry');
@@ -64,7 +64,7 @@ EOF;
         $logger->pushHandler($handler);
         $logger->addError($this->getSampleErrorMessage());
 
-        $crumbs = $client->breadcrumbs->fetch();
+        $crumbs = $client->getBreadcrumbs()->fetch();
         $this->assertEquals(count($crumbs), 1);
         $this->assertEquals($crumbs[0]['data']['type'], 'Exception');
         $this->assertEquals($crumbs[0]['data']['value'], 'An unhandled exception');

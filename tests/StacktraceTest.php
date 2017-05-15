@@ -178,6 +178,9 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @param integer $index
+     * @param boolean $throwException
+     *
      * @dataProvider removeFrameDataProvider
      */
     public function testRemoveFrame($index, $throwException)
@@ -255,7 +258,9 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
             "function" => "a_test",
         ];
 
-        $result = Stacktrace::getFrameArguments($frame, 5);
+        $getFrameArguments = new \ReflectionMethod('\\Raven\\Stacktrace', 'getFrameArguments');
+        $getFrameArguments->setAccessible(true);
+        $result = $getFrameArguments->invoke(null, $frame, 5);
 
         // Check we haven't modified our vars.
         $this->assertEquals($originalFoo, 'bloopblarp');

@@ -42,9 +42,12 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
             $this->client->captureException($exception);
         }
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $_pending_events = new \ReflectionProperty($this->client, '_pending_events');
+        $_pending_events->setAccessible(true);
+        $value = $_pending_events->getValue($this->client)[0];
+        $this->processor->process($value);
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
+        foreach ($value['exception']['values'] as $exceptionValue) {
             foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
                 $this->assertArrayNotHasKey('pre_context', $frame);
                 $this->assertArrayNotHasKey('context_line', $frame);
@@ -65,9 +68,12 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
             $this->client->captureException($exception);
         }
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $_pending_events = new \ReflectionProperty($this->client, '_pending_events');
+        $_pending_events->setAccessible(true);
+        $value = $_pending_events->getValue($this->client)[0];
+        $this->processor->process($value);
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
+        foreach ($value['exception']['values'] as $exceptionValue) {
             foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
                 $this->assertArrayNotHasKey('pre_context', $frame);
                 $this->assertArrayNotHasKey('context_line', $frame);
