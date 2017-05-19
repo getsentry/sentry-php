@@ -48,8 +48,6 @@ cache:
 before_install:
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
   - if [ "$DISABLE_ASSERTIONS" = "1" ]; then echo 'zend.assertions = -1' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then pecl install uopz; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then echo "extension=uopz.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - composer self-update
 
 install: travis_retry composer install --no-interaction --prefer-source
