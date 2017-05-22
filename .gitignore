@@ -4,3 +4,4 @@ package.xml
 .idea
 .php_cs.cache
 docs/_build
+test/clover.xml
