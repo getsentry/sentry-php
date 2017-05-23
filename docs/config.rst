@@ -2,12 +2,12 @@ Configuration
 =============
 
 Several options exist that allow you to configure the behavior of the
-``Raven_Client``. These are passed as the second parameter of the
+``\Raven\Client``. These are passed as the second parameter of the
 constructor, and is expected to be an array of key value pairs:
 
 .. code-block:: php
 
-    $client = new Raven_Client($dsn, array(
+    $client = new \Raven\Client($dsn, array(
         'option_name' => 'value',
     ));
 
@@ -20,7 +20,7 @@ The following settings are available for the client:
 
     A string to override the default value for the server's hostname.
 
-    Defaults to ``Raven_Compat::gethostname()``.
+    Defaults to ``gethostname()``.
 
 .. describe:: tags
 
@@ -221,21 +221,21 @@ The following settings are available for the client:
 .. describe:: processors
 
     An array of classes to use to process data before it is sent to
-    Sentry. By default, ``Raven_SanitizeDataProcessor`` is used
+    Sentry. By default, ``\Raven\SanitizeDataProcessor`` is used
 
 .. describe:: processorOptions
 
     Options that will be passed on to a ``setProcessorOptions()`` function
-    in a ``Raven_Processor`` sub-class before that Processor is added to
-    the list of processors used by ``Raven_Client``
+    in a ``\Raven\Processor`` sub-class before that Processor is added to
+    the list of processors used by ``\Raven\Client``
 
     An example of overriding the regular expressions in
-    ``Raven_SanitizeDataProcessor`` is below:
+    ``\Raven\SanitizeDataProcessor`` is below:
 
     .. code-block:: php
 
         'processorOptions' => array(
-            'Raven_SanitizeDataProcessor' => array(
+            '\Raven\SanitizeDataProcessor' => array(
                         'fields_re' => '/(user_password|user_token|user_secret)/i',
                         'values_re' => '/^(?:\d[ -]*?){15,16}$/'
                     )

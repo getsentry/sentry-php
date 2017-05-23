@@ -21,18 +21,6 @@ recommended way is to use `Composer <http://getcomposer.org/>`__::
 
     $ composer require "sentry/sentry"
 
-Alternatively you can manually install it:
-
-1.  Download and extract the latest `sentry-php
-    <https://github.com/getsentry/sentry-php/archive/master.zip>`__ archive
-    to your PHP project.
-2.  Require the autoloader in your application:
-
-    .. sourcecode:: php
-
-        require_once '/path/to/Raven/library/Raven/Autoloader.php';
-        Raven_Autoloader::register();
-
 Configuration
 -------------
 
@@ -41,14 +29,14 @@ once and reference it from anywhere you want to interface with Sentry:
 
 .. code-block:: php
 
-    $client = new Raven_Client('___DSN___');
+    $client = new \Raven\Client('___DSN___');
 
 Once you have the client you can either use it manually or enable the
 automatic error and exception capturing which is recomended:
 
 .. code-block:: php
 
-    $error_handler = new Raven_ErrorHandler($client);
+    $error_handler = new \Raven\ErrorHandler($client);
     $error_handler->registerExceptionHandler();
     $error_handler->registerErrorHandler();
     $error_handler->registerShutdownFunction();

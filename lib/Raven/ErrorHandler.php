@@ -146,7 +146,7 @@ class ErrorHandler
     }
 
     /**
-     * Register a handler which will intercept unhnalded exceptions and report them to the
+     * Register a handler which will intercept unhandled exceptions and report them to the
      * associated Sentry client.
      *
      * @param bool $call_existing Call any existing exception handlers after processing
