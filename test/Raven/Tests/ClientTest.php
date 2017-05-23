@@ -10,7 +10,7 @@
 
 function simple_function($a=null, $b=null, $c=null)
 {
-    assert(0);
+    throw new \RuntimeException('This simple function should fail before reaching this line!');
 }
 
 function invalid_encoding()
@@ -664,12 +664,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     public function testCaptureExceptionInvalidUTF8()
     {
-        if (version_compare(PHP_VERSION, '7.0', '>=')) {
-            if (ini_get('zend.assertions') != 1) {
-                $this->markTestSkipped('Production environment does not execute asserts');
-                return;
-            }
-        }
         $client = new Dummy_Raven_Client();
         try {
             invalid_encoding();
@@ -677,7 +671,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $client->captureException($ex);
         }
         $events = $client->getSentEvents();
-        $this->assertEquals(1, count($events));
+        $this->assertCount(1, $events);
 
         // if this fails to encode it returns false
         $message = $client->encode($events[0]);
