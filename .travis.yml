@@ -1,4 +1,5 @@
 language: php
+sudo: false
 
 php:
   - 5.3
@@ -8,41 +9,19 @@ php:
   - 7.0
   - 7.1
   - nightly
-  - hhvm-3.12
-
-matrix:
-  allow_failures:
-    - php: 7.1
-    - php: hhvm-3.12
-    - php: nightly
-  fast_finish: true
-  include:
-    - php: 7.0
-      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
-    - php: 7.0
-      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
-    - php: 7.1
-      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
-    - php: 7.1
-      env: REMOVE_XDEBUG="1" DISABLE_ASSERTIONS="1"
-    - php: nightly
-      env: REMOVE_XDEBUG="0" DISABLE_ASSERTIONS="1"
-    - php: hhvm-3.12
-      env: REMOVE_XDEBUG="0" HHVM="1"
-      dist: trusty
-  exclude:
-    - php: hhvm-3.12
-      env: REMOVE_XDEBUG="0"
-    - php: hhvm-3.12
-      env: REMOVE_XDEBUG="1"
-    - php: nightly
-      env: REMOVE_XDEBUG="1"
-
 env:
   - REMOVE_XDEBUG="0"
   - REMOVE_XDEBUG="1"
 
-sudo: false
+matrix:
+  allow_failures:
+    - php: hhvm-3.12
+    - php: nightly
+  fast_finish: true
+  include:
+    - php: hhvm-3.12
+      env: REMOVE_XDEBUG="0" HHVM="1"
+      dist: trusty
 
 cache:
   directories:
@@ -50,12 +29,9 @@ cache:
 
 before_install:
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
-  - if [ "$DISABLE_ASSERTIONS" = "1" ]; then echo 'zend.assertions = -1' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then pecl install uopz; fi
-  - if [[ ${TRAVIS_PHP_VERSION:0:1} > "5" ]] && [ "$HHVM" != "1" ]; then echo "extension=uopz.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi
   - composer self-update
 
-install: travis_retry composer install --no-interaction --prefer-source
+install: travis_retry composer install --no-interaction --prefer-dist
 
 script:
   - composer phpcs
@@ -68,3 +44,4 @@ after_script:
   - if [ $(phpenv version-name) = "5.5" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "5.6" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "7.0" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
+  - if [ $(phpenv version-name) = "7.1" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
