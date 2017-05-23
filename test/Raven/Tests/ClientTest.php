@@ -671,7 +671,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $client->captureException($ex);
         }
         $events = $client->getSentEvents();
-        $this->assertCount(1, $events);
+        $this->assertEquals(1, count($events));
 
         // if this fails to encode it returns false
         $message = $client->encode($events[0]);
