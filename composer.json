@@ -49,6 +49,9 @@
         "tests": [
             "vendor/bin/phpunit --verbose"
         ],
+        "tests-travis": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml"
+        ],
         "tests-report": [
             "vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-html tests/html-report"
         ],

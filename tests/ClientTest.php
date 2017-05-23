@@ -15,7 +15,7 @@ use Raven\Serializer;
 
 function simple_function($a = null, $b = null, $c = null)
 {
-    assert(0);
+    throw new \RuntimeException('This simple function should fail before reaching this line!');
 }
 
 function invalid_encoding()
@@ -661,12 +661,6 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testCaptureExceptionInvalidUTF8()
     {
-        if (version_compare(PHP_VERSION, '7.0', '>=')) {
-            if (ini_get('zend.assertions') != 1) {
-                $this->markTestSkipped('Production environment does not execute asserts');
-                return;
-            }
-        }
         $client = new Dummy_Raven_Client();
         try {
             invalid_encoding();
