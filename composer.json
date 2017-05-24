@@ -21,6 +21,7 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
+        "psr/log": ">=1.0.2",
         "ext-curl": "*"
     },
     "suggest": {
