@@ -2,6 +2,8 @@
 
 /*
  * This file is part of Raven.
+ * Asterisk out passwords from password fields in frames, http,
+ * and basic extra data.
  *
  * (c) Sentry Team
  *
@@ -14,12 +16,6 @@ namespace Raven\Processor;
 use Raven\Client;
 use Raven\Processor;
 
-/**
- * Asterisk out passwords from password fields in frames, http,
- * and basic extra data.
- *
- * @package raven
- */
 class SanitizeDataProcessor extends Processor
 {
     const MASK = self::STRING_MASK;
