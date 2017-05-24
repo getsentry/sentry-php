@@ -20,7 +20,7 @@ function simple_function($a = null, $b = null, $c = null)
 
 function invalid_encoding()
 {
-    $fp = fopen(__DIR__ . '/../../data/binary', 'r');
+    $fp = fopen(__DIR__.'/../../data/binary', 'r');
     simple_function(fread($fp, 64));
     fclose($fp);
 }
@@ -850,8 +850,8 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $clientstring = 'sentry-php/test';
         $timestamp = '1234341324.340000';
 
-        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
-                    "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, ".
+                    "sentry_version=".Dummy_Raven_Client::PROTOCOL.", ".
                     "sentry_key=publickey, sentry_secret=secretkey";
 
         $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', 'secretkey'));
@@ -994,7 +994,7 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
 
         $client = new Dummy_Raven_Client($options);
 
-        require_once(__DIR__ . '/Fixtures/code/Latin1File.php');
+        require_once(__DIR__.'/Fixtures/code/Latin1File.php');
 
         $events = $client->getSentEvents();
         $event = array_pop($events);

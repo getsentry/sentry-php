@@ -45,7 +45,7 @@ class CurlHandler
 
         $new_headers = [];
         foreach ($headers as $key => $value) {
-            array_push($new_headers, $key .': '. $value);
+            array_push($new_headers, $key.': '.$value);
         }
         // XXX(dcramer): Prevent 100-continue response form server (Fixes GH-216)
         $new_headers[] = 'Expect:';

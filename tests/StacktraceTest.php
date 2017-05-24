@@ -246,7 +246,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         ];
 
         $frame = [
-            "file" => dirname(__FILE__) . "/resources/a.php",
+            "file" => dirname(__FILE__)."/resources/a.php",
             "line" => 9,
             "args"=> [
                 &$newFoo,
@@ -268,7 +268,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     protected function getFixturePath($file)
     {
-        return realpath(__DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . $file);
+        return realpath(__DIR__.DIRECTORY_SEPARATOR.'Fixtures'.DIRECTORY_SEPARATOR.$file);
     }
 
     protected function getFixture($file)

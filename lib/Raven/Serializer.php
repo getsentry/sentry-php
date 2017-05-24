@@ -134,7 +134,7 @@ class Serializer
         }
 
         if (strlen($value) > 1024) {
-            $value = substr($value, 0, 1014) . ' {clipped}';
+            $value = substr($value, 0, 1014).' {clipped}';
         }
 
         return $value;
@@ -153,7 +153,7 @@ class Serializer
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+            return 'Array of length '.count($value);
         } else {
             return $this->serializeString($value);
         }
