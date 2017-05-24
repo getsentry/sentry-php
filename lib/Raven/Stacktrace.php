@@ -291,7 +291,7 @@ class Stacktrace implements \JsonSerializable
         $result = [];
 
         for ($i = 0; $i < count($frame['args']); ++$i) {
-            $result['param' . ($i + 1)] = self::serializeArgument($frame['args'][$i], $maxValueLength);
+            $result['param'.($i + 1)] = self::serializeArgument($frame['args'][$i], $maxValueLength);
         }
 
         return $result;
@@ -365,7 +365,7 @@ class Stacktrace implements \JsonSerializable
                 // Assign the argument by the parameter name
                 $args[$params[$index]->name] = $arg;
             } else {
-                $args['param' . $index] = $arg;
+                $args['param'.$index] = $arg;
             }
         }
 

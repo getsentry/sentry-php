@@ -34,7 +34,7 @@ class ReprSerializer extends \Raven\Serializer
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+            return 'Array of length '.count($value);
         } else {
             return $this->serializeString($value);
         }

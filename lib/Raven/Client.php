@@ -517,7 +517,7 @@ class Client
 
     public static function getUserAgent()
     {
-        return 'sentry-php/' . self::VERSION;
+        return 'sentry-php/'.self::VERSION;
     }
 
     /**
@@ -612,7 +612,7 @@ class Client
         $username = (isset($url['user']) ? $url['user'] : null);
         $password = (isset($url['pass']) ? $url['pass'] : null);
         if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
-            throw new \InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
+            throw new \InvalidArgumentException('Invalid Sentry DSN: '.$dsn);
         }
 
         return [
@@ -1166,7 +1166,7 @@ class Client
 
     protected static function get_default_ca_cert()
     {
-        return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
+        return dirname(__FILE__).DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cacert.pem';
     }
 
     /**
@@ -1181,7 +1181,7 @@ class Client
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
             CURLOPT_CAINFO => $this->ca_cert,
-            CURLOPT_USERAGENT => 'sentry-php/' . self::VERSION,
+            CURLOPT_USERAGENT => 'sentry-php/'.self::VERSION,
         ];
         if ($this->http_proxy) {
             $options[CURLOPT_PROXY] = $this->http_proxy;
@@ -1236,10 +1236,10 @@ class Client
         // TODO(dcramer): support ca_cert
         $cmd = $this->curl_path.' -X POST ';
         foreach ($headers as $key => $value) {
-            $cmd .= '-H ' . escapeshellarg($key.': '.$value). ' ';
+            $cmd .= '-H '.escapeshellarg($key.': '.$value).' ';
         }
-        $cmd .= '-d ' . escapeshellarg($data) . ' ';
-        $cmd .= escapeshellarg($url) . ' ';
+        $cmd .= '-d '.escapeshellarg($data).' ';
+        $cmd .= escapeshellarg($url).' ';
         $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
         if (!$this->verify_ssl) {
             $cmd .= '-k ';
@@ -1275,7 +1275,7 @@ class Client
     {
         $new_headers = [];
         foreach ($headers as $key => $value) {
-            array_push($new_headers, $key .': '. $value);
+            array_push($new_headers, $key.': '.$value);
         }
         // XXX(dcramer): Prevent 100-continue response form server (Fixes GH-216)
         $new_headers[] = 'Expect:';
