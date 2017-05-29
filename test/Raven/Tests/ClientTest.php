@@ -1168,6 +1168,58 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         )), $data);
     }
 
+    public function testItUsesSerializationDepthOptions()
+    {
+        $client = new Dummy_Raven_Client(null, array(
+            'serialization_depth_request' => 1,
+            'serialization_depth_user' => 1,
+            'serialization_depth_extra' => 1,
+            'serialization_depth_contexts' => 1,
+        ));
+        $data = array(
+            'extra' => array(
+                'context' => array(
+                    'line' => 1216,
+                    'stack' => array(
+                        1, array(2), 3
+                    ),
+                ),
+            ),
+            'user' => array(
+                'name' => array(
+                    'first' => 'romain',
+                    'last' => 'neutron',
+                ),
+            ),
+            'request' => array(
+                'keyrequest' => array(
+                    'subkeyrequest' => 'valuerequest',
+                ),
+            ),
+            'contexts' => array(
+                'keycontexts' => array(
+                    'subkeycontexts' => 'valuecontexts',
+                ),
+            ),
+        );
+        $client->sanitize($data);
+
+        $this->assertEquals(array(
+            'extra' => array(
+                'context' => 'Array of length 2',
+            ),
+            'user' => array(
+                'name' => 'Array of length 2'
+            ),
+            'request' => array(
+                'keyrequest' => 'Array of length 1',
+            ),
+            'contexts' => array(
+                'keycontexts' => 'Array of length 1',
+            ),
+        ), $data);
+    }
+
     /**
      * @covers Raven_Client::sanitize
      */
