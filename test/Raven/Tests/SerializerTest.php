@@ -96,6 +96,16 @@ class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
     }
 
+    public function testCallablesAreEvaluated()
+    {
+        $serializer = new Raven_Serializer();
+        $input = function () {
+            return 'hello world';
+        };
+        $result = $serializer->serialize($input);
+        $this->assertEquals('hello world', $result);
+    }
+
     /**
      * @covers Raven_Serializer::serializeString
      */

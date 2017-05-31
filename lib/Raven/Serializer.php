@@ -109,6 +109,12 @@ class Raven_Serializer
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
             return $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
+            // If the value is a callable and expects no parameters, we evaluate the
+            // callable value by calling it.
+            if (is_callable($value) && Raven_Util::getCallableParamNum($value) === 0) {
+                return $value();
+            }
+
             return 'Object '.get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
