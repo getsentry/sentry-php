@@ -74,3 +74,75 @@ Tests can then be run via phpunit:
 ```
 $ vendor/bin/phpunit
 ```
+
+
+Tagging a Release
+-----------------
+
+1. Make sure ``CHANGES`` is up to date (add the release date) and ``master`` is green.
+
+2. Create a new branch for the minor version (if not present):
+
+```
+$ git checkout -b releases/1.7.x
+```
+
+3. Update the hardcoded version tag in ``Client.php``:
+
+```
+class Raven_Client
+{
+    const VERSION = '1.7.0';
+}
+```
+
+4. Commit the change:
+
+```
+$ git commit -a -m "1.7.0"
+```
+
+5. Tag the branch:
+
+```
+git tag 1.7.0
+```
+
+6. Push the tag:
+
+```
+git push --tags
+```
+
+7. Switch back to ``master``:
+
+```
+git checkout master
+```
+
+8. Add the next minor release to the ``CHANGES`` file:
+
+```
+## 1.8.0 (unreleased)
+```
+
+9. Update the version in ``Client.php``:
+
+```
+class Raven_Client
+{
+    const VERSION = '1.8.x-dev';
+}
+```
+
+10. Lastly, update the composer version in ``composer.json``:
+
+```
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.8.x-dev"
+        }
+    }
+```
+
+All done! Composer will pick up the tag and configuration automatically.
