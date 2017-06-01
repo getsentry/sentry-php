@@ -305,7 +305,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_LIMIT)
+    protected static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_LIMIT)
     {
         if (!isset($frame['args'])) {
             return [];

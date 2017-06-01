@@ -118,7 +118,9 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
         /**
          * @var SanitizeDataProcessor $processor
          */
-        $processor = $client->processors[0];
+        $processors = new \ReflectionProperty($client, 'processors');
+        $processors->setAccessible(true);
+        $processor = $processors->getValue($client)[0];
 
         $this->assertInstanceOf(SanitizeDataProcessor::class, $processor);
         $this->assertEquals($processor->getFieldsRe(), $processorOptions[SanitizeDataProcessor::class]['fields_re'], 'overwrote fields');
@@ -157,7 +159,9 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
         /**
          * @var SanitizeDataProcessor $processor
          */
-        $processor = $client->processors[0];
+        $processors = new \ReflectionProperty($client, 'processors');
+        $processors->setAccessible(true);
+        $processor = $processors->getValue($client)[0];
 
         $this->assertInstanceOf(SanitizeDataProcessor::class, $processor);
         $this->assertEquals($processor->getFieldsRe(), $processorOptions[SanitizeDataProcessor::class]['fields_re'], 'overwrote fields');

@@ -91,6 +91,16 @@ class Dummy_Raven_Client extends \Raven\Client
     {
         return $this->get_current_url();
     }
+
+    public function encode(&$data)
+    {
+        return parent::encode($data);
+    }
+
+    public function process(&$data)
+    {
+        parent::process($data);
+    }
 }
 
 class Dummy_Raven_Client_With_Overrided_Direct_Send extends \Raven\Client
@@ -446,10 +456,10 @@ organization           = "Sentry"
     {
         $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
 
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
+        $this->assertAttributeEquals(1, 'project', $client);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('public', 'public_key', $client);
+        $this->assertAttributeEquals('secret', 'secret_key', $client);
     }
 
     /**
@@ -461,11 +471,11 @@ organization           = "Sentry"
             'site' => 'foo',
         ]);
 
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
-        $this->assertEquals('foo', $client->site);
+        $this->assertAttributeEquals(1, 'project', $client);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('public', 'public_key', $client);
+        $this->assertAttributeEquals('secret', 'secret_key', $client);
+        $this->assertAttributeEquals('foo', 'site', $client);
     }
 
     /**
@@ -478,7 +488,7 @@ organization           = "Sentry"
             'project' => 1,
         ]);
 
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
     }
 
     /**
@@ -490,10 +500,10 @@ organization           = "Sentry"
             'dsn' => 'http://public:secret@example.com/1',
         ]);
 
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
+        $this->assertAttributeEquals(1, 'project', $client);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('public', 'public_key', $client);
+        $this->assertAttributeEquals('secret', 'secret_key', $client);
     }
 
     /**
@@ -505,10 +515,10 @@ organization           = "Sentry"
             'dsn' => 'http://public:secret@example.com/1',
         ]);
 
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
+        $this->assertAttributeEquals(1, 'project', $client);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('public', 'public_key', $client);
+        $this->assertAttributeEquals('secret', 'secret_key', $client);
     }
 
     /**
@@ -523,8 +533,8 @@ organization           = "Sentry"
             'site' => 'foo',
         ]);
 
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('foo', $client->site);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('foo', 'site', $client);
     }
 
     /**
@@ -796,8 +806,11 @@ organization           = "Sentry"
             'processors' => ['\\Raven\\Processor\\SanitizeDataProcessor'],
         ]);
 
-        $this->assertEquals(1, count($client->processors));
-        $this->assertInstanceOf('\\Raven\\Processor\\SanitizeDataProcessor', $client->processors[0]);
+        $processors = new \ReflectionProperty($client, 'processors');
+        $processors->setAccessible(true);
+
+        $this->assertAttributeCount(1, 'processors', $client);
+        $this->assertInstanceOf('\\Raven\\Processor\\SanitizeDataProcessor', $processors->getValue($client)[0]);
     }
 
     public function testProcessDoesCallProcessors()
@@ -812,7 +825,9 @@ organization           = "Sentry"
                ->with($data);
 
         $client = new Dummy_Raven_Client();
-        $client->processors[] = $processor;
+        $processors = new \ReflectionProperty($client, 'processors');
+        $processors->setAccessible(true);
+        $processors->setValue($client, array_merge($processors->getValue($client), [$processor]));
         $client->process($data);
     }
 
@@ -825,7 +840,7 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client();
         $defaults = Dummy_Raven_Client::getDefaultProcessors();
 
-        $this->assertEquals(count($defaults), count($client->processors));
+        $this->assertAttributeCount(count($defaults), 'processors', $client);
     }
 
     /**
@@ -843,14 +858,26 @@ organization           = "Sentry"
     public function testGetDefaultData()
     {
         $client = new Dummy_Raven_Client();
-        $client->transaction->push('test');
+        $transaction = new \ReflectionProperty($client, 'transaction');
+        $transaction->setAccessible(true);
+        $transaction->getValue($client)->push('test');
+        $project = new \ReflectionProperty($client, 'project');
+        $project->setAccessible(true);
+        $name = new \ReflectionProperty($client, 'name');
+        $name->setAccessible(true);
+        $site = new \ReflectionProperty($client, 'site');
+        $site->setAccessible(true);
+        $tags = new \ReflectionProperty($client, 'tags');
+        $tags->setAccessible(true);
+        $logger = new \ReflectionProperty($client, 'logger');
+        $logger->setAccessible(true);
         $expected = [
             'platform' => 'php',
-            'project' => $client->project,
-            'server_name' => $client->name,
-            'site' => $client->site,
-            'logger' => $client->logger,
-            'tags' => $client->tags,
+            'project' => $project->getValue($client),
+            'server_name' => $name->getValue($client),
+            'site' => $site->getValue($client),
+            'logger' => $logger->getValue($client),
+            'tags' => $tags->getValue($client),
             'sdk' => [
                 'name' => 'sentry-php',
                 'version' => $client::VERSION,
@@ -976,7 +1003,9 @@ organization           = "Sentry"
     {
         $client = new Dummy_Raven_Client();
         $ts1 = microtime(true);
-        $header = $client->getAuthHeader();
+        $getAuthHeader = new \ReflectionMethod($client, 'getAuthHeader');
+        $getAuthHeader->setAccessible(true);
+        $header = $getAuthHeader->invoke($client);
         $ts2 = microtime(true);
         $this->assertEquals(1, preg_match('/sentry_timestamp=([0-9.]+)/', $header, $a));
         $this->assertRegExp('/^[0-9]+(\\.[0-9]+)?$/', $a[1]);
@@ -1456,7 +1485,9 @@ organization           = "Sentry"
         $result = $client->buildCurlCommand('http://foo.com', $data, ['key' => 'value']);
         $this->assertEquals('curl -X POST -H \'key: value\' -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
-        $client->verify_ssl = false;
+        $verify_ssl = new \ReflectionProperty($client, 'verify_ssl');
+        $verify_ssl->setAccessible(true);
+        $verify_ssl->setValue($client, false);
         $result = $client->buildCurlCommand('http://foo.com', $data, []);
         $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 -k > /dev/null 2>&1 &', $result);
 
@@ -1472,7 +1503,9 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client();
         $client->user_context(['foo' => 'bar'], false);
         $client->user_context(['baz' => 'bar'], false);
-        $this->assertEquals(['baz' => 'bar'], $client->context->user);
+        $context = new \ReflectionProperty($client, 'context');
+        $context->setAccessible(true);
+        $this->assertEquals(['baz' => 'bar'], $context->getValue($client)->user);
     }
 
     /**
@@ -1483,7 +1516,9 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client();
         $client->user_context(['foo' => 'bar'], true);
         $client->user_context(['baz' => 'bar'], true);
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'bar'], $client->context->user);
+        $context = new \ReflectionProperty($client, 'context');
+        $context->setAccessible(true);
+        $this->assertEquals(['foo' => 'bar', 'baz' => 'bar'], $context->getValue($client)->user);
     }
 
     /**
@@ -1494,7 +1529,9 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client();
         $client->user_context(['foo' => 'bar'], true);
         $client->user_context(null, true);
-        $this->assertEquals(['foo' => 'bar'], $client->context->user);
+        $context = new \ReflectionProperty($client, 'context');
+        $context->setAccessible(true);
+        $this->assertEquals(['foo' => 'bar'], $context->getValue($client)->user);
     }
 
     /**
@@ -1618,7 +1655,7 @@ organization           = "Sentry"
      * @covers \Raven\Client::getServerEndpoint
      * @covers \Raven\Client::getLastError
      * @covers \Raven\Client::getLastEventID
-     * @covers \Raven\Client::get_extra_data
+     * @covers \Raven\Client::getExtra_data
      * @covers \Raven\Client::setProcessors
      * @covers \Raven\Client::getLastSentryError
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
@@ -1656,7 +1693,7 @@ organization           = "Sentry"
             ['_last_sentry_error', null, (object)['error' => 'test',],],
             ['_last_event_id', null, mt_rand(100, 999),],
             ['_last_event_id', null, 'value',],
-            ['extra_data', '_extra_data', ['key' => 'value'],],
+            ['extra_data', null, ['key' => 'value'],],
             ['processors', 'processors', [],],
             ['processors', 'processors', ['key' => 'value'],],
             ['_shutdown_function_has_been_set', null, true],
@@ -1910,10 +1947,10 @@ organization           = "Sentry"
     {
         $_SERVER['SENTRY_DSN'] = 'http://public:secret@example.com/1';
         $client = new Dummy_Raven_Client();
-        $this->assertEquals(1, $client->project);
-        $this->assertEquals('http://example.com/api/1/store/', $client->server);
-        $this->assertEquals('public', $client->public_key);
-        $this->assertEquals('secret', $client->secret_key);
+        $this->assertAttributeEquals(1, 'project', $client);
+        $this->assertAttributeEquals('http://example.com/api/1/store/', 'server', $client);
+        $this->assertAttributeEquals('public', 'public_key', $client);
+        $this->assertAttributeEquals('secret', 'secret_key', $client);
     }
 
     /**
@@ -2035,12 +2072,14 @@ organization           = "Sentry"
                 'install_default_breadcrumb_handlers' => false,
             ]
         );
-        $this->assertEquals(0, count($client->_pending_events));
-        $client->_pending_events[] = ['foo' => 'bar'];
+        $_pending_events = new \ReflectionProperty($client, '_pending_events');
+        $_pending_events->setAccessible(true);
+        $this->assertAttributeCount(0, '_pending_events', $client);
+        $_pending_events->setValue($client, array_merge($_pending_events->getValue($client), [['foo' => 'bar']]));
         $client->sendUnsentErrors();
         $this->assertTrue($client->_send_http_synchronous);
         $this->assertFalse($client->_send_http_asynchronous_curl_exec_called);
-        $this->assertEquals(0, count($client->_pending_events));
+        $this->assertAttributeCount(0, '_pending_events', $client);
 
         // step 2
         $client->_send_http_synchronous = false;
@@ -2048,7 +2087,7 @@ organization           = "Sentry"
 
         $client->store_errors_for_bulk_send = true;
         $client->captureMessage('foobar');
-        $this->assertEquals(1, count($client->_pending_events));
+        $this->assertAttributeCount(1, '_pending_events', $client);
         $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
         $client->_send_http_synchronous = false;
         $client->_send_http_asynchronous_curl_exec_called = false;
@@ -2057,7 +2096,7 @@ organization           = "Sentry"
         $client->onShutdown();
         $this->assertTrue($client->_send_http_synchronous);
         $this->assertFalse($client->_send_http_asynchronous_curl_exec_called);
-        $this->assertEquals(0, count($client->_pending_events));
+        $this->assertAttributeCount(0, '_pending_events', $client);
 
         // step 1
         $client = null;
@@ -2117,7 +2156,9 @@ organization           = "Sentry"
                 'install_default_breadcrumb_handlers' => false,
             ]
         );
-        $client->server = null;
+        $server = new \ReflectionProperty($client, 'server');
+        $server->setAccessible(true);
+        $server->setValue($client, null);
         $data = ['foo' => 'bar'];
         $client->send($data);
         $this->assertFalse($client->_send_http_synchronous or $client->_send_http_asynchronous_curl_exec_called);
@@ -2320,8 +2361,8 @@ organization           = "Sentry"
     {
         $client = new Dummy_Raven_Client();
         $ts1 = microtime(true);
-        $client->breadcrumbs->record(['foo' => 'bar']);
-        $client->breadcrumbs->record(['honey' => 'clover']);
+        $client->getBreadcrumbs()->record(['foo' => 'bar']);
+        $client->getBreadcrumbs()->record(['honey' => 'clover']);
         $client->capture([]);
         $events = $client->getSentEvents();
         $event = array_pop($events);

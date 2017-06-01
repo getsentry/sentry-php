@@ -14,11 +14,11 @@ class TransactionStack
     /**
      * @var array $stack
      */
-    public $stack;
+    protected $stack;
 
     public function __construct()
     {
-        $this->stack = [];
+        $this->clear();
     }
 
     public function clear()

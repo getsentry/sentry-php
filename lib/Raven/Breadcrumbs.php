@@ -18,13 +18,13 @@ namespace Raven;
 
 class Breadcrumbs
 {
-    public $count;
-    public $pos;
-    public $size;
+    protected $count;
+    protected $pos;
+    protected $size;
     /**
      * @var array[]
      */
-    public $buffer;
+    protected $buffer;
 
     public function __construct($size = 100)
     {
