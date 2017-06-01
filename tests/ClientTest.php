@@ -11,7 +11,6 @@
 namespace Raven\Tests;
 
 use Raven\Client;
-use Raven\Serializer;
 
 function simple_function($a = null, $b = null, $c = null)
 {
@@ -212,6 +211,119 @@ class Dummy_Raven_CurlHandler extends \Raven\CurlHandler
 
 class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
 {
+    protected static $_folder = null;
+
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+        self::$_folder = sys_get_temp_dir().'/sentry_server_'.microtime(true);
+        mkdir(self::$_folder);
+
+        // Root CA #A1
+        // Сертификат CA #A4, signed by CA #A1 (end-user certificate)
+        $temporary_openssl_file_conf_alt = self::$_folder.'/openssl-config-alt.tmp';
+        file_put_contents($temporary_openssl_file_conf_alt, sprintf('HOME = .
+RANDFILE = $ENV::HOME/.rnd
+[ req ]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+
+[ v3_req ]
+subjectAltName         = DNS:*.org, DNS:127.0.0.1, DNS:%s
+keyUsage               = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign
+basicConstraints       = CA:FALSE
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid,issuer
+extendedKeyUsage       = serverAuth,clientAuth
+certificatePolicies    = @polsect
+
+[polsect]
+policyIdentifier       = 1.2.3.4.5.6.7
+userNotice.1           = @notice
+
+[notice]
+explicitText           = "UTF8:Please add this certificate to black list"
+organization           = "Sentry"
+', strtolower(gethostname())));
+        $certificate_offset = mt_rand(0, 10000) << 16;
+
+        // CA #A1
+        $csr_a1 = openssl_csr_new([
+            "countryName" => "US",
+            "localityName" => "Nowhere",
+            "organizationName" => "Sentry",
+            "organizationalUnitName" => "Development Center. CA #A1",
+            "commonName" => "Sentry: Test HTTP Server: CA #A1",
+            "emailAddress" => "noreply@sentry.example.com",
+        ], $ca_a1_pair, [
+            'private_key_bits' => 2048,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA, // currently only RSA works
+            'encrypt_key' => true,
+        ]);
+        if ($csr_a1 === false) {
+            throw new \Exception("Can not create CSR pair A1");
+        }
+        $crt_a1 = openssl_csr_sign($csr_a1, null, $ca_a1_pair, 1, [
+            "digest_alg" => "sha256",
+        ], hexdec("0A1") + $certificate_offset);
+        if ($crt_a1 === false) {
+            throw new \Exception("Can not create certificate A1");
+        }
+
+        /** @noinspection PhpUndefinedVariableInspection */
+        openssl_x509_export($crt_a1, $certout);
+        openssl_pkey_export($ca_a1_pair, $pkeyout);
+        file_put_contents(self::$_folder.'/crt_a1.crt', $certout, LOCK_EX);
+        file_put_contents(self::$_folder.'/crt_a1.pem', $pkeyout, LOCK_EX);
+        openssl_pkey_export($ca_a1_pair, $pkeyout, 'password');
+        file_put_contents(self::$_folder.'/crt_a1.p.pem', $pkeyout, LOCK_EX);
+        unset($csr_a1, $certout, $pkeyout);
+
+        // CA #A4
+        $csr_a4 = openssl_csr_new([
+            "countryName" => "US",
+            "localityName" => "Nowhere",
+            "organizationName" => "Sentry",
+            "organizationalUnitName" => "Development Center",
+            "commonName" => "127.0.0.1",
+            "emailAddress" => "noreply@sentry.example.com",
+        ], $ca_a4_pair, [
+            'private_key_bits' => 2048,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA, // currently only RSA works
+            'encrypt_key' => true,
+        ]);
+        if ($csr_a4 === false) {
+            throw new \Exception("Can not create CSR pair A4");
+        }
+        $crt_a4 = openssl_csr_sign($csr_a4, file_get_contents(self::$_folder.'/crt_a1.crt'),
+            $ca_a1_pair, 1, [
+                "digest_alg" => "sha256",
+                'config' => $temporary_openssl_file_conf_alt,
+                'x509_extensions' => 'v3_req',
+            ], hexdec("0A4") + $certificate_offset);
+        if ($crt_a4 === false) {
+            throw new \Exception("Can not create certificate A4");
+        }
+
+        /** @noinspection PhpUndefinedVariableInspection */
+        openssl_x509_export($crt_a4, $certout);
+        openssl_pkey_export($ca_a4_pair, $pkeyout);
+        file_put_contents(self::$_folder.'/crt_a4.crt', $certout, LOCK_EX);
+        file_put_contents(self::$_folder.'/crt_a4.c.crt',
+            $certout."\n".file_get_contents(self::$_folder.'/crt_a1.crt'), LOCK_EX);
+        file_put_contents(self::$_folder.'/crt_a4.pem', $pkeyout, LOCK_EX);
+        openssl_pkey_export($ca_a4_pair, $pkeyout, 'password');
+        file_put_contents(self::$_folder.'/crt_a4.p.pem', $pkeyout, LOCK_EX);
+        unset($csr_a4, $certout, $pkeyout);
+    }
+
+    public static function tearDownAfterClass()
+    {
+        exec(sprintf('rm -rf %s', escapeshellarg(self::$_folder)));
+    }
+
     public function tearDown()
     {
         parent::tearDown();
@@ -1330,6 +1442,14 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
     {
         $data = '{"foo": "\'; ls;"}';
         $client = new Dummy_Raven_Client();
+        $client->timeout = 5;
+        $result = $client->buildCurlCommand('http://foo.com', $data, []);
+        $folder = realpath(__DIR__.'/../lib/Raven/data');
+        $this->assertEquals(
+            'curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 --cacert \''.$folder.
+            '/cacert.pem\' > /dev/null 2>&1 &', $result
+        );
+        $client->ca_cert = null;
         $result = $client->buildCurlCommand('http://foo.com', $data, []);
         $this->assertEquals('curl -X POST -d \'{"foo": "\'\\\'\'; ls;"}\' \'http://foo.com\' -m 5 > /dev/null 2>&1 &', $result);
 
@@ -2353,5 +2473,224 @@ class Raven_Tests_ClientTest extends \PHPUnit_Framework_TestCase
         $client->setAllObjectSerialize(false);
         $this->assertFalse($o1->getAllObjectSerialize());
         $this->assertFalse($o2->getAllObjectSerialize());
+    }
+
+    /**
+     * @return int
+     */
+    protected static function get_port()
+    {
+        exec('netstat -n -t', $buf);
+        $current_used_ports = [];
+        foreach ($buf as $line) {
+            list(, , , $local_addr) = preg_split('_\\s+_', $line, 7);
+            if (preg_match('_:([0-9]+)$_', $local_addr, $a)) {
+                $current_used_ports[] = (int)$a[1];
+            }
+        }
+        $current_used_ports = array_unique($current_used_ports);
+        sort($current_used_ports);
+
+        do {
+            $port = mt_rand(55000, 60000);
+        } while (in_array($port, $current_used_ports));
+
+        return $port;
+    }
+
+    public function dataDirectSend()
+    {
+        $data = [];
+
+        $block1 = [];
+        $block1[] = [
+            'options'        => [
+                'dsn' => 'http://login:password@127.0.0.1:{port}/5',
+            ],
+            'server_options' => [],
+            'timeout'        => 0,
+            'is_failed'      => false,
+        ];
+        $block1[] = [
+            'options'        => [
+                'dsn'         => 'http://login:password@127.0.0.1:{port}/5',
+                'curl_method' => 'async',
+            ],
+            'server_options' => [],
+            'timeout'        => 0,
+            'is_failed'      => false,
+        ];
+        $block1[] = [
+            'options'        => [
+                'dsn'         => 'http://login:password@127.0.0.1:{port}/5',
+                'curl_method' => 'exec',
+            ],
+            'server_options' => [],
+            'timeout'        => 5,
+            'is_failed'      => false,
+        ];
+
+        $j = count($block1);
+        for ($i = 0; $i < $j; $i++) {
+            $datum = $block1[$i];
+            $datum['server_options']['http_code'] = 403;
+            $datum['is_failed'] = true;
+            $block1[] = $datum;
+        }
+
+        $block_ssl = [['options' => [], 'server_options' => [], 'timeout' => 0, 'is_failed' => false]];
+        $block_ssl[] = [
+            'options'        => [
+                'dsn'     => 'http://login:password@127.0.0.1:{port}/5',
+                'ca_cert' => '{folder}/crt_a1.crt',
+            ],
+            'server_options' => [
+                'ssl_server_certificate_file' => '{folder}/crt_a4.c.crt',
+                'ssl_server_key_file'         => '{folder}/crt_a4.pem',
+                'is_ssl'                      => true,
+            ],
+            'timeout'        => 5,
+            'is_failed'      => false,
+        ];
+
+        foreach ($block1 as $b1) {
+            foreach ($block_ssl as $b2) {
+                $datum = [
+                    'options'        => array_merge(
+                        isset($b1['options']) ? $b1['options'] : [],
+                        isset($b2['options']) ? $b2['options'] : []
+                    ),
+                    'server_options' => array_merge(
+                        isset($b1['server_options']) ? $b1['server_options'] : [],
+                        isset($b2['server_options']) ? $b2['server_options'] : []
+                    ),
+                    'timeout'        => max($b1['timeout'], $b2['timeout']),
+                    'is_failed'      => ($b1['is_failed'] or $b2['is_failed']),
+                ];
+                if (isset($datum['options']['ca_cert'])) {
+                    $datum['options']['dsn'] = str_replace('http://', 'https://', $datum['options']['dsn']);
+                }
+
+                $data[] = $datum;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array   $sentry_options
+     * @param array   $server_options
+     * @param integer $timeout
+     * @param boolean $is_failed
+     *
+     * @dataProvider dataDirectSend
+     */
+    public function testDirectSend($sentry_options, $server_options, $timeout, $is_failed)
+    {
+        foreach ($sentry_options as &$value) {
+            if (is_string($value)) {
+                $value = str_replace('{folder}', self::$_folder, $value);
+            }
+        }
+        foreach ($server_options as &$value) {
+            if (is_string($value)) {
+                $value = str_replace('{folder}', self::$_folder, $value);
+            }
+            $value = str_replace('{folder}', self::$_folder, $value);
+        }
+        unset($value);
+
+        $port = self::get_port();
+        $sentry_options['dsn'] = str_replace('{port}', $port, $sentry_options['dsn']);
+        $sentry_options['timeout'] = 10;
+
+        $client = new Client($sentry_options);
+        $output_filename = tempnam(self::$_folder, 'output_http_');
+        foreach (
+            [
+                'port'            => $port,
+                'output_filename' => $output_filename,
+            ] as $key => $value
+        ) {
+            $server_options[$key] = $value;
+        }
+
+        $filename = tempnam(self::$_folder, 'sentry_http_');
+        file_put_contents($filename, serialize((object)$server_options), LOCK_EX);
+
+        $cli_output_filename = tempnam(sys_get_temp_dir(), 'output_http_');
+        exec(
+            sprintf(
+                'php '.__DIR__.'/bin/httpserver.php --config=%s >%s 2>&1 &',
+                escapeshellarg($filename),
+                escapeshellarg($cli_output_filename)
+            )
+        );
+        $ts = microtime(true);
+        $u = false;
+        do {
+            if (preg_match('_listen_i', file_get_contents($cli_output_filename))) {
+                $u = true;
+                break;
+            }
+        } while ($ts + 10 > microtime(true));
+        $this->assertTrue($u, 'Can not start Test HTTP Server');
+        unset($u, $ts);
+
+        $extra = ['foo'.mt_rand(0, 10000) => microtime(true).':'.mt_rand(20, 100)];
+        $event = $client->captureMessage(
+            'Test Message', [], [
+                'level' => Client::INFO,
+                'extra' => $extra,
+            ]
+        );
+        $client->sendUnsentErrors();
+        $client->force_send_async_curl_events();
+        if ($is_failed) {
+            if (!isset($sentry_options['curl_method']) or
+                !in_array($sentry_options['curl_method'], ['async', 'exec'])
+            ) {
+                if (isset($server_options['http_code'])) {
+                    $this->assertNotNull($client->getLastError());
+                    $this->assertNotNull($client->getLastSentryError());
+                }
+            }
+        } else {
+            $this->assertNotNull($event);
+        }
+        if ($timeout > 0) {
+            usleep($timeout * 1000000);
+        }
+        $this->assertFileExists($output_filename);
+        $buf = file_get_contents($output_filename);
+        $server_input = unserialize($buf);
+        $this->assertNotFalse($server_input);
+        /** @var \NokitaKaze\TestHTTPServer\ClientDatum $connection */
+        $connection = $server_input['connection'];
+        $this->assertNotNull($connection);
+        $this->assertEquals('/api/5/store/', $connection->request_url);
+
+        $body = base64_decode($connection->blob_body);
+        if (function_exists('gzuncompress')) {
+            $new_body = gzuncompress($body);
+            if ($new_body !== false) {
+                $body = $new_body;
+            }
+            unset($new_body);
+        }
+        $body = json_decode($body);
+        $this->assertEquals(5, $body->project);
+        $this->assertEquals('', $body->site);
+        $this->assertEquals('Test Message', $body->message);
+        $this->assertEquals($event, $body->event_id);
+        $this->assertEquals($extra, (array)$body->extra);
+        $this->assertEquals('info', $body->level);
+
+        $this->assertRegExp(
+            '|^Sentry sentry_timestamp=[0-9.]+,\\s+sentry_client=sentry\\-php/[a-z0-9.-]+,\\s+sentry_version=[0-9]+,'.
+            '\\s+sentry_key=login,\\s+sentry_secret=password|',
+            $connection->request_head_params['X-Sentry-Auth']
+        );
     }
 }

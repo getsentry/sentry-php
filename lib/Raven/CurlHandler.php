@@ -16,7 +16,6 @@ namespace Raven;
  * @package raven
  */
 
-// TODO(dcramer): handle ca_cert
 class CurlHandler
 {
     protected $join_timeout;
@@ -73,6 +72,9 @@ class CurlHandler
 
     public function join($timeout = null)
     {
+        if (count($this->requests) == 0) {
+            return;
+        }
         if (!isset($timeout)) {
             $timeout = $this->join_timeout;
         }
