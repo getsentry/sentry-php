@@ -24,13 +24,14 @@ env:
   - REMOVE_XDEBUG="0"
   - REMOVE_XDEBUG="1"
 
-sudo: false
+sudo: required
 
 cache:
   directories:
     - $HOME/.composer/cache
 
 before_install:
+  - sudo apt-get install --yes net-tools
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
   - composer self-update
 

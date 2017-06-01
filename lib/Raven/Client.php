@@ -363,6 +363,7 @@ class Client
     {
         // Force close curl resource
         $this->close_curl_resource();
+        $this->force_send_async_curl_events();
     }
 
     /**
@@ -1231,20 +1232,27 @@ class Client
         }
     }
 
+    /**
+     * @param string $url
+     * @param string $data
+     * @param array  $headers
+     * @return string
+     *
+     * This command line ensures exec returns immediately while curl runs in the background
+     */
     protected function buildCurlCommand($url, $data, $headers)
     {
-        // TODO(dcramer): support ca_cert
-        $cmd = $this->curl_path.' -X POST ';
+        $post_fields = '';
         foreach ($headers as $key => $value) {
-            $cmd .= '-H ' . escapeshellarg($key.': '.$value). ' ';
+            $post_fields .= ' -H '.escapeshellarg($key.': '.$value);
         }
-        $cmd .= '-d ' . escapeshellarg($data) . ' ';
-        $cmd .= escapeshellarg($url) . ' ';
-        $cmd .= '-m 5 ';  // 5 second timeout for the whole process (connect + send)
-        if (!$this->verify_ssl) {
-            $cmd .= '-k ';
-        }
-        $cmd .= '> /dev/null 2>&1 &'; // ensure exec returns immediately while curl runs in the background
+        $cmd = sprintf(
+            '%s -X POST%s -d %s %s -m %d %s%s> /dev/null 2>&1 &',
+            escapeshellcmd($this->curl_path), $post_fields,
+            escapeshellarg($data), escapeshellarg($url), $this->timeout,
+            !$this->verify_ssl ? '-k ' : '',
+            !empty($this->ca_cert) ? '--cacert '.escapeshellarg($this->ca_cert).' ' : ''
+        );
 
         return $cmd;
     }
@@ -1301,9 +1309,10 @@ class Client
 
         $errno = curl_errno($this->_curl_instance);
         // CURLE_SSL_CACERT || CURLE_SSL_CACERT_BADFILE
-        if ((($errno == 60) || ($errno == 77)) && !is_null($ca_cert)) {
+        if (in_array($errno, [CURLE_SSL_CACERT, 77]) && !is_null($ca_cert)) {
             curl_setopt($this->_curl_instance, CURLOPT_CAINFO, $ca_cert);
             $buffer = curl_exec($this->_curl_instance);
+            $errno = curl_errno($this->_curl_instance);
         }
         if ($errno != 0) {
             $this->_lasterror = curl_error($this->_curl_instance);
@@ -1512,15 +1521,20 @@ class Client
         $this->user_context(array_merge($user, $data));
     }
 
+    public function force_send_async_curl_events()
+    {
+        if (!is_null($this->_curl_handler)) {
+            $this->_curl_handler->join();
+        }
+    }
+
     public function onShutdown()
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
         $this->sendUnsentErrors();
-        if ($this->curl_method == 'async') {
-            $this->_curl_handler->join();
-        }
+        $this->force_send_async_curl_events();
     }
 
     /**
