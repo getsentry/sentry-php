@@ -25,7 +25,8 @@
         "ext-mbstring": "*",
         "ext-curl": "*",
         "composer/ca-bundle": "~1.0",
-        "symfony/options-resolver": "~2.7|~3.0"
+        "symfony/options-resolver": "~2.7|~3.0",
+        "php-http/httplug": "~1.1"
     },
     "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
