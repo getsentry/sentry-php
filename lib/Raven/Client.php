@@ -10,6 +10,8 @@
 
 namespace Raven;
 
+use Raven\CurlHandler;
+
 /**
  * Raven PHP Client
  *
@@ -36,21 +38,20 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
-     * @var \Raven\Breadcrumbs
+     * @var Breadcrumbs The breadcrumbs
      */
     public $breadcrumbs;
+
     /**
-     * @var \Raven\Context
+     * @var Context The context
      */
     public $context;
+
     /**
-     * @var \Raven\TransactionStack
+     * @var TransactionStack The transaction stack
      */
     public $transaction;
-    /**
-     * @var array $extra_data
-     */
-    public $extra_data;
+
     /**
      * @var string[]|null
      */
@@ -61,10 +62,6 @@ class Client
      * @var \Raven\ErrorHandler $error_handler
      */
     protected $error_handler;
-    /**
-     * @var integer|null bit mask for error_reporting used in ErrorHandler::handleError
-     */
-    protected $error_types;
 
     /**
      * @var \Raven\Serializer $serializer
@@ -76,132 +73,10 @@ class Client
     protected $reprSerializer;
 
     /**
-     * @var string $app_path The root path to your application code
-     */
-    protected $app_path;
-    /**
-     * @var string[] $prefixes Prefixes which should be stripped from filenames to create relative paths
-     */
-    protected $prefixes;
-    /**
-     * @var string[]|null Paths to exclude from app_path detection
-     */
-    protected $excluded_app_paths;
-    /**
-     * @var Callable Set a custom transport to override how Sentry events are sent upstream
-     */
-    protected $transport;
-
-    /**
-     * @var string $logger Adjust the default logger name for messages
-     */
-    public $logger;
-    /**
-     * @var string Full URL to Sentry (not a DSN)
-     * @doc https://docs.sentry.io/quickstart/
-     */
-    public $server;
-    /**
-     * @var string $secret_key Password in Sentry Server
-     */
-    public $secret_key;
-    /**
-     * @var string $public_key Password in Sentry Server
-     */
-    public $public_key;
-    /**
-     * @var integer $project This project ID in Sentry Server
-     */
-    public $project;
-    /**
-     * @var boolean $auto_log_stacks Fill stacktrace by debug_backtrace()
-     */
-    public $auto_log_stacks;
-    /**
-     * @var string $name Override the default value for the server’s hostname
-     */
-    public $name;
-    /**
-     * @var string $site SERVER_NAME (not a HTTP_HOST)
-     */
-    public $site;
-    /**
-     * @var array $tags An array of tags to apply to events in this context
-     */
-    public $tags;
-    /**
-     * @var mixed $release The version of your application (e.g. git SHA)
-     */
-    public $release;
-    /**
-     * @var string $environment The environment your application is running in
-     */
-    public $environment;
-    /**
-     * @var double The sampling factor to apply to events. A value of 0.00 will deny sending
-     * any events, and a value of 1.00 will send 100% of events
-     */
-    public $sample_rate;
-    /**
-     * @var boolean $trace Set this to false to disable reflection tracing
-     * (function calling arguments) in stacktraces
-     */
-    public $trace;
-    /**
-     * @var double $timeout Timeout for sending data
-     */
-    public $timeout;
-    /**
-     * @var string $message_limit This value is used to truncate message and frame variables.
-     * However it is not guarantee that length of whole message will be restricted by this value
-     */
-    public $message_limit;
-    /**
-     * @var string[] $exclude Excluded exceptions classes
-     */
-    public $exclude;
-    public $http_proxy;
-    /**
-     * @var Callable $send_callback A function which will be called whenever data is ready to be sent.
-     * Within the function you can mutate the data, or alternatively return false to instruct the SDK
-     * to not send the event
-     */
-    protected $send_callback;
-    /**
-     * @var string $curl_method
-     * sync (default): send requests immediately when they’re made
-     * async: uses a curl_multi handler for best-effort asynchronous submissions
-     * exec: asynchronously send events by forking a curl process for each item
-     */
-    public $curl_method;
-    /**
-     * @var string $curl_path Specify the path to the curl binary to be used with the ‘exec’ curl method
-     */
-    public $curl_path;
-    /**
-     * @var boolean $curl_ipv4 Resolve domain only with IPv4
-     * @todo change to $curl_ipresolve, http://php.net/manual/ru/function.curl-setopt.php
-     */
-    public $curl_ipv4;
-    /**
-     * @var string $ca_cert The path to the CA certificate bundle
-     */
-    public $ca_cert;
-    /**
-     * @var boolean $verify_ssl
-     */
-    public $verify_ssl;
-    /**
-     * @var mixed The SSL version (2 or 3) to use. By default PHP will try to determine this itself,
-     * although in some cases this must be set manually
-     */
-    public $curl_ssl_version;
-    public $trust_x_forwarded_proto;
-    public $mb_detect_order;
-    /**
      * @var \Raven\Processor[] $processors An array of classes to use to process data before it is sent to Sentry
      */
-    public $processors;
+    protected $processors = [];
+
     /**
      * @var string|int|null
      */
@@ -212,16 +87,14 @@ class Client
     protected $_last_sentry_error;
     public $_last_event_id;
     public $_user;
+
     /**
      * @var array[] $_pending_events
      */
-    public $_pending_events;
+    public $_pending_events = [];
+
     /**
-     * @var array User Agent showed in Sentry
-     */
-    public $sdk;
-    /**
-     * @var \Raven\CurlHandler
+     * @var CurlHandler
      */
     protected $_curl_handler;
     /**
@@ -231,132 +104,57 @@ class Client
     /**
      * @var bool
      */
-    protected $_shutdown_function_has_been_set;
+    protected $_shutdown_function_has_been_set = false;
 
-    public function __construct($options_or_dsn = null, $options = [])
+    /**
+     * @var Configuration The client configuration
+     */
+    protected $config;
+
+    /**
+     * Constructor.
+     *
+     * @param Configuration $config The client configuration
+     */
+    public function __construct(Configuration $config)
     {
-        if (is_array($options_or_dsn)) {
-            $options = array_merge($options_or_dsn, $options);
+        $this->config = $config;
+        $this->context = new Context();
+        $this->breadcrumbs = new Breadcrumbs();
+        $this->transaction = new TransactionStack();
+        $this->serializer = new Serializer($this->config->getMbDetectOrder());
+        $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
+        $this->processors = $this->createProcessors();
+
+        if (static::is_http_request() && isset($_SERVER['PATH_INFO'])) {
+            $this->transaction->push($_SERVER['PATH_INFO']);
         }
 
-        if (!is_array($options_or_dsn) && !empty($options_or_dsn)) {
-            $dsn = $options_or_dsn;
-        } elseif (!empty($_SERVER['SENTRY_DSN'])) {
-            $dsn = @$_SERVER['SENTRY_DSN'];
-        } elseif (!empty($options['dsn'])) {
-            $dsn = $options['dsn'];
-        } else {
-            $dsn = null;
+        if ($this->config->getSerializeAllObjects()) {
+            $this->setAllObjectSerialize(true);
         }
 
-        if (!empty($dsn)) {
-            $options = array_merge($options, self::parseDSN($dsn));
+        if ('async' === $this->config->getCurlMethod()) {
+            $this->_curl_handler = new CurlHandler($this->get_curl_options());
         }
-        unset($dsn);
-        $this->init_with_options($options);
 
-        if (\Raven\Util::get($options, 'install_default_breadcrumb_handlers', true)) {
+        if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
             $this->registerDefaultBreadcrumbHandlers();
         }
 
-        if (\Raven\Util::get($options, 'install_shutdown_handler', true)) {
+        if ($this->config->shouldInstallShutdownHandler()) {
             $this->registerShutdownFunction();
         }
     }
 
     /**
-     * @param array $options
+     * Gets the client configuration.
+     *
+     * @return Configuration
      */
-    public function init_with_options($options)
+    public function getConfig()
     {
-        foreach (
-            [
-                ['logger', 'php',],
-                ['server',],
-                ['secret_key',],
-                ['public_key',],
-                ['project',1,],
-                ['auto_log_stacks', false,],
-                ['name', gethostname()],
-                ['site', self::_server_variable('SERVER_NAME')],
-                ['tags', []],
-                ['release', []],
-                ['environment'],
-                ['sample_rate', 1],
-                ['trace', true],
-                ['timeout', 2],
-                ['message_limit', self::MESSAGE_LIMIT],
-                ['exclude', []],
-                ['http_proxy'],
-                ['extra_data', [], 'extra'],
-                ['send_callback'],
-
-                ['curl_method', 'sync'],
-                ['curl_path', 'curl'],
-                ['curl_ipv4', true],
-                ['ca_cert', static::get_default_ca_cert()],
-                ['verify_ssl', true],
-                ['curl_ssl_version'],
-                ['trust_x_forwarded_proto'],
-                ['transport'],
-                ['mb_detect_order'],
-                ['error_types'],
-            ] as &$set
-        ) {
-            if (count($set) == 1) {
-                $set = [$set[0], null, null];
-            } elseif (count($set) == 2) {
-                $set[] = null;
-            }
-
-            list($object_key, $default_value, $array_key) = $set;
-            if (is_null($array_key)) {
-                $array_key = $object_key;
-            }
-
-            // @todo It should be isset or array_key_exists?
-            $this->{$object_key} = isset($options[$array_key]) ? $options[$array_key] : $default_value;
-        }
-        $this->auto_log_stacks = (boolean)$this->auto_log_stacks;
-        $this->severity_map = null;
-
-        // app path is used to determine if code is part of your application
-        $this->setAppPath(\Raven\Util::get($options, 'app_path', null));
-        $this->setExcludedAppPaths(\Raven\Util::get($options, 'excluded_app_paths', null));
-        // a list of prefixes used to coerce absolute paths into relative
-        $this->setPrefixes(\Raven\Util::get($options, 'prefixes', static::getDefaultPrefixes()));
-        $this->processors = $this->setProcessorsFromOptions($options);
-
-        $this->_lasterror = null;
-        $this->_last_sentry_error = null;
-        $this->_curl_instance = null;
-        $this->_last_event_id = null;
-        $this->_user = null;
-        $this->_pending_events = [];
-        $this->context = new \Raven\Context();
-        $this->breadcrumbs = new \Raven\Breadcrumbs();
-        $this->_shutdown_function_has_been_set = false;
-
-        $this->sdk = \Raven\Util::get($options, 'sdk', [
-            'name' => 'sentry-php',
-            'version' => self::VERSION,
-        ]);
-        $this->serializer = new \Raven\Serializer($this->mb_detect_order);
-        $this->reprSerializer = new \Raven\ReprSerializer($this->mb_detect_order);
-        if (\Raven\Util::get($options, 'serialize_all_object', false)) {
-            $this->setAllObjectSerialize(true);
-        }
-
-        if ($this->curl_method == 'async') {
-            $this->_curl_handler = new \Raven\CurlHandler($this->get_curl_options());
-        }
-
-        $this->transaction = new \Raven\TransactionStack();
-        if (static::is_http_request() && isset($_SERVER['PATH_INFO'])) {
-            // @codeCoverageIgnoreStart
-            $this->transaction->push($_SERVER['PATH_INFO']);
-            // @codeCoverageIgnoreEnd
-        }
+        return $this->config;
     }
 
     public function __destruct()
@@ -404,116 +202,11 @@ class Client
         if ($this->error_handler) {
             throw new \Raven\Exception(sprintf('%s->install() must only be called once', get_class($this)));
         }
-        $this->error_handler = new \Raven\ErrorHandler($this, false, $this->error_types);
+        $this->error_handler = new \Raven\ErrorHandler($this, false, $this->getConfig()->getErrorTypes());
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
         return $this;
-    }
-
-    public function getRelease()
-    {
-        return $this->release;
-    }
-
-    public function setRelease($value)
-    {
-        $this->release = $value;
-        return $this;
-    }
-
-    public function getEnvironment()
-    {
-        return $this->environment;
-    }
-
-    public function setEnvironment($value)
-    {
-        $this->environment = $value;
-        return $this;
-    }
-
-    private static function getDefaultPrefixes()
-    {
-        $value = get_include_path();
-        return explode(PATH_SEPARATOR, $value);
-    }
-
-    private static function _convertPath($value)
-    {
-        $path = @realpath($value);
-        if ($path === false) {
-            $path = $value;
-        }
-        // we need app_path to have a trailing slash otherwise
-        // base path detection becomes complex if the same
-        // prefix is matched
-        if (substr($path, 0, 1) === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR) {
-            $path = $path.DIRECTORY_SEPARATOR;
-        }
-        return $path;
-    }
-
-    public function getAppPath()
-    {
-        return $this->app_path;
-    }
-
-    public function setAppPath($value)
-    {
-        if ($value) {
-            $this->app_path = static::_convertPath($value);
-        } else {
-            $this->app_path = null;
-        }
-        return $this;
-    }
-
-    public function getExcludedAppPaths()
-    {
-        return $this->excluded_app_paths;
-    }
-
-    public function setExcludedAppPaths($value)
-    {
-        $this->excluded_app_paths = $value ? array_map([$this, '_convertPath'], $value) : null;
-        return $this;
-    }
-
-    public function getPrefixes()
-    {
-        return $this->prefixes;
-    }
-
-    /**
-     * @param array $value
-     * @return \Raven\Client
-     */
-    public function setPrefixes($value)
-    {
-        $this->prefixes = $value ? array_map([$this, '_convertPath'], $value) : $value;
-        return $this;
-    }
-
-    public function getSendCallback()
-    {
-        return $this->send_callback;
-    }
-
-    public function setSendCallback($value)
-    {
-        $this->send_callback = $value;
-        return $this;
-    }
-
-    public function getTransport()
-    {
-        return $this->transport;
-    }
-
-    public function getServerEndpoint()
-    {
-        return $this->server;
     }
 
     public static function getUserAgent()
@@ -522,106 +215,30 @@ class Client
     }
 
     /**
-     * Set a custom transport to override how Sentry events are sent upstream.
-     *
-     * The bound function will be called with ``$client`` and ``$data`` arguments
-     * and is responsible for encoding the data, authenticating, and sending
-     * the data to the upstream Sentry server.
-     *
-     * @param Callable $value Function to be called
-     * @return \Raven\Client
-     */
-    public function setTransport($value)
-    {
-        $this->transport = $value;
-        return $this;
-    }
-
-    /**
-     * @return string[]|\Raven\Processor[]
-     */
-    public static function getDefaultProcessors()
-    {
-        return [
-            '\\Raven\\Processor\\SanitizeDataProcessor',
-        ];
-    }
-
-    /**
      * Sets the \Raven\Processor sub-classes to be used when data is processed before being
      * sent to Sentry.
      *
-     * @param $options
      * @return \Raven\Processor[]
      */
-    public function setProcessorsFromOptions($options)
+    public function createProcessors()
     {
         $processors = [];
-        foreach (\Raven\util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
-            /**
-             * @var \Raven\Processor        $new_processor
-             * @var \Raven\Processor|string $processor
-             */
-            $new_processor = new $processor($this);
+        $processorsOptions = $this->config->getProcessorsOptions();
 
-            if (isset($options['processorOptions']) && is_array($options['processorOptions'])) {
-                if (isset($options['processorOptions'][$processor])
-                    && method_exists($processor, 'setProcessorOptions')
-                ) {
-                    $new_processor->setProcessorOptions($options['processorOptions'][$processor]);
+        foreach ($this->config->getProcessors() as $processor) {
+            /**  @var Processor $processorInstance */
+            $processorInstance = new $processor($this);
+
+            if (isset($processorsOptions[$processor])) {
+                if (method_exists($processor, 'setProcessorOptions')) {
+                    $processorInstance->setProcessorOptions($processorsOptions[$processor]);
                 }
             }
-            $processors[] = $new_processor;
+
+            $processors[] = $processorInstance;
         }
+
         return $processors;
-    }
-
-    /**
-     * Parses a Raven-compatible DSN and returns an array of its values.
-     *
-     * @param string $dsn Raven compatible DSN
-     * @return array      parsed DSN
-     *
-     * @doc http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
-     */
-    public static function parseDSN($dsn)
-    {
-        $url = parse_url($dsn);
-        $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if (!in_array($scheme, ['http', 'https'])) {
-            throw new \InvalidArgumentException(
-                'Unsupported Sentry DSN scheme: '.
-                (!empty($scheme) ? $scheme : /** @lang text */'<not set>')
-            );
-        }
-        $netloc = (isset($url['host']) ? $url['host'] : null);
-        $netloc .= (isset($url['port']) ? ':'.$url['port'] : null);
-        $rawpath = (isset($url['path']) ? $url['path'] : null);
-        if ($rawpath) {
-            $pos = strrpos($rawpath, '/', 1);
-            if ($pos !== false) {
-                $path = substr($rawpath, 0, $pos);
-                $project = substr($rawpath, $pos + 1);
-            } else {
-                $path = '';
-                $project = substr($rawpath, 1);
-            }
-        } else {
-            $project = null;
-            $path = '';
-        }
-        $username = (isset($url['user']) ? $url['user'] : null);
-        $password = (isset($url['pass']) ? $url['pass'] : null);
-        if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
-            throw new \InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
-        }
-
-        return [
-            'server'     => sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project),
-            'project'    => $project,
-            'public_key' => $username,
-            'secret_key' => $password,
-        ];
     }
 
     public function getLastError()
@@ -720,7 +337,7 @@ class Client
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
-        if (in_array(get_class($exception), $this->exclude)) {
+        if (in_array(get_class($exception), $this->config->getExcludedExceptions())) {
             return null;
         }
 
@@ -916,22 +533,19 @@ class Client
         ];
     }
 
-    protected function get_extra_data()
-    {
-        return $this->extra_data;
-    }
-
     public function get_default_data()
     {
         return [
-            'server_name' => $this->name,
-            'project' => $this->project,
-            'site' => $this->site,
-            'logger' => $this->logger,
-            'tags' => $this->tags,
+            'server_name' => $this->config->getServerName(),
+            'project' => $this->config->getProjectId(),
+            'logger' => $this->config->getLogger(),
+            'tags' => $this->config->getTags(),
             'platform' => 'php',
-            'sdk' => $this->sdk,
             'culprit' => $this->transaction->peek(),
+            'sdk' => [
+                'name' => 'sentry-php',
+                'version' => self::VERSION,
+            ],
         ];
     }
 
@@ -954,7 +568,7 @@ class Client
         }
 
         if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, $this->message_limit);
+            $data['message'] = substr($data['message'], 0, self::MESSAGE_LIMIT);
         }
 
         $data = array_merge($this->get_default_data(), $data);
@@ -965,20 +579,20 @@ class Client
 
         $data = array_merge($this->get_user_data(), $data);
 
-        if ($this->release) {
-            $data['release'] = $this->release;
+        if (!empty($this->config->getRelease())) {
+            $data['release'] = $this->config->getRelease();
         }
-        if ($this->environment) {
-            $data['environment'] = $this->environment;
+
+        if (!empty($this->config->getCurrentEnvironment())) {
+            $data['environment'] = $this->config->getCurrentEnvironment();
         }
 
         $data['tags'] = array_merge(
-            $this->tags,
+            $this->config->getTags(),
             $this->context->tags,
             $data['tags']);
 
         $data['extra'] = array_merge(
-            $this->get_extra_data(),
             $this->context->extra,
             $data['extra']);
 
@@ -999,7 +613,7 @@ class Client
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
         }
 
-        if ((!$stack && $this->auto_log_stacks) || $stack === true) {
+        if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
             $stack = debug_backtrace();
 
             // Drop last stack
@@ -1119,24 +733,17 @@ class Client
      */
     public function send(&$data)
     {
-        if (is_callable($this->send_callback)
-            && call_user_func_array($this->send_callback, [&$data]) === false
-        ) {
-            // if send_callback returns false, end native send
+        if (false === $this->config->shouldCapture($data) || !$this->config->getServer()) {
             return;
         }
 
-        if (!$this->server) {
-            return;
-        }
-
-        if ($this->transport) {
-            call_user_func($this->transport, $this, $data);
+        if ($this->getConfig()->getTransport()) {
+            call_user_func($this->getConfig()->getTransport(), $this, $data);
             return;
         }
 
         // should this event be sampled?
-        if (mt_rand(1, 100) / 100.0 > $this->sample_rate) {
+        if (mt_rand(1, 100) / 100.0 > $this->config->getSampleRate()) {
             return;
         }
 
@@ -1148,7 +755,10 @@ class Client
             'Content-Type' => 'application/octet-stream'
         ];
 
-        $this->send_remote($this->server, $message, $headers);
+        $config = $this->getConfig();
+        $server = sprintf('%s/api/%d/store/', $config->getServer(), $config->getProjectId());
+
+        $this->send_remote($server, $message, $headers);
     }
 
     /**
@@ -1165,11 +775,6 @@ class Client
         $this->send_http($url, $data, $headers);
     }
 
-    protected static function get_default_ca_cert()
-    {
-        return dirname(__FILE__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cacert.pem';
-    }
-
     /**
      * @return array
      * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
@@ -1180,22 +785,22 @@ class Client
         $options = [
             CURLOPT_VERBOSE => false,
             CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
-            CURLOPT_CAINFO => $this->ca_cert,
+            CURLOPT_SSL_VERIFYPEER => $this->config->isSslVerificationEnabled(),
+            CURLOPT_CAINFO => $this->config->getSslCaFile(),
             CURLOPT_USERAGENT => 'sentry-php/' . self::VERSION,
         ];
-        if ($this->http_proxy) {
-            $options[CURLOPT_PROXY] = $this->http_proxy;
+        if (!empty($this->config->getProxy())) {
+            $options[CURLOPT_PROXY] = $this->config->getProxy();
         }
-        if ($this->curl_ssl_version) {
-            $options[CURLOPT_SSLVERSION] = $this->curl_ssl_version;
+        if (null !== $this->config->getCurlSslVersion()) {
+            $options[CURLOPT_SSLVERSION] = $this->config->getCurlSslVersion();
         }
-        if ($this->curl_ipv4) {
+        if ($this->config->getCurlIpv4()) {
             $options[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
         }
         if (defined('CURLOPT_TIMEOUT_MS')) {
             // MS is available in curl >= 7.16.2
-            $timeout = max(1, ceil(1000 * $this->timeout));
+            $timeout = max(1, ceil(1000 * $this->config->getTimeout()));
 
             // None of the versions of PHP contains this constant
             if (!defined('CURLOPT_CONNECTTIMEOUT_MS')) {
@@ -1207,7 +812,7 @@ class Client
             $options[CURLOPT_TIMEOUT_MS] = $timeout;
         } else {
             // fall back to the lower-precision timeout.
-            $timeout = max(1, ceil($this->timeout));
+            $timeout = max(1, ceil($this->config->getTimeout()));
             $options[CURLOPT_CONNECTTIMEOUT] = $timeout;
             $options[CURLOPT_TIMEOUT] = $timeout;
         }
@@ -1223,9 +828,9 @@ class Client
      */
     protected function send_http($url, $data, $headers = [])
     {
-        if ($this->curl_method == 'async') {
+        if ($this->config->getCurlMethod() == 'async') {
             $this->_curl_handler->enqueue($url, $data, $headers);
-        } elseif ($this->curl_method == 'exec') {
+        } elseif ($this->config->getCurlMethod() == 'exec') {
             $this->send_http_asynchronous_curl_exec($url, $data, $headers);
         } else {
             $this->send_http_synchronous($url, $data, $headers);
@@ -1248,10 +853,10 @@ class Client
         }
         $cmd = sprintf(
             '%s -X POST%s -d %s %s -m %d %s%s> /dev/null 2>&1 &',
-            escapeshellcmd($this->curl_path), $post_fields,
-            escapeshellarg($data), escapeshellarg($url), $this->timeout,
-            !$this->verify_ssl ? '-k ' : '',
-            !empty($this->ca_cert) ? '--cacert '.escapeshellarg($this->ca_cert).' ' : ''
+            escapeshellcmd($this->config->getCurlPath()), $post_fields,
+            escapeshellarg($data), escapeshellarg($url), $this->config->getTimeout(),
+            !$this->config->isSslVerificationEnabled() ? '-k ' : '',
+            !empty($this->config->getSslCaFile()) ? '--cacert '.escapeshellarg($this->config->getSslCaFile()).' ' : ''
         );
 
         return $cmd;
@@ -1367,7 +972,7 @@ class Client
     {
         $timestamp = microtime(true);
         return $this->get_auth_header(
-            $timestamp, static::getUserAgent(), $this->public_key, $this->secret_key
+            $timestamp, static::getUserAgent(), $this->config->getPublicKey(), $this->config->getSecretKey()
         );
     }
 
@@ -1437,7 +1042,7 @@ class Client
             return true;
         }
 
-        if (!empty($this->trust_x_forwarded_proto) &&
+        if (!empty($this->config->isTrustXForwardedProto()) &&
             !empty($_SERVER['X-FORWARDED-PROTO']) &&
             $_SERVER['X-FORWARDED-PROTO'] === 'https') {
             return true;

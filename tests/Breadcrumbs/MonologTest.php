@@ -11,6 +11,11 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use Monolog\Logger;
+use Raven\Breadcrumbs\MonologHandler;
+use Raven\Client;
+use Raven\Configuration;
+
 class MonologTest extends \PHPUnit_Framework_TestCase
 {
     protected function getSampleErrorMessage()
@@ -37,17 +42,19 @@ EOF;
 
     public function testSimple()
     {
-        $client = new \Raven\Client([
+        $client = new Client(new Configuration([
             'install_default_breadcrumb_handlers' => false,
-        ]);
-        $handler = new \Raven\Breadcrumbs\MonologHandler($client);
+        ]));
 
-        $logger = new \Monolog\Logger('sentry');
+        $handler = new MonologHandler($client);
+
+        $logger = new Logger('sentry');
         $logger->pushHandler($handler);
         $logger->addWarning('Foo');
 
         $crumbs = $client->breadcrumbs->fetch();
-        $this->assertEquals(count($crumbs), 1);
+
+        $this->assertCount(1, $crumbs);
         $this->assertEquals($crumbs[0]['message'], 'Foo');
         $this->assertEquals($crumbs[0]['category'], 'sentry');
         $this->assertEquals($crumbs[0]['level'], 'warning');
@@ -55,17 +62,19 @@ EOF;
 
     public function testErrorInMessage()
     {
-        $client = new \Raven\Client([
+        $client = new Client(new Configuration([
             'install_default_breadcrumb_handlers' => false,
-        ]);
-        $handler = new \Raven\Breadcrumbs\MonologHandler($client);
+        ]));
 
-        $logger = new \Monolog\Logger('sentry');
+        $handler = new MonologHandler($client);
+
+        $logger = new Logger('sentry');
         $logger->pushHandler($handler);
         $logger->addError($this->getSampleErrorMessage());
 
         $crumbs = $client->breadcrumbs->fetch();
-        $this->assertEquals(count($crumbs), 1);
+
+        $this->assertCount(1, $crumbs);
         $this->assertEquals($crumbs[0]['data']['type'], 'Exception');
         $this->assertEquals($crumbs[0]['data']['value'], 'An unhandled exception');
         $this->assertEquals($crumbs[0]['category'], 'sentry');
