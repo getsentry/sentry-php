@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## 1.7.0
+## 1.8.0
+
+## 1.7.0 (2017-06-07)
 
 - Corrected some issues with argument serialization in stacktraces (#399).
 - The default exception handler will now re-raise exceptions when `call_existing` is true and no exception handler is registered (#421).
