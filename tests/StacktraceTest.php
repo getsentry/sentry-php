@@ -12,7 +12,7 @@
 namespace Raven\Tests;
 
 use Raven\Client;
-use Raven\Configuration;
+use Raven\ClientBuilder;
 use Raven\Stacktrace;
 
 class StacktraceTest extends \PHPUnit_Framework_TestCase
@@ -24,7 +24,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->client = new Client(new Configuration());
+        $this->client = ClientBuilder::create()->getClient();
     }
 
     public function testGetFramesAndToArray()

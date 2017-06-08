@@ -16,7 +16,9 @@
         "phpunit/phpunit": "^4.8 || ^5.0",
         "ext-openssl": "*",
         "nokitakaze/testhttpserver": "^0.1.0",
-        "monolog/monolog": "~1.0"
+        "monolog/monolog": "~1.0",
+        "php-http/mock-client": "~1.0",
+        "symfony/phpunit-bridge": "~2.7|~3.0"
     },
     "require": {
         "php": ">=5.5",
@@ -26,7 +28,9 @@
         "ext-curl": "*",
         "composer/ca-bundle": "~1.0",
         "symfony/options-resolver": "~2.7|~3.0",
-        "php-http/httplug": "~1.1"
+        "php-http/httplug": "~1.1",
+        "php-http/curl-client": "~1.7",
+        "zendframework/zend-diactoros": "~1.4"
     },
     "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"

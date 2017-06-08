@@ -14,7 +14,7 @@ namespace Raven;
 /**
  * A configurable builder for Client objects.
  *
- * @author Stefano Arlandini <stefano.arlandini@nooo.it>
+ * @author Stefano Arlandini <sarlandini@alice.it>
  */
 interface ClientBuilderInterface
 {

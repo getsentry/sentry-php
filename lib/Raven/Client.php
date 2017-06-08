@@ -10,7 +10,8 @@
 
 namespace Raven;
 
-use Raven\CurlHandler;
+use Http\Client\HttpAsyncClient;
+use Http\Message\MessageFactory;
 
 /**
  * Raven PHP Client
@@ -112,13 +113,26 @@ class Client
     protected $config;
 
     /**
+     * @var HttpAsyncClient The HTTP client
+     */
+    private $httpClient;
+
+    /**
+     * @var MessageFactory The message factory
+     */
+    private $messageFactory;
+
+    /**
      * Constructor.
      *
-     * @param Configuration $config The client configuration
+     * @param Configuration   $config     The client configuration
+     * @param HttpAsyncClient $httpClient The HTTP client
      */
-    public function __construct(Configuration $config)
+    public function __construct(Configuration $config, HttpAsyncClient $httpClient, MessageFactory $messageFactory)
     {
         $this->config = $config;
+        $this->httpClient = $httpClient;
+        $this->messageFactory = $messageFactory;
         $this->context = new Context();
         $this->breadcrumbs = new Breadcrumbs();
         $this->transaction = new TransactionStack();
@@ -207,11 +221,6 @@ class Client
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
         return $this;
-    }
-
-    public static function getUserAgent()
-    {
-        return 'sentry-php/' . self::VERSION;
     }
 
     /**
@@ -748,31 +757,10 @@ class Client
         }
 
         $message = $this->encode($data);
+        $uri = sprintf('api/%d/store/', $this->getConfig()->getProjectId());
+        $request = $this->messageFactory->createRequest('POST', $uri, [], $message);
 
-        $headers = [
-            'User-Agent' => static::getUserAgent(),
-            'X-Sentry-Auth' => $this->getAuthHeader(),
-            'Content-Type' => 'application/octet-stream'
-        ];
-
-        $config = $this->getConfig();
-        $server = sprintf('%s/api/%d/store/', $config->getServer(), $config->getProjectId());
-
-        $this->send_remote($server, $message, $headers);
-    }
-
-    /**
-     * Send data to Sentry
-     *
-     * @param string       $url     Full URL to Sentry
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     */
-    protected function send_remote($url, $data, $headers = [])
-    {
-        $parts = parse_url($url);
-        $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
-        $this->send_http($url, $data, $headers);
+        $this->httpClient->sendAsyncRequest($request)->wait(true);
     }
 
     /**
@@ -937,43 +925,6 @@ class Client
         }
 
         return $success;
-    }
-
-    /**
-     * Generate a Sentry authorization header string
-     *
-     * @param string $timestamp  Timestamp when the event occurred
-     * @param string $client     HTTP client name (not \Raven\Client object)
-     * @param string $api_key    Sentry API key
-     * @param string $secret_key Sentry API key
-     * @return string
-     */
-    protected static function get_auth_header($timestamp, $client, $api_key, $secret_key)
-    {
-        $header = [
-            sprintf('sentry_timestamp=%F', $timestamp),
-            "sentry_client={$client}",
-            sprintf('sentry_version=%s', self::PROTOCOL),
-        ];
-
-        if ($api_key) {
-            $header[] = "sentry_key={$api_key}";
-        }
-
-        if ($secret_key) {
-            $header[] = "sentry_secret={$secret_key}";
-        }
-
-
-        return sprintf('Sentry %s', implode(', ', $header));
-    }
-
-    public function getAuthHeader()
-    {
-        $timestamp = microtime(true);
-        return $this->get_auth_header(
-            $timestamp, static::getUserAgent(), $this->config->getPublicKey(), $this->config->getSecretKey()
-        );
     }
 
     /**

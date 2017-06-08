@@ -13,8 +13,7 @@ namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
 use Raven\Breadcrumbs\MonologHandler;
-use Raven\Client;
-use Raven\Configuration;
+use Raven\ClientBuilder;
 
 class MonologTest extends \PHPUnit_Framework_TestCase
 {
@@ -42,9 +41,9 @@ EOF;
 
     public function testSimple()
     {
-        $client = new Client(new Configuration([
+        $client = $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
-        ]));
+        ])->getClient();
 
         $handler = new MonologHandler($client);
 
@@ -62,9 +61,9 @@ EOF;
 
     public function testErrorInMessage()
     {
-        $client = new Client(new Configuration([
+        $client = $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
-        ]));
+        ])->getClient();
 
         $handler = new MonologHandler($client);
 

@@ -11,6 +11,15 @@
 
 namespace Raven;
 
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\MessageFactory;
+use Http\Message\StreamFactory;
+use Raven\Transport\CurlTransportFactory;
+use Raven\Transport\PluginClientFactory;
+use Raven\Transport\TransportFactoryInterface;
+
 /**
  * The default implementation of {@link ClientBuilderInterface}.
  *
@@ -87,6 +96,21 @@ class ClientBuilder implements ClientBuilderInterface
     protected $configuration;
 
     /**
+     * @var MessageFactory The message factory
+     */
+    protected $messageFactory;
+
+    /**
+     * @var StreamFactory The stream factory
+     */
+    protected $streamFactory;
+
+    /**
+     * @var TransportFactoryInterface The transport factory
+     */
+    protected $transportFactory;
+
+    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -104,12 +128,40 @@ class ClientBuilder implements ClientBuilderInterface
         return new static($options);
     }
 
+    public function setMessageFactory(MessageFactory $messageFactory)
+    {
+        $this->messageFactory = $messageFactory;
+    }
+
+    public function setStreamFactory(StreamFactory $streamFactory)
+    {
+        $this->streamFactory = $streamFactory;
+    }
+
+    /**
+     * Sets the factory to use to create the transport.
+     *
+     * @param TransportFactoryInterface $transportFactory The transport factory
+     */
+    public function setTransportFactory(TransportFactoryInterface $transportFactory)
+    {
+        $this->transportFactory = $transportFactory;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function getClient()
     {
-        return new Client($this->configuration);
+        $messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
+        $transportFactory = $this->transportFactory ?: new CurlTransportFactory(
+            $messageFactory,
+            $this->streamFactory ?: StreamFactoryDiscovery::find()
+        );
+
+        $transportFactory = new PluginClientFactory($this->configuration, $transportFactory, UriFactoryDiscovery::find());
+
+        return new Client($this->configuration, $transportFactory->getInstance(), $messageFactory);
     }
 
     /**

@@ -12,7 +12,7 @@
 namespace Raven\Tests;
 
 use Raven\Client;
-use Raven\Configuration;
+use Raven\ClientBuilder;
 use Raven\Processor\SanitizeStacktraceProcessor;
 
 class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
@@ -29,7 +29,7 @@ class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->client = new Client(new Configuration());
+        $this->client = ClientBuilder::create()->getClient();
         $this->client->store_errors_for_bulk_send = true;
 
         $this->processor = new SanitizeStacktraceProcessor($this->client);
