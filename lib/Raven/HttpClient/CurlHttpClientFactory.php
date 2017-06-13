@@ -9,18 +9,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Raven\HttpClient;
 
 use Http\Client\Curl\Client;
 use Http\Message\MessageFactory;
 use Http\Message\StreamFactory;
 
 /**
- * This factory creates instances of the cURL transport.
+ * This factory creates instances of the cURL HTTP client.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class CurlTransportFactory implements TransportFactoryInterface
+final class CurlHttpClientFactory implements HttpClientFactoryInterface
 {
     /**
      * @var MessageFactory The message factory

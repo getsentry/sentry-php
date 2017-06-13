@@ -11,14 +11,17 @@
 
 namespace Raven;
 
+use Http\Client\Common\FlexibleHttpClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
+use Http\Message\RequestFactory;
 use Http\Message\StreamFactory;
-use Raven\Transport\CurlTransportFactory;
-use Raven\Transport\PluginClientFactory;
-use Raven\Transport\TransportFactoryInterface;
+use Raven\HttpClient\CurlHttpClientFactory;
+use Raven\HttpClient\PluginClientFactory;
+use Raven\HttpClient\HttpClientFactoryInterface;
+use Raven\HttpClient\Stream\DecoratingStreamFactory;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.
@@ -96,19 +99,19 @@ class ClientBuilder implements ClientBuilderInterface
     protected $configuration;
 
     /**
-     * @var MessageFactory The message factory
+     * @var MessageFactory The PSR-7 message factory
      */
     protected $messageFactory;
 
     /**
-     * @var StreamFactory The stream factory
+     * @var StreamFactory The PSR-7 stream factory
      */
     protected $streamFactory;
 
     /**
-     * @var TransportFactoryInterface The transport factory
+     * @var HttpClientFactoryInterface The HTTP client factory
      */
-    protected $transportFactory;
+    protected $httpClientFactory;
 
     /**
      * Class constructor.
@@ -128,24 +131,28 @@ class ClientBuilder implements ClientBuilderInterface
         return new static($options);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setMessageFactory(MessageFactory $messageFactory)
     {
         $this->messageFactory = $messageFactory;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setStreamFactory(StreamFactory $streamFactory)
     {
         $this->streamFactory = $streamFactory;
     }
 
     /**
-     * Sets the factory to use to create the transport.
-     *
-     * @param TransportFactoryInterface $transportFactory The transport factory
+     * {@inheritdoc}
      */
-    public function setTransportFactory(TransportFactoryInterface $transportFactory)
+    public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory)
     {
-        $this->transportFactory = $transportFactory;
+        $this->httpClientFactory = $httpClientFactory;
     }
 
     /**
@@ -154,14 +161,13 @@ class ClientBuilder implements ClientBuilderInterface
     public function getClient()
     {
         $messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
-        $transportFactory = $this->transportFactory ?: new CurlTransportFactory(
-            $messageFactory,
-            $this->streamFactory ?: StreamFactoryDiscovery::find()
-        );
+        $streamFactory = new DecoratingStreamFactory($this->streamFactory ?: StreamFactoryDiscovery::find());
+        $httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($messageFactory, $streamFactory);
 
-        $transportFactory = new PluginClientFactory($this->configuration, $transportFactory, UriFactoryDiscovery::find());
+        $httpClientFactory = new PluginClientFactory($this->configuration, $httpClientFactory, UriFactoryDiscovery::find());
+        $httpClient = new FlexibleHttpClient($httpClientFactory->getInstance());
 
-        return new Client($this->configuration, $transportFactory->getInstance(), $messageFactory);
+        return $this->instantiate($httpClient, $messageFactory);
     }
 
     /**
@@ -183,5 +189,10 @@ class ClientBuilder implements ClientBuilderInterface
         call_user_func_array([$this->configuration, $name], $arguments);
 
         return $this;
+    }
+
+    protected function instantiate(FlexibleHttpClient $httpClient, RequestFactory $requestFactory)
+    {
+        return new Client($this->configuration, $httpClient, $requestFactory);
     }
 }

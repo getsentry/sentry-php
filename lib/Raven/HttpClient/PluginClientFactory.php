@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Raven\HttpClient;
 
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
@@ -19,14 +19,15 @@ use Http\Client\Common\PluginClient;
 use Http\Message\UriFactory;
 use Raven\Client;
 use Raven\Configuration;
-use Raven\Transport\Authentication\SentryAuth;
+use Raven\HttpClient\Authentication\SentryAuth;
 
 /**
- *
+ * This factory decorates each created HTTP client with all the plugins needed
+ * to make them work with a Sentry server.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class PluginClientFactory implements TransportFactoryInterface
+final class PluginClientFactory implements HttpClientFactoryInterface
 {
     /**
      * @var Configuration The Raven client configuration
@@ -34,9 +35,9 @@ final class PluginClientFactory implements TransportFactoryInterface
     private $configuration;
 
     /**
-     * @var TransportFactoryInterface The transport factory
+     * @var HttpClientFactoryInterface The HTTP client factory
      */
-    private $transportFactory;
+    private $httpClientFactory;
 
     /**
      * @var UriFactory The URI factory
@@ -46,14 +47,14 @@ final class PluginClientFactory implements TransportFactoryInterface
     /**
      * Constructor.
      *
-     * @param Configuration             $configuration    The Raven client configuration
-     * @param TransportFactoryInterface $transportFactory The transport factory
-     * @param UriFactory                $uriFactory       The URI factory
+     * @param Configuration              $configuration     The Raven client configuration
+     * @param HttpClientFactoryInterface $httpClientFactory The transport factory
+     * @param UriFactory                 $uriFactory        The URI factory
      */
-    public function __construct(Configuration $configuration, TransportFactoryInterface $transportFactory, UriFactory $uriFactory)
+    public function __construct(Configuration $configuration, HttpClientFactoryInterface $httpClientFactory, UriFactory $uriFactory)
     {
         $this->configuration = $configuration;
-        $this->transportFactory = $transportFactory;
+        $this->httpClientFactory = $httpClientFactory;
         $this->uriFactory = $uriFactory;
     }
 
@@ -62,7 +63,7 @@ final class PluginClientFactory implements TransportFactoryInterface
      */
     public function getInstance(array $options = [])
     {
-        $client = $this->transportFactory->getInstance($options);
+        $client = $this->httpClientFactory->getInstance($options);
         $plugins = [];
 
         if (null !== $this->configuration->getServer()) {
@@ -96,7 +97,7 @@ final class PluginClientFactory implements TransportFactoryInterface
     private function getHeadersPlugin()
     {
         return new HeaderSetPlugin([
-            'User-Agent' => 'sentry-php/' . Client::VERSION,
+            'User-Agent' => Client::USER_AGENT,
             'Content-Type' => 'application/octet-stream',
         ]);
     }

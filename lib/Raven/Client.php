@@ -10,8 +10,11 @@
 
 namespace Raven;
 
-use Http\Client\HttpAsyncClient;
-use Http\Message\MessageFactory;
+use Http\Client\Common\FlexibleHttpClient;
+use Http\Message\Encoding\CompressStream;
+use Http\Message\RequestFactory;
+use Raven\HttpClient\Stream\Base64EncodingStream;
+use Raven\Util\JSON;
 
 /**
  * Raven PHP Client
@@ -37,6 +40,11 @@ class Client
      * Default message limit
      */
     const MESSAGE_LIMIT = 1024;
+
+    /**
+     * This constant defines the client's user-agent string
+     */
+    const USER_AGENT = 'sentry-php/' . self::VERSION;
 
     /**
      * @var Breadcrumbs The breadcrumbs
@@ -113,26 +121,27 @@ class Client
     protected $config;
 
     /**
-     * @var HttpAsyncClient The HTTP client
+     * @var FlexibleHttpClient The HTTP client
      */
     private $httpClient;
 
     /**
-     * @var MessageFactory The message factory
+     * @var RequestFactory The PSR-7 request factory
      */
-    private $messageFactory;
+    private $requestFactory;
 
     /**
      * Constructor.
      *
-     * @param Configuration   $config     The client configuration
-     * @param HttpAsyncClient $httpClient The HTTP client
+     * @param Configuration      $config         The client configuration
+     * @param FlexibleHttpClient $httpClient     The HTTP client
+     * @param RequestFactory     $requestFactory The PSR-7 request factory
      */
-    public function __construct(Configuration $config, HttpAsyncClient $httpClient, MessageFactory $messageFactory)
+    public function __construct(Configuration $config, FlexibleHttpClient $httpClient, RequestFactory $requestFactory)
     {
         $this->config = $config;
         $this->httpClient = $httpClient;
-        $this->messageFactory = $messageFactory;
+        $this->requestFactory = $requestFactory;
         $this->context = new Context();
         $this->breadcrumbs = new Breadcrumbs();
         $this->transaction = new TransactionStack();
@@ -713,26 +722,7 @@ class Client
      */
     public function encode(&$data)
     {
-        $message = json_encode($data);
-        if ($message === false) {
-            if (function_exists('json_last_error_msg')) {
-                $this->_lasterror = json_last_error_msg();
-            } else {
-                // @codeCoverageIgnoreStart
-                $this->_lasterror = json_last_error();
-                // @codeCoverageIgnoreEnd
-            }
-            return false;
-        }
-
-        if (function_exists("gzcompress")) {
-            $message = gzcompress($message);
-        }
-
-        // PHP's builtin curl_* function are happy without this, but the exec method requires it
-        $message = base64_encode($message);
-
-        return $message;
+        return JSON::encode($data);
     }
 
     /**
@@ -756,9 +746,9 @@ class Client
             return;
         }
 
-        $message = $this->encode($data);
         $uri = sprintf('api/%d/store/', $this->getConfig()->getProjectId());
-        $request = $this->messageFactory->createRequest('POST', $uri, [], $message);
+
+        $request = $this->requestFactory->createRequest('POST', $uri, [], $this->encode($data));
 
         $this->httpClient->sendAsyncRequest($request)->wait(true);
     }

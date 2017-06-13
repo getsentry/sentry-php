@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Transport\Authentication;
+namespace Raven\Tests\HttpClient\Authentication;
 
 use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\Configuration;
-use Raven\Transport\Authentication\SentryAuth;
+use Raven\HttpClient\Authentication\SentryAuth;
 
 /**
  * @group time-sensitive
@@ -37,7 +37,7 @@ class SentryAuthTest extends \PHPUnit_Framework_TestCase
         $headerValue = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public, sentry_secret=secret',
             Client::PROTOCOL,
-            'sentry-php/' . Client::VERSION,
+            Client::USER_AGENT,
             microtime(true)
         );
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace Raven\Tests\Transport;
+namespace Raven\Tests\HttpClient;
 
 use Http\Client\Curl\Client;
 use Http\Message\MessageFactory;
 use Http\Message\StreamFactory;
-use Raven\Transport\CurlTransportFactory;
+use Raven\HttpClient\CurlHttpClientFactory;
 
 class CurlTransportFactoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -19,7 +19,7 @@ class CurlTransportFactoryTest extends \PHPUnit_Framework_TestCase
         $streamFactory = $this->getMockBuilder(StreamFactory::class)
             ->getMock();
 
-        $transportFactory = new CurlTransportFactory($messageFactory, $streamFactory);
+        $transportFactory = new CurlHttpClientFactory($messageFactory, $streamFactory);
         $client = $transportFactory->getInstance(['foo' => 'bar']);
 
         $this->assertInstanceOf(Client::class, $client);

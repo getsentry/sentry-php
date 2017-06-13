@@ -11,6 +11,10 @@
 
 namespace Raven;
 
+use Http\Message\MessageFactory;
+use Http\Message\StreamFactory;
+use Raven\HttpClient\HttpClientFactoryInterface;
+
 /**
  * A configurable builder for Client objects.
  *
@@ -26,6 +30,27 @@ interface ClientBuilderInterface
      * @return static
      */
     public static function create(array $options = []);
+
+    /**
+     * Sets the factory to use to create PSR-7 messages.
+     *
+     * @param MessageFactory $messageFactory The factory
+     */
+    public function setMessageFactory(MessageFactory $messageFactory);
+
+    /**
+     * Sets the factory to use to create PSR-7 streams.
+     *
+     * @param StreamFactory $streamFactory The factory
+     */
+    public function setStreamFactory(StreamFactory $streamFactory);
+
+    /**
+     * Sets the factory to use to create the HTTP client.
+     *
+     * @param HttpClientFactoryInterface $httpClientFactory The factory
+     */
+    public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory);
 
     /**
      * Gets the instance of the client built using the configured options.

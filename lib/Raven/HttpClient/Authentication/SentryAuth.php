@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport\Authentication;
+namespace Raven\HttpClient\Authentication;
 
 use Http\Message\Authentication;
 use Psr\Http\Message\RequestInterface;
@@ -17,9 +17,8 @@ use Raven\Client;
 use Raven\Configuration;
 
 /**
- * This authentication method sends an X-Sentry-Auth header compatible with a
- * Sentry server that contains the protocol version, the current timestamp, the
- * user agent of the SDK and finally the public and secret key.
+ * This authentication method sends the requests along with a X-Sentry-Auth
+ * header.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
@@ -48,7 +47,7 @@ final class SentryAuth implements Authentication
         $header = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=%s, sentry_secret=%s',
             Client::PROTOCOL,
-            'sentry-php/' . Client::VERSION,
+            Client::USER_AGENT,
             microtime(true),
             $this->configuration->getPublicKey(),
             $this->configuration->getSecretKey()
