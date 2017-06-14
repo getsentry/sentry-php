@@ -11,15 +11,21 @@
 
 namespace Raven;
 
+use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin\AuthenticationPlugin;
+use Http\Client\Common\Plugin\BaseUriPlugin;
+use Http\Client\Common\Plugin\ErrorPlugin;
+use Http\Client\Common\Plugin\HeaderSetPlugin;
+use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\MessageFactory;
 use Http\Message\RequestFactory;
 use Http\Message\StreamFactory;
+use Http\Message\UriFactory;
+use Raven\HttpClient\Authentication\SentryAuth;
 use Raven\HttpClient\CurlHttpClientFactory;
-use Raven\HttpClient\PluginClientFactory;
 use Raven\HttpClient\HttpClientFactoryInterface;
 use Raven\HttpClient\Stream\DecoratingStreamFactory;
 
@@ -74,6 +80,7 @@ use Raven\HttpClient\Stream\DecoratingStreamFactory;
  * @method setProxy(string $proxy)
  * @method string getRelease()
  * @method setRelease(string $release)
+ * @method string getServer()
  * @method string getServerName()
  * @method setServerName(string $serverName)
  * @method array getSslOptions()
@@ -97,9 +104,14 @@ class ClientBuilder implements ClientBuilderInterface
     protected $configuration;
 
     /**
-     * @var MessageFactory The PSR-7 message factory
+     * @var UriFactory The PSR-7 URI factory
      */
-    protected $messageFactory;
+    protected $uriFactory;
+
+    /**
+     * @var RequestFactory The PSR-7 request factory
+     */
+    protected $requestFactory;
 
     /**
      * @var StreamFactory The PSR-7 stream factory
@@ -110,6 +122,11 @@ class ClientBuilder implements ClientBuilderInterface
      * @var HttpClientFactoryInterface The HTTP client factory
      */
     protected $httpClientFactory;
+
+    /**
+     * @var Plugin[] The list of Httplug plugins
+     */
+    protected $httpClientPlugins = [];
 
     /**
      * Class constructor.
@@ -132,9 +149,21 @@ class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setMessageFactory(MessageFactory $messageFactory)
+    public function setUriFactory(UriFactory $uriFactory)
     {
-        $this->messageFactory = $messageFactory;
+        $this->uriFactory = $uriFactory;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setRequestFactory(RequestFactory $requestFactory)
+    {
+        $this->requestFactory = $requestFactory;
+
+        return $this;
     }
 
     /**
@@ -143,6 +172,8 @@ class ClientBuilder implements ClientBuilderInterface
     public function setStreamFactory(StreamFactory $streamFactory)
     {
         $this->streamFactory = $streamFactory;
+
+        return $this;
     }
 
     /**
@@ -151,6 +182,34 @@ class ClientBuilder implements ClientBuilderInterface
     public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory)
     {
         $this->httpClientFactory = $httpClientFactory;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addHttpClientPlugin(Plugin $plugin)
+    {
+        $this->httpClientPlugins[] = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeHttpClientPlugin($className)
+    {
+        foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
+            if (!$httpClientPlugin instanceof $className) {
+                continue;
+            }
+
+            unset($this->httpClientPlugins[$index]);
+        }
+
+        return $this;
     }
 
     /**
@@ -158,12 +217,13 @@ class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient()
     {
-        $messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
-        $streamFactory = new DecoratingStreamFactory($this->streamFactory ?: StreamFactoryDiscovery::find());
-        $httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($messageFactory, $streamFactory);
-        $httpClientFactory = new PluginClientFactory($this->configuration, $httpClientFactory, UriFactoryDiscovery::find());
+        $this->requestFactory = $this->requestFactory?: MessageFactoryDiscovery::find();
+        $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
+        $this->requestFactory = $this->requestFactory ?: MessageFactoryDiscovery::find();
+        $this->streamFactory = new DecoratingStreamFactory($this->streamFactory ?: StreamFactoryDiscovery::find());
+        $this->httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($this->requestFactory, $this->streamFactory);
 
-        return $this->instantiate($httpClientFactory->getInstance(), $messageFactory);
+        return new Client($this->configuration, $this->createHttpClientInstance(), $this->requestFactory);
     }
 
     /**
@@ -188,15 +248,25 @@ class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Creates a new instance of the Raven client.
+     * Creates a new instance of the HTTP client.
      *
-     * @param HttpAsyncClient $httpClient     The HTTP client
-     * @param RequestFactory  $requestFactory The PSR-7 request factory
-     *
-     * @return Client
+     * @return HttpAsyncClient
      */
-    protected function instantiate(HttpAsyncClient $httpClient, RequestFactory $requestFactory)
+    protected function createHttpClientInstance()
     {
-        return new Client($this->configuration, $httpClient, $requestFactory);
+        $defaultHeaders = [
+            'User-Agent' => Client::USER_AGENT,
+            'Content-Type' => 'application/octet-stream',
+        ];
+
+        if (null !== $this->configuration->getServer()) {
+            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getServer())));
+        }
+
+        $this->addHttpClientPlugin(new HeaderSetPlugin($defaultHeaders));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
+        $this->addHttpClientPlugin(new ErrorPlugin());
+
+        return new PluginClient($this->httpClientFactory->getInstance(), $this->httpClientPlugins);
     }
 }

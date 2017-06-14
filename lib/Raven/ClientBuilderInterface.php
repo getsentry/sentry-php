@@ -11,8 +11,10 @@
 
 namespace Raven;
 
-use Http\Message\MessageFactory;
+use Http\Client\Common\Plugin;
+use Http\Message\RequestFactory;
 use Http\Message\StreamFactory;
+use Http\Message\UriFactory;
 use Raven\HttpClient\HttpClientFactoryInterface;
 
 /**
@@ -32,16 +34,29 @@ interface ClientBuilderInterface
     public static function create(array $options = []);
 
     /**
+     * Sets the factory to use to create URIs.
+     *
+     * @param UriFactory $uriFactory The factory
+     *
+     * @return $this
+     */
+    public function setUriFactory(UriFactory $uriFactory);
+
+    /**
      * Sets the factory to use to create PSR-7 messages.
      *
-     * @param MessageFactory $messageFactory The factory
+     * @param RequestFactory $requestFactory The factory
+     *
+     * @return $this
      */
-    public function setMessageFactory(MessageFactory $messageFactory);
+    public function setRequestFactory(RequestFactory $requestFactory);
 
     /**
      * Sets the factory to use to create PSR-7 streams.
      *
      * @param StreamFactory $streamFactory The factory
+     *
+     * @return $this
      */
     public function setStreamFactory(StreamFactory $streamFactory);
 
@@ -49,8 +64,28 @@ interface ClientBuilderInterface
      * Sets the factory to use to create the HTTP client.
      *
      * @param HttpClientFactoryInterface $httpClientFactory The factory
+     *
+     * @return $this
      */
     public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory);
+
+    /**
+     * Adds a new HTTP client plugin to the end of the plugins chain.
+     *
+     * @param Plugin $plugin The plugin instance
+     *
+     * @return $this
+     */
+    public function addHttpClientPlugin(Plugin $plugin);
+
+    /**
+     * Removes a HTTP client plugin by its fully qualified class name (FQCN).
+     *
+     * @param string $className The class name
+     *
+     * @return $this
+     */
+    public function removeHttpClientPlugin($className);
 
     /**
      * Gets the instance of the client built using the configured options.

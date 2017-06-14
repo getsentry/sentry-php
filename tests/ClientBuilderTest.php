@@ -11,6 +11,8 @@
 
 namespace Raven\Tests;
 
+use Http\Client\Common\Plugin;
+use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
@@ -22,6 +24,41 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
         $clientBuilder = ClientBuilder::create();
 
         $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
+    }
+
+    public function testAddHttpClientPlugin()
+    {
+        /** @var Plugin|\PHPUnit_Framework_MockObject_MockObject $plugin */
+        $plugin = $this->getMockBuilder(Plugin::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addHttpClientPlugin($plugin);
+
+        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
+
+        $this->assertCount(1, $plugins);
+        $this->assertSame($plugin, $plugins[0]);
+    }
+
+    public function testRemoveHttpClientPlugin()
+    {
+        $plugin = new PluginStub1();
+        $plugin2 = new PluginStub2();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addHttpClientPlugin($plugin);
+        $clientBuilder->addHttpClientPlugin($plugin);
+        $clientBuilder->addHttpClientPlugin($plugin2);
+
+        $this->assertAttributeCount(3, 'httpClientPlugins', $clientBuilder);
+
+        $clientBuilder->removeHttpClientPlugin(PluginStub1::class);
+
+        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
+
+        $this->assertCount(1, $plugins);
+        $this->assertSame($plugin2, reset($plugins));
     }
 
     public function testGetClient()
@@ -99,5 +136,19 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setProcessors', ['foo']],
             ['setProcessorsOptions', ['foo']],
         ];
+    }
+}
+
+class PluginStub1 implements Plugin
+{
+    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    {
+    }
+}
+
+class PluginStub2 implements Plugin
+{
+    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    {
     }
 }
