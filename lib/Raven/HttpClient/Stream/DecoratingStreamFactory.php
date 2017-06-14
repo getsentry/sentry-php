@@ -13,6 +13,7 @@ namespace Raven\HttpClient\Stream;
 
 use Http\Message\Encoding\CompressStream;
 use Http\Message\StreamFactory;
+use Raven\HttpClient\Stream\Encoding\Base64EncodingStream;
 
 /**
  * This factory decorates another stream with one capable of encoding the data

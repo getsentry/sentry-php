@@ -11,9 +11,7 @@
 namespace Raven;
 
 use Http\Client\Common\FlexibleHttpClient;
-use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
-use Raven\HttpClient\Stream\Base64EncodingStream;
 use Raven\Util\JSON;
 
 /**
@@ -717,15 +715,6 @@ class Client
     }
 
     /**
-     * @param array $data
-     * @return string|bool
-     */
-    public function encode(&$data)
-    {
-        return JSON::encode($data);
-    }
-
-    /**
      * Wrapper to handle encoding and sending data to the Sentry API server.
      *
      * @param array     $data       Associative array of data to log
@@ -747,8 +736,7 @@ class Client
         }
 
         $uri = sprintf('api/%d/store/', $this->getConfig()->getProjectId());
-
-        $request = $this->requestFactory->createRequest('POST', $uri, [], $this->encode($data));
+        $request = $this->requestFactory->createRequest('POST', $uri, [], JSON::encode($data));
 
         $this->httpClient->sendAsyncRequest($request)->wait(true);
     }

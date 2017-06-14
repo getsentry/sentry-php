@@ -15,12 +15,13 @@ use Http\Client\Common\FlexibleHttpClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
-use Raven\CurlHandler;
 use Raven\Processor\SanitizeDataProcessor;
+use Raven\Util\JSON;
 
 function simple_function($a = null, $b = null, $c = null)
 {
@@ -29,7 +30,7 @@ function simple_function($a = null, $b = null, $c = null)
 
 function invalid_encoding()
 {
-    $fp = fopen(__DIR__ . '/../../data/binary', 'r');
+    $fp = fopen(__DIR__ . '/data/binary', 'r');
     simple_function(fread($fp, 64));
     fclose($fp);
 }
@@ -571,7 +572,11 @@ organization           = "Sentry"
 
         $this->assertCount(1, $client->_pending_events);
 
-        $this->assertNotFalse($client->encode($client->_pending_events[0]));
+        try {
+            $client->send($client->_pending_events[0]);
+        } catch (\Exception $ex) {
+            $this->fail();
+        }
     }
 
     public function testDoesRegisterProcessors()
@@ -1439,24 +1444,6 @@ organization           = "Sentry"
             $actual = $method->invoke(null, $key);
             $this->assertNotNull($actual);
             $this->assertEquals('', $actual);
-        }
-    }
-
-    public function testEncode()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $data = ['some' => (object)['value' => 'data'], 'foo' => ['bar', null, 123], false];
-        $json_stringify = json_encode($data);
-        $value = $client->encode($data);
-        $this->assertNotFalse($value);
-        $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, '\\Raven\\Client::encode returned malformed data');
-        $decoded = base64_decode($value);
-        $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
-        if (function_exists("gzcompress")) {
-            $decoded = gzuncompress($decoded);
-            $this->assertEquals($json_stringify, $decoded, 'Can not decompress compressed blob');
-        } else {
-            $this->assertEquals($json_stringify, $decoded);
         }
     }
 
