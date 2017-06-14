@@ -11,7 +11,7 @@
 
 namespace Raven;
 
-use Http\Client\Common\FlexibleHttpClient;
+use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
@@ -34,8 +34,6 @@ use Raven\HttpClient\Stream\DecoratingStreamFactory;
  * @method setPrefixes(array $prefixes)
  * @method bool getSerializeAllObjects()
  * @method setSerializeAllObjects(bool $serializeAllObjects)
- * @method string getCurlMethod()
- * @method setCurlMethod(string $method)
  * @method string getCurlPath()
  * @method setCurlPath(string $path)
  * @method bool getCurlIpv4()
@@ -163,11 +161,9 @@ class ClientBuilder implements ClientBuilderInterface
         $messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $streamFactory = new DecoratingStreamFactory($this->streamFactory ?: StreamFactoryDiscovery::find());
         $httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($messageFactory, $streamFactory);
-
         $httpClientFactory = new PluginClientFactory($this->configuration, $httpClientFactory, UriFactoryDiscovery::find());
-        $httpClient = new FlexibleHttpClient($httpClientFactory->getInstance());
 
-        return $this->instantiate($httpClient, $messageFactory);
+        return $this->instantiate($httpClientFactory->getInstance(), $messageFactory);
     }
 
     /**
@@ -194,12 +190,12 @@ class ClientBuilder implements ClientBuilderInterface
     /**
      * Creates a new instance of the Raven client.
      *
-     * @param FlexibleHttpClient $httpClient     The HTTP client
-     * @param RequestFactory     $requestFactory The PSR-7 request factory
+     * @param HttpAsyncClient $httpClient     The HTTP client
+     * @param RequestFactory  $requestFactory The PSR-7 request factory
      *
      * @return Client
      */
-    protected function instantiate(FlexibleHttpClient $httpClient, RequestFactory $requestFactory)
+    protected function instantiate(HttpAsyncClient $httpClient, RequestFactory $requestFactory)
     {
         return new Client($this->configuration, $httpClient, $requestFactory);
     }

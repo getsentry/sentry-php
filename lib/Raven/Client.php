@@ -10,7 +10,7 @@
 
 namespace Raven;
 
-use Http\Client\Common\FlexibleHttpClient;
+use Http\Client\HttpAsyncClient;
 use Http\Message\RequestFactory;
 use Raven\Util\JSON;
 
@@ -101,10 +101,6 @@ class Client
     public $_pending_events = [];
 
     /**
-     * @var CurlHandler
-     */
-    protected $_curl_handler;
-    /**
      * @var resource|null
      */
     protected $_curl_instance;
@@ -119,7 +115,7 @@ class Client
     protected $config;
 
     /**
-     * @var FlexibleHttpClient The HTTP client
+     * @var HttpAsyncClient The HTTP client
      */
     private $httpClient;
 
@@ -131,11 +127,11 @@ class Client
     /**
      * Constructor.
      *
-     * @param Configuration      $config         The client configuration
-     * @param FlexibleHttpClient $httpClient     The HTTP client
-     * @param RequestFactory     $requestFactory The PSR-7 request factory
+     * @param Configuration   $config         The client configuration
+     * @param HttpAsyncClient $httpClient     The HTTP client
+     * @param RequestFactory  $requestFactory The PSR-7 request factory
      */
-    public function __construct(Configuration $config, FlexibleHttpClient $httpClient, RequestFactory $requestFactory)
+    public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
     {
         $this->config = $config;
         $this->httpClient = $httpClient;
@@ -153,10 +149,6 @@ class Client
 
         if ($this->config->getSerializeAllObjects()) {
             $this->setAllObjectSerialize(true);
-        }
-
-        if ('async' === $this->config->getCurlMethod()) {
-            $this->_curl_handler = new CurlHandler($this->get_curl_options());
         }
 
         if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
@@ -180,7 +172,6 @@ class Client
     {
         // Force close curl resource
         $this->close_curl_resource();
-        $this->force_send_async_curl_events();
     }
 
     /**
@@ -996,20 +987,12 @@ class Client
         $this->user_context(array_merge($user, $data));
     }
 
-    public function force_send_async_curl_events()
-    {
-        if (!is_null($this->_curl_handler)) {
-            $this->_curl_handler->join();
-        }
-    }
-
     public function onShutdown()
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
         $this->sendUnsentErrors();
-        $this->force_send_async_curl_events();
     }
 
     /**

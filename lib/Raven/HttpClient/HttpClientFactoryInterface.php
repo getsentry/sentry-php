@@ -3,7 +3,6 @@
 namespace Raven\HttpClient;
 
 use Http\Client\HttpAsyncClient;
-use Http\Client\HttpClient;
 
 /**
  * This interface implements a contract that should be respected by all factories
@@ -19,7 +18,7 @@ interface HttpClientFactoryInterface
      *
      * @param array $options Options to pass to the client
      *
-     * @return HttpClient|HttpAsyncClient
+     * @return HttpAsyncClient
      */
     public function getInstance(array $options = []);
 }

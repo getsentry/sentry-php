@@ -139,28 +139,6 @@ class Configuration
     }
 
     /**
-     * Gets the cURL method to use to send data.
-     *
-     * @return string
-     */
-    public function getCurlMethod()
-    {
-        return $this->options['curl_method'];
-    }
-
-    /**
-     * Sets the cURL method to use to send data.
-     *
-     * @param bool $method The cURL method
-     */
-    public function setCurlMethod($method)
-    {
-        $options = array_merge($this->options, ['curl_method' => $method]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the path to the cURL binary to be used with the "exec" curl method.
      *
      * @return string
@@ -893,7 +871,6 @@ class Configuration
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
-            'curl_method' => 'sync',
             'curl_path' => 'curl',
             'curl_ipv4' => true,
             'curl_ssl_version' => null,
@@ -935,7 +912,6 @@ class Configuration
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
-        $resolver->setAllowedTypes('curl_method', 'string');
         $resolver->setAllowedTypes('curl_path', 'string');
         $resolver->setAllowedTypes('curl_ssl_version', ['null', 'int']);
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);

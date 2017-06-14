@@ -69,7 +69,6 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setIsTrustXForwardedProto', true],
             ['setPrefixes', ['foo', 'bar']],
             ['setSerializeAllObjects', false],
-            ['setCurlMethod', 'async'],
             ['setCurlPath', 'foo'],
             ['setCurlIpv4', true],
             ['setCurlSslVersion', CURL_SSLVERSION_DEFAULT],

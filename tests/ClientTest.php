@@ -10,9 +10,7 @@
 
 namespace Raven\Tests;
 
-use Http\Client\Common\FlexibleHttpClient;
 use Http\Client\HttpAsyncClient;
-use Http\Message\MessageFactory;
 use Http\Message\RequestFactory;
 use Psr\Http\Message\RequestInterface;
 use Raven\Breadcrumbs\ErrorHandler;
@@ -121,16 +119,6 @@ class Dummy_Raven_Client_With_Overrided_Direct_Send extends \Raven\Client
         return $options;
     }
 
-    public function get_curl_handler()
-    {
-        return $this->_curl_handler;
-    }
-
-    public function set_curl_handler(\Raven\CurlHandler $value)
-    {
-        $this->_curl_handler = $value;
-    }
-
     public function close_curl_resource()
     {
         parent::close_curl_resource();
@@ -168,35 +156,6 @@ class Dummy_Raven_Client_With_Sync_Override extends \Raven\Client
     public static function test_filename()
     {
         return sys_get_temp_dir().'/clientraven.tmp';
-    }
-}
-
-class Dummy_Raven_CurlHandler extends \Raven\CurlHandler
-{
-    public $_set_url;
-    public $_set_data;
-    public $_set_headers;
-    public $_enqueue_called = false;
-    public $_join_called = false;
-
-    public function __construct($options = [], $join_timeout = 5)
-    {
-        parent::__construct($options, $join_timeout);
-    }
-
-    public function enqueue($url, $data = null, $headers = [])
-    {
-        $this->_enqueue_called = true;
-        $this->_set_url = $url;
-        $this->_set_data = $data;
-        $this->_set_headers = $headers;
-
-        return 0;
-    }
-
-    public function join($timeout = null)
-    {
-        $this->_join_called = true;
     }
 }
 
@@ -675,7 +634,7 @@ organization           = "Sentry"
         $requestFactory = $this->getMockBuilder(RequestFactory::class)
             ->getMock();
 
-        $client = new Dummy_Raven_Client($config, new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client($config, $httpClient, $requestFactory);
 
         $this->assertEquals($expected, $client->get_http_data());
     }
@@ -899,7 +858,7 @@ organization           = "Sentry"
         $requestFactory = $this->getMockBuilder(RequestFactory::class)
             ->getMock();
 
-        $client = new Dummy_Raven_Client($config, new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client($config, $httpClient, $requestFactory);
 
         $client->captureMessage('test');
 
@@ -1140,7 +1099,7 @@ organization           = "Sentry"
         $requestFactory = $this->getMockBuilder(RequestFactory::class)
             ->getMock();
 
-        $client = new Dummy_Raven_Client(new Configuration($options), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client(new Configuration($options), $httpClient, $requestFactory);
         $result = $client->test_get_current_url();
 
         $this->assertSame($expected, $result, $message);
@@ -1485,10 +1444,9 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
             new Configuration([
                 'server' => 'http://public:secret@example.com/1',
-                'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
             ]),
-            new FlexibleHttpClient($httpClient),
+            $httpClient,
             $requestFactory
         );
         $this->assertEquals(0, count($client->_pending_events));
@@ -1509,24 +1467,6 @@ organization           = "Sentry"
         $client->onShutdown();
         $this->assertCount(2, $httpClient->getRequests());
         $this->assertEquals(0, count($client->_pending_events));
-
-        // step 1
-        $client = null;
-        $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
-            new Configuration([
-                'server' => 'http://public:secret@example.com/1',
-                'curl_method' => 'async',
-                'install_default_breadcrumb_handlers' => false,
-            ]),
-            new FlexibleHttpClient($httpClient),
-            $requestFactory
-        );
-        $ch = new Dummy_Raven_CurlHandler();
-        $client->set_curl_handler($ch);
-        $client->captureMessage('foobar');
-        $client->onShutdown();
-        $client = null;
-        $this->assertTrue($ch->_join_called);
     }
 
     public function testSendChecksShouldCaptureOption()
@@ -1544,7 +1484,6 @@ organization           = "Sentry"
 
         $config = new Configuration([
             'server' => 'http://public:secret@example.com/1',
-            'curl_method' => 'foobar',
             'install_default_breadcrumb_handlers' => false,
             'should_capture' => function () use (&$shouldCaptureCalled) {
                 $shouldCaptureCalled = true;
@@ -1553,7 +1492,7 @@ organization           = "Sentry"
             },
         ]);
 
-        $client = new Client($config, new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Client($config, $httpClient, $requestFactory);
 
         $data = ['foo' => 'bar'];
 
@@ -1575,7 +1514,7 @@ organization           = "Sentry"
         $requestFactory = $this->getMockBuilder(RequestFactory::class)
             ->getMock();
 
-        $client = new Client(new Configuration(), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Client(new Configuration(), $httpClient, $requestFactory);
         $data = ['foo' => 'bar'];
 
         $client->send($data);
@@ -1598,7 +1537,7 @@ organization           = "Sentry"
                         'install_default_breadcrumb_handlers' => $u1,
                         'install_shutdown_handler' => $u2,
                     ]),
-                    new FlexibleHttpClient($httpClient),
+                    $httpClient,
                     $requestFactory
                 );
 
@@ -1624,7 +1563,7 @@ organization           = "Sentry"
                 'install_default_breadcrumb_handlers' => false,
                 'install_shutdown_handler' => false,
             ]),
-            new FlexibleHttpClient($httpClient),
+            $httpClient,
             $requestFactory
         );
 
@@ -1648,7 +1587,7 @@ organization           = "Sentry"
             ->getMock();
 
         // step 1
-        $client = new Dummy_Raven_Client(new Configuration(), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
         $output = $client->get_user_data();
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
@@ -1705,7 +1644,7 @@ organization           = "Sentry"
             $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
         }
 
-        $client = new Dummy_Raven_Client(new Configuration(), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
         $client->store_errors_for_bulk_send = true;
 
         $client->capture(['message' => 'foobar']);
@@ -1715,7 +1654,7 @@ organization           = "Sentry"
         $this->assertEquals($input['request'], $client->_pending_events[0]['request']);
         $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
 
-        $client = new Dummy_Raven_Client(new Configuration(), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
         $client->store_errors_for_bulk_send = true;
 
         $client->capture(['message' => 'foobar', 'request' => ['foo' => 'bar']]);
@@ -1735,7 +1674,7 @@ organization           = "Sentry"
                     $options['current_environment'] = 'bar';
                 }
 
-                $client = new Client(new Configuration($options), new FlexibleHttpClient($httpClient), $requestFactory);
+                $client = new Client(new Configuration($options), $httpClient, $requestFactory);
                 $client->store_errors_for_bulk_send = true;
 
                 $client->capture(['message' => 'foobar']);
@@ -1763,7 +1702,7 @@ organization           = "Sentry"
         $requestFactory = $this->getMockBuilder(RequestFactory::class)
             ->getMock();
 
-        $client = new Dummy_Raven_Client_No_Http(new Configuration(['install_default_breadcrumb_handlers' => false]), new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Dummy_Raven_Client_No_Http(new Configuration(['install_default_breadcrumb_handlers' => false]), $httpClient, $requestFactory);
         $client->store_errors_for_bulk_send = true;
 
         $session_id = session_id();
@@ -1853,13 +1792,12 @@ organization           = "Sentry"
 
         $config = new Configuration([
             'server' => 'http://public:secret@example.com/1',
-            'curl_method' => 'foobar',
             'install_default_breadcrumb_handlers' => false,
             'sample_rate' => 0,
         ]);
 
         $httpClient = new \Http\Mock\Client();
-        $client = new Client($config, new FlexibleHttpClient($httpClient), $requestFactory);
+        $client = new Client($config, $httpClient, $requestFactory);
 
         for ($i = 0; $i < 1000; $i++) {
             $client->captureMessage('foobar');
@@ -1889,10 +1827,9 @@ organization           = "Sentry"
         $client = new Dummy_Raven_Client_With_Overrided_Direct_Send(
             new Configuration([
                 'sample_rate' => 0.5,
-                'curl_method' => 'foobar',
                 'install_default_breadcrumb_handlers' => false,
             ]),
-            new FlexibleHttpClient($httpClient),
+            $httpClient,
             $requestFactory
         );
 

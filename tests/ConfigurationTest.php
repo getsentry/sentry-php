@@ -49,7 +49,6 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
-            ['curl_method', 'sync', 'getCurlMethod', 'setCurlMethod'],
             ['curl_path', 'curl', 'getCurlPath', 'setCurlPath'],
             ['curl_ipv4', true, 'getCurlIpv4', 'setCurlIpv4'],
             ['curl_ssl_version', CURL_SSLVERSION_DEFAULT, 'getCurlSslVersion', 'setCurlSslVersion'],
