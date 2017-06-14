@@ -191,6 +191,14 @@ class ClientBuilder implements ClientBuilderInterface
         return $this;
     }
 
+    /**
+     * Creates a new instance of the Raven client.
+     *
+     * @param FlexibleHttpClient $httpClient     The HTTP client
+     * @param RequestFactory     $requestFactory The PSR-7 request factory
+     *
+     * @return Client
+     */
     protected function instantiate(FlexibleHttpClient $httpClient, RequestFactory $requestFactory)
     {
         return new Client($this->configuration, $httpClient, $requestFactory);

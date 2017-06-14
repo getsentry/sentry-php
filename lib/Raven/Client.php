@@ -169,9 +169,7 @@ class Client
     }
 
     /**
-     * Gets the client configuration.
-     *
-     * @return Configuration
+     * {@inheritdoc}
      */
     public function getConfig()
     {
@@ -715,9 +713,9 @@ class Client
     }
 
     /**
-     * Wrapper to handle encoding and sending data to the Sentry API server.
+     * Sends the given event to the Sentry server.
      *
-     * @param array     $data       Associative array of data to log
+     * @param array $data Associative array of data to log
      */
     public function send(&$data)
     {
@@ -783,63 +781,6 @@ class Client
             $options[CURLOPT_TIMEOUT] = $timeout;
         }
         return $options;
-    }
-
-    /**
-     * Send the message over http to the sentry url given
-     *
-     * @param string       $url     URL of the Sentry instance to log to
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     */
-    protected function send_http($url, $data, $headers = [])
-    {
-        if ($this->config->getCurlMethod() == 'async') {
-            $this->_curl_handler->enqueue($url, $data, $headers);
-        } elseif ($this->config->getCurlMethod() == 'exec') {
-            $this->send_http_asynchronous_curl_exec($url, $data, $headers);
-        } else {
-            $this->send_http_synchronous($url, $data, $headers);
-        }
-    }
-
-    /**
-     * @param string $url
-     * @param string $data
-     * @param array  $headers
-     * @return string
-     *
-     * This command line ensures exec returns immediately while curl runs in the background
-     */
-    protected function buildCurlCommand($url, $data, $headers)
-    {
-        $post_fields = '';
-        foreach ($headers as $key => $value) {
-            $post_fields .= ' -H '.escapeshellarg($key.': '.$value);
-        }
-        $cmd = sprintf(
-            '%s -X POST%s -d %s %s -m %d %s%s> /dev/null 2>&1 &',
-            escapeshellcmd($this->config->getCurlPath()), $post_fields,
-            escapeshellarg($data), escapeshellarg($url), $this->config->getTimeout(),
-            !$this->config->isSslVerificationEnabled() ? '-k ' : '',
-            !empty($this->config->getSslCaFile()) ? '--cacert '.escapeshellarg($this->config->getSslCaFile()).' ' : ''
-        );
-
-        return $cmd;
-    }
-
-    /**
-     * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
-     *
-     * @param string       $url     URL of the Sentry instance to log to
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     * @return bool
-     */
-    protected function send_http_asynchronous_curl_exec($url, $data, $headers)
-    {
-        exec($this->buildCurlCommand($url, $data, $headers));
-        return true; // The exec method is just fire and forget, so just assume it always works
     }
 
     /**

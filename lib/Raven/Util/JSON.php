@@ -16,7 +16,7 @@ namespace Raven\Util;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class JSON
+final class JSON
 {
     /**
      * Encodes the given data into JSON.
