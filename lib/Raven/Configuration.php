@@ -11,7 +11,6 @@
 
 namespace Raven;
 
-use Composer\CaBundle\CaBundle;
 use Raven\Processor\RemoveCookiesProcessor;
 use Raven\Processor\RemoveHttpBodyProcessor;
 use Raven\Processor\SanitizeDataProcessor;
@@ -139,67 +138,23 @@ class Configuration
     }
 
     /**
-     * Gets the path to the cURL binary to be used with the "exec" curl method.
+     * Gets the options that configure the HTTP client.
      *
-     * @return string
+     * @return array
      */
-    public function getCurlPath()
+    public function getHttpClientOptions()
     {
-        return $this->options['curl_path'];
+        return $this->options['http_client_options'];
     }
 
     /**
-     * Sets the path to the cURL binary to be used with the "exec" curl method.
+     * Sets the options that configure the HTTP client.
      *
-     * @param string $path The path
+     * @param array $options The options
      */
-    public function setCurlPath($path)
+    public function setHttpClientOptions(array $options)
     {
-        $options = array_merge($this->options, ['curl_path' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets whether cURL must resolve domains only with IPv4.
-     *
-     * @return bool
-     */
-    public function getCurlIpv4()
-    {
-        return $this->options['curl_ipv4'];
-    }
-
-    /**
-     * Sets whether cURL must resolve domains only with IPv4.
-     *
-     * @param bool $enable Whether only IPv4 domains should be resolved
-     */
-    public function setCurlIpv4($enable)
-    {
-        $options = array_merge($this->options, ['curl_ipv4' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the version of SSL/TLS to attempt to use when using cURL.
-     *
-     * @return int
-     */
-    public function getCurlSslVersion()
-    {
-        return $this->options['curl_ssl_version'];
-    }
-
-    /**
-     * Sets the version of SSL/TLS to attempt to use when using cURL.
-     *
-     * @param int $version The protocol version (one of the `CURL_SSLVERSION_*` constants)
-     */
-    public function setCurlSslVersion($version)
-    {
-        $options = array_merge($this->options, ['curl_ssl_version' => $version]);
+        $options = array_merge($this->options, ['http_client_options' => $options]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -711,72 +666,6 @@ class Configuration
     }
 
     /**
-     * Gets the options that configure the SSL for cURL.
-     *
-     * @return array
-     */
-    public function getSslOptions()
-    {
-        return $this->options['ssl'];
-    }
-
-    /**
-     * Sets the options that configure the SSL for cURL.
-     *
-     * @param array $options The options
-     */
-    public function setSslOptions(array $options)
-    {
-        $options = array_merge($this->options, ['ssl' => $options]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets whether the SSL certificate of the server should be verified.
-     *
-     * @return bool
-     */
-    public function isSslVerificationEnabled()
-    {
-        return $this->options['ssl_verification'];
-    }
-
-    /**
-     * Sets whether the SSL certificate of the server should be verified.
-     *
-     * @param bool $enable Whether the SSL certificate should be verified
-     */
-    public function setSslVerificationEnabled($enable)
-    {
-        $options = array_merge($this->options, ['ssl_verification' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the path to the SSL certificate file.
-     *
-     * @return string
-     */
-    public function getSslCaFile()
-    {
-        return $this->options['ssl_ca_file'];
-    }
-
-    /**
-     * Sets the path to the SSL certificate file.
-     *
-     * @param string $path The path
-     */
-    public function setSslCaFile($path)
-    {
-        $options = array_merge($this->options, ['ssl_ca_file' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets a list of default tags for events.
      *
      * @return string[]
@@ -871,9 +760,7 @@ class Configuration
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
-            'curl_path' => 'curl',
-            'curl_ipv4' => true,
-            'curl_ssl_version' => null,
+            'http_client_options' => [],
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
@@ -895,9 +782,6 @@ class Configuration
             'server' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
             'should_capture' => null,
-            'ssl' => [],
-            'ssl_verification' => true,
-            'ssl_ca_file' => CaBundle::getSystemCaRootBundlePath(),
             'tags' => [],
             'error_types' => null,
             'processors_options' => [],
@@ -912,8 +796,7 @@ class Configuration
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
-        $resolver->setAllowedTypes('curl_path', 'string');
-        $resolver->setAllowedTypes('curl_ssl_version', ['null', 'int']);
+        $resolver->setAllowedTypes('http_client_options', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
@@ -935,9 +818,6 @@ class Configuration
         $resolver->setAllowedTypes('server', ['null', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
-        $resolver->setAllowedTypes('ssl', 'array');
-        $resolver->setAllowedTypes('ssl_verification', 'bool');
-        $resolver->setAllowedTypes('ssl_ca_file', ['null', 'string']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('processors_options', 'array');

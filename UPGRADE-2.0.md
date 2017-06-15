@@ -2,8 +2,6 @@
 
 ### Client options
 
-- The `verify_ssl` option has been renamed to `ssl_verification`.
-- The `ca_cert` option has been renamed to `ssl_ca_file`.
 - The `environment` option has been renamed to `current_environment`.
 - The `http_proxy` option has been renamed to `proxy`.
 - The `processorOptions` option has been renamed to `processors_options`.
@@ -16,6 +14,13 @@
 - The `curl_method` option has been removed in favour of leaving to the user the
   choice of setting an HTTP client supporting syncronous, asyncronous or both
   transport methods.
+- The `curl_path` option has been removed.
+- The `curl_ipv4` option has been removed.
+- The `curl_ssl_version` option has been removed.
+- The `verify_ssl` option has been removed.
+- The `ca_cert` option has been removed.
+- The `http_client_options` has been added to set the options that applies to the
+  HTTP client chosen by the user as underlying transport method.
 - The `open_timeout` option has been added to set the maximum number of seconds
   to wait for the server connection to open.
 - The `excluded_loggers` option has been added to set the list of logger 'progname's

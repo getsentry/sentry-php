@@ -40,12 +40,6 @@ use Raven\HttpClient\Stream\DecoratingStreamFactory;
  * @method setPrefixes(array $prefixes)
  * @method bool getSerializeAllObjects()
  * @method setSerializeAllObjects(bool $serializeAllObjects)
- * @method string getCurlPath()
- * @method setCurlPath(string $path)
- * @method bool getCurlIpv4()
- * @method setCurlIpv4(bool $enable)
- * @method string getCurlSslVersion()
- * @method setCurlSslVersion(string $version)
  * @method float getSampleRate()
  * @method setSampleRate(float $sampleRate)
  * @method bool shouldInstallDefaultBreadcrumbHandlers()
@@ -83,12 +77,6 @@ use Raven\HttpClient\Stream\DecoratingStreamFactory;
  * @method string getServer()
  * @method string getServerName()
  * @method setServerName(string $serverName)
- * @method array getSslOptions()
- * @method setSslOptions(array $options)
- * @method bool isSslVerificationEnabled()
- * @method setSslVerificationEnabled(bool $enable)
- * @method string getSslCaFile()
- * @method setSslCaFile(string $path)
  * @method string[] getTags()
  * @method setTags(string[] $tags)
  * @method string[] getProcessors()
@@ -254,6 +242,7 @@ class ClientBuilder implements ClientBuilderInterface
      */
     protected function createHttpClientInstance()
     {
+        $httpClient = $this->httpClientFactory->getInstance($this->configuration->getHttpClientOptions());
         $defaultHeaders = [
             'User-Agent' => Client::USER_AGENT,
             'Content-Type' => 'application/octet-stream',
@@ -267,6 +256,6 @@ class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
-        return new PluginClient($this->httpClientFactory->getInstance(), $this->httpClientPlugins);
+        return new PluginClient($httpClient, $this->httpClientPlugins);
     }
 }
