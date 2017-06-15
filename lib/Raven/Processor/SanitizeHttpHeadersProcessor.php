@@ -67,6 +67,6 @@ final class SanitizeHttpHeadersProcessor extends Processor
      */
     private function getDefaultHeaders()
     {
-        return ['Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN'];
+        return ['Authorization', 'Proxy-Authorization', 'X-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN'];
     }
 }
