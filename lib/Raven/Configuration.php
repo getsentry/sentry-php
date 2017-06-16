@@ -294,6 +294,28 @@ class Configuration
     }
 
     /**
+     * Gets the encoding type for event bodies (GZIP or JSON).
+     *
+     * @return string
+     */
+    public function getEncoding()
+    {
+        return $this->options['encoding'];
+    }
+
+    /**
+     * Sets the encoding type for event bodies (GZIP or JSON).
+     *
+     * @param string $encoding The encoding type
+     */
+    public function setEnoding($encoding)
+    {
+        $options = array_merge($this->options, ['encoding' => $encoding]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the current environment.
      *
      * @return string
@@ -767,6 +789,7 @@ class Configuration
             'mb_detect_order' => null,
             'auto_log_stacks' => false,
             'context_lines' => 3,
+            'encoding' => 'gzip',
             'current_environment' => 'default',
             'environments' => [],
             'excluded_loggers' => [],
@@ -803,6 +826,7 @@ class Configuration
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
+        $resolver->setAllowedTypes('encoding', 'string');
         $resolver->setAllowedTypes('current_environment', 'string');
         $resolver->setAllowedTypes('environments', 'array');
         $resolver->setAllowedTypes('excluded_loggers', 'array');
@@ -823,6 +847,7 @@ class Configuration
         $resolver->setAllowedTypes('processors_options', 'array');
         $resolver->setAllowedTypes('processors', 'array');
 
+        $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('server', function ($value) {
             if (null === $value) {
                 return true;

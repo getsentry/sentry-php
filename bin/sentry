@@ -24,7 +24,6 @@ function cmd_test($dsn)
 
     $client = \Raven\ClientBuilder::create([
         'server' => $dsn,
-        'curl_method' => 'sync',
         'project_root' => realpath(__DIR__ . '/../'),
     ])->getClient();
 

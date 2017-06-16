@@ -208,7 +208,7 @@ class ClientBuilder implements ClientBuilderInterface
         $this->requestFactory = $this->requestFactory?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->requestFactory = $this->requestFactory ?: MessageFactoryDiscovery::find();
-        $this->streamFactory = new DecoratingStreamFactory($this->streamFactory ?: StreamFactoryDiscovery::find());
+        $this->streamFactory = $this->streamFactory ?: StreamFactoryDiscovery::find();
         $this->httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($this->requestFactory, $this->streamFactory);
 
         return new Client($this->configuration, $this->createHttpClientInstance(), $this->requestFactory);

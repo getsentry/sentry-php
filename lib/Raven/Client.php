@@ -11,7 +11,9 @@
 namespace Raven;
 
 use Http\Client\HttpAsyncClient;
+use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
+use Raven\HttpClient\Stream\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
 /**
@@ -724,8 +726,15 @@ class Client
             return;
         }
 
-        $uri = sprintf('api/%d/store/', $this->getConfig()->getProjectId());
-        $request = $this->requestFactory->createRequest('POST', $uri, [], JSON::encode($data));
+        $request = $this->requestFactory->createRequest('POST', sprintf('api/%d/store/', $this->getConfig()->getProjectId()), [], JSON::encode($data));
+
+        if ('gzip' === $this->config->getEncoding()) {
+            $request = $request->withBody(
+                new Base64EncodingStream(
+                    new CompressStream($request->getBody())
+                )
+            );
+        }
 
         $this->httpClient->sendAsyncRequest($request)->wait(true);
     }

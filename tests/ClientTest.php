@@ -17,6 +17,7 @@ use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
+use Raven\HttpClient\HttpClientFactoryInterface;
 use Raven\Processor\SanitizeDataProcessor;
 
 function simple_function($a = null, $b = null, $c = null)
@@ -838,6 +839,36 @@ organization           = "Sentry"
 
         $client->install();
         $client->install();
+    }
+
+    public function testSendCompressAndEncodesRequest()
+    {
+        $httpClient = new \Http\Mock\Client();
+
+        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
+        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
+            ->getMock();
+
+        $httpClientFactory->expects($this->once())
+            ->method('getInstance')
+            ->willReturn($httpClient);
+
+        $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
+            ->setHttpClientFactory($httpClientFactory)
+            ->getClient();
+
+        $data = ['foo bar'];
+
+        $client->send($data);
+
+        $requests = $httpClient->getRequests();
+
+        $this->assertCount(1, $requests);
+
+        $stream = $requests[0]->getBody();
+        $stream->rewind();
+
+        $this->assertEquals('eJyLVkrLz1dISixSigUAFYQDlg==', $stream->getContents());
     }
 
     public function testSendCallback()
