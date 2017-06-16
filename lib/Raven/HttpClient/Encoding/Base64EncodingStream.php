@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\HttpClient\Stream\Encoding;
+namespace Raven\HttpClient\Encoding;
 
 use Http\Message\Encoding\FilteredStream;
 use Psr\Http\Message\StreamInterface;

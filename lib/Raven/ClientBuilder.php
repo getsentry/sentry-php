@@ -21,13 +21,12 @@ use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\RequestFactory;
+use Http\Message\MessageFactory;
 use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
 use Raven\HttpClient\Authentication\SentryAuth;
 use Raven\HttpClient\CurlHttpClientFactory;
 use Raven\HttpClient\HttpClientFactoryInterface;
-use Raven\HttpClient\Stream\DecoratingStreamFactory;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.
@@ -97,9 +96,9 @@ class ClientBuilder implements ClientBuilderInterface
     protected $uriFactory;
 
     /**
-     * @var RequestFactory The PSR-7 request factory
+     * @var MessageFactory The PSR-7 message factory
      */
-    protected $requestFactory;
+    protected $messageFactory;
 
     /**
      * @var StreamFactory The PSR-7 stream factory
@@ -147,9 +146,9 @@ class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setRequestFactory(RequestFactory $requestFactory)
+    public function setMessageFactory(MessageFactory $messageFactory)
     {
-        $this->requestFactory = $requestFactory;
+        $this->messageFactory = $messageFactory;
 
         return $this;
     }
@@ -205,13 +204,13 @@ class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient()
     {
-        $this->requestFactory = $this->requestFactory?: MessageFactoryDiscovery::find();
+        $this->messageFactory = $this->messageFactory?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
-        $this->requestFactory = $this->requestFactory ?: MessageFactoryDiscovery::find();
+        $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->streamFactory = $this->streamFactory ?: StreamFactoryDiscovery::find();
-        $this->httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($this->requestFactory, $this->streamFactory);
+        $this->httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($this->messageFactory, $this->streamFactory);
 
-        return new Client($this->configuration, $this->createHttpClientInstance(), $this->requestFactory);
+        return new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
     }
 
     /**
@@ -243,16 +242,12 @@ class ClientBuilder implements ClientBuilderInterface
     protected function createHttpClientInstance()
     {
         $httpClient = $this->httpClientFactory->getInstance($this->configuration->getHttpClientOptions());
-        $defaultHeaders = [
-            'User-Agent' => Client::USER_AGENT,
-            'Content-Type' => 'application/octet-stream',
-        ];
 
         if (null !== $this->configuration->getServer()) {
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getServer())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin($defaultHeaders));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
         $this->addHttpClientPlugin(new ErrorPlugin());
 

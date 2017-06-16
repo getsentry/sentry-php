@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\HttpClient\Stream\Encoding;
+namespace Raven\Tests\HttpClient\Encoding;
 
 use Psr\Http\Message\StreamInterface;
-use Raven\HttpClient\Stream\Encoding\Base64EncodingStream;
+use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Zend\Diactoros\Stream;
 
 class Base64EncodingStreamTest extends \PHPUnit_Framework_TestCase

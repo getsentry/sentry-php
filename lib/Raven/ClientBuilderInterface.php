@@ -12,7 +12,7 @@
 namespace Raven;
 
 use Http\Client\Common\Plugin;
-use Http\Message\RequestFactory;
+use Http\Message\MessageFactory;
 use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
 use Raven\HttpClient\HttpClientFactoryInterface;
@@ -45,11 +45,11 @@ interface ClientBuilderInterface
     /**
      * Sets the factory to use to create PSR-7 messages.
      *
-     * @param RequestFactory $requestFactory The factory
+     * @param MessageFactory $messageFactory The factory
      *
      * @return $this
      */
-    public function setRequestFactory(RequestFactory $requestFactory);
+    public function setMessageFactory(MessageFactory $messageFactory);
 
     /**
      * Sets the factory to use to create PSR-7 streams.
