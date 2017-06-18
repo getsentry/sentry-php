@@ -103,10 +103,6 @@ class Client
     public $_pending_events = [];
 
     /**
-     * @var resource|null
-     */
-    protected $_curl_instance;
-    /**
      * @var bool
      */
     protected $_shutdown_function_has_been_set = false;
@@ -168,12 +164,6 @@ class Client
     public function getConfig()
     {
         return $this->config;
-    }
-
-    public function __destruct()
-    {
-        // Force close curl resource
-        $this->close_curl_resource();
     }
 
     /**
@@ -963,14 +953,6 @@ class Client
     public function getShutdownFunctionHasBeenSet()
     {
         return $this->_shutdown_function_has_been_set;
-    }
-
-    public function close_curl_resource()
-    {
-        if (!is_null($this->_curl_instance)) {
-            curl_close($this->_curl_instance);
-            $this->_curl_instance = null;
-        }
     }
 
     public function setAllObjectSerialize($value)

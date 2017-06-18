@@ -45,7 +45,7 @@ php composer.phar require sentry/sentry php-http/curl-client guzzlehttp/psr7
 ```
 
 This will install the library itself along with an HTTP client adapter that uses
-cURL as transport method (provided by a Httplug) and a PSR-7 implementation
+cURL as transport method (provided by Httplug) and a PSR-7 implementation
 (provided by Guzzle). You do not have to use those packages if you do not want to.
 The SDK does not care about which transport method you want to use because it's
 an implementation detail of your application. You may use any package that provides
