@@ -49,8 +49,10 @@ Other packages exists to integrate this SDK into the most common frameworks.
 
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
-- [Nette](https://github.com/Salamek/raven-nette)
 
+### Unofficial integrations
+- [Nette](https://github.com/Salamek/raven-nette)
+- [ZendFramework](https://github.com/facile-it/sentry-module)
 
 ## Community
 
