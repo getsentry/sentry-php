@@ -47,10 +47,17 @@ For more information, see our [documentation](https://docs.getsentry.com/hosted/
 
 Other packages exists to integrate this SDK into the most common frameworks.
 
+### Official integrations
+
+The following integrations are fully supported and maintained by the Sentry team.
+
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
 
-### Unofficial integrations
+### 3rd party integrations
+
+The following integrations are available and maintained by members of the Sentry community.
+
 - [Nette](https://github.com/Salamek/raven-nette)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 
