@@ -46,6 +46,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
     public function optionsDataProvider()
     {
         return [
+            ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
             ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
@@ -56,6 +57,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
+            ['encoding', 'json', 'getEncoding', 'setEncoding'],
             ['current_environment', 'foo', 'getCurrentEnvironment', 'setCurrentEnvironment'],
             ['environments', ['foo', 'bar'], 'getEnvironments', 'setEnvironments'],
             ['excluded_loggers', ['bar', 'foo'], 'getExcludedLoggers', 'setExcludedLoggers'],
@@ -63,8 +65,6 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             ['excluded_app_paths', ['foo', 'bar'], 'getExcludedProjectPaths', 'setExcludedProjectPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
-            ['open_timeout', 2, 'getOpenTimeout', 'setOpenTimeout'],
-            ['timeout', 3, 'getTimeout', 'setTimeout'],
             ['proxy', 'tcp://localhost:8125', 'getProxy', 'setProxy'],
             ['release', 'dev', 'getRelease', 'setRelease'],
             ['server_name', 'foo', 'getServerName', 'setServerName'],

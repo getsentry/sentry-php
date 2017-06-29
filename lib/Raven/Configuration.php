@@ -70,6 +70,28 @@ class Configuration
     }
 
     /**
+     * Gets the number of attempts to resend an event that failed to be sent.
+     *
+     * @return int
+     */
+    public function getSendAttempts()
+    {
+        return $this->options['send_attempts'];
+    }
+
+    /**
+     * Sets the number of attempts to resend an event that failed to be sent.
+     *
+     * @param int $attemptsCount The number of attempts
+     */
+    public function setSendAttempts($attemptsCount)
+    {
+        $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Checks whether the X-FORWARDED-PROTO header should be trusted.
      *
      * @return bool
@@ -308,7 +330,7 @@ class Configuration
      *
      * @param string $encoding The encoding type
      */
-    public function setEnoding($encoding)
+    public function setEncoding($encoding)
     {
         $options = array_merge($this->options, ['encoding' => $encoding]);
 
@@ -530,52 +552,6 @@ class Configuration
     }
 
     /**
-     * Gets the maximum number of seconds to wait for the Sentry server connection
-     * to open.
-     *
-     * @return int
-     */
-    public function getOpenTimeout()
-    {
-        return $this->options['open_timeout'];
-    }
-
-    /**
-     * Sets the maximum number of seconds to wait for the Sentry server connection
-     * to open.
-     *
-     * @param array $timeout The timeout in seconds
-     */
-    public function setOpenTimeout($timeout)
-    {
-        $options = array_merge($this->options, ['open_timeout' => $timeout]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the maximum number of seconds to wait for the server to return data.
-     *
-     * @return int
-     */
-    public function getTimeout()
-    {
-        return $this->options['timeout'];
-    }
-
-    /**
-     * Sets the maximum number of seconds to wait for the server to return data.
-     *
-     * @param array $timeout The timeout in seconds
-     */
-    public function setTimeout($timeout)
-    {
-        $options = array_merge($this->options, ['timeout' => $timeout]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the proxy information to pass to the transport adapter.
      *
      * @return array
@@ -779,6 +755,7 @@ class Configuration
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
+            'send_attempts' => 6,
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
@@ -798,8 +775,6 @@ class Configuration
             'transport' => null,
             'project_root' => null,
             'logger' => 'php',
-            'open_timeout' => 1,
-            'timeout' => 2,
             'proxy' => null,
             'release' => null,
             'server' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
@@ -816,6 +791,7 @@ class Configuration
             ],
         ]);
 
+        $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
@@ -835,8 +811,6 @@ class Configuration
         $resolver->setAllowedTypes('transport', ['null', 'callable']);
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
-        $resolver->setAllowedTypes('open_timeout', 'int');
-        $resolver->setAllowedTypes('timeout', 'int');
         $resolver->setAllowedTypes('proxy', ['null', 'string']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('server', ['null', 'string']);

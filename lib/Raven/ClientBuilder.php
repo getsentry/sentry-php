@@ -16,6 +16,7 @@ use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
+use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
@@ -33,6 +34,8 @@ use Raven\HttpClient\HttpClientFactoryInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
+ * @method int getSendAttempts()
+ * @method setSendAttempts(int $attemptsCount)
  * @method bool isTrustXForwardedProto()
  * @method setIsTrustXForwardedProto(bool $value)
  * @method string[] getPrefixes()
@@ -65,10 +68,6 @@ use Raven\HttpClient\HttpClientFactoryInterface;
  * @method setProjectRoot(string $path)
  * @method string getLogger()
  * @method setLogger(string $logger)
- * @method int getOpenTimeout()
- * @method setOpenTimeout(int $timeout)
- * @method int getTimeout()
- * @method setTimeout(int $timeout)
  * @method string getProxy()
  * @method setProxy(string $proxy)
  * @method string getRelease()
@@ -249,6 +248,7 @@ class ClientBuilder implements ClientBuilderInterface
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
+        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->configuration->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($httpClient, $this->httpClientPlugins);

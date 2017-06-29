@@ -12,6 +12,9 @@
 namespace Raven\Tests;
 
 use Http\Client\Common\Plugin;
+use Http\Message\MessageFactory;
+use Http\Message\StreamFactory;
+use Http\Message\UriFactory;
 use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
@@ -24,6 +27,42 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
         $clientBuilder = ClientBuilder::create();
 
         $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
+    }
+
+    public function testSetUriFactory()
+    {
+        /** @var UriFactory|\PHPUnit_Framework_MockObject_MockObject $uriFactory */
+        $uriFactory = $this->getMockBuilder(UriFactory::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setUriFactory($uriFactory);
+
+        $this->assertAttributeEquals($uriFactory, 'uriFactory', $clientBuilder);
+    }
+
+    public function testSetMessageFactory()
+    {
+        /** @var MessageFactory|\PHPUnit_Framework_MockObject_MockObject $messageFactory */
+        $messageFactory = $this->getMockBuilder(MessageFactory::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setMessageFactory($messageFactory);
+
+        $this->assertAttributeEquals($messageFactory, 'messageFactory', $clientBuilder);
+    }
+
+    public function testSetStreamFactory()
+    {
+        /** @var StreamFactory|\PHPUnit_Framework_MockObject_MockObject $streamFactory */
+        $streamFactory = $this->getMockBuilder(StreamFactory::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setStreamFactory($streamFactory);
+
+        $this->assertAttributeEquals($streamFactory, 'streamFactory', $clientBuilder);
     }
 
     public function testAddHttpClientPlugin()
@@ -113,6 +152,7 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
+            ['setEncoding', 'gzip'],
             ['setCurrentEnvironment', 'test'],
             ['setEnvironments', ['default']],
             ['setExcludedLoggers', ['foo', 'bar']],
@@ -121,8 +161,6 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setTransport', null],
             ['setProjectRoot', 'foo'],
             ['setLogger', 'bar'],
-            ['setOpenTimeout', 1],
-            ['setTimeout', 3],
             ['setProxy', 'foo'],
             ['setRelease', 'dev'],
             ['setServerName', 'example.com'],

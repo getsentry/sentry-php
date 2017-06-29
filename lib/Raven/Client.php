@@ -13,6 +13,8 @@ namespace Raven;
 use Http\Client\HttpAsyncClient;
 use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
+use Http\Promise\Promise;
+use Psr\Http\Message\ResponseInterface;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
@@ -123,6 +125,11 @@ class Client
     private $requestFactory;
 
     /**
+     * @var Promise[] The list of pending requests
+     */
+    private $pendingRequests = [];
+
+    /**
      * Constructor.
      *
      * @param Configuration   $config         The client configuration
@@ -155,6 +162,16 @@ class Client
 
         if ($this->config->shouldInstallShutdownHandler()) {
             $this->registerShutdownFunction();
+        }
+    }
+
+    /**
+     * Destructor.
+     */
+    public function __destruct()
+    {
+        foreach ($this->pendingRequests as $pendingRequest) {
+            $pendingRequest->wait();
         }
     }
 
@@ -702,7 +719,7 @@ class Client
      */
     public function send(&$data)
     {
-        if (false === $this->config->shouldCapture($data) || !$this->config->getServer()) {
+        if (!$this->config->shouldCapture($data) || !$this->config->getServer()) {
             return;
         }
 
@@ -731,7 +748,25 @@ class Client
             );
         }
 
-        $this->httpClient->sendAsyncRequest($request)->wait(true);
+        $promise = $this->httpClient->sendAsyncRequest($request);
+
+        // This function is defined in-line so it doesn't show up for
+        // type-hinting on classes that implement this trait.
+        $cleanupPromiseCallback = function (ResponseInterface $response) use ($promise) {
+            $index = array_search($promise, $this->pendingRequests, true);
+
+            if ($index === false) {
+                return $response;
+            }
+
+            unset($this->pendingRequests[$index]);
+
+            return $response;
+        };
+
+        $promise->then($cleanupPromiseCallback, $cleanupPromiseCallback);
+
+        $this->pendingRequests[] = $promise;
     }
 
     /**

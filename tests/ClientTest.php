@@ -12,6 +12,9 @@ namespace Raven\Tests;
 
 use Http\Client\HttpAsyncClient;
 use Http\Message\RequestFactory;
+use Http\Mock\Client as MockClient;
+use Http\Promise\Promise;
+use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
@@ -166,6 +169,62 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                 return $ex2;
             }
         }
+    }
+
+    public function testDestructor()
+    {
+        $waitCalled = false;
+
+        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise */
+        $promise = $this->getMockBuilder(Promise::class)
+            ->getMock();
+
+        $promise->expects($this->any())
+            ->method('then')
+            ->willReturnSelf();
+
+        $promise->expects($this->once())
+            ->method('wait')
+            ->willReturnCallback(function () use (&$waitCalled) {
+                $waitCalled = true;
+            });
+
+        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        $httpClient = $this->getMockBuilder(HttpAsyncClient::class)
+            ->getMock();
+
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn($promise);
+
+        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
+        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
+            ->getMock();
+
+        $httpClientFactory->expects($this->once())
+            ->method('getInstance')
+            ->willReturn($httpClient);
+
+        $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
+            ->setHttpClientFactory($httpClientFactory)
+            ->getClient();
+
+        $data = ['foo'];
+
+        $this->assertAttributeEmpty('pendingRequests', $client);
+
+        $client->send($data);
+
+        $this->assertAttributeNotEmpty('pendingRequests', $client);
+        $this->assertFalse($waitCalled);
+
+        // The destructor should never be called explicitly because it simply
+        // does nothing in PHP, but it's the only way to assert that the
+        // $waitCalled variable is true because PHPUnit maintains references
+        // to all mocks instances
+        $client->__destruct();
+
+        $this->assertTrue($waitCalled);
     }
 
     public function testOptionsExtraData()
@@ -709,7 +768,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testSendWithEncoding($options, $expectedRequest)
     {
-        $httpClient = new \Http\Mock\Client();
+        $httpClient = new MockClient();
 
         /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
         $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
@@ -1354,7 +1413,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testOnShutdown()
     {
-        $httpClient = new \Http\Mock\Client();
+        $httpClient = new MockClient();
 
         /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
         $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
@@ -1651,7 +1710,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testSampleRateAbsolute($options)
     {
-        $httpClient = new \Http\Mock\Client();
+        $httpClient = new MockClient();
 
         /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
         $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
