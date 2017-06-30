@@ -14,7 +14,6 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\RequestFactory;
 use Http\Mock\Client as MockClient;
 use Http\Promise\Promise;
-use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
