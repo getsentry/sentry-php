@@ -14,6 +14,7 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\RequestFactory;
 use Http\Mock\Client as MockClient;
 use Http\Promise\Promise;
+use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
@@ -174,19 +175,16 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $waitCalled = false;
 
-        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise */
-        $promise = $this->getMockBuilder(Promise::class)
+        /** @var ResponseInterface|\PHPUnit_Framework_MockObject_MockObject $response */
+        $response = $this->getMockBuilder(ResponseInterface::class)
             ->getMock();
 
-        $promise->expects($this->any())
-            ->method('then')
-            ->willReturnSelf();
+        $promise = new PromiseMock($response);
+        $promise->then(function (ResponseInterface $response) use (&$waitCalled) {
+            $waitCalled = true;
 
-        $promise->expects($this->once())
-            ->method('wait')
-            ->willReturnCallback(function () use (&$waitCalled) {
-                $waitCalled = true;
-            });
+            return $response;
+        });
 
         /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
         $httpClient = $this->getMockBuilder(HttpAsyncClient::class)
@@ -288,10 +286,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
     {
         $client = ClientBuilder::create(['release' => '1.2.3'])->getClient();
+        $client->store_errors_for_bulk_send = true;
 
         $this->assertEquals('1.2.3', $client->getConfig()->getRelease());
-
-        $client->store_errors_for_bulk_send = true;
 
         $client->captureMessage('foo %s', ['bar']);
 
@@ -706,6 +703,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     public function testGetLastEventID()
     {
         $client = ClientBuilder::create()->getClient();
+        $client->store_errors_for_bulk_send = true;
+
         $client->capture([
             'message' => 'test',
             'event_id' => 'abc'
@@ -1432,13 +1431,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $httpClient->getRequests());
         $this->assertEquals(0, count($client->_pending_events));
 
-        // step 2
-        $client->_send_http_synchronous = false;
-
         $client->store_errors_for_bulk_send = true;
         $client->captureMessage('foobar');
         $this->assertEquals(1, count($client->_pending_events));
-        $client->_send_http_synchronous = false;
 
         // step 3
         $client->onShutdown();
@@ -1768,5 +1763,66 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
         $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
+    }
+}
+
+class PromiseMock implements Promise
+{
+    private $result;
+
+    private $state;
+
+    private $onFullfilledCallbacks = [];
+
+    private $onRejectedCallbacks = [];
+
+    public function __construct($result, $state = self::FULFILLED)
+    {
+        $this->result = $result;
+        $this->state = $state;
+    }
+
+    public function then(callable $onFulfilled = null, callable $onRejected = null)
+    {
+        if (null !== $onFulfilled) {
+            $this->onFullfilledCallbacks[] = $onFulfilled;
+        }
+
+        if (null !== $onRejected) {
+            $this->onRejectedCallbacks[] = $onRejected;
+        }
+
+        return $this;
+    }
+
+    public function getState()
+    {
+        return $this->state;
+    }
+
+    public function wait($unwrap = true)
+    {
+        switch ($this->state) {
+            case self::FULFILLED: {
+                foreach ($this->onFullfilledCallbacks as $onFullfilledCallback) {
+                    $onFullfilledCallback($this->result);
+                }
+
+                break;
+            }
+            case self::REJECTED: {
+                foreach ($this->onRejectedCallbacks as $onRejectedCallback) {
+                    $onRejectedCallback($this->result);
+                }
+
+                break;
+            }
+        }
+
+        if ($unwrap) {
+            return $this->result;
+        }
+
+        return null;
     }
 }

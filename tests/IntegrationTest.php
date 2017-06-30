@@ -56,10 +56,7 @@ class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function testCaptureSimpleError()
     {
-        $client = ClientBuilder::create([
-            'server' => 'https://public:secret@example.com/1',
-        ])->getClient();
-
+        $client = ClientBuilder::create([])->getClient();
         $client->store_errors_for_bulk_send = true;
 
         @mkdir('/no/way');

@@ -170,9 +170,7 @@ class Client
      */
     public function __destruct()
     {
-        foreach ($this->pendingRequests as $pendingRequest) {
-            $pendingRequest->wait();
-        }
+        $this->sendUnsentErrors();
     }
 
     /**
@@ -181,16 +179,6 @@ class Client
     public function getConfig()
     {
         return $this->config;
-    }
-
-    /**
-     * Destruct all objects contain link to this object
-     *
-     * This method can not delete shutdown handler
-     */
-    public function close_all_children_link()
-    {
-        $this->processors = [];
     }
 
     /**
@@ -705,10 +693,16 @@ class Client
         foreach ($this->_pending_events as $data) {
             $this->send($data);
         }
+
         $this->_pending_events = [];
+
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
+        }
+
+        foreach ($this->pendingRequests as $pendingRequest) {
+            $pendingRequest->wait();
         }
     }
 
