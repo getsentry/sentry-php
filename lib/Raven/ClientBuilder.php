@@ -79,32 +79,32 @@ use Raven\HttpClient\Authentication\SentryAuth;
  * @method array getProcessorsOptions()
  * @method setProcessorsOptions(array $options)
  */
-class ClientBuilder implements ClientBuilderInterface
+final class ClientBuilder implements ClientBuilderInterface
 {
     /**
      * @var Configuration The client configuration
      */
-    protected $configuration;
+    private $configuration;
 
     /**
      * @var UriFactory The PSR-7 URI factory
      */
-    protected $uriFactory;
+    private $uriFactory;
 
     /**
      * @var MessageFactory The PSR-7 message factory
      */
-    protected $messageFactory;
+    private $messageFactory;
 
     /**
      * @var HttpAsyncClient The HTTP client
      */
-    protected $httpClient;
+    private $httpClient;
 
     /**
      * @var Plugin[] The list of Httplug plugins
      */
-    protected $httpClientPlugins = [];
+    private $httpClientPlugins = [];
 
     /**
      * Class constructor.
@@ -219,7 +219,7 @@ class ClientBuilder implements ClientBuilderInterface
      *
      * @return HttpAsyncClient
      */
-    protected function createHttpClientInstance()
+    private function createHttpClientInstance()
     {
         if (null !== $this->configuration->getServer()) {
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getServer())));
