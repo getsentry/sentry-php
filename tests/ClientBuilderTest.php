@@ -11,6 +11,12 @@
 
 namespace Raven\Tests;
 
+use Http\Client\Common\Plugin;
+use Http\Client\HttpAsyncClient;
+use Http\Message\MessageFactory;
+use Http\Message\StreamFactory;
+use Http\Message\UriFactory;
+use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
@@ -22,6 +28,85 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
         $clientBuilder = ClientBuilder::create();
 
         $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
+    }
+
+    public function testSetUriFactory()
+    {
+        /** @var UriFactory|\PHPUnit_Framework_MockObject_MockObject $uriFactory */
+        $uriFactory = $this->getMockBuilder(UriFactory::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setUriFactory($uriFactory);
+
+        $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
+    }
+
+    public function testSetMessageFactory()
+    {
+        /** @var MessageFactory|\PHPUnit_Framework_MockObject_MockObject $messageFactory */
+        $messageFactory = $this->getMockBuilder(MessageFactory::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setMessageFactory($messageFactory);
+
+        $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertAttributeSame($messageFactory, 'requestFactory', $client);
+    }
+
+    public function testSetHttpClient()
+    {
+        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        $httpClient = $this->getMockBuilder(HttpAsyncClient::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setHttpClient($httpClient);
+
+        $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
+
+        $client = $this->getObjectAttribute($clientBuilder->getClient(), 'httpClient');
+
+        $this->assertAttributeSame($httpClient, 'client', $client);
+    }
+
+    public function testAddHttpClientPlugin()
+    {
+        /** @var Plugin|\PHPUnit_Framework_MockObject_MockObject $plugin */
+        $plugin = $this->getMockBuilder(Plugin::class)
+            ->getMock();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addHttpClientPlugin($plugin);
+
+        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
+
+        $this->assertCount(1, $plugins);
+        $this->assertSame($plugin, $plugins[0]);
+    }
+
+    public function testRemoveHttpClientPlugin()
+    {
+        $plugin = new PluginStub1();
+        $plugin2 = new PluginStub2();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addHttpClientPlugin($plugin);
+        $clientBuilder->addHttpClientPlugin($plugin);
+        $clientBuilder->addHttpClientPlugin($plugin2);
+
+        $this->assertAttributeCount(3, 'httpClientPlugins', $clientBuilder);
+
+        $clientBuilder->removeHttpClientPlugin(PluginStub1::class);
+
+        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
+
+        $this->assertCount(1, $plugins);
+        $this->assertSame($plugin2, reset($plugins));
     }
 
     public function testGetClient()
@@ -69,16 +154,13 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setIsTrustXForwardedProto', true],
             ['setPrefixes', ['foo', 'bar']],
             ['setSerializeAllObjects', false],
-            ['setCurlMethod', 'async'],
-            ['setCurlPath', 'foo'],
-            ['setCurlIpv4', true],
-            ['setCurlSslVersion', CURL_SSLVERSION_DEFAULT],
             ['setSampleRate', 0.5],
             ['setInstallDefaultBreadcrumbHandlers', false],
             ['setInstallShutdownHandler', false],
             ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
+            ['setEncoding', 'gzip'],
             ['setCurrentEnvironment', 'test'],
             ['setEnvironments', ['default']],
             ['setExcludedLoggers', ['foo', 'bar']],
@@ -87,18 +169,27 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setTransport', null],
             ['setProjectRoot', 'foo'],
             ['setLogger', 'bar'],
-            ['setOpenTimeout', 1],
-            ['setTimeout', 3],
             ['setProxy', 'foo'],
             ['setRelease', 'dev'],
             ['setServerName', 'example.com'],
-            ['setSslOptions', ['foo' => 'bar']],
-            ['setSslVerificationEnabled', false],
-            ['setSslCaFile', 'foo'],
             ['setTags', ['foo', 'bar']],
             ['setErrorTypes', 0],
             ['setProcessors', ['foo']],
             ['setProcessorsOptions', ['foo']],
         ];
+    }
+}
+
+class PluginStub1 implements Plugin
+{
+    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    {
+    }
+}
+
+class PluginStub2 implements Plugin
+{
+    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    {
     }
 }

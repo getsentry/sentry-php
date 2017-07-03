@@ -22,13 +22,10 @@ function cmd_test($dsn)
         exit('ERROR: Missing DSN value');
     }
 
-    $config = new \Raven\Configuration([
+    $client = \Raven\ClientBuilder::create([
         'server' => $dsn,
-        'curl_method' => 'sync',
-        'project_root' => realpath(__DIR__ . '/..'),
-    ]);
-
-    $client = new \Raven\Client($config);
+        'project_root' => realpath(__DIR__ . '/../'),
+    ])->getClient();
 
     echo "Sending a test event:\n";
 

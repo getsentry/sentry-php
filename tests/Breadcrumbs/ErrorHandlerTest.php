@@ -9,16 +9,15 @@
  * file that was distributed with this source code.
  */
 
-use Raven\Client;
-use Raven\Configuration;
+use Raven\ClientBuilder;
 
 class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
-        $client = new Client(new Configuration([
+        $client = $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
-        ]));
+        ])->getClient();
 
         $handler = new \Raven\Breadcrumbs\ErrorHandler($client);
         $handler->handleError(E_WARNING, 'message');

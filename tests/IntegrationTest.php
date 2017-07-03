@@ -10,6 +10,7 @@
 
 namespace Raven\Tests;
 
+use Raven\ClientBuilder;
 use Raven\Configuration;
 
 class DummyIntegration_Raven_Client extends \Raven\Client
@@ -55,21 +56,16 @@ class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function testCaptureSimpleError()
     {
-        $client = new DummyIntegration_Raven_Client(new Configuration([
-            'server' => 'https://public:secret@example.com/1',
-        ]));
+        $client = ClientBuilder::create([])->getClient();
+        $client->store_errors_for_bulk_send = true;
 
         @mkdir('/no/way');
 
         $client->captureLastError();
 
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
+        $event = $client->_pending_events[0]['exception']['values'][0];
 
-        $exc = $event['exception']['values'][0];
-        $this->assertEquals($exc['value'], 'mkdir(): No such file or directory');
-        $stack = $exc['stacktrace']['frames'];
-        $lastFrame = $stack[count($stack) - 1];
-        $this->assertEquals(@$lastFrame['filename'], 'tests/IntegrationTest.php');
+        $this->assertEquals($event['value'], 'mkdir(): No such file or directory');
+        $this->assertEquals($event['stacktrace']['frames'][count($event['stacktrace']['frames']) - 1]['filename'], 'tests/IntegrationTest.php');
     }
 }

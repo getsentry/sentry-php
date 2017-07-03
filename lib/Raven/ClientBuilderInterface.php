@@ -11,10 +11,15 @@
 
 namespace Raven;
 
+use Http\Client\Common\Plugin;
+use Http\Client\HttpAsyncClient;
+use Http\Message\MessageFactory;
+use Http\Message\UriFactory;
+
 /**
  * A configurable builder for Client objects.
  *
- * @author Stefano Arlandini <stefano.arlandini@nooo.it>
+ * @author Stefano Arlandini <sarlandini@alice.it>
  */
 interface ClientBuilderInterface
 {
@@ -26,6 +31,51 @@ interface ClientBuilderInterface
      * @return static
      */
     public static function create(array $options = []);
+
+    /**
+     * Sets the factory to use to create URIs.
+     *
+     * @param UriFactory $uriFactory The factory
+     *
+     * @return $this
+     */
+    public function setUriFactory(UriFactory $uriFactory);
+
+    /**
+     * Sets the factory to use to create PSR-7 messages.
+     *
+     * @param MessageFactory $messageFactory The factory
+     *
+     * @return $this
+     */
+    public function setMessageFactory(MessageFactory $messageFactory);
+
+    /**
+     * Sets the HTTP client.
+     *
+     * @param HttpAsyncClient $httpClient The HTTP client
+     *
+     * @return $this
+     */
+    public function setHttpClient(HttpAsyncClient $httpClient);
+
+    /**
+     * Adds a new HTTP client plugin to the end of the plugins chain.
+     *
+     * @param Plugin $plugin The plugin instance
+     *
+     * @return $this
+     */
+    public function addHttpClientPlugin(Plugin $plugin);
+
+    /**
+     * Removes a HTTP client plugin by its fully qualified class name (FQCN).
+     *
+     * @param string $className The class name
+     *
+     * @return $this
+     */
+    public function removeHttpClientPlugin($className);
 
     /**
      * Gets the instance of the client built using the configured options.

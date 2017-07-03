@@ -10,7 +10,13 @@
 
 namespace Raven;
 
-use Raven\CurlHandler;
+use Http\Client\HttpAsyncClient;
+use Http\Message\Encoding\CompressStream;
+use Http\Message\RequestFactory;
+use Http\Promise\Promise;
+use Psr\Http\Message\ResponseInterface;
+use Raven\HttpClient\Encoding\Base64EncodingStream;
+use Raven\Util\JSON;
 
 /**
  * Raven PHP Client
@@ -36,6 +42,11 @@ class Client
      * Default message limit
      */
     const MESSAGE_LIMIT = 1024;
+
+    /**
+     * This constant defines the client's user-agent string
+     */
+    const USER_AGENT = 'sentry-php/' . self::VERSION;
 
     /**
      * @var Breadcrumbs The breadcrumbs
@@ -94,14 +105,6 @@ class Client
     public $_pending_events = [];
 
     /**
-     * @var CurlHandler
-     */
-    protected $_curl_handler;
-    /**
-     * @var resource|null
-     */
-    protected $_curl_instance;
-    /**
      * @var bool
      */
     protected $_shutdown_function_has_been_set = false;
@@ -112,13 +115,32 @@ class Client
     protected $config;
 
     /**
+     * @var HttpAsyncClient The HTTP client
+     */
+    private $httpClient;
+
+    /**
+     * @var RequestFactory The PSR-7 request factory
+     */
+    private $requestFactory;
+
+    /**
+     * @var Promise[] The list of pending requests
+     */
+    private $pendingRequests = [];
+
+    /**
      * Constructor.
      *
-     * @param Configuration $config The client configuration
+     * @param Configuration   $config         The client configuration
+     * @param HttpAsyncClient $httpClient     The HTTP client
+     * @param RequestFactory  $requestFactory The PSR-7 request factory
      */
-    public function __construct(Configuration $config)
+    public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
     {
         $this->config = $config;
+        $this->httpClient = $httpClient;
+        $this->requestFactory = $requestFactory;
         $this->context = new Context();
         $this->breadcrumbs = new Breadcrumbs();
         $this->transaction = new TransactionStack();
@@ -134,10 +156,6 @@ class Client
             $this->setAllObjectSerialize(true);
         }
 
-        if ('async' === $this->config->getCurlMethod()) {
-            $this->_curl_handler = new CurlHandler($this->get_curl_options());
-        }
-
         if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
             $this->registerDefaultBreadcrumbHandlers();
         }
@@ -148,30 +166,19 @@ class Client
     }
 
     /**
-     * Gets the client configuration.
-     *
-     * @return Configuration
+     * Destructor.
+     */
+    public function __destruct()
+    {
+        $this->sendUnsentErrors();
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function getConfig()
     {
         return $this->config;
-    }
-
-    public function __destruct()
-    {
-        // Force close curl resource
-        $this->close_curl_resource();
-        $this->force_send_async_curl_events();
-    }
-
-    /**
-     * Destruct all objects contain link to this object
-     *
-     * This method can not delete shutdown handler
-     */
-    public function close_all_children_link()
-    {
-        $this->processors = [];
     }
 
     /**
@@ -207,11 +214,6 @@ class Client
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
         return $this;
-    }
-
-    public static function getUserAgent()
-    {
-        return 'sentry-php/' . self::VERSION;
     }
 
     /**
@@ -691,53 +693,31 @@ class Client
         foreach ($this->_pending_events as $data) {
             $this->send($data);
         }
+
         $this->_pending_events = [];
+
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
         }
+
+        foreach ($this->pendingRequests as $pendingRequest) {
+            $pendingRequest->wait();
+        }
     }
 
     /**
-     * @param array $data
-     * @return string|bool
-     */
-    public function encode(&$data)
-    {
-        $message = json_encode($data);
-        if ($message === false) {
-            if (function_exists('json_last_error_msg')) {
-                $this->_lasterror = json_last_error_msg();
-            } else {
-                // @codeCoverageIgnoreStart
-                $this->_lasterror = json_last_error();
-                // @codeCoverageIgnoreEnd
-            }
-            return false;
-        }
-
-        if (function_exists("gzcompress")) {
-            $message = gzcompress($message);
-        }
-
-        // PHP's builtin curl_* function are happy without this, but the exec method requires it
-        $message = base64_encode($message);
-
-        return $message;
-    }
-
-    /**
-     * Wrapper to handle encoding and sending data to the Sentry API server.
+     * Sends the given event to the Sentry server.
      *
-     * @param array     $data       Associative array of data to log
+     * @param array $data Associative array of data to log
      */
     public function send(&$data)
     {
-        if (false === $this->config->shouldCapture($data) || !$this->config->getServer()) {
+        if (!$this->config->shouldCapture($data) || !$this->config->getServer()) {
             return;
         }
 
-        if ($this->getConfig()->getTransport()) {
+        if ($this->config->getTransport()) {
             call_user_func($this->getConfig()->getTransport(), $this, $data);
             return;
         }
@@ -747,233 +727,40 @@ class Client
             return;
         }
 
-        $message = $this->encode($data);
+        $request = $this->requestFactory->createRequest(
+            'POST',
+            sprintf('api/%d/store/', $this->getConfig()->getProjectId()),
+            ['Content-Type' => $this->isEncodingCompressed() ? 'application/octet-stream' : 'application/json'],
+            JSON::encode($data)
+        );
 
-        $headers = [
-            'User-Agent' => static::getUserAgent(),
-            'X-Sentry-Auth' => $this->getAuthHeader(),
-            'Content-Type' => 'application/octet-stream'
-        ];
-
-        $config = $this->getConfig();
-        $server = sprintf('%s/api/%d/store/', $config->getServer(), $config->getProjectId());
-
-        $this->send_remote($server, $message, $headers);
-    }
-
-    /**
-     * Send data to Sentry
-     *
-     * @param string       $url     Full URL to Sentry
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     */
-    protected function send_remote($url, $data, $headers = [])
-    {
-        $parts = parse_url($url);
-        $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
-        $this->send_http($url, $data, $headers);
-    }
-
-    /**
-     * @return array
-     * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
-     * @doc https://3v4l.org/4I7F5
-     */
-    protected function get_curl_options()
-    {
-        $options = [
-            CURLOPT_VERBOSE => false,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_SSL_VERIFYPEER => $this->config->isSslVerificationEnabled(),
-            CURLOPT_CAINFO => $this->config->getSslCaFile(),
-            CURLOPT_USERAGENT => 'sentry-php/' . self::VERSION,
-        ];
-        if (!empty($this->config->getProxy())) {
-            $options[CURLOPT_PROXY] = $this->config->getProxy();
+        if ($this->isEncodingCompressed()) {
+            $request = $request->withBody(
+                new Base64EncodingStream(
+                    new CompressStream($request->getBody())
+                )
+            );
         }
-        if (null !== $this->config->getCurlSslVersion()) {
-            $options[CURLOPT_SSLVERSION] = $this->config->getCurlSslVersion();
-        }
-        if ($this->config->getCurlIpv4()) {
-            $options[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
-        }
-        if (defined('CURLOPT_TIMEOUT_MS')) {
-            // MS is available in curl >= 7.16.2
-            $timeout = max(1, ceil(1000 * $this->config->getTimeout()));
 
-            // None of the versions of PHP contains this constant
-            if (!defined('CURLOPT_CONNECTTIMEOUT_MS')) {
-                //see stackoverflow link in the phpdoc
-                define('CURLOPT_CONNECTTIMEOUT_MS', 156);
+        $promise = $this->httpClient->sendAsyncRequest($request);
+
+        // This function is defined in-line so it doesn't show up for
+        // type-hinting on classes that implement this trait.
+        $cleanupPromiseCallback = function (ResponseInterface $response) use ($promise) {
+            $index = array_search($promise, $this->pendingRequests, true);
+
+            if (false === $index) {
+                return $response;
             }
 
-            $options[CURLOPT_CONNECTTIMEOUT_MS] = $timeout;
-            $options[CURLOPT_TIMEOUT_MS] = $timeout;
-        } else {
-            // fall back to the lower-precision timeout.
-            $timeout = max(1, ceil($this->config->getTimeout()));
-            $options[CURLOPT_CONNECTTIMEOUT] = $timeout;
-            $options[CURLOPT_TIMEOUT] = $timeout;
-        }
-        return $options;
-    }
+            unset($this->pendingRequests[$index]);
 
-    /**
-     * Send the message over http to the sentry url given
-     *
-     * @param string       $url     URL of the Sentry instance to log to
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     */
-    protected function send_http($url, $data, $headers = [])
-    {
-        if ($this->config->getCurlMethod() == 'async') {
-            $this->_curl_handler->enqueue($url, $data, $headers);
-        } elseif ($this->config->getCurlMethod() == 'exec') {
-            $this->send_http_asynchronous_curl_exec($url, $data, $headers);
-        } else {
-            $this->send_http_synchronous($url, $data, $headers);
-        }
-    }
+            return $response;
+        };
 
-    /**
-     * @param string $url
-     * @param string $data
-     * @param array  $headers
-     * @return string
-     *
-     * This command line ensures exec returns immediately while curl runs in the background
-     */
-    protected function buildCurlCommand($url, $data, $headers)
-    {
-        $post_fields = '';
-        foreach ($headers as $key => $value) {
-            $post_fields .= ' -H '.escapeshellarg($key.': '.$value);
-        }
-        $cmd = sprintf(
-            '%s -X POST%s -d %s %s -m %d %s%s> /dev/null 2>&1 &',
-            escapeshellcmd($this->config->getCurlPath()), $post_fields,
-            escapeshellarg($data), escapeshellarg($url), $this->config->getTimeout(),
-            !$this->config->isSslVerificationEnabled() ? '-k ' : '',
-            !empty($this->config->getSslCaFile()) ? '--cacert '.escapeshellarg($this->config->getSslCaFile()).' ' : ''
-        );
+        $promise->then($cleanupPromiseCallback, $cleanupPromiseCallback);
 
-        return $cmd;
-    }
-
-    /**
-     * Send the cURL to Sentry asynchronously. No errors will be returned from cURL
-     *
-     * @param string       $url     URL of the Sentry instance to log to
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     * @return bool
-     */
-    protected function send_http_asynchronous_curl_exec($url, $data, $headers)
-    {
-        exec($this->buildCurlCommand($url, $data, $headers));
-        return true; // The exec method is just fire and forget, so just assume it always works
-    }
-
-    /**
-     * Send a blocking cURL to Sentry and check for errors from cURL
-     *
-     * @param string       $url     URL of the Sentry instance to log to
-     * @param array|string $data    Associative array of data to log
-     * @param array        $headers Associative array of headers
-     * @return bool
-     */
-    protected function send_http_synchronous($url, $data, $headers)
-    {
-        $new_headers = [];
-        foreach ($headers as $key => $value) {
-            array_push($new_headers, $key .': '. $value);
-        }
-        // XXX(dcramer): Prevent 100-continue response form server (Fixes GH-216)
-        $new_headers[] = 'Expect:';
-
-        if (is_null($this->_curl_instance)) {
-            $this->_curl_instance = curl_init($url);
-        }
-        curl_setopt($this->_curl_instance, CURLOPT_POST, 1);
-        curl_setopt($this->_curl_instance, CURLOPT_HTTPHEADER, $new_headers);
-        curl_setopt($this->_curl_instance, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($this->_curl_instance, CURLOPT_RETURNTRANSFER, true);
-
-        $options = $this->get_curl_options();
-        if (isset($options[CURLOPT_CAINFO])) {
-            $ca_cert = $options[CURLOPT_CAINFO];
-            unset($options[CURLOPT_CAINFO]);
-        } else {
-            $ca_cert = null;
-        }
-        curl_setopt_array($this->_curl_instance, $options);
-
-        $buffer = curl_exec($this->_curl_instance);
-
-        $errno = curl_errno($this->_curl_instance);
-        // CURLE_SSL_CACERT || CURLE_SSL_CACERT_BADFILE
-        if (in_array($errno, [CURLE_SSL_CACERT, 77]) && !is_null($ca_cert)) {
-            curl_setopt($this->_curl_instance, CURLOPT_CAINFO, $ca_cert);
-            $buffer = curl_exec($this->_curl_instance);
-            $errno = curl_errno($this->_curl_instance);
-        }
-        if ($errno != 0) {
-            $this->_lasterror = curl_error($this->_curl_instance);
-            $this->_last_sentry_error = null;
-            return false;
-        }
-
-        $code = curl_getinfo($this->_curl_instance, CURLINFO_HTTP_CODE);
-        $success = ($code == 200);
-        if ($success) {
-            $this->_lasterror = null;
-            $this->_last_sentry_error = null;
-        } else {
-            // It'd be nice just to raise an exception here, but it's not very PHP-like
-            $this->_lasterror = curl_error($this->_curl_instance);
-            $this->_last_sentry_error = @json_decode($buffer);
-        }
-
-        return $success;
-    }
-
-    /**
-     * Generate a Sentry authorization header string
-     *
-     * @param string $timestamp  Timestamp when the event occurred
-     * @param string $client     HTTP client name (not \Raven\Client object)
-     * @param string $api_key    Sentry API key
-     * @param string $secret_key Sentry API key
-     * @return string
-     */
-    protected static function get_auth_header($timestamp, $client, $api_key, $secret_key)
-    {
-        $header = [
-            sprintf('sentry_timestamp=%F', $timestamp),
-            "sentry_client={$client}",
-            sprintf('sentry_version=%s', self::PROTOCOL),
-        ];
-
-        if ($api_key) {
-            $header[] = "sentry_key={$api_key}";
-        }
-
-        if ($secret_key) {
-            $header[] = "sentry_secret={$secret_key}";
-        }
-
-
-        return sprintf('Sentry %s', implode(', ', $header));
-    }
-
-    public function getAuthHeader()
-    {
-        $timestamp = microtime(true);
-        return $this->get_auth_header(
-            $timestamp, static::getUserAgent(), $this->config->getPublicKey(), $this->config->getSecretKey()
-        );
+        $this->pendingRequests[] = $promise;
     }
 
     /**
@@ -1126,20 +913,12 @@ class Client
         $this->user_context(array_merge($user, $data));
     }
 
-    public function force_send_async_curl_events()
-    {
-        if (!is_null($this->_curl_handler)) {
-            $this->_curl_handler->join();
-        }
-    }
-
     public function onShutdown()
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
         $this->sendUnsentErrors();
-        $this->force_send_async_curl_events();
     }
 
     /**
@@ -1205,17 +984,19 @@ class Client
         return $this->_shutdown_function_has_been_set;
     }
 
-    public function close_curl_resource()
-    {
-        if (!is_null($this->_curl_instance)) {
-            curl_close($this->_curl_instance);
-            $this->_curl_instance = null;
-        }
-    }
-
     public function setAllObjectSerialize($value)
     {
         $this->serializer->setAllObjectSerialize($value);
         $this->reprSerializer->setAllObjectSerialize($value);
+    }
+
+    /**
+     * Checks whether the encoding is compressed.
+     *
+     * @return bool
+     */
+    private function isEncodingCompressed()
+    {
+        return 'gzip' === $this->config->getEncoding();
     }
 }

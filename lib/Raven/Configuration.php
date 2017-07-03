@@ -11,7 +11,6 @@
 
 namespace Raven;
 
-use Composer\CaBundle\CaBundle;
 use Raven\Processor\RemoveCookiesProcessor;
 use Raven\Processor\RemoveHttpBodyProcessor;
 use Raven\Processor\SanitizeDataProcessor;
@@ -66,6 +65,28 @@ class Configuration
         $this->resolver = new OptionsResolver();
 
         $this->configureOptions($this->resolver);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the number of attempts to resend an event that failed to be sent.
+     *
+     * @return int
+     */
+    public function getSendAttempts()
+    {
+        return $this->options['send_attempts'];
+    }
+
+    /**
+     * Sets the number of attempts to resend an event that failed to be sent.
+     *
+     * @param int $attemptsCount The number of attempts
+     */
+    public function setSendAttempts($attemptsCount)
+    {
+        $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -134,94 +155,6 @@ class Configuration
     public function setSerializeAllObjects($serializeAllObjects)
     {
         $options = array_merge($this->options, ['serialize_all_object' => $serializeAllObjects]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the cURL method to use to send data.
-     *
-     * @return string
-     */
-    public function getCurlMethod()
-    {
-        return $this->options['curl_method'];
-    }
-
-    /**
-     * Sets the cURL method to use to send data.
-     *
-     * @param bool $method The cURL method
-     */
-    public function setCurlMethod($method)
-    {
-        $options = array_merge($this->options, ['curl_method' => $method]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the path to the cURL binary to be used with the "exec" curl method.
-     *
-     * @return string
-     */
-    public function getCurlPath()
-    {
-        return $this->options['curl_path'];
-    }
-
-    /**
-     * Sets the path to the cURL binary to be used with the "exec" curl method.
-     *
-     * @param string $path The path
-     */
-    public function setCurlPath($path)
-    {
-        $options = array_merge($this->options, ['curl_path' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets whether cURL must resolve domains only with IPv4.
-     *
-     * @return bool
-     */
-    public function getCurlIpv4()
-    {
-        return $this->options['curl_ipv4'];
-    }
-
-    /**
-     * Sets whether cURL must resolve domains only with IPv4.
-     *
-     * @param bool $enable Whether only IPv4 domains should be resolved
-     */
-    public function setCurlIpv4($enable)
-    {
-        $options = array_merge($this->options, ['curl_ipv4' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the version of SSL/TLS to attempt to use when using cURL.
-     *
-     * @return int
-     */
-    public function getCurlSslVersion()
-    {
-        return $this->options['curl_ssl_version'];
-    }
-
-    /**
-     * Sets the version of SSL/TLS to attempt to use when using cURL.
-     *
-     * @param int $version The protocol version (one of the `CURL_SSLVERSION_*` constants)
-     */
-    public function setCurlSslVersion($version)
-    {
-        $options = array_merge($this->options, ['curl_ssl_version' => $version]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -356,6 +289,28 @@ class Configuration
     public function setContextLines($contextLines)
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the encoding type for event bodies (GZIP or JSON).
+     *
+     * @return string
+     */
+    public function getEncoding()
+    {
+        return $this->options['encoding'];
+    }
+
+    /**
+     * Sets the encoding type for event bodies (GZIP or JSON).
+     *
+     * @param string $encoding The encoding type
+     */
+    public function setEncoding($encoding)
+    {
+        $options = array_merge($this->options, ['encoding' => $encoding]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -575,52 +530,6 @@ class Configuration
     }
 
     /**
-     * Gets the maximum number of seconds to wait for the Sentry server connection
-     * to open.
-     *
-     * @return int
-     */
-    public function getOpenTimeout()
-    {
-        return $this->options['open_timeout'];
-    }
-
-    /**
-     * Sets the maximum number of seconds to wait for the Sentry server connection
-     * to open.
-     *
-     * @param array $timeout The timeout in seconds
-     */
-    public function setOpenTimeout($timeout)
-    {
-        $options = array_merge($this->options, ['open_timeout' => $timeout]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the maximum number of seconds to wait for the server to return data.
-     *
-     * @return int
-     */
-    public function getTimeout()
-    {
-        return $this->options['timeout'];
-    }
-
-    /**
-     * Sets the maximum number of seconds to wait for the server to return data.
-     *
-     * @param array $timeout The timeout in seconds
-     */
-    public function setTimeout($timeout)
-    {
-        $options = array_merge($this->options, ['timeout' => $timeout]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the proxy information to pass to the transport adapter.
      *
      * @return array
@@ -733,72 +642,6 @@ class Configuration
     }
 
     /**
-     * Gets the options that configure the SSL for cURL.
-     *
-     * @return array
-     */
-    public function getSslOptions()
-    {
-        return $this->options['ssl'];
-    }
-
-    /**
-     * Sets the options that configure the SSL for cURL.
-     *
-     * @param array $options The options
-     */
-    public function setSslOptions(array $options)
-    {
-        $options = array_merge($this->options, ['ssl' => $options]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets whether the SSL certificate of the server should be verified.
-     *
-     * @return bool
-     */
-    public function isSslVerificationEnabled()
-    {
-        return $this->options['ssl_verification'];
-    }
-
-    /**
-     * Sets whether the SSL certificate of the server should be verified.
-     *
-     * @param bool $enable Whether the SSL certificate should be verified
-     */
-    public function setSslVerificationEnabled($enable)
-    {
-        $options = array_merge($this->options, ['ssl_verification' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the path to the SSL certificate file.
-     *
-     * @return string
-     */
-    public function getSslCaFile()
-    {
-        return $this->options['ssl_ca_file'];
-    }
-
-    /**
-     * Sets the path to the SSL certificate file.
-     *
-     * @param string $path The path
-     */
-    public function setSslCaFile($path)
-    {
-        $options = array_merge($this->options, ['ssl_ca_file' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets a list of default tags for events.
      *
      * @return string[]
@@ -890,19 +733,17 @@ class Configuration
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
+            'send_attempts' => 6,
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
-            'curl_method' => 'sync',
-            'curl_path' => 'curl',
-            'curl_ipv4' => true,
-            'curl_ssl_version' => null,
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
             'mb_detect_order' => null,
             'auto_log_stacks' => false,
             'context_lines' => 3,
+            'encoding' => 'gzip',
             'current_environment' => 'default',
             'environments' => [],
             'excluded_loggers' => [],
@@ -911,16 +752,11 @@ class Configuration
             'transport' => null,
             'project_root' => null,
             'logger' => 'php',
-            'open_timeout' => 1,
-            'timeout' => 2,
             'proxy' => null,
             'release' => null,
             'server' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
             'should_capture' => null,
-            'ssl' => [],
-            'ssl_verification' => true,
-            'ssl_ca_file' => CaBundle::getSystemCaRootBundlePath(),
             'tags' => [],
             'error_types' => null,
             'processors_options' => [],
@@ -932,18 +768,17 @@ class Configuration
             ],
         ]);
 
+        $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
-        $resolver->setAllowedTypes('curl_method', 'string');
-        $resolver->setAllowedTypes('curl_path', 'string');
-        $resolver->setAllowedTypes('curl_ssl_version', ['null', 'int']);
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
+        $resolver->setAllowedTypes('encoding', 'string');
         $resolver->setAllowedTypes('current_environment', 'string');
         $resolver->setAllowedTypes('environments', 'array');
         $resolver->setAllowedTypes('excluded_loggers', 'array');
@@ -952,21 +787,17 @@ class Configuration
         $resolver->setAllowedTypes('transport', ['null', 'callable']);
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
-        $resolver->setAllowedTypes('open_timeout', 'int');
-        $resolver->setAllowedTypes('timeout', 'int');
         $resolver->setAllowedTypes('proxy', ['null', 'string']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('server', ['null', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
-        $resolver->setAllowedTypes('ssl', 'array');
-        $resolver->setAllowedTypes('ssl_verification', 'bool');
-        $resolver->setAllowedTypes('ssl_ca_file', ['null', 'string']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('processors_options', 'array');
         $resolver->setAllowedTypes('processors', 'array');
 
+        $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('server', function ($value) {
             if (null === $value) {
                 return true;

@@ -11,8 +11,7 @@
 
 namespace Raven\Tests;
 
-use Raven\Client;
-use Raven\Configuration;
+use Raven\ClientBuilder;
 use Raven\Processor\SanitizeDataProcessor;
 
 class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
@@ -38,7 +37,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
             ]
         ];
 
-        $client = new Client(new Configuration());
+        $client = ClientBuilder::create()->getClient();
         $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -65,7 +64,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
             ]
         ];
 
-        $client = new Client(new Configuration());
+        $client = ClientBuilder::create()->getClient();
         $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -81,7 +80,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
             ],
         ];
 
-        $client = new Client(new Configuration());
+        $client = ClientBuilder::create()->getClient();
         $processor = new SanitizeDataProcessor($client);
         $processor->process($data);
 
@@ -90,7 +89,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function testSettingProcessorOptions()
     {
-        $client = new Client(new Configuration());
+        $client = ClientBuilder::create()->getClient();
         $processor = new SanitizeDataProcessor($client);
 
         $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
@@ -112,7 +111,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
      */
     public function testOverrideOptions($processorOptions, $clientOptions)
     {
-        $client = new Client(new Configuration($clientOptions));
+        $client = ClientBuilder::create($clientOptions)->getClient();
 
         /** @var SanitizeDataProcessor $processor */
         $processor = $this->getObjectAttribute($client, 'processors')[0];
@@ -146,7 +145,7 @@ class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
             ]
         ];
 
-        $client = new Client(new Configuration($clientOptions));
+        $client = ClientBuilder::create($clientOptions)->getClient();
 
         /** @var SanitizeDataProcessor $processor */
         $processor = $this->getObjectAttribute($client, 'processors')[0];
