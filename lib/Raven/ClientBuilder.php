@@ -203,7 +203,7 @@ class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient()
     {
-        $this->messageFactory = $this->messageFactory?: MessageFactoryDiscovery::find();
+        $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->streamFactory = $this->streamFactory ?: StreamFactoryDiscovery::find();

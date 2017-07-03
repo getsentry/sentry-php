@@ -730,11 +730,11 @@ class Client
         $request = $this->requestFactory->createRequest(
             'POST',
             sprintf('api/%d/store/', $this->getConfig()->getProjectId()),
-            ['Content-Type' => 'gzip' === $this->config->getEncoding() ? 'application/octet-stream' : 'application/json'],
+            ['Content-Type' => $this->isEncodingCompressed() ? 'application/octet-stream' : 'application/json'],
             JSON::encode($data)
         );
 
-        if ('gzip' === $this->config->getEncoding()) {
+        if ($this->isEncodingCompressed()) {
             $request = $request->withBody(
                 new Base64EncodingStream(
                     new CompressStream($request->getBody())
@@ -988,5 +988,15 @@ class Client
     {
         $this->serializer->setAllObjectSerialize($value);
         $this->reprSerializer->setAllObjectSerialize($value);
+    }
+
+    /**
+     * Checks whether the encoding is compressed.
+     *
+     * @return bool
+     */
+    private function isEncodingCompressed()
+    {
+        return 'gzip' === $this->config->getEncoding();
     }
 }

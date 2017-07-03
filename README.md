@@ -28,11 +28,7 @@ more about [automatic PHP error reporting with Sentry](https://sentry.io/for/php
 ## Install
 
 To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
-in your project. To install it run:
-
-```bash
-curl -sS https://getcomposer.org/installer | php
-```
+in your project. To install it please see the [docs](https://getcomposer.org/download/).
 
 Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
 it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever
@@ -55,13 +51,17 @@ and [`http-message-implementation`](https://packagist.org/providers/psr/http-mes
 ## Usage
 
 ```php
+namespace XXX;
+
+use Raven\ClientBuilder;
+
 require 'vendor/autoload.php';
 
 // Instantiate the SDK with your DSN
-$client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])->getClient();
+$client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])->getClient();
 
 // Capture an exception
-$eventId = $client->captureException($ex);
+$eventId = $client->captureException(new \RuntimeException('Hello World!'));
 
 // Give the user feedback
 echo 'Sorry, there was an error!';
