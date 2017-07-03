@@ -12,6 +12,7 @@
 namespace Raven\Tests;
 
 use Http\Client\Common\Plugin;
+use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
@@ -38,7 +39,7 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setUriFactory($uriFactory);
 
-        $this->assertAttributeEquals($uriFactory, 'uriFactory', $clientBuilder);
+        $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
     }
 
     public function testSetMessageFactory()
@@ -50,19 +51,27 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setMessageFactory($messageFactory);
 
-        $this->assertAttributeEquals($messageFactory, 'messageFactory', $clientBuilder);
+        $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertAttributeSame($messageFactory, 'requestFactory', $client);
     }
 
-    public function testSetStreamFactory()
+    public function testSetHttpClient()
     {
-        /** @var StreamFactory|\PHPUnit_Framework_MockObject_MockObject $streamFactory */
-        $streamFactory = $this->getMockBuilder(StreamFactory::class)
+        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        $httpClient = $this->getMockBuilder(HttpAsyncClient::class)
             ->getMock();
 
         $clientBuilder = new ClientBuilder();
-        $clientBuilder->setStreamFactory($streamFactory);
+        $clientBuilder->setHttpClient($httpClient);
 
-        $this->assertAttributeEquals($streamFactory, 'streamFactory', $clientBuilder);
+        $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
+
+        $client = $this->getObjectAttribute($clientBuilder->getClient(), 'httpClient');
+
+        $this->assertAttributeSame($httpClient, 'client', $client);
     }
 
     public function testAddHttpClientPlugin()
@@ -145,7 +154,6 @@ class ClientBuilderTest extends \PHPUnit_Framework_TestCase
             ['setIsTrustXForwardedProto', true],
             ['setPrefixes', ['foo', 'bar']],
             ['setSerializeAllObjects', false],
-            ['setHttpClientOptions', ['foo', 'bar']],
             ['setSampleRate', 0.5],
             ['setInstallDefaultBreadcrumbHandlers', false],
             ['setInstallShutdownHandler', false],

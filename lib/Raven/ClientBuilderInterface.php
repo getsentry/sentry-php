@@ -12,10 +12,9 @@
 namespace Raven;
 
 use Http\Client\Common\Plugin;
+use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
-use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
-use Raven\HttpClient\HttpClientFactoryInterface;
 
 /**
  * A configurable builder for Client objects.
@@ -52,22 +51,13 @@ interface ClientBuilderInterface
     public function setMessageFactory(MessageFactory $messageFactory);
 
     /**
-     * Sets the factory to use to create PSR-7 streams.
+     * Sets the HTTP client.
      *
-     * @param StreamFactory $streamFactory The factory
-     *
-     * @return $this
-     */
-    public function setStreamFactory(StreamFactory $streamFactory);
-
-    /**
-     * Sets the factory to use to create the HTTP client.
-     *
-     * @param HttpClientFactoryInterface $httpClientFactory The factory
+     * @param HttpAsyncClient $httpClient The HTTP client
      *
      * @return $this
      */
-    public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory);
+    public function setHttpClient(HttpAsyncClient $httpClient);
 
     /**
      * Adds a new HTTP client plugin to the end of the plugins chain.

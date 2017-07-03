@@ -50,7 +50,6 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
-            ['http_client_options', ['foo', 'bar'], 'getHttpClientOptions', 'setHttpClientOptions'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
             ['install_shutdown_handler', false, 'shouldInstallShutdownHandler', 'setInstallShutdownHandler'],

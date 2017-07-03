@@ -194,16 +194,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
-        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
-            ->getMock();
-
-        $httpClientFactory->expects($this->once())
-            ->method('getInstance')
-            ->willReturn($httpClient);
-
         $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
-            ->setHttpClientFactory($httpClientFactory)
+            ->setHttpClient($httpClient)
             ->getClient();
 
         $data = ['foo'];
@@ -768,16 +760,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $httpClient = new MockClient();
 
-        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
-        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
-            ->getMock();
-
-        $httpClientFactory->expects($this->once())
-            ->method('getInstance')
-            ->willReturn($httpClient);
-
         $client = ClientBuilder::create($options)
-            ->setHttpClientFactory($httpClientFactory)
+            ->setHttpClient($httpClient)
             ->getClient();
 
         $data = ['foo bar'];
@@ -1413,16 +1397,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $httpClient = new MockClient();
 
-        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
-        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
-            ->getMock();
-
-        $httpClientFactory->expects($this->once())
-            ->method('getInstance')
-            ->willReturn($httpClient);
-
         $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
-            ->setHttpClientFactory($httpClientFactory)
+            ->setHttpClient($httpClient)
             ->getClient();
 
         $this->assertEquals(0, count($client->_pending_events));
@@ -1706,16 +1682,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $httpClient = new MockClient();
 
-        /** @var HttpClientFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $httpClientFactory */
-        $httpClientFactory = $this->getMockBuilder(HttpClientFactoryInterface::class)
-            ->getMock();
-
-        $httpClientFactory->expects($this->once())
-            ->method('getInstance')
-            ->willReturn($httpClient);
-
         $client = ClientBuilder::create($options)
-            ->setHttpClientFactory($httpClientFactory)
+            ->setHttpClient($httpClient)
             ->getClient();
 
         for ($i = 0; $i < 10; $i++) {

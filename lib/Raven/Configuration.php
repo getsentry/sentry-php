@@ -160,28 +160,6 @@ class Configuration
     }
 
     /**
-     * Gets the options that configure the HTTP client.
-     *
-     * @return array
-     */
-    public function getHttpClientOptions()
-    {
-        return $this->options['http_client_options'];
-    }
-
-    /**
-     * Sets the options that configure the HTTP client.
-     *
-     * @param array $options The options
-     */
-    public function setHttpClientOptions(array $options)
-    {
-        $options = array_merge($this->options, ['http_client_options' => $options]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the sampling factor to apply to events. A value of 0 will deny
      * sending any events, and a value of 1 will send 100% of events.
      *
@@ -759,7 +737,6 @@ class Configuration
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
-            'http_client_options' => [],
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
@@ -795,7 +772,6 @@ class Configuration
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
-        $resolver->setAllowedTypes('http_client_options', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');

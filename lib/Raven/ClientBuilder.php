@@ -19,15 +19,12 @@ use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
+use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
-use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
 use Raven\HttpClient\Authentication\SentryAuth;
-use Raven\HttpClient\CurlHttpClientFactory;
-use Raven\HttpClient\HttpClientFactoryInterface;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.
@@ -100,14 +97,9 @@ class ClientBuilder implements ClientBuilderInterface
     protected $messageFactory;
 
     /**
-     * @var StreamFactory The PSR-7 stream factory
+     * @var HttpAsyncClient The HTTP client
      */
-    protected $streamFactory;
-
-    /**
-     * @var HttpClientFactoryInterface The HTTP client factory
-     */
-    protected $httpClientFactory;
+    protected $httpClient;
 
     /**
      * @var Plugin[] The list of Httplug plugins
@@ -155,19 +147,9 @@ class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setStreamFactory(StreamFactory $streamFactory)
+    public function setHttpClient(HttpAsyncClient $httpClient)
     {
-        $this->streamFactory = $streamFactory;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setHttpClientFactory(HttpClientFactoryInterface $httpClientFactory)
-    {
-        $this->httpClientFactory = $httpClientFactory;
+        $this->httpClient = $httpClient;
 
         return $this;
     }
@@ -206,8 +188,7 @@ class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
-        $this->streamFactory = $this->streamFactory ?: StreamFactoryDiscovery::find();
-        $this->httpClientFactory = $this->httpClientFactory ?: new CurlHttpClientFactory($this->messageFactory, $this->streamFactory);
+        $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
 
         return new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
     }
@@ -240,8 +221,6 @@ class ClientBuilder implements ClientBuilderInterface
      */
     protected function createHttpClientInstance()
     {
-        $httpClient = $this->httpClientFactory->getInstance($this->configuration->getHttpClientOptions());
-
         if (null !== $this->configuration->getServer()) {
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getServer())));
         }
@@ -251,6 +230,6 @@ class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->configuration->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
-        return new PluginClient($httpClient, $this->httpClientPlugins);
+        return new PluginClient($this->httpClient, $this->httpClientPlugins);
     }
 }

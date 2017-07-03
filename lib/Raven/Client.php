@@ -749,7 +749,7 @@ class Client
         $cleanupPromiseCallback = function (ResponseInterface $response) use ($promise) {
             $index = array_search($promise, $this->pendingRequests, true);
 
-            if ($index === false) {
+            if (false === $index) {
                 return $response;
             }
 
