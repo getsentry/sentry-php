@@ -14,13 +14,12 @@ namespace Raven\Breadcrumbs;
 use Raven\Exception\InvalidArgumentException;
 
 /**
- * This is the default implementation of {@link RecorderInterface}. This class
- * is a circular FIFO buffer that can store up to a certain amount of breadcrumbs
- * before overwriting the older ones.
+ * This class is a circular FIFO buffer that can store up to a certain amount
+ * of breadcrumbs before overwriting the older ones.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Recorder implements RecorderInterface
+final class Recorder implements \Countable, \Iterator
 {
     /**
      * This constant defines the maximum number of breadcrumbs to store.
@@ -68,7 +67,9 @@ final class Recorder implements RecorderInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Records a new breadcrumb.
+     *
+     * @param Breadcrumb $breadcrumb The breadcrumb object
      */
     public function record(Breadcrumb $breadcrumb)
     {
@@ -78,7 +79,7 @@ final class Recorder implements RecorderInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Clears all recorded breadcrumbs.
      */
     public function clear()
     {

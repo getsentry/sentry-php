@@ -17,7 +17,6 @@ use Http\Promise\Promise;
 use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
-use Raven\Breadcrumbs\RecorderInterface;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
@@ -65,7 +64,7 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
-     * @var RecorderInterface The bredcrumbs recorder
+     * @var Recorder The bredcrumbs recorder
      */
     protected $recorder;
 
