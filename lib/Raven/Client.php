@@ -311,9 +311,13 @@ class Client
      * @deprecated
      * @codeCoverageIgnore
      */
-    public function message($message, $params = [], $level = self::LEVEL_INFO,
-                            $stack = false, $vars = null)
-    {
+    public function message(
+        $message,
+        $params = [],
+        $level = self::LEVEL_INFO,
+                            $stack = false,
+        $vars = null
+    ) {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
     }
 
@@ -338,9 +342,13 @@ class Client
      * @param mixed      $vars
      * @return string|null
      */
-    public function captureMessage($message, $params = [], $data = [],
-                            $stack = false, $vars = null)
-    {
+    public function captureMessage(
+        $message,
+        $params = [],
+        $data = [],
+                            $stack = false,
+        $vars = null
+    ) {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
         if (!empty($params)) {
@@ -351,7 +359,7 @@ class Client
 
         if ($data === null) {
             $data = [];
-        // support legacy method of passing in a level name as the third arg
+            // support legacy method of passing in a level name as the third arg
         } elseif (!is_array($data)) {
             $data = [
                 'level' => $data,
@@ -415,7 +423,10 @@ class Client
 
             $exc_data['stacktrace'] = [
                 'frames' => Stacktrace::fromBacktrace(
-                    $this, $exception->getTrace(), $exception->getFile(), $exception->getLine()
+                    $this,
+                    $exception->getTrace(),
+                    $exception->getFile(),
+                    $exception->getLine()
                 )->getFrames(),
             ];
 
@@ -454,8 +465,11 @@ class Client
         }
 
         $e = new \ErrorException(
-            @$error['message'], 0, @$error['type'],
-            @$error['file'], @$error['line']
+            @$error['message'],
+            0,
+            @$error['type'],
+            @$error['file'],
+            @$error['line']
         );
 
         return $this->captureException($e);
@@ -632,11 +646,13 @@ class Client
         $data['tags'] = array_merge(
             $this->config->getTags(),
             $this->context->tags,
-            $data['tags']);
+            $data['tags']
+        );
 
         $data['extra'] = array_merge(
             $this->context->extra,
-            $data['extra']);
+            $data['extra']
+        );
 
         if (empty($data['extra'])) {
             unset($data['extra']);
@@ -673,7 +689,9 @@ class Client
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = [
                     'frames' => Stacktrace::fromBacktrace(
-                        $this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__,
+                        $this,
+                        $stack,
+                        isset($stack['file']) ? $stack['file'] : __FILE__,
                         isset($stack['line']) ? $stack['line'] : __LINE__ - 2
                     )->getFrames(),
                 ];
@@ -810,9 +828,11 @@ class Client
      */
     protected static function uuid4()
     {
-        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        $uuid = sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
 
             // 16 bits for "time_mid"
             mt_rand(0, 0xffff),
@@ -827,7 +847,9 @@ class Client
             mt_rand(0, 0x3fff) | 0x8000,
 
             // 48 bits for "node"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
 
         return str_replace('-', '', $uuid);

@@ -53,9 +53,12 @@ class ErrorHandler
      */
     protected $error_types = null;
 
-    public function __construct($client, $send_errors_last = false, $error_types = null,
-                                $__error_types = null)
-    {
+    public function __construct(
+        $client,
+        $send_errors_last = false,
+        $error_types = null,
+                                $__error_types = null
+    ) {
         // support legacy fourth argument for error types
         if ($error_types === null) {
             $error_types = $__error_types;
@@ -133,8 +136,11 @@ class ErrorHandler
 
         if ($this->shouldCaptureFatalError($error['type'])) {
             $e = new \ErrorException(
-                @$error['message'], 0, @$error['type'],
-                @$error['file'], @$error['line']
+                @$error['message'],
+                0,
+                @$error['type'],
+                @$error['file'],
+                @$error['line']
             );
             $this->handleException($e, true);
         }
