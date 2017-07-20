@@ -125,13 +125,18 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @param string $type The type
      *
-     * @return $this
+     * @return static
      */
-    public function setType($type)
+    public function withType($type)
     {
-        $this->type = $type;
+        if ($type === $this->type) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->type = $type;
+
+        return $new;
     }
 
     /**
@@ -149,17 +154,22 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @param string $level The level
      *
-     * @return $this
+     * @return static
      */
-    public function setLevel($level)
+    public function withLevel($level)
     {
         if (!in_array($level, self::getLevels(), true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
         }
 
-        $this->level = $level;
+        if ($level === $this->level) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->level = $level;
+
+        return $new;
     }
 
     /**
@@ -175,13 +185,20 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Sets the breadcrumb category.
      *
-     * @return $this
+     * @param string $category The category
+     *
+     * @return static
      */
-    public function setCategory($category)
+    public function withCategory($category)
     {
-        $this->category = $category;
+        if ($category === $this->category) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->category = $category;
+
+        return $new;
     }
 
     /**
@@ -199,13 +216,18 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @param string $message The message
      *
-     * @return $this
+     * @return static
      */
-    public function setMessage($message)
+    public function withMessage($message)
     {
-        $this->message = $message;
+        if ($message === $this->message) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->message = $message;
+
+        return $new;
     }
 
     /**
@@ -219,17 +241,45 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
-     * Sets the breadcrumb meta data.
+     * Returns an instance of this class with the provided metadata, replacing
+     * any existing values of any metadata with the same name.
      *
-     * @param array $metadata The meta data
+     * @param string $name  The name of the metadata
+     * @param mixed  $value The value
      *
-     * @return $this
+     * @return static
      */
-    public function setMetadata(array $metadata)
+    public function withMetadata($name, $value)
     {
-        $this->metadata = $metadata;
+        if (isset($this->metadata[$name]) && $value === $this->message[$name]) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->metadata[$name] = $value;
+
+        return $new;
+    }
+
+    /**
+     * Returns an instance of this class without the specified metadata
+     * information.
+     *
+     * @param string $name The name of the metadata
+     *
+     * @return static|Breadcrumb
+     */
+    public function withoutMetadata($name)
+    {
+        if (!isset($this->metadata[$name])) {
+            return $this;
+        }
+
+        $new = clone $this;
+
+        unset($new->metadata[$name]);
+
+        return $new;
     }
 
     /**
@@ -247,13 +297,18 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @param float $timestamp The timestamp.
      *
-     * @return $this
+     * @return static
      */
-    public function setTimestamp($timestamp)
+    public function withTimestamp($timestamp)
     {
-        $this->timestamp = $timestamp;
+        if ($timestamp === $this->timestamp) {
+            return $this;
+        }
 
-        return $this;
+        $new = clone $this;
+        $new->timestamp = $timestamp;
+
+        return $new;
     }
 
     /**

@@ -35,7 +35,7 @@ class BreadcrumbTest extends \PHPUnit_Framework_TestCase
     public function testSetLevelThrowsOnInvalidLevel()
     {
         $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
-        $breadcrumb->setLevel('bar');
+        $breadcrumb->withLevel('bar');
     }
 
     public function testConstructor()
@@ -62,27 +62,73 @@ class BreadcrumbTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
     }
 
-    /**
-     * @dataProvider gettersAndSettersDataProvider
-     */
-    public function testGettersAndSetters($property, $expectedValue)
+    public function testWithCategory()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_ERROR, 'foo', 'foo bar', ['baz']);
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withCategory('bar');
 
-        call_user_func([$breadcrumb, 'set' . ucfirst($property)], $expectedValue);
-
-        $this->assertEquals($expectedValue, call_user_func([$breadcrumb, 'get' . ucfirst($property)]));
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertEquals('bar', $newBreadcrumb->getCategory());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withCategory('bar'));
     }
 
-    public function gettersAndSettersDataProvider()
+    public function testWithLevel()
     {
-        return [
-            ['category', 'foo'],
-            ['level', Client::LEVEL_WARNING],
-            ['type', Breadcrumb::TYPE_USER],
-            ['message', 'foo bar'],
-            ['metadata', ['foo', 'bar']],
-            ['timestamp', 123],
-        ];
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withLevel(Client::LEVEL_WARNING);
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertEquals(Client::LEVEL_WARNING, $newBreadcrumb->getLevel());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withLevel(Client::LEVEL_WARNING));
+    }
+
+    public function testWithType()
+    {
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withType(Breadcrumb::TYPE_ERROR);
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertEquals(Breadcrumb::TYPE_ERROR, $newBreadcrumb->getType());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withType(Breadcrumb::TYPE_ERROR));
+    }
+
+    public function testWithMessage()
+    {
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withMessage('foo bar');
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertEquals('foo bar', $newBreadcrumb->getMessage());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withMessage('foo bar'));
+    }
+
+    public function testWithTimestamp()
+    {
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withTimestamp(123);
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertEquals(123, $newBreadcrumb->getTimestamp());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withTimestamp(123));
+    }
+
+    public function testWithMetadata()
+    {
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withMetadata('foo', 'bar');
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertNotContains('foo', $breadcrumb->getMetadata());
+        $this->assertSame(['foo' => 'bar'], $newBreadcrumb->getMetadata());
+    }
+
+    public function testWithoutMetadata()
+    {
+        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar']);
+        $newBreadcrumb = $breadcrumb->withoutMetadata('foo');
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertSame(['foo' => 'bar'], $breadcrumb->getMetadata());
+        $this->assertArrayNotHasKey('foo', $newBreadcrumb->getMetadata());
     }
 }
