@@ -310,12 +310,12 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $client->store_errors_for_bulk_send = true;
 
         $client->captureMessage('Test Message %s', ['foo'], [
-            'level' => Dummy_Raven_Client::WARNING,
+            'level' => Dummy_Raven_Client::LEVEL_WARNING,
             'extra' => ['foo' => 'bar']
         ]);
 
         $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
         $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
         $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
     }
@@ -325,10 +325,10 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $client = ClientBuilder::create()->getClient();
         $client->store_errors_for_bulk_send = true;
 
-        $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::WARNING);
+        $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::LEVEL_WARNING);
 
         $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
         $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
     }
 
@@ -389,9 +389,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $client->captureException($e3);
 
         $this->assertCount(3, $client->_pending_events);
-        $this->assertEquals(Client::WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals(Client::INFO, $client->_pending_events[1]['level']);
-        $this->assertEquals(Client::ERROR, $client->_pending_events[2]['level']);
+        $this->assertEquals(Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
+        $this->assertEquals(Client::LEVEL_INFO, $client->_pending_events[1]['level']);
+        $this->assertEquals(Client::LEVEL_ERROR, $client->_pending_events[2]['level']);
     }
 
     public function testCaptureExceptionHandlesOptionsAsSecondArg()
@@ -1637,30 +1637,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         session_id($session_id);
         @session_start(['use_cookies' => false]);
-    }
-
-    public function testCaptureNonEmptyBreadcrumb()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
-
-        $ts1 = microtime(true);
-
-        $client->breadcrumbs->record(['foo' => 'bar']);
-        $client->breadcrumbs->record(['honey' => 'clover']);
-
-        $client->capture([]);
-
-        foreach ($client->_pending_events[0]['breadcrumbs'] as &$crumb) {
-            $this->assertGreaterThanOrEqual($ts1, $crumb['timestamp']);
-
-            unset($crumb['timestamp']);
-        }
-
-        $this->assertEquals([
-            ['foo' => 'bar'],
-            ['honey' => 'clover'],
-        ], $client->_pending_events[0]['breadcrumbs']);
     }
 
     public function testCaptureAutoLogStacks()

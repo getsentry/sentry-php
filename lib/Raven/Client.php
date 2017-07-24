@@ -15,6 +15,8 @@ use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Psr\Http\Message\ResponseInterface;
+use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Breadcrumbs\Recorder;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
@@ -31,12 +33,30 @@ class Client
 
     const PROTOCOL = '6';
 
-    const DEBUG = 'debug';
-    const INFO = 'info';
-    const WARN = 'warning';
-    const WARNING = 'warning';
-    const ERROR = 'error';
-    const FATAL = 'fatal';
+    /**
+     * This constant defines the debug log level.
+     */
+    const LEVEL_DEBUG = 'debug';
+
+    /**
+     * This constant defines the info log level.
+     */
+    const LEVEL_INFO = 'info';
+
+    /**
+     * This constant defines the warning log level.
+     */
+    const LEVEL_WARNING = 'warning';
+
+    /**
+     * This constant defines the error log level.
+     */
+    const LEVEL_ERROR = 'error';
+
+    /**
+     * This constant defines the fatal log level.
+     */
+    const LEVEL_FATAL = 'fatal';
 
     /**
      * Default message limit
@@ -44,14 +64,14 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
+     * @var Recorder The bredcrumbs recorder
+     */
+    protected $recorder;
+
+    /**
      * This constant defines the client's user-agent string
      */
     const USER_AGENT = 'sentry-php/' . self::VERSION;
-
-    /**
-     * @var Breadcrumbs The breadcrumbs
-     */
-    public $breadcrumbs;
 
     /**
      * @var Context The context
@@ -142,7 +162,7 @@ class Client
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->context = new Context();
-        $this->breadcrumbs = new Breadcrumbs();
+        $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
@@ -166,11 +186,31 @@ class Client
     }
 
     /**
-     * Destructor.
+     * Destruct all objects contain link to this object
+     *
+     * This method can not delete shutdown handler
      */
     public function __destruct()
     {
         $this->sendUnsentErrors();
+    }
+
+    /**
+     * Records the given breadcrumb.
+     *
+     * @param Breadcrumb $breadcrumb The breadcrumb instance
+     */
+    public function leaveBreadcrumb(Breadcrumb $breadcrumb)
+    {
+        $this->recorder->record($breadcrumb);
+    }
+
+    /**
+     * Clears all recorded breadcrumbs.
+     */
+    public function clearBreadcrumbs()
+    {
+        $this->recorder->clear();
     }
 
     /**
@@ -271,9 +311,13 @@ class Client
      * @deprecated
      * @codeCoverageIgnore
      */
-    public function message($message, $params = [], $level = self::INFO,
-                            $stack = false, $vars = null)
-    {
+    public function message(
+        $message,
+        $params = [],
+        $level = self::LEVEL_INFO,
+                            $stack = false,
+        $vars = null
+    ) {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
     }
 
@@ -298,9 +342,13 @@ class Client
      * @param mixed      $vars
      * @return string|null
      */
-    public function captureMessage($message, $params = [], $data = [],
-                            $stack = false, $vars = null)
-    {
+    public function captureMessage(
+        $message,
+        $params = [],
+        $data = [],
+                            $stack = false,
+        $vars = null
+    ) {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
         if (!empty($params)) {
@@ -311,7 +359,7 @@ class Client
 
         if ($data === null) {
             $data = [];
-        // support legacy method of passing in a level name as the third arg
+            // support legacy method of passing in a level name as the third arg
         } elseif (!is_array($data)) {
             $data = [
                 'level' => $data,
@@ -375,7 +423,10 @@ class Client
 
             $exc_data['stacktrace'] = [
                 'frames' => Stacktrace::fromBacktrace(
-                    $this, $exception->getTrace(), $exception->getFile(), $exception->getLine()
+                    $this,
+                    $exception->getTrace(),
+                    $exception->getFile(),
+                    $exception->getLine()
                 )->getFrames(),
             ];
 
@@ -393,7 +444,7 @@ class Client
             if (method_exists($exception, 'getSeverity')) {
                 $data['level'] = $this->translateSeverity($exception->getSeverity());
             } else {
-                $data['level'] = self::ERROR;
+                $data['level'] = self::LEVEL_ERROR;
             }
         }
 
@@ -414,8 +465,11 @@ class Client
         }
 
         $e = new \ErrorException(
-            @$error['message'], 0, @$error['type'],
-            @$error['file'], @$error['line']
+            @$error['message'],
+            0,
+            @$error['type'],
+            @$error['file'],
+            @$error['line']
         );
 
         return $this->captureException($e);
@@ -428,7 +482,7 @@ class Client
      * @param string      $level
      * @param string      $engine
      */
-    public function captureQuery($query, $level = self::INFO, $engine = '')
+    public function captureQuery($query, $level = self::LEVEL_INFO, $engine = '')
     {
         $data = [
             'message' => $query,
@@ -557,7 +611,7 @@ class Client
             $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         }
         if (!isset($data['level'])) {
-            $data['level'] = self::ERROR;
+            $data['level'] = self::LEVEL_ERROR;
         }
         if (!isset($data['tags'])) {
             $data['tags'] = [];
@@ -592,11 +646,13 @@ class Client
         $data['tags'] = array_merge(
             $this->config->getTags(),
             $this->context->tags,
-            $data['tags']);
+            $data['tags']
+        );
 
         $data['extra'] = array_merge(
             $this->context->extra,
-            $data['extra']);
+            $data['extra']
+        );
 
         if (empty($data['extra'])) {
             unset($data['extra']);
@@ -611,8 +667,8 @@ class Client
             unset($data['request']);
         }
 
-        if (!$this->breadcrumbs->is_empty()) {
-            $data['breadcrumbs'] = $this->breadcrumbs->fetch();
+        if (!empty($this->recorder)) {
+            $data['breadcrumbs'] = iterator_to_array($this->recorder);
         }
 
         if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
@@ -633,7 +689,9 @@ class Client
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = [
                     'frames' => Stacktrace::fromBacktrace(
-                        $this, $stack, isset($stack['file']) ? $stack['file'] : __FILE__,
+                        $this,
+                        $stack,
+                        isset($stack['file']) ? $stack['file'] : __FILE__,
                         isset($stack['line']) ? $stack['line'] : __LINE__ - 2
                     )->getFrames(),
                 ];
@@ -770,9 +828,11 @@ class Client
      */
     protected static function uuid4()
     {
-        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        $uuid = sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             // 32 bits for "time_low"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
 
             // 16 bits for "time_mid"
             mt_rand(0, 0xffff),
@@ -787,7 +847,9 @@ class Client
             mt_rand(0, 0x3fff) | 0x8000,
 
             // 48 bits for "node"
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
 
         return str_replace('-', '', $uuid);
@@ -865,23 +927,23 @@ class Client
             return $this->severity_map[$severity];
         }
         switch ($severity) {
-            case E_ERROR:              return \Raven\Client::ERROR;
-            case E_WARNING:            return \Raven\Client::WARN;
-            case E_PARSE:              return \Raven\Client::ERROR;
-            case E_NOTICE:             return \Raven\Client::INFO;
-            case E_CORE_ERROR:         return \Raven\Client::ERROR;
-            case E_CORE_WARNING:       return \Raven\Client::WARN;
-            case E_COMPILE_ERROR:      return \Raven\Client::ERROR;
-            case E_COMPILE_WARNING:    return \Raven\Client::WARN;
-            case E_USER_ERROR:         return \Raven\Client::ERROR;
-            case E_USER_WARNING:       return \Raven\Client::WARN;
-            case E_USER_NOTICE:        return \Raven\Client::INFO;
-            case E_STRICT:             return \Raven\Client::INFO;
-            case E_RECOVERABLE_ERROR:  return \Raven\Client::ERROR;
-            case E_DEPRECATED:         return \Raven\Client::WARN;
-            case E_USER_DEPRECATED:    return \Raven\Client::WARN;
+            case E_DEPRECATED:         return \Raven\Client::LEVEL_WARNING;
+            case E_USER_DEPRECATED:    return \Raven\Client::LEVEL_WARNING;
+            case E_ERROR:              return \Raven\Client::LEVEL_ERROR;
+            case E_WARNING:            return \Raven\Client::LEVEL_WARNING;
+            case E_PARSE:              return \Raven\Client::LEVEL_ERROR;
+            case E_NOTICE:             return \Raven\Client::LEVEL_INFO;
+            case E_CORE_ERROR:         return \Raven\Client::LEVEL_ERROR;
+            case E_CORE_WARNING:       return \Raven\Client::LEVEL_WARNING;
+            case E_COMPILE_ERROR:      return \Raven\Client::LEVEL_ERROR;
+            case E_COMPILE_WARNING:    return \Raven\Client::LEVEL_WARNING;
+            case E_USER_ERROR:         return \Raven\Client::LEVEL_ERROR;
+            case E_USER_WARNING:       return \Raven\Client::LEVEL_WARNING;
+            case E_USER_NOTICE:        return \Raven\Client::LEVEL_INFO;
+            case E_STRICT:             return \Raven\Client::LEVEL_INFO;
+            case E_RECOVERABLE_ERROR:  return \Raven\Client::LEVEL_ERROR;
         }
-        return \Raven\Client::ERROR;
+        return \Raven\Client::LEVEL_ERROR;
     }
 
     /**

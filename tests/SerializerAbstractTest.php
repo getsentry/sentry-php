@@ -317,7 +317,8 @@ abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_Tes
         $this->assertEquals(['key' => ['key' => ['key' => 12345]]], $result);
 
         $result = $serializer->serialize(
-            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]], 3
+            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]],
+            3
         );
         $this->assertEquals(['key' => ['key' => ['key' => 'Object stdClass']]], $result);
     }

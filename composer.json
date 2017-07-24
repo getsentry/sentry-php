@@ -16,6 +16,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "php-http/async-client-implementation": "~1.0",
+        "php-http/client-common": "~1.5",
         "php-http/discovery": "~1.2",
         "php-http/httplug": "~1.1",
         "psr/http-message-implementation": "~1.0",

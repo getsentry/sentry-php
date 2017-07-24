@@ -14,7 +14,6 @@ namespace Raven\Tests;
 use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
-use Http\Message\StreamFactory;
 use Http\Message\UriFactory;
 use Psr\Http\Message\RequestInterface;
 use Raven\Client;

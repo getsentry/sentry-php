@@ -2,22 +2,24 @@
 
 namespace Raven\Breadcrumbs;
 
-use \Monolog\Logger;
+use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Logger;
+use Raven\Client;
 
-class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
+class MonologHandler extends AbstractProcessingHandler
 {
     /**
      * Translates Monolog log levels to Raven log levels.
      */
     protected $logLevels = [
-        Logger::DEBUG     => \Raven\Client::DEBUG,
-        Logger::INFO      => \Raven\Client::INFO,
-        Logger::NOTICE    => \Raven\Client::INFO,
-        Logger::WARNING   => \Raven\Client::WARNING,
-        Logger::ERROR     => \Raven\Client::ERROR,
-        Logger::CRITICAL  => \Raven\Client::FATAL,
-        Logger::ALERT     => \Raven\Client::FATAL,
-        Logger::EMERGENCY => \Raven\Client::FATAL,
+        Logger::DEBUG     => Client::LEVEL_DEBUG,
+        Logger::INFO      => Client::LEVEL_INFO,
+        Logger::NOTICE    => Client::LEVEL_INFO,
+        Logger::WARNING   => Client::LEVEL_WARNING,
+        Logger::ERROR     => Client::LEVEL_ERROR,
+        Logger::CRITICAL  => Client::LEVEL_FATAL,
+        Logger::ALERT     => Client::LEVEL_FATAL,
+        Logger::EMERGENCY => Client::LEVEL_FATAL,
     ];
 
     protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
@@ -28,11 +30,11 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
     protected $ravenClient;
 
     /**
-     * @param \Raven\Client $ravenClient
-     * @param int           $level  The minimum logging level at which this handler will be triggered
-     * @param bool          $bubble Whether the messages that are handled can bubble up the stack or not
+     * @param Client $ravenClient The Raven client
+     * @param int    $level       The minimum logging level at which this handler will be triggered
+     * @param bool   $bubble      Whether the messages that are handled can bubble up the stack or not
      */
-    public function __construct(\Raven\Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
+    public function __construct(Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
     {
         parent::__construct($level, $bubble);
 
@@ -67,36 +69,27 @@ class MonologHandler extends \Monolog\Handler\AbstractProcessingHandler
              * @var \Exception $exc
              */
             $exc = $record['context']['exception'];
-            $crumb = [
-                'type' => 'error',
-                'level' => $this->logLevels[$record['level']],
-                'category' => $record['channel'],
-                'data' => [
-                    'type' => get_class($exc),
-                    'value' => $exc->getMessage(),
-                ],
-            ];
+
+            $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
+                'type' => get_class($exc),
+                'value' => $exc->getMessage(),
+            ]);
+
+            $this->ravenClient->leaveBreadcrumb($breadcrumb);
         } else {
             // TODO(dcramer): parse exceptions out of messages and format as above
             if ($error = $this->parseException($record['message'])) {
-                $crumb = [
-                    'type' => 'error',
-                    'level' => $this->logLevels[$record['level']],
-                    'category' => $record['channel'],
-                    'data' => [
-                        'type' => $error[0],
-                        'value' => $error[1],
-                    ],
-                ];
+                $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
+                    'type' => $error[0],
+                    'value' => $error[1],
+                ]);
+
+                $this->ravenClient->leaveBreadcrumb($breadcrumb);
             } else {
-                $crumb = [
-                    'level' => $this->logLevels[$record['level']],
-                    'category' => $record['channel'],
-                    'message' => $record['message'],
-                ];
+                $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], $record['message']);
+
+                $this->ravenClient->leaveBreadcrumb($breadcrumb);
             }
         }
-
-        $this->ravenClient->breadcrumbs->record($crumb);
     }
 }
