@@ -12,7 +12,7 @@ Install the ``sentry/sentry-laravel`` package:
 
     $ composer require sentry/sentry-laravel
 
-Add the Sentry service provider and facade in ``config/app.php``:
+If you're on Laravel 5.4 or earlier, you'll need to add the following to your ``config/app.php``:
 
 .. code-block:: php
 
