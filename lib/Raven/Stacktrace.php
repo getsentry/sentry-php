@@ -39,6 +39,7 @@ class Raven_Stacktrace
             $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
 
             if (!array_key_exists('file', $frame)) {
+                $context = array();
                 if (!empty($frame['class'])) {
                     $context['line'] = sprintf('%s%s%s',
                         $frame['class'], $frame['type'], $frame['function']);
@@ -80,7 +81,11 @@ class Raven_Stacktrace
             // detect in_app based on app path
             if ($app_path) {
                 $norm_abs_path = @realpath($abs_path) ?: $abs_path;
-                $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
+                if (!$abs_path) {
+                    $in_app = false;
+                } else {
+                    $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
+                }
                 if ($in_app && $excluded_app_paths) {
                     foreach ($excluded_app_paths as $path) {
                         if (substr($norm_abs_path, 0, strlen($path)) === $path) {
