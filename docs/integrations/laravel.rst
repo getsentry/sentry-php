@@ -53,7 +53,7 @@ Add your DSN to ``.env``:
     SENTRY_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
-error response. To do this, open up ``App/Exceptions/Handler.php`` and except the
+error response. To do this, open up ``App/Exceptions/Handler.php`` and extend the
 ``render`` method:
 
 .. code-block:: php
