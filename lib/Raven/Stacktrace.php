@@ -40,16 +40,27 @@ class Raven_Stacktrace
 
             if (!array_key_exists('file', $frame)) {
                 $context = array();
+
                 if (!empty($frame['class'])) {
-                    $context['line'] = sprintf('%s%s%s',
-                        $frame['class'], $frame['type'], $frame['function']);
+                    $context['line'] = sprintf('%s%s%s', $frame['class'], $frame['type'], $frame['function']);
+
+                    try {
+                        $reflect = new ReflectionClass($frame['class']);
+                        $context['filename'] = $filename = $reflect->getFileName();
+                    } catch (ReflectionException $e) {
+                        // Forget it if we run into errors, it's not worth it.
+                    }
                 } else {
                     $context['line'] = sprintf('%s(anonymous)', $frame['function']);
                 }
+
+                if (empty($context['filename'])) {
+                    $context['filename'] = $filename = '[Anonymous function]';
+                }
+
                 $abs_path = '';
                 $context['prefix'] = '';
                 $context['suffix'] = '';
-                $context['filename'] = $filename = '[Anonymous function]';
                 $context['lineno'] = 0;
             } else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
