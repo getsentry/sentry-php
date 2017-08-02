@@ -12,7 +12,7 @@ Install the ``sentry/sentry-laravel`` package:
 
     $ composer require sentry/sentry-laravel
 
-Add the Sentry service provider and facade in ``config/app.php``:
+If you're on Laravel 5.4 or earlier, you'll need to add the following to your ``config/app.php``:
 
 .. code-block:: php
 
@@ -53,7 +53,7 @@ Add your DSN to ``.env``:
     SENTRY_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
-error response. To do this, open up ``App/Exceptions/Handler.php`` and except the
+error response. To do this, open up ``App/Exceptions/Handler.php`` and extend the
 ``render`` method:
 
 .. code-block:: php

@@ -47,9 +47,23 @@ For more information, see our [documentation](https://docs.getsentry.com/hosted/
 
 Other packages exists to integrate this SDK into the most common frameworks.
 
+### Official integrations
+
+The following integrations are fully supported and maintained by the Sentry team.
+
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
 
+### 3rd party integrations
+
+The following integrations are available and maintained by members of the Sentry community.
+
+- [Nette](https://github.com/Salamek/raven-nette)
+- [ZendFramework](https://github.com/facile-it/sentry-module)
+- [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
+- [Drupal](https://www.drupal.org/project/raven)
+- [OpenCart](https://github.com/BurdaPraha/oc_sentry)
+- ... feel free to be famous, create a port to your favourite platform!
 
 ## Community
 
