@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## 1.8.0
+## Unreleased
+
+## 1.7.1 (2017-08-02)
+- Fix of filtering sensitive data when there is an exception with multiple 'values' (#483)
 
 ## 1.7.0 (2017-06-07)
 
