@@ -199,4 +199,53 @@ class Raven_Tests_SanitizeDataProcessorTest extends PHPUnit_Framework_TestCase
             array($processorOptions, $client_options, $dsn)
         );
     }
+
+    public function testDoesFilterExceptionDataWithMultipleValues()
+    {
+        // Prerequisite: create an array with an 'exception' that contains 2 entry for 'values' key both containing at
+        // least 1 key that must be masked (i.e. 'password') in one of their 'vars' array in 'frames'.
+        $data = array(
+            'exception' => array(
+                'values' => array(
+                    array(
+                        'stacktrace' => array(
+                            'frames' => array(
+                                array(
+                                    'vars' => array(
+                                        'credentials' => array(
+                                            'password' => 'secretPassword'
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'stacktrace' => array(
+                            'frames' => array(
+                                array(
+                                    'vars' => array(
+                                        'credentials' => array(
+                                            'password' => 'anotherSecretPassword'
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        );
+
+        $client = new Dummy_Raven_Client();
+        $processor = new Raven_Processor_SanitizeDataProcessor($client);
+        // Action
+        $processor->process($data);
+
+        // Expectation: make sure we mask password in both the values array
+        $passwordValue0 = $data['exception']['values'][0]['stacktrace']['frames'][0]['vars']['credentials']['password'];
+        $this->assertEquals(Raven_Processor_SanitizeDataProcessor::STRING_MASK, $passwordValue0);
+        $passwordValue1 = $data['exception']['values'][1]['stacktrace']['frames'][0]['vars']['credentials']['password'];
+        $this->assertEquals(Raven_Processor_SanitizeDataProcessor::STRING_MASK, $passwordValue1);
+    }
 }
