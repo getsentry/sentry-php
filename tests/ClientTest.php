@@ -680,13 +680,13 @@ class ClientTest extends TestCase
 
     public function testGetLastEventID()
     {
-    	/** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
-    	$uuidFactory = $this->createMock(UuidFactory::class);
-    	$uuidFactory->expects($this->once())
-		    ->method('uuid4')
-		    ->willReturn(Uuid::fromString('ddbd643a-5190-4cce-a6ce-3098506f9d33'));
+        /** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
+        $uuidFactory = $this->createMock(UuidFactory::class);
+        $uuidFactory->expects($this->once())
+            ->method('uuid4')
+            ->willReturn(Uuid::fromString('ddbd643a-5190-4cce-a6ce-3098506f9d33'));
 
-    	Uuid::setFactory($uuidFactory);
+        Uuid::setFactory($uuidFactory);
 
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;

@@ -314,9 +314,13 @@ class Client
      *
      * @return string|null
      */
-    public function captureMessage($message, $params = array(), $data = array(),
-                            $stack = false, $vars = null)
-    {
+    public function captureMessage(
+        $message,
+        $params = [],
+        $data = [],
+                            $stack = false,
+        $vars = null
+    ) {
         if ($data === null) {
             $data = [];
             // support legacy method of passing in a level name as the third arg
@@ -326,10 +330,10 @@ class Client
             ];
         }
 
-        $data['sentry.interfaces.Message'] = array(
+        $data['sentry.interfaces.Message'] = [
             'message' => $message,
             'params' => $params,
-        );
+        ];
 
         return $this->capture($data, $stack, $vars);
     }
@@ -658,7 +662,7 @@ class Client
     /**
      * Process data through all defined \Raven\Processor sub-classes.
      *
-     * @param array $data Associative array of data to logf
+     * @param array $data Associative array of data to log
      */
     public function process(&$data)
     {

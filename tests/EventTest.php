@@ -34,9 +34,9 @@ class EventTest extends \PHPUnit_Framework_TestCase
      */
     protected $uuidFactory;
 
-	/**
-	 * @var Configuration
-	 */
+    /**
+     * @var Configuration
+     */
     protected $configuration;
 
     /**
@@ -203,28 +203,27 @@ class EventTest extends \PHPUnit_Framework_TestCase
         Event::createFromPHPThrowable($this->client, new \stdClass());
     }
 
-	public function testCreateFromPHPThrowable()
-	{
-		$event = Event::createFromPHPThrowable($this->client, new \Exception('foo bar'));
+    public function testCreateFromPHPThrowable()
+    {
+        $event = Event::createFromPHPThrowable($this->client, new \Exception('foo bar'));
 
-		$this->assertEquals('foo bar', $event->getMessage());
-		$this->assertEquals(Client::LEVEL_ERROR, $event->getLevel());
+        $this->assertEquals('foo bar', $event->getMessage());
+        $this->assertEquals(Client::LEVEL_ERROR, $event->getLevel());
 
-		$frames = $event->getStacktrace()->getFrames();
-		$lastFrame = $frames[count($frames) - 1];
+        $frames = $event->getStacktrace()->getFrames();
+        $lastFrame = $frames[count($frames) - 1];
 
-		$this->assertEquals(__FILE__, $lastFrame['filename']);
-		$this->assertEquals(__LINE__ - 9, $lastFrame['lineno']);
-		$this->assertEquals(__METHOD__, $lastFrame['function']);
-		$this->assertInstanceOf(Stacktrace::class, $event->getStacktrace());
-	}
+        $this->assertEquals(__FILE__, $lastFrame['filename']);
+        $this->assertEquals(__LINE__ - 9, $lastFrame['lineno']);
+        $this->assertEquals(__METHOD__, $lastFrame['function']);
+        $this->assertInstanceOf(Stacktrace::class, $event->getStacktrace());
+    }
 
-	public function testCreateFromPHPError()
-	{
+    public function testCreateFromPHPError()
+    {
+    }
 
-	}
-
-	public function testEventJsonSerialization()
+    public function testEventJsonSerialization()
     {
         $event = new Event($this->configuration);
 

@@ -589,13 +589,13 @@ final class Event implements \JsonSerializable
             $data['user'] = $this->userContext;
         }
 
-	    if (!empty($this->serverOsContext)) {
-		    $data['server_os'] = $this->serverOsContext;
-	    }
+        if (!empty($this->serverOsContext)) {
+            $data['server_os'] = $this->serverOsContext;
+        }
 
-	    if (!empty($this->runtimeContext)) {
-        	$data['runtime'] = $this->runtimeContext;
-	    }
+        if (!empty($this->runtimeContext)) {
+            $data['runtime'] = $this->runtimeContext;
+        }
 
         if (!empty($this->breadcrumbs)) {
             $data['breadcrumbs'] = $this->breadcrumbs;
@@ -642,18 +642,18 @@ final class Event implements \JsonSerializable
         return $this->toArray();
     }
 
-	/**
-	 * Creates a new event from the given throwable.
-	 *
-	 * @param Client                $client    The Raven client instance
-	 * @param \Exception|\Throwable $throwable The throwable instance
-	 *
-	 * @return static
-	 */
+    /**
+     * Creates a new event from the given throwable.
+     *
+     * @param Client                $client    The Raven client instance
+     * @param \Exception|\Throwable $throwable The throwable instance
+     *
+     * @return static
+     */
     public static function createFromPHPThrowable(Client $client, $throwable)
     {
         if (!$throwable instanceof \Exception && !$throwable instanceof \Throwable) {
-        	throw new InvalidArgumentException('The $throwable argument must be an instance of either \Throwable or \Exception.');
+            throw new InvalidArgumentException('The $throwable argument must be an instance of either \Throwable or \Exception.');
         }
 
         $event = new static($client->getConfig());
@@ -663,24 +663,24 @@ final class Event implements \JsonSerializable
         return $event;
     }
 
-	/**
-	 * Creates a new event using the given error details.
-	 *
-	 * @param Client $client  The Raven client instance
-	 * @param int    $code    The error code
-	 * @param string $message The error message
-	 * @param string $file    The file where the error was thrown
-	 * @param int    $line    The line at which the error was thrown
-	 *
-	 * @return static
-	 */
+    /**
+     * Creates a new event using the given error details.
+     *
+     * @param Client $client  The Raven client instance
+     * @param int    $code    The error code
+     * @param string $message The error message
+     * @param string $file    The file where the error was thrown
+     * @param int    $line    The line at which the error was thrown
+     *
+     * @return static
+     */
     public static function createFromPHPError(Client $client, $code, $message, $file, $line)
     {
-    	$event = new static($client->getConfig());
-    	$event->setMessage($message);
-    	$event->setLevel($client->translateSeverity($code));
-    	$event->setStacktrace(Stacktrace::create($client));
+        $event = new static($client->getConfig());
+        $event->setMessage($message);
+        $event->setLevel($client->translateSeverity($code));
+        $event->setStacktrace(Stacktrace::create($client));
 
-    	return $event;
+        return $event;
     }
 }
