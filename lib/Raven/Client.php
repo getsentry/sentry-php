@@ -563,43 +563,43 @@ class Client
 
     public function capture($data, $stack = null, $vars = null)
     {
-        $event = new Event($this->config);
-        $event->setTagsContext(array_merge($this->context->tags, isset($data['tags']) ? $data['tags'] : []));
-        $event->setUserContext(array_merge($this->get_user_data(), isset($data['user']) ? $data['user'] : []));
-        $event->setExtraContext(array_merge($this->context->extra, isset($data['extra']) ? $data['extra'] : []));
+        $event = Event::create($this->config)
+            ->withTagsContext(array_merge($this->context->tags, isset($data['tags']) ? $data['tags'] : []))
+            ->withUserContext(array_merge($this->get_user_data(), isset($data['user']) ? $data['user'] : []))
+            ->withExtraContext(array_merge($this->context->extra, isset($data['extra']) ? $data['extra'] : []));
 
         if (static::is_http_request()) {
-            $event->setRequest(isset($data['request']) ? $data['request'] : $this->get_http_data());
+            $event = $event->withRequest(isset($data['request']) ? $data['request'] : $this->get_http_data());
         }
 
         if (isset($data['culprit'])) {
-            $event->setCulprit($data['culprit']);
+            $event = $event->withCulprit($data['culprit']);
         } else {
-            $event->setCulprit($this->transaction->peek());
+            $event = $event->withCulprit($this->transaction->peek());
         }
 
         if (isset($data['level'])) {
-            $event->setLevel($data['level']);
+            $event = $event->withLevel($data['level']);
         }
 
         if (isset($data['logger'])) {
-            $event->setLogger($data['logger']);
+            $event = $event->withLogger($data['logger']);
         }
 
         if (isset($data['message'])) {
-            $event->setMessage(substr($data['message'], 0, static::MESSAGE_LIMIT));
+            $event = $event->withMessage(substr($data['message'], 0, static::MESSAGE_LIMIT));
         }
 
         if (isset($data['sentry.interfaces.Message'])) {
-            $event->setMessage(substr($data['sentry.interfaces.Message']['message'], 0, static::MESSAGE_LIMIT), $data['sentry.interfaces.Message']['params']);
+            $event = $event->withMessage(substr($data['sentry.interfaces.Message']['message'], 0, static::MESSAGE_LIMIT), $data['sentry.interfaces.Message']['params']);
         }
 
         if (isset($data['exception'])) {
-            $event->setException($data['exception']);
+            $event = $event->withException($data['exception']);
         }
 
         foreach ($this->recorder as $breadcrumb) {
-            $event->addBreadcrumb($breadcrumb);
+            $event = $event->withBreadcrumb($breadcrumb);
         }
 
         if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
@@ -618,7 +618,7 @@ class Client
         }
 
         if (isset($data['stacktrace'])) {
-            $event->setStacktrace($data['stacktrace']);
+            $event = $event->withStacktrace($data['stacktrace']);
         }
 
         $data = $event->toArray();

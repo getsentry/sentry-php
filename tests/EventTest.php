@@ -30,11 +30,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
     protected $originalUuidFactory;
 
     /**
-     * @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
-     */
-    protected $uuidFactory;
-
-    /**
      * @var Configuration
      */
     protected $configuration;
@@ -47,14 +42,15 @@ class EventTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->uuidGeneratorInvokationCount = 0;
-        $this->originalUuidFactory = Uuid::getFactory();
+        $this->originalUuidFactory = new UuidFactory();
         $this->client = ClientBuilder::create()->getClient();
         $this->configuration = $this->client->getConfig();
 
-        $this->uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
+        /** @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
+        $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
             ->getMock();
 
-        $this->uuidFactory->expects($this->any())
+        $uuidFactory->expects($this->any())
             ->method('uuid4')
             ->willReturnCallback(function () {
                 $uuid = static::GENERATED_UUID[$this->uuidGeneratorInvokationCount++];
@@ -62,7 +58,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
                 return $this->originalUuidFactory->fromString($uuid);
             });
 
-        Uuid::setFactory($this->uuidFactory);
+        Uuid::setFactory($uuidFactory);
     }
 
     protected function tearDown()
@@ -104,8 +100,8 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function testToArrayWithMessage()
     {
-        $event = new Event($this->configuration);
-        $event->setMessage('foo bar');
+        $event = Event::create($this->configuration)
+            ->withMessage('foo bar');
 
         $data = $event->toArray();
 
@@ -121,8 +117,8 @@ class EventTest extends \PHPUnit_Framework_TestCase
             'formatted' => 'foo bar',
         ];
 
-        $event = new Event($this->configuration);
-        $event->setMessage('foo %s', ['bar']);
+        $event = Event::create($this->configuration)
+            ->withMessage('foo %s', ['bar']);
 
         $data = $event->toArray();
 
@@ -140,7 +136,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
         $event = new Event($this->configuration);
 
         foreach ($breadcrumbs as $breadcrumb) {
-            $event->addBreadcrumb($breadcrumb);
+            $event = $event->withBreadcrumb($breadcrumb);
         }
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
@@ -157,20 +153,23 @@ class EventTest extends \PHPUnit_Framework_TestCase
     public function testGettersAndSetters($propertyName, $propertyValue, $serializedPropertyName)
     {
         $getterMethod = 'get' . ucfirst($propertyName);
-        $setterMethod = 'set' . ucfirst($propertyName);
+        $setterMethod = 'with' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
+        $newEvent = call_user_func([$event, $setterMethod], $propertyValue);
 
-        call_user_func([$event, $setterMethod], $propertyValue);
+        $this->assertNotSame($event, $newEvent);
 
-        $expectedValue = call_user_func([$event, $getterMethod]);
+        $value = call_user_func([$event, $getterMethod]);
+        $newValue = call_user_func([$newEvent, $getterMethod]);
 
-        $this->assertEquals($expectedValue, $propertyValue);
+        $this->assertNotSame($value, $newValue);
+        $this->assertSame($newValue, $propertyValue);
 
-        $data = $event->toArray();
+        $data = $newEvent->toArray();
 
         $this->assertArrayHasKey($serializedPropertyName, $data);
-        $this->assertEquals($propertyValue, $data[$serializedPropertyName]);
+        $this->assertSame($propertyValue, $data[$serializedPropertyName]);
     }
 
     public function gettersAndSettersDataProvider()

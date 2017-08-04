@@ -146,6 +146,56 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Creates a new instance of this class.
+     *
+     * @param Configuration $config The client configuration
+     *
+     * @return static
+     */
+    public static function create(Configuration $config)
+    {
+        return new static($config);
+    }
+
+    /**
+     * Creates a new event from the given throwable.
+     *
+     * @param Client $client The Raven client instance
+     * @param \Exception|\Throwable $throwable The throwable instance
+     *
+     * @return static
+     */
+    public static function createFromPHPThrowable(Client $client, $throwable)
+    {
+        if (!$throwable instanceof \Exception && !$throwable instanceof \Throwable) {
+            throw new InvalidArgumentException('The $throwable argument must be an instance of either \Throwable or \Exception.');
+        }
+
+        return static::create($client->getConfig())
+            ->withMessage($throwable->getMessage())
+            ->withStacktrace(Stacktrace::createFromBacktrace($client, $throwable->getTrace(), $throwable->getFile(), $throwable->getLine()));
+    }
+
+    /**
+     * Creates a new event using the given error details.
+     *
+     * @param Client $client The Raven client instance
+     * @param int $code The error code
+     * @param string $message The error message
+     * @param string $file The file where the error was thrown
+     * @param int $line The line at which the error was thrown
+     *
+     * @return static
+     */
+    public static function createFromPHPError(Client $client, $code, $message, $file, $line)
+    {
+        return static::create($client->getConfig())
+            ->withMessage($message)
+            ->withLevel($client->translateSeverity($code))
+            ->withStacktrace(Stacktrace::create($client));
+    }
+
+    /**
      * Gets the UUID of this event
      *
      * @return UuidInterface
@@ -179,10 +229,19 @@ final class Event implements \JsonSerializable
      * Sets the severity of this event.
      *
      * @param string $level The severity
+     *
+     * @return static
      */
-    public function setLevel($level)
+    public function withLevel($level)
     {
-        $this->level = $level;
+        if ($level === $this->level) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->level = $level;
+
+        return $new;
     }
 
     /**
@@ -199,10 +258,19 @@ final class Event implements \JsonSerializable
      * Sets the name of the logger which created the event.
      *
      * @param mixed $logger The logger name
+     *
+     * @return static
      */
-    public function setLogger($logger)
+    public function withLogger($logger)
     {
-        $this->logger = $logger;
+        if ($logger === $this->logger) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->logger = $logger;
+
+        return $new;
     }
 
     /**
@@ -221,10 +289,19 @@ final class Event implements \JsonSerializable
      * exception.
      *
      * @param string $culprit The transaction name
+     *
+     * @return static
      */
-    public function setCulprit($culprit)
+    public function withCulprit($culprit)
     {
-        $this->culprit = $culprit;
+        if ($culprit === $this->culprit) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->culprit = $culprit;
+
+        return $new;
     }
 
     /**
@@ -241,10 +318,19 @@ final class Event implements \JsonSerializable
      * Sets the name of the server.
      *
      * @param string $serverName The server name
+     *
+     * @return static
      */
-    public function setServerName($serverName)
+    public function withServerName($serverName)
     {
-        $this->serverName = $serverName;
+        if ($serverName === $this->serverName) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->serverName = $serverName;
+
+        return $new;
     }
 
     /**
@@ -261,10 +347,19 @@ final class Event implements \JsonSerializable
      * Sets the release of the program.
      *
      * @param string $release The release
+     *
+     * @return static
      */
-    public function setRelease($release)
+    public function withRelease($release)
     {
-        $this->release = $release;
+        if ($release === $this->release) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->release = $release;
+
+        return $new;
     }
 
     /**
@@ -281,12 +376,21 @@ final class Event implements \JsonSerializable
      * Sets the error message.
      *
      * @param string $message The message
-     * @param array  $params  The parameters to use to format the message
+     * @param array $params The parameters to use to format the message
+     *
+     * @return static
      */
-    public function setMessage($message, array $params = [])
+    public function withMessage($message, array $params = [])
     {
-        $this->message = $message;
-        $this->messageParams = $params;
+        if ($message === $this->message && $params === $this->messageParams) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->message = $message;
+        $new->messageParams = $params;
+
+        return $new;
     }
 
     /**
@@ -303,10 +407,19 @@ final class Event implements \JsonSerializable
      * Sets a list of relevant modules and their versions.
      *
      * @param array $modules
+     *
+     * @return static
      */
-    public function setModules(array $modules)
+    public function withModules(array $modules)
     {
-        $this->modules = $modules;
+        if ($modules === $this->modules) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->modules = $modules;
+
+        return $new;
     }
 
     /**
@@ -323,10 +436,19 @@ final class Event implements \JsonSerializable
      * Sets the request data.
      *
      * @param array $request The request data
+     *
+     * @return static
      */
-    public function setRequest(array $request)
+    public function withRequest(array $request)
     {
-        $this->request = $request;
+        if ($request === $this->request) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->request = $request;
+
+        return $new;
     }
 
     /**
@@ -343,10 +465,19 @@ final class Event implements \JsonSerializable
      * Sets an arbitrary mapping of additional metadata.
      *
      * @param array $extraContext Additional metadata
+     *
+     * @return static
      */
-    public function setExtraContext(array $extraContext)
+    public function withExtraContext(array $extraContext)
     {
-        $this->extraContext = $extraContext;
+        if ($extraContext === $this->extraContext) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->extraContext = $extraContext;
+
+        return $new;
     }
 
     /**
@@ -363,10 +494,19 @@ final class Event implements \JsonSerializable
      * Sets a list of tags.
      *
      * @param string[] $tagsContext The tags
+     *
+     * @return static
      */
-    public function setTagsContext(array $tagsContext)
+    public function withTagsContext(array $tagsContext)
     {
-        $this->tagsContext = $tagsContext;
+        if ($tagsContext === $this->tagsContext) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->tagsContext = $tagsContext;
+
+        return $new;
     }
 
     /**
@@ -383,10 +523,19 @@ final class Event implements \JsonSerializable
      * Sets the user context.
      *
      * @param array $userContext The context data
+     *
+     * @return static
      */
-    public function setUserContext($userContext)
+    public function withUserContext(array $userContext)
     {
-        $this->userContext = $userContext;
+        if ($userContext === $this->userContext) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->userContext = $userContext;
+
+        return $new;
     }
 
     /**
@@ -403,10 +552,19 @@ final class Event implements \JsonSerializable
      * Gets the server OS context.
      *
      * @param array $serverOsContext The context data
+     *
+     * @return static
      */
-    public function setServerOsContext(array $serverOsContext)
+    public function withServerOsContext(array $serverOsContext)
     {
-        $this->serverOsContext = $serverOsContext;
+        if ($serverOsContext === $this->serverOsContext) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->serverOsContext = $serverOsContext;
+
+        return $new;
     }
 
     /**
@@ -423,10 +581,19 @@ final class Event implements \JsonSerializable
      * Sets the runtime context data.
      *
      * @param array $runtimeContext The context data
+     *
+     * @return static
      */
-    public function setRuntimeContext(array $runtimeContext)
+    public function withRuntimeContext(array $runtimeContext)
     {
-        $this->runtimeContext = $runtimeContext;
+        if ($runtimeContext === $this->runtimeContext) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->runtimeContext = $runtimeContext;
+
+        return $new;
     }
 
     /**
@@ -445,10 +612,19 @@ final class Event implements \JsonSerializable
      * event.
      *
      * @param string[] $fingerprint The strings
+     *
+     * @return static
      */
-    public function setFingerprint(array $fingerprint)
+    public function withFingerprint(array $fingerprint)
     {
-        $this->fingerprint = $fingerprint;
+        if ($fingerprint === $this->fingerprint) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->fingerprint = $fingerprint;
+
+        return $new;
     }
 
     /**
@@ -465,10 +641,19 @@ final class Event implements \JsonSerializable
      * Sets the environment in which this event was generated.
      *
      * @param mixed $environment The name of the environment
+     *
+     * @return static
      */
-    public function setEnvironment($environment)
+    public function withEnvironment($environment)
     {
-        $this->environment = $environment;
+        if ($environment === $this->environment) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->environment = $environment;
+
+        return $new;
     }
 
     /**
@@ -485,10 +670,15 @@ final class Event implements \JsonSerializable
      * Adds a new breadcrumb to the event.
      *
      * @param mixed $breadcrumb The breadcrumb
+     *
+     * @return static
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb)
+    public function withBreadcrumb(Breadcrumb $breadcrumb)
     {
-        $this->breadcrumbs[] = $breadcrumb;
+        $new = clone $this;
+        $new->breadcrumbs[] = $breadcrumb;
+
+        return $new;
     }
 
     /**
@@ -505,10 +695,19 @@ final class Event implements \JsonSerializable
      * Sets the exception.
      *
      * @param array $exception The exception
+     *
+     * @return static
      */
-    public function setException($exception)
+    public function withException($exception)
     {
-        $this->exception = $exception;
+        if ($exception === $this->exception) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->exception = $exception;
+
+        return $new;
     }
 
     /**
@@ -525,10 +724,19 @@ final class Event implements \JsonSerializable
      * Sets the stacktrace that generated this event.
      *
      * @param Stacktrace $stacktrace The stacktrace instance
+     *
+     * @return static
      */
-    public function setStacktrace(Stacktrace $stacktrace)
+    public function withStacktrace(Stacktrace $stacktrace)
     {
-        $this->stacktrace = $stacktrace;
+        if ($stacktrace === $this->stacktrace) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->stacktrace = $stacktrace;
+
+        return $new;
     }
 
     /**
@@ -640,47 +848,5 @@ final class Event implements \JsonSerializable
     public function jsonSerialize()
     {
         return $this->toArray();
-    }
-
-    /**
-     * Creates a new event from the given throwable.
-     *
-     * @param Client                $client    The Raven client instance
-     * @param \Exception|\Throwable $throwable The throwable instance
-     *
-     * @return static
-     */
-    public static function createFromPHPThrowable(Client $client, $throwable)
-    {
-        if (!$throwable instanceof \Exception && !$throwable instanceof \Throwable) {
-            throw new InvalidArgumentException('The $throwable argument must be an instance of either \Throwable or \Exception.');
-        }
-
-        $event = new static($client->getConfig());
-        $event->setMessage($throwable->getMessage());
-        $event->setStacktrace(Stacktrace::createFromBacktrace($client, $throwable->getTrace(), $throwable->getFile(), $throwable->getLine()));
-
-        return $event;
-    }
-
-    /**
-     * Creates a new event using the given error details.
-     *
-     * @param Client $client  The Raven client instance
-     * @param int    $code    The error code
-     * @param string $message The error message
-     * @param string $file    The file where the error was thrown
-     * @param int    $line    The line at which the error was thrown
-     *
-     * @return static
-     */
-    public static function createFromPHPError(Client $client, $code, $message, $file, $line)
-    {
-        $event = new static($client->getConfig());
-        $event->setMessage($message);
-        $event->setLevel($client->translateSeverity($code));
-        $event->setStacktrace(Stacktrace::create($client));
-
-        return $event;
     }
 }
