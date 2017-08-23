@@ -13,20 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * Class SerializerTestObject
- *
- * @package Raven\Tests
- * @property mixed $keys
- */
-class SerializerTestObject
-{
-    private $foo = 'bar';
-
-    public $key = 'value';
-}
-
-abstract class Raven_Tests_SerializerAbstractTest extends TestCase
+abstract class SerializerAbstractTest extends TestCase
 {
     /**
      * @return string|\Raven\Serializer
@@ -423,4 +410,17 @@ abstract class Raven_Tests_SerializerAbstractTest extends TestCase
         $serializer->setAllObjectSerialize(false);
         $this->assertFalse($serializer->getAllObjectSerialize());
     }
+}
+
+/**
+ * Class SerializerTestObject
+ *
+ * @package Raven\Tests
+ * @property mixed $keys
+ */
+class SerializerTestObject
+{
+    private $foo = 'bar';
+
+    public $key = 'value';
 }

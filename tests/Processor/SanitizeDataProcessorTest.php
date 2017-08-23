@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;

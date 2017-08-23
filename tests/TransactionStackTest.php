@@ -13,7 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-class Raven_Tests_TransactionStackTest extends TestCase
+class TransactionStackTest extends TestCase
 {
     public function testSimple()
     {

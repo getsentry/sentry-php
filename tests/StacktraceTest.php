@@ -185,7 +185,8 @@ class StacktraceTest extends TestCase
     public function testRemoveFrame($index, $throwException)
     {
         if ($throwException) {
-            $this->setExpectedException(\OutOfBoundsException::class, 'Invalid frame index to remove.');
+            $this->expectException(\OutOfBoundsException::class);
+            $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
         $stacktrace = new Stacktrace($this->client);
