@@ -31,12 +31,12 @@ Add Sentry reporting to ``App/Exceptions/Handler.php``:
 
 .. code-block:: php
 
-    public function report(Exception $e)
+    public function report(Exception $exception)
     {
-        if ($this->shouldReport($e)) {
-            app('sentry')->captureException($e);
+        if ($this->shouldReport($exception)) {
+            app('sentry')->captureException($exception);
         }
-        parent::report($e);
+        parent::report($exception);
     }
 
 Create the Sentry configuration file (``config/sentry.php``):
@@ -64,18 +64,22 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and extend th
     {
         private $sentryID;
 
-        public function report(Exception $e)
+        public function report(Exception $exception)
         {
-            if ($this->shouldReport($e)) {
+            if ($this->shouldReport($exception)) {
                 // bind the event ID for Feedback
-                $this->sentryID = app('sentry')->captureException($e);
+                $this->sentryID = app('sentry')->captureException($exception);
             }
-            parent::report($e);
+            parent::report($exception);
         }
 
         // ...
-        public function render($request, Exception $e)
+        public function render($request, Exception $exception)
         {
+            if ($exception instanceof AuthenticationException) {
+                return parent::render($request, $exception);
+            }
+
             return response()->view('errors.500', [
                 'sentryID' => $this->sentryID,
             ], 500);
