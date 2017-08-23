@@ -1,7 +1,7 @@
 Laravel
 =======
 
-Laravel is supported via a native extension, `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_.
+Laravel is supported via a native package, `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_.
 
 Laravel 5.x
 -----------
@@ -12,7 +12,7 @@ Install the ``sentry/sentry-laravel`` package:
 
     $ composer require sentry/sentry-laravel
 
-If you're on Laravel 5.4 or earlier, you'll need to add the following to your ``config/app.php``:
+If you're on Laravel 5.4 or earlier, you'll need to add the following to your ``config/app.php`` (for Laravel 5.5+ these will be auto-discovered by Laravel):
 
 .. code-block:: php
 
@@ -33,9 +33,10 @@ Add Sentry reporting to ``App/Exceptions/Handler.php``:
 
     public function report(Exception $exception)
     {
-        if ($this->shouldReport($exception)) {
+        if (app()->bound('sentry') && $this->shouldReport($exception)) {
             app('sentry')->captureException($exception);
         }
+
         parent::report($exception);
     }
 
@@ -62,27 +63,25 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and extend th
 
     class Handler extends ExceptionHandler
     {
-        private $sentryID;
-
         public function report(Exception $exception)
         {
-            if ($this->shouldReport($exception)) {
-                // bind the event ID for Feedback
-                $this->sentryID = app('sentry')->captureException($exception);
+            if (app()->bound('sentry') && $this->shouldReport($exception)) {
+                app('sentry')->captureException($exception);
             }
+
             parent::report($exception);
         }
 
-        // ...
         public function render($request, Exception $exception)
         {
-            if ($exception instanceof AuthenticationException) {
-                return parent::render($request, $exception);
+            // Convert all non-http exceptions to a proper 500 http exception
+            // if we don't do this exceptions are shown as a default template
+            // instead of our own view in resources/views/errors/500.blade.php
+            if (!$this->isHttpException($exception) && !config('app.debug')) {
+                $exception = new HttpException(500, 'Whoops!');
             }
 
-            return response()->view('errors.500', [
-                'sentryID' => $this->sentryID,
-            ], 500);
+            return parent::render($request, $exception);
         }
     }
 
@@ -92,19 +91,20 @@ Next, create ``resources/views/errors/500.blade.php``, and embed the feedback co
 
     <div class="content">
         <div class="title">Something went wrong.</div>
-        @unless(empty($sentryID))
+
+        @if(app()->bound('sentry'))
             <!-- Sentry JS SDK 2.1.+ required -->
             <script src="https://cdn.ravenjs.com/3.3.0/raven.min.js"></script>
 
             <script>
             Raven.showReportDialog({
-                eventId: '{{ $sentryID }}',
+                eventId: '{{ app('sentry')->getLastEventID() }}',
 
                 // use the public DSN (dont include your secret!)
                 dsn: '___PUBLIC_DSN___'
             });
             </script>
-        @endunless
+        @endif
     </div>
 
 That's it!
@@ -182,9 +182,10 @@ Add Sentry reporting to ``app/Exceptions/Handler.php``:
 
     public function report(Exception $e)
     {
-        if ($this->shouldReport($e)) {
+        if (app()->bound('sentry') && $this->shouldReport($e)) {
             app('sentry')->captureException($e);
         }
+
         parent::report($e);
     }
 
@@ -197,8 +198,8 @@ Create the Sentry configuration file (``config/sentry.php``):
     return array(
         'dsn' => '___DSN___',
 
-    // capture release as git sha
-    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
+        // capture release as git sha
+        // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
     );
 
 Testing with Artisan
