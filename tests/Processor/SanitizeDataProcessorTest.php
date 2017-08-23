@@ -11,10 +11,11 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\Processor\SanitizeDataProcessor;
 
-class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeDataProcessorTest extends TestCase
 {
     public function testDoesFilterHttpData()
     {

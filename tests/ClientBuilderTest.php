@@ -15,12 +15,13 @@ use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 
-class ClientBuilderTest extends \PHPUnit_Framework_TestCase
+class ClientBuilderTest extends TestCase
 {
     public function testCreate()
     {

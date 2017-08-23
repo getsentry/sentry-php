@@ -11,13 +11,14 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
 use Raven\Processor\RemoveCookiesProcessor;
 use Raven\Processor\RemoveHttpBodyProcessor;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 
-class ConfigurationTest extends \PHPUnit_Framework_TestCase
+class ConfigurationTest extends TestCase
 {
     /**
      * @dataProvider optionsDataProvider

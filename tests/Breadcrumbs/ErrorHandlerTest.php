@@ -11,11 +11,12 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 
-class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
+class ErrorHandlerTest extends TestCase
 {
     public function testSimple()
     {

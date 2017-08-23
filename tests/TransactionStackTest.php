@@ -11,7 +11,9 @@
 
 namespace Raven\Tests;
 
-class Raven_Tests_TransactionStackTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class Raven_Tests_TransactionStackTest extends TestCase
 {
     public function testSimple()
     {

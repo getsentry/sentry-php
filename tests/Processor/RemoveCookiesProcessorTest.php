@@ -11,10 +11,11 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\Processor\RemoveCookiesProcessor;
 
-class RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
+class RemoveCookiesProcessorTest extends TestCase
 {
     /**
      * @var RemoveCookiesProcessor|\PHPUnit_Framework_MockObject_MockObject

@@ -10,6 +10,7 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 
@@ -39,7 +40,7 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     }
 }
 
-class IntegrationTest extends \PHPUnit_Framework_TestCase
+class IntegrationTest extends TestCase
 {
     private function create_chained_exception()
     {

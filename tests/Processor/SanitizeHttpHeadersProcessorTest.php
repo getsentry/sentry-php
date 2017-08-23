@@ -11,10 +11,11 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 
-class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeHttpHeadersProcessorTest extends TestCase
 {
     /**
      * @var SanitizeHttpHeadersProcessor|\PHPUnit_Framework_MockObject_MockObject

@@ -11,7 +11,9 @@
 
 namespace Raven\Tests;
 
-class ErrorHandlerTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class ErrorHandlerTest extends TestCase
 {
     private $errorLevel;
     private $errorHandlerCalled;

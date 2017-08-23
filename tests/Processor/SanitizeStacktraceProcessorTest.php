@@ -11,11 +11,12 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Processor\SanitizeStacktraceProcessor;
 
-class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeStacktraceProcessorTest extends TestCase
 {
     /**
      * @var Client

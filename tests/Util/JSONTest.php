@@ -11,11 +11,12 @@
 
 namespace Raven\Tests\Util;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Tests\Util\Fixtures\JsonSerializableClass;
 use Raven\Tests\Util\Fixtures\SimpleClass;
 use Raven\Util\JSON;
 
-class JSONTest extends \PHPUnit_Framework_TestCase
+class JSONTest extends TestCase
 {
     /**
      * @dataProvider encodeDataProvider

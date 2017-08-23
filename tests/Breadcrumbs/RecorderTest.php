@@ -11,6 +11,7 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
@@ -18,7 +19,7 @@ use Raven\Breadcrumbs\Recorder;
 /**
  * @group time-sensitive
  */
-class RecorderTest extends \PHPUnit_Framework_TestCase
+class RecorderTest extends TestCase
 {
     /**
      * @expectedException \InvalidArgumentException

@@ -11,6 +11,8 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Class SerializerTestObject
  *
@@ -24,7 +26,7 @@ class SerializerTestObject
     public $key = 'value';
 }
 
-abstract class Raven_Tests_SerializerAbstractTest extends \PHPUnit_Framework_TestCase
+abstract class Raven_Tests_SerializerAbstractTest extends TestCase
 {
     /**
      * @return string|\Raven\Serializer
