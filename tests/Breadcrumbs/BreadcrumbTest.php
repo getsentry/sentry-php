@@ -11,13 +11,14 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Client;
 
 /**
  * @group time-sensitive
  */
-class BreadcrumbTest extends \PHPUnit_Framework_TestCase
+class BreadcrumbTest extends TestCase
 {
     /**
      * @expectedException \Raven\Exception\InvalidArgumentException

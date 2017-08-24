@@ -11,11 +11,12 @@
 
 namespace Raven\Tests\HttpClient\Encoding;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Zend\Diactoros\Stream;
 
-class Base64EncodingStreamTest extends \PHPUnit_Framework_TestCase
+class Base64EncodingStreamTest extends TestCase
 {
     /**
      * @dataProvider getSizeDataProvider

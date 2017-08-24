@@ -11,6 +11,7 @@
 
 namespace Raven\Tests\HttpClient\Authentication;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\Configuration;
@@ -19,7 +20,7 @@ use Raven\HttpClient\Authentication\SentryAuth;
 /**
  * @group time-sensitive
  */
-class SentryAuthTest extends \PHPUnit_Framework_TestCase
+class SentryAuthTest extends TestCase
 {
     public function testAuthenticate()
     {

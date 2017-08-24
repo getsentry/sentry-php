@@ -14,6 +14,7 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\RequestFactory;
 use Http\Mock\Client as MockClient;
 use Http\Promise\Promise;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
@@ -125,7 +126,7 @@ class Dummy_Raven_Client_With_Sync_Override extends \Raven\Client
     }
 }
 
-class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends TestCase
 {
     protected static $_folder = null;
 

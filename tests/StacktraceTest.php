@@ -11,11 +11,12 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Stacktrace;
 
-class StacktraceTest extends \PHPUnit_Framework_TestCase
+class StacktraceTest extends TestCase
 {
     /**
      * @var Client
@@ -184,7 +185,8 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
     public function testRemoveFrame($index, $throwException)
     {
         if ($throwException) {
-            $this->setExpectedException(\OutOfBoundsException::class, 'Invalid frame index to remove.');
+            $this->expectException(\OutOfBoundsException::class);
+            $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
         $stacktrace = new Stacktrace($this->client);

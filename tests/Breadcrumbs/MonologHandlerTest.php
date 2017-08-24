@@ -12,12 +12,13 @@
 namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
+use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\MonologHandler;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Client;
 use Raven\ClientBuilder;
 
-class MonologHandlerTest extends \PHPUnit_Framework_TestCase
+class MonologHandlerTest extends TestCase
 {
     protected function getSampleErrorMessage()
     {

@@ -13,7 +13,7 @@ namespace Raven\Tests;
 
 require_once 'SerializerAbstractTest.php';
 
-class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
+class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 {
     /**
      * @return string

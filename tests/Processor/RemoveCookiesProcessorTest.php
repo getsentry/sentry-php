@@ -9,12 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Raven\Tests\Processor;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\Processor\RemoveCookiesProcessor;
 
-class RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
+class RemoveCookiesProcessorTest extends TestCase
 {
     /**
      * @var RemoveCookiesProcessor|\PHPUnit_Framework_MockObject_MockObject

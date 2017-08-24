@@ -11,12 +11,9 @@
 
 namespace Raven\Tests;
 
-class StacktraceTestObject
-{
-    private $foo = 'bar';
-}
+use PHPUnit\Framework\TestCase;
 
-class Raven_Tests_UtilTest extends \PHPUnit_Framework_TestCase
+class UtilTest extends TestCase
 {
     public function testGetReturnsDefaultOnMissing()
     {

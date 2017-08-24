@@ -9,12 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Raven\Tests\Processor;
 
+use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\Processor\SanitizeDataProcessor;
 
-class SanitizeDataProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeDataProcessorTest extends TestCase
 {
     public function testDoesFilterHttpData()
     {
