@@ -54,8 +54,11 @@ Add your DSN to ``.env``:
     SENTRY_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
-error response. To do this, open up ``App/Exceptions/Handler.php`` and extend the
-``render`` method:
+error view in `resources/views/errors/500.blade.php`.
+
+For Laravel 5 up to 5.4 you need to open up ``App/Exceptions/Handler.php`` and extend the
+``render`` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this
+step is not required anymore an you can skip ahead to the next one:
 
 .. code-block:: php
 
@@ -77,7 +80,7 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and extend th
             // Convert all non-http exceptions to a proper 500 http exception
             // if we don't do this exceptions are shown as a default template
             // instead of our own view in resources/views/errors/500.blade.php
-            if (!$this->isHttpException($exception) && !config('app.debug')) {
+            if ($this->shouldReport($exception) && !$this->isHttpException($exception) && !config('app.debug')) {
                 $exception = new HttpException(500, 'Whoops!');
             }
 
@@ -92,17 +95,22 @@ Next, create ``resources/views/errors/500.blade.php``, and embed the feedback co
     <div class="content">
         <div class="title">Something went wrong.</div>
 
-        @if(app()->bound('sentry'))
+        @if(app()->bound('sentry') && !empty(Sentry::getLastEventID()))
+            <div class="subtitle">Error ID: {{ Sentry::getLastEventID() }}</div>
+
             <!-- Sentry JS SDK 2.1.+ required -->
             <script src="https://cdn.ravenjs.com/3.3.0/raven.min.js"></script>
 
             <script>
-            Raven.showReportDialog({
-                eventId: '{{ app('sentry')->getLastEventID() }}',
-
-                // use the public DSN (dont include your secret!)
-                dsn: '___PUBLIC_DSN___'
-            });
+                Raven.showReportDialog({
+                    eventId: '{{ Sentry::getLastEventID() }}',
+                    // use the public DSN (dont include your secret!)
+                    dsn: 'https://e9ebbd88548a441288393c457ec90441@sentry.io/3235',
+                    user: {
+                        'name': 'Jane Doe',
+                        'email': 'jane.doe@example.com',
+                    }
+                });
             </script>
         @endif
     </div>
