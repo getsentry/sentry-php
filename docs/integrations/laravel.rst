@@ -244,9 +244,9 @@ In the following example, we'll use a middleware:
 
                 // Add user context
                 if (auth()->check()) {
-                    $sentry->user_context([...]);
+                    $sentry->setUserContext([...]);
                 } else {
-                    $sentry->user_context(['id' => null]);
+                    $sentry->setUserContext(['id' => null]);
                 }
 
                 // Add tags context
@@ -290,13 +290,13 @@ The following settings are available for the client:
         'breadcrumbs.sql_bindings' => false,
 
 
-.. describe:: user_context
+.. describe:: setUserContext
 
-    Capture user_context automatically.
+    Capture setUserContext automatically.
 
     Defaults to ``true``.
 
     .. code-block:: php
 
-        'user_context' => false,
+        'setUserContext' => false,
 

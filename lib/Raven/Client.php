@@ -32,28 +32,12 @@ class Client
     const PROTOCOL = '6';
 
     /**
-     * This constant defines the debug log level.
+     * Debug log levels
      */
     const LEVEL_DEBUG = 'debug';
-
-    /**
-     * This constant defines the info log level.
-     */
     const LEVEL_INFO = 'info';
-
-    /**
-     * This constant defines the warning log level.
-     */
     const LEVEL_WARNING = 'warning';
-
-    /**
-     * This constant defines the error log level.
-     */
     const LEVEL_ERROR = 'error';
-
-    /**
-     * This constant defines the fatal log level.
-     */
     const LEVEL_FATAL = 'fatal';
 
     /**
@@ -84,13 +68,13 @@ class Client
     /**
      * @var string[]|null
      */
-    public $severity_map;
-    public $store_errors_for_bulk_send = false;
+    public $severityMap;
+    public $storeErrorsForBulkSend = false;
 
     /**
-     * @var \Raven\ErrorHandler
+     * @var ErrorHandler
      */
-    protected $error_handler;
+    protected $errorHandler;
 
     /**
      * @var \Raven\Serializer
@@ -109,23 +93,19 @@ class Client
     /**
      * @var string|int|null
      */
-    public $_lasterror;
-    /**
-     * @var object|null
-     */
-    protected $_last_sentry_error;
-    public $_last_event_id;
-    public $_user;
+    private $lastError;
+
+    private $lastEventId;
 
     /**
      * @var array[]
      */
-    public $_pending_events = [];
+    public $pendingEvents = [];
 
     /**
      * @var bool
      */
-    protected $_shutdown_function_has_been_set = false;
+    protected $shutdownFunctionHasBeenSet = false;
 
     /**
      * @var Configuration The client configuration
@@ -166,7 +146,7 @@ class Client
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->processors = $this->createProcessors();
 
-        if (static::is_http_request() && isset($_SERVER['PATH_INFO'])) {
+        if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
             $this->transaction->push($_SERVER['PATH_INFO']);
         }
 
@@ -238,17 +218,18 @@ class Client
 
     /**
      * Installs any available automated hooks (such as error_reporting).
+     * @throws \Raven\Exception
      */
     public function install()
     {
-        if ($this->error_handler) {
-            throw new \Raven\Exception(sprintf('%s->install() must only be called once', get_class($this)));
+        if ($this->errorHandler) {
+            throw new \Raven\Exception(__CLASS__ . '->install() must only be called once');
         }
-        $this->error_handler = new \Raven\ErrorHandler($this, false, $this->getConfig()->getErrorTypes());
-        $this->error_handler->registerExceptionHandler();
-        $this->error_handler->registerErrorHandler();
-        $this->error_handler->registerShutdownFunction();
 
+        $this->errorHandler = new ErrorHandler($this, false, $this->getConfig()->getErrorTypes());
+        $this->errorHandler->registerExceptionHandler();
+        $this->errorHandler->registerErrorHandler();
+        $this->errorHandler->registerShutdownFunction();
         return $this;
     }
 
@@ -281,7 +262,7 @@ class Client
 
     public function getLastError()
     {
-        return $this->_lasterror;
+        return $this->lastError;
     }
 
     /**
@@ -314,23 +295,10 @@ class Client
         $message,
         $params = [],
         $level = self::LEVEL_INFO,
-                            $stack = false,
+        $stack = false,
         $vars = null
     ) {
         return $this->captureMessage($message, $params, $level, $stack, $vars);
-    }
-
-    /**
-     * @param Exception $exception
-     *
-     * @return string|null
-     *
-     * @deprecated
-     * @codeCoverageIgnore
-     */
-    public function exception($exception)
-    {
-        return $this->captureException($exception);
     }
 
     /**
@@ -348,7 +316,7 @@ class Client
         $message,
         $params = [],
         $data = [],
-                            $stack = false,
+        $stack = false,
         $vars = null
     ) {
         // Gracefully handle messages which contain formatting characters, but were not
@@ -398,33 +366,28 @@ class Client
             $data = [];
         }
 
-        $exc = $exception;
+        $currentException = $exception;
         do {
-            $exc_data = [
-                'value' => $this->serializer->serialize($exc->getMessage()),
-                'type' => get_class($exc),
+            $exceptionData = [
+                'value' => $this->serializer->serialize($currentException->getMessage()),
+                'type' => get_class($currentException),
             ];
 
-            /**'exception'
+            /**
              * Exception::getTrace doesn't store the point at where the exception
              * was thrown, so we have to stuff it in ourselves. Ugh.
              */
-            $trace = $exc->getTrace();
-            $frame_where_exception_thrown = [
-                'file' => $exc->getFile(),
-                'line' => $exc->getLine(),
+            $trace = $currentException->getTrace();
+            $frameWhereExceptionWasThrown = [
+                'file' => $currentException->getFile(),
+                'line' => $currentException->getLine(),
             ];
 
-            array_unshift($trace, $frame_where_exception_thrown);
+            array_unshift($trace, $frameWhereExceptionWasThrown);
 
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\\Raven\\Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('\\Raven\\Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
+            $this->autoloadRavenStacktrace();
 
-            $exc_data['stacktrace'] = [
+            $exceptionData['stacktrace'] = [
                 'frames' => Stacktrace::fromBacktrace(
                     $this,
                     $exception->getTrace(),
@@ -433,8 +396,8 @@ class Client
                 )->getFrames(),
             ];
 
-            $exceptions[] = $exc_data;
-        } while ($exc = $exc->getPrevious());
+            $exceptions[] = $exceptionData;
+        } while ($currentException = $currentException->getPrevious());
 
         $data['exception'] = [
             'values' => array_reverse($exceptions),
@@ -505,21 +468,21 @@ class Client
     /**
      * Return the last captured event's ID or null if none available.
      */
-    public function getLastEventID()
+    public function getLastEventId()
     {
-        return $this->_last_event_id;
+        return $this->lastEventId;
     }
 
     protected function registerDefaultBreadcrumbHandlers()
     {
-        $handler = new \Raven\Breadcrumbs\ErrorHandler($this);
+        $handler = new Breadcrumbs\ErrorHandler($this);
         $handler->install();
     }
 
     protected function registerShutdownFunction()
     {
-        if (!$this->_shutdown_function_has_been_set) {
-            $this->_shutdown_function_has_been_set = true;
+        if (!$this->shutdownFunctionHasBeenSet) {
+            $this->shutdownFunctionHasBeenSet = true;
             register_shutdown_function([$this, 'onShutdown']);
         }
     }
@@ -528,12 +491,12 @@ class Client
      * @return bool
      * @codeCoverageIgnore
      */
-    protected static function is_http_request()
+    protected static function isHttpRequest()
     {
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    protected function get_http_data()
+    protected function getHttpData()
     {
         $headers = [];
 
@@ -550,7 +513,7 @@ class Client
 
         $result = [
             'method' => self::_server_variable('REQUEST_METHOD'),
-            'url' => $this->get_current_url(),
+            'url' => $this->getCurrentUrl(),
             'query_string' => self::_server_variable('QUERY_STRING'),
         ];
 
@@ -571,7 +534,7 @@ class Client
         ];
     }
 
-    protected function get_user_data()
+    protected function getUserData()
     {
         $user = $this->context->user;
         if ($user === null) {
@@ -594,7 +557,7 @@ class Client
         ];
     }
 
-    public function get_default_data()
+    public function getDefaultData()
     {
         return [
             'server_name' => $this->config->getServerName(),
@@ -632,13 +595,13 @@ class Client
             $data['message'] = substr($data['message'], 0, self::MESSAGE_LIMIT);
         }
 
-        $data = array_merge($this->get_default_data(), $data);
+        $data = array_merge($this->getDefaultData(), $data);
 
-        if (static::is_http_request()) {
-            $data = array_merge($this->get_http_data(), $data);
+        if (static::isHttpRequest()) {
+            $data = array_merge($this->getHttpData(), $data);
         }
 
-        $data = array_merge($this->get_user_data(), $data);
+        $data = array_merge($this->getUserData(), $data);
 
         if (!empty($this->config->getRelease())) {
             $data['release'] = $this->config->getRelease();
@@ -672,7 +635,7 @@ class Client
             unset($data['request']);
         }
 
-        if (!empty($this->recorder)) {
+        if (null !== $this->recorder) {
             $data['breadcrumbs'] = iterator_to_array($this->recorder);
         }
 
@@ -684,12 +647,7 @@ class Client
         }
 
         if (!empty($stack)) {
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\\Raven\\Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('\\Raven\\Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
+            $this->autoloadRavenStacktrace();
 
             if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = [
@@ -706,13 +664,13 @@ class Client
         $this->sanitize($data);
         $this->process($data);
 
-        if (!$this->store_errors_for_bulk_send) {
+        if (!$this->storeErrorsForBulkSend) {
             $this->send($data);
         } else {
-            $this->_pending_events[] = $data;
+            $this->pendingEvents[] = $data;
         }
 
-        $this->_last_event_id = $data['event_id'];
+        $this->lastEventId = $data['event_id'];
 
         return $data['event_id'];
     }
@@ -753,15 +711,15 @@ class Client
 
     public function sendUnsentErrors()
     {
-        foreach ($this->_pending_events as $data) {
+        foreach ($this->pendingEvents as $data) {
             $this->send($data);
         }
 
-        $this->_pending_events = [];
+        $this->pendingEvents = [];
 
-        if ($this->store_errors_for_bulk_send) {
+        if ($this->storeErrorsForBulkSend) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
+            $this->storeErrorsForBulkSend = !defined('RAVEN_CLIENT_END_REACHED');
         }
 
         foreach ($this->pendingRequests as $pendingRequest) {
@@ -866,7 +824,7 @@ class Client
      *
      * @return string|null
      */
-    protected function get_current_url()
+    protected function getCurrentUrl()
     {
         // When running from commandline the REQUEST_URI is missing.
         if (!isset($_SERVER['REQUEST_URI'])) {
@@ -932,28 +890,32 @@ class Client
      */
     public function translateSeverity($severity)
     {
-        if (is_array($this->severity_map) && isset($this->severity_map[$severity])) {
-            return $this->severity_map[$severity];
-        }
-        switch ($severity) {
-            case E_DEPRECATED:         return \Raven\Client::LEVEL_WARNING;
-            case E_USER_DEPRECATED:    return \Raven\Client::LEVEL_WARNING;
-            case E_ERROR:              return \Raven\Client::LEVEL_ERROR;
-            case E_WARNING:            return \Raven\Client::LEVEL_WARNING;
-            case E_PARSE:              return \Raven\Client::LEVEL_ERROR;
-            case E_NOTICE:             return \Raven\Client::LEVEL_INFO;
-            case E_CORE_ERROR:         return \Raven\Client::LEVEL_ERROR;
-            case E_CORE_WARNING:       return \Raven\Client::LEVEL_WARNING;
-            case E_COMPILE_ERROR:      return \Raven\Client::LEVEL_ERROR;
-            case E_COMPILE_WARNING:    return \Raven\Client::LEVEL_WARNING;
-            case E_USER_ERROR:         return \Raven\Client::LEVEL_ERROR;
-            case E_USER_WARNING:       return \Raven\Client::LEVEL_WARNING;
-            case E_USER_NOTICE:        return \Raven\Client::LEVEL_INFO;
-            case E_STRICT:             return \Raven\Client::LEVEL_INFO;
-            case E_RECOVERABLE_ERROR:  return \Raven\Client::LEVEL_ERROR;
+        if (is_array($this->severityMap) && isset($this->severityMap[$severity])) {
+            return $this->severityMap[$severity];
         }
 
-        return \Raven\Client::LEVEL_ERROR;
+        switch ($severity) {
+            case E_DEPRECATED:
+            case E_USER_DEPRECATED:
+            case E_WARNING:
+            case E_CORE_WARNING:
+            case E_COMPILE_WARNING:
+            case E_USER_WARNING:
+            case E_RECOVERABLE_ERROR:
+                return self::LEVEL_WARNING;
+            case E_ERROR:
+            case E_PARSE:
+            case E_CORE_ERROR:
+            case E_COMPILE_ERROR:
+            case E_USER_ERROR:
+                return self::LEVEL_ERROR;
+            case E_NOTICE:
+            case E_USER_NOTICE:
+            case E_STRICT:
+                return self::LEVEL_INFO;
+            default:                   
+                return self::LEVEL_ERROR;
+        }
     }
 
     /**
@@ -964,7 +926,7 @@ class Client
      */
     public function registerSeverityMap($map)
     {
-        $this->severity_map = $map;
+        $this->severityMap = $map;
     }
 
     /**
@@ -977,13 +939,13 @@ class Client
      * @param array       $data  Additional user data
      * @codeCoverageIgnore
      */
-    public function set_user_data($id, $email = null, $data = [])
+    public function setUserData($id, $email = null, $data = [])
     {
         $user = ['id' => $id];
         if (isset($email)) {
             $user['email'] = $email;
         }
-        $this->user_context(array_merge($user, $data));
+        $this->setUserContext(array_merge($user, $data));
     }
 
     public function onShutdown()
@@ -1000,7 +962,7 @@ class Client
      * @param array $data  Associative array of user data
      * @param bool  $merge Merge existing context with new context
      */
-    public function user_context($data, $merge = true)
+    public function setUserContext($data, $merge = true)
     {
         if ($merge && $this->context->user !== null) {
             // bail if data is null
@@ -1042,19 +1004,11 @@ class Client
     }
 
     /**
-     * @return object|null
-     */
-    public function getLastSentryError()
-    {
-        return $this->_last_sentry_error;
-    }
-
-    /**
      * @return bool
      */
     public function getShutdownFunctionHasBeenSet()
     {
-        return $this->_shutdown_function_has_been_set;
+        return $this->shutdownFunctionHasBeenSet;
     }
 
     public function setAllObjectSerialize($value)
@@ -1071,5 +1025,15 @@ class Client
     private function isEncodingCompressed()
     {
         return 'gzip' === $this->config->getEncoding();
+    }
+
+    private function autoloadRavenStacktrace()
+    {
+        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
+        if (!class_exists('\\Raven\\Stacktrace')) {
+            // @codeCoverageIgnoreStart
+            spl_autoload_call('\\Raven\\Stacktrace');
+            // @codeCoverageIgnoreEnd
+        }
     }
 }

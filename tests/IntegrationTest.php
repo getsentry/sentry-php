@@ -31,7 +31,7 @@ class DummyIntegration_Raven_Client extends \Raven\Client
         $this->__sent_events[] = $data;
     }
 
-    public static function is_http_request()
+    public static function isHttpRequest()
     {
         return true;
     }
@@ -60,13 +60,13 @@ class IntegrationTest extends TestCase
     public function testCaptureSimpleError()
     {
         $client = ClientBuilder::create([])->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         @mkdir('/no/way');
 
         $client->captureLastError();
 
-        $event = $client->_pending_events[0]['exception']['values'][0];
+        $event = $client->pendingEvents[0]['exception']['values'][0];
 
         $this->assertEquals($event['value'], 'mkdir(): No such file or directory');
         $this->assertEquals($event['stacktrace']['frames'][count($event['stacktrace']['frames']) - 1]['filename'], 'tests/IntegrationTest.php');
