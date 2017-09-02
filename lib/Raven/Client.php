@@ -913,7 +913,7 @@ class Client
             case E_USER_NOTICE:
             case E_STRICT:
                 return self::LEVEL_INFO;
-            default:                   
+            default:
                 return self::LEVEL_ERROR;
         }
     }
