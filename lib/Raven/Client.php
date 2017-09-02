@@ -536,8 +536,8 @@ class Client
 
     protected function getUserData()
     {
-        $user = $this->context->user;
-        if ($user === null) {
+        $user = $this->context->getUserData();
+        if (empty($user)) {
             if (!function_exists('session_id') || !session_id()) {
                 return [];
             }
@@ -613,12 +613,12 @@ class Client
 
         $data['tags'] = array_merge(
             $this->config->getTags(),
-            $this->context->tags,
+            $this->context->getTags(),
             $data['tags']
         );
 
         $data['extra'] = array_merge(
-            $this->context->extra,
+            $this->context->getExtraData(),
             $data['extra']
         );
 
@@ -929,25 +929,6 @@ class Client
         $this->severityMap = $map;
     }
 
-    /**
-     * Convenience function for setting a user's ID and Email.
-     *
-     * @deprecated
-     *
-     * @param string      $id    User's ID
-     * @param string|null $email User's email
-     * @param array       $data  Additional user data
-     * @codeCoverageIgnore
-     */
-    public function setUserData($id, $email = null, $data = [])
-    {
-        $user = ['id' => $id];
-        if (isset($email)) {
-            $user['email'] = $email;
-        }
-        $this->setUserContext(array_merge($user, $data));
-    }
-
     public function onShutdown()
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
@@ -957,42 +938,11 @@ class Client
     }
 
     /**
-     * Sets user context.
-     *
-     * @param array $data  Associative array of user data
-     * @param bool  $merge Merge existing context with new context
+     * @return Context
      */
-    public function setUserContext($data, $merge = true)
+    public function getContext()
     {
-        if ($merge && $this->context->user !== null) {
-            // bail if data is null
-            if (!$data) {
-                return;
-            }
-            $this->context->user = array_merge($this->context->user, $data);
-        } else {
-            $this->context->user = $data;
-        }
-    }
-
-    /**
-     * Appends tags context.
-     *
-     * @param array $data Associative array of tags
-     */
-    public function tags_context($data)
-    {
-        $this->context->tags = array_merge($this->context->tags, $data);
-    }
-
-    /**
-     * Appends additional context.
-     *
-     * @param array $data Associative array of extra data
-     */
-    public function extra_context($data)
-    {
-        $this->context->extra = array_merge($this->context->extra, $data);
+        return $this->context;
     }
 
     /**

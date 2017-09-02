@@ -221,7 +221,7 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo']);
 
         $this->assertCount(1, $client->pendingEvents);
@@ -233,7 +233,7 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo'], null);
 
         $this->assertCount(1, $client->pendingEvents);
@@ -555,9 +555,10 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->setUserContext([
-            'id' => 'unique_id',
-            'email' => 'foo@example.com',
+        $context = $client->getContext();
+        $context->setUserId('unique_id');
+        $context->setUserEmail('foo@example.com');
+        $context->mergeUserData([
             'username' => 'my_user',
         ]);
 
@@ -585,11 +586,10 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->setUserContext([
-            'email' => 'foo@example.com',
-            'data' => [
-                'error' => new \Exception('test'),
-            ],
+        $context = $client->getContext();
+        $context->setUserEmail('foo@example.com');
+        $context->mergeUserData([
+            'error' => new \Exception('test'),
         ]);
 
         $client->captureMessage('test');
@@ -601,10 +601,11 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
+        $context = $client->getContext();
 
-        $client->tags_context(['foo' => 'bar']);
-        $client->tags_context(['biz' => 'boz']);
-        $client->tags_context(['biz' => 'baz']);
+        $context->setTag('foo', 'bar');
+        $context->setTag('biz', 'boz');
+        $context->setTag('biz', 'baz');
 
         $client->captureMessage('test');
 
@@ -617,9 +618,9 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
-        $client->extra_context(['biz' => 'boz']);
-        $client->extra_context(['biz' => 'baz']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['biz' => 'boz']);
+        $client->getContext()->mergeExtraData(['biz' => 'baz']);
 
         $client->captureMessage('test');
 
@@ -1013,36 +1014,6 @@ class ClientTest extends TestCase
                 ],
             ],
         ]], $data);
-    }
-
-    public function testUserContextWithoutMerge()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setUserContext(['foo' => 'bar'], false);
-        $client->setUserContext(['baz' => 'bar'], false);
-
-        $this->assertEquals(['baz' => 'bar'], $client->context->user);
-    }
-
-    public function testUserContextWithMerge()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setUserContext(['foo' => 'bar'], true);
-        $client->setUserContext(['baz' => 'bar'], true);
-
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'bar'], $client->context->user);
-    }
-
-    public function testUserContextWithMergeAndNull()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setUserContext(['foo' => 'bar'], true);
-        $client->setUserContext(null, true);
-
-        $this->assertEquals(['foo' => 'bar'], $client->context->user);
     }
 
     /**
