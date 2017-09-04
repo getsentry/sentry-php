@@ -7,7 +7,6 @@ return PhpCsFixer\Config::create()
         '@Symfony:risky' => true,
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
-        'not_operator_with_successor_space' => true,
         'ordered_imports' => true,
         'random_api_migration' => true,
     ])

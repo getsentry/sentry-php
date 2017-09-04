@@ -26,12 +26,12 @@ class SanitizeStacktraceProcessor extends Processor
      */
     public function process(&$data)
     {
-        if (! isset($data['exception'], $data['exception']['values'])) {
+        if (!isset($data['exception'], $data['exception']['values'])) {
             return;
         }
 
         foreach ($data['exception']['values'] as &$exception) {
-            if (! isset($exception['stacktrace'])) {
+            if (!isset($exception['stacktrace'])) {
                 continue;
             }
 

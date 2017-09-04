@@ -61,7 +61,7 @@ class MonologHandler extends AbstractProcessingHandler
     protected function write(array $record)
     {
         // sentry uses the 'nobreadcrumb' attribute to skip reporting
-        if (! empty($record['context']['nobreadcrumb'])) {
+        if (!empty($record['context']['nobreadcrumb'])) {
             return;
         }
 

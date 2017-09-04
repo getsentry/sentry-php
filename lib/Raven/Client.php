@@ -353,7 +353,7 @@ class Client
     ) {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
-        if (! empty($params)) {
+        if (!empty($params)) {
             $formatted_message = vsprintf($message, $params);
         } else {
             $formatted_message = $message;
@@ -362,7 +362,7 @@ class Client
         if ($data === null) {
             $data = [];
             // support legacy method of passing in a level name as the third arg
-        } elseif (! is_array($data)) {
+        } elseif (!is_array($data)) {
             $data = [
                 'level' => $data,
             ];
@@ -418,7 +418,7 @@ class Client
             array_unshift($trace, $frame_where_exception_thrown);
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (! class_exists('\\Raven\\Stacktrace')) {
+            if (!class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
                 spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
@@ -463,7 +463,7 @@ class Client
     {
         $error = error_get_last();
 
-        if (null === $error || ! isset($error['message'][0])) {
+        if (null === $error || !isset($error['message'][0])) {
             return null;
         }
 
@@ -518,7 +518,7 @@ class Client
 
     protected function registerShutdownFunction()
     {
-        if (! $this->_shutdown_function_has_been_set) {
+        if (!$this->_shutdown_function_has_been_set) {
             $this->_shutdown_function_has_been_set = true;
             register_shutdown_function([$this, 'onShutdown']);
         }
@@ -556,13 +556,13 @@ class Client
 
         // dont set this as an empty array as PHP will treat it as a numeric array
         // instead of a mapping which goes against the defined Sentry spec
-        if (! empty($_POST)) {
+        if (!empty($_POST)) {
             $result['data'] = $_POST;
         }
-        if (! empty($_COOKIE)) {
+        if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
         }
-        if (! empty($headers)) {
+        if (!empty($headers)) {
             $result['headers'] = $headers;
         }
 
@@ -575,16 +575,16 @@ class Client
     {
         $user = $this->context->user;
         if ($user === null) {
-            if (! function_exists('session_id') || ! session_id()) {
+            if (!function_exists('session_id') || !session_id()) {
                 return [];
             }
             $user = [
                 'id' => session_id(),
             ];
-            if (! empty($_SERVER['REMOTE_ADDR'])) {
+            if (!empty($_SERVER['REMOTE_ADDR'])) {
                 $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
             }
-            if (! empty($_SESSION)) {
+            if (!empty($_SESSION)) {
                 $user['data'] = $_SESSION;
             }
         }
@@ -612,19 +612,19 @@ class Client
 
     public function capture($data, $stack = null, $vars = null)
     {
-        if (! isset($data['timestamp'])) {
+        if (!isset($data['timestamp'])) {
             $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         }
-        if (! isset($data['level'])) {
+        if (!isset($data['level'])) {
             $data['level'] = self::LEVEL_ERROR;
         }
-        if (! isset($data['tags'])) {
+        if (!isset($data['tags'])) {
             $data['tags'] = [];
         }
-        if (! isset($data['extra'])) {
+        if (!isset($data['extra'])) {
             $data['extra'] = [];
         }
-        if (! isset($data['event_id'])) {
+        if (!isset($data['event_id'])) {
             $data['event_id'] = static::uuid4();
         }
 
@@ -640,11 +640,11 @@ class Client
 
         $data = array_merge($this->get_user_data(), $data);
 
-        if (! empty($this->config->getRelease())) {
+        if (!empty($this->config->getRelease())) {
             $data['release'] = $this->config->getRelease();
         }
 
-        if (! empty($this->config->getCurrentEnvironment())) {
+        if (!empty($this->config->getCurrentEnvironment())) {
             $data['environment'] = $this->config->getCurrentEnvironment();
         }
 
@@ -672,26 +672,26 @@ class Client
             unset($data['request']);
         }
 
-        if (! empty($this->recorder)) {
+        if (!empty($this->recorder)) {
             $data['breadcrumbs'] = iterator_to_array($this->recorder);
         }
 
-        if ((! $stack && $this->config->getAutoLogStacks()) || $stack === true) {
+        if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
             $stack = debug_backtrace();
 
             // Drop last stack
             array_shift($stack);
         }
 
-        if (! empty($stack)) {
+        if (!empty($stack)) {
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (! class_exists('\\Raven\\Stacktrace')) {
+            if (!class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
                 spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
             }
 
-            if (! isset($data['stacktrace']) && ! isset($data['exception'])) {
+            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
                 $data['stacktrace'] = [
                     'frames' => Stacktrace::fromBacktrace(
                         $this,
@@ -706,7 +706,7 @@ class Client
         $this->sanitize($data);
         $this->process($data);
 
-        if (! $this->store_errors_for_bulk_send) {
+        if (!$this->store_errors_for_bulk_send) {
             $this->send($data);
         } else {
             $this->_pending_events[] = $data;
@@ -720,21 +720,21 @@ class Client
     public function sanitize(&$data)
     {
         // attempt to sanitize any user provided data
-        if (! empty($data['request'])) {
+        if (!empty($data['request'])) {
             $data['request'] = $this->serializer->serialize($data['request']);
         }
-        if (! empty($data['user'])) {
+        if (!empty($data['user'])) {
             $data['user'] = $this->serializer->serialize($data['user'], 3);
         }
-        if (! empty($data['extra'])) {
+        if (!empty($data['extra'])) {
             $data['extra'] = $this->serializer->serialize($data['extra']);
         }
-        if (! empty($data['tags'])) {
+        if (!empty($data['tags'])) {
             foreach ($data['tags'] as $key => $value) {
                 $data['tags'][$key] = @(string) $value;
             }
         }
-        if (! empty($data['contexts'])) {
+        if (!empty($data['contexts'])) {
             $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
         }
     }
@@ -761,7 +761,7 @@ class Client
 
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->store_errors_for_bulk_send = ! defined('RAVEN_CLIENT_END_REACHED');
+            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
         }
 
         foreach ($this->pendingRequests as $pendingRequest) {
@@ -776,7 +776,7 @@ class Client
      */
     public function send(&$data)
     {
-        if (! $this->config->shouldCapture($data) || ! $this->config->getServer()) {
+        if (!$this->config->shouldCapture($data) || !$this->config->getServer()) {
             return;
         }
 
@@ -869,14 +869,14 @@ class Client
     protected function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
-        if (! isset($_SERVER['REQUEST_URI'])) {
+        if (!isset($_SERVER['REQUEST_URI'])) {
             return null;
         }
 
         // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
-        $host = (! empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (! empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
-            : (! empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
+        $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
+            : (!empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
+            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
         $httpS = $this->isHttps() ? 's' : '';
 
@@ -890,16 +890,16 @@ class Client
      */
     protected function isHttps()
     {
-        if (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
             return true;
         }
 
-        if (! empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
             return true;
         }
 
-        if (! empty($this->config->isTrustXForwardedProto()) &&
-            ! empty($_SERVER['X-FORWARDED-PROTO']) &&
+        if (!empty($this->config->isTrustXForwardedProto()) &&
+            !empty($_SERVER['X-FORWARDED-PROTO']) &&
             $_SERVER['X-FORWARDED-PROTO'] === 'https') {
             return true;
         }
@@ -988,7 +988,7 @@ class Client
 
     public function onShutdown()
     {
-        if (! defined('RAVEN_CLIENT_END_REACHED')) {
+        if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
         $this->sendUnsentErrors();
@@ -1004,7 +1004,7 @@ class Client
     {
         if ($merge && $this->context->user !== null) {
             // bail if data is null
-            if (! $data) {
+            if (!$data) {
                 return;
             }
             $this->context->user = array_merge($this->context->user, $data);

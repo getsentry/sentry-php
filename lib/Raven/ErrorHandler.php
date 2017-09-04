@@ -80,7 +80,7 @@ class ErrorHandler
     {
         $e->event_id = $this->client->captureException($e, null, null, $vars);
 
-        if (! $isError && $this->call_existing_exception_handler) {
+        if (!$isError && $this->call_existing_exception_handler) {
             if ($this->old_exception_handler !== null) {
                 call_user_func($this->old_exception_handler, $e);
             } else {

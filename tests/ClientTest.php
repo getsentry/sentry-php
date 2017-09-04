@@ -48,7 +48,7 @@ class Dummy_Raven_Client extends \Raven\Client
 
     public function send(&$data)
     {
-        if (! $this->config->shouldCapture($data)) {
+        if (!$this->config->shouldCapture($data)) {
             return;
         }
 
@@ -656,7 +656,7 @@ class ClientTest extends TestCase
         $found = false;
 
         foreach ($frames as $frame) {
-            if (! isset($frame['pre_context'])) {
+            if (!isset($frame['pre_context'])) {
                 continue;
             }
 
@@ -897,7 +897,7 @@ class ClientTest extends TestCase
                 $expected[$property->getName()] = [];
                 continue;
             }
-            if (! is_object($value)) {
+            if (!is_object($value)) {
                 $expected[$property->getName()] = $value;
                 continue;
             }
@@ -1321,7 +1321,7 @@ class ClientTest extends TestCase
             $this->assertEquals($value, $actual);
         }
         foreach (['foo', 'bar', 'foobar', '123456', 'SomeLongNonExistedKey'] as $key => $value) {
-            if (! isset($_SERVER[$key])) {
+            if (!isset($_SERVER[$key])) {
                 $actual = $method->invoke(null, $key);
                 $this->assertNotNull($actual);
                 $this->assertEquals('', $actual);

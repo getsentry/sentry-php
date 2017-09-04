@@ -263,7 +263,7 @@ abstract class SerializerAbstractTest extends TestCase
         ];
 
         foreach ($data as &$datum) {
-            if (! isset($datum['result_serialize_object'])) {
+            if (!isset($datum['result_serialize_object'])) {
                 $datum['result_serialize_object'] = $datum['result_serialize'];
             }
         }

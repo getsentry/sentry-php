@@ -170,7 +170,7 @@ final class ClientBuilder implements ClientBuilderInterface
     public function removeHttpClientPlugin($className)
     {
         foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
-            if (! $httpClientPlugin instanceof $className) {
+            if (!$httpClientPlugin instanceof $className) {
                 continue;
             }
 
@@ -205,7 +205,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __call($name, $arguments)
     {
-        if (! method_exists($this->configuration, $name)) {
+        if (!method_exists($this->configuration, $name)) {
             throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
         }
 
