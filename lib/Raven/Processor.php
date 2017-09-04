@@ -4,8 +4,6 @@ namespace Raven;
 
 /**
  * Base class for data processing.
- *
- * @package raven
  */
 abstract class Processor
 {
@@ -30,7 +28,7 @@ abstract class Processor
     }
 
     /**
-     * Override the default processor options
+     * Override the default processor options.
      *
      * @param array $options Associative array of processor options
      */

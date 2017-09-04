@@ -13,8 +13,8 @@ namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
-use Raven\Breadcrumbs\MonologHandler;
 use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Breadcrumbs\MonologHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 

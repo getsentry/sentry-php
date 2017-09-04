@@ -58,7 +58,7 @@ final class Recorder implements \Countable, \Iterator
      */
     public function __construct($maxSize = self::MAX_ITEMS)
     {
-        if (!is_int($maxSize) || $maxSize < 1) {
+        if (! is_int($maxSize) || $maxSize < 1) {
             throw new InvalidArgumentException(sprintf('The $maxSize argument must be an integer greater than 0.'));
         }
 

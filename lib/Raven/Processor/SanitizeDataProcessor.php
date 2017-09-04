@@ -53,10 +53,10 @@ class SanitizeDataProcessor extends Processor
     }
 
     /**
-     * Replace any array values with our mask if the field name or the value matches a respective regex
+     * Replace any array values with our mask if the field name or the value matches a respective regex.
      *
-     * @param mixed $item       Associative array value
-     * @param string $key       Associative array key
+     * @param mixed  $item Associative array value
+     * @param string $key  Associative array key
      */
     public function sanitize(&$item, $key)
     {
@@ -87,13 +87,13 @@ class SanitizeDataProcessor extends Processor
     public function sanitizeHttp(&$data)
     {
         $http = &$data['request'];
-        if (!empty($http['cookies']) && is_array($http['cookies'])) {
+        if (! empty($http['cookies']) && is_array($http['cookies'])) {
             $cookies = &$http['cookies'];
-            if (!empty($cookies[$this->session_cookie_name])) {
+            if (! empty($cookies[$this->session_cookie_name])) {
                 $cookies[$this->session_cookie_name] = self::STRING_MASK;
             }
         }
-        if (!empty($http['data']) && is_array($http['data'])) {
+        if (! empty($http['data']) && is_array($http['data'])) {
             array_walk_recursive($http['data'], [$this, 'sanitize']);
         }
     }
@@ -113,16 +113,16 @@ class SanitizeDataProcessor extends Processor
      */
     public function process(&$data)
     {
-        if (!empty($data['exception'])) {
+        if (! empty($data['exception'])) {
             $this->sanitizeException($data);
         }
-        if (!empty($data['stacktrace'])) {
+        if (! empty($data['stacktrace'])) {
             $this->sanitizeStacktrace($data['stacktrace']);
         }
-        if (!empty($data['request'])) {
+        if (! empty($data['request'])) {
             $this->sanitizeHttp($data);
         }
-        if (!empty($data['extra'])) {
+        if (! empty($data['extra'])) {
             array_walk_recursive($data['extra'], [$this, 'sanitize']);
         }
     }

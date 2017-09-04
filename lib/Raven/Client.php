@@ -21,12 +21,10 @@ use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
 /**
- * Raven PHP Client
+ * Raven PHP Client.
  *
- * @package raven
  * @doc https://docs.sentry.io/clients/php/config/
  */
-
 class Client
 {
     const VERSION = '2.0.x-dev';
@@ -59,7 +57,7 @@ class Client
     const LEVEL_FATAL = 'fatal';
 
     /**
-     * Default message limit
+     * Default message limit.
      */
     const MESSAGE_LIMIT = 1024;
 
@@ -69,7 +67,7 @@ class Client
     protected $recorder;
 
     /**
-     * This constant defines the client's user-agent string
+     * This constant defines the client's user-agent string.
      */
     const USER_AGENT = 'sentry-php/' . self::VERSION;
 
@@ -90,21 +88,21 @@ class Client
     public $store_errors_for_bulk_send = false;
 
     /**
-     * @var \Raven\ErrorHandler $error_handler
+     * @var \Raven\ErrorHandler
      */
     protected $error_handler;
 
     /**
-     * @var \Raven\Serializer $serializer
+     * @var \Raven\Serializer
      */
     protected $serializer;
     /**
-     * @var \Raven\Serializer $serializer
+     * @var \Raven\Serializer
      */
     protected $reprSerializer;
 
     /**
-     * @var \Raven\Processor[] $processors An array of classes to use to process data before it is sent to Sentry
+     * @var \Raven\Processor[] An array of classes to use to process data before it is sent to Sentry
      */
     protected $processors = [];
 
@@ -120,7 +118,7 @@ class Client
     public $_user;
 
     /**
-     * @var array[] $_pending_events
+     * @var array[]
      */
     public $_pending_events = [];
 
@@ -186,7 +184,7 @@ class Client
     }
 
     /**
-     * Destruct all objects contain link to this object
+     * Destruct all objects contain link to this object.
      *
      * This method can not delete shutdown handler
      */
@@ -213,9 +211,6 @@ class Client
         $this->recorder->clear();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getConfig()
     {
         return $this->config;
@@ -253,6 +248,7 @@ class Client
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
+
         return $this;
     }
 
@@ -268,7 +264,7 @@ class Client
         $processorsOptions = $this->config->getProcessorsOptions();
 
         foreach ($this->config->getProcessors() as $processor) {
-            /**  @var Processor $processorInstance */
+            /** @var Processor $processorInstance */
             $processorInstance = new $processor($this);
 
             if (isset($processorsOptions[$processor])) {
@@ -292,6 +288,7 @@ class Client
      * Given an identifier, returns a Sentry searchable string.
      *
      * @param mixed $ident
+     *
      * @return mixed
      * @codeCoverageIgnore
      */
@@ -302,12 +299,14 @@ class Client
     }
 
     /**
-     * @param string     $message The message (primary description) for the event.
-     * @param array      $params  params to use when formatting the message.
+     * @param string     $message the message (primary description) for the event
+     * @param array      $params  params to use when formatting the message
      * @param string     $level   Log level group
      * @param bool|array $stack
      * @param mixed      $vars
+     *
      * @return string|null
+     *
      * @deprecated
      * @codeCoverageIgnore
      */
@@ -323,7 +322,9 @@ class Client
 
     /**
      * @param Exception $exception
+     *
      * @return string|null
+     *
      * @deprecated
      * @codeCoverageIgnore
      */
@@ -333,13 +334,14 @@ class Client
     }
 
     /**
-     * Log a message to sentry
+     * Log a message to sentry.
      *
-     * @param string     $message The message (primary description) for the event.
-     * @param array      $params  params to use when formatting the message.
-     * @param array      $data    Additional attributes to pass with this event (see Sentry docs).
+     * @param string     $message the message (primary description) for the event
+     * @param array      $params  params to use when formatting the message
+     * @param array      $data    additional attributes to pass with this event (see Sentry docs)
      * @param bool|array $stack
      * @param mixed      $vars
+     *
      * @return string|null
      */
     public function captureMessage(
@@ -351,7 +353,7 @@ class Client
     ) {
         // Gracefully handle messages which contain formatting characters, but were not
         // intended to be used with formatting.
-        if (!empty($params)) {
+        if (! empty($params)) {
             $formatted_message = vsprintf($message, $params);
         } else {
             $formatted_message = $message;
@@ -360,7 +362,7 @@ class Client
         if ($data === null) {
             $data = [];
             // support legacy method of passing in a level name as the third arg
-        } elseif (!is_array($data)) {
+        } elseif (! is_array($data)) {
             $data = [
                 'level' => $data,
             ];
@@ -377,12 +379,13 @@ class Client
     }
 
     /**
-     * Log an exception to sentry
+     * Log an exception to sentry.
      *
-     * @param \Exception $exception The Exception object.
-     * @param array      $data      Additional attributes to pass with this event (see Sentry docs).
+     * @param \Exception $exception the Exception object
+     * @param array      $data      additional attributes to pass with this event (see Sentry docs)
      * @param mixed      $logger
      * @param mixed      $vars
+     *
      * @return string|null
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
@@ -415,7 +418,7 @@ class Client
             array_unshift($trace, $frame_where_exception_thrown);
 
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\\Raven\\Stacktrace')) {
+            if (! class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
                 spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
@@ -451,16 +454,16 @@ class Client
         return $this->capture($data, $trace, $vars);
     }
 
-
     /**
      * Capture the most recent error (obtained with ``error_get_last``).
+     *
      * @return string|null
      */
     public function captureLastError()
     {
         $error = error_get_last();
 
-        if (null === $error || !isset($error['message'][0])) {
+        if (null === $error || ! isset($error['message'][0])) {
             return null;
         }
 
@@ -476,7 +479,7 @@ class Client
     }
 
     /**
-     * Log an query to sentry
+     * Log an query to sentry.
      *
      * @param string|null $query
      * @param string      $level
@@ -488,13 +491,14 @@ class Client
             'message' => $query,
             'level' => $level,
             'sentry.interfaces.Query' => [
-                'query' => $query
-            ]
+                'query' => $query,
+            ],
         ];
 
         if ($engine !== '') {
             $data['sentry.interfaces.Query']['engine'] = $engine;
         }
+
         return $this->capture($data, false);
     }
 
@@ -514,7 +518,7 @@ class Client
 
     protected function registerShutdownFunction()
     {
-        if (!$this->_shutdown_function_has_been_set) {
+        if (! $this->_shutdown_function_has_been_set) {
             $this->_shutdown_function_has_been_set = true;
             register_shutdown_function([$this, 'onShutdown']);
         }
@@ -552,13 +556,13 @@ class Client
 
         // dont set this as an empty array as PHP will treat it as a numeric array
         // instead of a mapping which goes against the defined Sentry spec
-        if (!empty($_POST)) {
+        if (! empty($_POST)) {
             $result['data'] = $_POST;
         }
-        if (!empty($_COOKIE)) {
+        if (! empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
         }
-        if (!empty($headers)) {
+        if (! empty($headers)) {
             $result['headers'] = $headers;
         }
 
@@ -571,19 +575,20 @@ class Client
     {
         $user = $this->context->user;
         if ($user === null) {
-            if (!function_exists('session_id') || !session_id()) {
+            if (! function_exists('session_id') || ! session_id()) {
                 return [];
             }
             $user = [
                 'id' => session_id(),
             ];
-            if (!empty($_SERVER['REMOTE_ADDR'])) {
+            if (! empty($_SERVER['REMOTE_ADDR'])) {
                 $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
             }
-            if (!empty($_SESSION)) {
+            if (! empty($_SESSION)) {
                 $user['data'] = $_SESSION;
             }
         }
+
         return [
             'user' => $user,
         ];
@@ -607,19 +612,19 @@ class Client
 
     public function capture($data, $stack = null, $vars = null)
     {
-        if (!isset($data['timestamp'])) {
+        if (! isset($data['timestamp'])) {
             $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
         }
-        if (!isset($data['level'])) {
+        if (! isset($data['level'])) {
             $data['level'] = self::LEVEL_ERROR;
         }
-        if (!isset($data['tags'])) {
+        if (! isset($data['tags'])) {
             $data['tags'] = [];
         }
-        if (!isset($data['extra'])) {
+        if (! isset($data['extra'])) {
             $data['extra'] = [];
         }
-        if (!isset($data['event_id'])) {
+        if (! isset($data['event_id'])) {
             $data['event_id'] = static::uuid4();
         }
 
@@ -635,11 +640,11 @@ class Client
 
         $data = array_merge($this->get_user_data(), $data);
 
-        if (!empty($this->config->getRelease())) {
+        if (! empty($this->config->getRelease())) {
             $data['release'] = $this->config->getRelease();
         }
 
-        if (!empty($this->config->getCurrentEnvironment())) {
+        if (! empty($this->config->getCurrentEnvironment())) {
             $data['environment'] = $this->config->getCurrentEnvironment();
         }
 
@@ -667,26 +672,26 @@ class Client
             unset($data['request']);
         }
 
-        if (!empty($this->recorder)) {
+        if (! empty($this->recorder)) {
             $data['breadcrumbs'] = iterator_to_array($this->recorder);
         }
 
-        if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
+        if ((! $stack && $this->config->getAutoLogStacks()) || $stack === true) {
             $stack = debug_backtrace();
 
             // Drop last stack
             array_shift($stack);
         }
 
-        if (!empty($stack)) {
+        if (! empty($stack)) {
             // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('\\Raven\\Stacktrace')) {
+            if (! class_exists('\\Raven\\Stacktrace')) {
                 // @codeCoverageIgnoreStart
                 spl_autoload_call('\\Raven\\Stacktrace');
                 // @codeCoverageIgnoreEnd
             }
 
-            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
+            if (! isset($data['stacktrace']) && ! isset($data['exception'])) {
                 $data['stacktrace'] = [
                     'frames' => Stacktrace::fromBacktrace(
                         $this,
@@ -701,7 +706,7 @@ class Client
         $this->sanitize($data);
         $this->process($data);
 
-        if (!$this->store_errors_for_bulk_send) {
+        if (! $this->store_errors_for_bulk_send) {
             $this->send($data);
         } else {
             $this->_pending_events[] = $data;
@@ -715,27 +720,27 @@ class Client
     public function sanitize(&$data)
     {
         // attempt to sanitize any user provided data
-        if (!empty($data['request'])) {
+        if (! empty($data['request'])) {
             $data['request'] = $this->serializer->serialize($data['request']);
         }
-        if (!empty($data['user'])) {
+        if (! empty($data['user'])) {
             $data['user'] = $this->serializer->serialize($data['user'], 3);
         }
-        if (!empty($data['extra'])) {
+        if (! empty($data['extra'])) {
             $data['extra'] = $this->serializer->serialize($data['extra']);
         }
-        if (!empty($data['tags'])) {
+        if (! empty($data['tags'])) {
             foreach ($data['tags'] as $key => $value) {
-                $data['tags'][$key] = @(string)$value;
+                $data['tags'][$key] = @(string) $value;
             }
         }
-        if (!empty($data['contexts'])) {
+        if (! empty($data['contexts'])) {
             $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
         }
     }
 
     /**
-     * Process data through all defined \Raven\Processor sub-classes
+     * Process data through all defined \Raven\Processor sub-classes.
      *
      * @param array $data Associative array of data to log
      */
@@ -756,7 +761,7 @@ class Client
 
         if ($this->store_errors_for_bulk_send) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->store_errors_for_bulk_send = !defined('RAVEN_CLIENT_END_REACHED');
+            $this->store_errors_for_bulk_send = ! defined('RAVEN_CLIENT_END_REACHED');
         }
 
         foreach ($this->pendingRequests as $pendingRequest) {
@@ -771,12 +776,13 @@ class Client
      */
     public function send(&$data)
     {
-        if (!$this->config->shouldCapture($data) || !$this->config->getServer()) {
+        if (! $this->config->shouldCapture($data) || ! $this->config->getServer()) {
             return;
         }
 
         if ($this->config->getTransport()) {
             call_user_func($this->getConfig()->getTransport(), $this, $data);
+
             return;
         }
 
@@ -822,7 +828,7 @@ class Client
     }
 
     /**
-     * Generate an uuid4 value
+     * Generate an uuid4 value.
      *
      * @return string
      */
@@ -856,23 +862,24 @@ class Client
     }
 
     /**
-     * Return the URL for the current request
+     * Return the URL for the current request.
      *
      * @return string|null
      */
     protected function get_current_url()
     {
         // When running from commandline the REQUEST_URI is missing.
-        if (!isset($_SERVER['REQUEST_URI'])) {
+        if (! isset($_SERVER['REQUEST_URI'])) {
             return null;
         }
 
         // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
-        $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
-            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
+        $host = (! empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
+            : (! empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
+            : (! empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
         $httpS = $this->isHttps() ? 's' : '';
+
         return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
     }
 
@@ -883,16 +890,16 @@ class Client
      */
     protected function isHttps()
     {
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        if (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
             return true;
         }
 
-        if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        if (! empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
             return true;
         }
 
-        if (!empty($this->config->isTrustXForwardedProto()) &&
-            !empty($_SERVER['X-FORWARDED-PROTO']) &&
+        if (! empty($this->config->isTrustXForwardedProto()) &&
+            ! empty($_SERVER['X-FORWARDED-PROTO']) &&
             $_SERVER['X-FORWARDED-PROTO'] === 'https') {
             return true;
         }
@@ -901,10 +908,11 @@ class Client
     }
 
     /**
-     * Get the value of a key from $_SERVER
+     * Get the value of a key from $_SERVER.
      *
      * @param string $key Key whose value you wish to obtain
-     * @return string     Key's value
+     *
+     * @return string Key's value
      */
     private static function _server_variable($key)
     {
@@ -916,10 +924,11 @@ class Client
     }
 
     /**
-     * Translate a PHP Error constant into a Sentry log level group
+     * Translate a PHP Error constant into a Sentry log level group.
      *
      * @param string $severity PHP E_$x error constant
-     * @return string          Sentry log level group
+     *
+     * @return string Sentry log level group
      */
     public function translateSeverity($severity)
     {
@@ -943,12 +952,13 @@ class Client
             case E_STRICT:             return \Raven\Client::LEVEL_INFO;
             case E_RECOVERABLE_ERROR:  return \Raven\Client::LEVEL_ERROR;
         }
+
         return \Raven\Client::LEVEL_ERROR;
     }
 
     /**
      * Provide a map of PHP Error constants to Sentry logging groups to use instead
-     * of the defaults in translateSeverity()
+     * of the defaults in translateSeverity().
      *
      * @param string[] $map
      */
@@ -958,9 +968,10 @@ class Client
     }
 
     /**
-     * Convenience function for setting a user's ID and Email
+     * Convenience function for setting a user's ID and Email.
      *
      * @deprecated
+     *
      * @param string      $id    User's ID
      * @param string|null $email User's email
      * @param array       $data  Additional user data
@@ -977,7 +988,7 @@ class Client
 
     public function onShutdown()
     {
-        if (!defined('RAVEN_CLIENT_END_REACHED')) {
+        if (! defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
         }
         $this->sendUnsentErrors();
@@ -993,7 +1004,7 @@ class Client
     {
         if ($merge && $this->context->user !== null) {
             // bail if data is null
-            if (!$data) {
+            if (! $data) {
                 return;
             }
             $this->context->user = array_merge($this->context->user, $data);

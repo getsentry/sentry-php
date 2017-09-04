@@ -39,6 +39,7 @@ class ErrorHandler
     public function install()
     {
         $this->existingHandler = set_error_handler([$this, 'handleError'], E_ALL);
+
         return $this;
     }
 }

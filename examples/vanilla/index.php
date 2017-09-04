@@ -15,15 +15,14 @@ function setupSentry()
 
 function createCrumbs()
 {
-    echo($undefined['foobar']);
-    echo($undefined['bizbaz']);
+    echo $undefined['foobar'];
+    echo $undefined['bizbaz'];
 }
 
 function createError()
 {
     1 / 0;
 }
-
 
 function createException()
 {

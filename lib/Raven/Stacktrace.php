@@ -134,7 +134,7 @@ class Stacktrace implements \JsonSerializable
             $absoluteFilePath = @realpath($file) ?: $file;
             $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getConfig()->getProjectRoot());
 
-            if ($isApplicationFile && !empty($excludedAppPaths)) {
+            if ($isApplicationFile && ! empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
                     if (0 === strpos($absoluteFilePath, $path)) {
                         $frame['in_app'] = $isApplicationFile;
@@ -147,7 +147,7 @@ class Stacktrace implements \JsonSerializable
 
         $frameArguments = self::getFrameArguments($backtraceFrame);
 
-        if (!empty($frameArguments)) {
+        if (! empty($frameArguments)) {
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->reprSerializer->serialize($argumentValue);
 
@@ -173,7 +173,7 @@ class Stacktrace implements \JsonSerializable
      */
     public function removeFrame($index)
     {
-        if (!isset($this->frames[$index])) {
+        if (! isset($this->frames[$index])) {
             throw new \OutOfBoundsException('Invalid frame index to remove.');
         }
 
@@ -210,7 +210,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getSourceCodeExcerpt($path, $lineNumber, $linesNum)
     {
-        if (!is_file($path) || !is_readable($path)) {
+        if (! is_file($path) || ! is_readable($path)) {
             return [];
         }
 
@@ -227,7 +227,7 @@ class Stacktrace implements \JsonSerializable
             $file = new \SplFileObject($path);
             $file->seek($target);
 
-            while (!$file->eof()) {
+            while (! $file->eof()) {
                 $line = rtrim($file->current(), "\r\n");
 
                 if ($currentLineNumber == $lineNumber) {
@@ -284,7 +284,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected static function getFrameArgumentsValues($frame, $maxValueLength = Client::MESSAGE_LIMIT)
     {
-        if (!isset($frame['args'])) {
+        if (! isset($frame['args'])) {
             return [];
         }
 
@@ -307,13 +307,13 @@ class Stacktrace implements \JsonSerializable
      */
     public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_LIMIT)
     {
-        if (!isset($frame['args'])) {
+        if (! isset($frame['args'])) {
             return [];
         }
 
         // The Reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
-        if (!isset($frame['function'])) {
+        if (! isset($frame['function'])) {
             return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
 
