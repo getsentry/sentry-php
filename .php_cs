@@ -3,8 +3,13 @@
 return PhpCsFixer\Config::create()
     ->setRules([
         '@PSR2' => true,
+        '@Symfony' => true,
+        '@Symfony:risky' => true,
         'array_syntax' => ['syntax' => 'short'],
-        'psr4' => true,
+        'concat_space' => ['spacing' => 'one'],
+        'not_operator_with_successor_space' => true,
+        'ordered_imports' => true,
+        'random_api_migration' => true,
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
