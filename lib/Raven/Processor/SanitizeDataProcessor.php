@@ -53,10 +53,10 @@ class SanitizeDataProcessor extends Processor
     }
 
     /**
-     * Replace any array values with our mask if the field name or the value matches a respective regex
+     * Replace any array values with our mask if the field name or the value matches a respective regex.
      *
-     * @param mixed $item       Associative array value
-     * @param string $key       Associative array key
+     * @param mixed  $item Associative array value
+     * @param string $key  Associative array key
      */
     public function sanitize(&$item, $key)
     {

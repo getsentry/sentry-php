@@ -23,7 +23,7 @@ use Raven\Processor;
 final class SanitizeHttpHeadersProcessor extends Processor
 {
     /**
-     * @var string[] $httpHeadersToSanitize The list of HTTP headers to sanitize
+     * @var string[] The list of HTTP headers to sanitize
      */
     private $httpHeadersToSanitize = [];
 

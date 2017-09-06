@@ -15,7 +15,7 @@ class SerializerTest extends \Raven\Tests\SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeString
      */
@@ -25,7 +25,7 @@ class SerializerTest extends \Raven\Tests\SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeString
      */
@@ -35,7 +35,7 @@ class SerializerTest extends \Raven\Tests\SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeValue
      */

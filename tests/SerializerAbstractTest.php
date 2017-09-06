@@ -32,13 +32,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testArraysAreArrays($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer * */
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -49,13 +49,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testStdClassAreArrays($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -69,7 +69,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testObjectsAreStrings()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer * */
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $input = new \Raven\Tests\SerializerTestObject();
         $result = $serializer->serialize($input);
@@ -79,7 +79,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testObjectsAreNotStrings()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer * */
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
         $input = new \Raven\Tests\SerializerTestObject();
@@ -88,13 +88,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testIntsAreInts($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -106,13 +106,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testFloats($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -124,13 +124,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testBooleans($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -145,13 +145,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testNull($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -162,13 +162,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testRecursionMaxDepth($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -195,74 +195,73 @@ abstract class SerializerAbstractTest extends TestCase
     {
         $data = [];
         // case 1
-        $object = new SerializerTestObject;
+        $object = new SerializerTestObject();
         $object->key = $object;
         $data[] = [
-            'object'           => $object,
+            'object' => $object,
             'result_serialize' => ['key' => 'Object Raven\Tests\SerializerTestObject'],
         ];
 
         // case 2
-        $object = new SerializerTestObject;
-        $object2 = new SerializerTestObject;
+        $object = new SerializerTestObject();
+        $object2 = new SerializerTestObject();
         $object2->key = $object;
         $object->key = $object2;
         $data[] = [
-            'object'           => $object,
+            'object' => $object,
             'result_serialize' => ['key' => ['key' => 'Object Raven\Tests\SerializerTestObject']],
         ];
 
         // case 3
-        $object = new SerializerTestObject;
-        $object2 = new SerializerTestObject;
+        $object = new SerializerTestObject();
+        $object2 = new SerializerTestObject();
         $object2->key = 'foobar';
         $object->key = $object2;
         $data[] = [
-            'object'           => $object,
+            'object' => $object,
             'result_serialize' => ['key' => ['key' => 'foobar']],
         ];
 
         // case 4
-        $object3 = new SerializerTestObject;
+        $object3 = new SerializerTestObject();
         $object3->key = 'foobar';
-        $object2 = new SerializerTestObject;
+        $object2 = new SerializerTestObject();
         $object2->key = $object3;
-        $object = new SerializerTestObject;
+        $object = new SerializerTestObject();
         $object->key = $object2;
         $data[] = [
-            'object'           => $object,
+            'object' => $object,
             'result_serialize' => ['key' => ['key' => ['key' => 'foobar']]],
         ];
 
         // case 5
-        $object4 = new SerializerTestObject;
+        $object4 = new SerializerTestObject();
         $object4->key = 'foobar';
-        $object3 = new SerializerTestObject;
+        $object3 = new SerializerTestObject();
         $object3->key = $object4;
-        $object2 = new SerializerTestObject;
+        $object2 = new SerializerTestObject();
         $object2->key = $object3;
-        $object = new SerializerTestObject;
+        $object = new SerializerTestObject();
         $object->key = $object2;
         $data[] = [
-            'object'           => $object,
+            'object' => $object,
             'result_serialize' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject']]],
         ];
 
         // case 6
-        $object3 = new SerializerTestObject;
-        $object2 = new SerializerTestObject;
+        $object3 = new SerializerTestObject();
+        $object2 = new SerializerTestObject();
         $object2->key = $object3;
         $object2->keys = 'keys';
-        $object = new SerializerTestObject;
+        $object = new SerializerTestObject();
         $object->key = $object2;
         $object3->key = $object2;
         $data[] = [
-            'object'           => $object,
-            'result_serialize' => ['key' => ['key'  => ['key' => 'Object Raven\\Tests\\SerializerTestObject'],
-                                             'keys' => 'keys']],
+            'object' => $object,
+            'result_serialize' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject'],
+                                             'keys' => 'keys', ]],
         ];
 
-        //
         foreach ($data as &$datum) {
             if (!isset($datum['result_serialize_object'])) {
                 $datum['result_serialize_object'] = $datum['result_serialize'];
@@ -282,7 +281,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testRecursionInObjects($object, $result_serialize, $result_serialize_object)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
 
@@ -295,18 +294,18 @@ abstract class SerializerAbstractTest extends TestCase
     public function testRecursionMaxDepthForObject()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
 
-        $result = $serializer->serialize((object)['key' => (object)['key' => 12345]], 3);
+        $result = $serializer->serialize((object) ['key' => (object) ['key' => 12345]], 3);
         $this->assertEquals(['key' => ['key' => 12345]], $result);
 
-        $result = $serializer->serialize((object)['key' => (object)['key' => (object)['key' => 12345]]], 3);
+        $result = $serializer->serialize((object) ['key' => (object) ['key' => (object) ['key' => 12345]]], 3);
         $this->assertEquals(['key' => ['key' => ['key' => 12345]]], $result);
 
         $result = $serializer->serialize(
-            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]],
+            (object) ['key' => (object) ['key' => (object) ['key' => (object) ['key' => 12345]]]],
             3
         );
         $this->assertEquals(['key' => ['key' => ['key' => 'Object stdClass']]], $result);
@@ -315,7 +314,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testObjectInArray()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
         $result = $serializer->serialize($input);
@@ -325,7 +324,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testObjectInArraySerializeAll()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
         $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
@@ -334,13 +333,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testBrokenEncoding($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -356,21 +355,21 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testLongString($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
-        for ($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 100; ++$i) {
             foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
                 $input = '';
-                for ($i = 0; $i < $length; $i++) {
+                for ($i = 0; $i < $length; ++$i) {
                     $input .= chr(mt_rand(0, 255));
                 }
                 $result = $serializer->serialize($input);
@@ -381,13 +380,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testSerializeValueResource($serialize_all_objects)
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
@@ -403,7 +402,7 @@ abstract class SerializerAbstractTest extends TestCase
     public function testSetAllObjectSerialize()
     {
         $class_name = static::get_test_class();
-        /** @var \Raven\Serializer $serializer **/
+        /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
         $this->assertTrue($serializer->getAllObjectSerialize());
@@ -413,9 +412,8 @@ abstract class SerializerAbstractTest extends TestCase
 }
 
 /**
- * Class SerializerTestObject
+ * Class SerializerTestObject.
  *
- * @package Raven\Tests
  * @property mixed $keys
  */
 class SerializerTestObject

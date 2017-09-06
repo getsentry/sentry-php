@@ -32,10 +32,10 @@ class SanitizeDataProcessorTest extends TestCase
                         '1111',
                         '2222',
                         '3333',
-                        '4444'
-                    ]
+                        '4444',
+                    ],
                 ],
-            ]
+            ],
         ];
 
         $client = ClientBuilder::create()->getClient();
@@ -62,7 +62,7 @@ class SanitizeDataProcessorTest extends TestCase
                 'cookies' => [
                     ini_get('session.name') => 'abc',
                 ],
-            ]
+            ],
         ];
 
         $client = ClientBuilder::create()->getClient();
@@ -98,7 +98,7 @@ class SanitizeDataProcessorTest extends TestCase
 
         $options = [
             'fields_re' => '/(api_token)/i',
-            'values_re' => '/^(?:\d[ -]*?){15,16}$/'
+            'values_re' => '/^(?:\d[ -]*?){15,16}$/',
         ];
 
         $processor->setProcessorOptions($options);
@@ -141,9 +141,9 @@ class SanitizeDataProcessorTest extends TestCase
                     'card_number' => [
                         '1111111111111111',
                         '2222',
-                    ]
+                    ],
                 ],
-            ]
+            ],
         ];
 
         $client = ClientBuilder::create($clientOptions)->getClient();
@@ -182,11 +182,11 @@ class SanitizeDataProcessorTest extends TestCase
 
         $client_options = [
             'processors' => [SanitizeDataProcessor::class],
-            'processors_options' => $processorOptions
+            'processors_options' => $processorOptions,
         ];
 
         return [
-            [$processorOptions, $client_options]
+            [$processorOptions, $client_options],
         ];
     }
 }

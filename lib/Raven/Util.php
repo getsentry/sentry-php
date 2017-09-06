@@ -11,12 +11,6 @@
 
 namespace Raven;
 
-/**
- * Utilities
- *
- * @package raven
- */
-
 class Util
 {
     /**
@@ -27,6 +21,7 @@ class Util
      * @param array  $array
      * @param string $var
      * @param mixed  $default
+     *
      * @return mixed
      */
     public static function get($array, $var, $default = null)

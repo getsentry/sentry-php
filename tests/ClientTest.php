@@ -20,7 +20,6 @@ use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
-use Raven\HttpClient\HttpClientFactoryInterface;
 use Raven\Processor\SanitizeDataProcessor;
 
 function simple_function($a = null, $b = null, $c = null)
@@ -83,7 +82,7 @@ class Dummy_Raven_Client extends \Raven\Client
     }
 
     /**
-     * Expose the current url method to test it
+     * Expose the current url method to test it.
      *
      * @return string
      */
@@ -110,9 +109,9 @@ class Dummy_Raven_Client_With_Sync_Override extends \Raven\Client
 
     public static function get_test_data()
     {
-        if (is_null(self::$_test_data)) {
+        if (null === self::$_test_data) {
             self::$_test_data = '';
-            for ($i = 0; $i < 128; $i++) {
+            for ($i = 0; $i < 128; ++$i) {
                 self::$_test_data .= chr(mt_rand(ord('a'), ord('z')));
             }
         }
@@ -122,7 +121,7 @@ class Dummy_Raven_Client_With_Sync_Override extends \Raven\Client
 
     public static function test_filename()
     {
-        return sys_get_temp_dir().'/clientraven.tmp';
+        return sys_get_temp_dir() . '/clientraven.tmp';
     }
 }
 
@@ -133,7 +132,7 @@ class ClientTest extends TestCase
     public static function setUpBeforeClass()
     {
         parent::setUpBeforeClass();
-        self::$_folder = sys_get_temp_dir().'/sentry_server_'.microtime(true);
+        self::$_folder = sys_get_temp_dir() . '/sentry_server_' . microtime(true);
         mkdir(self::$_folder);
     }
 
@@ -312,7 +311,7 @@ class ClientTest extends TestCase
 
         $client->captureMessage('Test Message %s', ['foo'], [
             'level' => Dummy_Raven_Client::LEVEL_WARNING,
-            'extra' => ['foo' => 'bar']
+            'extra' => ['foo' => 'bar'],
         ]);
 
         $this->assertCount(1, $client->_pending_events);
@@ -338,7 +337,7 @@ class ClientTest extends TestCase
      */
     public function testCaptureExceptionSetsInterfaces()
     {
-        # TODO: it'd be nice if we could mock the stacktrace extraction function here
+        // TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = ClientBuilder::create()->getClient();
         $client->store_errors_for_bulk_send = true;
 
@@ -358,13 +357,13 @@ class ClientTest extends TestCase
         $this->assertEquals('Raven\Tests\ClientTest::create_exception', $frame['function']);
         $this->assertFalse(isset($frame['vars']));
         $this->assertEquals('            throw new \Exception(\'Foo bar\');', $frame['context_line']);
-        $this->assertFalse(empty($frame['pre_context']));
-        $this->assertFalse(empty($frame['post_context']));
+        $this->assertNotEmpty($frame['pre_context']);
+        $this->assertNotEmpty($frame['post_context']);
     }
 
     public function testCaptureExceptionChainedException()
     {
-        # TODO: it'd be nice if we could mock the stacktrace extraction function here
+        // TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = ClientBuilder::create()->getClient();
         $client->store_errors_for_bulk_send = true;
 
@@ -490,19 +489,19 @@ class ClientTest extends TestCase
     public function testGetHttpData()
     {
         $_SERVER = [
-            'REDIRECT_STATUS'     => '200',
-            'CONTENT_TYPE'        => 'text/xml',
-            'CONTENT_LENGTH'      => '99',
-            'HTTP_HOST'           => 'getsentry.com',
-            'HTTP_ACCEPT'         => 'text/html',
+            'REDIRECT_STATUS' => '200',
+            'CONTENT_TYPE' => 'text/xml',
+            'CONTENT_LENGTH' => '99',
+            'HTTP_HOST' => 'getsentry.com',
+            'HTTP_ACCEPT' => 'text/html',
             'HTTP_ACCEPT_CHARSET' => 'utf-8',
-            'HTTP_COOKIE'         => 'cupcake: strawberry',
-            'SERVER_PORT'         => '443',
-            'SERVER_PROTOCOL'     => 'HTTP/1.1',
-            'REQUEST_METHOD'      => 'PATCH',
-            'QUERY_STRING'        => 'q=bitch&l=en',
-            'REQUEST_URI'         => '/welcome/',
-            'SCRIPT_NAME'         => '/index.php',
+            'HTTP_COOKIE' => 'cupcake: strawberry',
+            'SERVER_PORT' => '443',
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'REQUEST_METHOD' => 'PATCH',
+            'QUERY_STRING' => 'q=bitch&l=en',
+            'REQUEST_URI' => '/welcome/',
+            'SCRIPT_NAME' => '/index.php',
         ];
         $_POST = [
             'stamp' => '1c',
@@ -517,20 +516,20 @@ class ClientTest extends TestCase
                 'url' => 'https://getsentry.com/welcome/',
                 'query_string' => 'q=bitch&l=en',
                 'data' => [
-                    'stamp'           => '1c',
+                    'stamp' => '1c',
                 ],
                 'cookies' => [
-                    'donut'           => 'chocolat',
+                    'donut' => 'chocolat',
                 ],
                 'headers' => [
-                    'Host'            => 'getsentry.com',
-                    'Accept'          => 'text/html',
-                    'Accept-Charset'  => 'utf-8',
-                    'Cookie'          => 'cupcake: strawberry',
-                    'Content-Type'    => 'text/xml',
-                    'Content-Length'  => '99',
+                    'Host' => 'getsentry.com',
+                    'Accept' => 'text/html',
+                    'Accept-Charset' => 'utf-8',
+                    'Cookie' => 'cupcake: strawberry',
+                    'Content-Type' => 'text/xml',
+                    'Content-Length' => '99',
                 ],
-            ]
+            ],
         ];
 
         $config = new Configuration([
@@ -559,7 +558,7 @@ class ClientTest extends TestCase
         $client->user_context([
             'id' => 'unique_id',
             'email' => 'foo@example.com',
-            'username' => 'my_user'
+            'username' => 'my_user',
         ]);
 
         $client->captureMessage('foo');
@@ -649,11 +648,11 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])->getClient();
         $client->store_errors_for_bulk_send = true;
 
-        require_once(__DIR__ . '/Fixtures/code/Latin1File.php');
+        require_once __DIR__ . '/Fixtures/code/Latin1File.php';
 
         $frames = $client->_pending_events[0]['exception']['values'][0]['stacktrace']['frames'];
 
-        $utf8String = "// äöü";
+        $utf8String = '// äöü';
         $found = false;
 
         foreach ($frames as $frame) {
@@ -683,8 +682,8 @@ class ClientTest extends TestCase
         $this->assertNull($client->captureLastError());
         $this->assertEmpty($client->_pending_events);
 
-        /** @var $undefined */
-        /** @noinspection PhpExpressionResultUnusedInspection */
+        /* @var $undefined */
+        /* @noinspection PhpExpressionResultUnusedInspection */
         @$undefined;
 
         $client->captureLastError();
@@ -700,7 +699,7 @@ class ClientTest extends TestCase
 
         $client->capture([
             'message' => 'test',
-            'event_id' => 'abc'
+            'event_id' => 'abc',
         ]);
 
         $this->assertEquals('abc', $client->getLastEventID());
@@ -817,7 +816,7 @@ class ClientTest extends TestCase
                 $this->assertEquals('test', $data['message']);
 
                 return false;
-            }
+            },
         ]);
 
         /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
@@ -863,7 +862,7 @@ class ClientTest extends TestCase
             'context' => [
                 'line' => 1216,
                 'stack' => [
-                    1, [2], 3
+                    1, [2], 3,
                 ],
             ],
         ]];
@@ -873,7 +872,7 @@ class ClientTest extends TestCase
             'context' => [
                 'line' => 1216,
                 'stack' => [
-                    1, 'Array of length 1', 3
+                    1, 'Array of length 1', 3,
                 ],
             ],
         ]], $data);
@@ -908,7 +907,7 @@ class ClientTest extends TestCase
             foreach ($reflection2->getProperties(\ReflectionProperty::IS_PUBLIC) as $property2) {
                 $sub_value = $property2->getValue($value);
                 if (is_array($sub_value)) {
-                    $new_value[$property2->getName()] = 'Array of length '.count($sub_value);
+                    $new_value[$property2->getName()] = 'Array of length ' . count($sub_value);
                     continue;
                 }
                 if (is_object($sub_value)) {
@@ -971,7 +970,7 @@ class ClientTest extends TestCase
             'context' => [
                 'line' => 1216,
                 'stack' => [
-                    1, [2], 3
+                    1, [2], 3,
                 ],
             ],
         ]];
@@ -981,7 +980,7 @@ class ClientTest extends TestCase
             'context' => [
                 'line' => 1216,
                 'stack' => [
-                    1, 'Array of length 1', 3
+                    1, 'Array of length 1', 3,
                 ],
             ],
         ]], $data);
@@ -997,7 +996,7 @@ class ClientTest extends TestCase
                     1, [
                         'foo' => 'bar',
                         'level4' => [['level5', 'level5 a'], 2],
-                    ], 3
+                    ], 3,
                 ],
             ],
         ]];
@@ -1010,7 +1009,7 @@ class ClientTest extends TestCase
                     1, [
                         'foo' => 'bar',
                         'level4' => ['Array of length 2', 2],
-                    ], 3
+                    ], 3,
                 ],
             ],
         ]], $data);
@@ -1047,13 +1046,14 @@ class ClientTest extends TestCase
     }
 
     /**
-     * Set the server array to the test values, check the current url
+     * Set the server array to the test values, check the current url.
      *
      * @dataProvider currentUrlProvider
-     * @param array $serverVars
-     * @param array $options
-     * @param string $expected - the url expected
-     * @param string $message - fail message
+     *
+     * @param array  $serverVars
+     * @param array  $options
+     * @param string $expected   - the url expected
+     * @param string $message    - fail message
      * @covers \Raven\Client::get_current_url
      * @covers \Raven\Client::isHttps
      */
@@ -1080,7 +1080,7 @@ class ClientTest extends TestCase
      *  $_SERVER data
      *  config
      *  expected url
-     *  Fail message
+     *  Fail message.
      *
      * @return array
      */
@@ -1091,7 +1091,7 @@ class ClientTest extends TestCase
                 [],
                 [],
                 null,
-                'No url expected for empty REQUEST_URI'
+                'No url expected for empty REQUEST_URI',
             ],
             [
                 [
@@ -1100,48 +1100,48 @@ class ClientTest extends TestCase
                 ],
                 [],
                 'http://example.com/',
-                'The url is expected to be http with the request uri'
+                'The url is expected to be http with the request uri',
             ],
             [
                 [
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'HTTPS' => 'on'
+                    'HTTPS' => 'on',
                 ],
                 [],
                 'https://example.com/',
-                'The url is expected to be https because of HTTPS on'
+                'The url is expected to be https because of HTTPS on',
             ],
             [
                 [
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'SERVER_PORT' => '443'
+                    'SERVER_PORT' => '443',
                 ],
                 [],
                 'https://example.com/',
-                'The url is expected to be https because of the server port'
+                'The url is expected to be https because of the server port',
             ],
             [
                 [
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'X-FORWARDED-PROTO' => 'https',
                 ],
                 [],
                 'http://example.com/',
-                'The url is expected to be http because the X-Forwarded header is ignored'
+                'The url is expected to be http because the X-Forwarded header is ignored',
             ],
             [
                 [
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'X-FORWARDED-PROTO' => 'https',
                 ],
                 ['trust_x_forwarded_proto' => true],
                 'https://example.com/',
-                'The url is expected to be https because the X-Forwarded header is trusted'
-            ]
+                'The url is expected to be https because the X-Forwarded header is trusted',
+            ],
         ];
     }
 
@@ -1152,7 +1152,7 @@ class ClientTest extends TestCase
     {
         $method = new \ReflectionMethod('\\Raven\\Client', 'uuid4');
         $method->setAccessible(true);
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 1000; ++$i) {
             $this->assertRegExp('/^[0-9a-z-]+$/', $method->invoke(null));
         }
     }
@@ -1169,12 +1169,12 @@ class ClientTest extends TestCase
         $callable = [$this, 'stabClosureVoid'];
 
         $data = [
-            ['_lasterror', null, null,],
-            ['_lasterror', null, 'value',],
-            ['_lasterror', null, mt_rand(100, 999),],
-            ['_last_sentry_error', null, (object)['error' => 'test',],],
-            ['_last_event_id', null, mt_rand(100, 999),],
-            ['_last_event_id', null, 'value',],
+            ['_lasterror', null, null],
+            ['_lasterror', null, 'value'],
+            ['_lasterror', null, mt_rand(100, 999)],
+            ['_last_sentry_error', null, (object) ['error' => 'test']],
+            ['_last_event_id', null, mt_rand(100, 999)],
+            ['_last_event_id', null, 'value'],
             ['_shutdown_function_has_been_set', null, true],
             ['_shutdown_function_has_been_set', null, false],
         ];
@@ -1195,18 +1195,18 @@ class ClientTest extends TestCase
         } else {
             list($property_name, $function_name, $value_in, $value_out) = $datum;
         }
-        if (is_null($function_name)) {
+        if (null === $function_name) {
             $function_name = str_replace('_', '', $property_name);
         }
 
-        $method_get_name = 'get'.$function_name;
-        $method_set_name = 'set'.$function_name;
+        $method_get_name = 'get' . $function_name;
+        $method_set_name = 'set' . $function_name;
         $property = new \ReflectionProperty('\\Raven\\Client', $property_name);
         $property->setAccessible(true);
 
         if (method_exists($client, $method_set_name)) {
             $setter_output = $client->$method_set_name($value_in);
-            if (!is_null($setter_output) and is_object($setter_output)) {
+            if (null !== $setter_output and is_object($setter_output)) {
                 // chaining call test
                 $this->assertEquals(spl_object_hash($client), spl_object_hash($setter_output));
             }
@@ -1226,13 +1226,13 @@ class ClientTest extends TestCase
 
     private function assertMixedValueAndArray($expected_value, $actual_value)
     {
-        if (is_null($expected_value)) {
+        if (null === $expected_value) {
             $this->assertNull($actual_value);
         } elseif ($expected_value === true) {
             $this->assertTrue($actual_value);
         } elseif ($expected_value === false) {
             $this->assertFalse($actual_value);
-        } elseif (is_string($expected_value) or is_integer($expected_value) or is_double($expected_value)) {
+        } elseif (is_string($expected_value) or is_int($expected_value) or is_float($expected_value)) {
             $this->assertEquals($expected_value, $actual_value);
         } elseif (is_array($expected_value)) {
             $this->assertInternalType('array', $actual_value);
@@ -1261,7 +1261,7 @@ class ClientTest extends TestCase
                        E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, ];
         $predefined[] = E_DEPRECATED;
         $predefined[] = E_USER_DEPRECATED;
-        $predefined_values = ['debug', 'info', 'warning', 'warning', 'error', 'fatal', ];
+        $predefined_values = ['debug', 'info', 'warning', 'warning', 'error', 'fatal'];
 
         // step 1
         foreach ($predefined as &$key) {
@@ -1277,7 +1277,7 @@ class ClientTest extends TestCase
         $this->assertEquals('error', $client->translateSeverity(123456));
         $this->assertEquals('error', $client->translateSeverity(123456));
         // step 3
-        $client->registerSeverityMap([123456 => 'foo', ]);
+        $client->registerSeverityMap([123456 => 'foo']);
         $this->assertMixedValueAndArray([123456 => 'foo'], $reflection->getValue($client));
         foreach ($predefined as &$key) {
             $this->assertContains($client->translateSeverity($key), $predefined_values);
@@ -1285,12 +1285,12 @@ class ClientTest extends TestCase
         $this->assertEquals('foo', $client->translateSeverity(123456));
         $this->assertEquals('error', $client->translateSeverity(123457));
         // step 4
-        $client->registerSeverityMap([E_USER_ERROR => 'bar', ]);
+        $client->registerSeverityMap([E_USER_ERROR => 'bar']);
         $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
         $this->assertEquals('error', $client->translateSeverity(123456));
         $this->assertEquals('error', $client->translateSeverity(123457));
         // step 5
-        $client->registerSeverityMap([E_USER_ERROR => 'bar', 123456 => 'foo', ]);
+        $client->registerSeverityMap([E_USER_ERROR => 'bar', 123456 => 'foo']);
         $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
         $this->assertEquals('foo', $client->translateSeverity(123456));
         $this->assertEquals('error', $client->translateSeverity(123457));
@@ -1524,7 +1524,7 @@ class ClientTest extends TestCase
 
         // step 3
         session_id($session_id);
-        @session_start(['use_cookies' => false, ]);
+        @session_start(['use_cookies' => false]);
         $_SESSION = ['foo' => 'bar'];
         $output = $client->get_user_data();
         $this->assertInternalType('array', $output);
@@ -1549,7 +1549,7 @@ class ClientTest extends TestCase
         foreach ([Client::MESSAGE_LIMIT * 3, 100] as $length) {
             $message = '';
 
-            for ($i = 0; $i < $length; $i++) {
+            for ($i = 0; $i < $length; ++$i) {
                 $message .= chr($i % 256);
             }
 
@@ -1663,7 +1663,7 @@ class ClientTest extends TestCase
             ->setHttpClient($httpClient)
             ->getClient();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 10; ++$i) {
             $client->captureMessage('foobar');
         }
 

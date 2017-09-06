@@ -121,7 +121,7 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
-     * Sets the type of the breadcrumb
+     * Sets the type of the breadcrumb.
      *
      * @param string $type The type
      *
@@ -295,7 +295,7 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Sets the breadcrumb timestamp.
      *
-     * @param float $timestamp The timestamp.
+     * @param float $timestamp the timestamp
      *
      * @return static
      */

@@ -32,7 +32,7 @@ final class SentryAuth implements Authentication
     /**
      * Constructor.
      *
-     * @param Configuration $configuration  The Raven client configuration
+     * @param Configuration $configuration The Raven client configuration
      */
     public function __construct(Configuration $configuration)
     {

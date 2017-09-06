@@ -4,8 +4,6 @@ namespace Raven;
 
 /**
  * Storage for additional client context.
- *
- * @package raven
  */
 class Context
 {

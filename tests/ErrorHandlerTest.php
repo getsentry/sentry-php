@@ -114,7 +114,7 @@ class ErrorHandlerTest extends TestCase
                ->with($this->isInstanceOf('Exception'));
 
         $handler = new \Raven\ErrorHandler($client);
-        
+
         set_exception_handler(null);
         $handler->registerExceptionHandler(false);
 

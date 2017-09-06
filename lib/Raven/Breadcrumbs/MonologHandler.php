@@ -12,13 +12,13 @@ class MonologHandler extends AbstractProcessingHandler
      * Translates Monolog log levels to Raven log levels.
      */
     protected $logLevels = [
-        Logger::DEBUG     => Client::LEVEL_DEBUG,
-        Logger::INFO      => Client::LEVEL_INFO,
-        Logger::NOTICE    => Client::LEVEL_INFO,
-        Logger::WARNING   => Client::LEVEL_WARNING,
-        Logger::ERROR     => Client::LEVEL_ERROR,
-        Logger::CRITICAL  => Client::LEVEL_FATAL,
-        Logger::ALERT     => Client::LEVEL_FATAL,
+        Logger::DEBUG => Client::LEVEL_DEBUG,
+        Logger::INFO => Client::LEVEL_INFO,
+        Logger::NOTICE => Client::LEVEL_INFO,
+        Logger::WARNING => Client::LEVEL_WARNING,
+        Logger::ERROR => Client::LEVEL_ERROR,
+        Logger::CRITICAL => Client::LEVEL_FATAL,
+        Logger::ALERT => Client::LEVEL_FATAL,
         Logger::EMERGENCY => Client::LEVEL_FATAL,
     ];
 
@@ -43,6 +43,7 @@ class MonologHandler extends AbstractProcessingHandler
 
     /**
      * @param string $message
+     *
      * @return array|null
      */
     protected function parseException($message)
@@ -66,7 +67,7 @@ class MonologHandler extends AbstractProcessingHandler
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
             /**
-             * @var \Exception $exc
+             * @var \Exception
              */
             $exc = $record['context']['exception'];
 

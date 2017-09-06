@@ -12,7 +12,6 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
-use Raven\Configuration;
 
 class DummyIntegration_Raven_Client extends \Raven\Client
 {
@@ -22,6 +21,7 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     {
         return $this->__sent_events;
     }
+
     public function send(&$data)
     {
         if (false === $this->config->shouldCapture($data)) {
@@ -30,10 +30,12 @@ class DummyIntegration_Raven_Client extends \Raven\Client
         }
         $this->__sent_events[] = $data;
     }
+
     public static function is_http_request()
     {
         return true;
     }
+
     // short circuit breadcrumbs
     public function registerDefaultBreadcrumbHandlers()
     {

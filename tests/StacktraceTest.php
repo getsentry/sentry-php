@@ -83,7 +83,7 @@ class StacktraceTest extends TestCase
             'file' => 'path/to/file',
             'line' => 12,
             'function' => 'test_function',
-            'args' => [1, 'foo']
+            'args' => [1, 'foo'],
         ]);
 
         $frames = $stacktrace->getFrames();
@@ -249,13 +249,13 @@ class StacktraceTest extends TestCase
         ];
 
         $frame = [
-            "file" => dirname(__FILE__) . "/resources/a.php",
-            "line" => 9,
-            "args"=> [
+            'file' => __DIR__ . '/resources/a.php',
+            'line' => 9,
+            'args' => [
                 &$newFoo,
                 &$nestedArray,
             ],
-            "function" => "a_test",
+            'function' => 'a_test',
         ];
 
         $result = Stacktrace::getFrameArguments($frame, 5);

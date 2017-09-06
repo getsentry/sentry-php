@@ -21,12 +21,10 @@ use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
 
 /**
- * Raven PHP Client
+ * Raven PHP Client.
  *
- * @package raven
  * @doc https://docs.sentry.io/clients/php/config/
  */
-
 class Client
 {
     const VERSION = '2.0.x-dev';
@@ -59,7 +57,7 @@ class Client
     const LEVEL_FATAL = 'fatal';
 
     /**
-     * Default message limit
+     * Default message limit.
      */
     const MESSAGE_LIMIT = 1024;
 
@@ -69,7 +67,7 @@ class Client
     protected $recorder;
 
     /**
-     * This constant defines the client's user-agent string
+     * This constant defines the client's user-agent string.
      */
     const USER_AGENT = 'sentry-php/' . self::VERSION;
 
@@ -90,21 +88,21 @@ class Client
     public $store_errors_for_bulk_send = false;
 
     /**
-     * @var \Raven\ErrorHandler $error_handler
+     * @var \Raven\ErrorHandler
      */
     protected $error_handler;
 
     /**
-     * @var \Raven\Serializer $serializer
+     * @var \Raven\Serializer
      */
     protected $serializer;
     /**
-     * @var \Raven\Serializer $serializer
+     * @var \Raven\Serializer
      */
     protected $reprSerializer;
 
     /**
-     * @var \Raven\Processor[] $processors An array of classes to use to process data before it is sent to Sentry
+     * @var \Raven\Processor[] An array of classes to use to process data before it is sent to Sentry
      */
     protected $processors = [];
 
@@ -120,7 +118,7 @@ class Client
     public $_user;
 
     /**
-     * @var array[] $_pending_events
+     * @var array[]
      */
     public $_pending_events = [];
 
@@ -186,7 +184,7 @@ class Client
     }
 
     /**
-     * Destruct all objects contain link to this object
+     * Destruct all objects contain link to this object.
      *
      * This method can not delete shutdown handler
      */
@@ -213,9 +211,6 @@ class Client
         $this->recorder->clear();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getConfig()
     {
         return $this->config;
@@ -253,6 +248,7 @@ class Client
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
+
         return $this;
     }
 
@@ -268,7 +264,7 @@ class Client
         $processorsOptions = $this->config->getProcessorsOptions();
 
         foreach ($this->config->getProcessors() as $processor) {
-            /**  @var Processor $processorInstance */
+            /** @var Processor $processorInstance */
             $processorInstance = new $processor($this);
 
             if (isset($processorsOptions[$processor])) {
@@ -292,6 +288,7 @@ class Client
      * Given an identifier, returns a Sentry searchable string.
      *
      * @param mixed $ident
+     *
      * @return mixed
      * @codeCoverageIgnore
      */
@@ -302,12 +299,14 @@ class Client
     }
 
     /**
-     * @param string     $message The message (primary description) for the event.
-     * @param array      $params  params to use when formatting the message.
+     * @param string     $message the message (primary description) for the event
+     * @param array      $params  params to use when formatting the message
      * @param string     $level   Log level group
      * @param bool|array $stack
      * @param mixed      $vars
+     *
      * @return string|null
+     *
      * @deprecated
      * @codeCoverageIgnore
      */
@@ -323,7 +322,9 @@ class Client
 
     /**
      * @param Exception $exception
+     *
      * @return string|null
+     *
      * @deprecated
      * @codeCoverageIgnore
      */
@@ -333,13 +334,14 @@ class Client
     }
 
     /**
-     * Log a message to sentry
+     * Log a message to sentry.
      *
-     * @param string     $message The message (primary description) for the event.
-     * @param array      $params  params to use when formatting the message.
-     * @param array      $data    Additional attributes to pass with this event (see Sentry docs).
+     * @param string     $message the message (primary description) for the event
+     * @param array      $params  params to use when formatting the message
+     * @param array      $data    additional attributes to pass with this event (see Sentry docs)
      * @param bool|array $stack
      * @param mixed      $vars
+     *
      * @return string|null
      */
     public function captureMessage(
@@ -377,12 +379,13 @@ class Client
     }
 
     /**
-     * Log an exception to sentry
+     * Log an exception to sentry.
      *
-     * @param \Exception $exception The Exception object.
-     * @param array      $data      Additional attributes to pass with this event (see Sentry docs).
+     * @param \Exception $exception the Exception object
+     * @param array      $data      additional attributes to pass with this event (see Sentry docs)
      * @param mixed      $logger
      * @param mixed      $vars
+     *
      * @return string|null
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
@@ -451,9 +454,9 @@ class Client
         return $this->capture($data, $trace, $vars);
     }
 
-
     /**
      * Capture the most recent error (obtained with ``error_get_last``).
+     *
      * @return string|null
      */
     public function captureLastError()
@@ -476,7 +479,7 @@ class Client
     }
 
     /**
-     * Log an query to sentry
+     * Log an query to sentry.
      *
      * @param string|null $query
      * @param string      $level
@@ -488,13 +491,14 @@ class Client
             'message' => $query,
             'level' => $level,
             'sentry.interfaces.Query' => [
-                'query' => $query
-            ]
+                'query' => $query,
+            ],
         ];
 
         if ($engine !== '') {
             $data['sentry.interfaces.Query']['engine'] = $engine;
         }
+
         return $this->capture($data, false);
     }
 
@@ -584,6 +588,7 @@ class Client
                 $user['data'] = $_SESSION;
             }
         }
+
         return [
             'user' => $user,
         ];
@@ -726,7 +731,7 @@ class Client
         }
         if (!empty($data['tags'])) {
             foreach ($data['tags'] as $key => $value) {
-                $data['tags'][$key] = @(string)$value;
+                $data['tags'][$key] = @(string) $value;
             }
         }
         if (!empty($data['contexts'])) {
@@ -735,7 +740,7 @@ class Client
     }
 
     /**
-     * Process data through all defined \Raven\Processor sub-classes
+     * Process data through all defined \Raven\Processor sub-classes.
      *
      * @param array $data Associative array of data to log
      */
@@ -777,6 +782,7 @@ class Client
 
         if ($this->config->getTransport()) {
             call_user_func($this->getConfig()->getTransport(), $this, $data);
+
             return;
         }
 
@@ -822,7 +828,7 @@ class Client
     }
 
     /**
-     * Generate an uuid4 value
+     * Generate an uuid4 value.
      *
      * @return string
      */
@@ -856,7 +862,7 @@ class Client
     }
 
     /**
-     * Return the URL for the current request
+     * Return the URL for the current request.
      *
      * @return string|null
      */
@@ -869,10 +875,11 @@ class Client
 
         // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
         $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
+            : (!empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
         $httpS = $this->isHttps() ? 's' : '';
+
         return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
     }
 
@@ -901,10 +908,11 @@ class Client
     }
 
     /**
-     * Get the value of a key from $_SERVER
+     * Get the value of a key from $_SERVER.
      *
      * @param string $key Key whose value you wish to obtain
-     * @return string     Key's value
+     *
+     * @return string Key's value
      */
     private static function _server_variable($key)
     {
@@ -916,10 +924,11 @@ class Client
     }
 
     /**
-     * Translate a PHP Error constant into a Sentry log level group
+     * Translate a PHP Error constant into a Sentry log level group.
      *
      * @param string $severity PHP E_$x error constant
-     * @return string          Sentry log level group
+     *
+     * @return string Sentry log level group
      */
     public function translateSeverity($severity)
     {
@@ -943,12 +952,13 @@ class Client
             case E_STRICT:             return \Raven\Client::LEVEL_INFO;
             case E_RECOVERABLE_ERROR:  return \Raven\Client::LEVEL_ERROR;
         }
+
         return \Raven\Client::LEVEL_ERROR;
     }
 
     /**
      * Provide a map of PHP Error constants to Sentry logging groups to use instead
-     * of the defaults in translateSeverity()
+     * of the defaults in translateSeverity().
      *
      * @param string[] $map
      */
@@ -958,9 +968,10 @@ class Client
     }
 
     /**
-     * Convenience function for setting a user's ID and Email
+     * Convenience function for setting a user's ID and Email.
      *
      * @deprecated
+     *
      * @param string      $id    User's ID
      * @param string|null $email User's email
      * @param array       $data  Additional user data
