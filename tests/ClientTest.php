@@ -1138,11 +1138,11 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
 
         $data = [
-            ['lastError', null, null,],
-            ['lastError', null, 'value',],
-            ['lastError', null, mt_rand(100, 999),],
-            ['lastEventId', null, mt_rand(100, 999),],
-            ['lastEventId', null, 'value',],
+            ['lastError', null, null],
+            ['lastError', null, 'value'],
+            ['lastError', null, mt_rand(100, 999)],
+            ['lastEventId', null, mt_rand(100, 999)],
+            ['lastEventId', null, 'value'],
             ['shutdownFunctionHasBeenSet', null, true],
             ['shutdownFunctionHasBeenSet', null, false],
         ];

@@ -32,7 +32,7 @@ class Client
     const PROTOCOL = '6';
 
     /**
-     * Debug log levels
+     * Debug log levels.
      */
     const LEVEL_DEBUG = 'debug';
     const LEVEL_INFO = 'info';
@@ -218,6 +218,7 @@ class Client
 
     /**
      * Installs any available automated hooks (such as error_reporting).
+     *
      * @throws \Raven\Exception
      */
     public function install()
@@ -230,6 +231,7 @@ class Client
         $this->errorHandler->registerExceptionHandler();
         $this->errorHandler->registerErrorHandler();
         $this->errorHandler->registerShutdownFunction();
+
         return $this;
     }
 

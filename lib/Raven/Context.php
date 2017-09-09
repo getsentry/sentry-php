@@ -40,7 +40,7 @@ class Context
     public function setTag($name, $value)
     {
         if (
-            ! is_string($name)
+            !is_string($name)
             || '' === $name
         ) {
             throw new \InvalidArgumentException('Invalid tag name');
