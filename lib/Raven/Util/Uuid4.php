@@ -12,7 +12,7 @@ class Uuid4
     public static function generate()
     {
         $uuid = Uuid::uuid4()->toString();
-        
+
         return str_replace('-', '', $uuid);
     }
 }
