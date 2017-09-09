@@ -1146,18 +1146,6 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @covers \Raven\Client::uuid4()
-     */
-    public function testUuid4()
-    {
-        $method = new \ReflectionMethod('\\Raven\\Client', 'uuid4');
-        $method->setAccessible(true);
-        for ($i = 0; $i < 1000; ++$i) {
-            $this->assertRegExp('/^[0-9a-z-]+$/', $method->invoke(null));
-        }
-    }
-
-    /**
      * @covers \Raven\Client::getLastError
      * @covers \Raven\Client::getLastEventID
      * @covers \Raven\Client::getLastSentryError
