@@ -19,6 +19,7 @@ use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Util\JSON;
+use Raven\Util\Uuid4;
 
 /**
  * Raven PHP Client.
@@ -625,7 +626,7 @@ class Client
             $data['extra'] = [];
         }
         if (!isset($data['event_id'])) {
-            $data['event_id'] = static::uuid4();
+            $data['event_id'] = Uuid4::generate();
         }
 
         if (isset($data['message'])) {
