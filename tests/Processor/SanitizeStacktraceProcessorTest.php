@@ -31,7 +31,7 @@ class SanitizeStacktraceProcessorTest extends TestCase
     protected function setUp()
     {
         $this->client = ClientBuilder::create()->getClient();
-        $this->client->store_errors_for_bulk_send = true;
+        $this->client->storeErrorsForBulkSend = true;
 
         $this->processor = new SanitizeStacktraceProcessor($this->client);
     }
@@ -44,9 +44,9 @@ class SanitizeStacktraceProcessorTest extends TestCase
             $this->client->captureException($exception);
         }
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $this->processor->process($this->client->pendingEvents[0]);
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
+        foreach ($this->client->pendingEvents[0]['exception']['values'] as $exceptionValue) {
             foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
                 $this->assertArrayNotHasKey('pre_context', $frame);
                 $this->assertArrayNotHasKey('context_line', $frame);
@@ -67,9 +67,9 @@ class SanitizeStacktraceProcessorTest extends TestCase
             $this->client->captureException($exception);
         }
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $this->processor->process($this->client->pendingEvents[0]);
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
+        foreach ($this->client->pendingEvents[0]['exception']['values'] as $exceptionValue) {
             foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
                 $this->assertArrayNotHasKey('pre_context', $frame);
                 $this->assertArrayNotHasKey('context_line', $frame);

@@ -259,7 +259,7 @@ There are three primary methods for providing request context:
 .. code-block:: php
 
     // bind the logged in user
-    $client->user_context(array('email' => 'foo@example.com'));
+    $client->setUserContext(array('email' => 'foo@example.com'));
 
     // tag the request with something interesting
     $client->tags_context(array('interesting' => 'yes'));

@@ -48,11 +48,11 @@ Much of the usefulness of Sentry comes from additional context data with
 the events.  The PHP client makes this very convenient by providing
 methods to set thread local context data that is then submitted
 automatically with all events.  For instance you can use the
-``user_context`` method to add information about the current user:
+``setUserContext`` method to add information about the current user:
 
 .. sourcecode:: php
 
-    $client->user_context(array(
+    $client->setUserContext(array(
         'email' => $USER->getEmail()
     ));
 

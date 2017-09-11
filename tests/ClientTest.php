@@ -55,19 +55,19 @@ class Dummy_Raven_Client extends \Raven\Client
         $this->__sent_events[] = $data;
     }
 
-    public static function is_http_request()
+    public static function isHttpRequest()
     {
         return true;
     }
 
-    public function get_http_data()
+    public function getHttpData()
     {
-        return parent::get_http_data();
+        return parent::getHttpData();
     }
 
-    public function get_user_data()
+    public function getUserData()
     {
-        return parent::get_user_data();
+        return parent::getUserData();
     }
 
     // short circuit breadcrumbs
@@ -88,7 +88,7 @@ class Dummy_Raven_Client extends \Raven\Client
      */
     public function test_get_current_url()
     {
-        return $this->get_current_url();
+        return $this->getCurrentUrl();
     }
 }
 
@@ -97,7 +97,7 @@ class Dummy_Raven_Client_No_Http extends Dummy_Raven_Client
     /**
      * @return bool
      */
-    public static function is_http_request()
+    public static function isHttpRequest()
     {
         return false;
     }
@@ -219,117 +219,117 @@ class ClientTest extends TestCase
     public function testOptionsExtraData()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
     }
 
     public function testOptionsExtraDataWithNull()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
         $client->captureMessage('Test Message %s', ['foo'], null);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
     }
 
     public function testEmptyExtraData()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('Test Message %s', ['foo']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertArrayNotHasKey('extra', $client->_pending_events[0]);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertArrayNotHasKey('extra', $client->pendingEvents[0]);
     }
 
     public function testCaptureMessageDoesHandleUninterpolatedMessage()
     {
         $client = ClientBuilder::create()->getClient();
 
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('foo %s');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo %s', $client->_pending_events[0]['message']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('foo %s', $client->pendingEvents[0]['message']);
     }
 
     public function testCaptureMessageDoesHandleInterpolatedMessage()
     {
         $client = ClientBuilder::create()->getClient();
 
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('foo %s', ['bar']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
     }
 
     public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
     {
         $client = ClientBuilder::create(['release' => '1.2.3'])->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $this->assertEquals('1.2.3', $client->getConfig()->getRelease());
 
         $client->captureMessage('foo %s', ['bar']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
-        $this->assertEquals('1.2.3', $client->_pending_events[0]['release']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
+        $this->assertEquals('1.2.3', $client->pendingEvents[0]['release']);
     }
 
     public function testCaptureMessageSetsInterface()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('foo %s', ['bar']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['message']);
-        $this->assertArrayHasKey('sentry.interfaces.Message', $client->_pending_events[0]);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['sentry.interfaces.Message']['formatted']);
-        $this->assertEquals('foo %s', $client->_pending_events[0]['sentry.interfaces.Message']['message']);
-        $this->assertEquals(['bar'], $client->_pending_events[0]['sentry.interfaces.Message']['params']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('foo bar', $client->pendingEvents[0]['message']);
+        $this->assertArrayHasKey('sentry.interfaces.Message', $client->pendingEvents[0]);
+        $this->assertEquals('foo bar', $client->pendingEvents[0]['sentry.interfaces.Message']['formatted']);
+        $this->assertEquals('foo %s', $client->pendingEvents[0]['sentry.interfaces.Message']['message']);
+        $this->assertEquals(['bar'], $client->pendingEvents[0]['sentry.interfaces.Message']['params']);
     }
 
     public function testCaptureMessageHandlesOptionsAsThirdArg()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('Test Message %s', ['foo'], [
             'level' => Dummy_Raven_Client::LEVEL_WARNING,
             'extra' => ['foo' => 'bar'],
         ]);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
-        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->pendingEvents[0]['level']);
+        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
+        $this->assertEquals('Test Message foo', $client->pendingEvents[0]['message']);
     }
 
     public function testCaptureMessageHandlesLevelAsThirdArg()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::LEVEL_WARNING);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->pendingEvents[0]['level']);
+        $this->assertEquals('Test Message foo', $client->pendingEvents[0]['message']);
     }
 
     /**
@@ -339,18 +339,18 @@ class ClientTest extends TestCase
     {
         // TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureException($this->create_exception());
 
-        $this->assertCount(1, $client->_pending_events);
+        $this->assertCount(1, $client->pendingEvents);
 
-        $this->assertCount(1, $client->_pending_events[0]['exception']['values']);
-        $this->assertEquals('Foo bar', $client->_pending_events[0]['exception']['values'][0]['value']);
-        $this->assertEquals('Exception', $client->_pending_events[0]['exception']['values'][0]['type']);
-        $this->assertNotEmpty($client->_pending_events[0]['exception']['values'][0]['stacktrace']['frames']);
+        $this->assertCount(1, $client->pendingEvents[0]['exception']['values']);
+        $this->assertEquals('Foo bar', $client->pendingEvents[0]['exception']['values'][0]['value']);
+        $this->assertEquals('Exception', $client->pendingEvents[0]['exception']['values'][0]['type']);
+        $this->assertNotEmpty($client->pendingEvents[0]['exception']['values'][0]['stacktrace']['frames']);
 
-        $frames = $client->_pending_events[0]['exception']['values'][0]['stacktrace']['frames'];
+        $frames = $client->pendingEvents[0]['exception']['values'][0]['stacktrace']['frames'];
         $frame = $frames[count($frames) - 1];
 
         $this->assertTrue($frame['lineno'] > 0);
@@ -365,20 +365,20 @@ class ClientTest extends TestCase
     {
         // TODO: it'd be nice if we could mock the stacktrace extraction function here
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureException($this->create_chained_exception());
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertCount(2, $client->_pending_events[0]['exception']['values']);
-        $this->assertEquals('Foo bar', $client->_pending_events[0]['exception']['values'][0]['value']);
-        $this->assertEquals('Child exc', $client->_pending_events[0]['exception']['values'][1]['value']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertCount(2, $client->pendingEvents[0]['exception']['values']);
+        $this->assertEquals('Foo bar', $client->pendingEvents[0]['exception']['values'][0]['value']);
+        $this->assertEquals('Child exc', $client->pendingEvents[0]['exception']['values'][1]['value']);
     }
 
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $e1 = new \ErrorException('First', 0, E_DEPRECATED);
         $e2 = new \ErrorException('Second', 0, E_NOTICE, __FILE__, __LINE__, $e1);
@@ -388,37 +388,37 @@ class ClientTest extends TestCase
         $client->captureException($e2);
         $client->captureException($e3);
 
-        $this->assertCount(3, $client->_pending_events);
-        $this->assertEquals(Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals(Client::LEVEL_INFO, $client->_pending_events[1]['level']);
-        $this->assertEquals(Client::LEVEL_ERROR, $client->_pending_events[2]['level']);
+        $this->assertCount(3, $client->pendingEvents);
+        $this->assertEquals(Client::LEVEL_WARNING, $client->pendingEvents[0]['level']);
+        $this->assertEquals(Client::LEVEL_INFO, $client->pendingEvents[1]['level']);
+        $this->assertEquals(Client::LEVEL_ERROR, $client->pendingEvents[2]['level']);
     }
 
     public function testCaptureExceptionHandlesOptionsAsSecondArg()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureException($this->create_exception(), ['culprit' => 'test']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('test', $client->_pending_events[0]['culprit']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('test', $client->pendingEvents[0]['culprit']);
     }
 
     public function testCaptureExceptionHandlesExcludeOption()
     {
         $client = ClientBuilder::create(['excluded_exceptions' => ['Exception']])->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureException($this->create_exception(), 'test');
 
-        $this->assertEmpty($client->_pending_events);
+        $this->assertEmpty($client->pendingEvents);
     }
 
     public function testCaptureExceptionInvalidUTF8()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         try {
             invalid_encoding();
@@ -426,10 +426,10 @@ class ClientTest extends TestCase
             $client->captureException($ex);
         }
 
-        $this->assertCount(1, $client->_pending_events);
+        $this->assertCount(1, $client->pendingEvents);
 
         try {
-            $client->send($client->_pending_events[0]);
+            $client->send($client->pendingEvents[0]);
         } catch (\Exception $ex) {
             $this->fail();
         }
@@ -480,7 +480,7 @@ class ClientTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, $client->get_default_data());
+        $this->assertEquals($expected, $client->getDefaultData());
     }
 
     /**
@@ -547,90 +547,91 @@ class ClientTest extends TestCase
 
         $client = new Dummy_Raven_Client($config, $httpClient, $requestFactory);
 
-        $this->assertEquals($expected, $client->get_http_data());
+        $this->assertEquals($expected, $client->getHttpData());
     }
 
     public function testCaptureMessageWithUserData()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
-        $client->user_context([
-            'id' => 'unique_id',
-            'email' => 'foo@example.com',
+        $context = $client->getContext();
+        $context->setUserId('unique_id');
+        $context->setUserEmail('foo@example.com');
+        $context->mergeUserData([
             'username' => 'my_user',
         ]);
 
         $client->captureMessage('foo');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('unique_id', $client->_pending_events[0]['user']['id']);
-        $this->assertEquals('my_user', $client->_pending_events[0]['user']['username']);
-        $this->assertEquals('foo@example.com', $client->_pending_events[0]['user']['email']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('unique_id', $client->pendingEvents[0]['user']['id']);
+        $this->assertEquals('my_user', $client->pendingEvents[0]['user']['username']);
+        $this->assertEquals('foo@example.com', $client->pendingEvents[0]['user']['email']);
     }
 
     public function testCaptureMessageWithNoUserData()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureMessage('foo');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(session_id(), $client->_pending_events[0]['user']['id']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(session_id(), $client->pendingEvents[0]['user']['id']);
     }
 
     public function testCaptureMessageWithUnserializableUserData()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
-        $client->user_context([
-            'email' => 'foo@example.com',
-            'data' => [
-                'error' => new \Exception('test'),
-            ],
+        $context = $client->getContext();
+        $context->setUserEmail('foo@example.com');
+        $context->mergeUserData([
+            'error' => new \Exception('test'),
         ]);
 
         $client->captureMessage('test');
 
-        $this->assertCount(1, $client->_pending_events);
+        $this->assertCount(1, $client->pendingEvents);
     }
 
     public function testCaptureMessageWithTagsContext()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
+        $context = $client->getContext();
 
-        $client->tags_context(['foo' => 'bar']);
-        $client->tags_context(['biz' => 'boz']);
-        $client->tags_context(['biz' => 'baz']);
+        $context->setTag('foo', 'bar');
+        $context->setTag('biz', 'boz');
+        $context->setTag('biz', 'baz');
 
         $client->captureMessage('test');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->_pending_events[0]['tags']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->pendingEvents[0]['tags']);
     }
 
     public function testCaptureMessageWithExtraContext()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
-        $client->extra_context(['foo' => 'bar']);
-        $client->extra_context(['biz' => 'boz']);
-        $client->extra_context(['biz' => 'baz']);
+        $client->getContext()->mergeExtraData(['foo' => 'bar']);
+        $client->getContext()->mergeExtraData(['biz' => 'boz']);
+        $client->getContext()->mergeExtraData(['biz' => 'baz']);
 
         $client->captureMessage('test');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->_pending_events[0]['extra']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(['foo' => 'bar', 'biz' => 'baz'], $client->pendingEvents[0]['extra']);
     }
 
     public function testCaptureExceptionContainingLatin1()
     {
         $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         // we need a non-utf8 string here.
         // nobody writes non-utf8 in exceptions, but it is the easiest way to test.
@@ -639,18 +640,18 @@ class ClientTest extends TestCase
         $latin1String = utf8_decode($utf8String);
         $client->captureException(new \Exception($latin1String));
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals($utf8String, $client->_pending_events[0]['exception']['values'][0]['value']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals($utf8String, $client->pendingEvents[0]['exception']['values'][0]['value']);
     }
 
     public function testCaptureExceptionInLatin1File()
     {
         $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         require_once __DIR__ . '/Fixtures/code/Latin1File.php';
 
-        $frames = $client->_pending_events[0]['exception']['values'][0]['stacktrace']['frames'];
+        $frames = $client->pendingEvents[0]['exception']['values'][0]['stacktrace']['frames'];
 
         $utf8String = '// äöü';
         $found = false;
@@ -677,10 +678,10 @@ class ClientTest extends TestCase
         }
 
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $this->assertNull($client->captureLastError());
-        $this->assertEmpty($client->_pending_events);
+        $this->assertEmpty($client->pendingEvents);
 
         /* @var $undefined */
         /* @noinspection PhpExpressionResultUnusedInspection */
@@ -688,21 +689,21 @@ class ClientTest extends TestCase
 
         $client->captureLastError();
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('Undefined variable: undefined', $client->_pending_events[0]['exception']['values'][0]['value']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('Undefined variable: undefined', $client->pendingEvents[0]['exception']['values'][0]['value']);
     }
 
     public function testGetLastEventID()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->capture([
             'message' => 'test',
             'event_id' => 'abc',
         ]);
 
-        $this->assertEquals('abc', $client->getLastEventID());
+        $this->assertEquals('abc', $client->getLastEventId());
     }
 
     public function testCustomTransport()
@@ -1015,36 +1016,6 @@ class ClientTest extends TestCase
         ]], $data);
     }
 
-    public function testUserContextWithoutMerge()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->user_context(['foo' => 'bar'], false);
-        $client->user_context(['baz' => 'bar'], false);
-
-        $this->assertEquals(['baz' => 'bar'], $client->context->user);
-    }
-
-    public function testUserContextWithMerge()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->user_context(['foo' => 'bar'], true);
-        $client->user_context(['baz' => 'bar'], true);
-
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'bar'], $client->context->user);
-    }
-
-    public function testUserContextWithMergeAndNull()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->user_context(['foo' => 'bar'], true);
-        $client->user_context(null, true);
-
-        $this->assertEquals(['foo' => 'bar'], $client->context->user);
-    }
-
     /**
      * Set the server array to the test values, check the current url.
      *
@@ -1054,7 +1025,7 @@ class ClientTest extends TestCase
      * @param array  $options
      * @param string $expected   - the url expected
      * @param string $message    - fail message
-     * @covers \Raven\Client::get_current_url
+     * @covers \Raven\Client::getCurrentUrl
      * @covers \Raven\Client::isHttps
      */
     public function testCurrentUrl($serverVars, $options, $expected, $message)
@@ -1159,30 +1130,23 @@ class ClientTest extends TestCase
 
     /**
      * @covers \Raven\Client::getLastError
-     * @covers \Raven\Client::getLastEventID
-     * @covers \Raven\Client::getLastSentryError
+     * @covers \Raven\Client::getLastEventId
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
      */
     public function testGettersAndSetters()
     {
         $client = ClientBuilder::create()->getClient();
-        $callable = [$this, 'stabClosureVoid'];
 
         $data = [
-            ['_lasterror', null, null],
-            ['_lasterror', null, 'value'],
-            ['_lasterror', null, mt_rand(100, 999)],
-            ['_last_sentry_error', null, (object) ['error' => 'test']],
-            ['_last_event_id', null, mt_rand(100, 999)],
-            ['_last_event_id', null, 'value'],
-            ['_shutdown_function_has_been_set', null, true],
-            ['_shutdown_function_has_been_set', null, false],
+            ['lastError', null, null],
+            ['lastError', null, 'value'],
+            ['lastError', null, mt_rand(100, 999)],
+            ['lastEventId', null, mt_rand(100, 999)],
+            ['lastEventId', null, 'value'],
+            ['shutdownFunctionHasBeenSet', null, true],
+            ['shutdownFunctionHasBeenSet', null, false],
         ];
         foreach ($data as &$datum) {
-            $this->subTestGettersAndSettersDatum($client, $datum);
-        }
-        foreach ($data as &$datum) {
-            $client = ClientBuilder::create()->getClient();
             $this->subTestGettersAndSettersDatum($client, $datum);
         }
     }
@@ -1252,7 +1216,7 @@ class ClientTest extends TestCase
      */
     public function testTranslateSeverity()
     {
-        $reflection = new \ReflectionProperty('\\Raven\Client', 'severity_map');
+        $reflection = new \ReflectionProperty(Client::class, 'severityMap');
         $reflection->setAccessible(true);
         $client = ClientBuilder::create()->getClient();
 
@@ -1299,12 +1263,12 @@ class ClientTest extends TestCase
     public function testCaptureExceptionWithLogger()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->captureException(new \Exception(), null, 'foobar');
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foobar', $client->_pending_events[0]['logger']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals('foobar', $client->pendingEvents[0]['logger']);
     }
 
     /**
@@ -1402,20 +1366,20 @@ class ClientTest extends TestCase
             ->setHttpClient($httpClient)
             ->getClient();
 
-        $this->assertEquals(0, count($client->_pending_events));
-        $client->_pending_events[] = ['foo' => 'bar'];
+        $this->assertEquals(0, count($client->pendingEvents));
+        $client->pendingEvents[] = ['foo' => 'bar'];
         $client->sendUnsentErrors();
         $this->assertCount(1, $httpClient->getRequests());
-        $this->assertEquals(0, count($client->_pending_events));
+        $this->assertEquals(0, count($client->pendingEvents));
 
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
         $client->captureMessage('foobar');
-        $this->assertEquals(1, count($client->_pending_events));
+        $this->assertEquals(1, count($client->pendingEvents));
 
         // step 3
         $client->onShutdown();
         $this->assertCount(2, $httpClient->getRequests());
-        $this->assertEquals(0, count($client->_pending_events));
+        $this->assertEquals(0, count($client->pendingEvents));
     }
 
     public function testSendChecksShouldCaptureOption()
@@ -1508,7 +1472,7 @@ class ClientTest extends TestCase
 
         // step 1
         $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
-        $output = $client->get_user_data();
+        $output = $client->getUserData();
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
         $this->assertArrayHasKey('id', $output['user']);
@@ -1518,7 +1482,7 @@ class ClientTest extends TestCase
         $session_id = session_id();
         session_write_close();
         session_id('');
-        $output = $client->get_user_data();
+        $output = $client->getUserData();
         $this->assertInternalType('array', $output);
         $this->assertEquals(0, count($output));
 
@@ -1526,7 +1490,7 @@ class ClientTest extends TestCase
         session_id($session_id);
         @session_start(['use_cookies' => false]);
         $_SESSION = ['foo' => 'bar'];
-        $output = $client->get_user_data();
+        $output = $client->getUserData();
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
         $this->assertArrayHasKey('id', $output['user']);
@@ -1554,33 +1518,33 @@ class ClientTest extends TestCase
             }
 
             $client = ClientBuilder::create()->getClient();
-            $client->store_errors_for_bulk_send = true;
+            $client->storeErrorsForBulkSend = true;
 
             $client->capture(['message' => $message]);
 
-            $this->assertCount(1, $client->_pending_events);
-            $this->assertEquals('error', $client->_pending_events[0]['level']);
-            $this->assertEquals(substr($message, 0, min(\Raven\Client::MESSAGE_LIMIT, $length)), $client->_pending_events[0]['message']);
-            $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
+            $this->assertCount(1, $client->pendingEvents);
+            $this->assertEquals('error', $client->pendingEvents[0]['level']);
+            $this->assertEquals(substr($message, 0, min(\Raven\Client::MESSAGE_LIMIT, $length)), $client->pendingEvents[0]['message']);
+            $this->assertArrayNotHasKey('release', $client->pendingEvents[0]);
         }
 
         $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->capture(['message' => 'foobar']);
 
-        $input = $client->get_http_data();
+        $input = $client->getHttpData();
 
-        $this->assertEquals($input['request'], $client->_pending_events[0]['request']);
-        $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
+        $this->assertEquals($input['request'], $client->pendingEvents[0]['request']);
+        $this->assertArrayNotHasKey('release', $client->pendingEvents[0]);
 
         $client = new Dummy_Raven_Client(new Configuration(), $httpClient, $requestFactory);
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->capture(['message' => 'foobar', 'request' => ['foo' => 'bar']]);
 
-        $this->assertEquals(['foo' => 'bar'], $client->_pending_events[0]['request']);
-        $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
+        $this->assertEquals(['foo' => 'bar'], $client->pendingEvents[0]['request']);
+        $this->assertArrayNotHasKey('release', $client->pendingEvents[0]);
 
         foreach ([false, true] as $u1) {
             foreach ([false, true] as $u2) {
@@ -1595,18 +1559,18 @@ class ClientTest extends TestCase
                 }
 
                 $client = new Client(new Configuration($options), $httpClient, $requestFactory);
-                $client->store_errors_for_bulk_send = true;
+                $client->storeErrorsForBulkSend = true;
 
                 $client->capture(['message' => 'foobar']);
 
                 if ($u1) {
-                    $this->assertEquals('foo', $client->_pending_events[0]['release']);
+                    $this->assertEquals('foo', $client->pendingEvents[0]['release']);
                 } else {
-                    $this->assertArrayNotHasKey('release', $client->_pending_events[0]);
+                    $this->assertArrayNotHasKey('release', $client->pendingEvents[0]);
                 }
 
                 if ($u2) {
-                    $this->assertEquals('bar', $client->_pending_events[0]['environment']);
+                    $this->assertEquals('bar', $client->pendingEvents[0]['environment']);
                 }
             }
         }
@@ -1623,7 +1587,7 @@ class ClientTest extends TestCase
             ->getMock();
 
         $client = new Dummy_Raven_Client_No_Http(new Configuration(['install_default_breadcrumb_handlers' => false]), $httpClient, $requestFactory);
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $session_id = session_id();
 
@@ -1632,9 +1596,9 @@ class ClientTest extends TestCase
 
         $client->capture(['user' => '', 'request' => '']);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertArrayNotHasKey('user', $client->_pending_events[0]);
-        $this->assertArrayNotHasKey('request', $client->_pending_events[0]);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertArrayNotHasKey('user', $client->pendingEvents[0]);
+        $this->assertArrayNotHasKey('request', $client->pendingEvents[0]);
 
         session_id($session_id);
         @session_start(['use_cookies' => false]);
@@ -1643,13 +1607,13 @@ class ClientTest extends TestCase
     public function testCaptureAutoLogStacks()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->store_errors_for_bulk_send = true;
+        $client->storeErrorsForBulkSend = true;
 
         $client->capture(['auto_log_stacks' => true], true);
 
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertArrayHasKey('stacktrace', $client->_pending_events[0]);
-        $this->assertInternalType('array', $client->_pending_events[0]['stacktrace']['frames']);
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertArrayHasKey('stacktrace', $client->pendingEvents[0]);
+        $this->assertInternalType('array', $client->pendingEvents[0]['stacktrace']['frames']);
     }
 
     /**

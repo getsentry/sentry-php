@@ -67,7 +67,7 @@ class ErrorHandler
         $this->fatal_error_types = array_reduce($this->fatal_error_types, [$this, 'bitwiseOr']);
         if ($send_errors_last) {
             $this->send_errors_last = true;
-            $this->client->store_errors_for_bulk_send = true;
+            $this->client->storeErrorsForBulkSend = true;
         }
     }
 
