@@ -373,10 +373,20 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Gets the parameters to use to format the message.
+     *
+     * @return string[]
+     */
+    public function getMessageParams()
+    {
+        return $this->messageParams;
+    }
+
+    /**
      * Sets the error message.
      *
      * @param string $message The message
-     * @param array $params The parameters to use to format the message
+     * @param array  $params  The parameters to use to format the message
      *
      * @return static
      */
