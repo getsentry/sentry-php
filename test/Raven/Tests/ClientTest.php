@@ -1561,6 +1561,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('foo/bar/', $property->invoke(null, 'foo/bar/'));
         $this->assertEquals(dirname(__DIR__).'/', $property->invoke(null, __DIR__.'/../'));
         $this->assertEquals(dirname(dirname(__DIR__)).'/', $property->invoke(null, __DIR__.'/../../'));
+
+        $path = stream_get_meta_data($_ = tmpfile())['uri'];
+        $this->assertEquals($path, $property->invoke(null, $path));
     }
 
     /**
