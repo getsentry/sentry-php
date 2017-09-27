@@ -79,7 +79,7 @@ class Raven_Processor_SanitizeDataProcessor extends Raven_Processor
     public function sanitizeException(&$data)
     {
         foreach ($data['exception']['values'] as &$value) {
-            return $this->sanitizeStacktrace($value['stacktrace']);
+            $this->sanitizeStacktrace($value['stacktrace']);
         }
     }
 
