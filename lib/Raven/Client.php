@@ -39,7 +39,6 @@ class Raven_Client
      * @var array|null
      */
     public $severity_map;
-    public $store_errors_for_bulk_send = false;
 
     protected $error_handler;
     protected $error_types;
@@ -93,6 +92,8 @@ class Raven_Client
     public $curl_ssl_version;
     public $trust_x_forwarded_proto;
     public $mb_detect_order;
+    public $store_errors_for_bulk_send = false;
+    public $fastcgi_finish_request = false;
     /**
      * @var Raven_Processor[]
      */
@@ -172,6 +173,8 @@ class Raven_Client
         $this->transport = Raven_Util::get($options, 'transport', null);
         $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
         $this->error_types = Raven_Util::get($options, 'error_types', null);
+        $this->store_errors_for_bulk_send = Raven_Util::get($options, 'store_errors_for_bulk_send', false);
+        $this->fastcgi_finish_request = Raven_Util::get($options, 'fastcgi_finish_request', false);
 
         // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
@@ -1358,6 +1361,11 @@ class Raven_Client
     {
         if (!defined('RAVEN_CLIENT_END_REACHED')) {
             define('RAVEN_CLIENT_END_REACHED', true);
+        }
+        if ($this->fastcgi_finish_request
+          && !empty($this->_pending_events)
+          && function_exists('fastcgi_finish_request')) {
+          fastcgi_finish_request();
         }
         $this->sendUnsentErrors();
         if ($this->curl_method == 'async') {
