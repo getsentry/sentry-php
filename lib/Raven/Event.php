@@ -44,7 +44,7 @@ final class Event implements \JsonSerializable
     private $logger;
 
     /**
-     * @var string The name of the transaction (or culprit) which caused this exception.
+     * @var string the name of the transaction (or culprit) which caused this exception
      */
     private $culprit;
 
@@ -91,7 +91,7 @@ final class Event implements \JsonSerializable
     private $serverOsContext = [];
 
     /**
-     * @var array $runtimeContext The runtime context data
+     * @var array The runtime context data
      */
     private $runtimeContext = [];
 
@@ -160,7 +160,7 @@ final class Event implements \JsonSerializable
     /**
      * Creates a new event from the given throwable.
      *
-     * @param Client $client The Raven client instance
+     * @param Client                $client    The Raven client instance
      * @param \Exception|\Throwable $throwable The throwable instance
      *
      * @return static
@@ -179,11 +179,11 @@ final class Event implements \JsonSerializable
     /**
      * Creates a new event using the given error details.
      *
-     * @param Client $client The Raven client instance
-     * @param int $code The error code
+     * @param Client $client  The Raven client instance
+     * @param int    $code    The error code
      * @param string $message The error message
-     * @param string $file The file where the error was thrown
-     * @param int $line The line at which the error was thrown
+     * @param string $file    The file where the error was thrown
+     * @param int    $line    The line at which the error was thrown
      *
      * @return static
      */
@@ -196,7 +196,7 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Gets the UUID of this event
+     * Gets the UUID of this event.
      *
      * @return UuidInterface
      */

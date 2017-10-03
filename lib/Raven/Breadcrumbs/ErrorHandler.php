@@ -29,7 +29,7 @@ class ErrorHandler
             ])
         );
 
-        if ($this->existingHandler !== null) {
+        if (null !== $this->existingHandler) {
             return call_user_func($this->existingHandler, $code, $message, $file, $line, $context);
         } else {
             return false;

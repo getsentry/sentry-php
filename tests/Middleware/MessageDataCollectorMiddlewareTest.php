@@ -11,11 +11,12 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
 use Raven\Event;
 use Raven\Middleware\MessageDataCollectorMiddleware;
 
-class MessageDataCollectorMiddlewareTest extends \PHPUnit_Framework_TestCase
+class MessageDataCollectorMiddlewareTest extends TestCase
 {
     public function testInvokeWithoutMessage()
     {

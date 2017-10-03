@@ -11,6 +11,7 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\Client;
@@ -18,7 +19,7 @@ use Raven\Configuration;
 use Raven\Event;
 use Raven\Middleware\BreadcrumbDataCollectorMiddleware;
 
-class BreadcrumbDataCollectorMiddlewareTest extends \PHPUnit_Framework_TestCase
+class BreadcrumbDataCollectorMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {

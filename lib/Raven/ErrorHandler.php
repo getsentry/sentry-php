@@ -58,7 +58,7 @@ class ErrorHandler
                                 $__error_types = null
     ) {
         // support legacy fourth argument for error types
-        if ($error_types === null) {
+        if (null === $error_types) {
             $error_types = $__error_types;
         }
 
@@ -81,7 +81,7 @@ class ErrorHandler
         $e->event_id = $this->client->captureException($e, null, null, $vars);
 
         if (!$isError && $this->call_existing_exception_handler) {
-            if ($this->old_exception_handler !== null) {
+            if (null !== $this->old_exception_handler) {
                 call_user_func($this->old_exception_handler, $e);
             } else {
                 throw $e;
@@ -96,9 +96,9 @@ class ErrorHandler
         // E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, and
         // most of E_STRICT raised in the file where set_error_handler() is called.
 
-        if (error_reporting() !== 0) {
+        if (0 !== error_reporting()) {
             $error_types = $this->error_types;
-            if ($error_types === null) {
+            if (null === $error_types) {
                 $error_types = error_reporting();
             }
             if ($error_types & $type) {
@@ -108,7 +108,7 @@ class ErrorHandler
         }
 
         if ($this->call_existing_error_handler) {
-            if ($this->old_error_handler !== null) {
+            if (null !== $this->old_error_handler) {
                 return call_user_func(
                     $this->old_error_handler,
                     $type,
@@ -177,7 +177,7 @@ class ErrorHandler
      */
     public function registerErrorHandler($call_existing = true, $error_types = null)
     {
-        if ($error_types !== null) {
+        if (null !== $error_types) {
             $this->error_types = $error_types;
         }
         $this->old_error_handler = set_error_handler([$this, 'handleError'], E_ALL);

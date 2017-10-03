@@ -502,18 +502,18 @@ class ClientTest extends TestCase
             'url' => 'https://getsentry.com/welcome/',
             'query_string' => 'q=bitch&l=en',
             'data' => [
-                'stamp'           => '1c',
+                'stamp' => '1c',
             ],
             'cookies' => [
-                'donut'           => 'chocolat',
+                'donut' => 'chocolat',
             ],
             'headers' => [
-                'Host'            => 'getsentry.com',
-                'Accept'          => 'text/html',
-                'Accept-Charset'  => 'utf-8',
-                'Cookie'          => 'cupcake: strawberry',
-                'Content-Type'    => 'text/xml',
-                'Content-Length'  => '99',
+                'Host' => 'getsentry.com',
+                'Accept' => 'text/html',
+                'Accept-Charset' => 'utf-8',
+                'Cookie' => 'cupcake: strawberry',
+                'Content-Type' => 'text/xml',
+                'Content-Length' => '99',
             ],
         ];
 
@@ -1133,7 +1133,7 @@ class ClientTest extends TestCase
 
     private function subTestGettersAndSettersDatum(\Raven\Client $client, $datum)
     {
-        if (count($datum) == 3) {
+        if (3 == count($datum)) {
             list($property_name, $function_name, $value_in) = $datum;
             $value_out = $value_in;
         } else {
@@ -1172,9 +1172,9 @@ class ClientTest extends TestCase
     {
         if (null === $expected_value) {
             $this->assertNull($actual_value);
-        } elseif ($expected_value === true) {
+        } elseif (true === $expected_value) {
             $this->assertTrue($actual_value);
-        } elseif ($expected_value === false) {
+        } elseif (false === $expected_value) {
             $this->assertFalse($actual_value);
         } elseif (is_string($expected_value) or is_int($expected_value) or is_float($expected_value)) {
             $this->assertEquals($expected_value, $actual_value);
@@ -1279,7 +1279,7 @@ class ClientTest extends TestCase
 
     public function testRegisterDefaultBreadcrumbHandlers()
     {
-        if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
+        if (isset($_ENV['HHVM']) and (1 == $_ENV['HHVM'])) {
             $this->markTestSkipped('HHVM stacktrace behaviour');
 
             return;
@@ -1690,20 +1690,19 @@ class PromiseMock implements Promise
     public function wait($unwrap = true)
     {
         switch ($this->state) {
-            case self::FULFILLED: {
+            case self::FULFILLED:
                 foreach ($this->onFullfilledCallbacks as $onFullfilledCallback) {
                     $onFullfilledCallback($this->result);
                 }
 
                 break;
-            }
-            case self::REJECTED: {
+
+            case self::REJECTED:
                 foreach ($this->onRejectedCallbacks as $onRejectedCallback) {
                     $onRejectedCallback($this->result);
                 }
 
                 break;
-            }
         }
 
         if ($unwrap) {

@@ -11,6 +11,7 @@
 
 namespace Raven\Tests\Breadcrumbs;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Raven\Configuration;
 use Raven\Event;
@@ -18,7 +19,7 @@ use Raven\Middleware\RequestDataCollectorMiddleware;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestDataCollectorMiddlewareTest extends \PHPUnit_Framework_TestCase
+class RequestDataCollectorMiddlewareTest extends TestCase
 {
     public function testInvokeWithNoRequest()
     {

@@ -2,6 +2,7 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidFactoryInterface;
@@ -15,7 +16,7 @@ use Raven\Stacktrace;
 /**
  * @group time-sensitive
  */
-class EventTest extends \PHPUnit_Framework_TestCase
+class EventTest extends TestCase
 {
     const GENERATED_UUID = [
         '500a339f-3ab2-450b-96de-e542adf36ba7',
@@ -156,6 +157,10 @@ class EventTest extends \PHPUnit_Framework_TestCase
         $setterMethod = 'with' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
+        $newEvent = call_user_func([$event, $setterMethod], call_user_func([$event, $getterMethod]));
+
+        $this->assertSame($event, $newEvent);
+
         $newEvent = call_user_func([$event, $setterMethod], $propertyValue);
 
         $this->assertNotSame($event, $newEvent);
@@ -198,7 +203,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateFromPHPThrowableThrowsOnInvalidArgument()
     {
-        /** @noinspection PhpParamsInspection */
+        /* @noinspection PhpParamsInspection */
         Event::createFromPHPThrowable($this->client, new \stdClass());
     }
 
@@ -216,10 +221,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(__LINE__ - 9, $lastFrame['lineno']);
         $this->assertEquals(__METHOD__, $lastFrame['function']);
         $this->assertInstanceOf(Stacktrace::class, $event->getStacktrace());
-    }
-
-    public function testCreateFromPHPError()
-    {
     }
 
     public function testEventJsonSerialization()

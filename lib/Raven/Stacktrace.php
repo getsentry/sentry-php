@@ -357,7 +357,7 @@ class Stacktrace implements \JsonSerializable
             if (isset($frame['class'])) {
                 if (method_exists($frame['class'], $frame['function'])) {
                     $reflection = new \ReflectionMethod($frame['class'], $frame['function']);
-                } elseif ($frame['type'] === '::') {
+                } elseif ('::' === $frame['type']) {
                     $reflection = new \ReflectionMethod($frame['class'], '__callStatic');
                 } else {
                     $reflection = new \ReflectionMethod($frame['class'], '__call');
