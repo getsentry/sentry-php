@@ -2030,8 +2030,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers Raven_Client::get_user_data
+     * @backupGlobals
      */
-    public function testGet_user_data()
+    public function testGet_user_data_step1()
     {
         // step 1
         $client = new Dummy_Raven_Client();
@@ -2039,19 +2040,40 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
         $this->assertArrayHasKey('id', $output['user']);
-        $session_old = $_SESSION;
+    }
 
-        // step 2
+    /**
+     * @covers Raven_Client::get_user_data
+     * @backupGlobals
+     */
+    public function testGet_user_data_step2()
+    {
+        if (version_compare(PHP_VERSION, '7.1.999', '>')) {
+            /**
+             * @doc https://3v4l.org/OVbja
+             * @doc https://3v4l.org/uT00O
+             * @doc https://github.com/php/php-src/blob/316802d8f2b07b863f1596cd804db28a183556e5/NEWS#L87
+             */
+            $this->markTestSkipped('PHP 7.2 does not support clearing session id');
+        }
+        $client = new Dummy_Raven_Client();
         $session_id = session_id();
         session_write_close();
-        session_id('');
+        @session_id('');
         $output = $client->get_user_data();
+        session_id($session_id);
         $this->assertInternalType('array', $output);
         $this->assertEquals(0, count($output));
+    }
 
-        // step 3
-        session_id($session_id);
-        @session_start(array('use_cookies' => false, ));
+    /**
+     * @covers Raven_Client::get_user_data
+     * @backupGlobals
+     */
+    public function testGet_user_data_step3()
+    {
+        $client = new Dummy_Raven_Client();
+        @session_start(array('use_cookies' => false));
         $_SESSION = array('foo' => 'bar');
         $output = $client->get_user_data();
         $this->assertInternalType('array', $output);
@@ -2060,7 +2082,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('data', $output['user']);
         $this->assertArrayHasKey('foo', $output['user']['data']);
         $this->assertEquals('bar', $output['user']['data']['foo']);
-        $_SESSION = $session_old;
     }
 
     /**
@@ -2140,7 +2161,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $session_id = session_id();
         session_write_close();
-        session_id('');
+        @session_id('');
         $client->capture(array('user' => '', 'request' => ''));
         $events = $client->getSentEvents();
         $event = array_pop($events);
@@ -2148,7 +2169,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertArrayNotHasKey('request', $event);
 
         // step 3
-        session_id($session_id);
+        @session_id($session_id);
         @session_start(array('use_cookies' => false, ));
     }
 
