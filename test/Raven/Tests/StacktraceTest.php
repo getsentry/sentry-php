@@ -179,6 +179,19 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($frames[1]['in_app'], true);
     }
 
+    public function testInAppWithAnonymous()
+    {
+        $stack = array(
+            array(
+                "function" => "[Anonymous function]",
+            ),
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, 0, null, dirname(__FILE__));
+
+        $this->assertEquals($frames[0]['in_app'], false);
+    }
+
     public function testInAppWithExclusion()
     {
         $stack = array(
