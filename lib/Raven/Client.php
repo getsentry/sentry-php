@@ -285,7 +285,7 @@ class Raven_Client
         // we need app_path to have a trailing slash otherwise
         // base path detection becomes complex if the same
         // prefix is matched
-        if ($path{0} === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR && !is_file($path)) {
+        if ($path{0} === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR && substr($path, -4) !== '.php') {
             $path .= DIRECTORY_SEPARATOR;
         }
         return $path;
