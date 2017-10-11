@@ -348,8 +348,10 @@ class Stacktrace implements \JsonSerializable
                 } else {
                     $reflection = new \ReflectionMethod($frame['class'], '__call');
                 }
-            } else {
+            } elseif (function_exists($frame['function'])) {
                 $reflection = new \ReflectionFunction($frame['function']);
+            } else {
+                return self::getFrameArgumentsValues($frame, $maxValueLength);
             }
         } catch (\ReflectionException $ex) {
             return self::getFrameArgumentsValues($frame, $maxValueLength);
