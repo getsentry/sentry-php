@@ -184,8 +184,10 @@ class Raven_Stacktrace
                 } else {
                     $reflection = new ReflectionMethod($frame['class'], '__call');
                 }
-            } else {
+            } elseif(function_exists($frame['function'])) {
                 $reflection = new ReflectionFunction($frame['function']);
+            } else {
+                return self::get_default_context($frame, $frame_arg_limit);
             }
         } catch (ReflectionException $e) {
             return self::get_default_context($frame, $frame_arg_limit);
