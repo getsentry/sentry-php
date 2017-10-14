@@ -36,7 +36,7 @@ class RequestDataCollectorMiddleware
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
         if (null === $request) {
-            return $next($event, $request, $exception);
+            return $next($event, $request, $exception, $payload);
         }
 
         $requestData = [

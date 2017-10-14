@@ -53,9 +53,24 @@ final class StacktraceDataCollectorMiddleware
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
         if (null !== $exception) {
-            $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
+            $exceptions = [];
+            $currentException = $exception;
+
+            do {
+                $exceptions[] = [
+                    'type' => get_class($currentException),
+                    'value' => $currentException->getMessage(),
+                    'stacktrace' => Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine()),
+                ];
+            } while ($currentException = $currentException->getPrevious());
+
+            $exceptions = array_reverse($exceptions);
+
+            $event = $event->withLevel(Client::LEVEL_ERROR)
+                ->withException($exceptions)
+                ->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
         }
 
-        return $next($event, $request, $exception);
+        return $next($event, $request, $exception, $payload);
     }
 }
