@@ -22,6 +22,7 @@ use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
+use Raven\Event;
 use Raven\Processor\SanitizeDataProcessor;
 
 function simple_function($a = null, $b = null, $c = null)
@@ -218,105 +219,111 @@ class ClientTest extends TestCase
         $this->assertTrue($waitCalled);
     }
 
-    public function testOptionsExtraData()
+    public function testSeedMiddleware()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $firstMiddleware = $this->getObjectAttribute($client, 'middlewareTip');
+        $lastMiddleware = null;
+
+        $client->addMiddleware(function (Event $event, callable $next) use (&$lastMiddleware) {
+            $lastMiddleware = $next;
+
+            return $event;
+        });
+
+        $client->capture([]);
+
+        $this->assertSame($firstMiddleware, $lastMiddleware);
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage Middleware can't be added once the stack is dequeuing
+     */
+    public function testAddMiddlewareThrowsWhileStackIsRunning()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $client->addMiddleware(function (Event $event, callable $next) use ($client) {
+            $client->addMiddleware(function () {
+                // Do nothing, it's just a middleware added to trigger the exception
+            });
+
+            return $event;
+        });
+
+        $client->capture([]);
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage Middleware must return an instance of the "Raven\Event" class.
+     */
+    public function testMiddlewareThrowsWhenBadValueIsReturned()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $client->addMiddleware(function () {
+            // Do nothing, it's just a middleware added to trigger the exception
+        });
+
+        $client->capture([]);
+    }
+
+    /**
+     * @dataProvider captureMessageDataProvider
+     */
+    public function testCaptureMessage($message, $params, $payload, $expectedResult)
     {
         $client = ClientBuilder::create()->getClient();
         $client->storeErrorsForBulkSend = true;
 
-        $client->getContext()->mergeExtraData(['foo' => 'bar']);
-        $client->captureMessage('Test Message %s', ['foo']);
+        $client->captureMessage($message, $params, $payload);
 
         $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
+
+        $this->assertArraySubset($expectedResult, $client->pendingEvents[0]);
     }
 
-    public function testOptionsExtraDataWithNull()
+    public function captureMessageDataProvider()
     {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->getContext()->mergeExtraData(['foo' => 'bar']);
-        $client->captureMessage('Test Message %s', ['foo'], null);
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('bar', $client->pendingEvents[0]['extra']['foo']);
-    }
-
-    public function testEmptyExtraData()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('Test Message %s', ['foo']);
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertArrayNotHasKey('extra', $client->pendingEvents[0]);
-    }
-
-    public function testCaptureMessageDoesHandleUninterpolatedMessage()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('foo %s');
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('foo %s', $client->pendingEvents[0]['message']);
-    }
-
-    public function testCaptureMessageDoesHandleInterpolatedMessage()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('foo %s', ['bar']);
-
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['message']['formatted']);
-    }
-
-    public function testCaptureMessageDoesHandleInterpolatedMessageWithRelease()
-    {
-        $client = ClientBuilder::create(['release' => '1.2.3'])->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $this->assertEquals('1.2.3', $client->getConfig()->getRelease());
-
-        $client->captureMessage('foo %s', ['bar']);
-
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals('foo bar', $client->_pending_events[0]['message']['formatted']);
-        $this->assertEquals('1.2.3', $client->_pending_events[0]['release']);
-    }
-
-    public function testCaptureMessageHandlesOptionsAsThirdArg()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('Test Message %s', ['foo'], [
-            'level' => Dummy_Raven_Client::LEVEL_WARNING,
-            'extra' => ['foo' => 'bar'],
-        ]);
-
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals('bar', $client->_pending_events[0]['extra']['foo']);
-        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']['formatted']);
-    }
-
-    public function testCaptureMessageHandlesLevelAsThirdArg()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureMessage('Test Message %s', ['foo'], Dummy_Raven_Client::LEVEL_WARNING);
-
-        $this->assertCount(1, $client->_pending_events);
-        $this->assertEquals(Dummy_Raven_Client::LEVEL_WARNING, $client->_pending_events[0]['level']);
-        $this->assertEquals('Test Message foo', $client->_pending_events[0]['message']['formatted']);
+        return [
+            [
+                'foo',
+                [],
+                [
+                    'level' => Client::LEVEL_DEBUG,
+                ],
+                [
+                    'level' => Client::LEVEL_DEBUG,
+                    'message' => 'foo',
+                ],
+            ],
+            [
+                'foo %s bar',
+                [],
+                [
+                    'message' => 'overridden message is not taken into account',
+                    'message_params' => ['overridden message params are not taken into account'],
+                ],
+                [
+                    'message' => 'foo %s bar',
+                ],
+            ],
+            [
+                'foo %s',
+                ['bar'],
+                [],
+                [
+                    'message' => [
+                        'message' => 'foo %s',
+                        'params' => ['bar'],
+                        'formatted' => 'foo bar',
+                    ],
+                ],
+            ],
+        ];
     }
 
     /**

@@ -208,6 +208,50 @@
 
 - The `Client::getDefaultProcessors` method has been removed.
 
+- The `Client::message` method has been removed.
+
+- The `Client::captureMessage` method has changed its signature by removing the
+  `$stack` and `$vars` arguments.
+
+  Before:
+  
+  ```php
+  public function captureMessage($message, $params = [], $data = [], $stack = false, $vars = null)
+  {
+      // ...
+  }
+  ```
+  
+  After:
+  
+  ```php
+  public function captureMessage($message, array $params = [], array $payload = [])
+  {
+      // ...
+  }
+  ```
+
+- The `Client::captureException` method has changed its signature by removing the
+  `$logger` and `$vars` arguments.
+
+  Before:
+  
+  ```php
+  public function captureException($exception, $data = null, $logger = null, $vars = null)
+  {
+      // ...
+  }
+  ```
+  
+  After:
+  
+  ```php
+  public function captureException($exception, array $payload = [])
+  {
+      // ...
+  }
+  ```
+  
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class

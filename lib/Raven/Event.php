@@ -247,7 +247,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the name of the logger which created the event.
      *
-     * @return mixed
+     * @return string
      */
     public function getLogger()
     {
@@ -257,7 +257,7 @@ final class Event implements \JsonSerializable
     /**
      * Sets the name of the logger which created the event.
      *
-     * @param mixed $logger The logger name
+     * @param string $logger The logger name
      *
      * @return static
      */
@@ -640,7 +640,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the environment in which this event was generated.
      *
-     * @return mixed
+     * @return string
      */
     public function getEnvironment()
     {
@@ -650,7 +650,7 @@ final class Event implements \JsonSerializable
     /**
      * Sets the environment in which this event was generated.
      *
-     * @param mixed $environment The name of the environment
+     * @param string $environment The name of the environment
      *
      * @return static
      */
@@ -669,7 +669,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the breadcrumbs.
      *
-     * @return mixed
+     * @return array
      */
     public function getBreadcrumbs()
     {
@@ -679,7 +679,7 @@ final class Event implements \JsonSerializable
     /**
      * Adds a new breadcrumb to the event.
      *
-     * @param mixed $breadcrumb The breadcrumb
+     * @param Breadcrumb $breadcrumb The breadcrumb
      *
      * @return static
      */
@@ -708,7 +708,7 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withException($exception)
+    public function withException(array $exception)
     {
         if ($exception === $this->exception) {
             return $this;
@@ -820,7 +820,15 @@ final class Event implements \JsonSerializable
         }
 
         if (!empty($this->exception)) {
-            $data['exception'] = $this->exception;
+            foreach ($this->exception as $exception) {
+                $data['exception']['values'][] = [
+                    'type' => $exception['type'],
+                    'value' => $exception['value'],
+                    'stacktrace' => [
+                        'frames' => $exception['stacktrace']->toArray(),
+                    ],
+                ];
+            }
         }
 
         if (null !== $this->stacktrace) {
