@@ -285,7 +285,7 @@ class Raven_Client
         // we need app_path to have a trailing slash otherwise
         // base path detection becomes complex if the same
         // prefix is matched
-        if ($path{0} === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR && substr($path, -4) !== '.php') {
+        if ($path{0} === DIRECTORY_SEPARATOR && substr($path, -1) !== DIRECTORY_SEPARATOR) {
             $path .= DIRECTORY_SEPARATOR;
         }
         return $path;
@@ -313,7 +313,19 @@ class Raven_Client
 
     public function setExcludedAppPaths($value)
     {
-        $this->excluded_app_paths = $value ? array_map(array($this, '_convertPath'), $value) : null;
+        if ($value) {
+            $excluded_app_paths = array();
+
+            // We should be able to exclude a php files
+            foreach ((array) $value as $path) {
+                $excluded_app_paths[] = substr($path, -4) !== '.php' ? self::_convertPath($path) : $path;
+            }
+        } else {
+            $excluded_app_paths = null;
+        }
+
+        $this->excluded_app_paths = $excluded_app_paths;
+
         return $this;
     }
 
