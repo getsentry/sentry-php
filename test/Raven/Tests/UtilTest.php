@@ -14,7 +14,7 @@ class Raven_StacktraceTestObject
     private $foo = 'bar';
 }
 
-class Raven_Tests_UtilTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_UtilTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetReturnsDefaultOnMissing()
     {

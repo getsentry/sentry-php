@@ -10,7 +10,7 @@
  */
 
 
-class Raven_Tests_TransactionStackTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_TransactionStackTest extends \PHPUnit\Framework\TestCase
 {
     public function testSimple()
     {

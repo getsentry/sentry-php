@@ -205,7 +205,7 @@ class Dummy_Raven_CurlHandler extends Raven_CurlHandler
     }
 }
 
-class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown()
     {

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-class Raven_SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
+class Raven_SanitizeHttpHeadersProcessorTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Raven_Processor_SanitizeHttpHeadersProcessor|\PHPUnit_Framework_MockObject_MockObject

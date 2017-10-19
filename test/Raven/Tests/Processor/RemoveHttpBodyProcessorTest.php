@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_RemoveHttpBodyProcessorTest extends \PHPUnit_Framework_TestCase
+class Raven_Tests_RemoveHttpBodyProcessorTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Raven_Processor_RemoveHttpBodyProcessor|\PHPUnit_Framework_MockObject_MockObject
