@@ -1,9 +1,7 @@
 language: php
 sudo: false
-dist: precise
 
 php:
-  - 5.3
   - 5.4
   - 5.5
   - 5.6
@@ -23,7 +21,12 @@ matrix:
   include:
     - php: hhvm-3.12
       env: REMOVE_XDEBUG="0" HHVM="1"
-      dist: trusty
+    - php: 5.3
+      env: REMOVE_XDEBUG="0"
+      dist: precise
+    - php: 5.3
+      env: REMOVE_XDEBUG="1"
+      dist: precise
 
 cache:
   directories:
