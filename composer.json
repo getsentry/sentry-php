@@ -13,7 +13,7 @@
     ],
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^1.8.0",
-        "phpunit/phpunit": "^4.8 || ^5.0",
+        "phpunit/phpunit": "^4.8.35 || ^5.7",
         "monolog/monolog": "*"
     },
     "require": {

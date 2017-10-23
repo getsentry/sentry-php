@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_RemoveCookiesProcessorTest extends \PHPUnit_Framework_TestCase
+class Raven_Tests_RemoveCookiesProcessorTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Raven_Processor_RemoveCookiesProcessor|\PHPUnit_Framework_MockObject_MockObject

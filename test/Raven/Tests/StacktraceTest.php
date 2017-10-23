@@ -24,7 +24,7 @@ function raven_test_create_stacktrace($args=null, $times=3)
     return raven_test_recurse($times, 'debug_backtrace');
 }
 
-class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_StacktraceTest extends \PHPUnit\Framework\TestCase
 {
     public function testCanTraceParamContext()
     {

@@ -34,7 +34,7 @@ class DummyIntegration_Raven_Client extends Raven_Client
     }
 }
 
-class Raven_Tests_IntegrationTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_IntegrationTest extends \PHPUnit\Framework\TestCase
 {
     private function create_chained_exception()
     {
