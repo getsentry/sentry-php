@@ -24,7 +24,6 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "immobiliare/sentry-php": "Fork that fixes support for PHP 5.2",
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
