@@ -282,7 +282,6 @@ class ClientTest extends TestCase
         $client->captureMessage($message, $params, $payload);
 
         $this->assertCount(1, $client->pendingEvents);
-
         $this->assertArraySubset($expectedResult, $client->pendingEvents[0]);
     }
 
@@ -312,16 +311,51 @@ class ClientTest extends TestCase
                 ],
             ],
             [
-                'foo %s',
-                ['bar'],
+                'foo %s %s',
+                ['bar', 'baz'],
                 [],
                 [
                     'message' => [
-                        'message' => 'foo %s',
-                        'params' => ['bar'],
-                        'formatted' => 'foo bar',
+                        'message' => 'foo %s %s',
+                        'params' => ['bar', 'baz'],
+                        'formatted' => 'foo bar baz',
                     ],
                 ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureExceptionDataProvider
+     */
+    public function testCaptureException($exception, $payload, $expectedResult)
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->storeErrorsForBulkSend = true;
+
+        $client->captureException(new \Exception(), $payload);
+
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertArraySubset($expectedResult, $client->pendingEvents[0]);
+    }
+
+    public function captureExceptionDataProvider()
+    {
+        return [
+            [
+                new \Exception(),
+                [],
+                [],
+            ],
+            [
+                new \Exception(),
+                ['logger' => 'foo'],
+                ['logger' => 'foo'],
+            ],
+            [
+                new \Exception(),
+                ['exception' => new \RuntimeException()],
+                [],
             ],
         ];
     }
@@ -1245,17 +1279,6 @@ class ClientTest extends TestCase
         $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
         $this->assertEquals('foo', $client->translateSeverity(123456));
         $this->assertEquals('error', $client->translateSeverity(123457));
-    }
-
-    public function testCaptureExceptionWithLogger()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureException(new \Exception(), null, 'foobar');
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertEquals('foobar', $client->pendingEvents[0]['logger']);
     }
 
     /**

@@ -17,12 +17,11 @@ use Raven\Event;
 use Raven\Stacktrace;
 
 /**
- * This middleware collects information about the error or exception that
- * generated the event.
+ * This middleware collects information about the thrown exceptions.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class StacktraceDataCollectorMiddleware
+final class ExceptionDataCollectorMiddleware
 {
     /**
      * @var Client The Raven client
@@ -52,8 +51,35 @@ final class StacktraceDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        if (null !== $exception && !$this->client->getConfig()->isExcludedException($exception)) {
-            $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
+        if (!isset($payload['level'])) {
+            $payload['level'] = Client::LEVEL_ERROR;
+
+            if (method_exists($exception, 'getSeverity')) {
+                $payload['level'] = $this->client->translateSeverity($exception->getSeverity());
+            }
+        }
+
+        $event = $event->withLevel($payload['level']);
+
+        if (null !== $exception) {
+            $exceptions = [];
+            $currentException = $exception;
+
+            do {
+                if ($this->client->getConfig()->isExcludedException($currentException)) {
+                    continue;
+                }
+
+                $exceptions[] = [
+                    'type' => get_class($currentException),
+                    'value' => $currentException->getMessage(),
+                    'stacktrace' => Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine()),
+                ];
+            } while ($currentException = $currentException->getPrevious());
+
+            $exceptions = array_reverse($exceptions);
+
+            $event = $event->withException($exceptions);
         }
 
         return $next($event, $request, $exception, $payload);

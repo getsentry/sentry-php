@@ -408,6 +408,25 @@ class Configuration
     }
 
     /**
+     * Checks whether the given exception should be ignored when sending events
+     * to Sentry.
+     *
+     * @param \Throwable|\Exception The exception
+     *
+     * @return bool
+     */
+    public function isExcludedException($exception)
+    {
+        foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
+            if ($exception instanceof $exceptionClass) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Gets the list of paths to exclude from app_path detection.
      *
      * @return string[]
