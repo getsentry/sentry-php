@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+- Use namespaced classes in test for PHPUnit (#506)
+- Prevent segmentation fault on PHP `<5.6` (#504)
+- Remove `ini_set` call for unneeded functionality (#501)
+- Exclude single `.php` files from the app path (#500)
+- Start testing PHP 7.2 (#489)
+- Exclude anonymous frames from app path (#482)
+
 ## 1.7.1 (2017-08-02)
+
 - Fix of filtering sensitive data when there is an exception with multiple 'values' (#483)
 
 ## 1.7.0 (2017-06-07)
