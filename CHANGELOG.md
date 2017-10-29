@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- ...
+
+## 1.8.0 (2017-10-29)
+
 - Use namespaced classes in test for PHPUnit (#506)
 - Prevent segmentation fault on PHP `<5.6` (#504)
 - Remove `ini_set` call for unneeded functionality (#501)
