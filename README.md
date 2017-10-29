@@ -98,7 +98,7 @@ Tagging a Release
 2. Create a new branch for the minor version (if not present):
 
 ```
-$ git checkout -b releases/1.7.x
+$ git checkout -b releases/1.9.x
 ```
 
 3. Update the hardcoded version tag in ``Client.php``:
@@ -106,20 +106,20 @@ $ git checkout -b releases/1.7.x
 ```
 class Raven_Client
 {
-    const VERSION = '1.7.0';
+    const VERSION = '1.9.0';
 }
 ```
 
 4. Commit the change:
 
 ```
-$ git commit -a -m "1.7.0"
+$ git commit -a -m "1.9.0"
 ```
 
 5. Tag the branch:
 
 ```
-git tag 1.7.0
+git tag 1.9.0
 ```
 
 6. Push the tag:
@@ -137,7 +137,7 @@ git checkout master
 8. Add the next minor release to the ``CHANGES`` file:
 
 ```
-## 1.8.0 (unreleased)
+## 1.10.0 (unreleased)
 ```
 
 9. Update the version in ``Client.php``:
@@ -145,7 +145,7 @@ git checkout master
 ```
 class Raven_Client
 {
-    const VERSION = '1.8.x-dev';
+    const VERSION = '1.10.x-dev';
 }
 ```
 
@@ -154,7 +154,7 @@ class Raven_Client
 ```
     "extra": {
         "branch-alias": {
-            "dev-master": "1.8.x-dev"
+            "dev-master": "1.10.x-dev"
         }
     }
 ```
