@@ -176,6 +176,8 @@ class Raven_Client
         // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
         $this->setExcludedAppPaths(Raven_Util::get($options, 'excluded_app_paths', null));
+        //get errors only from a specific path
+        $this->setStrictErrorCapturePath(Raven_Util::get($options, 'strict_error_capture_path', null));
         // a list of prefixes used to coerce absolute paths into relative
         $this->setPrefixes(Raven_Util::get($options, 'prefixes', static::getDefaultPrefixes()));
         $this->processors = $this->setProcessorsFromOptions($options);
@@ -302,6 +304,16 @@ class Raven_Client
             $this->app_path = static::_convertPath($value);
         } else {
             $this->app_path = null;
+        }
+        return $this;
+    }
+
+    public function setStrictErrorCapturePath($value)
+    {
+        if ($value) {
+            $this->strict_error_capture_path = $this->_convertPath($value);
+        } else {
+            $this->strict_error_capture_path = null;
         }
         return $this;
     }
@@ -569,6 +581,12 @@ class Raven_Client
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
+        //avoid errors other than specific path
+        $exception_file = $exception->getFile();
+        if (!empty($this->strict_error_capture_path) && stripos($exception_file, $this->strict_error_capture_path) === false) {
+            return null;
+        }
+
         $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
 
         if (in_array(get_class($exception), $this->exclude)) {
