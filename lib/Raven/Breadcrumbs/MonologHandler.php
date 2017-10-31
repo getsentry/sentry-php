@@ -67,7 +67,7 @@ class MonologHandler extends AbstractProcessingHandler
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
             /**
-             * @var \Exception
+             * @var \Exception $exc Exception
              */
             $exc = $record['context']['exception'];
 

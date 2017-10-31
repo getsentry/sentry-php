@@ -1673,6 +1673,26 @@ class ClientTest extends TestCase
         $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
         $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
     }
+
+    public function testClearBreadcrumb()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->leaveBreadcrumb(
+            new \Raven\Breadcrumbs\Breadcrumb(
+                'warning', \Raven\Breadcrumbs\Breadcrumb::TYPE_ERROR, 'error_reporting', 'message', [
+                    'code' => 127,
+                    'line' => 10,
+                    'file' => '/tmp/delme.php',
+                ]
+            )
+        );
+        $reflection = new \ReflectionProperty($client, 'recorder');
+        $reflection->setAccessible(true);
+        $this->assertNotEmpty(iterator_to_array($reflection->getValue($client)));
+
+        $client->clearBreadcrumbs();
+        $this->assertEmpty(iterator_to_array($reflection->getValue($client)));
+    }
 }
 
 class PromiseMock implements Promise
@@ -1712,20 +1732,18 @@ class PromiseMock implements Promise
     public function wait($unwrap = true)
     {
         switch ($this->state) {
-            case self::FULFILLED: {
+            case self::FULFILLED:
                 foreach ($this->onFullfilledCallbacks as $onFullfilledCallback) {
                     $onFullfilledCallback($this->result);
                 }
 
                 break;
-            }
-            case self::REJECTED: {
+            case self::REJECTED:
                 foreach ($this->onRejectedCallbacks as $onRejectedCallback) {
                     $onRejectedCallback($this->result);
                 }
 
                 break;
-            }
         }
 
         if ($unwrap) {

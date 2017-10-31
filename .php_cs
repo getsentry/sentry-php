@@ -9,6 +9,8 @@ return PhpCsFixer\Config::create()
         'concat_space' => ['spacing' => 'one'],
         'ordered_imports' => true,
         'random_api_migration' => true,
+        'phpdoc_var_without_name' => false,
+        'yoda_style' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder(

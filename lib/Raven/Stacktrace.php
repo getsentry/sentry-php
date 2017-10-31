@@ -246,8 +246,10 @@ class Stacktrace implements \JsonSerializable
 
                 $file->next();
             }
+            // @codeCoverageIgnoreStart
         } catch (\Exception $ex) {
         }
+        // @codeCoverageIgnoreEnd
 
         $frame['pre_context'] = $this->serializer->serialize($frame['pre_context']);
         $frame['context_line'] = $this->serializer->serialize($frame['context_line']);

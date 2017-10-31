@@ -46,7 +46,7 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
-     * @var Recorder The bredcrumbs recorder
+     * @var Recorder The breadcrumbs recorder
      */
     protected $recorder;
 

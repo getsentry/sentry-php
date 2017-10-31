@@ -187,7 +187,6 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
-        $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
 
         return new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
