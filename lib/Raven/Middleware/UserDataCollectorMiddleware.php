@@ -50,21 +50,13 @@ final class UserDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $user = $this->context->getUserData();
+        $userContext = $this->context->getUserData();
 
-        if (empty($user)) {
-            $user = [];
-
-            if ('' !== session_id()) {
-                $user['id'] = session_id();
-            }
-
-            if (null !== $request && $request->hasHeader('REMOTE_ADDR')) {
-                $user['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
-            }
+        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
         }
 
-        $event = $event->withUserContext($user);
+        $event = $event->withUserContext($userContext);
 
         return $next($event, $request, $exception, $payload);
     }

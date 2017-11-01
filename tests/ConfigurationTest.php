@@ -216,7 +216,7 @@ class ConfigurationTest extends TestCase
         return [
             [
                 [\BadFunctionCallException::class, \BadMethodCallException::class],
-                new \BadMethodCallException,
+                new \BadMethodCallException(),
                 true,
             ],
             [

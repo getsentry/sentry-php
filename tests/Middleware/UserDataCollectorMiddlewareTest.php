@@ -31,10 +31,7 @@ class UserDataCollectorMiddlewareTest extends TestCase
         $invokationCount = 0;
         $callback = function (Event $eventArg) use ($event, &$invokationCount) {
             $this->assertNotSame($event, $eventArg);
-
-            if ('' !== session_id()) {
-                $this->assertArraySubset(['id' => session_id()], $eventArg->getUserContext());
-            }
+            $this->assertEquals(['foo' => 'bar'], $eventArg->getUserContext());
 
             ++$invokationCount;
         };
@@ -47,6 +44,9 @@ class UserDataCollectorMiddlewareTest extends TestCase
 
     public function testInvokeWithRequest()
     {
+        $context = new Context();
+        $context->mergeUserData(['foo' => 'bar']);
+
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
@@ -55,12 +55,12 @@ class UserDataCollectorMiddlewareTest extends TestCase
         $invokationCount = 0;
         $callback = function (Event $eventArg) use ($event, &$invokationCount) {
             $this->assertNotSame($event, $eventArg);
-            $this->assertArraySubset(['ip_address' => '127.0.0.1'], $eventArg->getUserContext());
+            $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $eventArg->getUserContext());
 
             ++$invokationCount;
         };
 
-        $middleware = new UserDataCollectorMiddleware(new Context());
+        $middleware = new UserDataCollectorMiddleware($context);
         $middleware($event, $callback, $request);
 
         $this->assertEquals(1, $invokationCount);
