@@ -329,20 +329,6 @@ class Client
     }
 
     /**
-     * Given an identifier, returns a Sentry searchable string.
-     *
-     * @param mixed $ident
-     *
-     * @return mixed
-     * @codeCoverageIgnore
-     */
-    public function getIdent($ident)
-    {
-        // XXX: We don't calculate checksums yet, so we only have the ident.
-        return $ident;
-    }
-
-    /**
      * Logs a message.
      *
      * @param string $message The message (primary description) for the event

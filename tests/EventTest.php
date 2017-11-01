@@ -191,7 +191,6 @@ class EventTest extends TestCase
             ['userContext', ['foo' => 'bar'], 'user'],
             ['serverOsContext', ['foo' => 'bar'], 'server_os'],
             ['runtimeContext', ['foo' => 'bar'], 'runtime'],
-            //['checksum', 'foo', 'checksum'],
             ['fingerprint', ['foo', 'bar'], 'fingerprint'],
             ['environment', 'foo', 'environment'],
         ];

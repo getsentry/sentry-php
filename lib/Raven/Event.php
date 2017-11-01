@@ -53,8 +53,6 @@ final class Event implements \JsonSerializable
      */
     private $serverName;
 
-    private $checksum;
-
     /**
      * @var string The release of the program
      */
@@ -839,10 +837,6 @@ final class Event implements \JsonSerializable
 
         if (!empty($this->request)) {
             $data['request'] = $this->request;
-        }
-
-        if (null !== $this->checksum) {
-            $data['checksum'] = $this->checksum;
         }
 
         if (null !== $this->message) {
