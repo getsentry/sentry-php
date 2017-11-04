@@ -433,135 +433,56 @@ class Client
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    protected function getHttpData()
-    {
-        $headers = [];
-
-        foreach ($_SERVER as $key => $value) {
-            if (0 === strpos($key, 'HTTP_')) {
-                $header_key =
-                    str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
-                $headers[$header_key] = $value;
-            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH']) && '' !== $value) {
-                $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
-                $headers[$header_key] = $value;
-            }
-        }
-
-        $result = [
-            'method' => self::_server_variable('REQUEST_METHOD'),
-            'url' => $this->getCurrentUrl(),
-            'query_string' => self::_server_variable('QUERY_STRING'),
-        ];
-
-        // dont set this as an empty array as PHP will treat it as a numeric array
-        // instead of a mapping which goes against the defined Sentry spec
-        if (!empty($_POST)) {
-            $result['data'] = $_POST;
-        }
-        if (!empty($_COOKIE)) {
-            $result['cookies'] = $_COOKIE;
-        }
-        if (!empty($headers)) {
-            $result['headers'] = $headers;
-        }
-
-        return $result;
-    }
-
-    protected function getUserData()
-    {
-        $user = $this->context->getUserData();
-        if (empty($user)) {
-            if (!function_exists('session_id') || !session_id()) {
-                return [];
-            }
-            $user = [
-                'id' => session_id(),
-            ];
-            if (!empty($_SERVER['REMOTE_ADDR'])) {
-                $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
-            }
-            if (!empty($_SESSION)) {
-                $user['data'] = $_SESSION;
-            }
-        }
-
-        return $user;
-    }
-
-    public function getDefaultData()
-    {
-        return [
-            'server_name' => $this->config->getServerName(),
-            'project' => $this->config->getProjectId(),
-            'logger' => $this->config->getLogger(),
-            'tags' => $this->config->getTags(),
-            'platform' => 'php',
-            'culprit' => $this->transaction->peek(),
-            'sdk' => [
-                'name' => 'sentry-php',
-                'version' => self::VERSION,
-            ],
-        ];
-    }
-
-    public function capture($data)
+    public function capture($payload)
     {
         $event = new Event($this->config);
 
-        if (isset($data['culprit'])) {
-            $event = $event->withCulprit($data['culprit']);
+        if (isset($payload['culprit'])) {
+            $event = $event->withCulprit($payload['culprit']);
         } else {
             $event = $event->withCulprit($this->transaction->peek());
         }
 
-        if (isset($data['level'])) {
-            $event = $event->withLevel($data['level']);
+        if (isset($payload['level'])) {
+            $event = $event->withLevel($payload['level']);
         }
 
-        if (isset($data['logger'])) {
-            $event = $event->withLogger($data['logger']);
+        if (isset($payload['logger'])) {
+            $event = $event->withLogger($payload['logger']);
         }
 
-        if (isset($data['tags'])) {
-            $data['tags_context'] = $data['tags'];
-
-            unset($data['tags']);
+        if (isset($payload['tags_context'])) {
+            $event = $event->withTagsContext($payload['tags_context']);
         }
 
-        if (isset($data['extra'])) {
-            $data['extra_context'] = $data['extra'];
-
-            unset($data['extra']);
+        if (isset($payload['extra_context'])) {
+            $event = $event->withExtraContext($payload['extra_context']);
         }
 
-        if (isset($data['user'])) {
-            $data['user_context'] = $data['user'];
-
-            unset($data['user']);
+        if (isset($payload['user_context'])) {
+            $event = $event->withUserContext($payload['user_context']);
         }
 
-        if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, static::MESSAGE_LIMIT);
+        if (isset($payload['message'])) {
+            $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
 
-        $event = $this->callMiddlewareStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($data['exception']) ? $data['exception'] : null, $data);
+        $event = $this->callMiddlewareStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
 
-        $data = $event->toArray();
+        $payload = $event->toArray();
 
-        $this->sanitize($data);
-        $this->process($data);
+        $this->sanitize($payload);
+        $this->process($payload);
 
         if (!$this->storeErrorsForBulkSend) {
-            $this->send($data);
+            $this->send($payload);
         } else {
-            $this->pendingEvents[] = $data;
+            $this->pendingEvents[] = $payload;
         }
 
-        $this->lastEventId = $data['event_id'];
+        $this->lastEventId = $payload['event_id'];
 
-        return $data['event_id'];
+        return $payload['event_id'];
     }
 
     public function sanitize(&$data)
@@ -672,68 +593,6 @@ class Client
         $promise->then($cleanupPromiseCallback, $cleanupPromiseCallback);
 
         $this->pendingRequests[] = $promise;
-    }
-
-    /**
-     * Return the URL for the current request.
-     *
-     * @return string|null
-     */
-    protected function getCurrentUrl()
-    {
-        // When running from commandline the REQUEST_URI is missing.
-        if (!isset($_SERVER['REQUEST_URI'])) {
-            return null;
-        }
-
-        // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
-        $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (!empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
-            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
-
-        $httpS = $this->isHttps() ? 's' : '';
-
-        return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
-    }
-
-    /**
-     * Was the current request made over https?
-     *
-     * @return bool
-     */
-    protected function isHttps()
-    {
-        if (!empty($_SERVER['HTTPS']) && 'off' !== $_SERVER['HTTPS']) {
-            return true;
-        }
-
-        if (!empty($_SERVER['SERVER_PORT']) && 443 == $_SERVER['SERVER_PORT']) {
-            return true;
-        }
-
-        if (!empty($this->config->isTrustXForwardedProto()) &&
-            !empty($_SERVER['X-FORWARDED-PROTO']) &&
-            'https' === $_SERVER['X-FORWARDED-PROTO']) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get the value of a key from $_SERVER.
-     *
-     * @param string $key Key whose value you wish to obtain
-     *
-     * @return string Key's value
-     */
-    private static function _server_variable($key)
-    {
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return '';
     }
 
     /**

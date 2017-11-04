@@ -77,24 +77,6 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
                 ],
             ],
             [
-                new \ErrorException('foo', 0, E_USER_WARNING),
-                [],
-                [
-                    'level' => Client::LEVEL_INFO,
-                ],
-                [
-                    'level' => Client::LEVEL_INFO,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \ErrorException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
                 new \BadMethodCallException('baz', 0, new \BadFunctionCallException('bar', 0, new \LogicException('foo', 0))),
                 [
                     'excluded_exceptions' => [\BadMethodCallException::class],
@@ -117,5 +99,133 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    public function testInvokeWithExceptionContainingLatin1Characters()
+    {
+        $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])
+            ->getClient();
+
+        $event = new Event($client->getConfig());
+        $utf8String = 'äöü';
+        $latin1String = utf8_decode($utf8String);
+        $invokationCount = 0;
+
+        $callback = function (Event $eventArg) use ($event, &$invokationCount, $utf8String) {
+            $this->assertNotSame($event, $eventArg);
+
+            $expectedValue = [
+                [
+                    'type' => \Exception::class,
+                    'value' => $utf8String,
+                ],
+            ];
+
+            $this->assertArraySubset($expectedValue, $eventArg->getException());
+
+            ++$invokationCount;
+        };
+
+        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware($event, $callback, null, new \Exception($latin1String));
+
+        $this->assertEquals(1, $invokationCount);
+    }
+
+    public function testInvokeWithExceptionContainingInvalidUtf8Characters()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $event = new Event($client->getConfig());
+        $invokationCount = 0;
+
+        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+            $this->assertNotSame($event, $eventArg);
+
+            $expectedValue = [
+                [
+                    'type' => \Exception::class,
+                    'value' => "\xC2\xA2\x3F",
+                ],
+            ];
+
+            $this->assertArraySubset($expectedValue, $eventArg->getException());
+
+            ++$invokationCount;
+        };
+
+        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware($event, $callback, null, new \Exception("\xC2\xA2\xC2")); // ill-formed 2-byte character U+00A2 (CENT SIGN)
+
+        $this->assertEquals(1, $invokationCount);
+    }
+
+    public function testInvokeWithExceptionThrownInLatin1File()
+    {
+        $client = ClientBuilder::create([
+            'auto_log_stacks' => true,
+            'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
+        ])->getClient();
+
+        $event = new Event($client->getConfig());
+
+        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+            $this->assertNotSame($event, $eventArg);
+
+            $result = $eventArg->getException();
+
+            $expectedValue = [
+                [
+                    'type' => \Exception::class,
+                    'value' => 'foo',
+                ],
+            ];
+
+            $this->assertArraySubset($expectedValue, $result);
+
+            $latin1StringFound = false;
+
+            foreach ($result[0]['stacktrace']->toArray() as $frame) {
+                if (isset($frame['pre_context']) && in_array('// äöü', $frame['pre_context'], true)) {
+                    $latin1StringFound = true;
+
+                    break;
+                }
+            }
+
+            $this->assertTrue($latin1StringFound);
+
+            ++$invokationCount;
+        };
+
+        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware($event, $callback, null, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
+
+        $this->assertEquals(1, $invokationCount);
+    }
+
+    public function testInvokeWithAutoLogStacksDisabled()
+    {
+        $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
+        $event = new Event($client->getConfig());
+
+        $invokationCount = 0;
+        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+            $this->assertNotSame($event, $eventArg);
+
+            $result = $eventArg->getException();
+
+            $this->assertNotEmpty($result);
+            $this->assertInternalType('array', $result[0]);
+            $this->assertEquals(\Exception::class, $result[0]['type']);
+            $this->assertEquals('foo', $result[0]['value']);
+            $this->assertArrayNotHasKey('stacktrace', $result[0]);
+
+            ++$invokationCount;
+        };
+
+        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware($event, $callback, null, new \Exception('foo'));
+
+        $this->assertEquals(1, $invokationCount);
     }
 }

@@ -30,7 +30,7 @@ class SanitizeStacktraceProcessorTest extends TestCase
 
     protected function setUp()
     {
-        $this->client = ClientBuilder::create()->getClient();
+        $this->client = ClientBuilder::create(['auto_log_stacks' => true])->getClient();
         $this->client->storeErrorsForBulkSend = true;
 
         $this->processor = new SanitizeStacktraceProcessor($this->client);

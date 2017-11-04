@@ -51,15 +51,10 @@ final class ExceptionDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        if (!isset($payload['level'])) {
-            $payload['level'] = Client::LEVEL_ERROR;
-
-            if ($exception instanceof \ErrorException) {
-                $payload['level'] = $this->client->translateSeverity($exception->getSeverity());
-            }
+        // Do not override the level if it was set explicitly by the user
+        if (!isset($payload['level']) && $exception instanceof \ErrorException) {
+            $event = $event->withLevel($this->client->translateSeverity($exception->getSeverity()));
         }
-
-        $event = $event->withLevel($payload['level']);
 
         if (null !== $exception) {
             $exceptions = [];
@@ -70,11 +65,16 @@ final class ExceptionDataCollectorMiddleware
                     continue;
                 }
 
-                $exceptions[] = [
+                $data = [
                     'type' => get_class($currentException),
-                    'value' => $currentException->getMessage(),
-                    'stacktrace' => Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine()),
+                    'value' => $this->client->getSerializer()->serialize($currentException->getMessage()),
                 ];
+
+                if ($this->client->getConfig()->getAutoLogStacks()) {
+                    $data['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+                }
+
+                $exceptions[] = $data;
             } while ($currentException = $currentException->getPrevious());
 
             $exceptions = array_reverse($exceptions);

@@ -216,7 +216,7 @@
   Before:
 
   ```php
-  public function captureMessage($message, $params = [], $data = [], $stack = false, $vars = null)
+  public function captureMessage($message, $params = array(), $data = array(), $stack = false, $vars = null)
   {
       // ...
   }
@@ -252,9 +252,37 @@
   }
   ```
 
-- If an exception implemented the `getSeverity()` method its value was used as error level
-  of the event. This has been changed so that only the `ErrorException` or its derivated classes
-  are considered for this behavior.
+- The `$vars` argument of the `Client::captureException`, `Client::captureMessage` and
+  `Client::captureQuery` methods accepted some values that were setting additional data
+  in the event like the tags or the user data. Some of them have changed name.
+
+  Before:
+
+  ```php
+  $vars = array(
+      'tags' => array(...),
+      'extra' => array(...),
+      'user' => array(...),
+  );
+
+  $client->captureException(new Exception(), null, null, $vars);
+  ```
+
+  After:
+
+  ```php
+  $payload = array(
+      'tags_context' => array(...),
+      'extra_context' => array(...),
+      'user_context' => array(...),
+  );
+
+  $client->captureException(new Exception(), $payload);
+  ```
+
+- If an exception implemented the `getSeverity()` method its value was used as error
+  level of the event. This has been changed so that only the `ErrorException` or its
+  derivated classes are considered for this behavior.
 
 ### Client builder
 

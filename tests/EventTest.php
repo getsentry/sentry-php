@@ -11,7 +11,6 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;
-use Raven\Stacktrace;
 
 /**
  * @group time-sensitive
@@ -194,32 +193,6 @@ class EventTest extends TestCase
             ['fingerprint', ['foo', 'bar'], 'fingerprint'],
             ['environment', 'foo', 'environment'],
         ];
-    }
-
-    /**
-     * @expectedException \Raven\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The $throwable argument must be an instance of either \Throwable or \Exception.
-     */
-    public function testCreateFromPHPThrowableThrowsOnInvalidArgument()
-    {
-        /* @noinspection PhpParamsInspection */
-        Event::createFromPHPThrowable($this->client, new \stdClass());
-    }
-
-    public function testCreateFromPHPThrowable()
-    {
-        $event = Event::createFromPHPThrowable($this->client, new \Exception('foo bar'));
-
-        $this->assertEquals('foo bar', $event->getMessage());
-        $this->assertEquals(Client::LEVEL_ERROR, $event->getLevel());
-
-        $frames = $event->getStacktrace()->getFrames();
-        $lastFrame = $frames[count($frames) - 1];
-
-        $this->assertEquals(__FILE__, $lastFrame['filename']);
-        $this->assertEquals(__LINE__ - 9, $lastFrame['lineno']);
-        $this->assertEquals(__METHOD__, $lastFrame['function']);
-        $this->assertInstanceOf(Stacktrace::class, $event->getStacktrace());
     }
 
     public function testEventJsonSerialization()

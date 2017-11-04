@@ -80,6 +80,10 @@ class SanitizeDataProcessor extends Processor
     public function sanitizeException(&$data)
     {
         foreach ($data['exception']['values'] as &$value) {
+            if (!isset($value['stacktrace'])) {
+                continue;
+            }
+
             $this->sanitizeStacktrace($value['stacktrace']);
         }
     }

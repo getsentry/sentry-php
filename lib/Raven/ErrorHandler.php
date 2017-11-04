@@ -78,7 +78,7 @@ class ErrorHandler
 
     public function handleException($e, $isError = false, $vars = null)
     {
-        $e->event_id = $this->client->captureException($e, null, null, $vars);
+        $e->event_id = $this->client->captureException($e, $vars);
 
         if (!$isError && $this->call_existing_exception_handler) {
             if (null !== $this->old_exception_handler) {

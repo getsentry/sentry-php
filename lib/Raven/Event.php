@@ -14,7 +14,6 @@ namespace Raven;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Exception\InvalidArgumentException;
 
 /**
  * This is the base class for classes containing event data.
@@ -153,44 +152,6 @@ final class Event implements \JsonSerializable
     public static function create(Configuration $config)
     {
         return new static($config);
-    }
-
-    /**
-     * Creates a new event from the given throwable.
-     *
-     * @param Client                $client    The Raven client instance
-     * @param \Exception|\Throwable $throwable The throwable instance
-     *
-     * @return static
-     */
-    public static function createFromPHPThrowable(Client $client, $throwable)
-    {
-        if (!$throwable instanceof \Exception && !$throwable instanceof \Throwable) {
-            throw new InvalidArgumentException('The $throwable argument must be an instance of either \Throwable or \Exception.');
-        }
-
-        return static::create($client->getConfig())
-            ->withMessage($throwable->getMessage())
-            ->withStacktrace(Stacktrace::createFromBacktrace($client, $throwable->getTrace(), $throwable->getFile(), $throwable->getLine()));
-    }
-
-    /**
-     * Creates a new event using the given error details.
-     *
-     * @param Client $client  The Raven client instance
-     * @param int    $code    The error code
-     * @param string $message The error message
-     * @param string $file    The file where the error was thrown
-     * @param int    $line    The line at which the error was thrown
-     *
-     * @return static
-     */
-    public static function createFromPHPError(Client $client, $code, $message, $file, $line)
-    {
-        return static::create($client->getConfig())
-            ->withMessage($message)
-            ->withLevel($client->translateSeverity($code))
-            ->withStacktrace(Stacktrace::create($client));
     }
 
     /**
@@ -819,13 +780,18 @@ final class Event implements \JsonSerializable
 
         if (!empty($this->exception)) {
             foreach ($this->exception as $exception) {
-                $data['exception']['values'][] = [
+                $exceptionData = [
                     'type' => $exception['type'],
                     'value' => $exception['value'],
-                    'stacktrace' => [
-                        'frames' => $exception['stacktrace']->toArray(),
-                    ],
                 ];
+
+                if (isset($exception['stacktrace'])) {
+                    $exceptionData['stacktrace'] = [
+                        'frames' => $exception['stacktrace']->toArray(),
+                    ];
+                }
+
+                $data['exception']['values'][] = $exceptionData;
             }
         }
 

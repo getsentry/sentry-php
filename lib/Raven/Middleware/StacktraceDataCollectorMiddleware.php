@@ -52,7 +52,9 @@ final class StacktraceDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        if (null !== $exception && !$this->client->getConfig()->isExcludedException($exception)) {
+        $config = $this->client->getConfig();
+
+        if (null !== $exception && $config->getAutoLogStacks() && !$config->isExcludedException($exception)) {
             $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
         }
 

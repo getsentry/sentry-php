@@ -59,7 +59,7 @@ class IntegrationTest extends TestCase
 
     public function testCaptureSimpleError()
     {
-        $client = ClientBuilder::create([])->getClient();
+        $client = ClientBuilder::create(['auto_log_stacks' => true])->getClient();
         $client->storeErrorsForBulkSend = true;
 
         @mkdir('/no/way');
