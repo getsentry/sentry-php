@@ -54,7 +54,7 @@ final class ExceptionDataCollectorMiddleware
         if (!isset($payload['level'])) {
             $payload['level'] = Client::LEVEL_ERROR;
 
-            if (method_exists($exception, 'getSeverity')) {
+            if ($exception instanceof \ErrorException) {
                 $payload['level'] = $this->client->translateSeverity($exception->getSeverity());
             }
         }

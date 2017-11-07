@@ -389,19 +389,6 @@ class ClientTest extends TestCase
         $this->assertNotEmpty($frame['post_context']);
     }
 
-    public function testCaptureExceptionChainedException()
-    {
-        // TODO: it'd be nice if we could mock the stacktrace extraction function here
-        $client = ClientBuilder::create()->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureException($this->create_chained_exception());
-
-        $this->assertCount(1, $client->pendingEvents);
-        $this->assertCount(2, $client->pendingEvents[0]['exception']['values']);
-        $this->assertEquals('Foo bar', $client->pendingEvents[0]['exception']['values'][0]['value']);
-        $this->assertEquals('Child exc', $client->pendingEvents[0]['exception']['values'][1]['value']);
-    }
 
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
@@ -431,16 +418,6 @@ class ClientTest extends TestCase
 
         $this->assertCount(1, $client->pendingEvents);
         $this->assertEquals('test', $client->pendingEvents[0]['culprit']);
-    }
-
-    public function testCaptureExceptionHandlesExcludeOption()
-    {
-        $client = ClientBuilder::create(['excluded_exceptions' => ['Exception']])->getClient();
-        $client->storeErrorsForBulkSend = true;
-
-        $client->captureException($this->create_exception(), 'test');
-
-        $this->assertEmpty($client->pendingEvents);
     }
 
     public function testCaptureExceptionInvalidUTF8()

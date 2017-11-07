@@ -19,60 +19,103 @@ use Raven\Middleware\ExceptionDataCollectorMiddleware;
 
 class ExceptionDataCollectorMiddlewareTest extends TestCase
 {
-    public function testInvoke()
+    /**
+     * @dataProvider invokeDataProvider
+     */
+    public function testInvoke($exception, $clientConfig, $payload, $expectedResult)
     {
-        $client = ClientBuilder::create(['excluded_exceptions' => [\BadMethodCallException::class]])
-            ->getClient();
-
+        $client = ClientBuilder::create($clientConfig)->getClient();
         $event = new Event($client->getConfig());
-        $exception = new \LogicException('foo', 0);
-        $exception = new \BadFunctionCallException('bar', 0, $exception);
-        $exception = new \BadMethodCallException('baz', 0, $exception);
 
         $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+        $callback = function (Event $eventArg) use ($event, $expectedResult, &$invokationCount) {
             $this->assertNotSame($event, $eventArg);
-            $this->assertEquals(Client::LEVEL_ERROR, $eventArg->getLevel());
-
-            $result = [
-                [
-                    'type' => \LogicException::class,
-                    'value' => 'foo',
-                ],
-                [
-                    'type' => \BadFunctionCallException::class,
-                    'value' => 'bar',
-                ],
-            ];
-
-            $this->assertArraySubset($result, $eventArg->getException());
+            $this->assertArraySubset($expectedResult, $eventArg->toArray());
 
             ++$invokationCount;
         };
 
         $middleware = new ExceptionDataCollectorMiddleware($client);
-        $middleware($event, $callback, null, $exception);
+        $middleware($event, $callback, null, $exception, $payload);
 
         $this->assertEquals(1, $invokationCount);
     }
 
-    public function testInvokeWithLevel()
+    public function invokeDataProvider()
     {
-        $client = ClientBuilder::create()->getClient();
-
-        $event = new Event($client->getConfig());
-
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-            $this->assertEquals(Client::LEVEL_INFO, $eventArg->getLevel());
-
-            ++$invokationCount;
-        };
-
-        $middleware = new ExceptionDataCollectorMiddleware($client);
-        $middleware($event, $callback, null, null, ['level' => Client::LEVEL_INFO]);
-
-        $this->assertEquals(1, $invokationCount);
+        return [
+            [
+                new \RuntimeException('foo'),
+                [],
+                [],
+                [
+                    'level' => Client::LEVEL_ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \ErrorException('foo', 0, E_USER_WARNING),
+                [],
+                [],
+                [
+                    'level' => Client::LEVEL_WARNING,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \ErrorException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \ErrorException('foo', 0, E_USER_WARNING),
+                [],
+                [
+                    'level' => Client::LEVEL_INFO,
+                ],
+                [
+                    'level' => Client::LEVEL_INFO,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \ErrorException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \BadMethodCallException('baz', 0, new \BadFunctionCallException('bar', 0, new \LogicException('foo', 0))),
+                [
+                    'excluded_exceptions' => [\BadMethodCallException::class],
+                ],
+                [],
+                [
+                    'level' => Client::LEVEL_ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \LogicException::class,
+                                'value' => 'foo',
+                            ],
+                            [
+                                'type' => \BadFunctionCallException::class,
+                                'value' => 'bar',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

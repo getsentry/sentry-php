@@ -214,16 +214,16 @@
   `$stack` and `$vars` arguments.
 
   Before:
-  
+
   ```php
   public function captureMessage($message, $params = [], $data = [], $stack = false, $vars = null)
   {
       // ...
   }
   ```
-  
+
   After:
-  
+
   ```php
   public function captureMessage($message, array $params = [], array $payload = [])
   {
@@ -235,23 +235,27 @@
   `$logger` and `$vars` arguments.
 
   Before:
-  
+
   ```php
   public function captureException($exception, $data = null, $logger = null, $vars = null)
   {
       // ...
   }
   ```
-  
+
   After:
-  
+
   ```php
   public function captureException($exception, array $payload = [])
   {
       // ...
   }
   ```
-  
+
+- If an exception implemented the `getSeverity()` method its value was used as error level
+  of the event. This has been changed so that only the `ErrorException` or its derivated classes
+  are considered for this behavior.
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class
