@@ -81,9 +81,9 @@ class Raven_Compat
     public static function json_encode($value, $options = 0, $depth = 512)
     {
         if (function_exists('json_encode')) {
-            if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+            if (PHP_VERSION_ID < 50300) {
                 return json_encode($value);
-            } elseif (version_compare(PHP_VERSION, '5.5.0', '<')) {
+            } elseif (PHP_VERSION_ID < 50500) {
                 return json_encode($value, $options);
             } else {
                 return json_encode($value, $options, $depth);

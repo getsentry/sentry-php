@@ -569,7 +569,7 @@ class Raven_Client
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
     {
-        $has_chained_exceptions = version_compare(PHP_VERSION, '5.3.0', '>=');
+        $has_chained_exceptions = PHP_VERSION_ID >= 50300;
 
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
@@ -1328,7 +1328,7 @@ class Raven_Client
             case E_STRICT:             return Raven_Client::INFO;
             case E_RECOVERABLE_ERROR:  return Raven_Client::ERROR;
         }
-        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+        if (PHP_VERSION_ID >= 50300) {
             switch ($severity) {
             case E_DEPRECATED:         return Raven_Client::WARN;
             case E_USER_DEPRECATED:    return Raven_Client::WARN;

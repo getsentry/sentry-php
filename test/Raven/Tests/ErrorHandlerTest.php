@@ -207,7 +207,7 @@ class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
                        ->getMock();
         $handler = new Raven_ErrorHandler($client);
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), !version_compare(phpversion(), '7.0', '>='));
+        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), PHP_VERSION_ID < 70000);
 
         $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
     }

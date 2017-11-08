@@ -143,7 +143,7 @@ class Raven_ErrorHandler
         // Do not capture E_ERROR since those can be caught by userland since PHP 7.0
         // E_ERROR should already be handled by the exception handler
         // This prevents duplicated exceptions in PHP 7.0+
-        if (version_compare(phpversion(), '7.0', '>=') && $type === E_ERROR) {
+        if (PHP_VERSION_ID >= 70000 && $type === E_ERROR) {
             return false;
         }
 
