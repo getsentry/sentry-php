@@ -561,10 +561,10 @@ class Raven_Client
     /**
      * Log an exception to sentry
      *
-     * @param Exception $exception The Exception object.
-     * @param array     $data      Additional attributes to pass with this event (see Sentry docs).
-     * @param mixed     $logger
-     * @param mixed     $vars
+     * @param \Throwable|\Exception $exception The Throwable/Exception object.
+     * @param array                 $data      Additional attributes to pass with this event (see Sentry docs).
+     * @param mixed                 $logger
+     * @param mixed                 $vars
      * @return string|null
      */
     public function captureException($exception, $data = null, $logger = null, $vars = null)
