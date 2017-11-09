@@ -27,7 +27,7 @@ class Raven_CurlHandler
         $this->options = $options;
         $this->multi_handle = curl_multi_init();
         $this->requests = array();
-        $this->join_timeout = 5;
+        $this->join_timeout = $join_timeout;
 
         register_shutdown_function(array($this, 'join'));
     }
