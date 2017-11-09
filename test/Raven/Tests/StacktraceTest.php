@@ -124,7 +124,7 @@ class Raven_Tests_StacktraceTest extends \PHPUnit\Framework\TestCase
         // just grab the last few frames
         $frames = array_slice($frames, -6);
         $skip_call_user_func_fix = false;
-        if (version_compare(PHP_VERSION, '7.0', '>=')) {
+        if (PHP_VERSION_ID >= 70000) {
             $skip_call_user_func_fix = true;
             foreach ($frames as &$frame) {
                 if (isset($frame['function']) and ($frame['function'] == 'call_user_func')) {

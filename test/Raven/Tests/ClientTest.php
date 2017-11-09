@@ -586,7 +586,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
      */
     public function testCaptureExceptionChainedException()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+        if (PHP_VERSION_ID < 50300) {
             $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
         }
 
@@ -610,7 +610,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
      */
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+        if (PHP_VERSION_ID < 50300) {
             $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
         }
 
@@ -1600,7 +1600,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $predefined = array(E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
                        E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
                        E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, );
-        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+        if (PHP_VERSION_ID >= 50300) {
             $predefined[] = E_DEPRECATED;
             $predefined[] = E_USER_DEPRECATED;
         }
@@ -1769,7 +1769,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             $data_broken = array($data_broken);
         }
         $value = $client->encode($data_broken);
-        if (!function_exists('json_encode') or version_compare(PHP_VERSION, '5.5.0', '>=')) {
+        if (!function_exists('json_encode') or PHP_VERSION_ID >= 50500) {
             $this->assertFalse($value, 'Broken data encoded successfully with '.
                 (function_exists('json_encode') ? 'native method' : 'Raven_Compat::_json_encode'));
         } else {
@@ -1817,11 +1817,9 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $debug_backtrace = $this->_debug_backtrace;
         set_error_handler($previous, E_ALL);
         $this->assertTrue($u);
-        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func')
-            and version_compare(PHP_VERSION, '7.0', '>=')
-        ) {
+        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func') and PHP_VERSION_ID >= 70000) {
             $offset = 2;
-        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
+        } elseif (PHP_VERSION_ID >= 70000) {
             $offset = 1;
         } else {
             $offset = 2;
@@ -2048,7 +2046,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
      */
     public function testGet_user_data_step2()
     {
-        if (version_compare(PHP_VERSION, '7.1.999', '>')) {
+        if (PHP_VERSION_ID >= 70200) {
             /**
              * @doc https://3v4l.org/OVbja
              * @doc https://3v4l.org/uT00O
