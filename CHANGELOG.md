@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- ...
+- Avoid to capture `E_ERROR` in PHP 7+, because it's also a `Throwable` that gets captured and duplicates the error (#514)
 
 ## 1.8.0 (2017-10-29)
 
