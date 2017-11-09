@@ -44,7 +44,13 @@ class Raven_Client
     protected $error_handler;
     protected $error_types;
 
+    /**
+     * @var Raven_Serializer
+     */
     protected $serializer;
+    /**
+     * @var Raven_ReprSerializer
+     */
     protected $reprSerializer;
 
     /**
@@ -1446,5 +1452,21 @@ class Raven_Client
             curl_close($this->_curl_instance);
             $this->_curl_instance = null;
         }
+    }
+
+    /**
+     * @param Raven_Serializer $serializer
+     */
+    public function setSerializer(Raven_Serializer $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
+    /**
+     * @param Raven_ReprSerializer $reprSerializer
+     */
+    public function setReprSerializer(Raven_ReprSerializer $reprSerializer)
+    {
+        $this->reprSerializer = $reprSerializer;
     }
 }
