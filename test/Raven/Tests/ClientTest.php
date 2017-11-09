@@ -1437,6 +1437,8 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
      * @covers Raven_Client::getLastEventID
      * @covers Raven_Client::get_extra_data
      * @covers Raven_Client::setProcessors
+     * @covers Raven_Client::setSerializer
+     * @covers Raven_Client::setReprSerializer
      * @covers Raven_Client::getLastSentryError
      * @covers Raven_Client::getShutdownFunctionHasBeenSet
      */
@@ -1446,6 +1448,9 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $property_method__convert_path = new ReflectionMethod('Raven_Client', '_convertPath');
         $property_method__convert_path->setAccessible(true);
         $callable = array($this, 'stabClosureVoid');
+
+        $serializer = $this->getMockBuilder('Raven_Serializer')->getMock();
+        $reprSerializer = $this->getMockBuilder('Raven_ReprSerializer')->getMock();
 
         $data = array(
             array('environment', null, 'value', ),
@@ -1476,6 +1481,8 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             array('extra_data', '_extra_data', array('key' => 'value'), ),
             array('processors', 'processors', array(), ),
             array('processors', 'processors', array('key' => 'value'), ),
+            array('serializer', 'Serializer', $serializer, ),
+            array('reprSerializer', 'ReprSerializer', $reprSerializer, ),
             array('_shutdown_function_has_been_set', null, true),
             array('_shutdown_function_has_been_set', null, false),
         );
