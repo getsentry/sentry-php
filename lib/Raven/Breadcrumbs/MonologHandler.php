@@ -67,10 +67,11 @@ class MonologHandler extends AbstractProcessingHandler
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
             /**
-             * @var \Exception $exc Exception
+             * @var \Exception
              */
             $exc = $record['context']['exception'];
 
+            /** @noinspection PhpUndefinedMethodInspection */
             $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
                 'type' => get_class($exc),
                 'value' => $exc->getMessage(),

@@ -19,17 +19,17 @@ class ReprSerializer extends \Raven\Serializer
 {
     protected function serializeValue($value)
     {
-        if ($value === null) {
+        if (null === $value) {
             return 'null';
-        } elseif ($value === false) {
+        } elseif (false === $value) {
             return 'false';
-        } elseif ($value === true) {
+        } elseif (true === $value) {
             return 'true';
         } elseif (is_float($value) && (int) $value == $value) {
             return $value . '.0';
         } elseif (is_int($value) || is_float($value)) {
             return (string) $value;
-        } elseif (is_object($value) || gettype($value) == 'object') {
+        } elseif (is_object($value) || ('object' == gettype($value))) {
             return 'Object ' . get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource ' . get_resource_type($value);
