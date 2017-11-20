@@ -55,7 +55,7 @@ class Serializer
      */
     public function __construct($mb_detect_order = null)
     {
-        if ($mb_detect_order != null) {
+        if (null != $mb_detect_order) {
             $this->mb_detect_order = $mb_detect_order;
         }
     }
@@ -83,7 +83,7 @@ class Serializer
             }
 
             if (is_object($value)) {
-                if ((get_class($value) == 'stdClass') or $this->_all_object_serialize) {
+                if (('stdClass' == get_class($value)) or $this->_all_object_serialize) {
                     return $this->serializeObject($value, $max_depth, $_depth, []);
                 }
             }
@@ -147,9 +147,9 @@ class Serializer
      */
     protected function serializeValue($value)
     {
-        if (null === $value || is_bool($value) || is_float($value) || is_int($value)) {
+        if ((null === $value) || is_bool($value) || is_float($value) || is_int($value)) {
             return $value;
-        } elseif (is_object($value) || gettype($value) == 'object') {
+        } elseif (is_object($value) || ('object' == gettype($value))) {
             return 'Object ' . get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource ' . get_resource_type($value);

@@ -30,7 +30,7 @@ class TransactionStack
     public function peek()
     {
         $len = count($this->stack);
-        if ($len === 0) {
+        if (0 === $len) {
             return null;
         }
 
