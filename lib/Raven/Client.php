@@ -46,7 +46,7 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
-     * @var Recorder The bredcrumbs recorder
+     * @var Recorder The breadcrumbs recorder
      */
     protected $recorder;
 
@@ -329,7 +329,7 @@ class Client
             $formatted_message = $message;
         }
 
-        if ($data === null) {
+        if (null === $data) {
             $data = [];
             // support legacy method of passing in a level name as the third arg
         } elseif (!is_array($data)) {
@@ -364,7 +364,7 @@ class Client
             return null;
         }
 
-        if ($data === null) {
+        if (null === $data) {
             $data = [];
         }
 
@@ -404,7 +404,7 @@ class Client
         $data['exception'] = [
             'values' => array_reverse($exceptions),
         ];
-        if ($logger !== null) {
+        if (null !== $logger) {
             $data['logger'] = $logger;
         }
 
@@ -460,7 +460,7 @@ class Client
             ],
         ];
 
-        if ($engine !== '') {
+        if (!empty($engine)) {
             $data['sentry.interfaces.Query']['engine'] = $engine;
         }
 
@@ -507,7 +507,7 @@ class Client
                 $header_key =
                     str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
                 $headers[$header_key] = $value;
-            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH']) && $value !== '') {
+            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH']) && !empty($value)) {
                 $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
                 $headers[$header_key] = $value;
             }
@@ -641,7 +641,7 @@ class Client
             $data['breadcrumbs'] = iterator_to_array($this->recorder);
         }
 
-        if ((!$stack && $this->config->getAutoLogStacks()) || $stack === true) {
+        if ((!$stack && $this->config->getAutoLogStacks()) || (true === $stack)) {
             $stack = debug_backtrace();
 
             // Drop last stack
@@ -850,17 +850,17 @@ class Client
      */
     protected function isHttps()
     {
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        if (!empty($_SERVER['HTTPS']) && ('off' !== $_SERVER['HTTPS'])) {
             return true;
         }
 
-        if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        if (!empty($_SERVER['SERVER_PORT']) && (443 == $_SERVER['SERVER_PORT'])) {
             return true;
         }
 
         if (!empty($this->config->isTrustXForwardedProto()) &&
             !empty($_SERVER['X-FORWARDED-PROTO']) &&
-            $_SERVER['X-FORWARDED-PROTO'] === 'https') {
+            ('https' === $_SERVER['X-FORWARDED-PROTO'])) {
             return true;
         }
 

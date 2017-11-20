@@ -71,6 +71,7 @@ class MonologHandler extends AbstractProcessingHandler
              */
             $exc = $record['context']['exception'];
 
+            /** @noinspection PhpUndefinedMethodInspection */
             $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
                 'type' => get_class($exc),
                 'value' => $exc->getMessage(),

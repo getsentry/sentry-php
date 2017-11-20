@@ -1153,7 +1153,7 @@ class ClientTest extends TestCase
 
     private function subTestGettersAndSettersDatum(\Raven\Client $client, $datum)
     {
-        if (count($datum) == 3) {
+        if (3 == count($datum)) {
             list($property_name, $function_name, $value_in) = $datum;
             $value_out = $value_in;
         } else {
@@ -1192,9 +1192,9 @@ class ClientTest extends TestCase
     {
         if (null === $expected_value) {
             $this->assertNull($actual_value);
-        } elseif ($expected_value === true) {
+        } elseif (true === $expected_value) {
             $this->assertTrue($actual_value);
-        } elseif ($expected_value === false) {
+        } elseif (false === $expected_value) {
             $this->assertFalse($actual_value);
         } elseif (is_string($expected_value) or is_int($expected_value) or is_float($expected_value)) {
             $this->assertEquals($expected_value, $actual_value);
@@ -1299,7 +1299,7 @@ class ClientTest extends TestCase
 
     public function testRegisterDefaultBreadcrumbHandlers()
     {
-        if (isset($_ENV['HHVM']) and ($_ENV['HHVM'] == 1)) {
+        if (isset($_ENV['HHVM']) and (1 == $_ENV['HHVM'])) {
             $this->markTestSkipped('HHVM stacktrace behaviour');
 
             return;
@@ -1673,6 +1673,26 @@ class ClientTest extends TestCase
         $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
         $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
     }
+
+    public function testClearBreadcrumb()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->leaveBreadcrumb(
+            new \Raven\Breadcrumbs\Breadcrumb(
+                'warning', \Raven\Breadcrumbs\Breadcrumb::TYPE_ERROR, 'error_reporting', 'message', [
+                    'code' => 127,
+                    'line' => 10,
+                    'file' => '/tmp/delme.php',
+                ]
+            )
+        );
+        $reflection = new \ReflectionProperty($client, 'recorder');
+        $reflection->setAccessible(true);
+        $this->assertNotEmpty(iterator_to_array($reflection->getValue($client)));
+
+        $client->clearBreadcrumbs();
+        $this->assertEmpty(iterator_to_array($reflection->getValue($client)));
+    }
 }
 
 class PromiseMock implements Promise
@@ -1712,20 +1732,18 @@ class PromiseMock implements Promise
     public function wait($unwrap = true)
     {
         switch ($this->state) {
-            case self::FULFILLED: {
+            case self::FULFILLED:
                 foreach ($this->onFullfilledCallbacks as $onFullfilledCallback) {
                     $onFullfilledCallback($this->result);
                 }
 
                 break;
-            }
-            case self::REJECTED: {
+            case self::REJECTED:
                 foreach ($this->onRejectedCallbacks as $onRejectedCallback) {
                     $onRejectedCallback($this->result);
                 }
 
                 break;
-            }
         }
 
         if ($unwrap) {
