@@ -760,7 +760,7 @@ class Configuration
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
             'mb_detect_order' => null,
-            'auto_log_stacks' => false,
+            'auto_log_stacks' => true,
             'context_lines' => 3,
             'encoding' => 'gzip',
             'current_environment' => 'default',

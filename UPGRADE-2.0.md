@@ -210,6 +210,8 @@
 
 - The `Client::message` method has been removed.
 
+- The `Client::captureQuery` method has been removed.
+
 - The `Client::captureMessage` method has changed its signature by removing the
   `$stack` and `$vars` arguments.
 

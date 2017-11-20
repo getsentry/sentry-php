@@ -333,9 +333,9 @@ class Client
      *
      * @param string $message The message (primary description) for the event
      * @param array  $params  Params to use when formatting the message
-     * @param array  $payload Additional attributes to pass with this event (see Sentry docs)
+     * @param array  $payload Additional attributes to pass with this event
      *
-     * @return string|null
+     * @return string
      */
     public function captureMessage($message, array $params = [], array $payload = [])
     {
@@ -349,9 +349,9 @@ class Client
      * Logs an exception.
      *
      * @param \Throwable|\Exception $exception The exception object
-     * @param array                 $payload   Additional attributes to pass with this event (see Sentry docs)
+     * @param array                 $payload   Additional attributes to pass with this event
      *
-     * @return string|null
+     * @return string
      */
     public function captureException($exception, array $payload = [])
     {
@@ -363,7 +363,7 @@ class Client
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
-     * @return string|null
+     * @return string
      */
     public function captureLastError()
     {
@@ -376,30 +376,6 @@ class Client
         $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
         return $this->captureException($exception);
-    }
-
-    /**
-     * Logs a query.
-     *
-     * @param string|null $query
-     * @param string      $level
-     * @param string      $engine
-     */
-    public function captureQuery($query, $level = self::LEVEL_INFO, $engine = '')
-    {
-        $data = [
-            'message' => $query,
-            'level' => $level,
-            'sentry.interfaces.Query' => [
-                'query' => $query,
-            ],
-        ];
-
-        if (!empty($engine)) {
-            $data['sentry.interfaces.Query']['engine'] = $engine;
-        }
-
-        return $this->capture($data);
     }
 
     /**
@@ -433,7 +409,14 @@ class Client
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    public function capture($payload)
+    /**
+     * Captures a new event using the provided data.
+     *
+     * @param array $payload The data of the event being captured
+     *
+     * @return string
+     */
+    public function capture(array $payload)
     {
         $event = new Event($this->config);
 
