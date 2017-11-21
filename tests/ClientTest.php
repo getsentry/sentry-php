@@ -1043,8 +1043,7 @@ class PromiseMock implements Promise
                 }
 
                 break;
-            
-            case self::REJECTED: 
+            case self::REJECTED:
                 foreach ($this->onRejectedCallbacks as $onRejectedCallback) {
                     $onRejectedCallback($this->result);
                 }
