@@ -15,10 +15,10 @@ use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
 use Raven\Context;
 use Raven\Event;
-use Raven\Middleware\UserDataCollectorMiddleware;
+use Raven\Middleware\UserInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 
-class UserDataCollectorMiddlewareTest extends TestCase
+class UserInterfaceMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {
@@ -36,7 +36,7 @@ class UserDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new UserDataCollectorMiddleware($context);
+        $middleware = new UserInterfaceMiddleware($context);
         $middleware($event, $callback);
 
         $this->assertEquals(1, $invokationCount);
@@ -60,7 +60,7 @@ class UserDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new UserDataCollectorMiddleware($context);
+        $middleware = new UserInterfaceMiddleware($context);
         $middleware($event, $callback, $request);
 
         $this->assertEquals(1, $invokationCount);

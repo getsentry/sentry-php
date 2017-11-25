@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Event;
-use Raven\Middleware\ExceptionDataCollectorMiddleware;
+use Raven\Middleware\ExceptionInterfaceMiddleware;
 
-class ExceptionDataCollectorMiddlewareTest extends TestCase
+class ExceptionInterfaceMiddlewareTest extends TestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -35,7 +35,7 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, $exception, $payload);
 
         $this->assertEquals(1, $invokationCount);
@@ -126,7 +126,7 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception($latin1String));
 
         $this->assertEquals(1, $invokationCount);
@@ -153,7 +153,7 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception("\xC2\xA2\xC2")); // ill-formed 2-byte character U+00A2 (CENT SIGN)
 
         $this->assertEquals(1, $invokationCount);
@@ -197,7 +197,7 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
 
         $this->assertEquals(1, $invokationCount);
@@ -223,7 +223,7 @@ class ExceptionDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ExceptionDataCollectorMiddleware($client);
+        $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception('foo'));
 
         $this->assertEquals(1, $invokationCount);

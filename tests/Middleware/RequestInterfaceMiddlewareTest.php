@@ -15,11 +15,11 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Raven\Configuration;
 use Raven\Event;
-use Raven\Middleware\RequestDataCollectorMiddleware;
+use Raven\Middleware\RequestInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestDataCollectorMiddlewareTest extends TestCase
+class RequestInterfaceMiddlewareTest extends TestCase
 {
     public function testInvokeWithNoRequest()
     {
@@ -33,7 +33,7 @@ class RequestDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new RequestDataCollectorMiddleware();
+        $middleware = new RequestInterfaceMiddleware();
         $middleware($event, $callback);
 
         $this->assertEquals(1, $invokationCount);
@@ -63,7 +63,7 @@ class RequestDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new RequestDataCollectorMiddleware();
+        $middleware = new RequestInterfaceMiddleware();
         $middleware($event, $callback, $request);
 
         $this->assertEquals(1, $invokationCount);

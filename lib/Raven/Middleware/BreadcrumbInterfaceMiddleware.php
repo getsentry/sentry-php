@@ -21,7 +21,7 @@ use Raven\Event;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class BreadcrumbDataCollectorMiddleware
+final class BreadcrumbInterfaceMiddleware
 {
     /**
      * @var Recorder The breadcrumbs recorder

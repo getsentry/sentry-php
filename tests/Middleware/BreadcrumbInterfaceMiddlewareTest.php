@@ -17,9 +17,9 @@ use Raven\Breadcrumbs\Recorder;
 use Raven\Client;
 use Raven\Configuration;
 use Raven\Event;
-use Raven\Middleware\BreadcrumbDataCollectorMiddleware;
+use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 
-class BreadcrumbDataCollectorMiddlewareTest extends TestCase
+class BreadcrumbInterfaceMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {
@@ -41,7 +41,7 @@ class BreadcrumbDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new BreadcrumbDataCollectorMiddleware($recorder);
+        $middleware = new BreadcrumbInterfaceMiddleware($recorder);
         $middleware($event, $callback);
 
         $this->assertEquals(1, $invokationCount);

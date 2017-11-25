@@ -16,12 +16,11 @@ use Raven\Context;
 use Raven\Event;
 
 /**
- * This middleware collects additional context data. Typically this is data
- * related to the current user or the current HTTP request.
+ * This middleware collects information about the current authenticated user.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ContextDataCollectorMiddleware
+final class UserInterfaceMiddleware
 {
     /**
      * @var Context The context storage
@@ -51,17 +50,13 @@ final class ContextDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $tagsContext = isset($payload['tags_context']) ? $payload['tags_context'] : [];
-        $extraContext = isset($payload['extra_context']) ? $payload['extra_context'] : [];
-        $serverOsContext = isset($payload['server_os_context']) ? $payload['server_os_context'] : [];
-        $runtimeContext = isset($payload['runtime_context']) ? $payload['runtime_context'] : [];
-        $userContext = isset($payload['user_context']) ? $payload['user_context'] : [];
+        $userContext = $this->context->getUserData();
 
-        $event = $event->withTagsContext(array_merge($this->context->getTags(), $tagsContext))
-            ->withExtraContext(array_merge($this->context->getExtraData(), $extraContext))
-            ->withUserContext(array_merge($this->context->getUserData(), $userContext))
-            ->withServerOsContext($serverOsContext)
-            ->withRuntimeContext($runtimeContext);
+        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+        }
+
+        $event = $event->withUserContext($userContext);
 
         return $next($event, $request, $exception, $payload);
     }

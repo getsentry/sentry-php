@@ -20,13 +20,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
-use Raven\Middleware\BreadcrumbDataCollectorMiddleware;
-use Raven\Middleware\ContextDataCollectorMiddleware;
-use Raven\Middleware\ExceptionDataCollectorMiddleware;
-use Raven\Middleware\MessageDataCollectorMiddleware;
-use Raven\Middleware\RequestDataCollectorMiddleware;
-use Raven\Middleware\StacktraceDataCollectorMiddleware;
-use Raven\Middleware\UserDataCollectorMiddleware;
+use Raven\Middleware\BreadcrumbInterfaceMiddleware;
+use Raven\Middleware\ContextInterfaceMiddleware;
+use Raven\Middleware\ExceptionInterfaceMiddleware;
+use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\RequestInterfaceMiddleware;
+use Raven\Middleware\StacktraceInterfaceMiddleware;
+use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Util\JSON;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -166,13 +166,13 @@ class Client
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->processors = $this->createProcessors();
 
-        $this->addMiddleware(new MessageDataCollectorMiddleware());
-        $this->addMiddleware(new RequestDataCollectorMiddleware());
-        $this->addMiddleware(new UserDataCollectorMiddleware($this->context));
-        $this->addMiddleware(new ContextDataCollectorMiddleware($this->context));
-        $this->addMiddleware(new BreadcrumbDataCollectorMiddleware($this->recorder));
-        $this->addMiddleware(new StacktraceDataCollectorMiddleware($this));
-        $this->addMiddleware(new ExceptionDataCollectorMiddleware($this));
+        $this->addMiddleware(new MessageInterfaceMiddleware());
+        $this->addMiddleware(new RequestInterfaceMiddleware());
+        $this->addMiddleware(new UserInterfaceMiddleware($this->context));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->context));
+        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
+        $this->addMiddleware(new StacktraceInterfaceMiddleware($this));
+        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
         if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
             $this->transaction->push($_SERVER['PATH_INFO']);

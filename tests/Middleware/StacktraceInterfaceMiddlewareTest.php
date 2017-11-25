@@ -14,10 +14,10 @@ namespace Raven\Tests\Breadcrumbs;
 use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\Event;
-use Raven\Middleware\StacktraceDataCollectorMiddleware;
+use Raven\Middleware\StacktraceInterfaceMiddleware;
 use Raven\Stacktrace;
 
-class StacktraceDataCollectorMiddlewareTest extends TestCase
+class StacktraceInterfaceMiddlewareTest extends TestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -40,7 +40,7 @@ class StacktraceDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new StacktraceDataCollectorMiddleware($client);
+        $middleware = new StacktraceInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception());
 
         $this->assertEquals(1, $invokationCount);

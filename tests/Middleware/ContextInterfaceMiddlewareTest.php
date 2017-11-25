@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
 use Raven\Context;
 use Raven\Event;
-use Raven\Middleware\ContextDataCollectorMiddleware;
+use Raven\Middleware\ContextInterfaceMiddleware;
 
-class ContextDataCollectorMiddlewareTest extends TestCase
+class ContextInterfaceMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {
@@ -41,7 +41,7 @@ class ContextDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new ContextDataCollectorMiddleware($context);
+        $middleware = new ContextInterfaceMiddleware($context);
         $middleware($event, $callback, null, null, [
             'tags_context' => ['foobar' => 'barfoo'],
             'extra_context' => ['barbaz' => 'bazbar'],

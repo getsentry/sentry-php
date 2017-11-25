@@ -15,12 +15,12 @@ use Psr\Http\Message\ServerRequestInterface;
 use Raven\Event;
 
 /**
- * This middleware collects the needed data to store a message with optional
- * params into the event.
+ * This middleware collects information from the request and attaches them to
+ * the event.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class MessageDataCollectorMiddleware
+class RequestInterfaceMiddleware
 {
     /**
      * Collects the needed data and sets it in the given event object.
@@ -35,12 +35,25 @@ class MessageDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $message = isset($payload['message']) ? $payload['message'] : null;
-        $messageParams = isset($payload['message_params']) ? $payload['message_params'] : [];
-
-        if (null !== $message) {
-            $event = $event->withMessage($message, $messageParams);
+        if (null === $request) {
+            return $next($event, $request, $exception, $payload);
         }
+
+        $requestData = [
+            'url' => (string) $request->getUri(),
+            'method' => $request->getMethod(),
+            'headers' => $request->getHeaders(),
+        ];
+
+        if ('' !== $request->getUri()->getQuery()) {
+            $requestData['query_string'] = $request->getUri()->getQuery();
+        }
+
+        if ($request->hasHeader('REMOTE_ADDR')) {
+            $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+        }
+
+        $event = $event->withRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }

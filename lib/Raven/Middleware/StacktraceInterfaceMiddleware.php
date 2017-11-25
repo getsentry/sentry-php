@@ -12,16 +12,33 @@
 namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Raven\Client;
 use Raven\Event;
+use Raven\Stacktrace;
 
 /**
- * This middleware collects information from the request and attaches them to
- * the event.
+ * This middleware collects information about the error or exception that
+ * generated the event.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class RequestDataCollectorMiddleware
+final class StacktraceInterfaceMiddleware
 {
+    /**
+     * @var Client The Raven client
+     */
+    private $client;
+
+    /**
+     * Constructor.
+     *
+     * @param Client $client The Raven client
+     */
+    public function __construct(Client $client)
+    {
+        $this->client = $client;
+    }
+
     /**
      * Collects the needed data and sets it in the given event object.
      *
@@ -35,25 +52,11 @@ class RequestDataCollectorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        if (null === $request) {
-            return $next($event, $request, $exception, $payload);
+        $config = $this->client->getConfig();
+
+        if (null !== $exception && $config->getAutoLogStacks() && !$config->isExcludedException($exception)) {
+            $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
         }
-
-        $requestData = [
-            'url' => (string) $request->getUri(),
-            'method' => $request->getMethod(),
-            'headers' => $request->getHeaders(),
-        ];
-
-        if ('' !== $request->getUri()->getQuery()) {
-            $requestData['query_string'] = $request->getUri()->getQuery();
-        }
-
-        if ($request->hasHeader('REMOTE_ADDR')) {
-            $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
-        }
-
-        $event = $event->withRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }

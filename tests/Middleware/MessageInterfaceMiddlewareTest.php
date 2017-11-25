@@ -14,9 +14,9 @@ namespace Raven\Tests\Breadcrumbs;
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
 use Raven\Event;
-use Raven\Middleware\MessageDataCollectorMiddleware;
+use Raven\Middleware\MessageInterfaceMiddleware;
 
-class MessageDataCollectorMiddlewareTest extends TestCase
+class MessageInterfaceMiddlewareTest extends TestCase
 {
     public function testInvokeWithoutMessage()
     {
@@ -30,7 +30,7 @@ class MessageDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new MessageDataCollectorMiddleware();
+        $middleware = new MessageInterfaceMiddleware();
         $middleware($event, $callback);
 
         $this->assertEquals(1, $invokationCount);
@@ -54,7 +54,7 @@ class MessageDataCollectorMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new MessageDataCollectorMiddleware();
+        $middleware = new MessageInterfaceMiddleware();
         $middleware($event, $callback, null, null, $payload);
 
         $this->assertEquals(1, $invokationCount);
