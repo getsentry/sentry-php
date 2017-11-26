@@ -16,6 +16,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Event;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
+use Raven\Stacktrace;
 
 class ExceptionInterfaceMiddlewareTest extends TestCase
 {
@@ -25,12 +26,23 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
     public function testInvoke($exception, $clientConfig, $payload, $expectedResult)
     {
         $client = ClientBuilder::create($clientConfig)->getClient();
+        $assertHasStacktrace = $client->getConfig()->getAutoLogStacks();
+
         $event = new Event($client->getConfig());
 
         $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, $expectedResult, &$invokationCount) {
+        $callback = function (Event $eventArg) use ($event, $assertHasStacktrace, $expectedResult, &$invokationCount) {
             $this->assertNotSame($event, $eventArg);
             $this->assertArraySubset($expectedResult, $eventArg->toArray());
+
+            foreach ($eventArg->getException() as $exception) {
+                if ($assertHasStacktrace) {
+                    $this->assertArrayHasKey('stacktrace', $exception);
+                    $this->assertInstanceOf(Stacktrace::class, $exception['stacktrace']);
+                } else {
+                    $this->assertArrayNotHasKey('stacktrace', $exception);
+                }
+            }
 
             ++$invokationCount;
         };
@@ -47,6 +59,24 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             [
                 new \RuntimeException('foo'),
                 [],
+                [],
+                [
+                    'level' => Client::LEVEL_ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \RuntimeException('foo'),
+                [
+                    'auto_log_stacks' => false,
+                ],
                 [],
                 [
                     'level' => Client::LEVEL_ERROR,

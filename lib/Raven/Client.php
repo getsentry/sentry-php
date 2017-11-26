@@ -25,7 +25,6 @@ use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
 use Raven\Middleware\MessageInterfaceMiddleware;
 use Raven\Middleware\RequestInterfaceMiddleware;
-use Raven\Middleware\StacktraceInterfaceMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Util\JSON;
 use Zend\Diactoros\ServerRequestFactory;
@@ -171,7 +170,6 @@ class Client
         $this->addMiddleware(new UserInterfaceMiddleware($this->context));
         $this->addMiddleware(new ContextInterfaceMiddleware($this->context));
         $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
-        $this->addMiddleware(new StacktraceInterfaceMiddleware($this));
         $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
         if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
