@@ -137,7 +137,7 @@ class Client
     /**
      * @var callable The tip of the middleware call stack
      */
-    private $middlewareTip;
+    private $middlewareStackTip;
 
     /**
      * @var bool Whether the stack of middleware callables is locked
@@ -167,6 +167,9 @@ class Client
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->processors = $this->createProcessors();
+        $this->middlewareStackTip = function (Event $event) {
+            return $event;
+        };
 
         $this->addMiddleware(new MessageInterfaceMiddleware());
         $this->addMiddleware(new RequestInterfaceMiddleware());
@@ -243,11 +246,9 @@ class Client
             throw new \RuntimeException('Middleware can\'t be added once the stack is dequeuing');
         }
 
-        $this->seedMiddlewareStack();
+        $next = $this->middlewareStackTip;
 
-        $next = $this->middlewareTip;
-
-        $this->middlewareTip = function (Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = []) use ($callable, $next) {
+        $this->middlewareStackTip = function (Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = []) use ($callable, $next) {
             $result = $callable($event, $next, $request, $exception, $payload);
 
             if (!$result instanceof Event) {
@@ -691,20 +692,6 @@ class Client
     }
 
     /**
-     * Seeds the middleware stack with the first callable.
-     */
-    private function seedMiddlewareStack()
-    {
-        if (null !== $this->middlewareTip) {
-            return;
-        }
-
-        $this->middlewareTip = function (Event $event) {
-            return $event;
-        };
-    }
-
-    /**
      * Calls the middleware stack.
      *
      * @param Event                       $event     The event object
@@ -716,9 +703,7 @@ class Client
      */
     private function callMiddlewareStack(Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $this->seedMiddlewareStack();
-
-        $start = $this->middlewareTip;
+        $start = $this->middlewareStackTip;
 
         $this->stackLocked = true;
 

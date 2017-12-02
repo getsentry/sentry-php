@@ -186,11 +186,11 @@ class ClientTest extends TestCase
         $this->assertTrue($waitCalled);
     }
 
-    public function testSeedMiddleware()
+    public function testMiddlewareStackIsSeeded()
     {
         $client = ClientBuilder::create()->getClient();
 
-        $firstMiddleware = $this->getObjectAttribute($client, 'middlewareTip');
+        $firstMiddleware = $this->getObjectAttribute($client, 'middlewareStackTip');
         $lastMiddleware = null;
 
         $client->addMiddleware(function (Event $event, callable $next) use (&$lastMiddleware) {
