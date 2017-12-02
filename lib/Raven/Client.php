@@ -104,8 +104,6 @@ class Client
      */
     private $lastError;
 
-    private $lastEventId;
-
     /**
      * @var array[]
      */
@@ -145,6 +143,11 @@ class Client
      * @var bool Whether the stack of middleware callables is locked
      */
     private $stackLocked = false;
+
+    /**
+     * @var Event The last event that was captured
+     */
+    private $lastEvent;
 
     /**
      * Constructor.
@@ -377,11 +380,26 @@ class Client
     }
 
     /**
+     * Gets the last event that was captured by the client. However, it could
+     * have been sent or still sit in the queue of pending events.
+     *
+     * @return Event
+     */
+    public function getLastEvent()
+    {
+        return $this->lastEvent;
+    }
+
+    /**
      * Return the last captured event's ID or null if none available.
      */
     public function getLastEventId()
     {
-        return $this->lastEventId;
+        if (null === $this->lastEvent) {
+            return null;
+        }
+
+        return str_replace('-', '', $this->lastEvent->getId()->toString());
     }
 
     protected function registerDefaultBreadcrumbHandlers()
@@ -461,7 +479,7 @@ class Client
             $this->pendingEvents[] = $payload;
         }
 
-        $this->lastEventId = $payload['event_id'];
+        $this->lastEvent = $event;
 
         return $payload['event_id'];
     }

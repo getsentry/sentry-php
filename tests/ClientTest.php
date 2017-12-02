@@ -296,7 +296,25 @@ class ClientTest extends TestCase
         $this->assertEquals('Undefined variable: undefined', $client->pendingEvents[0]['exception']['values'][0]['value']);
     }
 
-    public function testGetLastEventID()
+    public function testGetLastEvent()
+    {
+        $lastEvent = null;
+
+        $client = ClientBuilder::create()->getClient();
+        $client->storeErrorsForBulkSend = true;
+
+        $client->addMiddleware(function (Event $event) use (&$lastEvent) {
+            $lastEvent = $event;
+
+            return $event;
+        });
+
+        $client->capture(['message' => 'foo']);
+
+        $this->assertSame($lastEvent, $client->getLastEvent());
+    }
+
+    public function testGetLastEventId()
     {
         /** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
         $uuidFactory = $this->createMock(UuidFactory::class);
@@ -639,8 +657,6 @@ class ClientTest extends TestCase
             ['lastError', null, null],
             ['lastError', null, 'value'],
             ['lastError', null, mt_rand(100, 999)],
-            ['lastEventId', null, mt_rand(100, 999)],
-            ['lastEventId', null, 'value'],
             ['shutdownFunctionHasBeenSet', null, true],
             ['shutdownFunctionHasBeenSet', null, false],
         ];
