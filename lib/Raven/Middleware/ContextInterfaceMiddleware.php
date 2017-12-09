@@ -57,11 +57,11 @@ final class ContextInterfaceMiddleware
         $runtimeContext = isset($payload['runtime_context']) ? $payload['runtime_context'] : [];
         $userContext = isset($payload['user_context']) ? $payload['user_context'] : [];
 
-        $event = $event->withTagsContext(array_merge($this->context->getTags(), $tagsContext))
-            ->withExtraContext(array_merge($this->context->getExtraData(), $extraContext))
-            ->withUserContext(array_merge($this->context->getUserData(), $userContext))
-            ->withServerOsContext($serverOsContext)
-            ->withRuntimeContext($runtimeContext);
+        $event = $event->withTagsContext(array_merge($this->context->getTags(), $tagsContext), false)
+            ->withExtraContext(array_merge($this->context->getExtraData(), $extraContext), false)
+            ->withUserContext(array_merge($this->context->getUserData(), $userContext), false)
+            ->withServerOsContext($serverOsContext, false)
+            ->withRuntimeContext($runtimeContext, false);
 
         return $next($event, $request, $exception, $payload);
     }

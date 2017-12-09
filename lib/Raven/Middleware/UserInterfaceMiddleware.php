@@ -12,7 +12,6 @@
 namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Context;
 use Raven\Event;
 
 /**
@@ -22,21 +21,6 @@ use Raven\Event;
  */
 final class UserInterfaceMiddleware
 {
-    /**
-     * @var Context The context storage
-     */
-    private $context;
-
-    /**
-     * Constructor.
-     *
-     * @param Context $context The context storage
-     */
-    public function __construct(Context $context)
-    {
-        $this->context = $context;
-    }
-
     /**
      * Collects the needed data and sets it in the given event object.
      *
@@ -50,7 +34,7 @@ final class UserInterfaceMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $userContext = $this->context->getUserData();
+        $userContext = $event->getUserContext();
 
         if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
             $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');

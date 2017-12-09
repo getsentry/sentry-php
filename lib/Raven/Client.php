@@ -173,7 +173,7 @@ class Client
 
         $this->addMiddleware(new MessageInterfaceMiddleware());
         $this->addMiddleware(new RequestInterfaceMiddleware());
-        $this->addMiddleware(new UserInterfaceMiddleware($this->context));
+        $this->addMiddleware(new UserInterfaceMiddleware());
         $this->addMiddleware(new ContextInterfaceMiddleware($this->context));
         $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
         $this->addMiddleware(new ExceptionInterfaceMiddleware($this));

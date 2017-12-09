@@ -13,7 +13,6 @@ namespace Raven\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
-use Raven\Context;
 use Raven\Event;
 use Raven\Middleware\UserInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
@@ -22,21 +21,17 @@ class UserInterfaceMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {
-        $context = new Context();
-        $context->mergeUserData(['foo' => 'bar']);
-
-        $configuration = new Configuration();
-        $event = new Event($configuration);
+        $event = new Event(new Configuration());
+        $event = $event->withUserContext(['foo' => 'bar']);
 
         $invokationCount = 0;
         $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-            $this->assertEquals(['foo' => 'bar'], $eventArg->getUserContext());
+            $this->assertSame($event, $eventArg);
 
             ++$invokationCount;
         };
 
-        $middleware = new UserInterfaceMiddleware($context);
+        $middleware = new UserInterfaceMiddleware();
         $middleware($event, $callback);
 
         $this->assertEquals(1, $invokationCount);
@@ -44,13 +39,11 @@ class UserInterfaceMiddlewareTest extends TestCase
 
     public function testInvokeWithRequest()
     {
-        $context = new Context();
-        $context->mergeUserData(['foo' => 'bar']);
+        $event = new Event(new Configuration());
+        $event = $event->withUserContext(['foo' => 'bar']);
 
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
-
-        $event = new Event(new Configuration());
 
         $invokationCount = 0;
         $callback = function (Event $eventArg) use ($event, &$invokationCount) {
@@ -60,7 +53,7 @@ class UserInterfaceMiddlewareTest extends TestCase
             ++$invokationCount;
         };
 
-        $middleware = new UserInterfaceMiddleware($context);
+        $middleware = new UserInterfaceMiddleware();
         $middleware($event, $callback, $request);
 
         $this->assertEquals(1, $invokationCount);

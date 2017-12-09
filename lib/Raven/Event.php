@@ -434,17 +434,18 @@ final class Event implements \JsonSerializable
      * Sets an arbitrary mapping of additional metadata.
      *
      * @param array $extraContext Additional metadata
+     * @param bool  $replace      Whether to merge the old data with the new one or replace entirely it
      *
      * @return static
      */
-    public function withExtraContext(array $extraContext)
+    public function withExtraContext(array $extraContext, $replace = true)
     {
         if ($extraContext === $this->extraContext) {
             return $this;
         }
 
         $new = clone $this;
-        $new->extraContext = $extraContext;
+        $new->extraContext = $replace ? $extraContext : array_merge($this->extraContext, $extraContext);
 
         return $new;
     }
@@ -463,17 +464,18 @@ final class Event implements \JsonSerializable
      * Sets a list of tags.
      *
      * @param string[] $tagsContext The tags
+     * @param bool     $replace     Whether to merge the old data with the new one or replace entirely it
      *
      * @return static
      */
-    public function withTagsContext(array $tagsContext)
+    public function withTagsContext(array $tagsContext, $replace = true)
     {
         if ($tagsContext === $this->tagsContext) {
             return $this;
         }
 
         $new = clone $this;
-        $new->tagsContext = $tagsContext;
+        $new->tagsContext = $replace ? $tagsContext : array_merge($this->tagsContext, $tagsContext);
 
         return $new;
     }
@@ -492,17 +494,18 @@ final class Event implements \JsonSerializable
      * Sets the user context.
      *
      * @param array $userContext The context data
+     * @param bool  $replace     Whether to merge the old data with the new one or replace entirely it
      *
      * @return static
      */
-    public function withUserContext(array $userContext)
+    public function withUserContext(array $userContext, $replace = true)
     {
         if ($userContext === $this->userContext) {
             return $this;
         }
 
         $new = clone $this;
-        $new->userContext = $userContext;
+        $new->userContext = $replace ? $userContext : array_merge($this->userContext, $userContext);
 
         return $new;
     }
@@ -521,17 +524,18 @@ final class Event implements \JsonSerializable
      * Gets the server OS context.
      *
      * @param array $serverOsContext The context data
+     * @param bool  $replace         Whether to merge the old data with the new one or replace entirely it
      *
      * @return static
      */
-    public function withServerOsContext(array $serverOsContext)
+    public function withServerOsContext(array $serverOsContext, $replace = true)
     {
         if ($serverOsContext === $this->serverOsContext) {
             return $this;
         }
 
         $new = clone $this;
-        $new->serverOsContext = $serverOsContext;
+        $new->serverOsContext = $replace ? $serverOsContext : array_merge($this->serverOsContext, $serverOsContext);
 
         return $new;
     }
@@ -550,17 +554,18 @@ final class Event implements \JsonSerializable
      * Sets the runtime context data.
      *
      * @param array $runtimeContext The context data
+     * @param bool  $replace        Whether to merge the old data with the new one or replace entirely it
      *
      * @return static
      */
-    public function withRuntimeContext(array $runtimeContext)
+    public function withRuntimeContext(array $runtimeContext, $replace = true)
     {
         if ($runtimeContext === $this->runtimeContext) {
             return $this;
         }
 
         $new = clone $this;
-        $new->runtimeContext = $runtimeContext;
+        $new->runtimeContext = $replace ? $runtimeContext : array_merge($this->runtimeContext, $runtimeContext);
 
         return $new;
     }

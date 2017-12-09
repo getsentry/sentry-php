@@ -249,6 +249,27 @@ class ClientTest extends TestCase
         $this->assertEquals('test', $client->pendingEvents[0]['culprit']);
     }
 
+    public function testCapture()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->storeErrorsForBulkSend = true;
+
+        $client->capture([
+            'level' => Client::LEVEL_DEBUG,
+            'logger' => 'foo',
+            'tags_context' => ['foo', 'bar'],
+            'extra_context' => ['foo' => 'bar'],
+            'user_context' => ['bar' => 'foo'],
+        ]);
+
+        $this->assertCount(1, $client->pendingEvents);
+        $this->assertEquals(Client::LEVEL_DEBUG, $client->pendingEvents[0]['level']);
+        $this->assertEquals('foo', $client->pendingEvents[0]['logger']);
+        $this->assertEquals(['foo', 'bar'], $client->pendingEvents[0]['tags']);
+        $this->assertEquals(['foo' => 'bar'], $client->pendingEvents[0]['extra']);
+        $this->assertEquals(['bar' => 'foo'], $client->pendingEvents[0]['user']);
+    }
+
     public function testDoesRegisterProcessors()
     {
         $client = ClientBuilder::create(['processors' => [SanitizeDataProcessor::class]])->getClient();
