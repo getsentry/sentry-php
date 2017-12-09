@@ -200,4 +200,30 @@ class ConfigurationTest extends TestCase
 
         $this->assertFalse($configuration->shouldCapture($data));
     }
+
+    /**
+     * @dataProvider excludedExceptionsDataProvider
+     */
+    public function testIsExcludedException($excludedExceptions, $exception, $result)
+    {
+        $configuration = new Configuration(['excluded_exceptions' => $excludedExceptions]);
+
+        $this->assertSame($result, $configuration->isExcludedException($exception));
+    }
+
+    public function excludedExceptionsDataProvider()
+    {
+        return [
+            [
+                [\BadFunctionCallException::class, \BadMethodCallException::class],
+                new \BadMethodCallException(),
+                true,
+            ],
+            [
+                [\BadFunctionCallException::class],
+                new \Exception(),
+                false,
+            ],
+        ];
+    }
 }

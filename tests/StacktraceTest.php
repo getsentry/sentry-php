@@ -221,7 +221,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktrace()
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
-        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
@@ -231,7 +231,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktraceWithAnonymousFrame()
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
-        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);

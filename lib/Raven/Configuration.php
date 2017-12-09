@@ -408,6 +408,25 @@ class Configuration
     }
 
     /**
+     * Checks whether the given exception should be ignored when sending events
+     * to Sentry.
+     *
+     * @param \Throwable|\Exception The exception
+     *
+     * @return bool
+     */
+    public function isExcludedException($exception)
+    {
+        foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
+            if ($exception instanceof $exceptionClass) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Gets the list of paths to exclude from app_path detection.
      *
      * @return string[]
@@ -741,7 +760,7 @@ class Configuration
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
             'mb_detect_order' => null,
-            'auto_log_stacks' => false,
+            'auto_log_stacks' => true,
             'context_lines' => 3,
             'encoding' => 'gzip',
             'current_environment' => 'default',

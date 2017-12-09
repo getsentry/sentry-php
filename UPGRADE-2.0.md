@@ -208,6 +208,84 @@
 
 - The `Client::getDefaultProcessors` method has been removed.
 
+- The `Client::message` method has been removed.
+
+- The `Client::captureQuery` method has been removed.
+
+- The `Client::captureMessage` method has changed its signature by removing the
+  `$stack` and `$vars` arguments.
+
+  Before:
+
+  ```php
+  public function captureMessage($message, $params = array(), $data = array(), $stack = false, $vars = null)
+  {
+      // ...
+  }
+  ```
+
+  After:
+
+  ```php
+  public function captureMessage($message, array $params = [], array $payload = [])
+  {
+      // ...
+  }
+  ```
+
+- The `Client::captureException` method has changed its signature by removing the
+  `$logger` and `$vars` arguments.
+
+  Before:
+
+  ```php
+  public function captureException($exception, $data = null, $logger = null, $vars = null)
+  {
+      // ...
+  }
+  ```
+
+  After:
+
+  ```php
+  public function captureException($exception, array $payload = [])
+  {
+      // ...
+  }
+  ```
+
+- The `$vars` argument of the `Client::captureException`, `Client::captureMessage` and
+  `Client::captureQuery` methods accepted some values that were setting additional data
+  in the event like the tags or the user data. Some of them have changed name.
+
+  Before:
+
+  ```php
+  $vars = array(
+      'tags' => array(...),
+      'extra' => array(...),
+      'user' => array(...),
+  );
+
+  $client->captureException(new Exception(), null, null, $vars);
+  ```
+
+  After:
+
+  ```php
+  $payload = array(
+      'tags_context' => array(...),
+      'extra_context' => array(...),
+      'user_context' => array(...),
+  );
+
+  $client->captureException(new Exception(), $payload);
+  ```
+
+- If an exception implemented the `getSeverity()` method its value was used as error
+  level of the event. This has been changed so that only the `ErrorException` or its
+  derivated classes are considered for this behavior.
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class

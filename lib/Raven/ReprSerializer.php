@@ -29,7 +29,7 @@ class ReprSerializer extends \Raven\Serializer
             return $value . '.0';
         } elseif (is_int($value) || is_float($value)) {
             return (string) $value;
-        } elseif (is_object($value) || ('object' == gettype($value))) {
+        } elseif (is_object($value) || 'object' == gettype($value)) {
             return 'Object ' . get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource ' . get_resource_type($value);

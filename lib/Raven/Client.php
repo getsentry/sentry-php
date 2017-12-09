@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of Raven.
  *
@@ -15,10 +16,18 @@ use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\HttpClient\Encoding\Base64EncodingStream;
+use Raven\Middleware\BreadcrumbInterfaceMiddleware;
+use Raven\Middleware\ContextInterfaceMiddleware;
+use Raven\Middleware\ExceptionInterfaceMiddleware;
+use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\RequestInterfaceMiddleware;
+use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Util\JSON;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Raven PHP Client.
@@ -91,13 +100,6 @@ class Client
     protected $processors = [];
 
     /**
-     * @var string|int|null
-     */
-    private $lastError;
-
-    private $lastEventId;
-
-    /**
      * @var array[]
      */
     public $pendingEvents = [];
@@ -128,6 +130,21 @@ class Client
     private $pendingRequests = [];
 
     /**
+     * @var callable The tip of the middleware call stack
+     */
+    private $middlewareStackTip;
+
+    /**
+     * @var bool Whether the stack of middleware callables is locked
+     */
+    private $stackLocked = false;
+
+    /**
+     * @var Event The last event that was captured
+     */
+    private $lastEvent;
+
+    /**
      * Constructor.
      *
      * @param Configuration   $config         The client configuration
@@ -145,6 +162,16 @@ class Client
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->processors = $this->createProcessors();
+        $this->middlewareStackTip = function (Event $event) {
+            return $event;
+        };
+
+        $this->addMiddleware(new MessageInterfaceMiddleware());
+        $this->addMiddleware(new RequestInterfaceMiddleware());
+        $this->addMiddleware(new UserInterfaceMiddleware());
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->context));
+        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
+        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
         if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
             $this->transaction->push($_SERVER['PATH_INFO']);
@@ -191,9 +218,40 @@ class Client
         $this->recorder->clear();
     }
 
+    /**
+     * Gets the configuration of the client.
+     *
+     * @return Configuration
+     */
     public function getConfig()
     {
         return $this->config;
+    }
+
+    /**
+     * Adds a new middleware to the end of the stack.
+     *
+     * @param callable $callable The middleware
+     *
+     * @throws \RuntimeException If this method is called while the stack is dequeuing
+     */
+    public function addMiddleware(callable $callable)
+    {
+        if ($this->stackLocked) {
+            throw new \RuntimeException('Middleware can\'t be added once the stack is dequeuing');
+        }
+
+        $next = $this->middlewareStackTip;
+
+        $this->middlewareStackTip = function (Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = []) use ($callable, $next) {
+            $result = $callable($event, $next, $request, $exception, $payload);
+
+            if (!$result instanceof Event) {
+                throw new \UnexpectedValueException(sprintf('Middleware must return an instance of the "%s" class.', Event::class));
+            }
+
+            return $result;
+        };
     }
 
     /**
@@ -262,167 +320,42 @@ class Client
         return $processors;
     }
 
-    public function getLastError()
+    /**
+     * Logs a message.
+     *
+     * @param string $message The message (primary description) for the event
+     * @param array  $params  Params to use when formatting the message
+     * @param array  $payload Additional attributes to pass with this event
+     *
+     * @return string
+     */
+    public function captureMessage($message, array $params = [], array $payload = [])
     {
-        return $this->lastError;
+        $payload['message'] = $message;
+        $payload['message_params'] = $params;
+
+        return $this->capture($payload);
     }
 
     /**
-     * Given an identifier, returns a Sentry searchable string.
+     * Logs an exception.
      *
-     * @param mixed $ident
+     * @param \Throwable|\Exception $exception The exception object
+     * @param array                 $payload   Additional attributes to pass with this event
      *
-     * @return mixed
-     * @codeCoverageIgnore
+     * @return string
      */
-    public function getIdent($ident)
+    public function captureException($exception, array $payload = [])
     {
-        // XXX: We don't calculate checksums yet, so we only have the ident.
-        return $ident;
+        $payload['exception'] = $exception;
+
+        return $this->capture($payload);
     }
 
     /**
-     * @param string     $message the message (primary description) for the event
-     * @param array      $params  params to use when formatting the message
-     * @param string     $level   Log level group
-     * @param bool|array $stack
-     * @param mixed      $vars
+     * Logs the most recent error (obtained with {@link error_get_last}).
      *
-     * @return string|null
-     *
-     * @deprecated
-     * @codeCoverageIgnore
-     */
-    public function message(
-        $message,
-        $params = [],
-        $level = self::LEVEL_INFO,
-        $stack = false,
-        $vars = null
-    ) {
-        return $this->captureMessage($message, $params, $level, $stack, $vars);
-    }
-
-    /**
-     * Log a message to sentry.
-     *
-     * @param string     $message the message (primary description) for the event
-     * @param array      $params  params to use when formatting the message
-     * @param array      $data    additional attributes to pass with this event (see Sentry docs)
-     * @param bool|array $stack
-     * @param mixed      $vars
-     *
-     * @return string|null
-     */
-    public function captureMessage(
-        $message,
-        $params = [],
-        $data = [],
-        $stack = false,
-        $vars = null
-    ) {
-        // Gracefully handle messages which contain formatting characters, but were not
-        // intended to be used with formatting.
-        if (!empty($params)) {
-            $formatted_message = vsprintf($message, $params);
-        } else {
-            $formatted_message = $message;
-        }
-
-        if (null === $data) {
-            $data = [];
-            // support legacy method of passing in a level name as the third arg
-        } elseif (!is_array($data)) {
-            $data = [
-                'level' => $data,
-            ];
-        }
-
-        $data['message'] = $formatted_message;
-        $data['sentry.interfaces.Message'] = [
-            'message' => $message,
-            'params' => $params,
-            'formatted' => $formatted_message,
-        ];
-
-        return $this->capture($data, $stack, $vars);
-    }
-
-    /**
-     * Log an exception to sentry.
-     *
-     * @param \Exception $exception the Exception object
-     * @param array      $data      additional attributes to pass with this event (see Sentry docs)
-     * @param mixed      $logger
-     * @param mixed      $vars
-     *
-     * @return string|null
-     */
-    public function captureException($exception, $data = null, $logger = null, $vars = null)
-    {
-        if (in_array(get_class($exception), $this->config->getExcludedExceptions())) {
-            return null;
-        }
-
-        if (null === $data) {
-            $data = [];
-        }
-
-        $currentException = $exception;
-        do {
-            $exceptionData = [
-                'value' => $this->serializer->serialize($currentException->getMessage()),
-                'type' => get_class($currentException),
-            ];
-
-            /**
-             * Exception::getTrace doesn't store the point at where the exception
-             * was thrown, so we have to stuff it in ourselves. Ugh.
-             */
-            $trace = $currentException->getTrace();
-            $frameWhereExceptionWasThrown = [
-                'file' => $currentException->getFile(),
-                'line' => $currentException->getLine(),
-            ];
-
-            array_unshift($trace, $frameWhereExceptionWasThrown);
-
-            $this->autoloadRavenStacktrace();
-
-            $exceptionData['stacktrace'] = [
-                'frames' => Stacktrace::fromBacktrace(
-                    $this,
-                    $exception->getTrace(),
-                    $exception->getFile(),
-                    $exception->getLine()
-                )->getFrames(),
-            ];
-
-            $exceptions[] = $exceptionData;
-        } while ($currentException = $currentException->getPrevious());
-
-        $data['exception'] = [
-            'values' => array_reverse($exceptions),
-        ];
-        if (null !== $logger) {
-            $data['logger'] = $logger;
-        }
-
-        if (empty($data['level'])) {
-            if (method_exists($exception, 'getSeverity')) {
-                $data['level'] = $this->translateSeverity($exception->getSeverity());
-            } else {
-                $data['level'] = self::LEVEL_ERROR;
-            }
-        }
-
-        return $this->capture($data, $trace, $vars);
-    }
-
-    /**
-     * Capture the most recent error (obtained with ``error_get_last``).
-     *
-     * @return string|null
+     * @return string
      */
     public function captureLastError()
     {
@@ -432,47 +365,36 @@ class Client
             return null;
         }
 
-        $e = new \ErrorException(
-            @$error['message'],
-            0,
-            @$error['type'],
-            @$error['file'],
-            @$error['line']
-        );
+        $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
-        return $this->captureException($e);
+        return $this->captureException($exception);
     }
 
     /**
-     * Log an query to sentry.
+     * Gets the last event that was captured by the client. However, it could
+     * have been sent or still sit in the queue of pending events.
      *
-     * @param string|null $query
-     * @param string      $level
-     * @param string      $engine
+     * @return Event
      */
-    public function captureQuery($query, $level = self::LEVEL_INFO, $engine = '')
+    public function getLastEvent()
     {
-        $data = [
-            'message' => $query,
-            'level' => $level,
-            'sentry.interfaces.Query' => [
-                'query' => $query,
-            ],
-        ];
-
-        if (!empty($engine)) {
-            $data['sentry.interfaces.Query']['engine'] = $engine;
-        }
-
-        return $this->capture($data, false);
+        return $this->lastEvent;
     }
 
     /**
      * Return the last captured event's ID or null if none available.
+     *
+     * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
      */
     public function getLastEventId()
     {
-        return $this->lastEventId;
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.0. Use getLastEvent() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->lastEvent) {
+            return null;
+        }
+
+        return str_replace('-', '', $this->lastEvent->getId()->toString());
     }
 
     protected function registerDefaultBreadcrumbHandlers()
@@ -498,183 +420,63 @@ class Client
         return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
     }
 
-    protected function getHttpData()
+    /**
+     * Captures a new event using the provided data.
+     *
+     * @param array $payload The data of the event being captured
+     *
+     * @return string
+     */
+    public function capture(array $payload)
     {
-        $headers = [];
+        $event = new Event($this->config);
 
-        foreach ($_SERVER as $key => $value) {
-            if (0 === strpos($key, 'HTTP_')) {
-                $header_key =
-                    str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
-                $headers[$header_key] = $value;
-            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH']) && !empty($value)) {
-                $header_key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $key))));
-                $headers[$header_key] = $value;
-            }
+        if (isset($payload['culprit'])) {
+            $event = $event->withCulprit($payload['culprit']);
+        } else {
+            $event = $event->withCulprit($this->transaction->peek());
         }
 
-        $result = [
-            'method' => self::_server_variable('REQUEST_METHOD'),
-            'url' => $this->getCurrentUrl(),
-            'query_string' => self::_server_variable('QUERY_STRING'),
-        ];
-
-        // dont set this as an empty array as PHP will treat it as a numeric array
-        // instead of a mapping which goes against the defined Sentry spec
-        if (!empty($_POST)) {
-            $result['data'] = $_POST;
-        }
-        if (!empty($_COOKIE)) {
-            $result['cookies'] = $_COOKIE;
-        }
-        if (!empty($headers)) {
-            $result['headers'] = $headers;
+        if (isset($payload['level'])) {
+            $event = $event->withLevel($payload['level']);
         }
 
-        return [
-            'request' => $result,
-        ];
-    }
-
-    protected function getUserData()
-    {
-        $user = $this->context->getUserData();
-        if (empty($user)) {
-            if (!function_exists('session_id') || !session_id()) {
-                return [];
-            }
-            $user = [
-                'id' => session_id(),
-            ];
-            if (!empty($_SERVER['REMOTE_ADDR'])) {
-                $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
-            }
-            if (!empty($_SESSION)) {
-                $user['data'] = $_SESSION;
-            }
+        if (isset($payload['logger'])) {
+            $event = $event->withLogger($payload['logger']);
         }
 
-        return [
-            'user' => $user,
-        ];
-    }
-
-    public function getDefaultData()
-    {
-        return [
-            'server_name' => $this->config->getServerName(),
-            'project' => $this->config->getProjectId(),
-            'logger' => $this->config->getLogger(),
-            'tags' => $this->config->getTags(),
-            'platform' => 'php',
-            'culprit' => $this->transaction->peek(),
-            'sdk' => [
-                'name' => 'sentry-php',
-                'version' => self::VERSION,
-            ],
-        ];
-    }
-
-    public function capture($data, $stack = null, $vars = null)
-    {
-        if (!isset($data['timestamp'])) {
-            $data['timestamp'] = gmdate('Y-m-d\TH:i:s\Z');
-        }
-        if (!isset($data['level'])) {
-            $data['level'] = self::LEVEL_ERROR;
-        }
-        if (!isset($data['tags'])) {
-            $data['tags'] = [];
-        }
-        if (!isset($data['extra'])) {
-            $data['extra'] = [];
-        }
-        if (!isset($data['event_id'])) {
-            $data['event_id'] = static::uuid4();
+        if (isset($payload['tags_context'])) {
+            $event = $event->withTagsContext($payload['tags_context']);
         }
 
-        if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, self::MESSAGE_LIMIT);
+        if (isset($payload['extra_context'])) {
+            $event = $event->withExtraContext($payload['extra_context']);
         }
 
-        $data = array_merge($this->getDefaultData(), $data);
-
-        if (static::isHttpRequest()) {
-            $data = array_merge($this->getHttpData(), $data);
+        if (isset($payload['user_context'])) {
+            $event = $event->withUserContext($payload['user_context']);
         }
 
-        $data = array_merge($this->getUserData(), $data);
-
-        if (!empty($this->config->getRelease())) {
-            $data['release'] = $this->config->getRelease();
+        if (isset($payload['message'])) {
+            $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
 
-        if (!empty($this->config->getCurrentEnvironment())) {
-            $data['environment'] = $this->config->getCurrentEnvironment();
-        }
+        $event = $this->callMiddlewareStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
 
-        $data['tags'] = array_merge(
-            $this->config->getTags(),
-            $this->context->getTags(),
-            $data['tags']
-        );
+        $payload = $event->toArray();
 
-        $data['extra'] = array_merge(
-            $this->context->getExtraData(),
-            $data['extra']
-        );
-
-        if (empty($data['extra'])) {
-            unset($data['extra']);
-        }
-        if (empty($data['tags'])) {
-            unset($data['tags']);
-        }
-        if (empty($data['user'])) {
-            unset($data['user']);
-        }
-        if (empty($data['request'])) {
-            unset($data['request']);
-        }
-
-        if (null !== $this->recorder) {
-            $data['breadcrumbs'] = iterator_to_array($this->recorder);
-        }
-
-        if ((!$stack && $this->config->getAutoLogStacks()) || (true === $stack)) {
-            $stack = debug_backtrace();
-
-            // Drop last stack
-            array_shift($stack);
-        }
-
-        if (!empty($stack)) {
-            $this->autoloadRavenStacktrace();
-
-            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
-                $data['stacktrace'] = [
-                    'frames' => Stacktrace::fromBacktrace(
-                        $this,
-                        $stack,
-                        isset($stack['file']) ? $stack['file'] : __FILE__,
-                        isset($stack['line']) ? $stack['line'] : __LINE__ - 2
-                    )->getFrames(),
-                ];
-            }
-        }
-
-        $this->sanitize($data);
-        $this->process($data);
+        $this->sanitize($payload);
+        $this->process($payload);
 
         if (!$this->storeErrorsForBulkSend) {
-            $this->send($data);
+            $this->send($payload);
         } else {
-            $this->pendingEvents[] = $data;
+            $this->pendingEvents[] = $payload;
         }
 
-        $this->lastEventId = $data['event_id'];
+        $this->lastEvent = $event;
 
-        return $data['event_id'];
+        return $payload['event_id'];
     }
 
     public function sanitize(&$data)
@@ -788,102 +590,6 @@ class Client
     }
 
     /**
-     * Generate an uuid4 value.
-     *
-     * @return string
-     */
-    protected static function uuid4()
-    {
-        $uuid = sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            // 32 bits for "time_low"
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_mid"
-            mt_rand(0, 0xffff),
-
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 4
-            mt_rand(0, 0x0fff) | 0x4000,
-
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1
-            mt_rand(0, 0x3fff) | 0x8000,
-
-            // 48 bits for "node"
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
-
-        return str_replace('-', '', $uuid);
-    }
-
-    /**
-     * Return the URL for the current request.
-     *
-     * @return string|null
-     */
-    protected function getCurrentUrl()
-    {
-        // When running from commandline the REQUEST_URI is missing.
-        if (!isset($_SERVER['REQUEST_URI'])) {
-            return null;
-        }
-
-        // HTTP_HOST is a client-supplied header that is optional in HTTP 1.0
-        $host = (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST']
-            : (!empty($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR']
-            : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
-
-        $httpS = $this->isHttps() ? 's' : '';
-
-        return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
-    }
-
-    /**
-     * Was the current request made over https?
-     *
-     * @return bool
-     */
-    protected function isHttps()
-    {
-        if (!empty($_SERVER['HTTPS']) && ('off' !== $_SERVER['HTTPS'])) {
-            return true;
-        }
-
-        if (!empty($_SERVER['SERVER_PORT']) && (443 == $_SERVER['SERVER_PORT'])) {
-            return true;
-        }
-
-        if (!empty($this->config->isTrustXForwardedProto()) &&
-            !empty($_SERVER['X-FORWARDED-PROTO']) &&
-            ('https' === $_SERVER['X-FORWARDED-PROTO'])) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get the value of a key from $_SERVER.
-     *
-     * @param string $key Key whose value you wish to obtain
-     *
-     * @return string Key's value
-     */
-    private static function _server_variable($key)
-    {
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return '';
-    }
-
-    /**
      * Translate a PHP Error constant into a Sentry log level group.
      *
      * @param string $severity PHP E_$x error constant
@@ -979,13 +685,27 @@ class Client
         return 'gzip' === $this->config->getEncoding();
     }
 
-    private function autoloadRavenStacktrace()
+    /**
+     * Calls the middleware stack.
+     *
+     * @param Event                       $event     The event object
+     * @param ServerRequestInterface|null $request   The request object, if available
+     * @param \Exception|null             $exception The thrown exception, if any
+     * @param array                       $payload   Additional payload data
+     *
+     * @return Event
+     */
+    private function callMiddlewareStack(Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-        if (!class_exists('\\Raven\\Stacktrace')) {
-            // @codeCoverageIgnoreStart
-            spl_autoload_call('\\Raven\\Stacktrace');
-            // @codeCoverageIgnoreEnd
-        }
+        $start = $this->middlewareStackTip;
+
+        $this->stackLocked = true;
+
+        /** @var Event $event */
+        $event = $start($event, $request, $exception, $payload);
+
+        $this->stackLocked = false;
+
+        return $event;
     }
 }
