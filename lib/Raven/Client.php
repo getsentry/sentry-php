@@ -100,11 +100,6 @@ class Client
     protected $processors = [];
 
     /**
-     * @var string|int|null
-     */
-    private $lastError;
-
-    /**
      * @var array[]
      */
     public $pendingEvents = [];
@@ -325,11 +320,6 @@ class Client
         return $processors;
     }
 
-    public function getLastError()
-    {
-        return $this->lastError;
-    }
-
     /**
      * Logs a message.
      *
@@ -393,9 +383,13 @@ class Client
 
     /**
      * Return the last captured event's ID or null if none available.
+     *
+     * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
      */
     public function getLastEventId()
     {
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.0. Use getLastEvent() instead.', __METHOD__), E_USER_DEPRECATED);
+
         if (null === $this->lastEvent) {
             return null;
         }

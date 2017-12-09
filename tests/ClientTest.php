@@ -335,6 +335,9 @@ class ClientTest extends TestCase
         $this->assertSame($lastEvent, $client->getLastEvent());
     }
 
+    /**
+     * @group legacy
+     */
     public function testGetLastEventId()
     {
         /** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
@@ -666,8 +669,6 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @covers \Raven\Client::getLastError
-     * @covers \Raven\Client::getLastEventId
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
      */
     public function testGettersAndSetters()
@@ -675,9 +676,6 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
 
         $data = [
-            ['lastError', null, null],
-            ['lastError', null, 'value'],
-            ['lastError', null, mt_rand(100, 999)],
             ['shutdownFunctionHasBeenSet', null, true],
             ['shutdownFunctionHasBeenSet', null, false],
         ];
