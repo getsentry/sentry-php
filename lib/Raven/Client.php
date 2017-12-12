@@ -137,7 +137,12 @@ class Raven_Client
         if (!is_array($options_or_dsn) && !empty($options_or_dsn)) {
             $dsn = $options_or_dsn;
         } elseif (!empty($_SERVER['SENTRY_DSN'])) {
-            $dsn = @$_SERVER['SENTRY_DSN'];
+            if (strtolower($_SERVER['SENTRY_DSN']) == 'false' || strtolower($_SERVER['SENTRY_DSN']) == 'null' ) {
+                $dsn = null;
+            }
+            else {
+                $dsn = @$_SERVER['SENTRY_DSN'];
+            }
         } elseif (!empty($options['dsn'])) {
             $dsn = $options['dsn'];
         } else {
