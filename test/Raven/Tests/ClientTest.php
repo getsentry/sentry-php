@@ -237,6 +237,42 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         }
     }
 
+    public function testParseDSNWithNull()
+    {
+        $result = Raven_Client::parseDSN(null);
+        $this->assertEmpty($result);
+    }
+
+    public function testParseDSNWithNullAsString()
+    {
+        $result = Raven_Client::parseDSN("null");
+        $this->assertEmpty($result);
+    }
+
+    public function testParseDSNWithFalse()
+    {
+        $result = Raven_Client::parseDSN(false);
+        $this->assertEmpty($result);
+    }
+
+    public function testParseDSNWithFalseAsString()
+    {
+        $result = Raven_Client::parseDSN("false");
+        $this->assertEmpty($result);
+    }
+
+    public function testParseDSNWithEmptyString()
+    {
+        $result = Raven_Client::parseDSN("");
+        $this->assertEmpty($result);
+    }
+
+    public function testParseDSNWithEmptyAsString()
+    {
+        $result = Raven_Client::parseDSN("empty");
+        $this->assertEmpty($result);
+    }
+
     public function testParseDSNHttp()
     {
         $result = Raven_Client::ParseDSN('http://public:secret@example.com/1');

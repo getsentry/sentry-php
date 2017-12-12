@@ -137,11 +137,7 @@ class Raven_Client
         if (!is_array($options_or_dsn) && !empty($options_or_dsn)) {
             $dsn = $options_or_dsn;
         } elseif (!empty($_SERVER['SENTRY_DSN'])) {
-            if (strtolower($_SERVER['SENTRY_DSN']) == 'false' || strtolower($_SERVER['SENTRY_DSN']) == 'null') {
-                $dsn = null;
-            } else {
                 $dsn = @$_SERVER['SENTRY_DSN'];
-            }
         } elseif (!empty($options['dsn'])) {
             $dsn = $options['dsn'];
         } else {
@@ -445,6 +441,17 @@ class Raven_Client
      */
     public static function parseDSN($dsn)
     {
+        switch (strtolower($dsn)) {
+            case '':
+            case 'false':
+            case '(false)':
+            case 'empty':
+            case '(empty)':
+            case 'null':
+            case '(null)':
+                return array();
+        }
+
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https'))) {
