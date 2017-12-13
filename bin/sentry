@@ -21,13 +21,11 @@ function raven_cli_test($command, $args)
 
 function cmd_test($dsn)
 {
-    if (empty($dsn)) {
-        exit('ERROR: Missing DSN value');
-    }
-
     // Parse DSN as a test
     try {
-        $parsed = Raven_Client::parseDSN($dsn);
+        if (empty(Raven_Client::parseDSN($dsn))) {
+            exit('ERROR: Missing DSN value');
+        }
     } catch (InvalidArgumentException $ex) {
         exit("ERROR: There was an error parsing your DSN:\n  " . $ex->getMessage());
     }

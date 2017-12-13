@@ -441,6 +441,17 @@ class Raven_Client
      */
     public static function parseDSN($dsn)
     {
+        switch (strtolower($dsn)) {
+            case '':
+            case 'false':
+            case '(false)':
+            case 'empty':
+            case '(empty)':
+            case 'null':
+            case '(null)':
+                return array();
+        }
+
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
         if (!in_array($scheme, array('http', 'https'))) {
