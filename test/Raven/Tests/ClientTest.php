@@ -237,40 +237,25 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    public function testParseDSNWithNull()
+    /**
+     * @dataProvider disabledDsnProvider
+     */
+    public function testParseDSNWithDisabledValue($dsn)
     {
-        $result = Raven_Client::parseDSN(null);
+        $result = Raven_Client::parseDSN($dsn);
         $this->assertEmpty($result);
     }
 
-    public function testParseDSNWithNullAsString()
+    public function disabledDsnProvider()
     {
-        $result = Raven_Client::parseDSN("null");
-        $this->assertEmpty($result);
-    }
-
-    public function testParseDSNWithFalse()
-    {
-        $result = Raven_Client::parseDSN(false);
-        $this->assertEmpty($result);
-    }
-
-    public function testParseDSNWithFalseAsString()
-    {
-        $result = Raven_Client::parseDSN("false");
-        $this->assertEmpty($result);
-    }
-
-    public function testParseDSNWithEmptyString()
-    {
-        $result = Raven_Client::parseDSN("");
-        $this->assertEmpty($result);
-    }
-
-    public function testParseDSNWithEmptyAsString()
-    {
-        $result = Raven_Client::parseDSN("empty");
-        $this->assertEmpty($result);
+        return array(
+            array(null),
+            array('null'),
+            array(false),
+            array('false'),
+            array(''),
+            array('empty'),
+        );
     }
 
     public function testParseDSNHttp()
