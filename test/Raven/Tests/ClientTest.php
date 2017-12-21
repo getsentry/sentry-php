@@ -237,6 +237,27 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         }
     }
 
+    /**
+     * @dataProvider disabledDsnProvider
+     */
+    public function testParseDSNWithDisabledValue($dsn)
+    {
+        $result = Raven_Client::parseDSN($dsn);
+        $this->assertEmpty($result);
+    }
+
+    public function disabledDsnProvider()
+    {
+        return array(
+            array(null),
+            array('null'),
+            array(false),
+            array('false'),
+            array(''),
+            array('empty'),
+        );
+    }
+
     public function testParseDSNHttp()
     {
         $result = Raven_Client::ParseDSN('http://public:secret@example.com/1');

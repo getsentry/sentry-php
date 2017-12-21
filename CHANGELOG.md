@@ -4,6 +4,11 @@
 
 - ...
 
+## 1.8.2 (2017-12-21)
+
+- Improve handling DSN with "null" like values (#522)
+- Prevent warning in Raven_Stacktrace (#493)
+
 ## 1.8.1 (2017-11-09)
 
 - Add setters for the serializers on the `Raven_Client` (#515)
