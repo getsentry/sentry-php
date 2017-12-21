@@ -275,6 +275,10 @@ class Raven_Stacktrace
             $frame['filename'] = $filename = $matches[1];
             $frame['lineno'] = $lineno = $matches[2];
         }
+        
+        if (!file_exists($filename)) {
+            return $frame;
+        }
 
         try {
             $file = new SplFileObject($filename);

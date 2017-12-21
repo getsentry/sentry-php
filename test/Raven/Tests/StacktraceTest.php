@@ -264,4 +264,23 @@ class Raven_Tests_StacktraceTest extends \PHPUnit\Framework\TestCase
          */
         $this->assertEquals($frames[count($frames) -1]['filename'], __FILE__);
     }
+
+    public function testWarningOnMissingFile()
+    {
+        $old_error_reporting = error_reporting();
+
+        error_reporting(E_ALL);
+
+        $trace = raven_test_create_stacktrace();
+
+        $trace[0]['file'] = 'filedoesnotexists404.php';
+
+        Raven_Stacktrace::get_stack_info($trace);
+
+        $last_error = error_get_last();
+
+        $this->assertNotEquals('SplFileObject::__construct(filedoesnotexists404.php): failed to open stream: No such file or directory', $last_error['message']);
+
+        error_reporting($old_error_reporting);
+    }
 }
