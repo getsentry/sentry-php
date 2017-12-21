@@ -21,7 +21,6 @@ class Raven_Autoloader
      */
     public static function register()
     {
-        ini_set('unserialize_callback_func', 'spl_autoload_call');
         spl_autoload_register(array('Raven_Autoloader', 'autoload'));
     }
 

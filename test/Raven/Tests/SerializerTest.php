@@ -14,7 +14,7 @@ class Raven_SerializerTestObject
     private $foo = 'bar';
 }
 
-class Raven_Tests_SerializerTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
 {
     public function testArraysAreArrays()
     {

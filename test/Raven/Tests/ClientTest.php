@@ -205,7 +205,7 @@ class Dummy_Raven_CurlHandler extends Raven_CurlHandler
     }
 }
 
-class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown()
     {
@@ -235,6 +235,27 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
                 return $ex2;
             }
         }
+    }
+
+    /**
+     * @dataProvider disabledDsnProvider
+     */
+    public function testParseDSNWithDisabledValue($dsn)
+    {
+        $result = Raven_Client::parseDSN($dsn);
+        $this->assertEmpty($result);
+    }
+
+    public function disabledDsnProvider()
+    {
+        return array(
+            array(null),
+            array('null'),
+            array(false),
+            array('false'),
+            array(''),
+            array('empty'),
+        );
     }
 
     public function testParseDSNHttp()
@@ -586,7 +607,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testCaptureExceptionChainedException()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+        if (PHP_VERSION_ID < 50300) {
             $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
         }
 
@@ -610,7 +631,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      */
     public function testCaptureExceptionDifferentLevelsInChainedExceptionsBug()
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+        if (PHP_VERSION_ID < 50300) {
             $this->markTestSkipped('PHP 5.3 required for chained exceptions.');
         }
 
@@ -1437,6 +1458,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
      * @covers Raven_Client::getLastEventID
      * @covers Raven_Client::get_extra_data
      * @covers Raven_Client::setProcessors
+     * @covers Raven_Client::setSerializer
+     * @covers Raven_Client::setReprSerializer
      * @covers Raven_Client::getLastSentryError
      * @covers Raven_Client::getShutdownFunctionHasBeenSet
      */
@@ -1447,6 +1470,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $property_method__convert_path->setAccessible(true);
         $callable = array($this, 'stabClosureVoid');
 
+        $serializer = $this->getMockBuilder('Raven_Serializer')->getMock();
+        $reprSerializer = $this->getMockBuilder('Raven_ReprSerializer')->getMock();
+
         $data = array(
             array('environment', null, 'value', ),
             array('environment', null, null, ),
@@ -1455,10 +1481,10 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             array('app_path', null, 'value', $property_method__convert_path->invoke($client, 'value')),
             array('app_path', null, null, ),
             array('app_path', null, false, null, ),
-            array('excluded_app_paths', null, array('value'),
-                  array($property_method__convert_path->invoke($client, 'value'))),
-            array('excluded_app_paths', null, array(), null),
             array('excluded_app_paths', null, null),
+            array('excluded_app_paths', null, array(), null),
+            array('excluded_app_paths', null, array(__FILE__), array(__FILE__)),
+            array('excluded_app_paths', null, array(__DIR__), array(__DIR__ . DIRECTORY_SEPARATOR)),
             array('prefixes', null, array('value'), array($property_method__convert_path->invoke($client, 'value'))),
             array('prefixes', null, array()),
             array('send_callback', null, $callable),
@@ -1476,6 +1502,8 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             array('extra_data', '_extra_data', array('key' => 'value'), ),
             array('processors', 'processors', array(), ),
             array('processors', 'processors', array('key' => 'value'), ),
+            array('serializer', 'Serializer', $serializer, ),
+            array('reprSerializer', 'ReprSerializer', $reprSerializer, ),
             array('_shutdown_function_has_been_set', null, true),
             array('_shutdown_function_has_been_set', null, false),
         );
@@ -1600,7 +1628,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $predefined = array(E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
                        E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
                        E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, );
-        if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+        if (PHP_VERSION_ID >= 50300) {
             $predefined[] = E_DEPRECATED;
             $predefined[] = E_USER_DEPRECATED;
         }
@@ -1769,7 +1797,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
             $data_broken = array($data_broken);
         }
         $value = $client->encode($data_broken);
-        if (!function_exists('json_encode') or version_compare(PHP_VERSION, '5.5.0', '>=')) {
+        if (!function_exists('json_encode') or PHP_VERSION_ID >= 50500) {
             $this->assertFalse($value, 'Broken data encoded successfully with '.
                 (function_exists('json_encode') ? 'native method' : 'Raven_Compat::_json_encode'));
         } else {
@@ -1817,11 +1845,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $debug_backtrace = $this->_debug_backtrace;
         set_error_handler($previous, E_ALL);
         $this->assertTrue($u);
-        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func')
-            and version_compare(PHP_VERSION, '7.0', '>=')
-        ) {
+        if (isset($debug_backtrace[1]['function']) and ($debug_backtrace[1]['function'] == 'call_user_func') and PHP_VERSION_ID >= 70000) {
             $offset = 2;
-        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
+        } elseif (PHP_VERSION_ID >= 70000) {
             $offset = 1;
         } else {
             $offset = 2;
@@ -2030,8 +2056,9 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers Raven_Client::get_user_data
+     * @backupGlobals
      */
-    public function testGet_user_data()
+    public function testGet_user_data_step1()
     {
         // step 1
         $client = new Dummy_Raven_Client();
@@ -2039,19 +2066,40 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertInternalType('array', $output);
         $this->assertArrayHasKey('user', $output);
         $this->assertArrayHasKey('id', $output['user']);
-        $session_old = $_SESSION;
+    }
 
-        // step 2
+    /**
+     * @covers Raven_Client::get_user_data
+     * @backupGlobals
+     */
+    public function testGet_user_data_step2()
+    {
+        if (PHP_VERSION_ID >= 70200) {
+            /**
+             * @doc https://3v4l.org/OVbja
+             * @doc https://3v4l.org/uT00O
+             * @doc https://github.com/php/php-src/blob/316802d8f2b07b863f1596cd804db28a183556e5/NEWS#L87
+             */
+            $this->markTestSkipped('PHP 7.2 does not support clearing session id');
+        }
+        $client = new Dummy_Raven_Client();
         $session_id = session_id();
         session_write_close();
-        session_id('');
+        @session_id('');
         $output = $client->get_user_data();
+        session_id($session_id);
         $this->assertInternalType('array', $output);
         $this->assertEquals(0, count($output));
+    }
 
-        // step 3
-        session_id($session_id);
-        @session_start(array('use_cookies' => false, ));
+    /**
+     * @covers Raven_Client::get_user_data
+     * @backupGlobals
+     */
+    public function testGet_user_data_step3()
+    {
+        $client = new Dummy_Raven_Client();
+        @session_start(array('use_cookies' => false));
         $_SESSION = array('foo' => 'bar');
         $output = $client->get_user_data();
         $this->assertInternalType('array', $output);
@@ -2060,7 +2108,6 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('data', $output['user']);
         $this->assertArrayHasKey('foo', $output['user']['data']);
         $this->assertEquals('bar', $output['user']['data']['foo']);
-        $_SESSION = $session_old;
     }
 
     /**
@@ -2140,7 +2187,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         ));
         $session_id = session_id();
         session_write_close();
-        session_id('');
+        @session_id('');
         $client->capture(array('user' => '', 'request' => ''));
         $events = $client->getSentEvents();
         $event = array_pop($events);
@@ -2148,7 +2195,7 @@ class Raven_Tests_ClientTest extends PHPUnit_Framework_TestCase
         $this->assertArrayNotHasKey('request', $event);
 
         // step 3
-        session_id($session_id);
+        @session_id($session_id);
         @session_start(array('use_cookies' => false, ));
     }
 

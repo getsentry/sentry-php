@@ -2,7 +2,24 @@
 
 ## Unreleased
 
+- ...
+
+## 1.8.1 (2017-11-09)
+
+- Add setters for the serializers on the `Raven_Client` (#515)
+- Avoid to capture `E_ERROR` in PHP 7+, because it's also a `Throwable` that gets captured and duplicates the error (#514)
+
+## 1.8.0 (2017-10-29)
+
+- Use namespaced classes in test for PHPUnit (#506)
+- Prevent segmentation fault on PHP `<5.6` (#504)
+- Remove `ini_set` call for unneeded functionality (#501)
+- Exclude single `.php` files from the app path (#500)
+- Start testing PHP 7.2 (#489)
+- Exclude anonymous frames from app path (#482)
+
 ## 1.7.1 (2017-08-02)
+
 - Fix of filtering sensitive data when there is an exception with multiple 'values' (#483)
 
 ## 1.7.0 (2017-06-07)

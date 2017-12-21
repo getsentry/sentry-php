@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_ErrorHandlerBreadcrumbHandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testSimple()
     {

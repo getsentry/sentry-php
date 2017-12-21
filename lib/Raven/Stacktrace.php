@@ -39,16 +39,28 @@ class Raven_Stacktrace
             $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
 
             if (!array_key_exists('file', $frame)) {
+                $context = array();
+
                 if (!empty($frame['class'])) {
-                    $context['line'] = sprintf('%s%s%s',
-                        $frame['class'], $frame['type'], $frame['function']);
+                    $context['line'] = sprintf('%s%s%s', $frame['class'], $frame['type'], $frame['function']);
+
+                    try {
+                        $reflect = new ReflectionClass($frame['class']);
+                        $context['filename'] = $filename = $reflect->getFileName();
+                    } catch (ReflectionException $e) {
+                        // Forget it if we run into errors, it's not worth it.
+                    }
                 } else {
                     $context['line'] = sprintf('%s(anonymous)', $frame['function']);
                 }
+
+                if (empty($context['filename'])) {
+                    $context['filename'] = $filename = '[Anonymous function]';
+                }
+
                 $abs_path = '';
                 $context['prefix'] = '';
                 $context['suffix'] = '';
-                $context['filename'] = $filename = '[Anonymous function]';
                 $context['lineno'] = 0;
             } else {
                 $context = self::read_source_file($frame['file'], $frame['line']);
@@ -80,7 +92,11 @@ class Raven_Stacktrace
             // detect in_app based on app path
             if ($app_path) {
                 $norm_abs_path = @realpath($abs_path) ?: $abs_path;
-                $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
+                if (!$abs_path) {
+                    $in_app = false;
+                } else {
+                    $in_app = (bool)(substr($norm_abs_path, 0, strlen($app_path)) === $app_path);
+                }
                 if ($in_app && $excluded_app_paths) {
                     foreach ($excluded_app_paths as $path) {
                         if (substr($norm_abs_path, 0, strlen($path)) === $path) {
@@ -168,8 +184,10 @@ class Raven_Stacktrace
                 } else {
                     $reflection = new ReflectionMethod($frame['class'], '__call');
                 }
-            } else {
+            } elseif (function_exists($frame['function'])) {
                 $reflection = new ReflectionFunction($frame['function']);
+            } else {
+                return self::get_default_context($frame, $frame_arg_limit);
             }
         } catch (ReflectionException $e) {
             return self::get_default_context($frame, $frame_arg_limit);

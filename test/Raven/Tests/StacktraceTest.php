@@ -24,7 +24,7 @@ function raven_test_create_stacktrace($args=null, $times=3)
     return raven_test_recurse($times, 'debug_backtrace');
 }
 
-class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_StacktraceTest extends \PHPUnit\Framework\TestCase
 {
     public function testCanTraceParamContext()
     {
@@ -124,7 +124,7 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         // just grab the last few frames
         $frames = array_slice($frames, -6);
         $skip_call_user_func_fix = false;
-        if (version_compare(PHP_VERSION, '7.0', '>=')) {
+        if (PHP_VERSION_ID >= 70000) {
             $skip_call_user_func_fix = true;
             foreach ($frames as &$frame) {
                 if (isset($frame['function']) and ($frame['function'] == 'call_user_func')) {
@@ -179,6 +179,19 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($frames[1]['in_app'], true);
     }
 
+    public function testInAppWithAnonymous()
+    {
+        $stack = array(
+            array(
+                "function" => "[Anonymous function]",
+            ),
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, 0, null, dirname(__FILE__));
+
+        $this->assertEquals($frames[0]['in_app'], false);
+    }
+
     public function testInAppWithExclusion()
     {
         $stack = array(
@@ -192,15 +205,21 @@ class Raven_Tests_StacktraceTest extends PHPUnit_Framework_TestCase
                 "line" => 3,
                 "function" => "include_once",
             ),
+            array(
+                "file" => dirname(__FILE__) . '/resources/foo/c.php',
+                "line" => 3,
+                "function" => "include_once",
+            )
         );
 
         $frames = Raven_Stacktrace::get_stack_info(
             $stack, true, null, 0, null, dirname(__FILE__) . '/',
-            array(dirname(__FILE__) . '/resources/bar/'));
+            array(dirname(__FILE__) . '/resources/bar/', dirname(__FILE__) . '/resources/foo/c.php'));
 
         // stack gets reversed
         $this->assertEquals($frames[0]['in_app'], false);
-        $this->assertEquals($frames[1]['in_app'], true);
+        $this->assertEquals($frames[1]['in_app'], false);
+        $this->assertEquals($frames[2]['in_app'], true);
     }
 
     public function testBasePath()

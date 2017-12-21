@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
+class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
 {
     private $errorLevel;
     private $errorHandlerCalled;
@@ -207,7 +207,7 @@ class Raven_Tests_ErrorHandlerTest extends PHPUnit_Framework_TestCase
                        ->getMock();
         $handler = new Raven_ErrorHandler($client);
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), true);
+        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), PHP_VERSION_ID < 70000);
 
         $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
     }

@@ -2,12 +2,12 @@ language: php
 sudo: false
 
 php:
-  - 5.3
   - 5.4
   - 5.5
   - 5.6
   - 7.0
   - 7.1
+  - 7.2
   - nightly
 env:
   - REMOVE_XDEBUG="0"
@@ -21,7 +21,12 @@ matrix:
   include:
     - php: hhvm-3.12
       env: REMOVE_XDEBUG="0" HHVM="1"
-      dist: trusty
+    - php: 5.3
+      env: REMOVE_XDEBUG="0"
+      dist: precise
+    - php: 5.3
+      env: REMOVE_XDEBUG="1"
+      dist: precise
 
 cache:
   directories:
@@ -45,3 +50,4 @@ after_script:
   - if [ $(phpenv version-name) = "5.6" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "7.0" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "7.1" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
+  - if [ $(phpenv version-name) = "7.2" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
