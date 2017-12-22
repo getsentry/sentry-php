@@ -1,7 +1,7 @@
 Laravel
 =======
 
-Laravel is supported via a native extension, `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_.
+Laravel is supported via a native package, `sentry-laravel <https://github.com/getsentry/sentry-laravel>`_.
 
 Laravel 5.x
 -----------
@@ -12,7 +12,7 @@ Install the ``sentry/sentry-laravel`` package:
 
     $ composer require sentry/sentry-laravel
 
-Add the Sentry service provider and facade in ``config/app.php``:
+If you're on Laravel 5.4 or earlier, you'll need to add the following to your ``config/app.php`` (for Laravel 5.5+ these will be auto-discovered by Laravel):
 
 .. code-block:: php
 
@@ -31,12 +31,13 @@ Add Sentry reporting to ``App/Exceptions/Handler.php``:
 
 .. code-block:: php
 
-    public function report(Exception $e)
+    public function report(Exception $exception)
     {
-        if ($this->shouldReport($e)) {
-            app('sentry')->captureException($e);
+        if (app()->bound('sentry') && $this->shouldReport($exception)) {
+            app('sentry')->captureException($exception);
         }
-        parent::report($e);
+
+        parent::report($exception);
     }
 
 Create the Sentry configuration file (``config/sentry.php``):
@@ -53,8 +54,11 @@ Add your DSN to ``.env``:
     SENTRY_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
-error response. To do this, open up ``App/Exceptions/Handler.php`` and except the
-``render`` method:
+error view in `resources/views/errors/500.blade.php`.
+
+For Laravel 5 up to 5.4 you need to open up ``App/Exceptions/Handler.php`` and extend the
+``render`` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this
+step is not required anymore an you can skip ahead to the next one:
 
 .. code-block:: php
 
@@ -62,23 +66,25 @@ error response. To do this, open up ``App/Exceptions/Handler.php`` and except th
 
     class Handler extends ExceptionHandler
     {
-        private $sentryID;
-
-        public function report(Exception $e)
+        public function report(Exception $exception)
         {
-            if ($this->shouldReport($e)) {
-                // bind the event ID for Feedback
-                $this->sentryID = app('sentry')->captureException($e);
+            if (app()->bound('sentry') && $this->shouldReport($exception)) {
+                app('sentry')->captureException($exception);
             }
-            parent::report($e);
+
+            parent::report($exception);
         }
 
-        // ...
-        public function render($request, Exception $e)
+        public function render($request, Exception $exception)
         {
-            return response()->view('errors.500', [
-                'sentryID' => $this->sentryID,
-            ], 500);
+            // Convert all non-http exceptions to a proper 500 http exception
+            // if we don't do this exceptions are shown as a default template
+            // instead of our own view in resources/views/errors/500.blade.php
+            if ($this->shouldReport($exception) && !$this->isHttpException($exception) && !config('app.debug')) {
+                $exception = new HttpException(500, 'Whoops!');
+            }
+
+            return parent::render($request, $exception);
         }
     }
 
@@ -88,19 +94,25 @@ Next, create ``resources/views/errors/500.blade.php``, and embed the feedback co
 
     <div class="content">
         <div class="title">Something went wrong.</div>
-        @unless(empty($sentryID))
+
+        @if(app()->bound('sentry') && !empty(Sentry::getLastEventID()))
+            <div class="subtitle">Error ID: {{ Sentry::getLastEventID() }}</div>
+
             <!-- Sentry JS SDK 2.1.+ required -->
             <script src="https://cdn.ravenjs.com/3.3.0/raven.min.js"></script>
 
             <script>
-            Raven.showReportDialog({
-                eventId: '{{ $sentryID }}',
-
-                // use the public DSN (dont include your secret!)
-                dsn: '___PUBLIC_DSN___'
-            });
+                Raven.showReportDialog({
+                    eventId: '{{ Sentry::getLastEventID() }}',
+                    // use the public DSN (dont include your secret!)
+                    dsn: 'https://e9ebbd88548a441288393c457ec90441@sentry.io/3235',
+                    user: {
+                        'name': 'Jane Doe',
+                        'email': 'jane.doe@example.com',
+                    }
+                });
             </script>
-        @endunless
+        @endif
     </div>
 
 That's it!
@@ -178,9 +190,10 @@ Add Sentry reporting to ``app/Exceptions/Handler.php``:
 
     public function report(Exception $e)
     {
-        if ($this->shouldReport($e)) {
+        if (app()->bound('sentry') && $this->shouldReport($e)) {
             app('sentry')->captureException($e);
         }
+
         parent::report($e);
     }
 
@@ -193,8 +206,8 @@ Create the Sentry configuration file (``config/sentry.php``):
     return array(
         'dsn' => '___DSN___',
 
-    // capture release as git sha
-    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
+        // capture release as git sha
+        // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
     );
 
 Testing with Artisan
@@ -239,14 +252,14 @@ In the following example, we'll use a middleware:
         public function handle($request, Closure $next)
         {
             if (app()->bound('sentry')) {
-                /** @var \Raven\Client $sentry */
+                /** @var \Raven_Client $sentry */
                 $sentry = app('sentry');
 
                 // Add user context
                 if (auth()->check()) {
-                    $sentry->setUserContext([...]);
+                    $sentry->user_context([...]);
                 } else {
-                    $sentry->setUserContext(['id' => null]);
+                    $sentry->user_context(['id' => null]);
                 }
 
                 // Add tags context
@@ -290,13 +303,13 @@ The following settings are available for the client:
         'breadcrumbs.sql_bindings' => false,
 
 
-.. describe:: setUserContext
+.. describe:: user_context
 
-    Capture setUserContext automatically.
+    Capture user_context automatically.
 
     Defaults to ``true``.
 
     .. code-block:: php
 
-        'setUserContext' => false,
+        'user_context' => false,
 
