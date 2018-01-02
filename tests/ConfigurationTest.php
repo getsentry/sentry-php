@@ -226,4 +226,26 @@ class ConfigurationTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider excludedPathProviders
+     * @param string $value
+     * @param string $expected
+     */
+    public function testExcludedAppPathsPathRegressionWithFileName($value, $expected)
+    {
+        $configuration = new Configuration(['excluded_app_paths' => [$value]]);
+
+        $this->assertSame([$expected], $configuration->getExcludedProjectPaths());
+    }
+
+    public function excludedPathProviders()
+    {
+        return [
+            ['some/path', 'some/path'],
+            ['some/specific/file.php', 'some/specific/file.php'],
+            [__DIR__, __DIR__ . '/'],
+            [__FILE__, __FILE__],
+        ];
+    }
 }
