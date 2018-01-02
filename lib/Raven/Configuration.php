@@ -748,6 +748,7 @@ class Configuration
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
+     *
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
@@ -862,6 +863,7 @@ class Configuration
                 case 'null':
                 case '(null)':
                     $this->server = null;
+
                     return null;
             }
 
@@ -917,7 +919,7 @@ class Configuration
         }
 
         if (
-            DIRECTORY_SEPARATOR === substr($path, 0, 1) 
+            DIRECTORY_SEPARATOR === substr($path, 0, 1)
             && DIRECTORY_SEPARATOR !== substr($path, -1)
             && '.php' !== substr($path, -4)
         ) {

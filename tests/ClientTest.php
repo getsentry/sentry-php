@@ -1039,9 +1039,9 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create()->getClient();
         $serializer = $this->prophesize(Serializer::class)->reveal();
-        
+
         $client->setSerializer($serializer);
-        
+
         $this->assertSame($serializer, $client->getSerializer());
     }
 
@@ -1049,9 +1049,9 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create()->getClient();
         $serializer = $this->prophesize(Serializer::class)->reveal();
-        
+
         $client->setReprSerializer($serializer);
-        
+
         $this->assertSame($serializer, $client->getReprSerializer());
     }
 }

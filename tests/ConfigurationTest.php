@@ -185,14 +185,14 @@ class ConfigurationTest extends TestCase
 
     public function disabledDsnProvider()
     {
-        return array(
-            array(null),
-            array('null'),
-            array(false),
-            array('false'),
-            array(''),
-            array('empty'),
-        );
+        return [
+            [null],
+            ['null'],
+            [false],
+            ['false'],
+            [''],
+            ['empty'],
+        ];
     }
 
     public function testShouldCapture()
@@ -254,6 +254,7 @@ class ConfigurationTest extends TestCase
 
     /**
      * @dataProvider excludedPathProviders
+     *
      * @param string $value
      * @param string $expected
      */
