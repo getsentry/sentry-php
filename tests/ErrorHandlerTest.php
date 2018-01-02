@@ -211,7 +211,7 @@ class ErrorHandlerTest extends TestCase
                        ->getMock();
         $handler = new \Raven\ErrorHandler($client);
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), true);
+        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), PHP_VERSION_ID < 70000);
 
         $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
     }
