@@ -170,6 +170,31 @@ class ConfigurationTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider disabledDsnProvider
+     */
+    public function testParseDSNWithDisabledValue($dsn)
+    {
+        $configuration = new Configuration(['server' => $dsn]);
+
+        $this->assertNull($configuration->getProjectId());
+        $this->assertNull($configuration->getPublicKey());
+        $this->assertNull($configuration->getSecretKey());
+        $this->assertNull($configuration->getServer());
+    }
+
+    public function disabledDsnProvider()
+    {
+        return array(
+            array(null),
+            array('null'),
+            array(false),
+            array('false'),
+            array(''),
+            array('empty'),
+        );
+    }
+
     public function testShouldCapture()
     {
         $configuration = new Configuration();
