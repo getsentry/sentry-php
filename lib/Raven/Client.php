@@ -264,6 +264,11 @@ class Client
         return $this->reprSerializer;
     }
 
+    public function setReprSerializer(Serializer $reprSerializer)
+    {
+        $this->reprSerializer = $reprSerializer;
+    }
+
     /**
      * Gets the serializer.
      *
@@ -272,6 +277,11 @@ class Client
     public function getSerializer()
     {
         return $this->serializer;
+    }
+
+    public function setSerializer(Serializer $serializer)
+    {
+        $this->serializer = $serializer;
     }
 
     /**
