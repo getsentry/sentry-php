@@ -192,6 +192,20 @@ class Raven_Tests_StacktraceTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($frames[0]['in_app'], false);
     }
 
+    public function testInAppWithEmptyFrame()
+    {
+        $stack = array(
+            array(
+                "function" => "{closure}",
+            ),
+            null
+        );
+
+        $frames = Raven_Stacktrace::get_stack_info($stack, true, null, 0, null, dirname(__FILE__));
+
+        $this->assertEquals($frames[0]['in_app'], false);
+    }
+
     public function testInAppWithExclusion()
     {
         $stack = array(

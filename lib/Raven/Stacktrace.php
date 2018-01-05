@@ -50,8 +50,10 @@ class Raven_Stacktrace
                     } catch (ReflectionException $e) {
                         // Forget it if we run into errors, it's not worth it.
                     }
-                } else {
+                } elseif (!empty($frame['function'])) {
                     $context['line'] = sprintf('%s(anonymous)', $frame['function']);
+                } else {
+                    $context['line'] = sprintf('(anonymous)');
                 }
 
                 if (empty($context['filename'])) {
