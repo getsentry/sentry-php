@@ -23,7 +23,6 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;
-use Raven\Processor\SanitizeDataProcessor;
 
 function simple_function($a = null, $b = null, $c = null)
 {
@@ -268,31 +267,6 @@ class ClientTest extends TestCase
         $this->assertEquals(['foo', 'bar'], $client->pendingEvents[0]['tags']);
         $this->assertEquals(['foo' => 'bar'], $client->pendingEvents[0]['extra']);
         $this->assertEquals(['bar' => 'foo'], $client->pendingEvents[0]['user']);
-    }
-
-    public function testDoesRegisterProcessors()
-    {
-        $client = ClientBuilder::create(['processors' => [SanitizeDataProcessor::class]])->getClient();
-
-        $this->assertInstanceOf(SanitizeDataProcessor::class, $this->getObjectAttribute($client, 'processors')[0]);
-    }
-
-    public function testProcessDoesCallProcessors()
-    {
-        $data = ['key' => 'value'];
-
-        $processor = $this->getMockBuilder('Processor')
-            ->setMethods(['process'])
-            ->getMock();
-
-        $processor->expects($this->once())
-            ->method('process')
-            ->with($data);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setProcessors([$processor]);
-        $client->process($data);
     }
 
     public function testCaptureLastError()

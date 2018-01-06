@@ -19,6 +19,11 @@
 - The `curl_ssl_version` option has been removed.
 - The `verify_ssl` option has been removed.
 - The `ca_cert` option has been removed.
+- The `processors` option has been removed in favour of leaving to the user the
+  choice of which processors add or remove using the appropriate methods of the
+  `Client` and `ClientBuilder` classes.
+- The `processors_options` option has been removed in favour of leaving to the
+  user the burden of adding an already configured processor instance to the client.
 - The `http_client_options` has been added to set the options that applies to the
   HTTP client chosen by the user as underlying transport method.
 - The `open_timeout` option has been added to set the maximum number of seconds
@@ -285,6 +290,39 @@
 - If an exception implemented the `getSeverity()` method its value was used as error
   level of the event. This has been changed so that only the `ErrorException` or its
   derivated classes are considered for this behavior.
+
+- The method `Client::createProcessors` has been removed as there is no need to create
+  instances of the processors from outside the `Client` class.
+
+- The method `Client::setProcessors` has been removed. You should use `Client::addProcessor`
+  and `Client::removeProcessor` instead to manage the processors that will be executed.
+
+  Before:
+
+  ```php
+  $processor1 = new Processor();
+  $processor2 = new Processor();
+
+  $client->setProcessors(array($processor2, $processor1));
+  ```
+
+  After:
+
+  ```php
+  $processor1 = new Processor();
+  $processor2 = new Processor();
+
+  $client->addProcessor($processor2);
+  $client->addProcessor($processor1);
+
+  // or
+
+  $client->addProcessor($processor1);
+  $client->addProcessor($processor2, 255); // Note the priority: higher the priority earlier a processor will be executed. This is equivalent to adding first $processor2 and then $processor1
+  ```
+
+- The method `Client::process` has been removed as there is no need to process event data
+  from outside the `Client` class.
 
 ### Client builder
 

@@ -195,6 +195,22 @@ class Stacktrace implements \JsonSerializable
     }
 
     /**
+     * Removes the `pre_context`, `post_context` and `context_line` data from
+     * each frame, effectively preventing any part of the source code from being
+     * sent to the server. Please note that the method/function definition will
+     * still be sent.
+     */
+    public function removeAllFramesContext()
+    {
+        foreach ($this->frames as &$frame) {
+            unset($frame['pre_context'], $frame['context_line'], $frame['post_context']);
+        }
+
+        // Free the memory by breaking the reference
+        unset($frame);
+    }
+
+    /**
      * Gets the stacktrace frames (this is the same as calling the getFrames
      * method).
      *

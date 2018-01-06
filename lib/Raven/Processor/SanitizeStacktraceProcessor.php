@@ -11,33 +11,29 @@
 
 namespace Raven\Processor;
 
-use Raven\Processor;
+use Raven\Event;
 
 /**
  * This processor removes the `pre_context`, `context_line` and `post_context`
- * informations from all exceptions captured by an event.
+ * information from all exceptions captured by an event.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class SanitizeStacktraceProcessor extends Processor
+final class SanitizeStacktraceProcessor implements ProcessorInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function process(&$data)
+    public function process(Event $event)
     {
-        if (!isset($data['exception'], $data['exception']['values'])) {
-            return;
+        $stacktrace = $event->getStacktrace();
+
+        if (null === $stacktrace) {
+            return $event;
         }
 
-        foreach ($data['exception']['values'] as &$exception) {
-            if (!isset($exception['stacktrace'])) {
-                continue;
-            }
+        $stacktrace->removeAllFramesContext();
 
-            foreach ($exception['stacktrace']['frames'] as &$frame) {
-                unset($frame['pre_context'], $frame['context_line'], $frame['post_context']);
-            }
-        }
+        return $event->withStacktrace($stacktrace);
     }
 }

@@ -15,6 +15,7 @@ use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Raven\Processor\ProcessorInterface;
 
 /**
  * A configurable builder for Client objects.
@@ -76,6 +77,35 @@ interface ClientBuilderInterface
      * @return $this
      */
     public function removeHttpClientPlugin($className);
+
+    /**
+     * Adds a new processor to the processors chain with the specified priority.
+     *
+     * @param ProcessorInterface $processor The processor instance
+     * @param int                $priority  The priority. The higher this value,
+     *                                      the earlier a processor will be
+     *                                      executed in the chain (defaults to 0)
+     *
+     * @return $this
+     */
+    public function addProcessor(ProcessorInterface $processor, $priority = 0);
+
+    /**
+     * Removes the given processor from the list.
+     *
+     * @param ProcessorInterface $processor The processor instance
+     *
+     * @return $this
+     */
+    public function removeProcessor(ProcessorInterface $processor);
+
+    /**
+     * Gets a list of processors that will be added to the client at the
+     * given priority.
+     *
+     * @return array
+     */
+    public function getProcessors();
 
     /**
      * Gets the instance of the client built using the configured options.

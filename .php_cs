@@ -10,6 +10,9 @@ return PhpCsFixer\Config::create()
         'ordered_imports' => true,
         'random_api_migration' => true,
         'yoda_style' => true,
+        'phpdoc_align' => [
+            'tags' => ['param', 'return', 'throws', 'type', 'var'],
+        ],
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
