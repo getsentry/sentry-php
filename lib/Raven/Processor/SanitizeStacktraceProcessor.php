@@ -32,7 +32,11 @@ final class SanitizeStacktraceProcessor implements ProcessorInterface
             return $event;
         }
 
-        $stacktrace->removeAllFramesContext();
+        foreach ($stacktrace->getFrames() as $frame) {
+            $frame->setPreContext(null);
+            $frame->setContextLine(null);
+            $frame->setPostContext(null);
+        }
 
         return $event->withStacktrace($stacktrace);
     }

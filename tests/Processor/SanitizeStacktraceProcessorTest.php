@@ -46,10 +46,10 @@ class SanitizeStacktraceProcessorTest extends TestCase
 
         $event = $this->processor->process($event);
 
-        foreach ($event->getStacktrace()->toArray() as $frame) {
-            $this->assertArrayNotHasKey('pre_context', $frame);
-            $this->assertArrayNotHasKey('context_line', $frame);
-            $this->assertArrayNotHasKey('post_context', $frame);
+        foreach ($event->getStacktrace()->getFrames() as $frame) {
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
         }
     }
 
@@ -64,9 +64,9 @@ class SanitizeStacktraceProcessorTest extends TestCase
         $event = $this->processor->process($event);
 
         foreach ($event->getStacktrace()->toArray() as $frame) {
-            $this->assertArrayNotHasKey('pre_context', $frame);
-            $this->assertArrayNotHasKey('context_line', $frame);
-            $this->assertArrayNotHasKey('post_context', $frame);
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
         }
     }
 

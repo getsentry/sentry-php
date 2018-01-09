@@ -783,8 +783,8 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs'] = $this->breadcrumbs;
         }
 
-        if (!empty($this->exception)) {
-            foreach ($this->exception as $exception) {
+        if (null !== $this->exception && isset($this->exception['values'])) {
+            foreach ($this->exception['values'] as $exception) {
                 $exceptionData = [
                     'type' => $exception['type'],
                     'value' => $exception['value'],

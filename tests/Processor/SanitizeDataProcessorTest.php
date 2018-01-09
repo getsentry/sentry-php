@@ -16,6 +16,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Event;
 use Raven\Processor\SanitizeDataProcessor;
+use Raven\Stacktrace;
 
 class SanitizeDataProcessorTest extends TestCase
 {
@@ -50,14 +51,40 @@ class SanitizeDataProcessorTest extends TestCase
             $event = $event->withExtraContext($inputData['extra_context']);
         }
 
+        if (isset($inputData['exception'])) {
+            // We must convert the backtrace to a Stacktrace instance here because
+            // PHPUnit executes the data provider before the setUp method and so
+            // the client instance cannot be accessed from there
+            foreach ($inputData['exception']['values'] as &$exceptionValue) {
+                $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
+            }
+
+            unset($exceptionValue);
+
+            $event = $event->withException($inputData['exception']);
+        }
+
         $event = $this->processor->process($event);
 
-        if (isset($inputData['request'])) {
+        if (isset($expectedData['request'])) {
             $this->assertArraySubset($expectedData['request'], $event->getRequest());
         }
 
-        if (isset($inputData['extra_context'])) {
+        if (isset($expectedData['extra_context'])) {
             $this->assertArraySubset($expectedData['extra_context'], $event->getExtraContext());
+        }
+
+        if (isset($expectedData['exception'])) {
+            // We must convert the backtrace to a Stacktrace instance here because
+            // PHPUnit executes the data provider before the setUp method and so
+            // the client instance cannot be accessed from there
+            foreach ($expectedData['exception']['values'] as &$exceptionValue) {
+                $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
+            }
+
+            unset($exceptionValue);
+
+            $this->assertArraySubset($expectedData['exception'], $event->getException());
         }
 
         $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
@@ -117,6 +144,64 @@ class SanitizeDataProcessorTest extends TestCase
                 [
                     'extra_context' => [
                         'ccnumba' => SanitizeDataProcessor::STRING_MASK,
+                    ],
+                ],
+            ],
+            [
+                [
+                    'exception' => [
+                        'values' => [
+                            [
+                                'stacktrace' => [
+                                    [
+                                        'args' => [
+                                            [
+                                                'password' => 'foo',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            [
+                                'stacktrace' => [
+                                    [
+                                        'args' => [
+                                            [
+                                                'password' => 'foo',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'exception' => [
+                        'values' => [
+                            [
+                                'stacktrace' => [
+                                    [
+                                        'args' => [
+                                            [
+                                                'password' => SanitizeDataProcessor::STRING_MASK,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            [
+                                'stacktrace' => [
+                                    [
+                                        'args' => [
+                                            [
+                                                'password' => SanitizeDataProcessor::STRING_MASK,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],

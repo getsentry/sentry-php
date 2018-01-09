@@ -35,7 +35,7 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $this->assertNotSame($event, $eventArg);
             $this->assertArraySubset($expectedResult, $eventArg->toArray());
 
-            foreach ($eventArg->getException() as $exception) {
+            foreach ($eventArg->getException()['values'] as $exception) {
                 if ($assertHasStacktrace) {
                     $this->assertArrayHasKey('stacktrace', $exception);
                     $this->assertInstanceOf(Stacktrace::class, $exception['stacktrace']);
@@ -145,9 +145,11 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $this->assertNotSame($event, $eventArg);
 
             $expectedValue = [
-                [
-                    'type' => \Exception::class,
-                    'value' => $utf8String,
+                'values' => [
+                    [
+                        'type' => \Exception::class,
+                        'value' => $utf8String,
+                    ],
                 ],
             ];
 
@@ -172,9 +174,11 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $this->assertNotSame($event, $eventArg);
 
             $expectedValue = [
-                [
-                    'type' => \Exception::class,
-                    'value' => "\xC2\xA2\x3F",
+                'values' => [
+                    [
+                        'type' => \Exception::class,
+                        'value' => "\xC2\xA2\x3F",
+                    ],
                 ],
             ];
 
@@ -204,9 +208,11 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $result = $eventArg->getException();
 
             $expectedValue = [
-                [
-                    'type' => \Exception::class,
-                    'value' => 'foo',
+                'values' => [
+                    [
+                        'type' => \Exception::class,
+                        'value' => 'foo',
+                    ],
                 ],
             ];
 
@@ -214,8 +220,9 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             $latin1StringFound = false;
 
-            foreach ($result[0]['stacktrace']->toArray() as $frame) {
-                if (isset($frame['pre_context']) && in_array('// äöü', $frame['pre_context'], true)) {
+            /** @var \Raven\Frame $frame */
+            foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
+                if (null !== $frame->getPreContext() && in_array('// äöü', $frame->getPreContext(), true)) {
                     $latin1StringFound = true;
 
                     break;
@@ -245,10 +252,10 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $result = $eventArg->getException();
 
             $this->assertNotEmpty($result);
-            $this->assertInternalType('array', $result[0]);
-            $this->assertEquals(\Exception::class, $result[0]['type']);
-            $this->assertEquals('foo', $result[0]['value']);
-            $this->assertArrayNotHasKey('stacktrace', $result[0]);
+            $this->assertInternalType('array', $result['values'][0]);
+            $this->assertEquals(\Exception::class, $result['values'][0]['type']);
+            $this->assertEquals('foo', $result['values'][0]['value']);
+            $this->assertArrayNotHasKey('stacktrace', $result['values'][0]);
 
             ++$invokationCount;
         };

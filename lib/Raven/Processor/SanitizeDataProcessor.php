@@ -116,14 +116,18 @@ final class SanitizeDataProcessor implements ProcessorInterface
         return $data;
     }
 
-    public function sanitizeStacktrace(&$data)
+    public function sanitizeStacktrace($data)
     {
-        foreach ($data['frames'] as &$frame) {
-            if (empty($frame['vars'])) {
+        foreach ($data->getFrames() as &$frame) {
+            if (empty($frame->getVars())) {
                 continue;
             }
 
-            array_walk_recursive($frame['vars'], [$this, 'sanitize']);
+            $vars = $frame->getVars();
+
+            array_walk_recursive($vars, [$this, 'sanitize']);
+
+            $frame->setVars($vars);
         }
 
         return $data;
