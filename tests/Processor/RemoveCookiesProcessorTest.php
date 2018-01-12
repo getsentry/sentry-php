@@ -54,7 +54,9 @@ class RemoveCookiesProcessorTest extends TestCase
             [
                 [
                     'foo' => 'bar',
-                    'cookies' => 'baz',
+                    'cookies' => [
+                        'foo' => 'bar',
+                    ],
                     'headers' => [
                         'cookie' => 'bar',
                         'another-header' => 'foo',
@@ -62,9 +64,10 @@ class RemoveCookiesProcessorTest extends TestCase
                 ],
                 [
                     'foo' => 'bar',
-                    'cookies' => RemoveCookiesProcessor::STRING_MASK,
+                    'cookies' => [
+                        'foo' => RemoveCookiesProcessor::STRING_MASK,
+                    ],
                     'headers' => [
-                        'cookie' => RemoveCookiesProcessor::STRING_MASK,
                         'another-header' => 'foo',
                     ],
                 ],
