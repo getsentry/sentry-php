@@ -350,3 +350,9 @@
 
   $client = ClientBuilder::create([...])->getClient();
   ```
+
+### Processors
+
+- The `RemoveCookiesProessor` class has been renamed to `SanitizeCookiesProcessor` to
+  better reflect its purpose. The constructor accepts an array of options to make the
+  behaviour of which cookies to sanitize configurable.

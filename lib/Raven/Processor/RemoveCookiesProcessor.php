@@ -12,6 +12,7 @@
 namespace Raven\Processor;
 
 use Raven\Event;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -39,6 +40,10 @@ final class RemoveCookiesProcessor implements ProcessorInterface
         $this->configureOptions($resolver);
 
         $this->options = $resolver->resolve($options);
+
+        if (!empty($this->options['only']) && !empty($this->options['except'])) {
+            throw new InvalidOptionsException('You can configure only one of "only" and "except" options.');
+        }
     }
 
     /**
@@ -49,7 +54,21 @@ final class RemoveCookiesProcessor implements ProcessorInterface
         $request = $event->getRequest();
 
         if (isset($request['cookies'])) {
+            $cookiesToSanitize = array_keys($request['cookies']);
+
+            if (!empty($this->options['only'])) {
+                $cookiesToSanitize = $this->options['only'];
+            }
+
+            if (!empty($this->options['except'])) {
+                $cookiesToSanitize = array_diff($cookiesToSanitize, $this->options['except']);
+            }
+
             foreach ($request['cookies'] as $name => $value) {
+                if (!in_array($name, $cookiesToSanitize)) {
+                    continue;
+                }
+
                 $request['cookies'][$name] = self::STRING_MASK;
             }
         }
@@ -67,11 +86,11 @@ final class RemoveCookiesProcessor implements ProcessorInterface
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'include' => [],
-            'exclude' => [],
+            'only' => [],
+            'except' => [],
         ]);
 
-        $resolver->setAllowedTypes('include', 'array');
-        $resolver->setAllowedTypes('exclude', 'array');
+        $resolver->setAllowedTypes('only', 'array');
+        $resolver->setAllowedTypes('except', 'array');
     }
 }

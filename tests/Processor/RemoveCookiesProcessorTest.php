@@ -24,26 +24,43 @@ class RemoveCookiesProcessorTest extends TestCase
      */
     protected $client;
 
-    /**
-     * @var RemoveCookiesProcessor
-     */
-    protected $processor;
-
     protected function setUp()
     {
         $this->client = ClientBuilder::create()->getClient();
-        $this->processor = new RemoveCookiesProcessor();
+    }
+
+    /**
+     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
+     * @expectedExceptionMessage You can configure only one of "only" and "except" options.
+     */
+    public function testConstructorThrowsIfBothOnlyAndExceptOptionsAreSet()
+    {
+        new RemoveCookiesProcessor([
+            'only' => ['foo'],
+            'except' => ['bar'],
+        ]);
     }
 
     /**
      * @dataProvider processDataProvider
      */
-    public function testProcess($inputData, $expectedData)
+    public function testProcess($options, $expectedData)
     {
         $event = new Event($this->client->getConfig());
-        $event = $event->withRequest($inputData);
+        $event = $event->withRequest([
+            'foo' => 'bar',
+            'cookies' => [
+                'foo' => 'bar',
+                'bar' => 'foo',
+            ],
+            'headers' => [
+                'cookie' => 'bar',
+                'another-header' => 'foo',
+            ],
+        ]);
 
-        $event = $this->processor->process($event);
+        $processor = new RemoveCookiesProcessor($options);
+        $event = $processor->process($event);
 
         $this->assertArraySubset($expectedData, $event->getRequest());
     }
@@ -52,20 +69,42 @@ class RemoveCookiesProcessorTest extends TestCase
     {
         return [
             [
+                [],
                 [
                     'foo' => 'bar',
                     'cookies' => [
-                        'foo' => 'bar',
+                        'foo' => RemoveCookiesProcessor::STRING_MASK,
+                        'bar' => RemoveCookiesProcessor::STRING_MASK,
                     ],
                     'headers' => [
-                        'cookie' => 'bar',
                         'another-header' => 'foo',
                     ],
+                ],
+            ],
+            [
+                [
+                    'only' => ['foo'],
                 ],
                 [
                     'foo' => 'bar',
                     'cookies' => [
                         'foo' => RemoveCookiesProcessor::STRING_MASK,
+                        'bar' => 'foo',
+                    ],
+                    'headers' => [
+                        'another-header' => 'foo',
+                    ],
+                ],
+            ],
+            [
+                [
+                    'except' => ['foo'],
+                ],
+                [
+                    'foo' => 'bar',
+                    'cookies' => [
+                        'foo' => 'bar',
+                        'bar' => RemoveCookiesProcessor::STRING_MASK,
                     ],
                     'headers' => [
                         'another-header' => 'foo',
