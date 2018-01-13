@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Event;
-use Raven\Processor\RemoveCookiesProcessor;
+use Raven\Processor\SanitizeCookiesProcessor;
 
-class RemoveCookiesProcessorTest extends TestCase
+class SanitizeCookiesProcessorTest extends TestCase
 {
     /**
      * @var Client
@@ -35,7 +35,7 @@ class RemoveCookiesProcessorTest extends TestCase
      */
     public function testConstructorThrowsIfBothOnlyAndExceptOptionsAreSet()
     {
-        new RemoveCookiesProcessor([
+        new SanitizeCookiesProcessor([
             'only' => ['foo'],
             'except' => ['bar'],
         ]);
@@ -59,10 +59,13 @@ class RemoveCookiesProcessorTest extends TestCase
             ],
         ]);
 
-        $processor = new RemoveCookiesProcessor($options);
+        $processor = new SanitizeCookiesProcessor($options);
         $event = $processor->process($event);
 
-        $this->assertArraySubset($expectedData, $event->getRequest());
+        $requestData = $event->getRequest();
+
+        $this->assertArraySubset($expectedData, $requestData);
+        $this->assertArrayNotHasKey('cookie', $requestData['headers']);
     }
 
     public function processDataProvider()
@@ -73,8 +76,8 @@ class RemoveCookiesProcessorTest extends TestCase
                 [
                     'foo' => 'bar',
                     'cookies' => [
-                        'foo' => RemoveCookiesProcessor::STRING_MASK,
-                        'bar' => RemoveCookiesProcessor::STRING_MASK,
+                        'foo' => SanitizeCookiesProcessor::STRING_MASK,
+                        'bar' => SanitizeCookiesProcessor::STRING_MASK,
                     ],
                     'headers' => [
                         'another-header' => 'foo',
@@ -88,7 +91,7 @@ class RemoveCookiesProcessorTest extends TestCase
                 [
                     'foo' => 'bar',
                     'cookies' => [
-                        'foo' => RemoveCookiesProcessor::STRING_MASK,
+                        'foo' => SanitizeCookiesProcessor::STRING_MASK,
                         'bar' => 'foo',
                     ],
                     'headers' => [
@@ -104,7 +107,7 @@ class RemoveCookiesProcessorTest extends TestCase
                     'foo' => 'bar',
                     'cookies' => [
                         'foo' => 'bar',
-                        'bar' => RemoveCookiesProcessor::STRING_MASK,
+                        'bar' => SanitizeCookiesProcessor::STRING_MASK,
                     ],
                     'headers' => [
                         'another-header' => 'foo',

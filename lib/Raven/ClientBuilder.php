@@ -26,8 +26,8 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Raven\HttpClient\Authentication\SentryAuth;
 use Raven\Processor\ProcessorInterface;
-use Raven\Processor\RemoveCookiesProcessor;
 use Raven\Processor\RemoveHttpBodyProcessor;
+use Raven\Processor\SanitizeCookiesProcessor;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 
@@ -287,7 +287,7 @@ final class ClientBuilder implements ClientBuilderInterface
     private static function getDefaultProcessors()
     {
         return [
-            [new RemoveCookiesProcessor(), 0],
+            [new SanitizeCookiesProcessor(), 0],
             [new RemoveHttpBodyProcessor(), 0],
             [new SanitizeHttpHeadersProcessor(), 0],
             [new SanitizeDataProcessor(), -255],

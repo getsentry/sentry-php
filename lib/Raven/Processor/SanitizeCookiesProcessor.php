@@ -16,12 +16,12 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * This processor removes all the cookies from the request to ensure no sensitive
- * informations are sent to the server.
+ * This processor sanitizes the cookies to ensure no sensitive information are
+ * sent to the server.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RemoveCookiesProcessor implements ProcessorInterface
+final class SanitizeCookiesProcessor implements ProcessorInterface
 {
     /**
      * @var array The configuration options
