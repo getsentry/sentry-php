@@ -805,9 +805,10 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 'method' => 'PATCH',
                 'url' => 'https://getsentry.com/welcome/',
                 'query_string' => 'q=bitch&l=en',
-                'data' => array(
+                'POST' => array(
                     'stamp'           => '1c',
                 ),
+                'data' => '',
                 'cookies' => array(
                     'donut'           => 'chocolat',
                 ),
@@ -821,6 +822,11 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 ),
             )
         );
+
+        if (PHP_VERSION_ID < 50600) {
+             $expected['request']['data'] = $expected['request']['POST'];
+             unset($expected['request']['POST']);
+        }
 
         $client = new Dummy_Raven_Client();
         $this->assertEquals($expected, $client->get_http_data());

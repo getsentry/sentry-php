@@ -746,8 +746,13 @@ class Raven_Client
 
         // dont set this as an empty array as PHP will treat it as a numeric array
         // instead of a mapping which goes against the defined Sentry spec
-        if (!empty($_POST)) {
+        if (PHP_VERSION_ID < 50600 && !empty($_POST)) {
             $result['data'] = $_POST;
+        } else {
+            $result['data'] = file_get_contents("php://input");
+            if (!empty($_POST)) {
+                $result['POST'] = $_POST;
+            }
         }
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
