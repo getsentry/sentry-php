@@ -824,8 +824,8 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         );
 
         if (PHP_VERSION_ID < 50600) {
-             $expected['request']['data'] = $expected['request']['POST'];
-             unset($expected['request']['POST']);
+            $expected['request']['data'] = $expected['request']['POST'];
+            unset($expected['request']['POST']);
         }
 
         $client = new Dummy_Raven_Client();
