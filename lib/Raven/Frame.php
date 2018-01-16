@@ -131,7 +131,7 @@ final class Frame implements \JsonSerializable
      * Gets the source code written at the line number of the file that originated
      * this frame.
      *
-     * @return string|null
+     * @return string[]|null
      */
     public function getContextLine()
     {

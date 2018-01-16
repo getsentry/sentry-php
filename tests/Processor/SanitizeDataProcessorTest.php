@@ -55,13 +55,7 @@ class SanitizeDataProcessorTest extends TestCase
             // We must convert the backtrace to a Stacktrace instance here because
             // PHPUnit executes the data provider before the setUp method and so
             // the client instance cannot be accessed from there
-            foreach ($inputData['exception']['values'] as &$exceptionValue) {
-                $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
-            }
-
-            unset($exceptionValue);
-
-            $event = $event->withException($inputData['exception']);
+            $event = $event->withException($this->convertExceptionValuesToStacktrace($expectedData['exception']));
         }
 
         $event = $this->processor->process($event);
@@ -78,13 +72,7 @@ class SanitizeDataProcessorTest extends TestCase
             // We must convert the backtrace to a Stacktrace instance here because
             // PHPUnit executes the data provider before the setUp method and so
             // the client instance cannot be accessed from there
-            foreach ($expectedData['exception']['values'] as &$exceptionValue) {
-                $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
-            }
-
-            unset($exceptionValue);
-
-            $this->assertArraySubset($expectedData['exception'], $event->getException());
+            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $event->getException());
         }
 
         $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
@@ -206,5 +194,17 @@ class SanitizeDataProcessorTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    private function convertExceptionValuesToStacktrace($exceptionValues)
+    {
+        foreach ($exceptionValues['values'] as &$exceptionValue) {
+            $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
+        }
+
+        // Free the memory from the reference
+        unset($exceptionValue);
+
+        return $exceptionValues;
     }
 }

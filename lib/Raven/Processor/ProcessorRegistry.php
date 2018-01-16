@@ -51,11 +51,9 @@ final class ProcessorRegistry
     {
         foreach ($this->processors as $priority => $processors) {
             foreach ($processors as $key => $value) {
-                if ($value !== $processor) {
-                    continue;
+                if ($value === $processor) {
+                    unset($this->processors[$priority][$key], $this->sortedProcessors);
                 }
-
-                unset($this->processors[$priority][$key], $this->sortedProcessors);
             }
         }
     }

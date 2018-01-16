@@ -324,6 +324,10 @@
 - The method `Client::process` has been removed as there is no need to process event data
   from outside the `Client` class.
 
+- The `Raven_Processor` class has been removed. There is not anymore a base
+  abstract class for the processors, but a `ProcessorInterface` interface has
+  been introduced.
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class
