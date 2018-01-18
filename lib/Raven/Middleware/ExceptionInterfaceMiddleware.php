@@ -77,7 +77,9 @@ final class ExceptionInterfaceMiddleware
                 $exceptions[] = $data;
             } while ($currentException = $currentException->getPrevious());
 
-            $exceptions = array_reverse($exceptions);
+            $exceptions = [
+                'values' => array_reverse($exceptions),
+            ];
 
             $event = $event->withException($exceptions);
         }

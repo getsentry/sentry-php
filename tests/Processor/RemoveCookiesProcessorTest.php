@@ -13,23 +13,26 @@ namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
+use Raven\ClientBuilder;
+use Raven\Event;
 use Raven\Processor\RemoveCookiesProcessor;
 
 class RemoveCookiesProcessorTest extends TestCase
 {
     /**
-     * @var RemoveCookiesProcessor|\PHPUnit_Framework_MockObject_MockObject
+     * @var Client
+     */
+    protected $client;
+
+    /**
+     * @var RemoveCookiesProcessor
      */
     protected $processor;
 
     protected function setUp()
     {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->processor = new RemoveCookiesProcessor($client);
+        $this->client = ClientBuilder::create()->getClient();
+        $this->processor = new RemoveCookiesProcessor();
     }
 
     /**
@@ -37,9 +40,12 @@ class RemoveCookiesProcessorTest extends TestCase
      */
     public function testProcess($inputData, $expectedData)
     {
-        $this->processor->process($inputData);
+        $event = new Event($this->client->getConfig());
+        $event = $event->withRequest($inputData);
 
-        $this->assertArraySubset($expectedData, $inputData);
+        $event = $this->processor->process($event);
+
+        $this->assertArraySubset($expectedData, $event->getRequest());
     }
 
     public function processDataProvider()
@@ -47,32 +53,19 @@ class RemoveCookiesProcessorTest extends TestCase
         return [
             [
                 [
-                    'request' => [
-                        'foo' => 'bar',
-                    ],
-                ], [
-                    'request' => [
-                        'foo' => 'bar',
+                    'foo' => 'bar',
+                    'cookies' => 'baz',
+                    'headers' => [
+                        'cookie' => 'bar',
+                        'another-header' => 'foo',
                     ],
                 ],
-            ], [
                 [
-                    'request' => [
-                        'foo' => 'bar',
-                        'cookies' => 'baz',
-                        'headers' => [
-                            'Cookie' => 'bar',
-                            'AnotherHeader' => 'foo',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'foo' => 'bar',
-                        'cookies' => RemoveCookiesProcessor::STRING_MASK,
-                        'headers' => [
-                            'Cookie' => RemoveCookiesProcessor::STRING_MASK,
-                            'AnotherHeader' => 'foo',
-                        ],
+                    'foo' => 'bar',
+                    'cookies' => RemoveCookiesProcessor::STRING_MASK,
+                    'headers' => [
+                        'cookie' => RemoveCookiesProcessor::STRING_MASK,
+                        'another-header' => 'foo',
                     ],
                 ],
             ],

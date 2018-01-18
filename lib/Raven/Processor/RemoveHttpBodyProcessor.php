@@ -11,7 +11,7 @@
 
 namespace Raven\Processor;
 
-use Raven\Processor;
+use Raven\Event;
 
 /**
  * This processor removes all the data of the HTTP body to ensure no sensitive
@@ -20,17 +20,19 @@ use Raven\Processor;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RemoveHttpBodyProcessor extends Processor
+final class RemoveHttpBodyProcessor implements ProcessorInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function process(&$data)
+    public function process(Event $event)
     {
-        if (isset($data['request'], $data['request']['method'])
-            && in_array(strtoupper($data['request']['method']), ['POST', 'PUT', 'PATCH', 'DELETE'])
-        ) {
-            $data['request']['data'] = self::STRING_MASK;
+        $request = $event->getRequest();
+
+        if (isset($request['method']) && in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            $request['data'] = self::STRING_MASK;
         }
+
+        return $event->withRequest($request);
     }
 }

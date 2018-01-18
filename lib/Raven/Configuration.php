@@ -11,10 +11,6 @@
 
 namespace Raven;
 
-use Raven\Processor\RemoveCookiesProcessor;
-use Raven\Processor\RemoveHttpBodyProcessor;
-use Raven\Processor\SanitizeDataProcessor;
-use Raven\Processor\SanitizeHttpHeadersProcessor;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -411,7 +407,7 @@ class Configuration
      * Checks whether the given exception should be ignored when sending events
      * to Sentry.
      *
-     * @param \Throwable|\Exception The exception
+     * @param \Throwable|\Exception $exception The exception
      *
      * @return bool
      */
@@ -705,46 +701,6 @@ class Configuration
     }
 
     /**
-     * Gets the list of enabled processors.
-     *
-     * @return string[]
-     */
-    public function getProcessors()
-    {
-        return $this->options['processors'];
-    }
-
-    /**
-     * Sets the list of enabled processors.
-     *
-     * @param string[] $processors A list of FCQN
-     */
-    public function setProcessors(array $processors)
-    {
-        $this->options = $this->resolver->resolve(['processors' => $processors]);
-    }
-
-    /**
-     * Gets the options to configure the processors.
-     *
-     * @return array
-     */
-    public function getProcessorsOptions()
-    {
-        return $this->options['processors_options'];
-    }
-
-    /**
-     * Sets the options to configure the processors.
-     *
-     * @param array $options The options
-     */
-    public function setProcessorsOptions(array $options)
-    {
-        $this->options = $this->resolver->resolve(['processors_options' => $options]);
-    }
-
-    /**
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -778,13 +734,6 @@ class Configuration
             'should_capture' => null,
             'tags' => [],
             'error_types' => null,
-            'processors_options' => [],
-            'processors' => [
-                SanitizeDataProcessor::class,
-                RemoveCookiesProcessor::class,
-                RemoveHttpBodyProcessor::class,
-                SanitizeHttpHeadersProcessor::class,
-            ],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -813,8 +762,6 @@ class Configuration
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
-        $resolver->setAllowedTypes('processors_options', 'array');
-        $resolver->setAllowedTypes('processors', 'array');
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('server', function ($value) {

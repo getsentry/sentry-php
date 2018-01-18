@@ -13,43 +13,53 @@
 
 namespace Raven\Processor;
 
-use Raven\Client;
-use Raven\Processor;
+use Raven\Event;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class SanitizeDataProcessor extends Processor
+/**
+ * Asterisk out passwords from password fields in frames, http and basic extra
+ * data.
+ *
+ * @author David Cramer <dcramer@gmail.com>
+ * @author Stefano Arlandini <sarlandini@alice.it>
+ */
+final class SanitizeDataProcessor implements ProcessorInterface
 {
-    const MASK = self::STRING_MASK;
-    const FIELDS_RE = '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i';
-    const VALUES_RE = '/^(?:\d[ -]*?){13,16}$/';
-
-    protected $fields_re;
-    protected $values_re;
-    protected $session_cookie_name;
+    /**
+     * @var array The configuration options
+     */
+    private $options;
 
     /**
-     * {@inheritdoc}
+     * Class constructor.
+     *
+     * @param array $options An optional array of configuration options
      */
-    public function __construct(Client $client)
+    public function __construct(array $options = [])
     {
-        parent::__construct($client);
+        $resolver = new OptionsResolver();
 
-        $this->fields_re = self::FIELDS_RE;
-        $this->values_re = self::VALUES_RE;
-        $this->session_cookie_name = ini_get('session.name');
+        $this->configureOptions($resolver);
+
+        $this->options = $resolver->resolve($options);
     }
 
     /**
-     * {@inheritdoc}
+     * Configures the options for this processor.
+     *
+     * @param OptionsResolver $resolver The resolver for the options
      */
-    public function setProcessorOptions(array $options)
+    private function configureOptions(OptionsResolver $resolver)
     {
-        if (isset($options['fields_re'])) {
-            $this->fields_re = $options['fields_re'];
-        }
+        $resolver->setDefaults([
+            'fields_re' => '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i',
+            'values_re' => '/^(?:\d[ -]*?){13,16}$/',
+            'session_cookie_name' => ini_get('session.name'),
+        ]);
 
-        if (isset($options['values_re'])) {
-            $this->values_re = $options['values_re'];
-        }
+        $resolver->setAllowedTypes('fields_re', 'string');
+        $resolver->setAllowedTypes('values_re', 'string');
+        $resolver->setAllowedTypes('session_cookie_name', 'string');
     }
 
     /**
@@ -64,7 +74,7 @@ class SanitizeDataProcessor extends Processor
             return;
         }
 
-        if (preg_match($this->values_re, $item)) {
+        if (preg_match($this->options['values_re'], $item)) {
             $item = self::STRING_MASK;
         }
 
@@ -72,94 +82,85 @@ class SanitizeDataProcessor extends Processor
             return;
         }
 
-        if (preg_match($this->fields_re, $key)) {
+        if (preg_match($this->options['fields_re'], $key)) {
             $item = self::STRING_MASK;
         }
     }
 
     public function sanitizeException(&$data)
     {
-        foreach ($data['exception']['values'] as &$value) {
+        foreach ($data['values'] as &$value) {
             if (!isset($value['stacktrace'])) {
                 continue;
             }
 
             $this->sanitizeStacktrace($value['stacktrace']);
         }
+
+        return $data;
     }
 
     public function sanitizeHttp(&$data)
     {
-        $http = &$data['request'];
-        if (!empty($http['cookies']) && is_array($http['cookies'])) {
-            $cookies = &$http['cookies'];
-            if (!empty($cookies[$this->session_cookie_name])) {
-                $cookies[$this->session_cookie_name] = self::STRING_MASK;
+        if (!empty($data['cookies']) && is_array($data['cookies'])) {
+            $cookies = &$data['cookies'];
+            if (!empty($cookies[$this->options['session_cookie_name']])) {
+                $cookies[$this->options['session_cookie_name']] = self::STRING_MASK;
             }
         }
-        if (!empty($http['data']) && is_array($http['data'])) {
-            array_walk_recursive($http['data'], [$this, 'sanitize']);
+
+        if (!empty($data['data']) && is_array($data['data'])) {
+            array_walk_recursive($data['data'], [$this, 'sanitize']);
         }
+
+        return $data;
     }
 
-    public function sanitizeStacktrace(&$data)
+    public function sanitizeStacktrace($data)
     {
-        foreach ($data['frames'] as &$frame) {
-            if (empty($frame['vars'])) {
+        foreach ($data->getFrames() as &$frame) {
+            if (empty($frame->getVars())) {
                 continue;
             }
-            array_walk_recursive($frame['vars'], [$this, 'sanitize']);
+
+            $vars = $frame->getVars();
+
+            array_walk_recursive($vars, [$this, 'sanitize']);
+
+            $frame->setVars($vars);
         }
+
+        return $data;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function process(&$data)
+    public function process(Event $event)
     {
-        if (!empty($data['exception'])) {
-            $this->sanitizeException($data);
-        }
-        if (!empty($data['stacktrace'])) {
-            $this->sanitizeStacktrace($data['stacktrace']);
-        }
-        if (!empty($data['request'])) {
-            $this->sanitizeHttp($data);
-        }
-        if (!empty($data['extra'])) {
-            array_walk_recursive($data['extra'], [$this, 'sanitize']);
-        }
-    }
+        $exception = $event->getException();
+        $stacktrace = $event->getStacktrace();
+        $request = $event->getRequest();
+        $extraContext = $event->getExtraContext();
 
-    /**
-     * @return string
-     */
-    public function getFieldsRe()
-    {
-        return $this->fields_re;
-    }
+        if (!empty($exception)) {
+            $event = $event->withException($this->sanitizeException($exception));
+        }
 
-    /**
-     * @param string $fields_re
-     */
-    public function setFieldsRe($fields_re)
-    {
-        $this->fields_re = $fields_re;
-    }
+        if (!empty($stacktrace)) {
+            $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
+        }
 
-    /**
-     * @return string
-     */
-    public function getValuesRe()
-    {
-        return $this->values_re;
-    }
+        if (!empty($request)) {
+            $event = $event->withRequest($this->sanitizeHttp($request));
+        }
 
-    /**
-     * @param string $values_re
-     */
-    public function setValuesRe($values_re)
-    {
-        $this->values_re = $values_re;
+        if (!empty($extraContext)) {
+            array_walk_recursive($extraContext, [$this, 'sanitize']);
+
+            $event = $event->withExtraContext($extraContext);
+        }
+
+        return $event;
     }
 }

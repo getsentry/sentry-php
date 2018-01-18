@@ -11,8 +11,8 @@
 
 namespace Raven\Processor;
 
-use Raven\Client;
-use Raven\Processor;
+use Raven\Event;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * This processor sanitizes the configured HTTP headers to ensure no sensitive
@@ -20,53 +20,54 @@ use Raven\Processor;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SanitizeHttpHeadersProcessor extends Processor
+final class SanitizeHttpHeadersProcessor implements ProcessorInterface
 {
     /**
-     * @var string[] The list of HTTP headers to sanitize
+     * @var array The configuration options
      */
-    private $httpHeadersToSanitize = [];
+    private $options;
 
     /**
-     * {@inheritdoc}
+     * Class constructor.
+     *
+     * @param array $options An optional array of configuration options
      */
-    public function __construct(Client $client)
+    public function __construct(array $options = [])
     {
-        parent::__construct($client);
+        $resolver = new OptionsResolver();
+
+        $this->configureOptions($resolver);
+
+        $this->options = $resolver->resolve($options);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setProcessorOptions(array $options)
+    public function process(Event $event)
     {
-        $this->httpHeadersToSanitize = array_merge(
-            $this->getDefaultHeaders(),
-            isset($options['sanitize_http_headers']) ? $options['sanitize_http_headers'] : []
-        );
-    }
+        $request = $event->getRequest();
 
-    /**
-     * {@inheritdoc}
-     */
-    public function process(&$data)
-    {
-        if (isset($data['request']) && isset($data['request']['headers'])) {
-            foreach ($data['request']['headers'] as $header => &$value) {
-                if (in_array($header, $this->httpHeadersToSanitize)) {
-                    $value = self::STRING_MASK;
-                }
+        if (!isset($request['headers'])) {
+            return $event;
+        }
+
+        foreach ($request['headers'] as $header => &$value) {
+            if (in_array($header, $this->options['sanitize_http_headers'], true)) {
+                $value = self::STRING_MASK;
             }
         }
+
+        return $event->withRequest($request);
     }
 
     /**
-     * Gets the list of default headers that must be sanitized.
-     *
-     * @return string[]
+     * {@inheritdoc}
      */
-    private function getDefaultHeaders()
+    private function configureOptions(OptionsResolver $resolver)
     {
-        return ['Authorization', 'Proxy-Authorization', 'X-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN'];
+        $resolver->setDefault('sanitize_http_headers', ['Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN']);
+
+        $resolver->setAllowedTypes('sanitize_http_headers', 'array');
     }
 }

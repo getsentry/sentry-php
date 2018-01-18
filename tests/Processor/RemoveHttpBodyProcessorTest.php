@@ -13,10 +13,17 @@ namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
+use Raven\ClientBuilder;
+use Raven\Event;
 use Raven\Processor\RemoveHttpBodyProcessor;
 
 class RemoveHttpBodyProcessorTest extends TestCase
 {
+    /**
+     * @var Client
+     */
+    protected $client;
+
     /**
      * @var RemoveHttpBodyProcessor|\PHPUnit_Framework_MockObject_MockObject
      */
@@ -24,12 +31,8 @@ class RemoveHttpBodyProcessorTest extends TestCase
 
     protected function setUp()
     {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->processor = new RemoveHttpBodyProcessor($client);
+        $this->client = ClientBuilder::create()->getClient();
+        $this->processor = new RemoveHttpBodyProcessor();
     }
 
     /**
@@ -37,9 +40,12 @@ class RemoveHttpBodyProcessorTest extends TestCase
      */
     public function testProcess($inputData, $expectedData)
     {
-        $this->processor->process($inputData);
+        $event = new Event($this->client->getConfig());
+        $event = $event->withRequest($inputData);
 
-        $this->assertArraySubset($expectedData, $inputData);
+        $event = $this->processor->process($event);
+
+        $this->assertArraySubset($expectedData, $event->getRequest());
     }
 
     public function processDataProvider()
@@ -47,70 +53,58 @@ class RemoveHttpBodyProcessorTest extends TestCase
         return [
             [
                 [
-                    'request' => [
-                        'method' => 'POST',
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ],
-                ],
-            ], [
-                [
-                    'request' => [
-                        'method' => 'PUT',
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'data' => RemoveHttpBodyProcessor::STRING_MASK,
-                    ],
-                ],
-            ], [
-                [
-                    'request' => [
-                        'method' => 'PATCH',
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
+                    'method' => 'POST',
+                    'data' => [
+                        'foo' => 'bar',
                     ],
                 ],
                 [
-                    'request' => [
-                        'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                ],
+            ],
+            [
+                [
+                    'method' => 'PUT',
+                    'data' => [
+                        'foo' => 'bar',
                     ],
                 ],
-            ], [
                 [
-                    'request' => [
-                        'method' => 'DELETE',
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                ],
+            ],
+            [
+                [
+                    'method' => 'PATCH',
+                    'data' => [
+                        'foo' => 'bar',
                     ],
                 ],
-            ], [
                 [
-                    'request' => [
-                        'method' => 'GET',
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
+                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                ],
+            ],
+            [
+                [
+                    'method' => 'DELETE',
+                    'data' => [
+                        'foo' => 'bar',
                     ],
-                ], [
-                    'request' => [
-                        'data' => [
-                            'foo' => 'bar',
-                        ],
+                ],
+                [
+                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                ],
+            ],
+            [
+                [
+                    'method' => 'GET',
+                    'data' => [
+                        'foo' => 'bar',
+                    ],
+                ],
+                [
+                    'data' => [
+                        'foo' => 'bar',
                     ],
                 ],
             ],
