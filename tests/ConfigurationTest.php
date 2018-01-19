@@ -171,7 +171,7 @@ class ConfigurationTest extends TestCase
     {
         $configuration = new Configuration();
 
-        $this->assertTrue($configuration->shouldCapture());
+        $this->assertTrue($configuration->shouldCapture(), 'By default all events should be captured');
 
         $configuration->setCurrentEnvironment('foo');
         $configuration->setEnvironments(['bar']);

@@ -55,6 +55,8 @@ class Configuration
      * Class constructor.
      *
      * @param array $options The configuration options
+     * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
+     * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
     public function __construct(array $options = [])
     {
@@ -414,7 +416,7 @@ class Configuration
      */
     public function isExcludedException($exception)
     {
-        foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
+        foreach ($this->getExcludedExceptions() as $exceptionClass) {
             if ($exception instanceof $exceptionClass) {
                 return true;
             }
@@ -617,17 +619,15 @@ class Configuration
      */
     public function shouldCapture(&$value = null)
     {
-        $result = true;
-
-        if (!empty($this->options['environments']) && !in_array($this->options['current_environment'], $this->options['environments'])) {
-            $result = false;
+        if (!empty($this->getEnvironments()) && !in_array($this->getCurrentEnvironment(), $this->getEnvironments())) {
+            return false;
         }
 
         if (null !== $this->options['should_capture'] && null !== $value) {
-            $result = $result && $this->options['should_capture']($value);
+            return $this->options['should_capture']($value);
         }
 
-        return $result;
+        return true;
     }
 
     /**
@@ -790,7 +790,7 @@ class Configuration
                 $this->server .= ':' . $parsed['port'];
             }
 
-            $this->server .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
+            $this->server .= substr($parsed['path'], 0, strrpos($parsed['path'], '/'));
             $this->publicKey = $parsed['user'];
             $this->secretKey = $parsed['pass'];
 
@@ -833,8 +833,8 @@ class Configuration
             $path = $value;
         }
 
-        if (DIRECTORY_SEPARATOR === substr($path, 0, 1) && DIRECTORY_SEPARATOR !== substr($path, -1)) {
-            $path = $path . DIRECTORY_SEPARATOR;
+        if (DIRECTORY_SEPARATOR === $path[0] && DIRECTORY_SEPARATOR !== substr($path, -1)) {
+            $path .= DIRECTORY_SEPARATOR;
         }
 
         return $path;
