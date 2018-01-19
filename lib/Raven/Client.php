@@ -163,8 +163,8 @@ class Client
         $this->context = new Context();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
-        $this->serializer = new Serializer($this->config->getMbDetectOrder());
-        $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
+        $this->serializer = $this->config->getSerializer();
+        $this->reprSerializer = $this->config->getReprSerializer();
         $this->middlewareStackTip = function (Event $event) {
             return $event;
         };
@@ -630,12 +630,8 @@ class Client
 
     public function setAllObjectSerialize($value)
     {
-        if (method_exists($this->serializer, 'setAllObjectSerialize')) {
-            $this->serializer->setAllObjectSerialize($value);
-        }
-        if (method_exists($this->reprSerializer, 'setAllObjectSerialize')) {
-            $this->reprSerializer->setAllObjectSerialize($value);
-        }
+        $this->serializer->setAllObjectSerialize($value);
+        $this->reprSerializer->setAllObjectSerialize($value);
     }
 
     /**

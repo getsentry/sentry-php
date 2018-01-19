@@ -14,4 +14,9 @@ interface SerializerInterface
      * @return string|bool|double|int|null|object|array
      */
     public function serialize($value, array $context = []);
+
+    /**
+     * @param bool $value
+     */
+    public function setAllObjectSerialize($value);
 }
