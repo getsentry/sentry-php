@@ -23,6 +23,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;
+use Raven\Serializer;
 
 function simple_function($a = null, $b = null, $c = null)
 {
