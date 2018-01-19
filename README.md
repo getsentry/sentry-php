@@ -11,6 +11,8 @@
 [![Downloads per month](https://img.shields.io/packagist/dm/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
 [![Latest stable version](https://img.shields.io/packagist/v/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
 [![License](http://img.shields.io/packagist/l/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
+[![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
+[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -23,19 +25,47 @@ more about [automatic PHP error reporting with Sentry](https://sentry.io/for/php
 - Send customized diagnostic data
 - Process and sanitize data before sending it over the network
 
+## Install
+
+To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
+in your project. To install it please see the [docs](https://getcomposer.org/download/).
+
+Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
+it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever
+PSR-7 implementation and HTTP client they want to use.
+
+If you just want to get started quickly you should run the following command:
+
+```bash
+php composer.phar require sentry/sentry php-http/curl-client guzzlehttp/psr7
+```
+
+This will install the library itself along with an HTTP client adapter that uses
+cURL as transport method (provided by Httplug) and a PSR-7 implementation
+(provided by Guzzle). You do not have to use those packages if you do not want to.
+The SDK does not care about which transport method you want to use because it's
+an implementation detail of your application. You may use any package that provides
+[`php-http/async-client-implementation`](https://packagist.org/providers/php-http/async-client-implementation)
+and [`http-message-implementation`](https://packagist.org/providers/psr/http-message-implementation).
+
 ## Usage
 
 ```php
-// Instantiate a new client with a compatible DSN and install built-in
-// handlers
-$client = (new Raven_Client('http://public:secret@example.com/1'))->install();
+namespace XXX;
+
+use Raven\ClientBuilder;
+
+require 'vendor/autoload.php';
+
+// Instantiate the SDK with your DSN
+$client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])->getClient();
 
 // Capture an exception
-$event_id = $client->captureException($ex);
+$eventId = $client->captureException(new \RuntimeException('Hello World!'));
 
 // Give the user feedback
-echo "Sorry, there was an error!";
-echo "Your reference ID is " . $event_id;
+echo 'Sorry, there was an error!';
+echo 'Your reference ID is ' . $eventId;
 ```
 
 For more information, see our [documentation](https://docs.getsentry.com/hosted/clients/php/).

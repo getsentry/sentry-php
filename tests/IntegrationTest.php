@@ -10,6 +10,9 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
+use Raven\ClientBuilder;
+
 class DummyIntegration_Raven_Client extends \Raven\Client
 {
     private $__sent_events = [];
@@ -18,25 +21,28 @@ class DummyIntegration_Raven_Client extends \Raven\Client
     {
         return $this->__sent_events;
     }
+
     public function send(&$data)
     {
-        if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, [&$data]) === false) {
+        if (false === $this->config->shouldCapture($data)) {
             // if send_callback returns falsely, end native send
             return;
         }
         $this->__sent_events[] = $data;
     }
-    public static function is_http_request()
+
+    public static function isHttpRequest()
     {
         return true;
     }
+
     // short circuit breadcrumbs
     public function registerDefaultBreadcrumbHandlers()
     {
     }
 }
 
-class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
+class IntegrationTest extends TestCase
 {
     private function create_chained_exception()
     {
@@ -53,19 +59,16 @@ class Raven_Tests_IntegrationTest extends \PHPUnit_Framework_TestCase
 
     public function testCaptureSimpleError()
     {
-        $client = new DummyIntegration_Raven_Client('https://public:secret@example.com/1');
+        $client = ClientBuilder::create(['auto_log_stacks' => true])->getClient();
+        $client->storeErrorsForBulkSend = true;
 
         @mkdir('/no/way');
 
         $client->captureLastError();
 
-        $events = $client->getSentEvents();
-        $event = array_pop($events);
+        $event = $client->pendingEvents[0]['exception']['values'][0];
 
-        $exc = $event['exception']['values'][0];
-        $this->assertEquals($exc['value'], 'mkdir(): No such file or directory');
-        $stack = $exc['stacktrace']['frames'];
-        $lastFrame = $stack[count($stack) - 1];
-        $this->assertEquals(@$lastFrame['filename'], 'tests/IntegrationTest.php');
+        $this->assertEquals($event['value'], 'mkdir(): No such file or directory');
+        $this->assertEquals($event['stacktrace']['frames'][count($event['stacktrace']['frames']) - 1]->getFile(), 'tests/IntegrationTest.php');
     }
 }

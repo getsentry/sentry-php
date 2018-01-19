@@ -9,13 +9,21 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Raven\Tests\Processor;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
+use Raven\ClientBuilder;
+use Raven\Event;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 
-class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeHttpHeadersProcessorTest extends TestCase
 {
+    /**
+     * @var Client
+     */
+    protected $client;
+
     /**
      * @var SanitizeHttpHeadersProcessor|\PHPUnit_Framework_MockObject_MockObject
      */
@@ -23,13 +31,8 @@ class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->processor = new SanitizeHttpHeadersProcessor($client);
-        $this->processor->setProcessorOptions([
+        $this->client = ClientBuilder::create()->getClient();
+        $this->processor = new SanitizeHttpHeadersProcessor([
             'sanitize_http_headers' => ['User-Defined-Header'],
         ]);
     }
@@ -39,9 +42,12 @@ class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
      */
     public function testProcess($inputData, $expectedData)
     {
-        $this->processor->process($inputData);
+        $event = new Event($this->client->getConfig());
+        $event = $event->withRequest($inputData);
 
-        $this->assertArraySubset($expectedData, $inputData);
+        $event = $this->processor->process($event);
+
+        $this->assertArraySubset($expectedData, $event->getRequest());
     }
 
     public function processDataProvider()
@@ -49,34 +55,17 @@ class SanitizeHttpHeadersProcessorTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 [
-                    'request' => [
-                        'headers' => [
-                            'Authorization' => 'foo',
-                            'AnotherHeader' => 'bar',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'headers' => [
-                            'Authorization' => SanitizeHttpHeadersProcessor::STRING_MASK,
-                            'AnotherHeader' => 'bar',
-                        ],
+                    'headers' => [
+                        'Authorization' => 'foo',
+                        'AnotherHeader' => 'bar',
+                        'User-Defined-Header' => 'baz',
                     ],
                 ],
-            ], [
                 [
-                    'request' => [
-                        'headers' => [
-                            'User-Defined-Header' => 'foo',
-                            'AnotherHeader' => 'bar',
-                        ],
-                    ],
-                ], [
-                    'request' => [
-                        'headers' => [
-                            'User-Defined-Header' => SanitizeHttpHeadersProcessor::STRING_MASK,
-                            'AnotherHeader' => 'bar',
-                        ],
+                    'headers' => [
+                        'Authorization' => 'foo',
+                        'AnotherHeader' => 'bar',
+                        'User-Defined-Header' => SanitizeHttpHeadersProcessor::STRING_MASK,
                     ],
                 ],
             ],

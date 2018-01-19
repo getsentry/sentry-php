@@ -4,7 +4,7 @@ namespace Raven\Tests;
 
 require_once 'SerializerAbstractTest.php';
 
-class SerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
+class SerializerTest extends \Raven\Tests\SerializerAbstractTest
 {
     /**
      * @return string
@@ -15,7 +15,7 @@ class SerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeString
      */
@@ -25,7 +25,7 @@ class SerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeString
      */
@@ -35,7 +35,7 @@ class SerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\Serializer::serializeValue
      */

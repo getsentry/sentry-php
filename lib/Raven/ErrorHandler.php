@@ -12,15 +12,13 @@ namespace Raven;
  */
 
 /**
- * Event handlers for exceptions and errors
+ * Event handlers for exceptions and errors.
  *
  * $client = new \Raven\Client('http://public:secret/example.com/1');
  * $error_handler = new \Raven\ErrorHandler($client);
  * $error_handler->registerExceptionHandler();
  * $error_handler->registerErrorHandler();
  * $error_handler->registerShutdownFunction();
- *
- * @package raven
  */
 
 // TODO(dcramer): deprecate default error types in favor of runtime configuration
@@ -48,16 +46,19 @@ class ErrorHandler
 
     /**
      * @var array
-     * Error types which should be processed by the handler.
-     * A 'null' value implies "whatever error_reporting is at time of error".
+     *            Error types which should be processed by the handler.
+     *            A 'null' value implies "whatever error_reporting is at time of error".
      */
     protected $error_types = null;
 
-    public function __construct($client, $send_errors_last = false, $error_types = null,
-                                $__error_types = null)
-    {
+    public function __construct(
+        $client,
+        $send_errors_last = false,
+        $error_types = null,
+                                $__error_types = null
+    ) {
         // support legacy fourth argument for error types
-        if ($error_types === null) {
+        if (null === $error_types) {
             $error_types = $__error_types;
         }
 
@@ -66,7 +67,7 @@ class ErrorHandler
         $this->fatal_error_types = array_reduce($this->fatal_error_types, [$this, 'bitwiseOr']);
         if ($send_errors_last) {
             $this->send_errors_last = true;
-            $this->client->store_errors_for_bulk_send = true;
+            $this->client->storeErrorsForBulkSend = true;
         }
     }
 
@@ -77,10 +78,10 @@ class ErrorHandler
 
     public function handleException($e, $isError = false, $vars = null)
     {
-        $e->event_id = $this->client->captureException($e, null, null, $vars);
+        $e->event_id = $this->client->captureException($e, $vars);
 
         if (!$isError && $this->call_existing_exception_handler) {
-            if ($this->old_exception_handler !== null) {
+            if (null !== $this->old_exception_handler) {
                 call_user_func($this->old_exception_handler, $e);
             } else {
                 throw $e;
@@ -95,9 +96,9 @@ class ErrorHandler
         // E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING, and
         // most of E_STRICT raised in the file where set_error_handler() is called.
 
-        if (error_reporting() !== 0) {
+        if (0 !== error_reporting()) {
             $error_types = $this->error_types;
-            if ($error_types === null) {
+            if (null === $error_types) {
                 $error_types = error_reporting();
             }
             if ($error_types & $type) {
@@ -107,7 +108,7 @@ class ErrorHandler
         }
 
         if ($this->call_existing_error_handler) {
-            if ($this->old_error_handler !== null) {
+            if (null !== $this->old_error_handler) {
                 return call_user_func(
                     $this->old_error_handler,
                     $type,
@@ -120,6 +121,7 @@ class ErrorHandler
                 return false;
             }
         }
+
         return true;
     }
 
@@ -133,8 +135,11 @@ class ErrorHandler
 
         if ($this->shouldCaptureFatalError($error['type'])) {
             $e = new \ErrorException(
-                @$error['message'], 0, @$error['type'],
-                @$error['file'], @$error['line']
+                @$error['message'],
+                0,
+                @$error['type'],
+                @$error['file'],
+                @$error['line']
             );
             $this->handleException($e, true);
         }
@@ -146,17 +151,18 @@ class ErrorHandler
     }
 
     /**
-     * Register a handler which will intercept unhnalded exceptions and report them to the
+     * Register a handler which will intercept unhandled exceptions and report them to the
      * associated Sentry client.
      *
-     * @param bool $call_existing Call any existing exception handlers after processing
-     *                            this instance.
+     * @param bool $call_existing Call any existing exception handlers after processing this instance
+     *
      * @return \Raven\ErrorHandler
      */
     public function registerExceptionHandler($call_existing = true)
     {
         $this->old_exception_handler = set_exception_handler([$this, 'handleException']);
         $this->call_existing_exception_handler = $call_existing;
+
         return $this;
     }
 
@@ -164,18 +170,19 @@ class ErrorHandler
      * Register a handler which will intercept standard PHP errors and report them to the
      * associated Sentry client.
      *
-     * @param bool  $call_existing Call any existing errors handlers after processing
-     *                             this instance.
-     * @param array $error_types   All error types that should be sent.
+     * @param bool  $call_existing Call any existing errors handlers after processing this instance
+     * @param array $error_types   All error types that should be sent
+     *
      * @return \Raven\ErrorHandler
      */
     public function registerErrorHandler($call_existing = true, $error_types = null)
     {
-        if ($error_types !== null) {
+        if (null !== $error_types) {
             $this->error_types = $error_types;
         }
         $this->old_error_handler = set_error_handler([$this, 'handleError'], E_ALL);
         $this->call_existing_error_handler = $call_existing;
+
         return $this;
     }
 
@@ -184,7 +191,8 @@ class ErrorHandler
      * shutdown the PHP process. These are commonly things like OOM or timeouts.
      *
      * @param int $reservedMemorySize Number of kilobytes memory space to reserve,
-     *                                which is utilized when handling fatal errors.
+     *                                which is utilized when handling fatal errors
+     *
      * @return \Raven\ErrorHandler
      */
     public function registerShutdownFunction($reservedMemorySize = 10)
@@ -192,6 +200,7 @@ class ErrorHandler
         register_shutdown_function([$this, 'handleFatalError']);
 
         $this->reservedMemory = str_repeat('x', 1024 * $reservedMemorySize);
+
         return $this;
     }
 }

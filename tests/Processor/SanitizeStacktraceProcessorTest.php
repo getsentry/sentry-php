@@ -9,70 +9,71 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Raven\Tests\Processor;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
+use Raven\ClientBuilder;
+use Raven\Event;
 use Raven\Processor\SanitizeStacktraceProcessor;
+use Raven\Stacktrace;
 
-class SanitizeStacktraceProcessorTest extends \PHPUnit_Framework_TestCase
+class SanitizeStacktraceProcessorTest extends TestCase
 {
-    /**
-     * @var Client
-     */
-    protected $client;
-
     /**
      * @var SanitizeStacktraceProcessor
      */
     protected $processor;
 
+    /**
+     * @var Client
+     */
+    protected $client;
+
     protected function setUp()
     {
-        $this->client = new Client();
-        $this->client->store_errors_for_bulk_send = true;
-
-        $this->processor = new SanitizeStacktraceProcessor($this->client);
+        $this->processor = new SanitizeStacktraceProcessor();
+        $this->client = ClientBuilder::create(['auto_log_stacks' => true])
+            ->getClient();
     }
 
     public function testProcess()
     {
-        try {
-            throw new \Exception();
-        } catch (\Exception $exception) {
-            $this->client->captureException($exception);
-        }
+        $exception = new \Exception();
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $event = new Event($this->client->getConfig());
+        $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
-            foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
-                $this->assertArrayNotHasKey('pre_context', $frame);
-                $this->assertArrayNotHasKey('context_line', $frame);
-                $this->assertArrayNotHasKey('post_context', $frame);
-            }
+        $event = $this->processor->process($event);
+
+        foreach ($event->getStacktrace()->getFrames() as $frame) {
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
         }
     }
 
     public function testProcessWithPreviousException()
     {
-        try {
-            try {
-                throw new \Exception('foo');
-            } catch (\Exception $exception) {
-                throw new \Exception('bar', 0, $exception);
-            }
-        } catch (\Exception $exception) {
-            $this->client->captureException($exception);
-        }
+        $exception1 = new \Exception();
+        $exception2 = new \Exception('', 0, $exception1);
 
-        $this->processor->process($this->client->_pending_events[0]);
+        $event = new Event($this->client->getConfig());
+        $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception2->getTrace(), $exception2->getFile(), $exception2->getLine()));
 
-        foreach ($this->client->_pending_events[0]['exception']['values'] as $exceptionValue) {
-            foreach ($exceptionValue['stacktrace']['frames'] as $frame) {
-                $this->assertArrayNotHasKey('pre_context', $frame);
-                $this->assertArrayNotHasKey('context_line', $frame);
-                $this->assertArrayNotHasKey('post_context', $frame);
-            }
+        $event = $this->processor->process($event);
+
+        foreach ($event->getStacktrace()->toArray() as $frame) {
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
         }
+    }
+
+    public function testProcessWithNoStacktrace()
+    {
+        $event = new Event($this->client->getConfig());
+
+        $this->assertSame($event, $this->processor->process($event));
     }
 }

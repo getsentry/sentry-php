@@ -18,13 +18,11 @@
 namespace Raven;
 
 /**
- * This helper is based on code from Facebook's Phabricator project
+ * This helper is based on code from Facebook's Phabricator project.
  *
  *   https://github.com/facebook/phabricator
  *
  * Specifically, it is an adaptation of the PhutilReadableSerializer class.
- *
- * @package raven
  */
 class Serializer implements SerializerInterface
 {
@@ -41,14 +39,14 @@ class Serializer implements SerializerInterface
     const WESTERN_MB_DETECT_ORDER = 'UTF-8, ASCII, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4, ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10, ISO-8859-13, ISO-8859-14, ISO-8859-15, ISO-8859-16, Windows-1251, Windows-1252, Windows-1254';
 
     /**
-     * This is the default mb detect order for the detection of encoding
+     * This is the default mb detect order for the detection of encoding.
      *
      * @var string
      */
     protected $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
     /**
-     * @var boolean $_all_object_serialize
+     * @var bool
      */
     protected $_all_object_serialize = false;
 
@@ -57,7 +55,7 @@ class Serializer implements SerializerInterface
      */
     public function __construct($mb_detect_order = null)
     {
-        if ($mb_detect_order != null) {
+        if (null != $mb_detect_order) {
             $this->mb_detect_order = $mb_detect_order;
         }
     }
@@ -96,7 +94,8 @@ class Serializer implements SerializerInterface
      * @param mixed $value
      * @param int   $max_depth
      * @param int   $_depth
-     * @return string|bool|double|int|null|object|array
+     *
+     * @return string|bool|float|int|null|object|array
      */
     protected function serializeInner($value, $max_depth, $_depth)
     {
@@ -111,18 +110,19 @@ class Serializer implements SerializerInterface
             }
 
             if (is_object($value)) {
-                if ((get_class($value) == 'stdClass') or $this->_all_object_serialize) {
+                if (('stdClass' == get_class($value)) or $this->_all_object_serialize) {
                     return $this->serializeObject($value, $max_depth, $_depth, []);
                 }
             }
         }
+
         return $this->serializeValue($value);
     }
 
     /**
      * @param object   $object
-     * @param integer  $max_depth
-     * @param integer  $_depth
+     * @param int      $max_depth
+     * @param int      $_depth
      * @param string[] $hashes
      *
      * @return array|string
@@ -169,23 +169,23 @@ class Serializer implements SerializerInterface
 
     /**
      * @param mixed $value
-     * @return string|bool|double|int|null
+     *
+     * @return string|bool|float|int|null
      */
     protected function serializeValue($value)
     {
-        if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
+        if ((null === $value) || is_bool($value) || is_float($value) || is_int($value)) {
             return $value;
-        } elseif (is_object($value) || gettype($value) == 'object') {
-            return 'Object '.get_class($value);
+        } elseif (is_object($value) || 'object' == gettype($value)) {
+            return 'Object ' . get_class($value);
         } elseif (is_resource($value)) {
-            return 'Resource '.get_resource_type($value);
+            return 'Resource ' . get_resource_type($value);
         } elseif (is_array($value)) {
             return 'Array of length ' . count($value);
         } else {
             return $this->serializeString($value);
         }
     }
-
 
     /**
      * @return string
@@ -210,7 +210,7 @@ class Serializer implements SerializerInterface
     }
 
     /**
-     * @param boolean $value
+     * @param bool $value
      */
     public function setAllObjectSerialize($value)
     {
@@ -218,7 +218,7 @@ class Serializer implements SerializerInterface
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getAllObjectSerialize()
     {

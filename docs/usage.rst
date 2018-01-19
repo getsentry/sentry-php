@@ -12,7 +12,7 @@ once and reference it from anywhere you want to interface with Sentry:
 
 .. code-block:: php
 
-    $sentryClient = new Raven_Client('___DSN___');
+    $sentryClient = new \Raven\Client('___DSN___');
 
 
 Capturing Errors
@@ -24,12 +24,12 @@ and appropriate hooks for each of PHP's built-in reporting:
 
 .. code-block:: php
 
-    $error_handler = new Raven_ErrorHandler($sentryClient);
+    $error_handler = new \Raven\ErrorHandler($sentryClient);
     $error_handler->registerExceptionHandler();
     $error_handler->registerErrorHandler();
     $error_handler->registerShutdownFunction();
 
-.. note:: Calling ``install()`` on a Raven_Client instance will automatically
+.. note:: Calling ``install()`` on a \Raven\Client instance will automatically
           register these handlers.
 
 
@@ -185,7 +185,7 @@ which is aware of the last event ID.
 
     <?php
 
-    $sentry = new \Raven_Client(___DSN___);
+    $sentry = new \Raven\Client(___DSN___);
 
     public class App {
         function error500($exc) {
@@ -263,7 +263,7 @@ Its common that you might want to prevent automatic capture of certain areas. Id
     $sentryClient->setSendCallback(function($data) {
         $ignore_types = array('Symfony\Component\HttpKernel\Exception\NotFoundHttpException');
 
-        if (isset($data['exception'] && in_array($data['exception']['values'][0]['type'], $ignore_types)
+        if (isset($data['exception']) && in_array($data['exception']['values'][0]['type'], $ignore_types))
         {
             return false;
         }

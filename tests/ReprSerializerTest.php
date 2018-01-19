@@ -13,7 +13,7 @@ namespace Raven\Tests;
 
 require_once 'SerializerAbstractTest.php';
 
-class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
+class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 {
     /**
      * @return string
@@ -24,7 +24,7 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testIntsAreInts($serialize_all_objects)
@@ -40,7 +40,7 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testFloats($serialize_all_objects)
@@ -56,7 +56,7 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testBooleans($serialize_all_objects)
@@ -76,7 +76,7 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      */
     public function testNull($serialize_all_objects)
@@ -92,7 +92,7 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
     }
 
     /**
-     * @param boolean $serialize_all_objects
+     * @param bool $serialize_all_objects
      * @dataProvider dataGetBaseParam
      * @covers \Raven\ReprSerializer::serializeValue
      */
@@ -103,15 +103,15 @@ class ReprSerializerTest extends \Raven\Tests\Raven_Tests_SerializerAbstractTest
             $serializer->setAllObjectSerialize(true);
         }
 
-        $result = $serializer->serialize((double)1);
+        $result = $serializer->serialize((float) 1);
         $this->assertInternalType('string', $result);
         $this->assertEquals('1.0', $result);
 
-        $result = $serializer->serialize((double)floor(5 / 2));
+        $result = $serializer->serialize((float) floor(5 / 2));
         $this->assertInternalType('string', $result);
         $this->assertEquals('2.0', $result);
 
-        $result = $serializer->serialize((double)floor(12345.678901234));
+        $result = $serializer->serialize((float) floor(12345.678901234));
         $this->assertInternalType('string', $result);
         $this->assertEquals('12345.0', $result);
     }

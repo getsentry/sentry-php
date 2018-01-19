@@ -11,7 +11,7 @@
 
 namespace Raven\Processor;
 
-use Raven\Processor;
+use Raven\Event;
 
 /**
  * This processor removes all the cookies from the request to ensure no sensitive
@@ -19,21 +19,23 @@ use Raven\Processor;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RemoveCookiesProcessor extends Processor
+final class RemoveCookiesProcessor implements ProcessorInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function process(&$data)
+    public function process(Event $event)
     {
-        if (isset($data['request'])) {
-            if (isset($data['request']['cookies'])) {
-                $data['request']['cookies'] = self::STRING_MASK;
-            }
+        $request = $event->getRequest();
 
-            if (isset($data['request']['headers']) && isset($data['request']['headers']['Cookie'])) {
-                $data['request']['headers']['Cookie'] = self::STRING_MASK;
-            }
+        if (isset($request['cookies'])) {
+            $request['cookies'] = self::STRING_MASK;
         }
+
+        if (isset($request['headers'], $request['headers']['cookie'])) {
+            $request['headers']['cookie'] = self::STRING_MASK;
+        }
+
+        return $event->withRequest($request);
     }
 }

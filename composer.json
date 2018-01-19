@@ -11,17 +11,26 @@
             "email": "dcramer@gmail.com"
         }
     ],
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "~2.1",
-        "phpunit/phpunit": "^4.8 || ^5.0",
-        "monolog/monolog": "*"
-    },
     "require": {
-        "php": ">=5.5",
-        "ext-hash": "*",
+        "php": "^5.6|^7.0",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-curl": "*"
+        "php-http/async-client-implementation": "~1.0",
+        "php-http/client-common": "~1.5",
+        "php-http/discovery": "~1.2",
+        "php-http/httplug": "~1.1",
+        "psr/http-message-implementation": "~1.0",
+        "ramsey/uuid": "~3.3",
+        "symfony/options-resolver": "~2.7|~3.0",
+        "zendframework/zend-diactoros": "~1.4"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "~2.1",
+        "monolog/monolog": "~1.0",
+        "php-http/curl-client": "~1.7",
+        "php-http/mock-client": "~1.0",
+        "phpunit/phpunit": "^5.7|^6.0",
+        "symfony/phpunit-bridge": "~2.7|~3.0"
     },
     "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
@@ -49,12 +58,18 @@
         "tests": [
             "vendor/bin/phpunit --verbose"
         ],
+        "tests-travis": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml"
+        ],
         "tests-report": [
             "vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-html tests/html-report"
         ],
         "phpcs": [
             "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
         ]
+    },
+    "config": {
+        "sort-packages": true
     },
     "extra": {
         "branch-alias": {

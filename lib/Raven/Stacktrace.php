@@ -39,7 +39,7 @@ class Stacktrace implements \JsonSerializable
     protected $reprSerializer;
 
     /**
-     * @var array The frames that compose the stacktrace
+     * @var Frame[] The frames that compose the stacktrace
      */
     protected $frames = [];
 
@@ -66,6 +66,20 @@ class Stacktrace implements \JsonSerializable
     }
 
     /**
+     * Creates a new instance of this class using the current backtrace data.
+     *
+     * @param Client $client The Raven client
+     *
+     * @return static
+     */
+    public static function create(Client $client)
+    {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+
+        return static::createFromBacktrace($client, $backtrace, __FILE__, __LINE__);
+    }
+
+    /**
      * Creates a new instance of this class from the given backtrace.
      *
      * @param Client $client    The Raven client
@@ -75,7 +89,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return static
      */
-    public static function fromBacktrace(Client $client, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Client $client, array $backtrace, $file, $line)
     {
         $stacktrace = new static($client);
 
@@ -95,7 +109,7 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the stacktrace frames.
      *
-     * @return array[]
+     * @return Frame[]
      */
     public function getFrames()
     {
@@ -120,24 +134,38 @@ class Stacktrace implements \JsonSerializable
             $line = $matches[2];
         }
 
-        $frame = array_merge(
-            [
-                'filename' => $this->stripPrefixFromFilePath($file),
-                'lineno' => (int) $line,
-                'function' => isset($backtraceFrame['class']) ? sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']) : (isset($backtraceFrame['function']) ? $backtraceFrame['function'] : null),
-            ],
-            self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES)
-        );
+        if (isset($backtraceFrame['class'])) {
+            $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
+        } elseif (isset($backtraceFrame['function'])) {
+            $functionName = $backtraceFrame['function'];
+        } else {
+            $functionName = null;
+        }
 
-        if (null !== $this->client->getAppPath()) {
-            $excludedAppPaths = $this->client->getExcludedAppPaths();
+        $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), (int) $line);
+        $sourceCodeExcerpt = self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES);
+
+        if (isset($sourceCodeExcerpt['pre_context'])) {
+            $frame->setPreContext($sourceCodeExcerpt['pre_context']);
+        }
+
+        if (isset($sourceCodeExcerpt['context_line'])) {
+            $frame->setContextLine($sourceCodeExcerpt['context_line']);
+        }
+
+        if (isset($sourceCodeExcerpt['post_context'])) {
+            $frame->setPostContext($sourceCodeExcerpt['post_context']);
+        }
+
+        if (null !== $this->client->getConfig()->getProjectRoot()) {
+            $excludedAppPaths = $this->client->getConfig()->getExcludedProjectPaths();
             $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getAppPath());
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getConfig()->getProjectRoot());
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
                     if (0 === strpos($absoluteFilePath, $path)) {
-                        $frame['in_app'] = $isApplicationFile;
+                        $frame->setIsInApp($isApplicationFile);
 
                         break;
                     }
@@ -158,7 +186,7 @@ class Stacktrace implements \JsonSerializable
                 }
             }
 
-            $frame['vars'] = $frameArguments;
+            $frame->setVars($frameArguments);
         }
 
         array_unshift($this->frames, $frame);
@@ -184,7 +212,7 @@ class Stacktrace implements \JsonSerializable
      * Gets the stacktrace frames (this is the same as calling the getFrames
      * method).
      *
-     * @return array
+     * @return Frame[]
      */
     public function toArray()
     {
@@ -210,15 +238,15 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getSourceCodeExcerpt($path, $lineNumber, $linesNum)
     {
+        if (!is_file($path) || !is_readable($path)) {
+            return [];
+        }
+
         $frame = [
             'pre_context' => [],
             'context_line' => '',
             'post_context' => [],
         ];
-
-        if (!is_file($path) || !is_readable($path)) {
-            return [];
-        }
 
         $target = max(0, ($lineNumber - ($linesNum + 1)));
         $currentLineNumber = $target + 1;
@@ -246,8 +274,10 @@ class Stacktrace implements \JsonSerializable
 
                 $file->next();
             }
+            // @codeCoverageIgnoreStart
         } catch (\Exception $ex) {
         }
+        // @codeCoverageIgnoreEnd
 
         $frame['pre_context'] = $this->serializer->serialize($frame['pre_context']);
         $frame['context_line'] = $this->serializer->serialize($frame['context_line']);
@@ -265,7 +295,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function stripPrefixFromFilePath($filePath)
     {
-        foreach ($this->client->getPrefixes() as $prefix) {
+        foreach ($this->client->getConfig()->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
                 return substr($filePath, strlen($prefix));
             }
@@ -343,13 +373,15 @@ class Stacktrace implements \JsonSerializable
             if (isset($frame['class'])) {
                 if (method_exists($frame['class'], $frame['function'])) {
                     $reflection = new \ReflectionMethod($frame['class'], $frame['function']);
-                } elseif ($frame['type'] === '::') {
+                } elseif ('::' === $frame['type']) {
                     $reflection = new \ReflectionMethod($frame['class'], '__callStatic');
                 } else {
                     $reflection = new \ReflectionMethod($frame['class'], '__call');
                 }
-            } else {
+            } elseif (function_exists($frame['function'])) {
                 $reflection = new \ReflectionFunction($frame['function']);
+            } else {
+                return self::getFrameArgumentsValues($frame, $maxValueLength);
             }
         } catch (\ReflectionException $ex) {
             return self::getFrameArgumentsValues($frame, $maxValueLength);

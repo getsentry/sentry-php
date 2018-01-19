@@ -11,10 +11,13 @@
 
 namespace Raven\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Raven\Client;
+use Raven\ClientBuilder;
+use Raven\Frame;
 use Raven\Stacktrace;
 
-class StacktraceTest extends \PHPUnit_Framework_TestCase
+class StacktraceTest extends TestCase
 {
     /**
      * @var Client
@@ -23,7 +26,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->client = new Client();
+        $this->client = ClientBuilder::create()->getClient();
     }
 
     public function testGetFramesAndToArray()
@@ -81,19 +84,19 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
             'file' => 'path/to/file',
             'line' => 12,
             'function' => 'test_function',
-            'args' => [1, 'foo']
+            'args' => [1, 'foo'],
         ]);
 
         $frames = $stacktrace->getFrames();
 
         $this->assertCount(1, $frames);
         $this->assertFrameEquals($frames[0], 'test_function', 'path/to/file', 12);
-        $this->assertEquals(['param1' => 1, 'param2' => 'foo'], $frames[0]['vars']);
+        $this->assertEquals(['param1' => 1, 'param2' => 'foo'], $frames[0]->getVars());
     }
 
     public function testAddFrameStripsPath()
     {
-        $this->client->setPrefixes(['path/to/', 'path/to/app']);
+        $this->client->getConfig()->setPrefixes(['path/to/', 'path/to/app']);
 
         $stacktrace = new Stacktrace($this->client);
 
@@ -112,8 +115,8 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
     public function testAddFrameMarksAsInApp()
     {
-        $this->client->setAppPath('path/to');
-        $this->client->setExcludedAppPaths(['path/to/excluded/path']);
+        $this->client->getConfig()->setProjectRoot('path/to');
+        $this->client->getConfig()->setExcludedProjectPaths(['path/to/excluded/path']);
 
         $stacktrace = new Stacktrace($this->client);
 
@@ -122,9 +125,8 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
 
         $frames = $stacktrace->getFrames();
 
-        $this->assertArrayHasKey('in_app', $frames[0]);
-        $this->assertTrue($frames[0]['in_app']);
-        $this->assertArrayNotHasKey('in_app', $frames[1]);
+        $this->assertTrue($frames[0]->isInApp());
+        $this->assertFalse($frames[1]->isInApp());
     }
 
     public function testAddFrameReadsCodeFromShortFile()
@@ -137,17 +139,17 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         $frames = $stacktrace->getFrames();
 
         $this->assertCount(1, $frames);
-        $this->assertCount(2, $frames[0]['pre_context']);
-        $this->assertCount(2, $frames[0]['post_context']);
+        $this->assertCount(2, $frames[0]->getPreContext());
+        $this->assertCount(2, $frames[0]->getPostContext());
 
         for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i]), $frames[0]['pre_context'][$i]);
+            $this->assertEquals(rtrim($fileContent[$i]), $frames[0]->getPreContext()[$i]);
         }
 
-        $this->assertEquals(rtrim($fileContent[2]), $frames[0]['context_line']);
+        $this->assertEquals(rtrim($fileContent[2]), $frames[0]->getContextLine());
 
         for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 3]), $frames[0]['post_context'][$i]);
+            $this->assertEquals(rtrim($fileContent[$i + 3]), $frames[0]->getPostContext()[$i]);
         }
     }
 
@@ -163,17 +165,17 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         $frames = $stacktrace->getFrames();
 
         $this->assertCount(1, $frames);
-        $this->assertCount(5, $frames[0]['pre_context']);
-        $this->assertCount(5, $frames[0]['post_context']);
+        $this->assertCount(5, $frames[0]->getPreContext());
+        $this->assertCount(5, $frames[0]->getPostContext());
 
         for ($i = 0; $i < 5; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 2]), $frames[0]['pre_context'][$i]);
+            $this->assertEquals(rtrim($fileContent[$i + 2]), $frames[0]->getPreContext()[$i]);
         }
 
-        $this->assertEquals(rtrim($fileContent[7]), $frames[0]['context_line']);
+        $this->assertEquals(rtrim($fileContent[7]), $frames[0]->getContextLine());
 
         for ($i = 0; $i < 5; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]['post_context'][$i]);
+            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]->getPostContext()[$i]);
         }
     }
 
@@ -183,7 +185,8 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
     public function testRemoveFrame($index, $throwException)
     {
         if ($throwException) {
-            $this->setExpectedException(\OutOfBoundsException::class, 'Invalid frame index to remove.');
+            $this->expectException(\OutOfBoundsException::class);
+            $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
         $stacktrace = new Stacktrace($this->client);
@@ -218,7 +221,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
     public function testFromBacktrace()
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
-        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
@@ -228,7 +231,7 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
     public function testFromBacktraceWithAnonymousFrame()
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
-        $frames = Stacktrace::fromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
@@ -246,13 +249,13 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         ];
 
         $frame = [
-            "file" => dirname(__FILE__) . "/resources/a.php",
-            "line" => 9,
-            "args"=> [
+            'file' => __DIR__ . '/resources/a.php',
+            'line' => 9,
+            'args' => [
                 &$newFoo,
                 &$nestedArray,
             ],
-            "function" => "a_test",
+            'function' => 'a_test',
         ];
 
         $result = Stacktrace::getFrameArguments($frame, 5);
@@ -281,10 +284,10 @@ class StacktraceTest extends \PHPUnit_Framework_TestCase
         return json_decode($this->getFixture($file), true);
     }
 
-    protected function assertFrameEquals($frame, $method, $file, $line)
+    protected function assertFrameEquals(Frame $frame, $method, $file, $line)
     {
-        $this->assertSame($method, $frame['function']);
-        $this->assertSame($file, $frame['filename']);
-        $this->assertSame($line, $frame['lineno']);
+        $this->assertSame($method, $frame->getFunctionName());
+        $this->assertSame($file, $frame->getFile());
+        $this->assertSame($line, $frame->getLine());
     }
 }
