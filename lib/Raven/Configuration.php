@@ -156,6 +156,40 @@ class Configuration
     }
 
     /**
+     * @return SerializerInterface
+     */
+    public function getSerializer()
+    {
+        return $this->options['serializer'];
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function setSerializer(SerializerInterface $serializer)
+    {
+        $this->mergeAndResolve(['serializer' => $serializer]);
+    }
+
+    /**
+     * @return SerializerInterface
+     */
+    public function getReprSerializer()
+    {
+        return $this->options['reprSerializer'];
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function setReprSerializer(SerializerInterface $serializer)
+    {
+        $options = array_merge($this->options, ['reprSerializer' => $serializer]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the sampling factor to apply to events. A value of 0 will deny
      * sending any events, and a value of 1 will send 100% of events.
      *
@@ -711,6 +745,8 @@ class Configuration
             'send_attempts' => 6,
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
+            'serializer' => new Serializer(),
+            'reprSerializer' => new Serializer(),
             'serialize_all_object' => false,
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
@@ -740,6 +776,8 @@ class Configuration
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
+        $resolver->setAllowedTypes('serializer', SerializerInterface::class);
+        $resolver->setAllowedTypes('reprSerializer', SerializerInterface::class);
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
@@ -851,5 +889,15 @@ class Configuration
         }
 
         return $path;
+    }
+
+    /**
+     * @param array $additionalOptions
+     */
+    private function mergeAndResolve(array $additionalOptions)
+    {
+        $options = array_merge($this->options, $additionalOptions);
+
+        $this->options = $this->resolver->resolve($options);
     }
 }

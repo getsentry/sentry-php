@@ -13,6 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
+use Raven\SerializerInterface;
 
 class ConfigurationTest extends TestCase
 {
@@ -47,6 +48,8 @@ class ConfigurationTest extends TestCase
             ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
+            ['serializer', $this->prophesize(SerializerInterface::class)->reveal(), 'getSerializer', 'setSerializer'],
+            ['reprSerializer', $this->prophesize(SerializerInterface::class)->reveal(), 'getReprSerializer', 'setReprSerializer'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
             ['install_shutdown_handler', false, 'shouldInstallShutdownHandler', 'setInstallShutdownHandler'],
