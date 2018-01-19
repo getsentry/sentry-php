@@ -50,6 +50,7 @@ class RequestInterfaceMiddlewareTest extends TestCase
         $request = new ServerRequest();
         $request = $request->withUri(new Uri($requestData['uri']));
         $request = $request->withMethod($requestData['method']);
+        $request = $request->withCookieParams($requestData['cookies']);
 
         foreach ($requestData['headers'] as $name => $value) {
             $request = $request->withHeader($name, $value);
@@ -76,11 +77,17 @@ class RequestInterfaceMiddlewareTest extends TestCase
                 [
                     'uri' => 'http://www.example.com/foo',
                     'method' => 'GET',
+                    'cookies' => [
+                        'foo' => 'bar',
+                    ],
                     'headers' => [],
                 ],
                 [
                     'url' => 'http://www.example.com/foo',
                     'method' => 'GET',
+                    'cookies' => [
+                        'foo' => 'bar',
+                    ],
                     'headers' => [
                         'Host' => ['www.example.com'],
                     ],
@@ -90,6 +97,7 @@ class RequestInterfaceMiddlewareTest extends TestCase
                 [
                     'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
+                    'cookies' => [],
                     'headers' => [
                         'Host' => ['www.example.com'],
                         'REMOTE_ADDR' => ['127.0.0.1'],
@@ -99,6 +107,7 @@ class RequestInterfaceMiddlewareTest extends TestCase
                     'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
                     'query_string' => 'foo=bar&bar=baz',
+                    'cookies' => [],
                     'headers' => [
                         'Host' => ['www.example.com'],
                         'REMOTE_ADDR' => ['127.0.0.1'],
