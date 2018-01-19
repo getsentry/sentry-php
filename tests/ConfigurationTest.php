@@ -53,7 +53,6 @@ class ConfigurationTest extends TestCase
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
             ['install_shutdown_handler', false, 'shouldInstallShutdownHandler', 'setInstallShutdownHandler'],
-            ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['encoding', 'json', 'getEncoding', 'setEncoding'],

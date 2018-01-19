@@ -243,26 +243,6 @@ class Configuration
     }
 
     /**
-     * Gets the character encoding detection order.
-     *
-     * @return string[]|null
-     */
-    public function getMbDetectOrder()
-    {
-        return $this->options['mb_detect_order'];
-    }
-
-    /**
-     * Sets the character encoding detection order.
-     *
-     * @param string[]|null $detectOrder The detection order
-     */
-    public function setMbDetectOrder($detectOrder)
-    {
-        $this->mergeAndResolve(['mb_detect_order' => $detectOrder]);
-    }
-
-    /**
      * Gets whether the stacktrace must be auto-filled.
      *
      * @return bool
@@ -700,7 +680,6 @@ class Configuration
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
-            'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
             'encoding' => 'gzip',
@@ -730,7 +709,6 @@ class Configuration
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
-        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('encoding', 'string');
