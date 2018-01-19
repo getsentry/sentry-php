@@ -61,8 +61,7 @@ class Configuration
         $this->resolver = new OptionsResolver();
 
         $this->configureOptions($this->resolver);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve($options);
     }
 
     /**
@@ -82,9 +81,7 @@ class Configuration
      */
     public function setSendAttempts($attemptsCount)
     {
-        $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['send_attempts' => $attemptsCount]);
     }
 
     /**
@@ -104,9 +101,7 @@ class Configuration
      */
     public function setIsTrustXForwardedProto($value)
     {
-        $options = array_merge($this->options, ['trust_x_forwarded_proto' => $value]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['trust_x_forwarded_proto' => $value]);
     }
 
     /**
@@ -128,9 +123,7 @@ class Configuration
      */
     public function setPrefixes(array $prefixes)
     {
-        $options = array_merge($this->options, ['prefixes' => $prefixes]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['prefixes' => $prefixes]);
     }
 
     /**
@@ -150,9 +143,7 @@ class Configuration
      */
     public function setSerializeAllObjects($serializeAllObjects)
     {
-        $options = array_merge($this->options, ['serialize_all_object' => $serializeAllObjects]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['serialize_all_object' => $serializeAllObjects]);
     }
 
     /**
@@ -184,9 +175,7 @@ class Configuration
      */
     public function setReprSerializer(SerializerInterface $serializer)
     {
-        $options = array_merge($this->options, ['reprSerializer' => $serializer]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['reprSerializer' => $serializer]);
     }
 
     /**
@@ -208,9 +197,7 @@ class Configuration
      */
     public function setSampleRate($sampleRate)
     {
-        $options = array_merge($this->options, ['sample_rate' => $sampleRate]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['sample_rate' => $sampleRate]);
     }
 
     /**
@@ -230,9 +217,7 @@ class Configuration
      */
     public function setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
     {
-        $options = array_merge($this->options, ['install_default_breadcrumb_handlers' => $installDefaultBreadcrumbHandlers]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['install_default_breadcrumb_handlers' => $installDefaultBreadcrumbHandlers]);
     }
 
     /**
@@ -252,9 +237,7 @@ class Configuration
      */
     public function setInstallShutdownHandler($installShutdownHandler)
     {
-        $options = array_merge($this->options, ['install_shutdown_handler' => $installShutdownHandler]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['install_shutdown_handler' => $installShutdownHandler]);
     }
 
     /**
@@ -274,9 +257,7 @@ class Configuration
      */
     public function setMbDetectOrder($detectOrder)
     {
-        $options = array_merge($this->options, ['mb_detect_order' => $detectOrder]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['mb_detect_order' => $detectOrder]);
     }
 
     /**
@@ -296,9 +277,7 @@ class Configuration
      */
     public function setAutoLogStacks($enable)
     {
-        $options = array_merge($this->options, ['auto_log_stacks' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['auto_log_stacks' => $enable]);
     }
 
     /**
@@ -318,9 +297,7 @@ class Configuration
      */
     public function setContextLines($contextLines)
     {
-        $options = array_merge($this->options, ['context_lines' => $contextLines]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['context_lines' => $contextLines]);
     }
 
     /**
@@ -340,9 +317,7 @@ class Configuration
      */
     public function setEncoding($encoding)
     {
-        $options = array_merge($this->options, ['encoding' => $encoding]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['encoding' => $encoding]);
     }
 
     /**
@@ -362,9 +337,7 @@ class Configuration
      */
     public function setCurrentEnvironment($environment)
     {
-        $options = array_merge($this->options, ['current_environment' => $environment]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['current_environment' => $environment]);
     }
 
     /**
@@ -386,9 +359,7 @@ class Configuration
      */
     public function setEnvironments(array $environments)
     {
-        $options = array_merge($this->options, ['environments' => $environments]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['environments' => $environments]);
     }
 
     /**
@@ -408,9 +379,7 @@ class Configuration
      */
     public function setExcludedLoggers(array $loggers)
     {
-        $options = array_merge($this->options, ['excluded_loggers' => $loggers]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_loggers' => $loggers]);
     }
 
     /**
@@ -432,9 +401,7 @@ class Configuration
      */
     public function setExcludedExceptions(array $exceptions)
     {
-        $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_exceptions' => $exceptions]);
     }
 
     /**
@@ -473,9 +440,7 @@ class Configuration
      */
     public function setExcludedProjectPaths(array $paths)
     {
-        $options = array_merge($this->options, ['excluded_app_paths' => $paths]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_app_paths' => $paths]);
     }
 
     /**
@@ -499,9 +464,7 @@ class Configuration
      */
     public function setTransport(callable $transport = null)
     {
-        $options = array_merge($this->options, ['transport' => $transport]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['transport' => $transport]);
     }
 
     /**
@@ -531,9 +494,7 @@ class Configuration
      */
     public function setProjectRoot($path)
     {
-        $options = array_merge($this->options, ['project_root' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['project_root' => $path]);
     }
 
     /**
@@ -573,9 +534,7 @@ class Configuration
      */
     public function setLogger($logger)
     {
-        $options = array_merge($this->options, ['logger' => $logger]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['logger' => $logger]);
     }
 
     /**
@@ -595,9 +554,7 @@ class Configuration
      */
     public function setProxy($proxy)
     {
-        $options = array_merge($this->options, ['proxy' => $proxy]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['proxy' => $proxy]);
     }
 
     /**
@@ -617,9 +574,7 @@ class Configuration
      */
     public function setRelease($release)
     {
-        $options = array_merge($this->options, ['release' => $release]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['release' => $release]);
     }
 
     /**
@@ -649,9 +604,7 @@ class Configuration
      */
     public function setServerName($serverName)
     {
-        $options = array_merge($this->options, ['server_name' => $serverName]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['server_name' => $serverName]);
     }
 
     /**
@@ -685,9 +638,7 @@ class Configuration
      */
     public function setShouldCapture(callable $callable = null)
     {
-        $options = array_merge($this->options, ['should_capture' => $callable]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['should_capture' => $callable]);
     }
 
     /**
@@ -707,9 +658,7 @@ class Configuration
      */
     public function setTags(array $tags)
     {
-        $options = array_merge($this->options, ['tags' => $tags]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['tags' => $tags]);
     }
 
     /**
@@ -729,15 +678,15 @@ class Configuration
      */
     public function setErrorTypes($errorTypes)
     {
-        $options = array_merge($this->options, ['error_types' => $errorTypes]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['error_types' => $errorTypes]);
     }
 
     /**
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
+     * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
+     * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
     private function configureOptions(OptionsResolver $resolver)
     {
