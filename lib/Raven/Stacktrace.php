@@ -23,10 +23,8 @@ class Stacktrace implements \JsonSerializable
      */
     const CONTEXT_NUM_LINES = 5;
 
-    /**
-     * @var Client The Raven client
-     */
-    protected $client;
+    /** @var Configuration */
+    private $configuration;
 
     /**
      * @var SerializerInterface The serializer
@@ -42,7 +40,6 @@ class Stacktrace implements \JsonSerializable
      * @var Frame[] The frames that compose the stacktrace
      */
     protected $frames = [];
-
     /**
      * @var array The list of functions to import a file
      */
@@ -54,44 +51,42 @@ class Stacktrace implements \JsonSerializable
     ];
 
     /**
-     * Constructor.
-     *
-     * @param Client $client The Raven client
+     * Stacktrace constructor.
+     * @param Configuration $configuration
      */
-    public function __construct(Client $client)
+    public function __construct(Configuration $configuration)
     {
-        $this->client = $client;
-        $this->serializer = $client->getSerializer();
-        $this->reprSerializer = $client->getReprSerializer();
+        $this->configuration = $configuration;
+        $this->serializer = $configuration->getSerializer();
+        $this->reprSerializer = $configuration->getReprSerializer();
     }
 
     /**
      * Creates a new instance of this class using the current backtrace data.
      *
-     * @param Client $client The Raven client
-     *
-     * @return static
+     * @param Configuration $configuration
+     * @return Stacktrace
      */
-    public static function create(Client $client)
+    public static function create(Configuration $configuration)
     {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
-        return static::createFromBacktrace($client, $backtrace, __FILE__, __LINE__);
+        return static::createFromBacktrace($configuration, $backtrace, __FILE__, __LINE__);
     }
 
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param Client $client    The Raven client
+     * @param Configuration $configuration The client configuration
      * @param array  $backtrace The backtrace
      * @param string $file      The file that originated the backtrace
      * @param string $line      The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(Client $client, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Configuration $configuration, array $backtrace, $file, $line)
     {
-        $stacktrace = new static($client);
+        $stacktrace = new static($configuration);
 
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
@@ -157,10 +152,10 @@ class Stacktrace implements \JsonSerializable
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
         }
 
-        if (null !== $this->client->getConfig()->getProjectRoot()) {
-            $excludedAppPaths = $this->client->getConfig()->getExcludedProjectPaths();
+        if (null !== $this->configuration->getProjectRoot()) {
+            $excludedAppPaths = $this->configuration->getExcludedProjectPaths();
             $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getConfig()->getProjectRoot());
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->configuration->getProjectRoot());
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
@@ -295,7 +290,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function stripPrefixFromFilePath($filePath)
     {
-        foreach ($this->client->getConfig()->getPrefixes() as $prefix) {
+        foreach ($this->configuration->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
                 return substr($filePath, strlen($prefix));
             }

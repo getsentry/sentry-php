@@ -14,24 +14,25 @@ namespace Raven\Tests;
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\Configuration;
 use Raven\Frame;
 use Raven\Stacktrace;
 
 class StacktraceTest extends TestCase
 {
     /**
-     * @var Client
+     * @var Configuration
      */
-    protected $client;
+    protected $configuration;
 
     protected function setUp()
     {
-        $this->client = ClientBuilder::create()->getClient();
+        $this->configuration = ClientBuilder::create()->getConfiguration();
     }
 
     public function testGetFramesAndToArray()
     {
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
@@ -46,7 +47,7 @@ class StacktraceTest extends TestCase
 
     public function testStacktraceJsonSerialization()
     {
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
@@ -58,7 +59,7 @@ class StacktraceTest extends TestCase
 
     public function testAddFrame()
     {
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
         $frames = [
             $this->getJsonFixture('frames/eval.json'),
             $this->getJsonFixture('frames/runtime_created.json'),
@@ -79,7 +80,7 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameSerializesMethodArguments()
     {
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
         $stacktrace->addFrame('path/to/file', 12, [
             'file' => 'path/to/file',
             'line' => 12,
@@ -96,9 +97,9 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameStripsPath()
     {
-        $this->client->getConfig()->setPrefixes(['path/to/', 'path/to/app']);
+        $this->configuration->setPrefixes(['path/to/', 'path/to/app']);
 
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame('path/to/app/file', 12, ['function' => 'test_function_parent_parent_parent']);
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function_parent_parent']);
@@ -115,10 +116,10 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameMarksAsInApp()
     {
-        $this->client->getConfig()->setProjectRoot('path/to');
-        $this->client->getConfig()->setExcludedProjectPaths(['path/to/excluded/path']);
+        $this->configuration->setProjectRoot('path/to');
+        $this->configuration->setExcludedProjectPaths(['path/to/excluded/path']);
 
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function']);
         $stacktrace->addFrame('path/to/excluded/path/to/file', 12, ['function' => 'test_function']);
@@ -132,7 +133,7 @@ class StacktraceTest extends TestCase
     public function testAddFrameReadsCodeFromShortFile()
     {
         $fileContent = explode("\n", $this->getFixture('code/ShortFile.php'));
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame($this->getFixturePath('code/ShortFile.php'), 3, ['function' => '[unknown]']);
 
@@ -156,7 +157,7 @@ class StacktraceTest extends TestCase
     public function testAddFrameReadsCodeFromLongFile()
     {
         $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
             'function' => '[unknown]',
@@ -189,7 +190,7 @@ class StacktraceTest extends TestCase
             $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
-        $stacktrace = new Stacktrace($this->client);
+        $stacktrace = new Stacktrace($this->configuration);
 
         $stacktrace->addFrame('path/to/file', 12, [
             'function' => 'test_function_parent',
@@ -221,7 +222,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktrace()
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
-        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->configuration, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
@@ -231,7 +232,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktraceWithAnonymousFrame()
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
-        $frames = Stacktrace::createFromBacktrace($this->client, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->configuration, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);

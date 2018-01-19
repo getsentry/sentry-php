@@ -14,6 +14,7 @@ namespace Raven\Tests\Processor;
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\Configuration;
 use Raven\Event;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Stacktrace;
@@ -21,9 +22,9 @@ use Raven\Stacktrace;
 class SanitizeDataProcessorTest extends TestCase
 {
     /**
-     * @var Client
+     * @var Configuration
      */
-    protected $client;
+    protected $configuration;
 
     /**
      * @var SanitizeDataProcessor
@@ -32,7 +33,7 @@ class SanitizeDataProcessorTest extends TestCase
 
     protected function setUp()
     {
-        $this->client = ClientBuilder::create()->getClient();
+        $this->configuration = ClientBuilder::create()->getConfiguration();
         $this->processor = new SanitizeDataProcessor();
     }
 
@@ -41,7 +42,7 @@ class SanitizeDataProcessorTest extends TestCase
      */
     public function testProcess($inputData, $expectedData)
     {
-        $event = new Event($this->client->getConfig());
+        $event = new Event($this->configuration);
 
         if (isset($inputData['request'])) {
             $event = $event->withRequest($inputData['request']);
@@ -199,7 +200,7 @@ class SanitizeDataProcessorTest extends TestCase
     private function convertExceptionValuesToStacktrace($exceptionValues)
     {
         foreach ($exceptionValues['values'] as &$exceptionValue) {
-            $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $exceptionValue['stacktrace'], 'foo', 1);
+            $exceptionValue['stacktrace'] = Stacktrace::createFromBacktrace($this->configuration, $exceptionValue['stacktrace'], 'foo', 1);
         }
 
         // Free the memory from the reference
