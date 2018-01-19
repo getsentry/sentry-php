@@ -282,36 +282,6 @@ class Client
     }
 
     /**
-     * Gets the representation serialier.
-     *
-     * @return SerializerInterface
-     */
-    public function getReprSerializer()
-    {
-        return $this->reprSerializer;
-    }
-
-    public function setReprSerializer(SerializerInterface $serializer)
-    {
-        $this->reprSerializer = $serializer;
-    }
-
-    /**
-     * Gets the serializer.
-     *
-     * @return SerializerInterface
-     */
-    public function getSerializer()
-    {
-        return $this->serializer;
-    }
-
-    public function setSerializer(SerializerInterface $serializer)
-    {
-        $this->serializer = $serializer;
-    }
-
-    /**
      * Installs any available automated hooks (such as error_reporting).
      *
      * @throws \Raven\Exception
