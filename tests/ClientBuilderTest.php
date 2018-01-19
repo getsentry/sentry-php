@@ -20,6 +20,7 @@ use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
+use Raven\Processor\ProcessorInterface;
 
 class ClientBuilderTest extends TestCase
 {
@@ -109,6 +110,42 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
+    public function testAddProcessor()
+    {
+        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
+        $processor = $this->createMock(ProcessorInterface::class);
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addProcessor($processor, -10);
+
+        $this->assertAttributeContains([$processor, -10], 'processors', $clientBuilder);
+    }
+
+    public function testRemoveProcessor()
+    {
+        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
+        $processor = $this->createMock(ProcessorInterface::class);
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addProcessor($processor, -10);
+        $clientBuilder->removeProcessor($processor);
+
+        $this->assertAttributeNotContains([$processor, -10], 'processors', $clientBuilder);
+    }
+
+    public function testGetProcessors()
+    {
+        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
+        $processor = $this->createMock(ProcessorInterface::class);
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addProcessor($processor, -10);
+        $clientBuilder->addProcessor($processor, 10);
+
+        $this->assertContains([$processor, -10], $clientBuilder->getProcessors());
+        $this->assertContains([$processor, 10], $clientBuilder->getProcessors());
+    }
+
     public function testGetClient()
     {
         $clientBuilder = new ClientBuilder();
@@ -174,8 +211,6 @@ class ClientBuilderTest extends TestCase
             ['setServerName', 'example.com'],
             ['setTags', ['foo', 'bar']],
             ['setErrorTypes', 0],
-            ['setProcessors', ['foo']],
-            ['setProcessorsOptions', ['foo']],
         ];
     }
 }

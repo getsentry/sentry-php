@@ -25,6 +25,11 @@ use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Raven\HttpClient\Authentication\SentryAuth;
+use Raven\Processor\ProcessorInterface;
+use Raven\Processor\RemoveCookiesProcessor;
+use Raven\Processor\RemoveHttpBodyProcessor;
+use Raven\Processor\SanitizeDataProcessor;
+use Raven\Processor\SanitizeHttpHeadersProcessor;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.
@@ -74,10 +79,6 @@ use Raven\HttpClient\Authentication\SentryAuth;
  * @method setServerName(string $serverName)
  * @method string[] getTags()
  * @method setTags(string[] $tags)
- * @method string[] getProcessors()
- * @method setProcessors(string[] $processors)
- * @method array getProcessorsOptions()
- * @method setProcessorsOptions(array $options)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -107,6 +108,11 @@ final class ClientBuilder implements ClientBuilderInterface
     private $httpClientPlugins = [];
 
     /**
+     * @var array List of processors and their priorities
+     */
+    private $processors = [];
+
+    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -114,6 +120,7 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(array $options = [])
     {
         $this->configuration = new Configuration($options);
+        $this->processors = self::getDefaultProcessors();
     }
 
     /**
@@ -183,13 +190,53 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
+    public function addProcessor(ProcessorInterface $processor, $priority = 0)
+    {
+        $this->processors[] = [$processor, $priority];
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeProcessor(ProcessorInterface $processor)
+    {
+        foreach ($this->processors as $key => $value) {
+            if ($value[0] !== $processor) {
+                continue;
+            }
+
+            unset($this->processors[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProcessors()
+    {
+        return $this->processors;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getClient()
     {
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
 
-        return new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        $client = new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+
+        foreach ($this->processors as $value) {
+            $client->addProcessor($value[0], $value[1]);
+        }
+
+        return $client;
     }
 
     /**
@@ -230,5 +277,20 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
+    }
+
+    /**
+     * Returns a list of processors that are enabled by default.
+     *
+     * @return array
+     */
+    private static function getDefaultProcessors()
+    {
+        return [
+            [new RemoveCookiesProcessor(), 0],
+            [new RemoveHttpBodyProcessor(), 0],
+            [new SanitizeHttpHeadersProcessor(), 0],
+            [new SanitizeDataProcessor(), -255],
+        ];
     }
 }

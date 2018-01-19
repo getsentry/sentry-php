@@ -13,10 +13,6 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
-use Raven\Processor\RemoveCookiesProcessor;
-use Raven\Processor\RemoveHttpBodyProcessor;
-use Raven\Processor\SanitizeDataProcessor;
-use Raven\Processor\SanitizeHttpHeadersProcessor;
 
 class ConfigurationTest extends TestCase
 {
@@ -70,8 +66,6 @@ class ConfigurationTest extends TestCase
             ['server_name', 'foo', 'getServerName', 'setServerName'],
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
-            ['processors', [SanitizeDataProcessor::class, RemoveCookiesProcessor::class, RemoveHttpBodyProcessor::class, SanitizeHttpHeadersProcessor::class], 'getProcessors', 'setProcessors'],
-            ['processors_options', ['foo' => 'bar'], 'getProcessorsOptions', 'setProcessorsOptions'],
         ];
     }
 

@@ -24,8 +24,11 @@ use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
 use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\ProcessorMiddleware;
 use Raven\Middleware\RequestInterfaceMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
+use Raven\Processor\ProcessorInterface;
+use Raven\Processor\ProcessorRegistry;
 use Raven\Util\JSON;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -95,11 +98,6 @@ class Client
     protected $reprSerializer;
 
     /**
-     * @var \Raven\Processor[] An array of classes to use to process data before it is sent to Sentry
-     */
-    protected $processors = [];
-
-    /**
      * @var array[]
      */
     public $pendingEvents = [];
@@ -123,6 +121,11 @@ class Client
      * @var RequestFactory The PSR-7 request factory
      */
     private $requestFactory;
+
+    /**
+     * @var ProcessorRegistry The registry of processors
+     */
+    private $processorRegistry;
 
     /**
      * @var Promise[] The list of pending requests
@@ -156,16 +159,17 @@ class Client
         $this->config = $config;
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
+        $this->processorRegistry = new ProcessorRegistry();
         $this->context = new Context();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
-        $this->processors = $this->createProcessors();
         $this->middlewareStackTip = function (Event $event) {
             return $event;
         };
 
+        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry));
         $this->addMiddleware(new MessageInterfaceMiddleware());
         $this->addMiddleware(new RequestInterfaceMiddleware());
         $this->addMiddleware(new UserInterfaceMiddleware());
@@ -255,6 +259,29 @@ class Client
     }
 
     /**
+     * Adds a new processor to the processors chain with the specified priority.
+     *
+     * @param ProcessorInterface $processor The processor instance
+     * @param int                $priority  The priority. The higher this value,
+     *                                      the earlier a processor will be
+     *                                      executed in the chain (defaults to 0)
+     */
+    public function addProcessor(ProcessorInterface $processor, $priority = 0)
+    {
+        $this->processorRegistry->addProcessor($processor, $priority);
+    }
+
+    /**
+     * Removes the given processor from the list.
+     *
+     * @param ProcessorInterface $processor The processor instance
+     */
+    public function removeProcessor(ProcessorInterface $processor)
+    {
+        $this->processorRegistry->removeProcessor($processor);
+    }
+
+    /**
      * Gets the representation serialier.
      *
      * @return ReprSerializer
@@ -301,33 +328,6 @@ class Client
         $this->errorHandler->registerShutdownFunction();
 
         return $this;
-    }
-
-    /**
-     * Sets the \Raven\Processor sub-classes to be used when data is processed before being
-     * sent to Sentry.
-     *
-     * @return \Raven\Processor[]
-     */
-    public function createProcessors()
-    {
-        $processors = [];
-        $processorsOptions = $this->config->getProcessorsOptions();
-
-        foreach ($this->config->getProcessors() as $processor) {
-            /** @var Processor $processorInstance */
-            $processorInstance = new $processor($this);
-
-            if (isset($processorsOptions[$processor])) {
-                if (method_exists($processor, 'setProcessorOptions')) {
-                    $processorInstance->setProcessorOptions($processorsOptions[$processor]);
-                }
-            }
-
-            $processors[] = $processorInstance;
-        }
-
-        return $processors;
     }
 
     /**
@@ -476,7 +476,6 @@ class Client
         $payload = $event->toArray();
 
         $this->sanitize($payload);
-        $this->process($payload);
 
         if (!$this->storeErrorsForBulkSend) {
             $this->send($payload);
@@ -508,18 +507,6 @@ class Client
         }
         if (!empty($data['contexts'])) {
             $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
-        }
-    }
-
-    /**
-     * Process data through all defined \Raven\Processor sub-classes.
-     *
-     * @param array $data Associative array of data to log
-     */
-    public function process(&$data)
-    {
-        foreach ($this->processors as $processor) {
-            $processor->process($data);
         }
     }
 
@@ -661,14 +648,6 @@ class Client
     public function getContext()
     {
         return $this->context;
-    }
-
-    /**
-     * @param array $processors
-     */
-    public function setProcessors(array $processors)
-    {
-        $this->processors = $processors;
     }
 
     /**

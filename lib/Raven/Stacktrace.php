@@ -39,7 +39,7 @@ class Stacktrace implements \JsonSerializable
     protected $reprSerializer;
 
     /**
-     * @var array The frames that compose the stacktrace
+     * @var Frame[] The frames that compose the stacktrace
      */
     protected $frames = [];
 
@@ -109,7 +109,7 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the stacktrace frames.
      *
-     * @return array[]
+     * @return Frame[]
      */
     public function getFrames()
     {
@@ -134,14 +134,28 @@ class Stacktrace implements \JsonSerializable
             $line = $matches[2];
         }
 
-        $frame = array_merge(
-            [
-                'filename' => $this->stripPrefixFromFilePath($file),
-                'lineno' => (int) $line,
-                'function' => isset($backtraceFrame['class']) ? sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']) : (isset($backtraceFrame['function']) ? $backtraceFrame['function'] : null),
-            ],
-            self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES)
-        );
+        if (isset($backtraceFrame['class'])) {
+            $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
+        } elseif (isset($backtraceFrame['function'])) {
+            $functionName = $backtraceFrame['function'];
+        } else {
+            $functionName = null;
+        }
+
+        $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), (int) $line);
+        $sourceCodeExcerpt = self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES);
+
+        if (isset($sourceCodeExcerpt['pre_context'])) {
+            $frame->setPreContext($sourceCodeExcerpt['pre_context']);
+        }
+
+        if (isset($sourceCodeExcerpt['context_line'])) {
+            $frame->setContextLine($sourceCodeExcerpt['context_line']);
+        }
+
+        if (isset($sourceCodeExcerpt['post_context'])) {
+            $frame->setPostContext($sourceCodeExcerpt['post_context']);
+        }
 
         if (null !== $this->client->getConfig()->getProjectRoot()) {
             $excludedAppPaths = $this->client->getConfig()->getExcludedProjectPaths();
@@ -151,7 +165,7 @@ class Stacktrace implements \JsonSerializable
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
                     if (0 === strpos($absoluteFilePath, $path)) {
-                        $frame['in_app'] = $isApplicationFile;
+                        $frame->setIsInApp($isApplicationFile);
 
                         break;
                     }
@@ -172,7 +186,7 @@ class Stacktrace implements \JsonSerializable
                 }
             }
 
-            $frame['vars'] = $frameArguments;
+            $frame->setVars($frameArguments);
         }
 
         array_unshift($this->frames, $frame);
@@ -198,7 +212,7 @@ class Stacktrace implements \JsonSerializable
      * Gets the stacktrace frames (this is the same as calling the getFrames
      * method).
      *
-     * @return array
+     * @return Frame[]
      */
     public function toArray()
     {

@@ -69,6 +69,6 @@ class IntegrationTest extends TestCase
         $event = $client->pendingEvents[0]['exception']['values'][0];
 
         $this->assertEquals($event['value'], 'mkdir(): No such file or directory');
-        $this->assertEquals($event['stacktrace']['frames'][count($event['stacktrace']['frames']) - 1]['filename'], 'tests/IntegrationTest.php');
+        $this->assertEquals($event['stacktrace']['frames'][count($event['stacktrace']['frames']) - 1]->getFile(), 'tests/IntegrationTest.php');
     }
 }
