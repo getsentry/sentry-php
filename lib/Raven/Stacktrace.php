@@ -52,6 +52,7 @@ class Stacktrace implements \JsonSerializable
 
     /**
      * Stacktrace constructor.
+     *
      * @param Configuration $configuration
      */
     public function __construct(Configuration $configuration)
@@ -65,6 +66,7 @@ class Stacktrace implements \JsonSerializable
      * Creates a new instance of this class using the current backtrace data.
      *
      * @param Configuration $configuration
+     *
      * @return Stacktrace
      */
     public static function create(Configuration $configuration)
@@ -78,9 +80,9 @@ class Stacktrace implements \JsonSerializable
      * Creates a new instance of this class from the given backtrace.
      *
      * @param Configuration $configuration The client configuration
-     * @param array  $backtrace The backtrace
-     * @param string $file      The file that originated the backtrace
-     * @param string $line      The line at which the backtrace originated
+     * @param array         $backtrace     The backtrace
+     * @param string        $file          The file that originated the backtrace
+     * @param string        $line          The line at which the backtrace originated
      *
      * @return static
      */

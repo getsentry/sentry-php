@@ -12,7 +12,6 @@
 namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;

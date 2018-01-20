@@ -308,7 +308,7 @@ abstract class SerializerAbstractTest extends TestCase
         $this->assertEquals(['key' => ['key' => ['key' => 12345]]], $result);
 
         $result = $serializer->serialize(
-            (object)['key' => (object)['key' => (object)['key' => (object)['key' => 12345]]]],['max_depth' => 3]
+            (object) ['key' => (object) ['key' => (object) ['key' => (object) ['key' => 12345]]]], ['max_depth' => 3]
         );
         $this->assertEquals(['key' => ['key' => ['key' => 'Object stdClass']]], $result);
     }

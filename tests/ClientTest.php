@@ -982,7 +982,7 @@ class ClientTest extends TestCase
         $serializer2 = $this->prophesize(SerializerInterface::class);
         $serializer2->setAllObjectSerialize(true)
             ->shouldBeCalledTimes(1);
-        
+
         $client = ClientBuilder::create([
             'serializer' => $serializer1->reveal(),
             'reprSerializer' => $serializer2->reveal(),

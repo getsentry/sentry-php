@@ -66,16 +66,19 @@ class Serializer implements SerializerInterface
      *
      * @param mixed $value
      * @param array $context
-     * @return string|bool|double|int|null|object|array
+     *
+     * @return string|bool|float|int|null|object|array
      */
     public function serialize($value, array $context = [])
     {
         $full_context = $this->get_full_context($context);
+
         return $this->serializeInner($value, $full_context['max_depth'], 0);
     }
 
     /**
      * @param array $context
+     *
      * @return array
      */
     protected function get_full_context(array $context)

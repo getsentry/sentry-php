@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Raven;
 
 interface SerializerInterface
@@ -11,7 +10,8 @@ interface SerializerInterface
      *
      * @param mixed $value
      * @param array $context
-     * @return string|bool|double|int|null|object|array
+     *
+     * @return string|bool|float|int|null|object|array
      */
     public function serialize($value, array $context = []);
 

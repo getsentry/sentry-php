@@ -78,9 +78,9 @@ final class ExceptionInterfaceMiddleware
 
                 if ($this->configuration->getAutoLogStacks()) {
                     $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                        $this->configuration, 
-                        $currentException->getTrace(), 
-                        $currentException->getFile(), 
+                        $this->configuration,
+                        $currentException->getTrace(),
+                        $currentException->getFile(),
                         $currentException->getLine()
                     );
                 }

@@ -89,11 +89,11 @@ class Client
     protected $errorHandler;
 
     /**
-     * @var SerializerInterface $serializer
+     * @var SerializerInterface
      */
     protected $serializer;
     /**
-     * @var SerializerInterface $serializer
+     * @var SerializerInterface
      */
     protected $reprSerializer;
 

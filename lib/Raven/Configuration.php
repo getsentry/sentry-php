@@ -55,6 +55,7 @@ class Configuration
      * Class constructor.
      *
      * @param array $options The configuration options
+     *
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
@@ -665,6 +666,7 @@ class Configuration
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
+     *
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
