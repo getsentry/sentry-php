@@ -24,7 +24,7 @@ namespace Raven;
  *
  * Specifically, it is an adaptation of the PhutilReadableSerializer class.
  */
-class Serializer
+class Serializer implements SerializerInterface
 {
     /*
      * The default mb detect order
@@ -65,18 +65,48 @@ class Serializer
      * sanitization and encoding.
      *
      * @param mixed $value
+     * @param array $context
+     *
+     * @return string|bool|float|int|null|object|array
+     */
+    public function serialize($value, array $context = [])
+    {
+        $full_context = $this->getFullContext($context);
+
+        return $this->serializeInner($value, $full_context['max_depth'], 0);
+    }
+
+    /**
+     * @param array $context
+     *
+     * @return array
+     */
+    protected function getFullContext(array $context)
+    {
+        if (!array_key_exists('max_depth', $context)) {
+            $context['max_depth'] = 3;
+        }
+
+        return $context;
+    }
+
+    /**
+     * Serialize an object (recursively) into something safe for data
+     * sanitization and encoding.
+     *
+     * @param mixed $value
      * @param int   $max_depth
      * @param int   $_depth
      *
      * @return string|bool|float|int|null|object|array
      */
-    public function serialize($value, $max_depth = 3, $_depth = 0)
+    protected function serializeInner($value, $max_depth, $_depth)
     {
         if ($_depth < $max_depth) {
             if (is_array($value)) {
                 $new = [];
                 foreach ($value as $k => $v) {
-                    $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
+                    $new[$this->serializeValue($k)] = $this->serializeInner($v, $max_depth, $_depth + 1);
                 }
 
                 return $new;
@@ -111,7 +141,7 @@ class Serializer
             if (is_object($value)) {
                 $new_value = $this->serializeObject($value, $max_depth, $_depth + 1, $hashes);
             } else {
-                $new_value = $this->serialize($value, $max_depth, $_depth + 1);
+                $new_value = $this->serialize($value, ['max_depth' => $max_depth - $_depth - 1]);
             }
             $return[$key] = $new_value;
         }

@@ -194,7 +194,6 @@ class ClientBuilderTest extends TestCase
             ['setSampleRate', 0.5],
             ['setInstallDefaultBreadcrumbHandlers', false],
             ['setInstallShutdownHandler', false],
-            ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
             ['setEncoding', 'gzip'],

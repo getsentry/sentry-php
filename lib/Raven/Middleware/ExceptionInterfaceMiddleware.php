@@ -29,6 +29,11 @@ final class ExceptionInterfaceMiddleware
     private $client;
 
     /**
+     * @var \Raven\Configuration The client configuration
+     */
+    private $configuration;
+
+    /**
      * Constructor.
      *
      * @param Client $client The Raven client
@@ -36,6 +41,7 @@ final class ExceptionInterfaceMiddleware
     public function __construct(Client $client)
     {
         $this->client = $client;
+        $this->configuration = $client->getConfig();
     }
 
     /**
@@ -61,17 +67,22 @@ final class ExceptionInterfaceMiddleware
             $currentException = $exception;
 
             do {
-                if ($this->client->getConfig()->isExcludedException($currentException)) {
+                if ($this->configuration->isExcludedException($currentException)) {
                     continue;
                 }
 
                 $data = [
                     'type' => get_class($currentException),
-                    'value' => $this->client->getSerializer()->serialize($currentException->getMessage()),
+                    'value' => $this->configuration->getSerializer()->serialize($currentException->getMessage()),
                 ];
 
-                if ($this->client->getConfig()->getAutoLogStacks()) {
-                    $data['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+                if ($this->configuration->getAutoLogStacks()) {
+                    $data['stacktrace'] = Stacktrace::createFromBacktrace(
+                        $this->configuration,
+                        $currentException->getTrace(),
+                        $currentException->getFile(),
+                        $currentException->getLine()
+                    );
                 }
 
                 $exceptions[] = $data;

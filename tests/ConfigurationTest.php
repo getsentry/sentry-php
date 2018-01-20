@@ -13,6 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
+use Raven\SerializerInterface;
 
 class ConfigurationTest extends TestCase
 {
@@ -47,10 +48,11 @@ class ConfigurationTest extends TestCase
             ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
+            ['serializer', $this->prophesize(SerializerInterface::class)->reveal(), 'getSerializer', 'setSerializer'],
+            ['reprSerializer', $this->prophesize(SerializerInterface::class)->reveal(), 'getReprSerializer', 'setReprSerializer'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
             ['install_shutdown_handler', false, 'shouldInstallShutdownHandler', 'setInstallShutdownHandler'],
-            ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['encoding', 'json', 'getEncoding', 'setEncoding'],
@@ -168,7 +170,7 @@ class ConfigurationTest extends TestCase
     {
         $configuration = new Configuration();
 
-        $this->assertTrue($configuration->shouldCapture());
+        $this->assertTrue($configuration->shouldCapture(), 'By default all events should be captured');
 
         $configuration->setCurrentEnvironment('foo');
         $configuration->setEnvironments(['bar']);

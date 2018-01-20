@@ -9,13 +9,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Event;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
+use Raven\Serializer;
 use Raven\Stacktrace;
 
 class ExceptionInterfaceMiddlewareTest extends TestCase
@@ -133,7 +134,12 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
     public function testInvokeWithExceptionContainingLatin1Characters()
     {
-        $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])
+        $serializer = new Serializer();
+        $serializer->setMbDetectOrder(['ISO-8859-1', 'ASCII', 'UTF-8']);
+        $client = ClientBuilder::create([
+            'serializer' => $serializer,
+            'reprSerializer' => $serializer,
+        ])
             ->getClient();
 
         $event = new Event($client->getConfig());
@@ -195,10 +201,14 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
     public function testInvokeWithExceptionThrownInLatin1File()
     {
+        $serializer = new Serializer();
+        $serializer->setMbDetectOrder(['ISO-8859-1', 'ASCII', 'UTF-8']);
         $client = ClientBuilder::create([
             'auto_log_stacks' => true,
-            'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
-        ])->getClient();
+            'serializer' => $serializer,
+            'reprSerializer' => $serializer,
+        ])
+            ->getClient();
 
         $event = new Event($client->getConfig());
 

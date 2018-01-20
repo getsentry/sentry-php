@@ -55,14 +55,16 @@ class Configuration
      * Class constructor.
      *
      * @param array $options The configuration options
+     *
+     * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
+     * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
     public function __construct(array $options = [])
     {
         $this->resolver = new OptionsResolver();
 
         $this->configureOptions($this->resolver);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve($options);
     }
 
     /**
@@ -82,9 +84,7 @@ class Configuration
      */
     public function setSendAttempts($attemptsCount)
     {
-        $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['send_attempts' => $attemptsCount]);
     }
 
     /**
@@ -104,9 +104,7 @@ class Configuration
      */
     public function setIsTrustXForwardedProto($value)
     {
-        $options = array_merge($this->options, ['trust_x_forwarded_proto' => $value]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['trust_x_forwarded_proto' => $value]);
     }
 
     /**
@@ -128,9 +126,7 @@ class Configuration
      */
     public function setPrefixes(array $prefixes)
     {
-        $options = array_merge($this->options, ['prefixes' => $prefixes]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['prefixes' => $prefixes]);
     }
 
     /**
@@ -150,9 +146,39 @@ class Configuration
      */
     public function setSerializeAllObjects($serializeAllObjects)
     {
-        $options = array_merge($this->options, ['serialize_all_object' => $serializeAllObjects]);
+        $this->mergeAndResolve(['serialize_all_object' => $serializeAllObjects]);
+    }
 
-        $this->options = $this->resolver->resolve($options);
+    /**
+     * @return SerializerInterface
+     */
+    public function getSerializer()
+    {
+        return $this->options['serializer'];
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function setSerializer(SerializerInterface $serializer)
+    {
+        $this->mergeAndResolve(['serializer' => $serializer]);
+    }
+
+    /**
+     * @return SerializerInterface
+     */
+    public function getReprSerializer()
+    {
+        return $this->options['reprSerializer'];
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function setReprSerializer(SerializerInterface $serializer)
+    {
+        $this->mergeAndResolve(['reprSerializer' => $serializer]);
     }
 
     /**
@@ -174,9 +200,7 @@ class Configuration
      */
     public function setSampleRate($sampleRate)
     {
-        $options = array_merge($this->options, ['sample_rate' => $sampleRate]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['sample_rate' => $sampleRate]);
     }
 
     /**
@@ -196,9 +220,7 @@ class Configuration
      */
     public function setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
     {
-        $options = array_merge($this->options, ['install_default_breadcrumb_handlers' => $installDefaultBreadcrumbHandlers]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['install_default_breadcrumb_handlers' => $installDefaultBreadcrumbHandlers]);
     }
 
     /**
@@ -218,31 +240,7 @@ class Configuration
      */
     public function setInstallShutdownHandler($installShutdownHandler)
     {
-        $options = array_merge($this->options, ['install_shutdown_handler' => $installShutdownHandler]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the character encoding detection order.
-     *
-     * @return string[]|null
-     */
-    public function getMbDetectOrder()
-    {
-        return $this->options['mb_detect_order'];
-    }
-
-    /**
-     * Sets the character encoding detection order.
-     *
-     * @param string[]|null $detectOrder The detection order
-     */
-    public function setMbDetectOrder($detectOrder)
-    {
-        $options = array_merge($this->options, ['mb_detect_order' => $detectOrder]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['install_shutdown_handler' => $installShutdownHandler]);
     }
 
     /**
@@ -262,9 +260,7 @@ class Configuration
      */
     public function setAutoLogStacks($enable)
     {
-        $options = array_merge($this->options, ['auto_log_stacks' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['auto_log_stacks' => $enable]);
     }
 
     /**
@@ -284,9 +280,7 @@ class Configuration
      */
     public function setContextLines($contextLines)
     {
-        $options = array_merge($this->options, ['context_lines' => $contextLines]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['context_lines' => $contextLines]);
     }
 
     /**
@@ -306,9 +300,7 @@ class Configuration
      */
     public function setEncoding($encoding)
     {
-        $options = array_merge($this->options, ['encoding' => $encoding]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['encoding' => $encoding]);
     }
 
     /**
@@ -328,9 +320,7 @@ class Configuration
      */
     public function setCurrentEnvironment($environment)
     {
-        $options = array_merge($this->options, ['current_environment' => $environment]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['current_environment' => $environment]);
     }
 
     /**
@@ -352,9 +342,7 @@ class Configuration
      */
     public function setEnvironments(array $environments)
     {
-        $options = array_merge($this->options, ['environments' => $environments]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['environments' => $environments]);
     }
 
     /**
@@ -374,9 +362,7 @@ class Configuration
      */
     public function setExcludedLoggers(array $loggers)
     {
-        $options = array_merge($this->options, ['excluded_loggers' => $loggers]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_loggers' => $loggers]);
     }
 
     /**
@@ -398,9 +384,7 @@ class Configuration
      */
     public function setExcludedExceptions(array $exceptions)
     {
-        $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_exceptions' => $exceptions]);
     }
 
     /**
@@ -413,7 +397,7 @@ class Configuration
      */
     public function isExcludedException($exception)
     {
-        foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
+        foreach ($this->getExcludedExceptions() as $exceptionClass) {
             if ($exception instanceof $exceptionClass) {
                 return true;
             }
@@ -439,9 +423,7 @@ class Configuration
      */
     public function setExcludedProjectPaths(array $paths)
     {
-        $options = array_merge($this->options, ['excluded_app_paths' => $paths]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['excluded_app_paths' => $paths]);
     }
 
     /**
@@ -465,9 +447,7 @@ class Configuration
      */
     public function setTransport(callable $transport = null)
     {
-        $options = array_merge($this->options, ['transport' => $transport]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['transport' => $transport]);
     }
 
     /**
@@ -497,9 +477,7 @@ class Configuration
      */
     public function setProjectRoot($path)
     {
-        $options = array_merge($this->options, ['project_root' => $path]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['project_root' => $path]);
     }
 
     /**
@@ -539,9 +517,7 @@ class Configuration
      */
     public function setLogger($logger)
     {
-        $options = array_merge($this->options, ['logger' => $logger]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['logger' => $logger]);
     }
 
     /**
@@ -561,9 +537,7 @@ class Configuration
      */
     public function setProxy($proxy)
     {
-        $options = array_merge($this->options, ['proxy' => $proxy]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['proxy' => $proxy]);
     }
 
     /**
@@ -583,9 +557,7 @@ class Configuration
      */
     public function setRelease($release)
     {
-        $options = array_merge($this->options, ['release' => $release]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['release' => $release]);
     }
 
     /**
@@ -615,9 +587,7 @@ class Configuration
      */
     public function setServerName($serverName)
     {
-        $options = array_merge($this->options, ['server_name' => $serverName]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['server_name' => $serverName]);
     }
 
     /**
@@ -630,17 +600,15 @@ class Configuration
      */
     public function shouldCapture(&$value = null)
     {
-        $result = true;
-
-        if (!empty($this->options['environments']) && !in_array($this->options['current_environment'], $this->options['environments'])) {
-            $result = false;
+        if (!empty($this->getEnvironments()) && !in_array($this->getCurrentEnvironment(), $this->getEnvironments())) {
+            return false;
         }
 
         if (null !== $this->options['should_capture'] && null !== $value) {
-            $result = $result && $this->options['should_capture']($value);
+            return $this->options['should_capture']($value);
         }
 
-        return $result;
+        return true;
     }
 
     /**
@@ -651,9 +619,7 @@ class Configuration
      */
     public function setShouldCapture(callable $callable = null)
     {
-        $options = array_merge($this->options, ['should_capture' => $callable]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['should_capture' => $callable]);
     }
 
     /**
@@ -673,9 +639,7 @@ class Configuration
      */
     public function setTags(array $tags)
     {
-        $options = array_merge($this->options, ['tags' => $tags]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['tags' => $tags]);
     }
 
     /**
@@ -695,15 +659,16 @@ class Configuration
      */
     public function setErrorTypes($errorTypes)
     {
-        $options = array_merge($this->options, ['error_types' => $errorTypes]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->mergeAndResolve(['error_types' => $errorTypes]);
     }
 
     /**
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
+     *
+     * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
+     * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
     private function configureOptions(OptionsResolver $resolver)
     {
@@ -711,11 +676,12 @@ class Configuration
             'send_attempts' => 6,
             'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
+            'serializer' => new Serializer(),
+            'reprSerializer' => new Serializer(),
             'serialize_all_object' => false,
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
             'install_shutdown_handler' => true,
-            'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
             'encoding' => 'gzip',
@@ -740,10 +706,11 @@ class Configuration
         $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
+        $resolver->setAllowedTypes('serializer', SerializerInterface::class);
+        $resolver->setAllowedTypes('reprSerializer', SerializerInterface::class);
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
-        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('encoding', 'string');
@@ -803,7 +770,7 @@ class Configuration
                 $this->server .= ':' . $parsed['port'];
             }
 
-            $this->server .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
+            $this->server .= substr($parsed['path'], 0, strrpos($parsed['path'], '/'));
             $this->publicKey = $parsed['user'];
             $this->secretKey = $parsed['pass'];
 
@@ -846,10 +813,20 @@ class Configuration
             $path = $value;
         }
 
-        if (DIRECTORY_SEPARATOR === substr($path, 0, 1) && DIRECTORY_SEPARATOR !== substr($path, -1)) {
-            $path = $path . DIRECTORY_SEPARATOR;
+        if (DIRECTORY_SEPARATOR === $path[0] && DIRECTORY_SEPARATOR !== substr($path, -1)) {
+            $path .= DIRECTORY_SEPARATOR;
         }
 
         return $path;
+    }
+
+    /**
+     * @param array $additionalOptions
+     */
+    private function mergeAndResolve(array $additionalOptions)
+    {
+        $options = array_merge($this->options, $additionalOptions);
+
+        $this->options = $this->resolver->resolve($options);
     }
 }

@@ -132,6 +132,14 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
+     * @return Configuration
+     */
+    public function getConfiguration()
+    {
+        return $this->configuration;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setUriFactory(UriFactory $uriFactory)

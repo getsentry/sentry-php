@@ -89,11 +89,11 @@ class Client
     protected $errorHandler;
 
     /**
-     * @var \Raven\Serializer
+     * @var SerializerInterface
      */
     protected $serializer;
     /**
-     * @var \Raven\Serializer
+     * @var SerializerInterface
      */
     protected $reprSerializer;
 
@@ -163,8 +163,8 @@ class Client
         $this->context = new Context();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
-        $this->serializer = new Serializer($this->config->getMbDetectOrder());
-        $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
+        $this->serializer = $this->config->getSerializer();
+        $this->reprSerializer = $this->config->getReprSerializer();
         $this->middlewareStackTip = function (Event $event) {
             return $event;
         };
@@ -279,26 +279,6 @@ class Client
     public function removeProcessor(ProcessorInterface $processor)
     {
         $this->processorRegistry->removeProcessor($processor);
-    }
-
-    /**
-     * Gets the representation serialier.
-     *
-     * @return ReprSerializer
-     */
-    public function getReprSerializer()
-    {
-        return $this->reprSerializer;
-    }
-
-    /**
-     * Gets the serializer.
-     *
-     * @return Serializer
-     */
-    public function getSerializer()
-    {
-        return $this->serializer;
     }
 
     /**
@@ -485,7 +465,7 @@ class Client
             $data['request'] = $this->serializer->serialize($data['request']);
         }
         if (!empty($data['user'])) {
-            $data['user'] = $this->serializer->serialize($data['user'], 3);
+            $data['user'] = $this->serializer->serialize($data['user'], ['max_depth' => 3]);
         }
         if (!empty($data['extra'])) {
             $data['extra'] = $this->serializer->serialize($data['extra']);
@@ -496,7 +476,7 @@ class Client
             }
         }
         if (!empty($data['contexts'])) {
-            $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
+            $data['contexts'] = $this->serializer->serialize($data['contexts'], ['max_depth' => 5]);
         }
     }
 

@@ -23,6 +23,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;
+use Raven\SerializerInterface;
 
 function simple_function($a = null, $b = null, $c = null)
 {
@@ -975,17 +976,19 @@ class ClientTest extends TestCase
 
     public function testSetAllObjectSerialize()
     {
-        $client = ClientBuilder::create()->getClient();
+        $serializer1 = $this->prophesize(SerializerInterface::class);
+        $serializer1->setAllObjectSerialize(true)
+            ->shouldBeCalledTimes(1);
+        $serializer2 = $this->prophesize(SerializerInterface::class);
+        $serializer2->setAllObjectSerialize(true)
+            ->shouldBeCalledTimes(1);
+
+        $client = ClientBuilder::create([
+            'serializer' => $serializer1->reveal(),
+            'reprSerializer' => $serializer2->reveal(),
+        ])->getClient();
 
         $client->setAllObjectSerialize(true);
-
-        $this->assertTrue($client->getSerializer()->getAllObjectSerialize());
-        $this->assertTrue($client->getReprSerializer()->getAllObjectSerialize());
-
-        $client->setAllObjectSerialize(false);
-
-        $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
-        $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
     }
 
     public function testClearBreadcrumb()
