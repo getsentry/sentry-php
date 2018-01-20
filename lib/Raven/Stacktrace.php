@@ -40,6 +40,7 @@ class Stacktrace implements \JsonSerializable
      * @var Frame[] The frames that compose the stacktrace
      */
     protected $frames = [];
+
     /**
      * @var array The list of functions to import a file
      */

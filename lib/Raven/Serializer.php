@@ -71,7 +71,7 @@ class Serializer implements SerializerInterface
      */
     public function serialize($value, array $context = [])
     {
-        $full_context = $this->get_full_context($context);
+        $full_context = $this->getFullContext($context);
 
         return $this->serializeInner($value, $full_context['max_depth'], 0);
     }
@@ -81,7 +81,7 @@ class Serializer implements SerializerInterface
      *
      * @return array
      */
-    protected function get_full_context(array $context)
+    protected function getFullContext(array $context)
     {
         if (!array_key_exists('max_depth', $context)) {
             $context['max_depth'] = 3;
