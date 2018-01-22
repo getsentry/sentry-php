@@ -1,6 +1,5 @@
 language: php
 sudo: false
-
 php:
   - 5.4
   - 5.5
@@ -10,9 +9,12 @@ php:
   - 7.2
   - nightly
 env:
-  - REMOVE_XDEBUG="0"
-  - REMOVE_XDEBUG="1"
-
+  matrix:
+    - REMOVE_XDEBUG="0"
+    - REMOVE_XDEBUG="1"
+  global:
+    - NODE_ENV=production
+    - TRAVIS_NODE_VERSION=8.9.1
 matrix:
   allow_failures:
     - php: hhvm-3.12
@@ -27,21 +29,18 @@ matrix:
     - php: 5.3
       env: REMOVE_XDEBUG="1"
       dist: precise
-
 cache:
   directories:
     - $HOME/.composer/cache
-
 before_install:
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
   - composer self-update
-
-install: travis_retry composer install --no-interaction --prefer-dist
-
+install:
+  - nvm install $TRAVIS_NODE_VERSION
+  - travis_retry composer install --no-interaction --prefer-dist
 script:
   - composer phpcs
   - composer tests-travis
-
 after_script:
   - wget https://scrutinizer-ci.com/ocular.phar
   - if [ $(phpenv version-name) = "5.3" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
@@ -51,3 +50,15 @@ after_script:
   - if [ $(phpenv version-name) = "7.0" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "7.1" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
   - if [ $(phpenv version-name) = "7.2" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
+  - npm install -g @zeus-ci/cli
+  - $(npm bin -g)/zeus upload -t "application/x-junit+xml" test/junit.xml
+  - $(npm bin -g)/zeus upload -t "application/x-clover+xml" test/clover.xml
+notifications:
+  webhooks:
+    urls:
+      - https://zeus.ci/hooks/cf8597c4-ffba-11e7-89c9-0a580a281308/public/provider/travis/webhook
+    on_success: always
+    on_failure: always
+    on_start: always
+    on_cancel: always
+    on_error: always

@@ -42,7 +42,7 @@
             "vendor/bin/phpunit --verbose"
         ],
         "tests-travis": [
-            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-clover test/clover.xml"
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-clover test/clover.xml --log-junit test/junit.xml"
         ],
         "tests-report": [
             "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html test/html-report"
