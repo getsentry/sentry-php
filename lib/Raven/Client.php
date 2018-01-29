@@ -11,15 +11,9 @@
 
 namespace Raven;
 
-use Http\Client\HttpAsyncClient;
-use Http\Message\Encoding\CompressStream;
-use Http\Message\RequestFactory;
-use Http\Promise\Promise;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
-use Raven\HttpClient\Encoding\Base64EncodingStream;
 use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
@@ -29,7 +23,7 @@ use Raven\Middleware\RequestInterfaceMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Processor\ProcessorInterface;
 use Raven\Processor\ProcessorRegistry;
-use Raven\Util\JSON;
+use Raven\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
@@ -98,11 +92,6 @@ class Client
     protected $reprSerializer;
 
     /**
-     * @var array[]
-     */
-    public $pendingEvents = [];
-
-    /**
      * @var bool
      */
     protected $shutdownFunctionHasBeenSet = false;
@@ -113,24 +102,14 @@ class Client
     protected $config;
 
     /**
-     * @var HttpAsyncClient The HTTP client
+     * @var TransportInterface The transport
      */
-    private $httpClient;
-
-    /**
-     * @var RequestFactory The PSR-7 request factory
-     */
-    private $requestFactory;
+    private $transport;
 
     /**
      * @var ProcessorRegistry The registry of processors
      */
     private $processorRegistry;
-
-    /**
-     * @var Promise[] The list of pending requests
-     */
-    private $pendingRequests = [];
 
     /**
      * @var callable The tip of the middleware call stack
@@ -150,15 +129,13 @@ class Client
     /**
      * Constructor.
      *
-     * @param Configuration   $config         The client configuration
-     * @param HttpAsyncClient $httpClient     The HTTP client
-     * @param RequestFactory  $requestFactory The PSR-7 request factory
+     * @param Configuration      $config    The client configuration
+     * @param TransportInterface $transport The transport
      */
-    public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
+    public function __construct(Configuration $config, TransportInterface $transport)
     {
         $this->config = $config;
-        $this->httpClient = $httpClient;
-        $this->requestFactory = $requestFactory;
+        $this->transport = $transport;
         $this->processorRegistry = new ProcessorRegistry();
         $this->context = new Context();
         $this->recorder = new Recorder();
@@ -192,16 +169,6 @@ class Client
         if ($this->config->shouldInstallShutdownHandler()) {
             $this->registerShutdownFunction();
         }
-    }
-
-    /**
-     * Destruct all objects contain link to this object.
-     *
-     * This method can not delete shutdown handler
-     */
-    public function __destruct()
-    {
-        $this->sendUnsentErrors();
     }
 
     /**
@@ -355,7 +322,7 @@ class Client
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
-     * @return string
+     * @return string|null
      */
     public function captureLastError()
     {
@@ -462,76 +429,69 @@ class Client
         }
 
         $event = $this->callMiddlewareStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
+        $event = $this->sanitize($event);
 
-        $payload = $event->toArray();
-
-        $this->sanitize($payload);
-
-        if (!$this->storeErrorsForBulkSend) {
-            $this->send($payload);
-        } else {
-            $this->pendingEvents[] = $payload;
-        }
+        $this->send($event);
 
         $this->lastEvent = $event;
 
-        return $payload['event_id'];
+        return str_replace('-', '', $event->getId()->toString());
     }
 
-    public function sanitize(&$data)
+    public function sanitize(Event $event)
     {
         // attempt to sanitize any user provided data
-        if (!empty($data['request'])) {
-            $data['request'] = $this->serializer->serialize($data['request']);
+        $request = $event->getRequest();
+        $userContext = $event->getUserContext();
+        $extraContext = $event->getExtraContext();
+        $tagsContext = $event->getTagsContext();
+
+        if (!empty($request)) {
+            $event = $event->withRequest($this->serializer->serialize($request));
         }
-        if (!empty($data['user'])) {
-            $data['user'] = $this->serializer->serialize($data['user'], 3);
+        if (!empty($userContext)) {
+            $event = $event->withUserContext($this->serializer->serialize($userContext, 3));
         }
-        if (!empty($data['extra'])) {
-            $data['extra'] = $this->serializer->serialize($data['extra']);
+        if (!empty($extraContext)) {
+            $event = $event->withExtraContext($this->serializer->serialize($extraContext));
         }
-        if (!empty($data['tags'])) {
-            foreach ($data['tags'] as $key => $value) {
-                $data['tags'][$key] = @(string) $value;
+        if (!empty($tagsContext)) {
+            foreach ($tagsContext as $key => $value) {
+                $tagsContext[$key] = @(string) $value;
             }
+
+            $event = $event->withTagsContext($tagsContext);
         }
-        if (!empty($data['contexts'])) {
-            $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
-        }
+
+        return $event;
     }
 
     public function sendUnsentErrors()
     {
-        foreach ($this->pendingEvents as $data) {
+        /*foreach ($this->pendingEvents as $data) {
             $this->send($data);
         }
 
-        $this->pendingEvents = [];
+        $this->pendingEvents = [];*/
 
         if ($this->storeErrorsForBulkSend) {
             //in case an error occurs after this is called, on shutdown, send any new errors.
             $this->storeErrorsForBulkSend = !defined('RAVEN_CLIENT_END_REACHED');
         }
 
-        foreach ($this->pendingRequests as $pendingRequest) {
+        /*foreach ($this->pendingRequests as $pendingRequest) {
             $pendingRequest->wait();
-        }
+        }*/
     }
 
     /**
      * Sends the given event to the Sentry server.
      *
-     * @param array $data Associative array of data to log
+     * @param Event $event The event to send
      */
-    public function send(&$data)
+    public function send(Event $event)
     {
-        if (!$this->config->shouldCapture($data) || !$this->config->getServer()) {
-            return;
-        }
-
-        if ($this->config->getTransport()) {
-            call_user_func($this->getConfig()->getTransport(), $this, $data);
-
+        if (!$this->config->shouldCapture($event) || !$this->config->getServer()) {
             return;
         }
 
@@ -540,40 +500,7 @@ class Client
             return;
         }
 
-        $request = $this->requestFactory->createRequest(
-            'POST',
-            sprintf('api/%d/store/', $this->getConfig()->getProjectId()),
-            ['Content-Type' => $this->isEncodingCompressed() ? 'application/octet-stream' : 'application/json'],
-            JSON::encode($data)
-        );
-
-        if ($this->isEncodingCompressed()) {
-            $request = $request->withBody(
-                new Base64EncodingStream(
-                    new CompressStream($request->getBody())
-                )
-            );
-        }
-
-        $promise = $this->httpClient->sendAsyncRequest($request);
-
-        // This function is defined in-line so it doesn't show up for
-        // type-hinting on classes that implement this trait.
-        $cleanupPromiseCallback = function (ResponseInterface $response) use ($promise) {
-            $index = array_search($promise, $this->pendingRequests, true);
-
-            if (false === $index) {
-                return $response;
-            }
-
-            unset($this->pendingRequests[$index]);
-
-            return $response;
-        };
-
-        $promise->then($cleanupPromiseCallback, $cleanupPromiseCallback);
-
-        $this->pendingRequests[] = $promise;
+        $this->transport->send($event);
     }
 
     /**

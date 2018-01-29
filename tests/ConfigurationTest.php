@@ -13,6 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
+use Raven\Event;
 
 class ConfigurationTest extends TestCase
 {
@@ -61,7 +62,6 @@ class ConfigurationTest extends TestCase
             ['excluded_app_paths', ['foo', 'bar'], 'getExcludedProjectPaths', 'setExcludedProjectPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
-            ['proxy', 'tcp://localhost:8125', 'getProxy', 'setProxy'],
             ['release', 'dev', 'getRelease', 'setRelease'],
             ['server_name', 'foo', 'getServerName', 'setServerName'],
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
@@ -190,9 +190,7 @@ class ConfigurationTest extends TestCase
 
         $this->assertTrue($configuration->shouldCapture());
 
-        $data = 'foo';
-
-        $this->assertFalse($configuration->shouldCapture($data));
+        $this->assertFalse($configuration->shouldCapture(new Event($configuration)));
     }
 
     /**

@@ -445,32 +445,6 @@ class Configuration
     }
 
     /**
-     * Gets the custom transport set to override how Sentry events are sent
-     * upstream.
-     *
-     * @return callable|null
-     */
-    public function getTransport()
-    {
-        return $this->options['transport'];
-    }
-
-    /**
-     * Set a custom transport to override how Sentry events are sent upstream.
-     * The bound function will be called with `$client` and `$data` arguments
-     * and is responsible for encoding the data, authenticating, and sending
-     * the data to the upstream Sentry server.
-     *
-     * @param callable|null $transport The callable
-     */
-    public function setTransport(callable $transport = null)
-    {
-        $options = array_merge($this->options, ['transport' => $transport]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the project ID number to send to the Sentry server.
      *
      * @return string
@@ -545,28 +519,6 @@ class Configuration
     }
 
     /**
-     * Gets the proxy information to pass to the transport adapter.
-     *
-     * @return array
-     */
-    public function getProxy()
-    {
-        return $this->options['proxy'];
-    }
-
-    /**
-     * Sets the proxy information to pass to the transport adapter.
-     *
-     * @param string $proxy The proxy information
-     */
-    public function setProxy($proxy)
-    {
-        $options = array_merge($this->options, ['proxy' => $proxy]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the release tag to be passed with every event sent to Sentry.
      *
      * @return string
@@ -621,14 +573,14 @@ class Configuration
     }
 
     /**
-     * Checks whether all events or a specific exception or event (if provided)
-     * are allowed to be captured.
+     * Checks whether all events or a specific event (if provided) are allowed
+     * to be captured.
      *
-     * @param object|\Exception $value An optional event or exception to test
+     * @param Event|null $event The event object
      *
      * @return bool
      */
-    public function shouldCapture(&$value = null)
+    public function shouldCapture(Event $event = null)
     {
         $result = true;
 
@@ -636,8 +588,8 @@ class Configuration
             $result = false;
         }
 
-        if (null !== $this->options['should_capture'] && null !== $value) {
-            $result = $result && $this->options['should_capture']($value);
+        if (null !== $this->options['should_capture'] && null !== $event) {
+            $result = $result && $this->options['should_capture']($event);
         }
 
         return $result;
@@ -724,10 +676,8 @@ class Configuration
             'excluded_loggers' => [],
             'excluded_exceptions' => [],
             'excluded_app_paths' => [],
-            'transport' => null,
             'project_root' => null,
             'logger' => 'php',
-            'proxy' => null,
             'release' => null,
             'server' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
@@ -752,10 +702,8 @@ class Configuration
         $resolver->setAllowedTypes('excluded_loggers', 'array');
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('excluded_app_paths', 'array');
-        $resolver->setAllowedTypes('transport', ['null', 'callable']);
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
-        $resolver->setAllowedTypes('proxy', ['null', 'string']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('server', ['null', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');

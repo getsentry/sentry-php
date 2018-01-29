@@ -21,6 +21,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Processor\ProcessorInterface;
+use Raven\Transport\TransportInterface;
 
 class ClientBuilderTest extends TestCase
 {
@@ -34,8 +35,7 @@ class ClientBuilderTest extends TestCase
     public function testSetUriFactory()
     {
         /** @var UriFactory|\PHPUnit_Framework_MockObject_MockObject $uriFactory */
-        $uriFactory = $this->getMockBuilder(UriFactory::class)
-            ->getMock();
+        $uriFactory = $this->createMock(UriFactory::class);
 
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setUriFactory($uriFactory);
@@ -46,40 +46,49 @@ class ClientBuilderTest extends TestCase
     public function testSetMessageFactory()
     {
         /** @var MessageFactory|\PHPUnit_Framework_MockObject_MockObject $messageFactory */
-        $messageFactory = $this->getMockBuilder(MessageFactory::class)
-            ->getMock();
+        $messageFactory = $this->createMock(MessageFactory::class);
 
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setMessageFactory($messageFactory);
 
         $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
 
-        $client = $clientBuilder->getClient();
+        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
-        $this->assertAttributeSame($messageFactory, 'requestFactory', $client);
+        $this->assertAttributeSame($messageFactory, 'requestFactory', $transport);
+    }
+
+    public function testSetTransport()
+    {
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setTransport($transport);
+
+        $this->assertAttributeSame($transport, 'transport', $clientBuilder);
+        $this->assertAttributeSame($transport, 'transport', $clientBuilder->getClient());
     }
 
     public function testSetHttpClient()
     {
         /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
-        $httpClient = $this->getMockBuilder(HttpAsyncClient::class)
-            ->getMock();
+        $httpClient = $this->createMock(HttpAsyncClient::class);
 
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setHttpClient($httpClient);
 
         $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
 
-        $client = $this->getObjectAttribute($clientBuilder->getClient(), 'httpClient');
+        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
-        $this->assertAttributeSame($httpClient, 'client', $client);
+        $this->assertAttributeSame($httpClient, 'client', $this->getObjectAttribute($transport, 'httpClient'));
     }
 
     public function testAddHttpClientPlugin()
     {
         /** @var Plugin|\PHPUnit_Framework_MockObject_MockObject $plugin */
-        $plugin = $this->getMockBuilder(Plugin::class)
-            ->getMock();
+        $plugin = $this->createMock(Plugin::class);
 
         $clientBuilder = new ClientBuilder();
         $clientBuilder->addHttpClientPlugin($plugin);
@@ -131,19 +140,6 @@ class ClientBuilderTest extends TestCase
         $clientBuilder->removeProcessor($processor);
 
         $this->assertAttributeNotContains([$processor, -10], 'processors', $clientBuilder);
-    }
-
-    public function testGetProcessors()
-    {
-        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
-        $processor = $this->createMock(ProcessorInterface::class);
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addProcessor($processor, -10);
-        $clientBuilder->addProcessor($processor, 10);
-
-        $this->assertContains([$processor, -10], $clientBuilder->getProcessors());
-        $this->assertContains([$processor, 10], $clientBuilder->getProcessors());
     }
 
     public function testGetClient()
@@ -203,10 +199,8 @@ class ClientBuilderTest extends TestCase
             ['setExcludedLoggers', ['foo', 'bar']],
             ['setExcludedExceptions', ['foo', 'bar']],
             ['setExcludedProjectPaths', ['foo', 'bar']],
-            ['setTransport', null],
             ['setProjectRoot', 'foo'],
             ['setLogger', 'bar'],
-            ['setProxy', 'foo'],
             ['setRelease', 'dev'],
             ['setServerName', 'example.com'],
             ['setTags', ['foo', 'bar']],

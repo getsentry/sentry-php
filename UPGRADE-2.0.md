@@ -19,11 +19,14 @@
 - The `curl_ssl_version` option has been removed.
 - The `verify_ssl` option has been removed.
 - The `ca_cert` option has been removed.
+- The `proxy` option has been removed.
 - The `processors` option has been removed in favour of leaving to the user the
   choice of which processors add or remove using the appropriate methods of the
   `Client` and `ClientBuilder` classes.
 - The `processors_options` option has been removed in favour of leaving to the
   user the burden of adding an already configured processor instance to the client.
+- The `transport` option has been removed in favour of setting it using the
+  client builder.
 - The `http_client_options` has been added to set the options that applies to the
   HTTP client chosen by the user as underlying transport method.
 - The `open_timeout` option has been added to set the maximum number of seconds
