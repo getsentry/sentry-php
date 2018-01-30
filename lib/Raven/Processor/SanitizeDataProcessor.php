@@ -124,6 +124,9 @@ class Raven_Processor_SanitizeDataProcessor extends Raven_Processor
         if (!empty($data['extra'])) {
             array_walk_recursive($data['extra'], array($this, 'sanitize'));
         }
+        if (!empty($data['user'])) {
+            array_walk_recursive($data['user'], array($this, 'sanitize'));
+        }
     }
 
     /**
