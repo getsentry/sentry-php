@@ -332,6 +332,51 @@
   abstract class for the processors, but a `ProcessorInterface` interface has
   been introduced.
 
+- The `Client::user_context` method has been removed. You should use `Client::getUserContext`
+  instead.
+
+  Before:
+
+  ```php
+  $client->user_context(array('foo' => 'bar'));
+  ```
+
+  After:
+
+  ```php
+  $client->getUserContext()->setData(array('foo' => 'bar'));
+  ```
+
+- The `Client::tags_context` method has been removed. You should use `Client::getTagsContext`
+  instead.
+
+  Before:
+
+  ```php
+  $client->tags_context(array('foo', 'bar'));
+  ```
+
+  After:
+
+  ```php
+  $client->getTagsContext()->setData(array('foo', 'bar'));
+  ```
+
+- The `Client::extra_context` method has been removed. You should use `Client::getExtraContext`
+  instead.
+
+  Before:
+
+  ```php
+  $client->extra_context(array('foo' => 'bar'));
+  ```
+
+  After:
+
+  ```php
+  $client->getExtraContext()->setData(array('foo' => 'bar'));
+  ```
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class
@@ -360,3 +405,12 @@
 - The `RemoveCookiesProessor` class has been renamed to `SanitizeCookiesProcessor` to
   better reflect its purpose. The constructor accepts an array of options to make the
   behaviour of which cookies to sanitize configurable.
+
+# Context
+
+- The `Raven_Context` class has been renamed to `Context` and added to the `Raven`
+  namespace to follow the PSR-4 convention.
+
+- The `tags`, `extra` and `user` properties of the `Raven_Context` class have
+  been removed. Each instance of the new class represents now a single context
+  type only and provides some useful methods to interact with the data.

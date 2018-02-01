@@ -20,7 +20,7 @@ use Raven\Event;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class MessageInterfaceMiddleware
+final class MessageInterfaceMiddleware
 {
     /**
      * Collects the needed data and sets it in the given event object.

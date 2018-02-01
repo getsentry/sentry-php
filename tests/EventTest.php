@@ -150,7 +150,7 @@ class EventTest extends TestCase
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
-    public function testGettersAndSetters($propertyName, $propertyValue, $serializedPropertyName)
+    public function testGettersAndSetters($propertyName, $propertyValue, $expectedValue)
     {
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'with' . ucfirst($propertyName);
@@ -172,26 +172,25 @@ class EventTest extends TestCase
 
         $data = $newEvent->toArray();
 
-        $this->assertArrayHasKey($serializedPropertyName, $data);
-        $this->assertSame($propertyValue, $data[$serializedPropertyName]);
+        $this->assertArraySubset($expectedValue, $data);
     }
 
     public function gettersAndSettersDataProvider()
     {
         return [
-            ['level', 'info', 'level'],
-            ['logger', 'ruby', 'logger'],
-            ['culprit', '', 'culprit'],
-            ['serverName', 'local.host', 'server_name'],
-            ['release', '0.0.1', 'release'],
-            ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], 'modules'],
-            ['extraContext', ['foo' => 'bar'], 'extra'],
-            ['tagsContext', ['foo' => 'bar'], 'tags'],
-            ['userContext', ['foo' => 'bar'], 'user'],
-            ['serverOsContext', ['foo' => 'bar'], 'server_os'],
-            ['runtimeContext', ['foo' => 'bar'], 'runtime'],
-            ['fingerprint', ['foo', 'bar'], 'fingerprint'],
-            ['environment', 'foo', 'environment'],
+            ['level', 'info', ['level' => 'info']],
+            ['logger', 'ruby', ['logger' => 'ruby']],
+            ['culprit', 'foo', ['culprit' => 'foo']],
+            ['serverName', 'local.host', ['server_name' => 'local.host']],
+            ['release', '0.0.1', ['release' => '0.0.1']],
+            ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], ['modules' => ['foo' => '0.0.1', 'bar' => '0.0.2']]],
+            ['extraContext', ['foo' => 'bar'], ['extra' => ['foo' => 'bar']]],
+            ['tagsContext', ['bar' => 'foo'], ['tags' => ['bar' => 'foo']]],
+            ['userContext', ['bar' => 'baz'], ['user' => ['bar' => 'baz']]],
+            ['serverOsContext', ['foobar' => 'barfoo'], ['contexts' => ['os' => ['foobar' => 'barfoo']]]],
+            ['runtimeContext', ['barfoo' => 'foobar'], ['contexts' => ['runtime' => ['barfoo' => 'foobar']]]],
+            ['fingerprint', ['foo', 'bar'], ['fingerprint' => ['foo', 'bar']]],
+            ['environment', 'foo', ['environment' => 'foo']],
         ];
     }
 

@@ -12,7 +12,7 @@
 namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Context;
+use Raven\Context\Context;
 use Raven\Event;
 
 /**
@@ -24,18 +24,25 @@ use Raven\Event;
 final class ContextInterfaceMiddleware
 {
     /**
-     * @var Context The context storage
+     * @var Context The context
      */
     private $context;
 
     /**
+     * @var string The alias name of the context
+     */
+    private $contextName;
+
+    /**
      * Constructor.
      *
-     * @param Context $context The context storage
+     * @param Context $context     The context
+     * @param string  $contextName The alias name of the context
      */
-    public function __construct(Context $context)
+    public function __construct(Context $context, $contextName)
     {
         $this->context = $context;
+        $this->contextName = $contextName;
     }
 
     /**
@@ -51,17 +58,28 @@ final class ContextInterfaceMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
-        $tagsContext = isset($payload['tags_context']) ? $payload['tags_context'] : [];
-        $extraContext = isset($payload['extra_context']) ? $payload['extra_context'] : [];
-        $serverOsContext = isset($payload['server_os_context']) ? $payload['server_os_context'] : [];
-        $runtimeContext = isset($payload['runtime_context']) ? $payload['runtime_context'] : [];
-        $userContext = isset($payload['user_context']) ? $payload['user_context'] : [];
+        $context = isset($payload[$this->contextName . '_context']) ? $payload[$this->contextName . '_context'] : [];
+        $context = array_merge($this->context->toArray(), $context);
 
-        $event = $event->withTagsContext(array_merge($this->context->getTags(), $tagsContext), false)
-            ->withExtraContext(array_merge($this->context->getExtraData(), $extraContext), false)
-            ->withUserContext(array_merge($this->context->getUserData(), $userContext), false)
-            ->withServerOsContext($serverOsContext, false)
-            ->withRuntimeContext($runtimeContext, false);
+        switch ($this->contextName) {
+            case Context::CONTEXT_USER:
+                $event = $event->withUserContext($context, false);
+                break;
+            case Context::CONTEXT_RUNTIME:
+                $event = $event->withRuntimeContext($context, false);
+                break;
+            case Context::CONTEXT_TAGS:
+                $event = $event->withTagsContext($context, false);
+                break;
+            case Context::CONTEXT_EXTRA:
+                $event = $event->withExtraContext($context, false);
+                break;
+            case Context::CONTEXT_SERVER_OS:
+                $event = $event->withServerOsContext($context, false);
+                break;
+            default:
+                throw new \RuntimeException(sprintf('The "%s" context is not supported.', $this->contextName));
+        }
 
         return $next($event, $request, $exception, $payload);
     }
