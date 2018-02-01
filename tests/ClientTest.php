@@ -61,22 +61,6 @@ class Dummy_Raven_Client extends \Raven\Client
 
 class ClientTest extends TestCase
 {
-    public function testDestructor()
-    {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send');
-
-        $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
-            ->getClient();
-
-        $client->capture([]);
-
-        unset($client);
-    }
-
     public function testMiddlewareStackIsSeeded()
     {
         $client = ClientBuilder::create()->getClient();
@@ -452,59 +436,6 @@ class ClientTest extends TestCase
         ], $event->getRequest());
     }
 
-    /**
-     * @covers \Raven\Client::getShutdownFunctionHasBeenSet
-     */
-    public function testGettersAndSetters()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $data = [
-            ['shutdownFunctionHasBeenSet', null, true],
-            ['shutdownFunctionHasBeenSet', null, false],
-        ];
-        foreach ($data as &$datum) {
-            $this->subTestGettersAndSettersDatum($client, $datum);
-        }
-    }
-
-    private function subTestGettersAndSettersDatum(\Raven\Client $client, $datum)
-    {
-        if (3 == count($datum)) {
-            list($property_name, $function_name, $value_in) = $datum;
-            $value_out = $value_in;
-        } else {
-            list($property_name, $function_name, $value_in, $value_out) = $datum;
-        }
-        if (null === $function_name) {
-            $function_name = str_replace('_', '', $property_name);
-        }
-
-        $method_get_name = 'get' . $function_name;
-        $method_set_name = 'set' . $function_name;
-        $property = new \ReflectionProperty('\\Raven\\Client', $property_name);
-        $property->setAccessible(true);
-
-        if (method_exists($client, $method_set_name)) {
-            $setter_output = $client->$method_set_name($value_in);
-            if (null !== $setter_output and is_object($setter_output)) {
-                // chaining call test
-                $this->assertEquals(spl_object_hash($client), spl_object_hash($setter_output));
-            }
-            $actual_value = $property->getValue($client);
-            $this->assertMixedValueAndArray($value_out, $actual_value);
-        }
-
-        if (method_exists($client, $method_get_name)) {
-            $property->setValue($client, $value_out);
-            $reflection = new \ReflectionMethod('\\Raven\Client', $method_get_name);
-            if ($reflection->isPublic()) {
-                $actual_value = $client->$method_get_name();
-                $this->assertMixedValueAndArray($value_out, $actual_value);
-            }
-        }
-    }
-
     private function assertMixedValueAndArray($expected_value, $actual_value)
     {
         if (null === $expected_value) {
@@ -677,18 +608,14 @@ class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
 
         foreach ([true, false] as $u1) {
-            foreach ([true, false] as $u2) {
-                $client = new Dummy_Raven_Client(
-                    new Configuration([
-                        'install_default_breadcrumb_handlers' => $u1,
-                        'install_shutdown_handler' => $u2,
-                    ]),
-                    $transport
-                );
+            $client = new Dummy_Raven_Client(
+                new Configuration([
+                    'install_default_breadcrumb_handlers' => $u1,
+                ]),
+                $transport
+            );
 
-                $this->assertEquals($u1, $client->dummy_breadcrumbs_handlers_has_set);
-                $this->assertEquals($u2, $client->dummy_shutdown_handlers_has_set);
-            }
+            $this->assertEquals($u1, $client->dummy_breadcrumbs_handlers_has_set);
         }
     }
 

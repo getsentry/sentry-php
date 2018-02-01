@@ -24,18 +24,24 @@ use Raven\Util\JSON;
 
 class HttpTransportTest extends TestCase
 {
-    public function testDestructor()
+    public function testCleanupPendingRequests()
     {
-        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise */
-        $promise = $this->createMock(Promise::class);
-        $promise->expects($this->once())
+        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise1 */
+        $promise1 = $this->createMock(Promise::class);
+        $promise1->expects($this->once())
+            ->method('wait')
+            ->willThrowException(new \Exception());
+
+        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise2 */
+        $promise2 = $this->createMock(Promise::class);
+        $promise2->expects($this->once())
             ->method('wait');
 
         /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
-        $httpClient->expects($this->once())
+        $httpClient->expects($this->exactly(2))
             ->method('sendAsyncRequest')
-            ->willReturn($promise);
+            ->willReturnOnConsecutiveCalls($promise1, $promise2);
 
         $config = new Configuration();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
@@ -43,10 +49,14 @@ class HttpTransportTest extends TestCase
         $this->assertAttributeEmpty('pendingRequests', $transport);
 
         $transport->send(new Event($config));
+        $transport->send(new Event($config));
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
-        unset($transport);
+        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
+        $reflectionMethod->setAccessible(true);
+        $reflectionMethod->invoke($transport);
+        $reflectionMethod->setAccessible(false);
     }
 
     public function testSendWithoutCompressedEncoding()
@@ -73,7 +83,10 @@ class HttpTransportTest extends TestCase
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
         $transport->send($event);
 
-        unset($transport);
+        // In PHP calling the destructor manually does not destroy the object,
+        // but for testing we will do it anyway because otherwise we could not
+        // test the cleanup code of the class if not all references are released
+        $transport->__destruct();
     }
 
     public function testSendWithCompressedEncoding()
@@ -100,7 +113,10 @@ class HttpTransportTest extends TestCase
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
         $transport->send($event);
 
-        unset($transport);
+        // In PHP calling the destructor manually does not destroy the object,
+        // but for testing we will do it anyway because otherwise we could not
+        // test the cleanup code of the class if not all references are released
+        $transport->__destruct();
     }
 
     public function testSendFailureCleanupPendingRequests()

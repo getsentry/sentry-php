@@ -92,11 +92,6 @@ class Client
     protected $reprSerializer;
 
     /**
-     * @var bool
-     */
-    protected $shutdownFunctionHasBeenSet = false;
-
-    /**
      * @var Configuration The client configuration
      */
     protected $config;
@@ -164,10 +159,6 @@ class Client
 
         if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
             $this->registerDefaultBreadcrumbHandlers();
-        }
-
-        if ($this->config->shouldInstallShutdownHandler()) {
-            $this->registerShutdownFunction();
         }
     }
 
@@ -370,14 +361,6 @@ class Client
         $handler->install();
     }
 
-    protected function registerShutdownFunction()
-    {
-        if (!$this->shutdownFunctionHasBeenSet) {
-            $this->shutdownFunctionHasBeenSet = true;
-            register_shutdown_function([$this, 'onShutdown']);
-        }
-    }
-
     /**
      * @return bool
      * @codeCoverageIgnore
@@ -466,24 +449,6 @@ class Client
         return $event;
     }
 
-    public function sendUnsentErrors()
-    {
-        /*foreach ($this->pendingEvents as $data) {
-            $this->send($data);
-        }
-
-        $this->pendingEvents = [];*/
-
-        if ($this->storeErrorsForBulkSend) {
-            //in case an error occurs after this is called, on shutdown, send any new errors.
-            $this->storeErrorsForBulkSend = !defined('RAVEN_CLIENT_END_REACHED');
-        }
-
-        /*foreach ($this->pendingRequests as $pendingRequest) {
-            $pendingRequest->wait();
-        }*/
-    }
-
     /**
      * Sends the given event to the Sentry server.
      *
@@ -551,14 +516,6 @@ class Client
         $this->severityMap = $map;
     }
 
-    public function onShutdown()
-    {
-        if (!defined('RAVEN_CLIENT_END_REACHED')) {
-            define('RAVEN_CLIENT_END_REACHED', true);
-        }
-        $this->sendUnsentErrors();
-    }
-
     /**
      * @return Context
      */
@@ -567,28 +524,10 @@ class Client
         return $this->context;
     }
 
-    /**
-     * @return bool
-     */
-    public function getShutdownFunctionHasBeenSet()
-    {
-        return $this->shutdownFunctionHasBeenSet;
-    }
-
     public function setAllObjectSerialize($value)
     {
         $this->serializer->setAllObjectSerialize($value);
         $this->reprSerializer->setAllObjectSerialize($value);
-    }
-
-    /**
-     * Checks whether the encoding is compressed.
-     *
-     * @return bool
-     */
-    private function isEncodingCompressed()
-    {
-        return 'gzip' === $this->config->getEncoding();
     }
 
     /**

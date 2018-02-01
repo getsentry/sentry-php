@@ -50,8 +50,6 @@ use Raven\Transport\TransportInterface;
  * @method setSampleRate(float $sampleRate)
  * @method bool shouldInstallDefaultBreadcrumbHandlers()
  * @method setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
- * @method bool shouldInstallShutdownHandler()
- * @method setInstallShutdownHandler(bool $installShutdownHandler)
  * @method string getMbDetectOrder()
  * @method setMbDetectOrder(string $detectOrder)
  * @method bool getAutoLogStacks()

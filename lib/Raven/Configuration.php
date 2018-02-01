@@ -202,28 +202,6 @@ class Configuration
     }
 
     /**
-     * Gets whether the shutdown hundler should be installed.
-     *
-     * @return bool
-     */
-    public function shouldInstallShutdownHandler()
-    {
-        return $this->options['install_shutdown_handler'];
-    }
-
-    /**
-     * Sets whether the shutdown hundler should be installed.
-     *
-     * @param bool $installShutdownHandler Flag indicating if the shutdown handler should be installed
-     */
-    public function setInstallShutdownHandler($installShutdownHandler)
-    {
-        $options = array_merge($this->options, ['install_shutdown_handler' => $installShutdownHandler]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the character encoding detection order.
      *
      * @return string[]|null
@@ -666,7 +644,6 @@ class Configuration
             'serialize_all_object' => false,
             'sample_rate' => 1,
             'install_default_breadcrumb_handlers' => true,
-            'install_shutdown_handler' => true,
             'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
@@ -692,7 +669,6 @@ class Configuration
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
-        $resolver->setAllowedTypes('install_shutdown_handler', 'bool');
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');

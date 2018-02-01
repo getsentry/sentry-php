@@ -59,19 +59,21 @@ final class HttpTransport implements TransportInterface
         $this->config = $config;
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
+
+        register_shutdown_function(function () {
+            // When the library will support PHP 7.1+ only this closure can be
+            // replaced with a simple call to \Closure::fromCallable
+            $this->cleanupPendingRequests();
+        });
     }
 
     /**
      * Destructor. Ensures that all pending requests ends before destroying this
      * object instance.
-     *
-     * @throws \Exception If any error occurs while sending an event
      */
     public function __destruct()
     {
-        foreach ($this->pendingRequests as $pendingRequest) {
-            $pendingRequest->wait();
-        }
+        $this->cleanupPendingRequests();
     }
 
     /**
@@ -122,5 +124,20 @@ final class HttpTransport implements TransportInterface
     private function isEncodingCompressed()
     {
         return 'gzip' === $this->config->getEncoding();
+    }
+
+    /**
+     * Cleanups the pending requests by forcing them to be sent. Any error that
+     * occurs will be ignored.
+     */
+    private function cleanupPendingRequests()
+    {
+        foreach ($this->pendingRequests as $pendingRequest) {
+            try {
+                $pendingRequest->wait();
+            } catch (\Exception $exception) {
+                continue;
+            }
+        }
     }
 }
