@@ -1282,6 +1282,36 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::sanitize
+     */
+    public function testSanitizeBreadcrumbs()
+    {
+        $client = new Dummy_Raven_Client();
+        $data = array('breadcrumbs' => array(array(
+            'message' => 'foo',
+            'utf8' => pack("NA3CC", 3, "aBc", 0x0D, 0x0A),
+            'data' => array(
+                'line' => 1216,
+                'bindings' => array(
+                    array('foo', pack("NA3CC", 3, "aBc", 0x0D, 0x0A)),
+                )
+            ),
+        )));
+        $client->sanitize($data);
+
+        $this->assertEquals(array('breadcrumbs' => array(array(
+            'message' => 'foo',
+            'utf8' => mb_convert_encoding(pack("NA3CC", 3, "aBc", 0x0D, 0x0A), 'UTF-8'),
+            'data' => array(
+                'line' => 1216,
+                'bindings' => array(
+                    array('foo', mb_convert_encoding(pack("NA3CC", 3, "aBc", 0x0D, 0x0A), 'UTF-8')),
+                )
+            ),
+        ))), $data);
+    }
+
+    /**
      * @covers Raven_Client::buildCurlCommand
      */
     public function testBuildCurlCommandEscapesInput()
