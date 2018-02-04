@@ -588,20 +588,6 @@ class ClientTest extends TestCase
         $this->assertTrue($shouldCaptureCalled);
     }
 
-    public function testNothingIsSentWhenNoServerIsConfigured()
-    {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->never())
-            ->method('send');
-
-        $client = ClientBuilder::create()
-            ->setTransport($transport)
-            ->getClient();
-
-        $client->capture([]);
-    }
-
     public function test__construct_handlers()
     {
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */

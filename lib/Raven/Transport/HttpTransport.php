@@ -136,7 +136,6 @@ final class HttpTransport implements TransportInterface
             try {
                 $pendingRequest->wait();
             } catch (\Exception $exception) {
-                continue;
             }
         }
     }

@@ -31,6 +31,7 @@ use Raven\Processor\SanitizeCookiesProcessor;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 use Raven\Transport\HttpTransport;
+use Raven\Transport\NullTransport;
 use Raven\Transport\TransportInterface;
 
 /**
@@ -242,7 +243,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
-        $this->transport = $this->transport ?: new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        $this->transport = $this->createTransportInstance();
 
         $client = new Client($this->configuration, $this->transport);
 
@@ -291,6 +292,24 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
+    }
+
+    /**
+     * Creates a new instance of the transport mechanism.
+     *
+     * @return TransportInterface
+     */
+    private function createTransportInstance()
+    {
+        if (null !== $this->transport) {
+            return $this->transport;
+        }
+
+        if (null !== $this->configuration->getServer()) {
+            return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        }
+
+        return new NullTransport();
     }
 
     /**

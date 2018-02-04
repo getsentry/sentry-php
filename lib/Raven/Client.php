@@ -456,7 +456,7 @@ class Client
      */
     public function send(Event $event)
     {
-        if (!$this->config->shouldCapture($event) || !$this->config->getServer()) {
+        if (!$this->config->shouldCapture($event)) {
             return;
         }
 
