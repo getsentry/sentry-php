@@ -136,6 +136,8 @@ final class HttpTransport implements TransportInterface
             try {
                 $pendingRequest->wait();
             } catch (\Exception $exception) {
+                // Do nothing because an exception thrown from a destructor
+                // can't be catched in PHP (see http://php.net/manual/en/language.oop5.decon.php#language.oop5.decon.destructor)
             }
         }
     }

@@ -24,6 +24,31 @@ use Raven\Util\JSON;
 
 class HttpTransportTest extends TestCase
 {
+    public function testDestructor()
+    {
+        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise1 */
+        $promise = $this->createMock(Promise::class);
+        $promise->expects($this->once())
+            ->method('wait');
+
+        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn($promise);
+
+        $config = new Configuration();
+        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
+
+        $transport->send(new Event($config));
+
+        // In PHP calling the destructor manually does not destroy the object,
+        // but for testing we will do it anyway because otherwise we could not
+        // test the cleanup code of the class if not all references to its
+        // instance are released
+        $transport->__destruct();
+    }
+
     public function testCleanupPendingRequests()
     {
         /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise1 */
@@ -83,10 +108,10 @@ class HttpTransportTest extends TestCase
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
         $transport->send($event);
 
-        // In PHP calling the destructor manually does not destroy the object,
-        // but for testing we will do it anyway because otherwise we could not
-        // test the cleanup code of the class if not all references are released
-        $transport->__destruct();
+        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
+        $reflectionMethod->setAccessible(true);
+        $reflectionMethod->invoke($transport);
+        $reflectionMethod->setAccessible(false);
     }
 
     public function testSendWithCompressedEncoding()
@@ -113,10 +138,10 @@ class HttpTransportTest extends TestCase
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
         $transport->send($event);
 
-        // In PHP calling the destructor manually does not destroy the object,
-        // but for testing we will do it anyway because otherwise we could not
-        // test the cleanup code of the class if not all references are released
-        $transport->__destruct();
+        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
+        $reflectionMethod->setAccessible(true);
+        $reflectionMethod->invoke($transport);
+        $reflectionMethod->setAccessible(false);
     }
 
     public function testSendFailureCleanupPendingRequests()

@@ -368,12 +368,6 @@ class ClientTest extends TestCase
         ksort($expected);
 
         $event = $client->sanitize($event);
-        /*ksort($data['extra']['object']);
-        foreach ($data['extra']['object'] as $key => &$value) {
-            if (is_array($value)) {
-                ksort($value);
-            }
-        }*/
 
         $this->assertEquals(['object' => $expected], $event->getExtraContext());
     }

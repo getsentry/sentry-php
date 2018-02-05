@@ -19,7 +19,8 @@
 - The `curl_ssl_version` option has been removed.
 - The `verify_ssl` option has been removed.
 - The `ca_cert` option has been removed.
-- The `proxy` option has been removed.
+- The `proxy` option has been removed in favour of leaving to the user the burden
+  of configuring the HTTP client options using a custom client.
 - The `processors` option has been removed in favour of leaving to the user the
   choice of which processors add or remove using the appropriate methods of the
   `Client` and `ClientBuilder` classes.
