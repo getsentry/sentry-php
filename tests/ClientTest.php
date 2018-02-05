@@ -643,6 +643,41 @@ class ClientTest extends TestCase
         ]], $data);
     }
 
+    public function testSanitizeBreadcrumbs()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $data = [
+            'breadcrumbs' => [
+                [
+                    'message' => 'foo',
+                    'utf8' => pack('NA3CC', 3, 'aBc', 0x0D, 0x0A),
+                    'data' => [
+                        'line' => 1216,
+                        'bindings' => [
+                            ['foo', pack('NA3CC', 3, 'aBc', 0x0D, 0x0A)],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $client->sanitize($data);
+
+        $this->assertEquals([
+            'breadcrumbs' => [
+                [
+                    'message' => 'foo',
+                    'utf8' => mb_convert_encoding(pack('NA3CC', 3, 'aBc', 0x0D, 0x0A), 'UTF-8'),
+                    'data' => [
+                        'line' => 1216,
+                        'bindings' => [
+                            ['foo', mb_convert_encoding(pack('NA3CC', 3, 'aBc', 0x0D, 0x0A), 'UTF-8')],
+                        ],
+                    ],
+                ],
+            ],
+        ], $data);
+    }
+
     /**
      * @covers \Raven\Client::getShutdownFunctionHasBeenSet
      */

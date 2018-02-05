@@ -238,14 +238,13 @@ class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
-
     public function testInAppWithEmptyFrame()
     {
         $stack = [
             [
                 'function' => '{closure}',
             ],
-            null
+            null,
         ];
 
         $stacktrace = new Stacktrace($this->client);
