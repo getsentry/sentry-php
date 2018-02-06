@@ -16,6 +16,7 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Raven\Processor\ProcessorInterface;
+use Raven\Transport\TransportInterface;
 
 /**
  * A configurable builder for Client objects.
@@ -50,6 +51,15 @@ interface ClientBuilderInterface
      * @return $this
      */
     public function setMessageFactory(MessageFactory $messageFactory);
+
+    /**
+     * Sets the transport that will be used to send events.
+     *
+     * @param TransportInterface $transport The transport
+     *
+     * @return $this
+     */
+    public function setTransport(TransportInterface $transport);
 
     /**
      * Sets the HTTP client.

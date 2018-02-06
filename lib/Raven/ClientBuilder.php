@@ -30,6 +30,9 @@ use Raven\Processor\RemoveHttpBodyProcessor;
 use Raven\Processor\SanitizeCookiesProcessor;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
+use Raven\Transport\HttpTransport;
+use Raven\Transport\NullTransport;
+use Raven\Transport\TransportInterface;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.
@@ -48,8 +51,6 @@ use Raven\Processor\SanitizeHttpHeadersProcessor;
  * @method setSampleRate(float $sampleRate)
  * @method bool shouldInstallDefaultBreadcrumbHandlers()
  * @method setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
- * @method bool shouldInstallShutdownHandler()
- * @method setInstallShutdownHandler(bool $installShutdownHandler)
  * @method string getMbDetectOrder()
  * @method setMbDetectOrder(string $detectOrder)
  * @method bool getAutoLogStacks()
@@ -70,8 +71,6 @@ use Raven\Processor\SanitizeHttpHeadersProcessor;
  * @method setProjectRoot(string $path)
  * @method string getLogger()
  * @method setLogger(string $logger)
- * @method string getProxy()
- * @method setProxy(string $proxy)
  * @method string getRelease()
  * @method setRelease(string $release)
  * @method string getServer()
@@ -96,6 +95,11 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var MessageFactory The PSR-7 message factory
      */
     private $messageFactory;
+
+    /**
+     * @var TransportInterface The transport
+     */
+    private $transport;
 
     /**
      * @var HttpAsyncClient The HTTP client
@@ -147,6 +151,16 @@ final class ClientBuilder implements ClientBuilderInterface
     public function setMessageFactory(MessageFactory $messageFactory)
     {
         $this->messageFactory = $messageFactory;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setTransport(TransportInterface $transport)
+    {
+        $this->transport = $transport;
 
         return $this;
     }
@@ -229,8 +243,9 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
+        $this->transport = $this->createTransportInstance();
 
-        $client = new Client($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        $client = new Client($this->configuration, $this->transport);
 
         foreach ($this->processors as $value) {
             $client->addProcessor($value[0], $value[1]);
@@ -277,6 +292,24 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
+    }
+
+    /**
+     * Creates a new instance of the transport mechanism.
+     *
+     * @return TransportInterface
+     */
+    private function createTransportInstance()
+    {
+        if (null !== $this->transport) {
+            return $this->transport;
+        }
+
+        if (null !== $this->configuration->getServer()) {
+            return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        }
+
+        return new NullTransport();
     }
 
     /**
