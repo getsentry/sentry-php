@@ -13,6 +13,7 @@ namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
+use Raven\Event;
 
 class ConfigurationTest extends TestCase
 {
@@ -49,7 +50,6 @@ class ConfigurationTest extends TestCase
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
-            ['install_shutdown_handler', false, 'shouldInstallShutdownHandler', 'setInstallShutdownHandler'],
             ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
@@ -61,7 +61,6 @@ class ConfigurationTest extends TestCase
             ['excluded_app_paths', ['foo', 'bar'], 'getExcludedProjectPaths', 'setExcludedProjectPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
-            ['proxy', 'tcp://localhost:8125', 'getProxy', 'setProxy'],
             ['release', 'dev', 'getRelease', 'setRelease'],
             ['server_name', 'foo', 'getServerName', 'setServerName'],
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
@@ -215,9 +214,7 @@ class ConfigurationTest extends TestCase
 
         $this->assertTrue($configuration->shouldCapture());
 
-        $data = 'foo';
-
-        $this->assertFalse($configuration->shouldCapture($data));
+        $this->assertFalse($configuration->shouldCapture(new Event($configuration)));
     }
 
     /**

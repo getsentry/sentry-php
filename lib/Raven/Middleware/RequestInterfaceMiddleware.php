@@ -43,6 +43,7 @@ class RequestInterfaceMiddleware
             'url' => (string) $request->getUri(),
             'method' => $request->getMethod(),
             'headers' => $request->getHeaders(),
+            'cookies' => $request->getCookieParams(),
         ];
 
         if ('' !== $request->getUri()->getQuery()) {

@@ -633,7 +633,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the breadcrumbs.
      *
-     * @return array
+     * @return Breadcrumb[]
      */
     public function getBreadcrumbs()
     {
