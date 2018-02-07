@@ -35,8 +35,8 @@ class Raven_Stacktrace
          */
         $result = array();
         for ($i = 0; $i < count($frames); $i++) {
-            $frame = isset($frames[$i]) ? $frames[$i] : null;
-            $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : null;
+            $frame = isset($frames[$i]) ? $frames[$i] : array();
+            $nextframe = isset($frames[$i + 1]) ? $frames[$i + 1] : array();
 
             if (!array_key_exists('file', $frame)) {
                 $context = array();
@@ -50,8 +50,10 @@ class Raven_Stacktrace
                     } catch (ReflectionException $e) {
                         // Forget it if we run into errors, it's not worth it.
                     }
-                } else {
+                } elseif (!empty($frame['function'])) {
                     $context['line'] = sprintf('%s(anonymous)', $frame['function']);
+                } else {
+                    $context['line'] = sprintf('(anonymous)');
                 }
 
                 if (empty($context['filename'])) {

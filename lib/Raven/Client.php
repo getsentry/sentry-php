@@ -925,6 +925,9 @@ class Raven_Client
         if (!empty($data['contexts'])) {
             $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
         }
+        if (!empty($data['breadcrumbs'])) {
+            $data['breadcrumbs'] = $this->serializer->serialize($data['breadcrumbs'], 5);
+        }
     }
 
     /**
