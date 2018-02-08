@@ -19,6 +19,7 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Event;
+use Raven\Serializer;
 use Raven\Transport\TransportInterface;
 
 // XXX: Is there a better way to stub the client?
@@ -675,5 +676,25 @@ class ClientTest extends TestCase
 
         $client->clearBreadcrumbs();
         $this->assertEmpty(iterator_to_array($reflection->getValue($client)));
+    }
+
+    public function testSetSerializer()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $serializer = $this->prophesize(Serializer::class)->reveal();
+
+        $client->setSerializer($serializer);
+
+        $this->assertSame($serializer, $client->getSerializer());
+    }
+
+    public function testSetReprSerializer()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $serializer = $this->prophesize(Serializer::class)->reveal();
+
+        $client->setReprSerializer($serializer);
+
+        $this->assertSame($serializer, $client->getReprSerializer());
     }
 }

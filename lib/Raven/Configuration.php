@@ -634,6 +634,9 @@ class Configuration
      * Configures the options for this processor.
      *
      * @param OptionsResolver $resolver The resolver for the options
+     *
+     * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
+     * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
     private function configureOptions(OptionsResolver $resolver)
     {
@@ -681,7 +684,7 @@ class Configuration
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
-        $resolver->setAllowedTypes('server', ['null', 'string']);
+        $resolver->setAllowedTypes('server', ['null', 'boolean', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
         $resolver->setAllowedTypes('tags', 'array');
@@ -689,8 +692,15 @@ class Configuration
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('server', function ($value) {
-            if (null === $value) {
-                return true;
+            switch (strtolower($value)) {
+                case '':
+                case 'false':
+                case '(false)':
+                case 'empty':
+                case '(empty)':
+                case 'null':
+                case '(null)':
+                    return true;
             }
 
             $parsed = @parse_url($value);
@@ -715,8 +725,17 @@ class Configuration
         });
 
         $resolver->setNormalizer('server', function (Options $options, $value) {
-            if (null === $value) {
-                return $value;
+            switch (strtolower($value)) {
+                case '':
+                case 'false':
+                case '(false)':
+                case 'empty':
+                case '(empty)':
+                case 'null':
+                case '(null)':
+                    $this->server = null;
+
+                    return null;
             }
 
             $parsed = @parse_url($value);
@@ -770,8 +789,12 @@ class Configuration
             $path = $value;
         }
 
-        if (DIRECTORY_SEPARATOR === substr($path, 0, 1) && DIRECTORY_SEPARATOR !== substr($path, -1)) {
-            $path = $path . DIRECTORY_SEPARATOR;
+        if (
+            DIRECTORY_SEPARATOR === substr($path, 0, 1)
+            && DIRECTORY_SEPARATOR !== substr($path, -1)
+            && '.php' !== substr($path, -4)
+        ) {
+            $path .= DIRECTORY_SEPARATOR;
         }
 
         return $path;

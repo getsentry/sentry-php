@@ -163,6 +163,31 @@ class ConfigurationTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider disabledDsnProvider
+     */
+    public function testParseDSNWithDisabledValue($dsn)
+    {
+        $configuration = new Configuration(['server' => $dsn]);
+
+        $this->assertNull($configuration->getProjectId());
+        $this->assertNull($configuration->getPublicKey());
+        $this->assertNull($configuration->getSecretKey());
+        $this->assertNull($configuration->getServer());
+    }
+
+    public function disabledDsnProvider()
+    {
+        return [
+            [null],
+            ['null'],
+            [false],
+            ['false'],
+            [''],
+            ['empty'],
+        ];
+    }
+
     public function testShouldCapture()
     {
         $configuration = new Configuration();
@@ -215,6 +240,29 @@ class ConfigurationTest extends TestCase
                 new \Exception(),
                 false,
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider excludedPathProviders
+     *
+     * @param string $value
+     * @param string $expected
+     */
+    public function testExcludedAppPathsPathRegressionWithFileName($value, $expected)
+    {
+        $configuration = new Configuration(['excluded_app_paths' => [$value]]);
+
+        $this->assertSame([$expected], $configuration->getExcludedProjectPaths());
+    }
+
+    public function excludedPathProviders()
+    {
+        return [
+            ['some/path', 'some/path'],
+            ['some/specific/file.php', 'some/specific/file.php'],
+            [__DIR__, __DIR__ . '/'],
+            [__FILE__, __FILE__],
         ];
     }
 }

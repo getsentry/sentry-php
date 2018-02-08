@@ -147,6 +147,13 @@ class ErrorHandler
 
     public function shouldCaptureFatalError($type)
     {
+        // Do not capture E_ERROR since those can be caught by userland since PHP 7.0
+        // E_ERROR should already be handled by the exception handler
+        // This prevents duplicated exceptions in PHP 7.0+
+        if (PHP_VERSION_ID >= 70000 && E_ERROR === $type) {
+            return false;
+        }
+
         return $type & $this->fatal_error_types;
     }
 

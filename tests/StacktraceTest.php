@@ -238,6 +238,24 @@ class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
+    public function testInAppWithEmptyFrame()
+    {
+        $stack = [
+            [
+                'function' => '{closure}',
+            ],
+            null,
+        ];
+
+        $stacktrace = new Stacktrace($this->client);
+        $stacktrace->addFrame('/some/file', 123, $stack);
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(1, $frames);
+        $this->assertContainsOnlyInstancesOf(Frame::class, $frames);
+        $this->assertFalse($frames[0]->isInApp());
+    }
+
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs()
     {
         // PHP's errcontext as passed to the error handler contains REFERENCES to any vars that were in the global scope.
