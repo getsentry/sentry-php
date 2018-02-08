@@ -438,7 +438,6 @@ class Client
         $userContext = $event->getUserContext();
         $extraContext = $event->getExtraContext();
         $tagsContext = $event->getTagsContext();
-        $breadcrumbs = $event->getBreadcrumbs();
 
         if (!empty($request)) {
             $event = $event->withRequest($this->serializer->serialize($request));
