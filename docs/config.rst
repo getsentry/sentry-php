@@ -171,7 +171,7 @@ The following settings are available for the client:
                     'User-Agent'       => $client->getUserAgent(),
                     'X-Sentry-Auth'    => $client->getAuthHeader(),
                 ),
-                'body'    => gzipCompress(jsonEncode($data)),
+                'body'    => gzcompress(jsonEncode($data)),
             ))
         },
 
