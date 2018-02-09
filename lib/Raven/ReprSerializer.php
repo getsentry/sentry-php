@@ -29,7 +29,11 @@ class Raven_ReprSerializer extends Raven_Serializer
         } elseif (is_integer($value) || is_float($value)) {
             return (string) $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
-            return 'Object '.get_class($value);
+            $name = 'Object '.get_class($value);
+            if (method_exists($value, '__toString')) {
+                $name .= ': ' . $value;
+            }
+            return $name;
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {

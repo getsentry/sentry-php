@@ -27,6 +27,13 @@ class Raven_Tests_ReprSerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('Object Raven_StacktraceTestObject', $result);
     }
 
+    public function testObjectsAreStringsIncludingOwnRepresentation() {
+        $serializer = new Raven_ReprSerializer();
+        $input = new Raven_StacktraceTestObjectWithStringConversion();
+        $result = $serializer->serialize($input);
+        $this->assertEquals('Object Raven_StacktraceTestObjectWithStringConversion: no foo without a bar', $result);
+    }
+
     public function testIntsAreInts()
     {
         $serializer = new Raven_ReprSerializer();
