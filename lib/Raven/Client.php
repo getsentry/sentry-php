@@ -748,7 +748,13 @@ class Raven_Client
         // instead of a mapping which goes against the defined Sentry spec
         if (!empty($_POST)) {
             $result['data'] = $_POST;
+        } else if (isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') === 0) {
+            $raw_data = file_get_contents('php://input') ?: false;
+            if ($raw_data) {
+                $result['data'] = (array) json_decode($raw_data, true) ?: null;
+            }
         }
+
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
         }
