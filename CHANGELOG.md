@@ -4,6 +4,11 @@
 
 - ...
 
+## 1.8.3 (2018-02-07)
+
+- Serialize breadcrumbs to prevent issues with binary data (#538)
+- Fix notice array_key_exists() expects parameter 2 to be array, null given (#527)
+
 ## 1.8.2 (2017-12-21)
 
 - Improve handling DSN with "null" like values (#522)
