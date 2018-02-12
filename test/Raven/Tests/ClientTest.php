@@ -25,6 +25,7 @@ function invalid_encoding()
 class Dummy_Raven_Client extends Raven_Client
 {
     private $__sent_events = array();
+    private static $input_stream;
     public $dummy_breadcrumbs_handlers_has_set = false;
     public $dummy_shutdown_handlers_has_set = false;
 
@@ -60,6 +61,16 @@ class Dummy_Raven_Client extends Raven_Client
     public function get_user_data()
     {
         return parent::get_user_data();
+    }
+
+    public function setInputStream($input)
+    {
+        static::$input_stream = isset($_SERVER['CONTENT_TYPE']) ? json_encode($input) : 'test=foo';
+    }
+
+    protected static function getInputStream()
+    {
+        return static::$input_stream ? static::$input_stream : file_get_contents('php://input');
     }
 
     public function buildCurlCommand($url, $data, $headers)
@@ -789,7 +800,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'SERVER_PORT'         => '443',
             'SERVER_PROTOCOL'     => 'HTTP/1.1',
             'REQUEST_METHOD'      => 'PATCH',
-            'QUERY_STRING'        => 'q=bitch&l=en',
+            'QUERY_STRING'        => 'q=foobar&l=en',
             'REQUEST_URI'         => '/welcome/',
             'SCRIPT_NAME'         => '/index.php',
         );
@@ -804,7 +815,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'request' => array(
                 'method' => 'PATCH',
                 'url' => 'https://getsentry.com/welcome/',
-                'query_string' => 'q=bitch&l=en',
+                'query_string' => 'q=foobar&l=en',
                 'data' => array(
                     'stamp'           => '1c',
                 ),
@@ -823,6 +834,59 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         );
 
         $client = new Dummy_Raven_Client();
+        $this->assertEquals($expected, $client->get_http_data());
+    }
+
+    /**
+     * @backupGlobals
+     * @covers Raven_Client::get_http_data
+     */
+    public function testGetHttpDataApplicationJson()
+    {
+        $_SERVER = array(
+            'REDIRECT_STATUS'     => '200',
+            'CONTENT_TYPE'        => 'application/json',
+            'CONTENT_LENGTH'      => '99',
+            'HTTP_HOST'           => 'getsentry.com',
+            'HTTP_ACCEPT'         => 'text/html',
+            'HTTP_ACCEPT_CHARSET' => 'utf-8',
+            'HTTP_COOKIE'         => 'cupcake: strawberry',
+            'SERVER_PORT'         => '443',
+            'SERVER_PROTOCOL'     => 'HTTP/1.1',
+            'REQUEST_METHOD'      => 'POST',
+            'QUERY_STRING'        => 'q=foobar&l=en',
+            'REQUEST_URI'         => '/welcome/',
+            'SCRIPT_NAME'         => '/index.php',
+        );
+        $_COOKIE = array(
+            'donut' => 'chocolat',
+        );
+
+        $expected = array(
+            'request' => array(
+                'method' => 'POST',
+                'url' => 'https://getsentry.com/welcome/',
+                'query_string' => 'q=foobar&l=en',
+                'data' => array(
+                    'json_test'       => 'json_data',
+                ),
+                'cookies' => array(
+                    'donut'           => 'chocolat',
+                ),
+                'headers' => array(
+                    'Host'            => 'getsentry.com',
+                    'Accept'          => 'text/html',
+                    'Accept-Charset'  => 'utf-8',
+                    'Cookie'          => 'cupcake: strawberry',
+                    'Content-Type'    => 'application/json',
+                    'Content-Length'  => '99',
+                ),
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $client->setInputStream(array('json_test' => 'json_data'));
+
         $this->assertEquals($expected, $client->get_http_data());
     }
 
