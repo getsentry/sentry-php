@@ -284,6 +284,10 @@ class Raven_Client
      */
     protected static function getInputStream()
     {
+        if (PHP_VERSION_ID < 50600) {
+            return null;
+        }
+
         return file_get_contents('php://input');
     }
 

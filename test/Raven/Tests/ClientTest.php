@@ -65,7 +65,7 @@ class Dummy_Raven_Client extends Raven_Client
 
     public function setInputStream($input)
     {
-        static::$input_stream = isset($_SERVER['CONTENT_TYPE']) ? json_encode($input) : 'test=foo';
+        static::$input_stream = isset($_SERVER['CONTENT_TYPE']) ? $input : false;
     }
 
     protected static function getInputStream()
@@ -885,8 +885,50 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         );
 
         $client = new Dummy_Raven_Client();
-        $client->setInputStream(array('json_test' => 'json_data'));
+        $client->setInputStream(json_encode(array('json_test' => 'json_data')));
 
+        $this->assertEquals($expected, $client->get_http_data());
+    }
+
+    /**
+     * Test showing that invalid json will be discarded from data collection.
+     */
+    public function testGetHttpDataApplicationInvalidJson()
+    {
+        $_SERVER = array(
+            'REDIRECT_STATUS'     => '200',
+            'CONTENT_TYPE'        => 'application/json',
+            'CONTENT_LENGTH'      => '99',
+            'HTTP_HOST'           => 'getsentry.com',
+            'HTTP_ACCEPT'         => 'text/html',
+            'HTTP_ACCEPT_CHARSET' => 'utf-8',
+            'HTTP_COOKIE'         => 'cupcake: strawberry',
+            'SERVER_PORT'         => '443',
+            'SERVER_PROTOCOL'     => 'HTTP/1.1',
+            'REQUEST_METHOD'      => 'POST',
+            'REQUEST_URI'         => '/welcome/',
+            'SCRIPT_NAME'         => '/index.php',
+        );
+
+        $expected = array(
+            'request' => array(
+                'method' => 'POST',
+                'url' => 'https://getsentry.com/welcome/',
+                'query_string' => '',
+                'data' => null,
+                'headers' => array(
+                    'Host'            => 'getsentry.com',
+                    'Accept'          => 'text/html',
+                    'Accept-Charset'  => 'utf-8',
+                    'Cookie'          => 'cupcake: strawberry',
+                    'Content-Type'    => 'application/json',
+                    'Content-Length'  => '99',
+                ),
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $client->setInputStream('{"binary_json":"'.pack("NA3CC", 3, "aBc", 0x0D, 0x0A).'"}');
         $this->assertEquals($expected, $client->get_http_data());
     }
 
