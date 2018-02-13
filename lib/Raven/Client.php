@@ -276,6 +276,21 @@ class Raven_Client
         return $this;
     }
 
+    /**
+     * Note: Prior to PHP 5.6, a stream opened with php://input can
+     * only be read once;
+     *
+     * @see http://php.net/manual/en/wrappers.php.php
+     */
+    protected static function getInputStream()
+    {
+        if (PHP_VERSION_ID < 50600) {
+            return null;
+        }
+
+        return file_get_contents('php://input');
+    }
+
     private static function getDefaultPrefixes()
     {
         $value = get_include_path();
@@ -748,6 +763,11 @@ class Raven_Client
         // instead of a mapping which goes against the defined Sentry spec
         if (!empty($_POST)) {
             $result['data'] = $_POST;
+        } elseif (isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') === 0) {
+            $raw_data = $this->getInputStream() ?: false;
+            if ($raw_data !== false) {
+                $result['data'] = (array) json_decode($raw_data, true) ?: null;
+            }
         }
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
