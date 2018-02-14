@@ -452,7 +452,7 @@ class Raven_Client
      * @param string $dsn Raven compatible DSN
      * @return array      parsed DSN
      *
-     * @doc http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @see http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
      */
     public static function parseDSN($dsn)
     {
@@ -1062,7 +1062,7 @@ class Raven_Client
 
     /**
      * @return array
-     * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+     * @see http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
      */
     protected function get_curl_options()
     {
