@@ -131,7 +131,7 @@ $ git checkout -b releases/1.9.x
 
 3. Update the hardcoded version tag in ``Client.php``:
 
-```
+```php
 class Raven_Client
 {
     const VERSION = '1.9.0';
@@ -170,7 +170,7 @@ git checkout master
 
 9. Update the version in ``Client.php``:
 
-```
+```php
 class Raven_Client
 {
     const VERSION = '1.10.x-dev';
@@ -179,7 +179,7 @@ class Raven_Client
 
 10. Lastly, update the composer version in ``composer.json``:
 
-```
+```json
     "extra": {
         "branch-alias": {
             "dev-master": "1.10.x-dev"
