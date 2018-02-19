@@ -155,7 +155,7 @@ class Raven_Client
         $this->project = Raven_Util::get($options, 'project', 1);
         $this->auto_log_stacks = (bool) Raven_Util::get($options, 'auto_log_stacks', false);
         $this->name = Raven_Util::get($options, 'name', Raven_Compat::gethostname());
-        $this->site = Raven_Util::get($options, 'site', self::_server_variable('SERVER_NAME'));
+        $this->site = (self::_server_variable('SERVER_NAME') === "localhost") ? Raven_Util::get($options, 'site', self::_server_variable('HTTP_HOST')) : self::_server_variable('SERVER_NAME');
         $this->tags = Raven_Util::get($options, 'tags', array());
         $this->release = Raven_Util::get($options, 'release', null);
         $this->environment = Raven_Util::get($options, 'environment', null);
@@ -1336,6 +1336,10 @@ class Raven_Client
     private static function _server_variable($key)
     {
         if (isset($_SERVER[$key])) {
+            if($key === "HTTP_HOST")
+            {
+                return htmlentities($_SERVER[$key]);
+            }
             return $_SERVER[$key];
         }
 
