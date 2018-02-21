@@ -1379,6 +1379,52 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers Raven_Client::sanitize
      */
+    public function testSanitizeDeepRequest()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $post = array(
+            '_method' => 'POST',
+            'data' => array(
+                'Level 1' => array(
+                    'Level 2' => array(
+                        'Level 3' => array(
+                            'Level 4' => 'something',
+                        ),
+                    ),
+                ),
+            ),
+        );
+
+        $data = array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => $post,
+        ));
+
+        $client->sanitize($data);
+
+        $this->assertEquals(array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => array(
+                '_method' => 'POST',
+                'data' => array(
+                    'Level 1' => array(
+                        'Level 2' => array(
+                            'Level 3' => 'Array of length 1',
+                        ),
+                    ),
+                ),
+            ),
+        )), $data);
+    }
+
+    /**
+     * @covers Raven_Client::sanitize
+     */
     public function testSanitizeContexts()
     {
         $client = new Dummy_Raven_Client();
