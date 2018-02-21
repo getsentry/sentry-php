@@ -94,7 +94,7 @@ class Raven_Serializer
         }
 
         if (strlen($value) > 1024) {
-            $value = substr($value, 0, 1014) . ' {clipped}';
+            $value = mb_substr($value, 0, 1014) . ' {clipped}';
         }
 
         return $value;
