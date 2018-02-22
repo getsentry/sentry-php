@@ -64,6 +64,8 @@ step is not required anymore an you can skip ahead to the next one:
 
     <?php
 
+    use Symfony\Component\HttpKernel\Exception\HttpException;
+
     class Handler extends ExceptionHandler
     {
         public function report(Exception $exception)
