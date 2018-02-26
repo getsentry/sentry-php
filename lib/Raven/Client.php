@@ -881,6 +881,9 @@ class Raven_Client
         if (empty($data['request'])) {
             unset($data['request']);
         }
+        if (empty($data['site'])) {
+            unset($data['site']);
+        }
 
         if (!$this->breadcrumbs->is_empty()) {
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
