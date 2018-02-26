@@ -760,6 +760,21 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::capture
+     */
+    public function testEmptySiteGetsRemoved()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->site = '';
+
+        $client->captureMessage("My message");
+        $events = $client->getSentEvents();
+        $this->assertSame(1, count($events));
+        $event = array_pop($events);
+        $this->assertFalse(array_key_exists('site', $event));
+    }
+
+  /**
      * @covers Raven_Client::__construct
      * @covers Raven_Client::get_default_data
      */
