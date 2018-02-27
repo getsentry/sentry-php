@@ -1452,6 +1452,16 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array('trust_x_forwarded_proto' => true),
                 'https://example.com/',
                 'The url is expected to be https because the X-Forwarded header is trusted'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => 81
+                ),
+                array(),
+                'http://example.com:81/',
+                'Port is not appended'
             )
         );
     }
