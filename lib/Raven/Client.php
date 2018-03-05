@@ -1279,6 +1279,11 @@ class Raven_Client
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
+        $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
+        if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
+            $host .= ':' . $_SERVER['SERVER_PORT'];
+        }
+
         $httpS = $this->isHttps() ? 's' : '';
         return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
     }
