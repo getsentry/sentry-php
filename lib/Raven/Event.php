@@ -772,11 +772,11 @@ final class Event implements \JsonSerializable
         }
 
         if (!empty($this->serverOsContext)) {
-            $data['server_os'] = $this->serverOsContext;
+            $data['contexts']['os'] = $this->serverOsContext;
         }
 
         if (!empty($this->runtimeContext)) {
-            $data['runtime'] = $this->runtimeContext;
+            $data['contexts']['runtime'] = $this->runtimeContext;
         }
 
         if (!empty($this->breadcrumbs)) {

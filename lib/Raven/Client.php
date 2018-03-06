@@ -14,6 +14,8 @@ namespace Raven;
 use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
+use Raven\Context\Context;
+use Raven\Context\TagsContext;
 use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
@@ -62,11 +64,6 @@ class Client
     const USER_AGENT = 'sentry-php/' . self::VERSION;
 
     /**
-     * @var Context The context
-     */
-    public $context;
-
-    /**
      * @var TransactionStack The transaction stack
      */
     public $transaction;
@@ -107,6 +104,31 @@ class Client
     private $processorRegistry;
 
     /**
+     * @var TagsContext The tags context
+     */
+    private $tagsContext;
+
+    /**
+     * @var Context The user context
+     */
+    private $userContext;
+
+    /**
+     * @var Context The extra context
+     */
+    private $extraContext;
+
+    /**
+     * @var Context The runtime context
+     */
+    private $runtimeContext;
+
+    /**
+     * @var Context The server OS context
+     */
+    private $serverOsContext;
+
+    /**
      * @var callable The tip of the middleware call stack
      */
     private $middlewareStackTip;
@@ -132,7 +154,11 @@ class Client
         $this->config = $config;
         $this->transport = $transport;
         $this->processorRegistry = new ProcessorRegistry();
-        $this->context = new Context();
+        $this->tagsContext = new TagsContext();
+        $this->userContext = new Context();
+        $this->extraContext = new Context();
+        $this->runtimeContext = new Context();
+        $this->serverOsContext = new Context();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
@@ -145,7 +171,11 @@ class Client
         $this->addMiddleware(new MessageInterfaceMiddleware());
         $this->addMiddleware(new RequestInterfaceMiddleware());
         $this->addMiddleware(new UserInterfaceMiddleware());
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->context));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
         $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
         $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
@@ -527,11 +557,53 @@ class Client
     }
 
     /**
+     * Gets the user context.
+     *
      * @return Context
      */
-    public function getContext()
+    public function getUserContext()
     {
-        return $this->context;
+        return $this->userContext;
+    }
+
+    /**
+     * Gets the tags context.
+     *
+     * @return TagsContext
+     */
+    public function getTagsContext()
+    {
+        return $this->tagsContext;
+    }
+
+    /**
+     * Gets the extra context.
+     *
+     * @return Context
+     */
+    public function getExtraContext()
+    {
+        return $this->extraContext;
+    }
+
+    /**
+     * Gets the runtime context.
+     *
+     * @return Context
+     */
+    public function getRuntimeContext()
+    {
+        return $this->runtimeContext;
+    }
+
+    /**
+     * Gets the server OS context.
+     *
+     * @return Context
+     */
+    public function getServerOsContext()
+    {
+        return $this->serverOsContext;
     }
 
     public function setAllObjectSerialize($value)

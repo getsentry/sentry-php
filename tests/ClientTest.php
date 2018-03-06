@@ -18,6 +18,8 @@ use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
+use Raven\Context\Context;
+use Raven\Context\TagsContext;
 use Raven\Event;
 use Raven\Serializer;
 use Raven\Transport\TransportInterface;
@@ -246,6 +248,8 @@ class ClientTest extends TestCase
 
     /**
      * @group legacy
+     *
+     * @expectedDeprecation The Raven\Client::getLastEventId() method is deprecated since version 2.0. Use getLastEvent() instead.
      */
     public function testGetLastEventId()
     {
@@ -264,6 +268,41 @@ class ClientTest extends TestCase
         Uuid::setFactory(new UuidFactory());
 
         $this->assertEquals('ddbd643a51904ccea6ce3098506f9d33', $client->getLastEventID());
+    }
+
+    public function testGetUserContext()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(Context::class, $client->getUserContext());
+    }
+
+    public function testGetTagsContext()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(TagsContext::class, $client->getTagsContext());
+    }
+
+    public function testGetExtraContext()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(Context::class, $client->getExtraContext());
+    }
+
+    public function testGetRuntimeContext()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(Context::class, $client->getRuntimeContext());
+    }
+
+    public function testGetServerOsContext()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(Context::class, $client->getServerOsContext());
     }
 
     public function testAppPathLinux()

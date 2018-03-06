@@ -13,43 +13,93 @@ namespace Raven\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Configuration;
-use Raven\Context;
+use Raven\Context\Context;
 use Raven\Event;
 use Raven\Middleware\ContextInterfaceMiddleware;
 
 class ContextInterfaceMiddlewareTest extends TestCase
 {
-    public function testInvoke()
+    /**
+     * @dataProvider invokeDataProvider
+     */
+    public function testInvoke($contextName, $initialData, $payloadData, $expectedData, $expectedExceptionMessage)
     {
+        if (null !== $expectedExceptionMessage) {
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessage($expectedExceptionMessage);
+        }
+
         $context = new Context();
-        $context->setTag('bar', 'foo');
-        $context->mergeUserData(['foo' => 'bar']);
-        $context->mergeExtraData(['bar' => 'baz']);
+        $context->setData($initialData);
 
         $configuration = new Configuration();
         $event = new Event($configuration);
 
         $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+        $callback = function (Event $eventArg) use ($event, $contextName, $expectedData, &$invokationCount) {
+            $method = preg_replace_callback('/_[a-zA-Z]/', function ($matches) {
+                return strtoupper($matches[0][1]);
+            }, 'get_' . $contextName . '_context');
+
             $this->assertNotSame($event, $eventArg);
-            $this->assertEquals(['bar' => 'foo', 'foobar' => 'barfoo'], $eventArg->getTagsContext());
-            $this->assertEquals(['foo' => 'bar', 'baz' => 'foo'], $eventArg->getUserContext());
-            $this->assertEquals(['bar' => 'baz', 'barbaz' => 'bazbar'], $eventArg->getExtraContext());
-            $this->assertEquals(['foo' => 'bar'], $eventArg->getServerOsContext());
-            $this->assertEquals(['bar' => 'foo'], $eventArg->getRuntimeContext());
+            $this->assertEquals($expectedData, $eventArg->$method());
 
             ++$invokationCount;
         };
 
-        $middleware = new ContextInterfaceMiddleware($context);
+        $middleware = new ContextInterfaceMiddleware($context, $contextName);
         $middleware($event, $callback, null, null, [
-            'tags_context' => ['foobar' => 'barfoo'],
-            'extra_context' => ['barbaz' => 'bazbar'],
-            'server_os_context' => ['foo' => 'bar'],
-            'runtime_context' => ['bar' => 'foo'],
-            'user_context' => ['baz' => 'foo'],
+            $contextName . '_context' => $payloadData,
         ]);
 
         $this->assertEquals(1, $invokationCount);
+    }
+
+    public function invokeDataProvider()
+    {
+        return [
+            [
+                Context::CONTEXT_USER,
+                ['foo' => 'bar', 'foobaz' => 'bazfoo'],
+                ['foobaz' => 'bazfoo'],
+                ['foo' => 'bar', 'foobaz' => 'bazfoo'],
+                null,
+            ],
+            [
+                Context::CONTEXT_RUNTIME,
+                ['baz' => 'foo'],
+                ['barfoo' => 'foobar'],
+                ['baz' => 'foo', 'barfoo' => 'foobar'],
+                null,
+            ],
+            [
+                Context::CONTEXT_TAGS,
+                ['foo', 'bar'],
+                ['foobar'],
+                ['foo', 'bar', 'foobar'],
+                null,
+            ],
+            [
+                Context::CONTEXT_EXTRA,
+                ['bar' => 'foo'],
+                ['barbaz' => 'bazbar'],
+                ['bar' => 'foo', 'barbaz' => 'bazbar'],
+                null,
+            ],
+            [
+                Context::CONTEXT_SERVER_OS,
+                ['foo' => 'baz'],
+                ['bazfoo' => 'foobaz'],
+                ['foo' => 'baz', 'bazfoo' => 'foobaz'],
+                null,
+            ],
+            [
+                'foo',
+                [],
+                [],
+                [],
+                'The "foo" context is not supported.',
+            ],
+        ];
     }
 }
