@@ -49,7 +49,7 @@ final class ProcessorMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         foreach ($this->processorRegistry->getProcessors() as $processor) {
             $event = $processor->process($event);

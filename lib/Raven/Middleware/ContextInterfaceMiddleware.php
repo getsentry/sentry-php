@@ -56,7 +56,7 @@ final class ContextInterfaceMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         $context = isset($payload[$this->contextName . '_context']) ? $payload[$this->contextName . '_context'] : [];
         $context = array_merge($this->context->toArray(), $context);

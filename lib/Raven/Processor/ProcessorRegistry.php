@@ -17,7 +17,7 @@ namespace Raven\Processor;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ProcessorRegistry
+class ProcessorRegistry
 {
     /**
      * @var array List of processors sorted by priority

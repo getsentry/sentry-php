@@ -33,7 +33,7 @@ final class MessageInterfaceMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         $message = isset($payload['message']) ? $payload['message'] : null;
         $messageParams = isset($payload['message_params']) ? $payload['message_params'] : [];

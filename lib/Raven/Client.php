@@ -11,7 +11,6 @@
 
 namespace Raven;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\Context\Context;
@@ -20,6 +19,7 @@ use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
 use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\MiddlewareStack;
 use Raven\Middleware\ProcessorMiddleware;
 use Raven\Middleware\RequestInterfaceMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
@@ -129,14 +129,9 @@ class Client
     private $serverOsContext;
 
     /**
-     * @var callable The tip of the middleware call stack
+     * @var MiddlewareStack The stack of middlewares to compose an event to send
      */
-    private $middlewareStackTip;
-
-    /**
-     * @var bool Whether the stack of middleware callables is locked
-     */
-    private $stackLocked = false;
+    private $middlewareStack;
 
     /**
      * @var Event The last event that was captured
@@ -163,21 +158,21 @@ class Client
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
-        $this->middlewareStackTip = function (Event $event) {
+        $this->middlewareStack = new MiddlewareStack(function (Event $event) {
             return $event;
-        };
+        });
 
-        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry));
-        $this->addMiddleware(new MessageInterfaceMiddleware());
-        $this->addMiddleware(new RequestInterfaceMiddleware());
-        $this->addMiddleware(new UserInterfaceMiddleware());
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
-        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
-        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
+        $this->middlewareStack->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -255);
+        $this->middlewareStack->addMiddleware(new MessageInterfaceMiddleware());
+        $this->middlewareStack->addMiddleware(new RequestInterfaceMiddleware());
+        $this->middlewareStack->addMiddleware(new UserInterfaceMiddleware());
+        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
+        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
+        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
+        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
+        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
+        $this->middlewareStack->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
+        $this->middlewareStack->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
         if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
             $this->transaction->push($_SERVER['PATH_INFO']);
@@ -221,29 +216,26 @@ class Client
     }
 
     /**
-     * Adds a new middleware to the end of the stack.
+     * Adds a new middleware with the given priority to the stack.
      *
-     * @param callable $callable The middleware
-     *
-     * @throws \RuntimeException If this method is called while the stack is dequeuing
+     * @param callable $middleware The middleware instance
+     * @param int      $priority   The priority. The higher this value, the
+     *                             earlier a processor will be executed in
+     *                             the chain (defaults to 0)
      */
-    public function addMiddleware(callable $callable)
+    public function addMiddleware(callable $middleware, $priority = 0)
     {
-        if ($this->stackLocked) {
-            throw new \RuntimeException('Middleware can\'t be added once the stack is dequeuing');
-        }
+        $this->middlewareStack->addMiddleware($middleware, $priority);
+    }
 
-        $next = $this->middlewareStackTip;
-
-        $this->middlewareStackTip = function (Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = []) use ($callable, $next) {
-            $result = $callable($event, $next, $request, $exception, $payload);
-
-            if (!$result instanceof Event) {
-                throw new \UnexpectedValueException(sprintf('Middleware must return an instance of the "%s" class.', Event::class));
-            }
-
-            return $result;
-        };
+    /**
+     * Removes the given middleware from the stack.
+     *
+     * @param callable $middleware The middleware instance
+     */
+    public function removeMiddleware(callable $middleware)
+    {
+        $this->middlewareStack->removeMiddleware($middleware);
     }
 
     /**
@@ -451,7 +443,7 @@ class Client
             $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
 
-        $event = $this->callMiddlewareStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
+        $event = $this->middlewareStack->executeStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
         $event = $this->sanitize($event);
 
         $this->send($event);
@@ -610,29 +602,5 @@ class Client
     {
         $this->serializer->setAllObjectSerialize($value);
         $this->reprSerializer->setAllObjectSerialize($value);
-    }
-
-    /**
-     * Calls the middleware stack.
-     *
-     * @param Event                       $event     The event object
-     * @param ServerRequestInterface|null $request   The request object, if available
-     * @param \Exception|null             $exception The thrown exception, if any
-     * @param array                       $payload   Additional payload data
-     *
-     * @return Event
-     */
-    private function callMiddlewareStack(Event $event, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
-    {
-        $start = $this->middlewareStackTip;
-
-        $this->stackLocked = true;
-
-        /** @var Event $event */
-        $event = $start($event, $request, $exception, $payload);
-
-        $this->stackLocked = false;
-
-        return $event;
     }
 }

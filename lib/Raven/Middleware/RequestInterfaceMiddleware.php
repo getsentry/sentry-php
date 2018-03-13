@@ -33,7 +33,7 @@ final class RequestInterfaceMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         if (null === $request) {
             return $next($event, $request, $exception, $payload);

@@ -49,7 +49,7 @@ final class BreadcrumbInterfaceMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         foreach ($this->recorder as $breadcrumb) {
             $event = $event->withBreadcrumb($breadcrumb);

@@ -49,7 +49,7 @@ final class ExceptionInterfaceMiddleware
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         // Do not override the level if it was set explicitly by the user
         if (!isset($payload['level']) && $exception instanceof \ErrorException) {

@@ -140,6 +140,32 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
+    public function testAddMiddlewares()
+    {
+        $middleware = function () {};
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addMiddleware($middleware, -10);
+
+        $this->assertEquals([[$middleware, -10]], $clientBuilder->getMiddlewares());
+    }
+
+    public function testRemoveMiddleware()
+    {
+        $middleware1 = function () {};
+        $middleware2 = function () {};
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->addMiddleware($middleware1, -10);
+        $clientBuilder->addMiddleware($middleware2, 10);
+
+        $this->assertEquals([[$middleware1, -10], [$middleware2, 10]], $clientBuilder->getMiddlewares());
+
+        $clientBuilder->removeMiddleware($middleware2);
+
+        $this->assertEquals([[$middleware1, -10]], $clientBuilder->getMiddlewares());
+    }
+
     public function testAddProcessor()
     {
         /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
@@ -148,7 +174,7 @@ class ClientBuilderTest extends TestCase
         $clientBuilder = new ClientBuilder();
         $clientBuilder->addProcessor($processor, -10);
 
-        $this->assertAttributeContains([$processor, -10], 'processors', $clientBuilder);
+        $this->assertContains([$processor, -10], $clientBuilder->getProcessors());
     }
 
     public function testRemoveProcessor()
@@ -160,7 +186,7 @@ class ClientBuilderTest extends TestCase
         $clientBuilder->addProcessor($processor, -10);
         $clientBuilder->removeProcessor($processor);
 
-        $this->assertAttributeNotContains([$processor, -10], 'processors', $clientBuilder);
+        $this->assertNotContains([$processor, -10], $clientBuilder->getProcessors());
     }
 
     public function testGetClient()
