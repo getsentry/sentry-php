@@ -1044,7 +1044,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 
         $client->captureMessage('test');
         $events = $client->getSentEvents();
-        $this->assertEquals(phpversion(), $events[0]['contexts']['runtime']['version']);
+        $this->assertEquals(PHP_VERSION, $events[0]['contexts']['runtime']['version']);
         $event = array_pop($events);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
     }
