@@ -884,6 +884,8 @@ class Raven_Client
         if (empty($data['site'])) {
             unset($data['site']);
         }
+        $data['contexts']['runtime'] =  array('version' => phpversion(), 'name' => 'php');
+
 
         if (!$this->breadcrumbs->is_empty()) {
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
