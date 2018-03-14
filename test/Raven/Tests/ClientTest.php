@@ -1050,6 +1050,34 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnCustomContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'mine' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $this->assertEquals(PHP_VERSION, $events[0]['contexts']['runtime']['version']);
+        $event = array_pop($events);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['mine']['line']);
+    }
+
+    /**
      * @covers Raven_Client::captureMessage
      */
     public function testCaptureMessageWithUnserializableUserData()
