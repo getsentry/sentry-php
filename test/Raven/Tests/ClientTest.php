@@ -1049,8 +1049,6 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
     }
 
-
-
     /**
      * @covers Raven_Client::captureMessage
      */
