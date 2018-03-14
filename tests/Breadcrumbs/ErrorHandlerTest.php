@@ -27,7 +27,7 @@ class ErrorHandlerTest extends TestCase
         $handler = new ErrorHandler($client);
         $handler->handleError(E_WARNING, 'message');
 
-        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
 
         /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
         $breadcrumbs = iterator_to_array($breadcrumbsRecorder);

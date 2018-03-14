@@ -377,6 +377,21 @@
   $client->getExtraContext()->setData(array('foo' => 'bar'));
   ```
 
+- The `transaction` property has been made private. You should use `Client::getTransactionStack`
+  instead to access the instance of the object.
+
+  Before:
+
+  ```php
+  $client->transaction->push('foo');
+  ```
+
+  After:
+
+  ```php
+  $client->getTransactionStack()->push('foo');
+  ```
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class
@@ -406,7 +421,7 @@
   better reflect its purpose. The constructor accepts an array of options to make the
   behaviour of which cookies to sanitize configurable.
 
-# Context
+### Context
 
 - The `Raven_Context` class has been renamed to `Context` and added to the `Raven`
   namespace to follow the PSR-4 convention.
@@ -414,3 +429,80 @@
 - The `tags`, `extra` and `user` properties of the `Raven_Context` class have
   been removed. Each instance of the new class represents now a single context
   type only and provides some useful methods to interact with the data.
+
+### Transactions
+
+- The method `TransactionStack::push` has changed its signature. It used to accept
+  a single value only, but now more values can be passed in a single call.
+
+  Before:
+
+  ```php
+  $client->transaction->push('foo');
+  $client->transaction->push('bar');
+  ```
+
+  After:
+
+  ```php
+  $client->getTransactionStack()->push('foo');
+  $client->getTransactionStack()->push('bar');
+
+  // or
+
+  $client->getTransactionStack()->push('foo', 'bar');
+  ```
+
+- The method `TransactionStack::peek` used to return `null` when the stack was
+  empty. The behaviour has changed and an exception is now thrown.
+
+  Before:
+
+  ```php
+  $client->transaction->clear();
+
+  $value = $client->transaction->peek(); // $value is null
+  ```
+
+  After:
+
+  ```php
+  $client->getTransactionStack()->clear();
+
+  try {
+      $value = $client->getTransactionStack()->peek();
+  } catch (\UnderflowException $exception) {
+      // handle the exception here
+  }
+
+- The method `TransactionStack::pop` has changed its signature by removing the
+  `$context` argument. Consequently the behaviour of the method in regards to
+  the returned value changed as well: it's not possible anymore to pop all values
+  up to one that equals the value of `$context` and an exception is thrown if the
+  stack is empty while calling this method.
+
+  Before:
+
+  ```php
+  $client->transaction->push('foo', 'bar', 'baz');
+  
+  $value = $client->transaction->pop(); // $value is 'baz'
+  $value = $client->transaction->pop('foo'); // $value is 'foo'
+  $value = $client->transaction->pop(); // $value is null
+  ```
+
+  After:
+
+  ```php
+  $client->getTransactionStack()->push('foo', 'bar', 'baz');
+
+  while (!$client->getTransactionStack()->isEmpty()) {
+      $value = $client->getTransactionStack()->pop(); // $value is 'baz', then 'bar', then 'foo'
+  }
+
+  try {
+      $value = $client->getTransactionStack()->pop();
+  } catch (\UnderflowException $exception) {
+      // handle the exception here
+  }
+  ```
