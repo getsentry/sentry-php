@@ -885,6 +885,10 @@ class Raven_Client
             unset($data['site']);
         }
 
+        $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
+        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
+
         if (!$this->breadcrumbs->is_empty()) {
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
         }

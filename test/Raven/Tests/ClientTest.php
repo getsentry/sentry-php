@@ -1036,6 +1036,98 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnCustomContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'mine' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['mine']['line']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnOverrideRuntimeItself()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'name' => 'sentry',
+                'version' => '0.1.1-alpha.1'
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals('0.1.1-alpha.1', $event['contexts']['runtime']['version']);
+        $this->assertEquals('sentry', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnExistingRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['runtime']['line']);
+    }
+
+    /**
      * @covers Raven_Client::captureMessage
      */
     public function testCaptureMessageWithUnserializableUserData()
