@@ -1080,6 +1080,28 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers Raven_Client::capture
      */
+    public function testRuntimeOnOverrideRuntimeItself()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'name' => 'sentry',
+                'version' => '0.1.1-alpha.1'
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals('0.1.1-alpha.1', $event['contexts']['runtime']['version']);
+        $this->assertEquals('sentry', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
     public function testRuntimeOnExistingRuntimeContext()
     {
         $client = new Dummy_Raven_Client();
