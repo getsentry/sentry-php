@@ -15,6 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\Context\Context;
+use Raven\Context\RuntimeContext;
 use Raven\Context\TagsContext;
 use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
@@ -119,7 +120,7 @@ class Client
     private $extraContext;
 
     /**
-     * @var Context The runtime context
+     * @var RuntimeContext The runtime context
      */
     private $runtimeContext;
 
@@ -157,7 +158,7 @@ class Client
         $this->tagsContext = new TagsContext();
         $this->userContext = new Context();
         $this->extraContext = new Context();
-        $this->runtimeContext = new Context();
+        $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new Context();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
@@ -589,7 +590,7 @@ class Client
     /**
      * Gets the runtime context.
      *
-     * @return Context
+     * @return RuntimeContext
      */
     public function getRuntimeContext()
     {

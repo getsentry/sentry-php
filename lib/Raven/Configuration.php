@@ -631,7 +631,7 @@ class Configuration
     }
 
     /**
-     * Configures the options for this processor.
+     * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
      *
