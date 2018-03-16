@@ -188,4 +188,31 @@ class RuntimeContextTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider gettersAndSettersDataProvider
+     */
+    public function testGettersAndSetters($getterMethod, $setterMethod, $value)
+    {
+        $context = new RuntimeContext();
+        $context->$setterMethod($value);
+
+        $this->assertEquals($value, $context->$getterMethod());
+    }
+
+    public function gettersAndSettersDataProvider()
+    {
+        return [
+            [
+                'getName',
+                'setName',
+                'foo',
+            ],
+            [
+                'getVersion',
+                'setVersion',
+                'bar',
+            ],
+        ];
+    }
 }
