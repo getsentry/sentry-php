@@ -16,8 +16,9 @@
       "type": "framework",
       "doc_link": "integrations/laravel/",
       "wizard": [
-        "index#installation",
-        "integrations/laravel#laravel-5-x"
+        "integrations/laravel#laravel-5-x",
+        "integrations/laravel#laravel-4-x",
+        "integrations/laravel#lumen-5-x"
       ]
     },
     "php.monolog": {
@@ -34,7 +35,6 @@
       "type": "framework",
       "doc_link": "integrations/symfony2/",
       "wizard": [
-        "index#installation",
         "integrations/symfony2#symfony-2"
       ]
     }
