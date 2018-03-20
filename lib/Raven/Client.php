@@ -276,6 +276,21 @@ class Raven_Client
         return $this;
     }
 
+    /**
+     * Note: Prior to PHP 5.6, a stream opened with php://input can
+     * only be read once;
+     *
+     * @see http://php.net/manual/en/wrappers.php.php
+     */
+    protected static function getInputStream()
+    {
+        if (PHP_VERSION_ID < 50600) {
+            return null;
+        }
+
+        return file_get_contents('php://input');
+    }
+
     private static function getDefaultPrefixes()
     {
         $value = get_include_path();
@@ -437,7 +452,7 @@ class Raven_Client
      * @param string $dsn Raven compatible DSN
      * @return array      parsed DSN
      *
-     * @doc http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
+     * @see http://raven.readthedocs.org/en/latest/config/#the-sentry-dsn
      */
     public static function parseDSN($dsn)
     {
@@ -748,6 +763,11 @@ class Raven_Client
         // instead of a mapping which goes against the defined Sentry spec
         if (!empty($_POST)) {
             $result['data'] = $_POST;
+        } elseif (isset($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') === 0) {
+            $raw_data = $this->getInputStream() ?: false;
+            if ($raw_data !== false) {
+                $result['data'] = (array) json_decode($raw_data, true) ?: null;
+            }
         }
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
@@ -861,6 +881,13 @@ class Raven_Client
         if (empty($data['request'])) {
             unset($data['request']);
         }
+        if (empty($data['site'])) {
+            unset($data['site']);
+        }
+
+        $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
+        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
 
         if (!$this->breadcrumbs->is_empty()) {
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
@@ -1042,7 +1069,7 @@ class Raven_Client
 
     /**
      * @return array
-     * @doc http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
+     * @see http://stackoverflow.com/questions/9062798/php-curl-timeout-is-not-working/9063006#9063006
      */
     protected function get_curl_options()
     {

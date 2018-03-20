@@ -25,6 +25,7 @@ function invalid_encoding()
 class Dummy_Raven_Client extends Raven_Client
 {
     private $__sent_events = array();
+    private static $input_stream;
     public $dummy_breadcrumbs_handlers_has_set = false;
     public $dummy_shutdown_handlers_has_set = false;
 
@@ -60,6 +61,16 @@ class Dummy_Raven_Client extends Raven_Client
     public function get_user_data()
     {
         return parent::get_user_data();
+    }
+
+    public function setInputStream($input)
+    {
+        static::$input_stream = isset($_SERVER['CONTENT_TYPE']) ? $input : false;
+    }
+
+    protected static function getInputStream()
+    {
+        return static::$input_stream ? static::$input_stream : file_get_contents('php://input');
     }
 
     public function buildCurlCommand($url, $data, $headers)
@@ -749,6 +760,21 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::capture
+     */
+    public function testEmptySiteGetsRemoved()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->site = '';
+
+        $client->captureMessage("My message");
+        $events = $client->getSentEvents();
+        $this->assertSame(1, count($events));
+        $event = array_pop($events);
+        $this->assertFalse(array_key_exists('site', $event));
+    }
+
+  /**
      * @covers Raven_Client::__construct
      * @covers Raven_Client::get_default_data
      */
@@ -789,7 +815,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'SERVER_PORT'         => '443',
             'SERVER_PROTOCOL'     => 'HTTP/1.1',
             'REQUEST_METHOD'      => 'PATCH',
-            'QUERY_STRING'        => 'q=bitch&l=en',
+            'QUERY_STRING'        => 'q=foobar&l=en',
             'REQUEST_URI'         => '/welcome/',
             'SCRIPT_NAME'         => '/index.php',
         );
@@ -804,7 +830,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'request' => array(
                 'method' => 'PATCH',
                 'url' => 'https://getsentry.com/welcome/',
-                'query_string' => 'q=bitch&l=en',
+                'query_string' => 'q=foobar&l=en',
                 'data' => array(
                     'stamp'           => '1c',
                 ),
@@ -823,6 +849,101 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         );
 
         $client = new Dummy_Raven_Client();
+        $this->assertEquals($expected, $client->get_http_data());
+    }
+
+    /**
+     * @backupGlobals
+     * @covers Raven_Client::get_http_data
+     */
+    public function testGetHttpDataApplicationJson()
+    {
+        $_SERVER = array(
+            'REDIRECT_STATUS'     => '200',
+            'CONTENT_TYPE'        => 'application/json',
+            'CONTENT_LENGTH'      => '99',
+            'HTTP_HOST'           => 'getsentry.com',
+            'HTTP_ACCEPT'         => 'text/html',
+            'HTTP_ACCEPT_CHARSET' => 'utf-8',
+            'HTTP_COOKIE'         => 'cupcake: strawberry',
+            'SERVER_PORT'         => '443',
+            'SERVER_PROTOCOL'     => 'HTTP/1.1',
+            'REQUEST_METHOD'      => 'POST',
+            'QUERY_STRING'        => 'q=foobar&l=en',
+            'REQUEST_URI'         => '/welcome/',
+            'SCRIPT_NAME'         => '/index.php',
+        );
+        $_COOKIE = array(
+            'donut' => 'chocolat',
+        );
+
+        $expected = array(
+            'request' => array(
+                'method' => 'POST',
+                'url' => 'https://getsentry.com/welcome/',
+                'query_string' => 'q=foobar&l=en',
+                'data' => array(
+                    'json_test'       => 'json_data',
+                ),
+                'cookies' => array(
+                    'donut'           => 'chocolat',
+                ),
+                'headers' => array(
+                    'Host'            => 'getsentry.com',
+                    'Accept'          => 'text/html',
+                    'Accept-Charset'  => 'utf-8',
+                    'Cookie'          => 'cupcake: strawberry',
+                    'Content-Type'    => 'application/json',
+                    'Content-Length'  => '99',
+                ),
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $client->setInputStream(json_encode(array('json_test' => 'json_data')));
+
+        $this->assertEquals($expected, $client->get_http_data());
+    }
+
+    /**
+     * Test showing that invalid json will be discarded from data collection.
+     */
+    public function testGetHttpDataApplicationInvalidJson()
+    {
+        $_SERVER = array(
+            'REDIRECT_STATUS'     => '200',
+            'CONTENT_TYPE'        => 'application/json',
+            'CONTENT_LENGTH'      => '99',
+            'HTTP_HOST'           => 'getsentry.com',
+            'HTTP_ACCEPT'         => 'text/html',
+            'HTTP_ACCEPT_CHARSET' => 'utf-8',
+            'HTTP_COOKIE'         => 'cupcake: strawberry',
+            'SERVER_PORT'         => '443',
+            'SERVER_PROTOCOL'     => 'HTTP/1.1',
+            'REQUEST_METHOD'      => 'POST',
+            'REQUEST_URI'         => '/welcome/',
+            'SCRIPT_NAME'         => '/index.php',
+        );
+
+        $expected = array(
+            'request' => array(
+                'method' => 'POST',
+                'url' => 'https://getsentry.com/welcome/',
+                'query_string' => '',
+                'data' => null,
+                'headers' => array(
+                    'Host'            => 'getsentry.com',
+                    'Accept'          => 'text/html',
+                    'Accept-Charset'  => 'utf-8',
+                    'Cookie'          => 'cupcake: strawberry',
+                    'Content-Type'    => 'application/json',
+                    'Content-Length'  => '99',
+                ),
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $client->setInputStream('{"binary_json":"'.pack("NA3CC", 3, "aBc", 0x0D, 0x0A).'"}');
         $this->assertEquals($expected, $client->get_http_data());
     }
 
@@ -912,6 +1033,98 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(array(
             'email' => 'foo@example.com',
         ), $event['user']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnCustomContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'mine' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['mine']['line']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnOverrideRuntimeItself()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'name' => 'sentry',
+                'version' => '0.1.1-alpha.1'
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals('0.1.1-alpha.1', $event['contexts']['runtime']['version']);
+        $this->assertEquals('sentry', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnExistingRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['runtime']['line']);
     }
 
     /**

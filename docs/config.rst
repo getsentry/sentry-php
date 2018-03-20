@@ -171,7 +171,7 @@ The following settings are available for the client:
                     'User-Agent'       => $client->getUserAgent(),
                     'X-Sentry-Auth'    => $client->getAuthHeader(),
                 ),
-                'body'    => gzipCompress(jsonEncode($data)),
+                'body'    => gzcompress(jsonEncode($data)),
             ))
         },
 
@@ -221,7 +221,7 @@ The following settings are available for the client:
 .. describe:: processors
 
     An array of classes to use to process data before it is sent to
-    Sentry. By default, ``Raven_SanitizeDataProcessor`` is used
+    Sentry. By default, ``Raven_Processor_SanitizeDataProcessor`` is used
 
 .. describe:: processorOptions
 
@@ -230,12 +230,12 @@ The following settings are available for the client:
     the list of processors used by ``Raven_Client``
 
     An example of overriding the regular expressions in
-    ``Raven_SanitizeDataProcessor`` is below:
+    ``Raven_Processor_SanitizeDataProcessor`` is below:
 
     .. code-block:: php
 
         'processorOptions' => array(
-            'Raven_SanitizeDataProcessor' => array(
+            'Raven_Processor_SanitizeDataProcessor' => array(
                         'fields_re' => '/(user_password|user_token|user_secret)/i',
                         'values_re' => '/^(?:\d[ -]*?){15,16}$/'
                     )

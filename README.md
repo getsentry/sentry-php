@@ -7,10 +7,10 @@
 # Sentry for PHP
 
 [![Build Status](https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master)](http://travis-ci.org/getsentry/sentry-php)
-[![Total Downloads](https://img.shields.io/packagist/dt/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
-[![Downloads per month](https://img.shields.io/packagist/dm/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
-[![Latest stable version](https://img.shields.io/packagist/v/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
-[![License](http://img.shields.io/packagist/l/sentry/sentry.svg?style=flat-square)](https://packagist.org/packages/sentry/sentry)
+[![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
+[![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
+[![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
+[![License](https://poser.pugx.org/sentry/sentry/license)](https://packagist.org/packages/sentry/sentry)
 [![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
 [![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
 
@@ -103,7 +103,7 @@ $ git checkout -b releases/1.9.x
 
 3. Update the hardcoded version tag in ``Client.php``:
 
-```
+```php
 class Raven_Client
 {
     const VERSION = '1.9.0';
@@ -142,7 +142,7 @@ git checkout master
 
 9. Update the version in ``Client.php``:
 
-```
+```php
 class Raven_Client
 {
     const VERSION = '1.10.x-dev';
@@ -151,7 +151,7 @@ class Raven_Client
 
 10. Lastly, update the composer version in ``composer.json``:
 
-```
+```json
     "extra": {
         "branch-alias": {
             "dev-master": "1.10.x-dev"
