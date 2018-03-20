@@ -16,6 +16,7 @@ use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\Recorder;
 use Raven\Context\Context;
 use Raven\Context\RuntimeContext;
+use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
 use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
@@ -125,7 +126,7 @@ class Client
     private $runtimeContext;
 
     /**
-     * @var Context The server OS context
+     * @var ServerOsContext The server OS context
      */
     private $serverOsContext;
 
@@ -159,7 +160,7 @@ class Client
         $this->userContext = new Context();
         $this->extraContext = new Context();
         $this->runtimeContext = new RuntimeContext();
-        $this->serverOsContext = new Context();
+        $this->serverOsContext = new ServerOsContext();
         $this->recorder = new Recorder();
         $this->transaction = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
@@ -436,18 +437,6 @@ class Client
             $event = $event->withLogger($payload['logger']);
         }
 
-        if (isset($payload['tags_context'])) {
-            $event = $event->withTagsContext($payload['tags_context']);
-        }
-
-        if (isset($payload['extra_context'])) {
-            $event = $event->withExtraContext($payload['extra_context']);
-        }
-
-        if (isset($payload['user_context'])) {
-            $event = $event->withUserContext($payload['user_context']);
-        }
-
         if (isset($payload['message'])) {
             $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
@@ -600,7 +589,7 @@ class Client
     /**
      * Gets the server OS context.
      *
-     * @return Context
+     * @return ServerOsContext
      */
     public function getServerOsContext()
     {

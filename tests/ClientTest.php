@@ -19,6 +19,8 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
 use Raven\Context\Context;
+use Raven\Context\RuntimeContext;
+use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
 use Raven\Event;
 use Raven\Serializer;
@@ -295,14 +297,14 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create()->getClient();
 
-        $this->assertInstanceOf(Context::class, $client->getRuntimeContext());
+        $this->assertInstanceOf(RuntimeContext::class, $client->getRuntimeContext());
     }
 
     public function testGetServerOsContext()
     {
         $client = ClientBuilder::create()->getClient();
 
-        $this->assertInstanceOf(Context::class, $client->getServerOsContext());
+        $this->assertInstanceOf(ServerOsContext::class, $client->getServerOsContext());
     }
 
     public function testAppPathLinux()
