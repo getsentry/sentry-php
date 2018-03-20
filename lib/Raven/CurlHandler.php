@@ -82,6 +82,10 @@ class Raven_CurlHandler
             }
             usleep(10000);
         } while ($timeout !== 0 && time() - $start < $timeout);
+
+        if (!defined('RAVEN_CURL_END_REACHED')) {
+            define('RAVEN_CURL_END_REACHED', true);
+        }
     }
 
     /**
