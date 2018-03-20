@@ -4,6 +4,13 @@
 
 - ...
 
+## 1.8.4 (2018-03-20)
+
+- Revert ignoring fatal errors on PHP 7+ (#571)
+- Add PHP runtime information (#564)
+- Cleanup the `site` value if it's empty (#555)
+- Add `application/json` input handling (#546)
+
 ## 1.8.3 (2018-02-07)
 
 - Serialize breadcrumbs to prevent issues with binary data (#538)
