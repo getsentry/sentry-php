@@ -10,6 +10,11 @@ while (!file_exists($vendor.'/vendor')) {
 require $vendor.'/test/bootstrap.php';
 
 $client = new \Raven_Client(array('curl_method' => 'async'));
+
+$client->setSendCallback(function (array $data) {
+    echo 'Sending handled fatal error...' . PHP_EOL;
+});
+
 register_shutdown_function(function () {
     if (constant('RAVEN_CURL_END_REACHED')) {
         echo 'Raven_CurlHandler::join() was called before' . PHP_EOL;
@@ -25,4 +30,5 @@ while (TRUE) {
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size %s
+Sending handled fatal error...
 Raven_CurlHandler::join() was called before
