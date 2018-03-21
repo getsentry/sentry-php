@@ -8,20 +8,30 @@ while (!file_exists($vendor.'/vendor')) {
     $vendor = dirname($vendor);
 }
 require $vendor.'/test/bootstrap.php';
+require $vendor.'/vendor/autoload.php';
 
 $client = new \Raven_Client(array('curl_method' => 'async'));
+$pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
+$curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
+$pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
 
-$client->setSendCallback(function (array $data) {
+$client->setSendCallback(function () {
     echo 'Sending handled fatal error...' . PHP_EOL;
 });
 
-register_shutdown_function(function () {
-    if (constant('RAVEN_CURL_END_REACHED')) {
-        echo 'Raven_CurlHandler::join() was called before' . PHP_EOL;
+$client->install();
+
+register_shutdown_function(function () use ($pendingEvents, $pendingRequests) {
+    if (! empty($pendingEvents)) {
+        echo 'There are pending events inside the client';
+    }
+
+    if (empty($pendingRequests)) {
+        echo 'Curl handler successfully emptied';
+    } else {
+        echo 'There are still queued request inside the Curl Handler';
     }
 });
-
-$client->install();
 
 ini_set('memory_limit', '8M');
 while (TRUE) {
@@ -31,4 +41,4 @@ while (TRUE) {
 --EXPECTF--
 Fatal error: Allowed memory size %s
 Sending handled fatal error...
-Raven_CurlHandler::join() was called before
+Curl handler successfully emptied
