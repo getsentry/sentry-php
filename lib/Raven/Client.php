@@ -131,7 +131,7 @@ class Raven_Client
     /**
      * @var bool
      */
-    private $useCompression;
+    public $useCompression;
 
     public function __construct($options_or_dsn = null, $options = array())
     {
