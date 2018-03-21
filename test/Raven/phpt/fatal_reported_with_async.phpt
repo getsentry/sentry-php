@@ -10,10 +10,8 @@ while (!file_exists($vendor.'/vendor')) {
 require $vendor.'/test/bootstrap.php';
 require $vendor.'/vendor/autoload.php';
 
-$client = new \Raven_Client(array('curl_method' => 'async'));
-$pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
-$curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
-$pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
+$dsn = 'https://user:password@sentry.test/123456';
+$client = new \Raven_Client($dsn, array('curl_method' => 'async'));
 
 $client->setSendCallback(function () {
     echo 'Sending handled fatal error...' . PHP_EOL;
@@ -21,7 +19,11 @@ $client->setSendCallback(function () {
 
 $client->install();
 
-register_shutdown_function(function () use ($pendingEvents, $pendingRequests) {
+register_shutdown_function(function () use (&$client) {
+    $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
+    $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
+    $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
+
     if (! empty($pendingEvents)) {
         echo 'There are pending events inside the client';
     }
