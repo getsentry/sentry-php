@@ -258,6 +258,11 @@ class Raven_Client
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
+        
+        if ($this->_curl_handler) {
+            $this->_curl_handler->registerShutdownFunction();
+        }
+
         return $this;
     }
 
