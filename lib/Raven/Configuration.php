@@ -435,7 +435,7 @@ class Configuration
     /**
      * Gets the project which the authenticated user is bound to.
      *
-     * @return string
+     * @return string|null
      */
     public function getProjectRoot()
     {
@@ -445,7 +445,7 @@ class Configuration
     /**
      * Sets the project which the authenticated user is bound to.
      *
-     * @param string $path The path to the project root
+     * @param string|null $path The path to the project root
      */
     public function setProjectRoot($path)
     {

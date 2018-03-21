@@ -22,6 +22,7 @@ use Raven\Middleware\BreadcrumbInterfaceMiddleware;
 use Raven\Middleware\ContextInterfaceMiddleware;
 use Raven\Middleware\ExceptionInterfaceMiddleware;
 use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\ModulesMiddleware;
 use Raven\Middleware\ProcessorMiddleware;
 use Raven\Middleware\RequestInterfaceMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
@@ -170,6 +171,7 @@ class Client
         };
 
         $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry));
+        $this->addMiddleware(new ModulesMiddleware($this->config));
         $this->addMiddleware(new MessageInterfaceMiddleware());
         $this->addMiddleware(new RequestInterfaceMiddleware());
         $this->addMiddleware(new UserInterfaceMiddleware());
