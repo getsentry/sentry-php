@@ -29,6 +29,6 @@ include __DIR__ . '/resources/parseError.php';
 Sending message: syntax error, unexpected 'error' (T_STRING)
 Sending message of type: ParseError
 
-Parse error: syntax error, unexpected 'error' (T_STRING) in /home/jean/workspace/sentry-php/test/Raven/phpt/resources/parseError.php on line 3
+Parse error: syntax error, unexpected 'error' (T_STRING) in %s/test/Raven/phpt/resources/parseError.php on line 3
 
 Fatal error: Exception thrown without a stack frame in Unknown on line 0
