@@ -128,6 +128,11 @@ class Raven_Client
      */
     protected $_shutdown_function_has_been_set;
 
+    /**
+     * @var bool
+     */
+    private $useCompression;
+
     public function __construct($options_or_dsn = null, $options = array())
     {
         if (is_array($options_or_dsn)) {
@@ -195,6 +200,7 @@ class Raven_Client
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
         $this->_shutdown_function_has_been_set = false;
+        $this->useCompression = function_exists('gzcompress') && extension_loaded('zip');
 
         $this->sdk = Raven_Util::get($options, 'sdk', array(
             'name' => 'sentry-php',
@@ -995,7 +1001,7 @@ class Raven_Client
             return false;
         }
 
-        if (function_exists("gzcompress")) {
+        if ($this->useCompression) {
             $message = gzcompress($message);
         }
 
