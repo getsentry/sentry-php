@@ -1,7 +1,7 @@
 --TEST--
 Test that, when handling a fatal, we report it once and only once
 --SKIPIF--
-<?php if (PHP_VERSION_ID < 70000) die('This test makes sense only under PHP 7+'); ?>
+<?php if (PHP_VERSION_ID < 70000) die('Skipped: this test makes sense only under PHP 7+'); ?>
 --FILE--
 <?php
 
@@ -31,10 +31,10 @@ iAcceptOnlyArrays('not an array');
 
 ?>
 --EXPECTF--
-Sending message: Return value of thisiswrong() must be of the type float, string returned
-Sending message of type: TypeError
+Sending message: Argument 1 passed to iAcceptOnlyArrays() must be of the type array, string given%s
+Sending message of type: %s
 
-Fatal error: Uncaught TypeError: Return value of thisiswrong() must be of the type float, string returned in %a
+Fatal error: Uncaught TypeError: Argument 1 passed to iAcceptOnlyArrays() must be of the type array, string given%s
 Stack trace:
 #0 %s
 #1 {main}

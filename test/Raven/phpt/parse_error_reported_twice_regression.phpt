@@ -1,7 +1,7 @@
 --TEST--
 Test that, when handling a fatal, we report it once and only once
 --SKIPIF--
-<?php if (PHP_VERSION_ID < 70000) die('This test makes sense only under PHP 7+'); ?>
+<?php if (PHP_VERSION_ID < 70000) die('Skipped: this test makes sense only under PHP 7+'); ?>
 --FILE--
 <?php
 
