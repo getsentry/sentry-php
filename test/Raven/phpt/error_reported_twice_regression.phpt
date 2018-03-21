@@ -38,4 +38,4 @@ Fatal error: Uncaught TypeError: Argument 1 passed to iAcceptOnlyArrays() must b
 Stack trace:
 #0 %s
 #1 {main}
-  thrown in - on line %s
+  thrown in %s
