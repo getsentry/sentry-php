@@ -27,7 +27,7 @@ final class UserInterfaceMiddleware
      * @param Event                       $event     The event being processed
      * @param callable                    $next      The next middleware to call
      * @param ServerRequestInterface|null $request   The request, if available
-     * @param \Exception|null             $exception The thrown exception, if available
+     * @param \Exception|\Throwable|null  $exception The thrown exception, if available
      * @param array                       $payload   Additional data
      *
      * @return Event

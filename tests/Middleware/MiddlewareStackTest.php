@@ -139,10 +139,13 @@ class MiddlewareStackTest extends TestCase
             return $event;
         });
 
+        $this->assertFalse($middlewareStack->removeMiddleware($middleware1));
+
         $middlewareStack->addMiddleware($middleware1, -10);
         $middlewareStack->addMiddleware($middleware2);
         $middlewareStack->addMiddleware($middleware3, -10);
-        $middlewareStack->removeMiddleware($middleware3);
+
+        $this->assertTrue($middlewareStack->removeMiddleware($middleware3));
 
         $middlewareStack->executeStack(new Event(new Configuration()));
 

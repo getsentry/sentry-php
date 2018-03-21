@@ -104,6 +104,8 @@ class MiddlewareStack
      *
      * @param callable $middleware The middleware instance
      *
+     * @return bool True if the middleware was removed, false otherwise
+     *
      * @throws \RuntimeException If the method is called while the stack is dequeuing
      */
     public function removeMiddleware(callable $middleware)
@@ -114,11 +116,24 @@ class MiddlewareStack
 
         $this->middlewareStackTip = null;
 
-        foreach ($this->stack as $priority => $middlewares) {
-            $this->stack[$priority] = array_filter($middlewares, function ($item) use ($middleware) {
-                return $middleware !== $item;
-            });
+        $result = false;
+
+        foreach ($this->stack as $priority => &$middlewares) {
+            foreach ($middlewares as $index => $value) {
+                if ($middleware !== $value) {
+                    continue;
+                }
+
+                array_splice($middlewares, $index, 1);
+
+                $result = true;
+            }
         }
+
+        // Free the memory by breaking the reference
+        unset($middlewares);
+
+        return $result;
     }
 
     /**

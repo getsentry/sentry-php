@@ -443,7 +443,13 @@ class Client
             $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
 
-        $event = $this->middlewareStack->executeStack($event, static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null, isset($payload['exception']) ? $payload['exception'] : null, $payload);
+        $event = $this->middlewareStack->executeStack(
+            $event,
+            static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null,
+            isset($payload['exception']) ? $payload['exception'] : null,
+            $payload
+        );
+
         $event = $this->sanitize($event);
 
         $this->send($event);
