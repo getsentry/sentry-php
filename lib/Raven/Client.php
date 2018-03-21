@@ -221,6 +221,13 @@ class Raven_Client
         if (Raven_Util::get($options, 'install_shutdown_handler', true)) {
             $this->registerShutdownFunction();
         }
+
+        // manually trigger autoloading, as it cannot be done during error handling in some edge cases due to PHP (see #60149)
+        if (!class_exists('Raven_Stacktrace')) {
+            // @codeCoverageIgnoreStart
+            spl_autoload_call('Raven_Stacktrace');
+            // @codeCoverageIgnoreEnd
+        }
     }
 
     public function __destruct()
@@ -630,13 +637,6 @@ class Raven_Client
 
             array_unshift($trace, $frame_where_exception_thrown);
 
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('Raven_Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('Raven_Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
-
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
                     $trace, $this->trace, $vars, $this->message_limit, $this->prefixes,
@@ -900,22 +900,13 @@ class Raven_Client
             array_shift($stack);
         }
 
-        if (!empty($stack)) {
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('Raven_Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('Raven_Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
-
-            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
-                $data['stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
-                        $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
-                    ),
-                );
-            }
+        if (! empty($stack) && ! isset($data['stacktrace']) && ! isset($data['exception'])) {
+            $data['stacktrace'] = array(
+                'frames' => Raven_Stacktrace::get_stack_info(
+                    $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
+                    $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
+                ),
+            );
         }
 
         $this->sanitize($data);
