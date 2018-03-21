@@ -430,7 +430,7 @@ class Client
 
         if (isset($payload['culprit'])) {
             $event = $event->withCulprit($payload['culprit']);
-        } elseif (!$this->transactionStack->isEmpty()) {
+        } else {
             $event = $event->withCulprit($this->transactionStack->peek());
         }
 

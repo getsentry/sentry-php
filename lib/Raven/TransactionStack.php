@@ -73,14 +73,12 @@ final class TransactionStack implements \Countable
     /**
      * Gets the value at the top of the stack without removing it.
      *
-     * @return string
-     *
-     * @throws \UnderflowException If the stack is empty
+     * @return string|null
      */
     public function peek()
     {
         if (empty($this->transactions)) {
-            throw new \UnderflowException('Peeking an empty stack is not allowed.');
+            return null;
         }
 
         return $this->transactions[count($this->transactions) - 1];
@@ -89,14 +87,12 @@ final class TransactionStack implements \Countable
     /**
      * Removes and returns the value at the top of the stack.
      *
-     * @return string
-     *
-     * @throws \UnderflowException If the stack is empty
+     * @return string|null
      */
     public function pop()
     {
         if (empty($this->transactions)) {
-            throw new \UnderflowException('Popping an empty stack is not allowed.');
+            return null;
         }
 
         return array_pop($this->transactions);

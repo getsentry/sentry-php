@@ -69,33 +69,23 @@ class Dummy_Raven_Client extends \Raven\Client
 
 class ClientTest extends TestCase
 {
-    /**
-     * @dataProvider constructorInitializesTransactionStackDataProvider
-     */
-    public function testConstructorInitializesTransactionStack($isHttpRequest)
+    public function testConstructorInitializesTransactionStack()
     {
-        if ($isHttpRequest) {
-            $_SERVER['PATH_INFO'] = '/foo';
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-        }
+        $_SERVER['PATH_INFO'] = '/foo';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
 
         $client = ClientBuilder::create()->getClient();
         $transactionStack = $client->getTransactionStack();
 
-        if ($isHttpRequest) {
-            $this->assertCount(1, $transactionStack);
-            $this->assertEquals('/foo', $transactionStack->peek());
-        } else {
-            $this->assertCount(0, $transactionStack);
-        }
+        $this->assertNotEmpty($transactionStack);
+        $this->assertEquals('/foo', $transactionStack->peek());
     }
 
-    public function constructorInitializesTransactionStackDataProvider()
+    public function testConstructorInitializesTransactionStackInCli()
     {
-        return [
-            [true],
-            [false],
-        ];
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertEmpty($client->getTransactionStack());
     }
 
     public function testGetTransactionStack()
@@ -105,7 +95,7 @@ class ClientTest extends TestCase
         $this->assertAttributeSame($client->getTransactionStack(), 'transactionStack', $client);
     }
 
-    public function testMiddlewareStackIsSeeded()
+    public function testAddMiddleware()
     {
         $middleware = function () {};
 

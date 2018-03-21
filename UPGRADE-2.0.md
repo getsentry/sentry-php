@@ -453,33 +453,10 @@
   $client->getTransactionStack()->push('foo', 'bar');
   ```
 
-- The method `TransactionStack::peek` used to return `null` when the stack was
-  empty. The behaviour has changed and an exception is now thrown.
-
-  Before:
-
-  ```php
-  $client->transaction->clear();
-
-  $value = $client->transaction->peek(); // $value is null
-  ```
-
-  After:
-
-  ```php
-  $client->getTransactionStack()->clear();
-
-  try {
-      $value = $client->getTransactionStack()->peek();
-  } catch (\UnderflowException $exception) {
-      // handle the exception here
-  }
-
 - The method `TransactionStack::pop` has changed its signature by removing the
   `$context` argument. Consequently the behaviour of the method in regards to
   the returned value changed as well: it's not possible anymore to pop all values
-  up to one that equals the value of `$context` and an exception is thrown if the
-  stack is empty while calling this method.
+  up to one that equals the value of `$context`.
 
   Before:
 
@@ -500,9 +477,5 @@
       $value = $client->getTransactionStack()->pop(); // $value is 'baz', then 'bar', then 'foo'
   }
 
-  try {
-      $value = $client->getTransactionStack()->pop();
-  } catch (\UnderflowException $exception) {
-      // handle the exception here
-  }
+  $value = $client->getTransactionStack()->pop(); // $value is null
   ```

@@ -34,17 +34,13 @@ class TransactionStackTest extends TestCase
 
     public function testClear()
     {
-        $stack = new TransactionStack();
-
-        $this->assertAttributeEmpty('transactions', $stack);
-
-        $stack->push('a', 'b');
+        $stack = new TransactionStack(['a', 'b']);
 
         $this->assertAttributeEquals(['a', 'b'], 'transactions', $stack);
 
         $stack->clear();
 
-        $this->assertAttributeEmpty('transactions', $stack);
+        $this->assertEmpty($stack);
     }
 
     public function testIsEmpty()
@@ -63,9 +59,6 @@ class TransactionStackTest extends TestCase
     public function testPush()
     {
         $stack = new TransactionStack();
-
-        $this->assertAttributeEmpty('transactions', $stack);
-
         $stack->push('a');
 
         $this->assertAttributeEquals(['a'], 'transactions', $stack);
@@ -83,7 +76,7 @@ class TransactionStackTest extends TestCase
     {
         $stack = new TransactionStack();
 
-        $this->assertAttributeEmpty('transactions', $stack);
+        $this->assertEmpty($stack);
 
         $stack->push('a', 1);
     }
@@ -91,16 +84,12 @@ class TransactionStackTest extends TestCase
     /**
      * @dataProvider peekDataProvider
      */
-    public function testPeek($initialData, $expectedData, $expectedExceptionThrow)
+    public function testPeek($initialData, $expectedData, $expectedRemainingData)
     {
-        if ($expectedExceptionThrow) {
-            $this->expectException(\UnderflowException::class);
-            $this->expectExceptionMessage('Peeking an empty stack is not allowed.');
-        }
-
         $stack = new TransactionStack($initialData);
 
         $this->assertEquals($expectedData, $stack->peek());
+        $this->assertAttributeEquals($expectedRemainingData, 'transactions', $stack);
     }
 
     public function peekDataProvider()
@@ -109,12 +98,12 @@ class TransactionStackTest extends TestCase
             [
                 ['a', 'b'],
                 'b',
-                false,
+                ['a', 'b'],
             ],
             [
                 [],
                 null,
-                true,
+                [],
             ],
         ];
     }
@@ -122,13 +111,8 @@ class TransactionStackTest extends TestCase
     /**
      * @dataProvider popDataProvider
      */
-    public function testPop($initialData, $expectedData, $expectedRemainingData, $expectedExceptionThrow)
+    public function testPop($initialData, $expectedData, $expectedRemainingData)
     {
-        if ($expectedExceptionThrow) {
-            $this->expectException(\UnderflowException::class);
-            $this->expectExceptionMessage('Popping an empty stack is not allowed.');
-        }
-
         $stack = new TransactionStack($initialData);
 
         $this->assertEquals($expectedData, $stack->pop());
@@ -142,13 +126,11 @@ class TransactionStackTest extends TestCase
                 ['a', 'b'],
                 'b',
                 ['a'],
-                false,
             ],
             [
                 [],
                 null,
                 [],
-                true,
             ],
         ];
     }
