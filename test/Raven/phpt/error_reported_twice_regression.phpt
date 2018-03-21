@@ -22,12 +22,12 @@ $client->setSendCallback(function (array $data) {
 });
 $client->install();
 
-function thisiswrong(): float
+function iAcceptOnlyArrays(array $array)
 {
-    return 'not a float';
+    return false;
 }
 
-thisiswrong();
+iAcceptOnlyArrays('not an array');
 
 ?>
 --EXPECTF--
