@@ -228,12 +228,7 @@ class Raven_Client
             $this->registerShutdownFunction();
         }
 
-        // manually trigger autoloading, as it cannot be done during error handling in some edge cases due to PHP (see #60149)
-        if (!class_exists('Raven_Stacktrace')) {
-            // @codeCoverageIgnoreStart
-            spl_autoload_call('Raven_Stacktrace');
-            // @codeCoverageIgnoreEnd
-        }
+        $this->triggerAutoload();
     }
 
     public function __destruct()
@@ -1516,5 +1511,24 @@ class Raven_Client
     public function setReprSerializer(Raven_ReprSerializer $reprSerializer)
     {
         $this->reprSerializer = $reprSerializer;
+    }
+
+    private function triggerAutoload()
+    {
+        // manually trigger autoloading, as it cannot be done during error handling in some edge cases due to PHP (see #60149)
+       
+        if (! class_exists('Raven_Stacktrace')) {
+            spl_autoload_call('Raven_Stacktrace');
+        }
+
+        if (function_exists('mb_detect_encoding')) {
+            mb_detect_encoding('string');
+        }
+        if (function_exists('mb_convert_encoding')) {
+            mb_convert_encoding('string', 'UTF8');
+        }
+        if (function_exists('mb_convert_encoding')) {
+            mb_convert_encoding('string', 'UTF8');
+        }
     }
 }
