@@ -14,7 +14,6 @@
     "require": {
         "php": "^5.6|^7.0",
         "ext-mbstring": "*",
-        "composer/composer": "^1.6",
         "php-http/async-client-implementation": "~1.0",
         "php-http/client-common": "~1.5",
         "php-http/discovery": "~1.2",
@@ -25,6 +24,7 @@
         "zendframework/zend-diactoros": "~1.4"
     },
     "require-dev": {
+        "composer/composer": "^1.6",
         "friendsofphp/php-cs-fixer": "~2.1",
         "monolog/monolog": "~1.0",
         "php-http/curl-client": "~1.7",

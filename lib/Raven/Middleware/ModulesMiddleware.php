@@ -2,6 +2,7 @@
 
 namespace Raven\Middleware;
 
+use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,6 +29,10 @@ final class ModulesMiddleware
      */
     public function __construct(Configuration $config)
     {
+        if (!class_exists(Composer::class)) {
+            throw new \LogicException('You need the "composer/composer" package in order to use this middleware.');
+        }
+
         $this->config = $config;
     }
 
