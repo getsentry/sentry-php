@@ -1650,7 +1650,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'HTTP_X_FORWARDED_PROTO' => 'https'
                 ),
                 array(),
                 'http://example.com/',
@@ -1660,7 +1660,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'HTTP_X_FORWARDED_PROTO' => 'https'
                 ),
                 array('trust_x_forwarded_proto' => true),
                 'https://example.com/',
