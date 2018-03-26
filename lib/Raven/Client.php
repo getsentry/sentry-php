@@ -1322,8 +1322,8 @@ class Raven_Client
         }
 
         if (!empty($this->trust_x_forwarded_proto) &&
-            !empty($_SERVER['X-FORWARDED-PROTO']) &&
-            $_SERVER['X-FORWARDED-PROTO'] === 'https') {
+            !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
             return true;
         }
 
