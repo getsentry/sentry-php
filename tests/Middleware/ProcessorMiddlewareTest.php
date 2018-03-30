@@ -21,7 +21,7 @@ class ProcessorMiddlewareTest extends TestCase
 {
     public function testInvoke()
     {
-        $client = ClientBuilder::create([])->getClient();
+        $client = ClientBuilder::create()->getClient();
         $event = new Event($client->getConfig());
         $processorRegistry = $this->getObjectAttribute($client, 'processorRegistry');
 
@@ -45,7 +45,7 @@ class ProcessorMiddlewareTest extends TestCase
      */
     public function testInvokeProcessorThatReturnsNothingThrows()
     {
-        $client = ClientBuilder::create([])->getClient();
+        $client = ClientBuilder::create()->getClient();
         $event = new Event($client->getConfig());
         $processorRegistry = $this->getObjectAttribute($client, 'processorRegistry');
 

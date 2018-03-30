@@ -112,6 +112,11 @@ final class ClientBuilder implements ClientBuilderInterface
     private $httpClientPlugins = [];
 
     /**
+     * @var array List of middlewares and their priorities
+     */
+    private $middlewares = [];
+
+    /**
      * @var array List of processors and their priorities
      */
     private $processors = [];
@@ -199,6 +204,40 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addMiddleware(callable $middleware, $priority = 0)
+    {
+        $this->middlewares[] = [$middleware, $priority];
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeMiddleware(callable $middleware)
+    {
+        foreach ($this->middlewares as $key => $value) {
+            if ($value[0] !== $middleware) {
+                continue;
+            }
+
+            unset($this->middlewares[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMiddlewares()
+    {
+        return $this->middlewares;
     }
 
     /**

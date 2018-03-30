@@ -23,6 +23,9 @@ use Raven\Context\RuntimeContext;
 use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
 use Raven\Event;
+use Raven\Middleware\MiddlewareStack;
+use Raven\Processor\ProcessorInterface;
+use Raven\Processor\ProcessorRegistry;
 use Raven\Serializer;
 use Raven\Transport\TransportInterface;
 
@@ -66,56 +69,84 @@ class Dummy_Raven_Client extends \Raven\Client
 
 class ClientTest extends TestCase
 {
-    public function testMiddlewareStackIsSeeded()
+    public function testAddMiddleware()
     {
+        $middleware = function () {};
+
+        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
+        $middlewareStack = $this->createMock(MiddlewareStack::class);
+        $middlewareStack->expects($this->once())
+            ->method('addMiddleware')
+            ->with($middleware, -10);
+
         $client = ClientBuilder::create()->getClient();
 
-        $firstMiddleware = $this->getObjectAttribute($client, 'middlewareStackTip');
-        $lastMiddleware = null;
+        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($client, $middlewareStack);
+        $reflectionProperty->setAccessible(false);
 
-        $client->addMiddleware(function (Event $event, callable $next) use (&$lastMiddleware) {
-            $lastMiddleware = $next;
-
-            return $event;
-        });
-
-        $client->capture([]);
-
-        $this->assertSame($firstMiddleware, $lastMiddleware);
+        $client->addMiddleware($middleware, -10);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage Middleware can't be added once the stack is dequeuing
-     */
-    public function testAddMiddlewareThrowsWhileStackIsRunning()
+    public function testRemoveMiddleware()
     {
+        $middleware = function () {};
+
+        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
+        $middlewareStack = $this->createMock(MiddlewareStack::class);
+        $middlewareStack->expects($this->once())
+            ->method('removeMiddleware')
+            ->with($middleware);
+
         $client = ClientBuilder::create()->getClient();
 
-        $client->addMiddleware(function (Event $event) use ($client) {
-            $client->addMiddleware(function () {
-                // Do nothing, it's just a middleware added to trigger the exception
-            });
+        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($client, $middlewareStack);
+        $reflectionProperty->setAccessible(false);
 
-            return $event;
-        });
-
-        $client->capture([]);
+        $client->removeMiddleware($middleware, -10);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage Middleware must return an instance of the "Raven\Event" class.
-     */
-    public function testMiddlewareThrowsWhenBadValueIsReturned()
+    public function testAddProcessor()
     {
+        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
+        $processor = $this->createMock(ProcessorInterface::class);
+
+        $processorRegistry = $this->createMock(ProcessorRegistry::class);
+        $processorRegistry->expects($this->once())
+            ->method('addProcessor')
+            ->with($processor, -10);
+
         $client = ClientBuilder::create()->getClient();
 
-        $client->addMiddleware(function () {
-            // Do nothing, it's just a middleware added to trigger the exception
-        });
+        $reflectionProperty = new \ReflectionProperty($client, 'processorRegistry');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($client, $processorRegistry);
+        $reflectionProperty->setAccessible(false);
 
-        $client->capture([]);
+        $client->addProcessor($processor, -10);
+    }
+
+    public function testRemoveProcessor()
+    {
+        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
+        $processor = $this->createMock(ProcessorInterface::class);
+
+        $processorRegistry = $this->createMock(ProcessorRegistry::class);
+        $processorRegistry->expects($this->once())
+            ->method('removeProcessor')
+            ->with($processor);
+
+        $client = ClientBuilder::create()->getClient();
+
+        $reflectionProperty = new \ReflectionProperty($client, 'processorRegistry');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($client, $processorRegistry);
+        $reflectionProperty->setAccessible(false);
+
+        $client->removeProcessor($processor);
     }
 
     public function testCaptureMessage()
