@@ -769,9 +769,22 @@ class Raven_Client
                 $result['data'] = (array) json_decode($raw_data, true) ?: null;
             }
         }
+        
+        // if the $_POST super global is empty, try to retrieve a json string
+        // prior to PHP 5.6, a stream opened with php://input could only be read once, so only do this with 5.6 or up
+        if (version_compare(PHP_VERSION, '5.6', '>=') && empty($_POST)) {
+            try {
+                $data = file_get_contents('php://input');
+                $result['data'] = json_decode($data, true);
+            } catch (\Exception $exception) {
+                // do nothing
+            }
+        }
+        
         if (!empty($_COOKIE)) {
             $result['cookies'] = $_COOKIE;
         }
+        
         if (!empty($headers)) {
             $result['headers'] = $headers;
         }
