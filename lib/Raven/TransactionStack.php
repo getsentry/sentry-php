@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of Raven.
  *
@@ -10,55 +11,98 @@
 
 namespace Raven;
 
-class TransactionStack
+/**
+ * This class is a LIFO collection that only allows access to the value at the
+ * top of the stack.
+ *
+ * @author Stefano Arlandini <sarlandini@alice.it>
+ */
+final class TransactionStack implements \Countable
 {
     /**
-     * @var array
+     * @var string[] The transaction stack
      */
-    public $stack;
+    private $transactions = [];
 
-    public function __construct()
+    /**
+     * Class constructor.
+     *
+     * @param array $values An array of initial values
+     */
+    public function __construct(array $values = [])
     {
-        $this->stack = [];
+        $this->push(...$values);
     }
 
+    /**
+     * Clears the stack by removing all values.
+     */
     public function clear()
     {
-        $this->stack = [];
+        $this->transactions = [];
     }
 
+    /**
+     * Checks whether the stack is empty.
+     *
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return empty($this->transactions);
+    }
+
+    /**
+     * Pushes the given values onto the stack.
+     *
+     * @param string[] $values The values to push
+     *
+     * @throws \InvalidArgumentException If any of the values is not a string
+     */
+    public function push(...$values)
+    {
+        foreach ($values as $value) {
+            if (!is_string($value)) {
+                throw new \InvalidArgumentException(sprintf('The $values argument must contain string values only.'));
+            }
+
+            $this->transactions[] = $value;
+        }
+    }
+
+    /**
+     * Gets the value at the top of the stack without removing it.
+     *
+     * @return string|null
+     */
     public function peek()
     {
-        $len = count($this->stack);
-        if (0 === $len) {
+        if (empty($this->transactions)) {
             return null;
         }
 
-        return $this->stack[$len - 1];
+        return $this->transactions[count($this->transactions) - 1];
     }
 
-    public function push($context)
-    {
-        $this->stack[] = $context;
-    }
-
-    /** @noinspection PhpInconsistentReturnPointsInspection
-     * @param string|null $context
+    /**
+     * Removes and returns the value at the top of the stack.
      *
-     * @return mixed
+     * @return string|null
      */
-    public function pop($context = null)
+    public function pop()
     {
-        if (!$context) {
-            return array_pop($this->stack);
+        if (empty($this->transactions)) {
+            return null;
         }
-        while (!empty($this->stack)) {
-            if (array_pop($this->stack) === $context) {
-                return $context;
-            }
-        }
-        // @codeCoverageIgnoreStart
+
+        return array_pop($this->transactions);
     }
 
-    // @codeCoverageIgnoreEnd
+    /**
+     * {@inheritdoc}
+     */
+    public function count()
+    {
+        return count($this->transactions);
+    }
 }

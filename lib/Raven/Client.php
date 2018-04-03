@@ -56,19 +56,9 @@ class Client
     const MESSAGE_LIMIT = 1024;
 
     /**
-     * @var Recorder The breadcrumbs recorder
-     */
-    protected $recorder;
-
-    /**
      * This constant defines the client's user-agent string.
      */
     const USER_AGENT = 'sentry-php/' . self::VERSION;
-
-    /**
-     * @var TransactionStack The transaction stack
-     */
-    public $transaction;
 
     /**
      * @var string[]|null
@@ -94,6 +84,16 @@ class Client
      * @var Configuration The client configuration
      */
     protected $config;
+
+    /**
+     * @var Recorder The breadcrumbs recorder
+     */
+    private $breadcrumbRecorder;
+
+    /**
+     * @var TransactionStack The transaction stack
+     */
+    private $transactionStack;
 
     /**
      * @var TransportInterface The transport
@@ -156,28 +156,31 @@ class Client
         $this->extraContext = new Context();
         $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new ServerOsContext();
-        $this->recorder = new Recorder();
-        $this->transaction = new TransactionStack();
+        $this->breadcrumbRecorder = new Recorder();
+        $this->transactionStack = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->middlewareStack = new MiddlewareStack(function (Event $event) {
             return $event;
         });
 
-        $this->middlewareStack->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -255);
-        $this->middlewareStack->addMiddleware(new MessageInterfaceMiddleware());
-        $this->middlewareStack->addMiddleware(new RequestInterfaceMiddleware());
-        $this->middlewareStack->addMiddleware(new UserInterfaceMiddleware());
-        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
-        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
-        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
-        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
-        $this->middlewareStack->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
-        $this->middlewareStack->addMiddleware(new BreadcrumbInterfaceMiddleware($this->recorder));
-        $this->middlewareStack->addMiddleware(new ExceptionInterfaceMiddleware($this));
+        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -255);
+        $this->addMiddleware(new MessageInterfaceMiddleware());
+        $this->addMiddleware(new RequestInterfaceMiddleware());
+        $this->addMiddleware(new UserInterfaceMiddleware());
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
+        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->breadcrumbRecorder));
+        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
 
-        if (static::isHttpRequest() && isset($_SERVER['PATH_INFO'])) {
-            $this->transaction->push($_SERVER['PATH_INFO']);
+        $request = ServerRequestFactory::fromGlobals();
+        $serverParams = $request->getServerParams();
+
+        if (isset($serverParams['PATH_INFO'])) {
+            $this->transactionStack->push($serverParams['PATH_INFO']);
         }
 
         if ($this->config->getSerializeAllObjects()) {
@@ -196,7 +199,7 @@ class Client
      */
     public function leaveBreadcrumb(Breadcrumb $breadcrumb)
     {
-        $this->recorder->record($breadcrumb);
+        $this->breadcrumbRecorder->record($breadcrumb);
     }
 
     /**
@@ -204,7 +207,7 @@ class Client
      */
     public function clearBreadcrumbs()
     {
-        $this->recorder->clear();
+        $this->breadcrumbRecorder->clear();
     }
 
     /**
@@ -215,6 +218,16 @@ class Client
     public function getConfig()
     {
         return $this->config;
+    }
+
+    /**
+     * Gets the transaction stack.
+     *
+     * @return TransactionStack
+     */
+    public function getTransactionStack()
+    {
+        return $this->transactionStack;
     }
 
     /**
@@ -418,7 +431,7 @@ class Client
         if (isset($payload['culprit'])) {
             $event = $event->withCulprit($payload['culprit']);
         } else {
-            $event = $event->withCulprit($this->transaction->peek());
+            $event = $event->withCulprit($this->transactionStack->peek());
         }
 
         if (isset($payload['level'])) {

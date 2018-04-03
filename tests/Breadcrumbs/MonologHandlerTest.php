@@ -54,7 +54,7 @@ EOF;
         $logger->pushHandler($handler);
         $logger->addWarning('foo');
 
-        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
 
         /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
         $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
@@ -78,7 +78,7 @@ EOF;
         $logger->pushHandler($handler);
         $logger->addError($this->getSampleErrorMessage());
 
-        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'recorder');
+        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
 
         /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
         $breadcrumbs = iterator_to_array($breadcrumbsRecorder);

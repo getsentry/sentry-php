@@ -69,6 +69,32 @@ class Dummy_Raven_Client extends \Raven\Client
 
 class ClientTest extends TestCase
 {
+    public function testConstructorInitializesTransactionStack()
+    {
+        $_SERVER['PATH_INFO'] = '/foo';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $client = ClientBuilder::create()->getClient();
+        $transactionStack = $client->getTransactionStack();
+
+        $this->assertNotEmpty($transactionStack);
+        $this->assertEquals('/foo', $transactionStack->peek());
+    }
+
+    public function testConstructorInitializesTransactionStackInCli()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertEmpty($client->getTransactionStack());
+    }
+
+    public function testGetTransactionStack()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertAttributeSame($client->getTransactionStack(), 'transactionStack', $client);
+    }
+
     public function testAddMiddleware()
     {
         $middleware = function () {};
@@ -742,7 +768,7 @@ class ClientTest extends TestCase
                 ]
             )
         );
-        $reflection = new \ReflectionProperty($client, 'recorder');
+        $reflection = new \ReflectionProperty($client, 'breadcrumbRecorder');
         $reflection->setAccessible(true);
         $this->assertNotEmpty(iterator_to_array($reflection->getValue($client)));
 
