@@ -1516,7 +1516,7 @@ class Raven_Client
     private function triggerAutoload()
     {
         // manually trigger autoloading, as it cannot be done during error handling in some edge cases due to PHP (see #60149)
-       
+
         if (! class_exists('Raven_Stacktrace')) {
             spl_autoload_call('Raven_Stacktrace');
         }
