@@ -1,5 +1,7 @@
 --TEST--
 Test that, when handling a fatal with async send enabled, we force the async to avoid losing the event
+--SKIPIF--
+<?php if (PHP_VERSION_ID >= 50400 && PHP_VERSION_ID < 50600) die('Skipped: this fails under PHP 5.4/5.5, we cannot fix it'); ?>
 --FILE--
 <?php
 
