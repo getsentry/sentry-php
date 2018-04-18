@@ -89,6 +89,7 @@ class Raven_Client
     public $timeout;
     public $message_limit;
     public $exclude;
+    public $excluded_exceptions;
     public $http_proxy;
     protected $send_callback;
     public $curl_method;
@@ -164,6 +165,7 @@ class Raven_Client
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
+        $this->excluded_exceptions = Raven_Util::get($options, 'excluded_exceptions', array());
         $this->severity_map = null;
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
@@ -612,6 +614,12 @@ class Raven_Client
 
         if (in_array(get_class($exception), $this->exclude)) {
             return null;
+        }
+
+        foreach ($this->excluded_exceptions as $exclude) {
+            if ($exception instanceof $exclude) {
+                return null;
+            }
         }
 
         if ($data === null) {
