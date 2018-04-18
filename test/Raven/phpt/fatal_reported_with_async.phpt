@@ -11,7 +11,7 @@ require $vendor.'/test/bootstrap.php';
 require $vendor.'/vendor/autoload.php';
 
 $dsn = 'https://user:password@sentry.test/123456';
-$client = new \Raven_Client($dsn, array('curl_method' => 'async'));
+$client = new \Raven_Client($dsn, array('curl_method' => 'async', 'server' => 'sentry.test'));
 $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
 $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
 $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
