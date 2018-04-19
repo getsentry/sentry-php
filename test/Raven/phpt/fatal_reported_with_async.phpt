@@ -14,6 +14,7 @@ require $vendor.'/vendor/autoload.php';
 
 $dsn = 'https://user:password@sentry.test/123456';
 $client = new \Raven_Client($dsn, array('curl_method' => 'async', 'server' => 'sentry.test'));
+// doing this to avoid autoload-driver failures during the error handling
 $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
 $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
 $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
@@ -24,7 +25,11 @@ $client->setSendCallback(function () {
 
 $client->install();
 
-register_shutdown_function(function () use (&$pendingEvents, &$pendingRequests) {
+register_shutdown_function(function () use (&$client) {
+    $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
+    $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
+    $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
+
     if (! empty($pendingEvents)) {
         echo 'There are pending events inside the client';
     }
