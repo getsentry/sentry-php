@@ -1477,21 +1477,88 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     public function testSanitizeRequest()
     {
         $client = new Dummy_Raven_Client();
-        $data = array('request' => array(
-            'context' => array(
-                'line' => 1216,
-                'stack' => array(
-                    1, array(2), 3
+
+        // Typical content of $_POST in PHP
+        $post = array(
+            '_method' => 'POST',
+            'data' => array(
+                'MyModel' => array(
+                    'flatField' => 'my value',
+                    'nestedField' => array(
+                        'key' => 'my other value',
+                    ),
                 ),
             ),
+        );
+
+        $data = array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => $post,
         ));
+
         $client->sanitize($data);
 
         $this->assertEquals(array('request' => array(
-            'context' => array(
-                'line' => 1216,
-                'stack' => array(
-                    1, 'Array of length 1', 3
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => array(
+                '_method' => 'POST',
+                'data' => array(
+                    'MyModel' => array(
+                        'flatField' => 'my value',
+                        'nestedField' => array(
+                            'key' => 'my other value',
+                        ),
+                    ),
+                ),
+            ),
+        )), $data);
+    }
+
+    /**
+     * @covers Raven_Client::sanitize
+     */
+    public function testSanitizeDeepRequest()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $post = array(
+            '_method' => 'POST',
+            'data' => array(
+                'Level 1' => array(
+                    'Level 2' => array(
+                        'Level 3' => array(
+                            'Level 4' => 'something',
+                        ),
+                    ),
+                ),
+            ),
+        );
+
+        $data = array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => $post,
+        ));
+
+        $client->sanitize($data);
+
+        $this->assertEquals(array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => array(
+                '_method' => 'POST',
+                'data' => array(
+                    'Level 1' => array(
+                        'Level 2' => array(
+                            'Level 3' => 'Array of length 1',
+                        ),
+                    ),
                 ),
             ),
         )), $data);
