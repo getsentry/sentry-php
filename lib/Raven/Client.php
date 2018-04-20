@@ -200,7 +200,7 @@ class Raven_Client
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
         $this->_shutdown_function_has_been_set = false;
-        $this->useCompression = function_exists('gzcompress') && extension_loaded('zip');
+        $this->useCompression = function_exists('gzcompress');
 
         $this->sdk = Raven_Util::get($options, 'sdk', array(
             'name' => 'sentry-php',
@@ -1524,9 +1524,7 @@ class Raven_Client
         if (function_exists('mb_detect_encoding')) {
             mb_detect_encoding('string');
         }
-        if (function_exists('mb_convert_encoding')) {
-            mb_convert_encoding('string', 'UTF8');
-        }
+
         if (function_exists('mb_convert_encoding')) {
             mb_convert_encoding('string', 'UTF8');
         }
