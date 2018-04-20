@@ -29,7 +29,7 @@ class Raven_CurlHandler
         $this->requests = array();
         $this->join_timeout = $join_timeout;
 
-        register_shutdown_function(array($this, 'join'));
+        $this->registerShutdownFunction();
     }
 
     public function __destruct()
@@ -67,6 +67,11 @@ class Raven_CurlHandler
         $this->select();
 
         return $fd;
+    }
+
+    public function registerShutdownFunction()
+    {
+        register_shutdown_function(array($this, 'join'));
     }
 
     public function join($timeout = null)

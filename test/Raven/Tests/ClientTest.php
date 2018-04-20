@@ -2174,7 +2174,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, 'Raven_Client::encode returned malformed data');
         $decoded = base64_decode($value);
         $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
-        if (function_exists("gzcompress")) {
+        if (function_exists('gzcompress')) {
             $decoded = gzuncompress($decoded);
             $this->assertEquals($json_stringify, $decoded, 'Can not decompress compressed blob');
         } else {

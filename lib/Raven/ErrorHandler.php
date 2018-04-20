@@ -138,6 +138,8 @@ class Raven_ErrorHandler
                 @$error['message'], 0, @$error['type'],
                 @$error['file'], @$error['line']
             );
+            
+            $this->client->useCompression = $this->client->useCompression && PHP_VERSION_ID > 70000;
             $this->handleException($e, true);
         }
     }

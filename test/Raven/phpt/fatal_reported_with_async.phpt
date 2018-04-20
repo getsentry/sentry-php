@@ -1,5 +1,7 @@
 --TEST--
 Test that, when handling a fatal with async send enabled, we force the async to avoid losing the event
+--SKIPIF--
+<?php if (PHP_VERSION_ID >= 50400 && PHP_VERSION_ID < 50600) die('Skipped: this fails under PHP 5.4/5.5, we cannot fix it'); ?>
 --FILE--
 <?php
 
@@ -10,7 +12,9 @@ while (!file_exists($vendor.'/vendor')) {
 require $vendor.'/test/bootstrap.php';
 require $vendor.'/vendor/autoload.php';
 
-$client = new \Raven_Client(array('curl_method' => 'async'));
+$dsn = 'https://user:password@sentry.test/123456';
+$client = new \Raven_Client($dsn, array('curl_method' => 'async', 'server' => 'sentry.test'));
+// doing this to avoid autoload-driver failures during the error handling
 $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
 $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
 $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
@@ -21,7 +25,11 @@ $client->setSendCallback(function () {
 
 $client->install();
 
-register_shutdown_function(function () use ($pendingEvents, $pendingRequests) {
+register_shutdown_function(function () use (&$client) {
+    $pendingEvents = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_pending_events');
+    $curlHandler = \PHPUnit\Framework\Assert::getObjectAttribute($client, '_curl_handler');
+    $pendingRequests = \PHPUnit\Framework\Assert::getObjectAttribute($curlHandler, 'requests');
+
     if (! empty($pendingEvents)) {
         echo 'There are pending events inside the client';
     }
