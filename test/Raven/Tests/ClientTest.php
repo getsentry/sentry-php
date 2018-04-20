@@ -216,6 +216,13 @@ class Dummy_Raven_CurlHandler extends Raven_CurlHandler
     }
 }
 
+interface Dummy_Exception_Interface
+{
+}
+class Dummy_Exception extends Exception implements Dummy_Exception_Interface
+{
+}
+
 class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown()
@@ -689,6 +696,34 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'exclude' => array('Exception'),
         ));
         $ex = $this->create_exception();
+        $client->captureException($ex, 'test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(0, count($events));
+    }
+
+    /**
+     * @covers Raven_Client::captureException
+     */
+    public function testCaptureExceptionHandlesExcludeSubclassOption()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'excluded_exceptions' => array('Exception'),
+        ));
+        $ex = new Dummy_Exception();
+        $client->captureException($ex, 'test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(0, count($events));
+    }
+
+    /**
+     * @covers Raven_Client::captureException
+     */
+    public function testCaptureExceptionHandlesExcludeInterfaceOption()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'excluded_exceptions' => array('Dummy_Exception_Interface'),
+        ));
+        $ex = new Dummy_Exception();
         $client->captureException($ex, 'test');
         $events = $client->getSentEvents();
         $this->assertEquals(0, count($events));
