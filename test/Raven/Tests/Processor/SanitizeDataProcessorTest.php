@@ -67,6 +67,24 @@ class Raven_Tests_SanitizeDataProcessorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($cookies[ini_get('session.name')], Raven_Processor_SanitizeDataProcessor::STRING_MASK);
     }
 
+    public function testDoesFilterUserData()
+    {
+        $data = array(
+            'user' => array(
+                'data' => array(
+                    'csrf_secret' => '1234'
+                )
+            )
+        );
+
+        $client = new Dummy_Raven_Client();
+        $processor = new Raven_Processor_SanitizeDataProcessor($client);
+        $processor->process($data);
+
+        $user = $data['user']['data'];
+        $this->assertEquals($user['csrf_secret'], Raven_Processor_SanitizeDataProcessor::STRING_MASK);
+    }
+
     public function testDoesFilterCreditCard()
     {
         $data = array(
