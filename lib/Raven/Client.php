@@ -67,11 +67,6 @@ class Client
     public $storeErrorsForBulkSend = false;
 
     /**
-     * @var ErrorHandler
-     */
-    protected $errorHandler;
-
-    /**
      * @var \Raven\Serializer
      */
     protected $serializer;
@@ -304,25 +299,6 @@ class Client
     public function setSerializer(Serializer $serializer)
     {
         $this->serializer = $serializer;
-    }
-
-    /**
-     * Installs any available automated hooks (such as error_reporting).
-     *
-     * @throws \Raven\Exception
-     */
-    public function install()
-    {
-        if ($this->errorHandler) {
-            throw new \Raven\Exception(__CLASS__ . '->install() must only be called once');
-        }
-
-        $this->errorHandler = new ErrorHandler($this, false, $this->getConfig()->getErrorTypes());
-        $this->errorHandler->registerExceptionHandler();
-        $this->errorHandler->registerErrorHandler();
-        $this->errorHandler->registerShutdownFunction();
-
-        return $this;
     }
 
     /**

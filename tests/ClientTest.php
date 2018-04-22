@@ -383,18 +383,6 @@ class ClientTest extends TestCase
         $this->assertEquals('C:\\foo\\bar\\', $client->getConfig()->getProjectRoot());
     }
 
-    /**
-     * @expectedException \Raven\Exception
-     * @expectedExceptionMessage Raven\Client->install() must only be called once
-     */
-    public function testCannotInstallTwice()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->install();
-        $client->install();
-    }
-
     public function testSanitizeExtra()
     {
         $client = ClientBuilder::create()->getClient();
