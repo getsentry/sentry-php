@@ -5,7 +5,8 @@
 - The `environment` option has been renamed to `current_environment`.
 - The `http_proxy` option has been renamed to `proxy`.
 - The `processorOptions` option has been renamed to `processors_options`.
-- The `exclude` option has been renamed to `excluded_exceptions`.
+- The `exclude` option has been renamed to `excluded_exceptions`. Unlike `exclude`,
+   `excluded_exceptions` will also exclude all subclasses. 
 - The `send_callback` option has been renamed to `should_capture`.
 - The `name` option has been renamed to `server_name`.
 - The `project` option has been removed.

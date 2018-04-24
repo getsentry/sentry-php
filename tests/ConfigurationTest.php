@@ -240,6 +240,11 @@ class ConfigurationTest extends TestCase
                 new \Exception(),
                 false,
             ],
+            [
+                [\Exception::class],
+                new \BadFunctionCallException(),
+                true,
+            ],
         ];
     }
 
