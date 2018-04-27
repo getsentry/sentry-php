@@ -805,7 +805,9 @@ class Raven_Client
             $user = array(
                 'id' => session_id(),
             );
-            if (!empty($_SERVER['REMOTE_ADDR'])) {
+            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $user['ip_address'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+            } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
                 $user['ip_address'] = $_SERVER['REMOTE_ADDR'];
             }
             if (!empty($_SESSION)) {
