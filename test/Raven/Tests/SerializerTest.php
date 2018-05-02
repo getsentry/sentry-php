@@ -121,12 +121,12 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         for ($i = 0; $i < 100; $i++) {
             foreach (array(100, 1000, 1010, 1024, 1050, 1100, 10000) as $length) {
                 $input = '';
-                for ($i = 0; $i < $length; $i++) {
-                    $input .= chr(mt_rand(0, 255));
+                for ($j = 0; $j < $length; $j++) {
+                    $input .= chr(mt_rand(ord('a'), ord('z')));
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual(1024, extension_loaded('mbstring') ? mb_strlen($result) : strlen($result));
+                $this->assertLessThanOrEqual(1024, strlen($result));
             }
         }
     }
@@ -141,8 +141,8 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         for ($i = 0; $i < 100; $i++) {
             foreach (array(100, 490, 499, 500, 501, 1000, 10000) as $length) {
                 $input = '';
-                for ($i = 0; $i < $length; $i++) {
-                    $input .= chr(mt_rand(32, 126));
+                for ($j = 0; $j < $length; $j++) {
+                    $input .= chr(mt_rand(ord('a'), ord('z')));
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
