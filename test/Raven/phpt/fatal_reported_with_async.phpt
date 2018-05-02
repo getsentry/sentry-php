@@ -41,7 +41,7 @@ register_shutdown_function(function () use (&$client) {
     }
 });
 
-ini_set('memory_limit', '8M');
+ini_set('memory_limit', '16M');
 while (TRUE) {
     $a[] = 'b';
 }
