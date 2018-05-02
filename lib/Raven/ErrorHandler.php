@@ -50,7 +50,7 @@ class Raven_ErrorHandler
      * A 'null' value implies "whatever error_reporting is at time of error".
      */
     protected $error_types = null;
-    
+
     /** @var \Exception|null */
     private $lastHandledException;
 
@@ -78,7 +78,15 @@ class Raven_ErrorHandler
 
     public function handleException($e, $isError = false, $vars = null)
     {
-        $e->event_id = $this->client->captureException($e, null, null, $vars);
+        $event_id = $this->client->captureException($e, null, null, $vars);
+
+        try {
+            $e->event_id = $event_id;
+        } catch (\Exception $e) {
+            // Ignore any errors while setting the event id on the exception object
+            // @see: https://github.com/getsentry/sentry-php/issues/579
+        }
+
         $this->lastHandledException = $e;
 
         if (!$isError && $this->call_existing_exception_handler) {
@@ -138,7 +146,7 @@ class Raven_ErrorHandler
                 @$error['message'], 0, @$error['type'],
                 @$error['file'], @$error['line']
             );
-            
+
             $this->client->useCompression = $this->client->useCompression && PHP_VERSION_ID > 70000;
             $this->handleException($e, true);
         }

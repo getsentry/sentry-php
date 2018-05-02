@@ -69,4 +69,50 @@ EOF;
         $this->assertEquals($crumbs[0]['category'], 'sentry');
         $this->assertEquals($crumbs[0]['level'], 'error');
     }
+
+    public function testExceptionBeingParsed()
+    {
+        $client = new \Raven_Client(array(
+            'install_default_breadcrumb_handlers' => false,
+        ));
+        $handler = new \Raven_Breadcrumbs_MonologHandler($client);
+        $exception = new Exception('Foo bar');
+
+        $logger = new Monolog\Logger('sentry');
+        $logger->pushHandler($handler);
+        $logger->addError('This is an exception', compact('exception'));
+
+        $crumbs = $client->breadcrumbs->fetch();
+
+        $this->assertEquals(count($crumbs), 1);
+        $this->assertEquals($crumbs[0]['data']['type'], get_class($exception));
+        $this->assertEquals($crumbs[0]['data']['value'], 'Foo bar');
+        $this->assertEquals($crumbs[0]['category'], 'sentry');
+        $this->assertEquals($crumbs[0]['level'], 'error');
+    }
+
+    public function testThrowableBeingParsedAsException()
+    {
+        if (PHP_VERSION_ID <= 70000) {
+            $this->markTestSkipped('PHP 7.0 introduced Throwable');
+        }
+
+        $client = new \Raven_Client(array(
+            'install_default_breadcrumb_handlers' => false,
+        ));
+        $handler = new \Raven_Breadcrumbs_MonologHandler($client);
+        $throwable = new ParseError('Foo bar');
+
+        $logger = new Monolog\Logger('sentry');
+        $logger->pushHandler($handler);
+        $logger->addError('This is an throwable', array('exception' => $throwable));
+
+        $crumbs = $client->breadcrumbs->fetch();
+
+        $this->assertEquals(count($crumbs), 1);
+        $this->assertEquals($crumbs[0]['data']['type'], get_class($throwable));
+        $this->assertEquals($crumbs[0]['data']['value'], 'Foo bar');
+        $this->assertEquals($crumbs[0]['category'], 'sentry');
+        $this->assertEquals($crumbs[0]['level'], 'error');
+    }
 }
