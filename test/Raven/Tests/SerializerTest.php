@@ -121,8 +121,8 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         for ($i = 0; $i < 100; $i++) {
             foreach (array(100, 1000, 1010, 1024, 1050, 1100, 10000) as $length) {
                 $input = '';
-                for ($i = 0; $i < $length; $i++) {
-                    $input .= chr(mt_rand(0, 255));
+                for ($j = 0; $j < $length; $j++) {
+                    $input .= chr(mt_rand(ord('a'), ord('z')));
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
@@ -141,8 +141,8 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         for ($i = 0; $i < 100; $i++) {
             foreach (array(100, 490, 499, 500, 501, 1000, 10000) as $length) {
                 $input = '';
-                for ($i = 0; $i < $length; $i++) {
-                    $input .= chr(mt_rand(0, 255));
+                for ($j = 0; $j < $length; $j++) {
+                    $input .= chr(mt_rand(ord('a'), ord('z')));
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
@@ -163,5 +163,22 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $result = $serializer->serialize($fo);
         $this->assertInternalType('string', $result);
         $this->assertEquals('Resource stream', $result);
+    }
+
+    public function testClippingUTF8Characters()
+    {
+        if (!extension_loaded('mbstring')) {
+            $this->markTestSkipped('mbstring extension is not enabled.');
+        }
+
+        $teststring = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
+        $serializer = new Raven_Serializer(null, 19); // Length of 19 will clip character in half if no mb_* string functions are used for the teststring
+
+        $clipped = $serializer->serialize($teststring);
+        $this->assertEquals('Прекратит {clipped}', $clipped);
+
+        Raven_Compat::json_encode($clipped);
+
+        $this->assertEquals(JSON_ERROR_NONE, json_last_error());
     }
 }
