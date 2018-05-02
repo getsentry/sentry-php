@@ -142,11 +142,11 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
             foreach (array(100, 490, 499, 500, 501, 1000, 10000) as $length) {
                 $input = '';
                 for ($i = 0; $i < $length; $i++) {
-                    $input .= chr(mt_rand(0, 255));
+                    $input .= chr(mt_rand(32, 126));
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual(500, extension_loaded('mbstring') ? mb_strlen($result) : strlen($result));
+                $this->assertLessThanOrEqual(500, strlen($result));
             }
         }
     }
