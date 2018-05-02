@@ -89,6 +89,7 @@ class Raven_Client
     public $timeout;
     public $message_limit;
     public $exclude;
+    public $excluded_exceptions;
     public $http_proxy;
     protected $send_callback;
     public $curl_method;
@@ -128,6 +129,11 @@ class Raven_Client
      */
     protected $_shutdown_function_has_been_set;
 
+    /**
+     * @var bool
+     */
+    public $useCompression;
+
     public function __construct($options_or_dsn = null, $options = array())
     {
         if (is_array($options_or_dsn)) {
@@ -164,6 +170,7 @@ class Raven_Client
         $this->timeout = Raven_Util::get($options, 'timeout', 2);
         $this->message_limit = Raven_Util::get($options, 'message_limit', self::MESSAGE_LIMIT);
         $this->exclude = Raven_Util::get($options, 'exclude', array());
+        $this->excluded_exceptions = Raven_Util::get($options, 'excluded_exceptions', array());
         $this->severity_map = null;
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
         $this->extra_data = Raven_Util::get($options, 'extra', array());
@@ -195,6 +202,7 @@ class Raven_Client
         $this->context = new Raven_Context();
         $this->breadcrumbs = new Raven_Breadcrumbs();
         $this->_shutdown_function_has_been_set = false;
+        $this->useCompression = function_exists('gzcompress');
 
         $this->sdk = Raven_Util::get($options, 'sdk', array(
             'name' => 'sentry-php',
@@ -221,6 +229,8 @@ class Raven_Client
         if (Raven_Util::get($options, 'install_shutdown_handler', true)) {
             $this->registerShutdownFunction();
         }
+
+        $this->triggerAutoload();
     }
 
     public function __destruct()
@@ -251,6 +261,11 @@ class Raven_Client
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
+        
+        if ($this->_curl_handler) {
+            $this->_curl_handler->registerShutdownFunction();
+        }
+
         return $this;
     }
 
@@ -607,6 +622,12 @@ class Raven_Client
             return null;
         }
 
+        foreach ($this->excluded_exceptions as $exclude) {
+            if ($exception instanceof $exclude) {
+                return null;
+            }
+        }
+
         if ($data === null) {
             $data = array();
         }
@@ -629,13 +650,6 @@ class Raven_Client
             );
 
             array_unshift($trace, $frame_where_exception_thrown);
-
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('Raven_Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('Raven_Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
 
             $exc_data['stacktrace'] = array(
                 'frames' => Raven_Stacktrace::get_stack_info(
@@ -881,6 +895,13 @@ class Raven_Client
         if (empty($data['request'])) {
             unset($data['request']);
         }
+        if (empty($data['site'])) {
+            unset($data['site']);
+        }
+
+        $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
+        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
 
         if (!$this->breadcrumbs->is_empty()) {
             $data['breadcrumbs'] = $this->breadcrumbs->fetch();
@@ -893,22 +914,13 @@ class Raven_Client
             array_shift($stack);
         }
 
-        if (!empty($stack)) {
-            // manually trigger autoloading, as it's not done in some edge cases due to PHP bugs (see #60149)
-            if (!class_exists('Raven_Stacktrace')) {
-                // @codeCoverageIgnoreStart
-                spl_autoload_call('Raven_Stacktrace');
-                // @codeCoverageIgnoreEnd
-            }
-
-            if (!isset($data['stacktrace']) && !isset($data['exception'])) {
-                $data['stacktrace'] = array(
-                    'frames' => Raven_Stacktrace::get_stack_info(
-                        $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
-                        $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
-                    ),
-                );
-            }
+        if (! empty($stack) && ! isset($data['stacktrace']) && ! isset($data['exception'])) {
+            $data['stacktrace'] = array(
+                'frames' => Raven_Stacktrace::get_stack_info(
+                    $stack, $this->trace, $vars, $this->message_limit, $this->prefixes,
+                    $this->app_path, $this->excluded_app_paths, $this->serializer, $this->reprSerializer
+                ),
+            );
         }
 
         $this->sanitize($data);
@@ -929,7 +941,7 @@ class Raven_Client
     {
         // attempt to sanitize any user provided data
         if (!empty($data['request'])) {
-            $data['request'] = $this->serializer->serialize($data['request']);
+            $data['request'] = $this->serializer->serialize($data['request'], 5);
         }
         if (!empty($data['user'])) {
             $data['user'] = $this->serializer->serialize($data['user'], 3);
@@ -992,7 +1004,7 @@ class Raven_Client
             return false;
         }
 
-        if (function_exists("gzcompress")) {
+        if ($this->useCompression) {
             $message = gzcompress($message);
         }
 
@@ -1299,6 +1311,11 @@ class Raven_Client
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
+        $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
+        if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
+            $host .= ':' . $_SERVER['SERVER_PORT'];
+        }
+
         $httpS = $this->isHttps() ? 's' : '';
         return "http{$httpS}://{$host}{$_SERVER['REQUEST_URI']}";
     }
@@ -1319,8 +1336,8 @@ class Raven_Client
         }
 
         if (!empty($this->trust_x_forwarded_proto) &&
-            !empty($_SERVER['X-FORWARDED-PROTO']) &&
-            $_SERVER['X-FORWARDED-PROTO'] === 'https') {
+            !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
             return true;
         }
 
@@ -1502,5 +1519,22 @@ class Raven_Client
     public function setReprSerializer(Raven_ReprSerializer $reprSerializer)
     {
         $this->reprSerializer = $reprSerializer;
+    }
+
+    private function triggerAutoload()
+    {
+        // manually trigger autoloading, as it cannot be done during error handling in some edge cases due to PHP (see #60149)
+
+        if (! class_exists('Raven_Stacktrace')) {
+            spl_autoload_call('Raven_Stacktrace');
+        }
+
+        if (function_exists('mb_detect_encoding')) {
+            mb_detect_encoding('string');
+        }
+
+        if (function_exists('mb_convert_encoding')) {
+            mb_convert_encoding('string', 'UTF8');
+        }
     }
 }

@@ -9,6 +9,16 @@
  * file that was distributed with this source code.
  */
 
+class Dummy_CarelessSetException extends Exception
+{
+    public function __set($var, $value)
+    {
+        if ($var === 'event_id') {
+            throw new Exception('I am carelessly throwing an exception here!');
+        }
+    }
+}
+
 class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
 {
     private $errorLevel;
@@ -110,7 +120,7 @@ class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
                ->with($this->isInstanceOf('Exception'));
 
         $handler = new Raven_ErrorHandler($client);
-        
+
         set_exception_handler(null);
         $handler->registerExceptionHandler(false);
 
@@ -207,8 +217,6 @@ class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
                        ->getMock();
         $handler = new Raven_ErrorHandler($client);
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), PHP_VERSION_ID < 70000);
-
         $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
     }
 
@@ -242,5 +250,28 @@ class Raven_Tests_ErrorHandlerTest extends \PHPUnit\Framework\TestCase
         // handler
         // $result = $handler->registerShutdownHandler();
         // $this->assertEquals($result, $handler);
+    }
+
+    public function testHandlingExceptionThrowingAnException()
+    {
+        $client = new Dummy_Raven_Client();
+        $handler = new Raven_ErrorHandler($client);
+        $handler->handleException($this->create_careless_exception());
+        $events = $client->getSentEvents();
+        $this->assertCount(1, $events);
+        $event = array_pop($events);
+
+        // Make sure the exception is of the careless exception and not the exception thrown inside
+        // the __set method of that exception caused by setting the event_id on the exception instance
+        $this->assertEquals('Dummy_CarelessSetException', $event['exception']['values'][0]['type']);
+    }
+
+    private function create_careless_exception()
+    {
+        try {
+            throw new Dummy_CarelessSetException('Foo bar');
+        } catch (Exception $ex) {
+            return $ex;
+        }
     }
 }

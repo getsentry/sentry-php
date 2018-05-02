@@ -13,6 +13,7 @@
   <testsuites>
     <testsuite name="Raven Test Suite">
       <directory>./test/Raven/</directory>
+      <directory suffix=".phpt">./test/Raven/phpt/</directory>
     </testsuite>
   </testsuites>
 

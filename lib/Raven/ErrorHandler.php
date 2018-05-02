@@ -51,6 +51,9 @@ class Raven_ErrorHandler
      */
     protected $error_types = null;
 
+    /** @var \Exception|null */
+    private $lastHandledException;
+
     public function __construct($client, $send_errors_last = false, $error_types = null,
                                 $__error_types = null)
     {
@@ -75,7 +78,16 @@ class Raven_ErrorHandler
 
     public function handleException($e, $isError = false, $vars = null)
     {
-        $e->event_id = $this->client->captureException($e, null, null, $vars);
+        $event_id = $this->client->captureException($e, null, null, $vars);
+
+        try {
+            $e->event_id = $event_id;
+        } catch (\Exception $e) {
+            // Ignore any errors while setting the event id on the exception object
+            // @see: https://github.com/getsentry/sentry-php/issues/579
+        }
+
+        $this->lastHandledException = $e;
 
         if (!$isError && $this->call_existing_exception_handler) {
             if ($this->old_exception_handler !== null) {
@@ -129,25 +141,42 @@ class Raven_ErrorHandler
             return;
         }
 
-        if ($this->shouldCaptureFatalError($error['type'])) {
+        if ($this->shouldCaptureFatalError($error['type'], $error['message'])) {
             $e = new ErrorException(
                 @$error['message'], 0, @$error['type'],
                 @$error['file'], @$error['line']
             );
+
+            $this->client->useCompression = $this->client->useCompression && PHP_VERSION_ID > 70000;
             $this->handleException($e, true);
         }
     }
 
-    public function shouldCaptureFatalError($type)
+    /**
+     * @param int $type
+     * @param string|null $message
+     * @return bool
+     */
+    public function shouldCaptureFatalError($type, $message = null)
     {
-        // Do not capture E_ERROR since those can be caught by userland since PHP 7.0
-        // E_ERROR should already be handled by the exception handler
-        // This prevents duplicated exceptions in PHP 7.0+
-        if (PHP_VERSION_ID >= 70000 && $type === E_ERROR) {
-            return false;
+        if (PHP_VERSION_ID >= 70000 && $this->lastHandledException) {
+            if ($type === E_CORE_ERROR && strpos($message, 'Exception thrown without a stack frame') === 0) {
+                return false;
+            }
+
+            if ($type === E_ERROR) {
+                $expectedMessage = 'Uncaught '
+                    . \get_class($this->lastHandledException)
+                    . ': '
+                    . $this->lastHandledException->getMessage();
+
+                if (strpos($message, $expectedMessage) === 0) {
+                    return false;
+                }
+            }
         }
 
-        return $type & $this->fatal_error_types;
+        return (bool) ($type & $this->fatal_error_types);
     }
 
     /**

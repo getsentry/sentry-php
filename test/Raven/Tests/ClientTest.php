@@ -216,6 +216,13 @@ class Dummy_Raven_CurlHandler extends Raven_CurlHandler
     }
 }
 
+interface Dummy_Exception_Interface
+{
+}
+class Dummy_Exception extends Exception implements Dummy_Exception_Interface
+{
+}
+
 class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown()
@@ -694,6 +701,34 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0, count($events));
     }
 
+    /**
+     * @covers Raven_Client::captureException
+     */
+    public function testCaptureExceptionHandlesExcludeSubclassOption()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'excluded_exceptions' => array('Exception'),
+        ));
+        $ex = new Dummy_Exception();
+        $client->captureException($ex, 'test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(0, count($events));
+    }
+
+    /**
+     * @covers Raven_Client::captureException
+     */
+    public function testCaptureExceptionHandlesExcludeInterfaceOption()
+    {
+        $client = new Dummy_Raven_Client(array(
+            'excluded_exceptions' => array('Dummy_Exception_Interface'),
+        ));
+        $ex = new Dummy_Exception();
+        $client->captureException($ex, 'test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(0, count($events));
+    }
+
     public function testCaptureExceptionInvalidUTF8()
     {
         $client = new Dummy_Raven_Client();
@@ -760,6 +795,21 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::capture
+     */
+    public function testEmptySiteGetsRemoved()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->site = '';
+
+        $client->captureMessage("My message");
+        $events = $client->getSentEvents();
+        $this->assertSame(1, count($events));
+        $event = array_pop($events);
+        $this->assertFalse(array_key_exists('site', $event));
+    }
+
+  /**
      * @covers Raven_Client::__construct
      * @covers Raven_Client::get_default_data
      */
@@ -1018,6 +1068,98 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(array(
             'email' => 'foo@example.com',
         ), $event['user']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnCustomContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'mine' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['mine']['line']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnOverrideRuntimeItself()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'name' => 'sentry',
+                'version' => '0.1.1-alpha.1'
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals('0.1.1-alpha.1', $event['contexts']['runtime']['version']);
+        $this->assertEquals('sentry', $event['contexts']['runtime']['name']);
+    }
+
+    /**
+     * @covers Raven_Client::capture
+     */
+    public function testRuntimeOnExistingRuntimeContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $data = array('contexts' => array(
+            'runtime' => array(
+                'line' => 1216,
+                'stack' => array(
+                    1, array(
+                        'foo' => 'bar',
+                        'level4' => array(array('level5', 'level5 a'), 2),
+                    ), 3
+                ),
+            ),
+        ));
+
+        $client->captureMessage('test', array(), $data);
+
+        $events = $client->getSentEvents();
+        $event = array_pop($events);
+        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals('php', $event['contexts']['runtime']['name']);
+        $this->assertEquals(1216, $event['contexts']['runtime']['line']);
     }
 
     /**
@@ -1335,21 +1477,88 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     public function testSanitizeRequest()
     {
         $client = new Dummy_Raven_Client();
-        $data = array('request' => array(
-            'context' => array(
-                'line' => 1216,
-                'stack' => array(
-                    1, array(2), 3
+
+        // Typical content of $_POST in PHP
+        $post = array(
+            '_method' => 'POST',
+            'data' => array(
+                'MyModel' => array(
+                    'flatField' => 'my value',
+                    'nestedField' => array(
+                        'key' => 'my other value',
+                    ),
                 ),
             ),
+        );
+
+        $data = array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => $post,
         ));
+
         $client->sanitize($data);
 
         $this->assertEquals(array('request' => array(
-            'context' => array(
-                'line' => 1216,
-                'stack' => array(
-                    1, 'Array of length 1', 3
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => array(
+                '_method' => 'POST',
+                'data' => array(
+                    'MyModel' => array(
+                        'flatField' => 'my value',
+                        'nestedField' => array(
+                            'key' => 'my other value',
+                        ),
+                    ),
+                ),
+            ),
+        )), $data);
+    }
+
+    /**
+     * @covers Raven_Client::sanitize
+     */
+    public function testSanitizeDeepRequest()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $post = array(
+            '_method' => 'POST',
+            'data' => array(
+                'Level 1' => array(
+                    'Level 2' => array(
+                        'Level 3' => array(
+                            'Level 4' => 'something',
+                        ),
+                    ),
+                ),
+            ),
+        );
+
+        $data = array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => $post,
+        ));
+
+        $client->sanitize($data);
+
+        $this->assertEquals(array('request' => array(
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => array(
+                '_method' => 'POST',
+                'data' => array(
+                    'Level 1' => array(
+                        'Level 2' => array(
+                            'Level 3' => 'Array of length 1',
+                        ),
+                    ),
                 ),
             ),
         )), $data);
@@ -1543,7 +1752,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'HTTP_X_FORWARDED_PROTO' => 'https'
                 ),
                 array(),
                 'http://example.com/',
@@ -1553,11 +1762,21 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(
                     'REQUEST_URI' => '/',
                     'HTTP_HOST' => 'example.com',
-                    'X-FORWARDED-PROTO' => 'https'
+                    'HTTP_X_FORWARDED_PROTO' => 'https'
                 ),
                 array('trust_x_forwarded_proto' => true),
                 'https://example.com/',
                 'The url is expected to be https because the X-Forwarded header is trusted'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => 81
+                ),
+                array(),
+                'http://example.com:81/',
+                'Port is not appended'
             )
         );
     }
@@ -1955,7 +2174,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertRegExp('_^[a-zA-Z0-9/=]+$_', $value, 'Raven_Client::encode returned malformed data');
         $decoded = base64_decode($value);
         $this->assertInternalType('string', $decoded, 'Can not use base64 decode on the encoded blob');
-        if (function_exists("gzcompress")) {
+        if (function_exists('gzcompress')) {
             $decoded = gzuncompress($decoded);
             $this->assertEquals($json_stringify, $decoded, 'Can not decompress compressed blob');
         } else {
