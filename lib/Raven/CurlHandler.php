@@ -94,6 +94,8 @@ class Raven_CurlHandler
      */
     protected function select()
     {
+        $active = false;
+        
         do {
             $mrc = curl_multi_exec($this->multi_handle, $active);
         } while ($mrc == CURLM_CALL_MULTI_PERFORM);
