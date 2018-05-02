@@ -46,5 +46,5 @@ trigger_error('Fatal please!', E_USER_ERROR);
 --EXPECTF--
 Sending handled fatal error...
 
-Fatal error: Fatal please! in - on line %d
+Fatal error: Fatal please! in %s on line %d
 Curl handler successfully emptied
