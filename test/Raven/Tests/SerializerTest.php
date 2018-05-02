@@ -164,4 +164,17 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertInternalType('string', $result);
         $this->assertEquals('Resource stream', $result);
     }
+
+    public function testClippingUTF8Characters()
+    {
+        $teststring = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
+        $serializer = new Raven_Serializer(null, 19); // Length of 19 will clip character in half if no mb_* string functions are used for the teststring
+
+        $clipped = $serializer->serialize($teststring);
+        $this->assertEquals('Прекратит {clipped}', $clipped);
+
+        Raven_Compat::json_encode($clipped);
+
+        $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+    }
 }
