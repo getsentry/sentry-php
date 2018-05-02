@@ -126,7 +126,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual(1024, mb_strlen($result));
+                $this->assertLessThanOrEqual(1024, extension_loaded('mbstring') ? mb_strlen($result) : strlen($result));
             }
         }
     }
@@ -146,7 +146,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual(500, mb_strlen($result));
+                $this->assertLessThanOrEqual(500, extension_loaded('mbstring') ? mb_strlen($result) : strlen($result));
             }
         }
     }
@@ -167,6 +167,10 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
 
     public function testClippingUTF8Characters()
     {
+        if (!extension_loaded('mbstring')) {
+            $this->markTestSkipped('mbstring extension is not enabled.');
+        }
+
         $teststring = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
         $serializer = new Raven_Serializer(null, 19); // Length of 19 will clip character in half if no mb_* string functions are used for the teststring
 
