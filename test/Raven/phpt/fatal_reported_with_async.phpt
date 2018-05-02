@@ -41,12 +41,10 @@ register_shutdown_function(function () use (&$client) {
     }
 });
 
-ini_set('memory_limit', '8M');
-while (TRUE) {
-    $a[] = 'b';
-}
+trigger_error('Fatal please!', E_USER_ERROR);
 ?>
 --EXPECTF--
-Fatal error: Allowed memory size %s
 Sending handled fatal error...
+
+Fatal error: Fatal please! in - on line %d
 Curl handler successfully emptied
