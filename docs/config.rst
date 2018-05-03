@@ -241,6 +241,26 @@ The following settings are available for the client:
                     )
         )
 
+.. describe:: timeout
+
+    The timeout for sending requests to the Sentry server in seconds, default is 2 seconds.
+
+    .. code-block:: php
+
+        'timeout' => 2,
+
+.. describe:: excluded_exceptions
+
+    Exception that should not be reported, exceptions extending exceptions in this list will also
+    be excluded, default is an empty array.
+
+    In the example below, when you exclude ``LogicException`` you will also exclude ``BadFunctionCallException``
+    since it extends ``LogicException``.
+
+    .. code-block:: php
+
+        'excluded_exceptions' => array('LogicException'),
+
 .. _sentry-php-request-context:
 
 Providing Request Context
