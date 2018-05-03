@@ -106,7 +106,7 @@ class ContextTest extends TestCase
 
         // Accessing a key that does not exists in the data object should behave
         // like accessing a non-existent key of an array
-        $context['foo'];
+        @$context['foo'];
 
         $error = error_get_last();
 
