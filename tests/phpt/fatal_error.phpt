@@ -27,9 +27,11 @@ ErrorHandler::register($client);
 register_shutdown_function('register_shutdown_function', function () use ($client) {
     /** @var \Raven\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
-    $pendingRequests = Assert::getObjectAttribute($transport, 'pendingRequests');
 
-    Assert::assertEmpty($pendingRequests);
+    Assert::assertNotNull($client->getLastEvent());
+    Assert::assertAttributeEmpty('pendingRequests', $transport);
+
+    echo 'Shutdown function called';
 });
 
 class TestClass implements \Serializable
@@ -37,4 +39,5 @@ class TestClass implements \Serializable
 }
 ?>
 --EXPECTF--
-Fatal error: Class Raven\Tests\TestClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %i
+Fatal error: Class Raven\Tests\TestClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
+Shutdown function called

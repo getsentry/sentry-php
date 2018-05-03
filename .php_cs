@@ -20,6 +20,7 @@ return PhpCsFixer\Config::create()
             ->in(__DIR__)
             ->exclude([
                 'tests/resources',
+                'tests/phpt'
             ])
     )
 ;

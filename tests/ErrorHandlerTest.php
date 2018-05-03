@@ -48,9 +48,9 @@ class ErrorHandlerTest extends TestCase
      * @expectedException \UnexpectedValueException
      * @expectedExceptionMessage The value of the $reservedMemorySize argument must be an integer greater than 0.
      */
-    public function testConstructorThrowsWhenReservedMemorySizeIsWrong()
+    public function testConstructorThrowsWhenReservedMemorySizeIsWrong($reservedMemorySize)
     {
-        ErrorHandler::register($this->client, 0);
+        ErrorHandler::register($this->client, $reservedMemorySize);
     }
 
     public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider()

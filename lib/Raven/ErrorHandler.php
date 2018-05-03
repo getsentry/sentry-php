@@ -264,7 +264,7 @@ class ErrorHandler
         $this->previousExceptionHandler = null;
 
         try {
-            call_user_func($previousExceptionHandler, $exception);
+            $previousExceptionHandler($exception);
         } catch (\Exception $previousExceptionHandlerException) {
             // Do nothing, we just need to set the $previousExceptionHandlerException
             // variable to the exception we just catched to compare it later
