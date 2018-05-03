@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- ...
+
 ## 1.9.0 (2018-05-03)
 
 - Fixed undefined variable (#588)
