@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,6 +21,8 @@ use Zend\Diactoros\Uri;
 
 class RequestInterfaceMiddlewareTest extends TestCase
 {
+    private static $inputData;
+
     public function testInvokeWithNoRequest()
     {
         $configuration = new Configuration();
@@ -42,7 +44,7 @@ class RequestInterfaceMiddlewareTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke($requestData, $expectedValue)
+    public function testInvoke(array $requestData, array $expectedValue, $inputData = null)
     {
         $configuration = new Configuration();
         $event = new Event($configuration);
@@ -65,6 +67,10 @@ class RequestInterfaceMiddlewareTest extends TestCase
         };
 
         $middleware = new RequestInterfaceMiddleware();
+        if ($inputData) {
+            $this->mockReadFromPhpInput($inputData);
+        }
+
         $middleware($event, $callback, $request);
 
         $this->assertEquals(1, $invokationCount);
@@ -72,6 +78,9 @@ class RequestInterfaceMiddlewareTest extends TestCase
 
     public function invokeDataProvider()
     {
+        $validData = ['json_test' => 'json_data'];
+        $invalidData = '{"binary_json":"' . pack('NA3CC', 3, 'aBc', 0x0D, 0x0A) . '"}';
+
         return [
             [
                 [
@@ -117,6 +126,92 @@ class RequestInterfaceMiddlewareTest extends TestCase
                     ],
                 ],
             ],
+            [
+                [
+                    'uri' => 'http://www.example.com/foo',
+                    'method' => 'POST',
+                    'cookies' => [],
+                    'headers' => [
+                        'Content-Type' => ['application/json'],
+                        'Host' => ['www.example.com'],
+                        'REMOTE_ADDR' => ['127.0.0.1'],
+                    ],
+                ],
+                [
+                    'url' => 'http://www.example.com/foo',
+                    'method' => 'POST',
+                    'cookies' => [],
+                    'data' => $validData,
+                    'headers' => [
+                        'Content-Type' => ['application/json'],
+                        'Host' => ['www.example.com'],
+                        'REMOTE_ADDR' => ['127.0.0.1'],
+                    ],
+                    'env' => [
+                        'REMOTE_ADDR' => '127.0.0.1',
+                    ],
+                ],
+                json_encode($validData),
+            ],
+            [
+                [
+                    'uri' => 'http://www.example.com/foo',
+                    'method' => 'POST',
+                    'cookies' => [],
+                    'headers' => [
+                        'Content-Type' => ['application/json'],
+                        'Host' => ['www.example.com'],
+                        'REMOTE_ADDR' => ['127.0.0.1'],
+                    ],
+                ],
+                [
+                    'url' => 'http://www.example.com/foo',
+                    'method' => 'POST',
+                    'cookies' => [],
+                    'data' => null,
+                    'headers' => [
+                        'Content-Type' => ['application/json'],
+                        'Host' => ['www.example.com'],
+                        'REMOTE_ADDR' => ['127.0.0.1'],
+                    ],
+                    'env' => [
+                        'REMOTE_ADDR' => '127.0.0.1',
+                    ],
+                ],
+                $invalidData,
+            ],
         ];
+    }
+
+    /**
+     * @return string
+     */
+    public static function getInputData()
+    {
+        return self::$inputData;
+    }
+
+    /**
+     * @param string $inputData
+     */
+    private function mockReadFromPhpInput($inputData)
+    {
+        self::$inputData = $inputData;
+        if (function_exists('Raven\Middleware\file_get_contents')) {
+            return;
+        }
+
+        $self = \get_class($this);
+
+        eval(<<<EOPHP
+namespace Raven\Middleware;
+
+function file_get_contents()
+{
+    return \\$self::getInputData();
+}
+
+EOPHP
+        );
     }
 }
