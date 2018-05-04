@@ -27,6 +27,7 @@ use Raven\Middleware\MiddlewareStack;
 use Raven\Processor\ProcessorInterface;
 use Raven\Processor\ProcessorRegistry;
 use Raven\Serializer;
+use Raven\Tests\Fixtures\classes\CarelessException;
 use Raven\Transport\TransportInterface;
 
 // XXX: Is there a better way to stub the client?
@@ -841,5 +842,24 @@ class ClientTest extends TestCase
         $client->setReprSerializer($serializer);
 
         $this->assertSame($serializer, $client->getReprSerializer());
+    }
+
+    public function testHandlingExceptionThrowingAnException()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->captureException($this->createCarelessExceptionWithStacktrace());
+        $event = $client->getLastEvent();
+        // Make sure the exception is of the careless exception and not the exception thrown inside
+        // the __set method of that exception caused by setting the event_id on the exception instance
+        $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
+    }
+
+    private function createCarelessExceptionWithStacktrace()
+    {
+        try {
+            throw new CarelessException('Foo bar');
+        } catch (\Exception $ex) {
+            return $ex;
+        }
     }
 }
