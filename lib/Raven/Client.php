@@ -33,7 +33,7 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * Raven PHP Client.
  *
- * @doc https://docs.sentry.io/clients/php/config/
+ * @see https://docs.sentry.io/clients/php/config/
  */
 class Client
 {
