@@ -51,13 +51,23 @@ class Serializer
     protected $_all_object_serialize = false;
 
     /**
-     * @param null|string $mb_detect_order
+     * The default maximum message lengths. Longer strings will be truncated
+     * 
+     * @var int
      */
-    public function __construct($mb_detect_order = null)
+    protected $messageLimit;
+
+    /**
+     * @param null|string $mb_detect_order
+     * @param null|int    $messageLimit
+     */
+    public function __construct($mb_detect_order = null, $messageLimit = Client::MESSAGE_LIMIT)
     {
         if (null != $mb_detect_order) {
             $this->mb_detect_order = $mb_detect_order;
         }
+
+        $this->messageLimit = (int) $messageLimit;
     }
 
     /**
@@ -133,8 +143,8 @@ class Serializer
             }
         }
 
-        if (strlen($value) > 1024) {
-            $value = substr($value, 0, 1014) . ' {clipped}';
+        if (strlen($value) > $this->messageLimit) {
+            $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
         }
 
         return $value;
@@ -196,5 +206,21 @@ class Serializer
     public function getAllObjectSerialize()
     {
         return $this->_all_object_serialize;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMessageLimit()
+    {
+        return $this->messageLimit;
+    }
+
+    /**
+     * @param int $messageLimit
+     */
+    public function setMessageLimit($messageLimit)
+    {
+        $this->messageLimit = $messageLimit;
     }
 }
