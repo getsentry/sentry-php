@@ -132,19 +132,22 @@ class Serializer
     protected function serializeString($value)
     {
         $value = (string) $value;
-        if (function_exists('mb_detect_encoding')
-            && function_exists('mb_convert_encoding')
-        ) {
+
+        if (extension_loaded('mbstring')) {
             // we always guarantee this is coerced, even if we can't detect encoding
             if ($currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)) {
                 $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
             } else {
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
-        }
 
-        if (strlen($value) > $this->messageLimit) {
-            $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
+            if (mb_strlen($value) > $this->messageLimit) {
+                $value = mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
+            }
+        } else {
+            if (strlen($value) > $this->messageLimit) {
+                $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
+            }
         }
 
         return $value;

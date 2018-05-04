@@ -420,6 +420,24 @@ abstract class SerializerAbstractTest extends TestCase
         $serializer->setAllObjectSerialize(false);
         $this->assertFalse($serializer->getAllObjectSerialize());
     }
+
+    public function testClippingUTF8Characters()
+    {
+        if (!extension_loaded('mbstring')) {
+            $this->markTestSkipped('mbstring extension is not enabled.');
+        }
+
+        $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
+        $class_name = static::get_test_class();
+        /** @var \Raven\Serializer $serializer */
+        $serializer = new $class_name(null, 19);
+
+        $clipped = $serializer->serialize($testString);
+
+        $this->assertEquals('Прекратит {clipped}', $clipped);
+        $this->assertNotNull(json_encode($clipped));
+        $this->assertSame(JSON_ERROR_NONE, json_last_error());
+    }
 }
 
 /**
