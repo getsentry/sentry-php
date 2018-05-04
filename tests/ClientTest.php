@@ -554,7 +554,7 @@ class ClientTest extends TestCase
                             'key' => 'my other value',
                         ],
                     ],
-                ]
+                ],
             ],
             [
                 [

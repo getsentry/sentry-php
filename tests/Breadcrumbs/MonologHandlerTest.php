@@ -123,6 +123,7 @@ EOF;
 
     /**
      * @param Client $client
+     *
      * @return Logger
      */
     private function createLoggerWithHandler(Client $client)
@@ -136,6 +137,7 @@ EOF;
 
     /**
      * @param Client $client
+     *
      * @return Breadcrumb[]
      */
     private function getBreadcrumbs(Client $client)

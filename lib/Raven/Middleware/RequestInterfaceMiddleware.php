@@ -53,7 +53,7 @@ final class RequestInterfaceMiddleware
         if ($request->hasHeader('REMOTE_ADDR')) {
             $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
         }
-        
+
         if (in_array('application/json', $request->getHeader('Content-Type'))) {
             $inputData = file_get_contents('php://input');
             $requestData['data'] = json_decode($inputData, true);

@@ -6,7 +6,7 @@ class CarelessException extends \Exception
 {
     public function __set($var, $value)
     {
-        if ($var === 'event_id') {
+        if ('event_id' === $var) {
             throw new \RuntimeException('I am carelessly throwing an exception here!');
         }
     }

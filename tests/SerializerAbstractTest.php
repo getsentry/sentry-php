@@ -382,7 +382,7 @@ abstract class SerializerAbstractTest extends TestCase
         $serializer = new $class_name();
         $serializer->setMessageLimit(500);
 
-        foreach (array(100, 490, 499, 500, 501, 1000, 10000) as $length) {
+        foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
             $input = str_repeat('x', $length);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);

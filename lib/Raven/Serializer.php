@@ -51,8 +51,8 @@ class Serializer
     protected $_all_object_serialize = false;
 
     /**
-     * The default maximum message lengths. Longer strings will be truncated
-     * 
+     * The default maximum message lengths. Longer strings will be truncated.
+     *
      * @var int
      */
     protected $messageLimit;
