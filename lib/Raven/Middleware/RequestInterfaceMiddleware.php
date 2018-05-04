@@ -54,11 +54,6 @@ final class RequestInterfaceMiddleware
             $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
         }
 
-        if (in_array('application/json', $request->getHeader('Content-Type'))) {
-            $inputData = file_get_contents('php://input');
-            $requestData['data'] = json_decode($inputData, true);
-        }
-
         $event = $event->withRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
