@@ -503,30 +503,77 @@ class ClientTest extends TestCase
         $this->assertEquals(['email' => 'foo@example.com'], $event->getUserContext());
     }
 
-    public function testSanitizeRequest()
+    /**
+     * @dataProvider deepRequestProvider
+     */
+    public function testSanitizeRequest(array $postData, array $expectedData)
     {
         $client = ClientBuilder::create()->getClient();
 
         $event = new Event($client->getConfig());
         $event = $event->withRequest([
-            'context' => [
-                'line' => 1216,
-                'stack' => [
-                    1, [2], 3,
-                ],
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => [
+                '_method' => 'POST',
+                'data' => $postData,
             ],
         ]);
 
         $event = $client->sanitize($event);
 
         $this->assertArraySubset([
-            'context' => [
-                'line' => 1216,
-                'stack' => [
-                    1, 'Array of length 1', 3,
-                ],
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => [
+                '_method' => 'POST',
+                'data' => $expectedData,
             ],
         ], $event->getRequest());
+    }
+
+    public function deepRequestProvider()
+    {
+        return [
+            [
+                [
+                    'MyModel' => [
+                        'flatField' => 'my value',
+                        'nestedField' => [
+                            'key' => 'my other value',
+                        ],
+                    ],
+                ],
+                [
+                    'MyModel' => [
+                        'flatField' => 'my value',
+                        'nestedField' => [
+                            'key' => 'my other value',
+                        ],
+                    ],
+                ]
+            ],
+            [
+                [
+                    'Level 1' => [
+                        'Level 2' => [
+                            'Level 3' => [
+                                'Level 4' => 'something',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'Level 1' => [
+                        'Level 2' => [
+                            'Level 3' => 'Array of length 1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 
     private function assertMixedValueAndArray($expected_value, $actual_value)

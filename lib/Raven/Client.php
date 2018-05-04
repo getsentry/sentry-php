@@ -471,7 +471,7 @@ class Client
         $tagsContext = $event->getTagsContext();
 
         if (!empty($request)) {
-            $event = $event->withRequest($this->serializer->serialize($request));
+            $event = $event->withRequest($this->serializer->serialize($request, 5));
         }
         if (!empty($userContext)) {
             $event = $event->withUserContext($this->serializer->serialize($userContext, 3));
