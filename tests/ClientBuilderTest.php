@@ -246,7 +246,6 @@ class ClientBuilderTest extends TestCase
             ['setPrefixes', ['foo', 'bar']],
             ['setSerializeAllObjects', false],
             ['setSampleRate', 0.5],
-            ['setInstallDefaultBreadcrumbHandlers', false],
             ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],

@@ -181,10 +181,6 @@ class Client
         if ($this->config->getSerializeAllObjects()) {
             $this->setAllObjectSerialize(true);
         }
-
-        if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
-            $this->registerDefaultBreadcrumbHandlers();
-        }
     }
 
     /**
@@ -376,12 +372,6 @@ class Client
         }
 
         return str_replace('-', '', $this->lastEvent->getId()->toString());
-    }
-
-    protected function registerDefaultBreadcrumbHandlers()
-    {
-        $handler = new Breadcrumbs\ErrorHandler($this);
-        $handler->install();
     }
 
     /**

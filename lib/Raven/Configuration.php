@@ -180,28 +180,6 @@ class Configuration
     }
 
     /**
-     * Gets whether the default breadcrumb handlers should be installed.
-     *
-     * @return bool
-     */
-    public function shouldInstallDefaultBreadcrumbHandlers()
-    {
-        return $this->options['install_default_breadcrumb_handlers'];
-    }
-
-    /**
-     * Sets whether the default breadcrumb handlers should be installed.
-     *
-     * @param bool $installDefaultBreadcrumbHandlers Flag indicating if the default handlers should be installed
-     */
-    public function setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
-    {
-        $options = array_merge($this->options, ['install_default_breadcrumb_handlers' => $installDefaultBreadcrumbHandlers]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the character encoding detection order.
      *
      * @return string[]|null
@@ -646,7 +624,6 @@ class Configuration
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
             'sample_rate' => 1,
-            'install_default_breadcrumb_handlers' => true,
             'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
@@ -671,7 +648,6 @@ class Configuration
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('install_default_breadcrumb_handlers', 'bool');
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');

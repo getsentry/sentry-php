@@ -114,9 +114,7 @@ EOF;
      */
     private function createClient()
     {
-        $client = $client = ClientBuilder::create([
-            'install_default_breadcrumb_handlers' => false,
-        ])->getClient();
+        $client = $client = ClientBuilder::create()->getClient();
 
         return $client;
     }
