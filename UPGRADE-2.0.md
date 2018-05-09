@@ -29,6 +29,7 @@
   user the burden of adding an already configured processor instance to the client.
 - The `transport` option has been removed in favour of setting it using the
   client builder.
+- The `install_default_breadcrumb_handlers` option has been removed.
 - The `http_client_options` has been added to set the options that applies to the
   HTTP client chosen by the user as underlying transport method.
 - The `open_timeout` option has been added to set the maximum number of seconds
@@ -44,7 +45,10 @@
 
 ### Client
 
-- The constructor of the `Client` class has changed its signature. The only way
+- The `Raven_Client` class has been renamed to `Client` to follow the PSR-4
+  convention.
+
+- The constructor of the `Raven_Client` class has changed its signature. The only way
   to set the DSN is now to set it in the options passed to the `Configuration`
   class.
 
@@ -66,8 +70,8 @@
   }
   ```
 
-- The methods `Client::getRelease` and `Client::setRelease` have been removed.
-  You should use `Configuration::getRelease()` and `Configuration::setRelease`
+- The methods `Raven_Client::getRelease` and `Raven_Client::setRelease` have
+  been removed. You should use `Configuration::getRelease()` and `Configuration::setRelease`
   instead.
 
   Before:
@@ -84,8 +88,8 @@
   $client->getConfig()->setRelease(...);
   ```
 
-- The methods `Client::getEnvironment` and `Client::setEnvironment` have been
-  removed. You should use `Configuration::getCurrentEnvironment` and
+- The methods `Raven_Client::getEnvironment` and `Raven_Client::setEnvironment`
+  have been removed. You should use `Configuration::getCurrentEnvironment` and
   `Configuration::setCurrentEnvironment` instead.
 
   Before:
@@ -102,9 +106,9 @@
   $client->getConfig()->setCurrentEnvironment(...);
   ```
 
-- The methods `Client::getDefaultPrefixes` and `Client::setPrefixes` have been
-  removed. You should use `Configuration::getPrefixes` and `Configuration::setPrefixes`
-  instead.
+- The methods `Raven_Client::getDefaultPrefixes` and `Raven_Client::setPrefixes`
+  have been removed. You should use `Configuration::getPrefixes` and
+  `Configuration::setPrefixes` instead.
 
   Before:
 
@@ -120,8 +124,8 @@
   $client->getConfig()->setPrefixes(...);
   ```
 
-- The methods `Client::getAppPath` and `Client::setAppPath` have been removed.
-  You should use `Configuration::getProjectRoot` and `Configuration::setProjectRoot`
+- The methods `Raven_Client::getAppPath` and `Raven_Client::setAppPath` have been
+  removed. You should use `Configuration::getProjectRoot` and `Configuration::setProjectRoot`
   instead.
 
   Before:
@@ -137,7 +141,7 @@
   $client->getConfig()->getProjectRoot();
   $client->getConfig()->setProjectRoot(...);
 
-- The methods `Client::getExcludedAppPaths` and `Client::setExcludedAppPaths`
+- The methods `Raven_Client::getExcludedAppPaths` and `Raven_Client::setExcludedAppPaths`
   have been removed. You should use `Configuration::getExcludedProjectPaths`
   and `Configuration::setExcludedProjectPaths` instead.
 
@@ -154,7 +158,7 @@
   $client->getConfig()->getExcludedProjectPaths();
   $client->getConfig()->setExcludedProjectPaths(...);
 
-- The methods `Client::getSendCallback` and `Client::setSendCallback` have been
+- The methods `Raven_Client::getSendCallback` and `Raven_Client::setSendCallback` have been
   removed. You should use `Configuration::shouldCapture` and `Configuration::setShouldCapture`
   instead.
 
@@ -171,7 +175,7 @@
   $client->getConfig()->shouldCapture();
   $client->getConfig()->setShouldCapture(...);
 
-- The method `Client::getServerEndpoint` has been removed. You should use
+- The method `Raven_Client::getServerEndpoint` has been removed. You should use
   `Configuration::getServer` instead.
 
   Before:
@@ -186,7 +190,7 @@
   $client->getConfig()->getServer();
   ```
 
-- The method `Client::getTransport` has been removed. You should use
+- The method `Raven_Client::getTransport` has been removed. You should use
   `Configuration::getTransport` instead.
 
   Before:
@@ -201,7 +205,7 @@
   $client->getConfig()->getTransport();
   ```
 
-- The method `Client::getErrorTypes` has been removed. You should use
+- The method `Raven_Client::getErrorTypes` has been removed. You should use
   `Configuration::getErrorTypes` instead.
 
   Before:
@@ -216,13 +220,13 @@
   $client->getConfig()->getErrorTypes();
   ```
 
-- The `Client::getDefaultProcessors` method has been removed.
+- The `Raven_Client::getDefaultProcessors` method has been removed.
 
-- The `Client::message` method has been removed.
+- The `Raven_Client::message` method has been removed.
 
-- The `Client::captureQuery` method has been removed.
+- The `Raven_Client::captureQuery` method has been removed.
 
-- The `Client::captureMessage` method has changed its signature by removing the
+- The `Raven_Client::captureMessage` method has changed its signature by removing the
   `$stack` and `$vars` arguments.
 
   Before:
@@ -243,8 +247,8 @@
   }
   ```
 
-- The `Client::captureException` method has changed its signature by removing the
-  `$logger` and `$vars` arguments.
+- The `Raven_Client::captureException` method has changed its signature by removing
+  the `$logger` and `$vars` arguments.
 
   Before:
 
@@ -264,9 +268,10 @@
   }
   ```
 
-- The `$vars` argument of the `Client::captureException`, `Client::captureMessage` and
-  `Client::captureQuery` methods accepted some values that were setting additional data
-  in the event like the tags or the user data. Some of them have changed name.
+- The `$vars` argument of the `Raven_Client::captureException`, `Raven_Client::captureMessage`
+  and `Raven_Client::captureQuery` methods accepted some values that were
+  setting additional data in the event like the tags or the user data.
+  Some of them have changed name.
 
   Before:
 
@@ -296,11 +301,12 @@
   level of the event. This has been changed so that only the `ErrorException` or its
   derivated classes are considered for this behavior.
 
-- The method `Client::createProcessors` has been removed as there is no need to create
-  instances of the processors from outside the `Client` class.
+- The method `Raven_Client::createProcessors` has been removed as there is no
+  need to create instances of the processors from outside the `Client` class.
 
-- The method `Client::setProcessors` has been removed. You should use `Client::addProcessor`
-  and `Client::removeProcessor` instead to manage the processors that will be executed.
+- The method `Raven_Client::setProcessors` has been removed. You should use
+  `Client::addProcessor` and `Client::removeProcessor` instead to manage the
+  processors that will be executed.
 
   Before:
 
@@ -326,15 +332,15 @@
   $client->addProcessor($processor2, 255); // Note the priority: higher the priority earlier a processor will be executed. This is equivalent to adding first $processor2 and then $processor1
   ```
 
-- The method `Client::process` has been removed as there is no need to process event data
+- The method `Raven_Client::process` has been removed as there is no need to process event data
   from outside the `Client` class.
 
 - The `Raven_Processor` class has been removed. There is not anymore a base
   abstract class for the processors, but a `ProcessorInterface` interface has
   been introduced.
 
-- The `Client::user_context` method has been removed. You should use `Client::getUserContext`
-  instead.
+- The `Raven_Client::user_context` method has been removed. You should use
+  `Client::getUserContext` instead.
 
   Before:
 
@@ -348,8 +354,8 @@
   $client->getUserContext()->setData(array('foo' => 'bar'));
   ```
 
-- The `Client::tags_context` method has been removed. You should use `Client::getTagsContext`
-  instead.
+- The `Raven_Client::tags_context` method has been removed. You should use
+  `Client::getTagsContext` instead.
 
   Before:
 
@@ -363,8 +369,8 @@
   $client->getTagsContext()->setData(array('foo', 'bar'));
   ```
 
-- The `Client::extra_context` method has been removed. You should use `Client::getExtraContext`
-  instead.
+- The `Raven_Client::extra_context` method has been removed. You should use
+  `Client::getExtraContext` instead.
 
   Before:
 
@@ -393,6 +399,43 @@
   $client->getTransactionStack()->push('foo');
   ```
 
+- The method `Raven_Client::install` has been removed. You should use `ErrorHandler::register`
+  instead to register an error handler and associate it with the client.
+
+  Before:
+
+  ```php
+  $client->install();
+  ```
+
+  After:
+
+  ```php
+  use Raven\ErrorHandler;
+
+  ErrorHandler::register($client);
+  ```
+
+- The method `Raven_Client::registerDefaultBreadcrumbHandlers` has been removed.
+  You should use `BreadcrumbErrorHandler::register` instead to register an error
+  handler and associate it with the client.
+
+  Before:
+
+  ```php
+  $client = new Raven_Client(array('install_default_breadcrumb_handlers' => true));
+  ```
+
+  After:
+
+  ```php
+  use Raven\BreadcrumbErrorHandler;
+
+  $client = new Client([...]);
+
+  BreadcrumbErrorHandler::register($client);
+  ```
+
 ### Client builder
 
 - To simplify the creation of a `Client` object instance, a new builder class
@@ -401,7 +444,7 @@
   Before:
 
   ```php
-  $client = new Client([...]);
+  $client = new Raven_Client([...]);
   ```
 
   After:
@@ -463,7 +506,7 @@
 
   ```php
   $client->transaction->push('foo', 'bar', 'baz');
-  
+
   $value = $client->transaction->pop(); // $value is 'baz'
   $value = $client->transaction->pop('foo'); // $value is 'foo'
   $value = $client->transaction->pop(); // $value is null
@@ -480,3 +523,101 @@
 
   $value = $client->getTransactionStack()->pop(); // $value is null
   ```
+
+## Error handlers
+
+- The `Raven_Breadcrumbs_ErrorHandler` class has been renamed to `BreadcrumbErrorHandler`
+  to better reflect its purpose and to follow the PSR-4 convention.
+
+- The constructor of the `Raven_Breadcrumbs_ErrorHandler` class has changed its
+  visibility to `protected`. To create a new instance of the class use the new
+  method `BreadcrumbErrorHandler::register`.
+
+- The method `Raven_Breadcrumbs_ErrorHandler::install` has been renamed to
+  `register` and changed its signature to accept the instance of the Raven
+  client to associate with the handler itself.
+
+  Before:
+
+  ```php
+  $errorHandler = new Raven_Breadcrumbs_ErrorHandler($client);
+  $errorHandler->install();
+  ```
+
+  After:
+
+  ```php
+  use Raven\BreadcrumbErrorHandler;
+
+  $errorHandler = BreadcrumbErrorHandler::register($client);
+  ```
+
+- The `Raven_ErrorHandler` class has been renamed to `ErrorHandler` to follow
+  the PSR-4 convention.
+
+- The constructor of the `Raven_ErrorHandler` class has changed its visibility
+  to `protected`. To create a new instance of the class use the new method
+  `ErrorHandler::register`.
+
+  Before:
+
+  ```php
+  $errorHandler = new Raven_ErrorHandler($client);
+  ```
+
+  After:
+
+  ```php
+  use Raven\ErrorHandler;
+
+  $errorHandler = ErrorHandler::register($client);
+  ```
+
+- The method `Raven_ErrorHandler::handleError` has changed its signature by removing
+  the `$context` argument and it has been marked as internal to make it clear that
+  it should not be called publicly and its method visibility is subject to changes
+  without any notice.
+
+- The methods `Raven_ErrorHandler::registerErrorHandler`, `Raven_ErrorHandler::registerExceptionHandler`
+  and `Raven_ErrorHandler::registerShutdownFunction` have been removed. You should
+  use the `ErrorHandler::register` method instead, but note that it registers all
+  error handlers (error, exception and fatal error) at once and there is no way
+  anymore to only use one of them.
+
+  Before:
+
+  ```php
+  $errorHandler = new Raven_ErrorHandler($client);
+  $errorHandler->registerErrorHandler();
+  $errorHandler->registerExceptionHandler();
+  $errorHandler->registerShutdownFunction();
+  ```
+
+  After:
+
+  ```php
+  use Raven\ErrorHandler;
+
+  $errorHandler = ErrorHandler::register($client);
+  ```
+
+- The method `Raven_ErrorHandler::handleError` has changed its signature by
+  removing the `$context` argument and it has been marked as internal to
+  make it clear that it should not be called publicly and its method visibility
+  is subject to changes without any notice.
+
+- The method `Raven_ErrorHandler::handleFatalError` has changed its signature
+  by adding an optional argument named `$error` and it has been marked as internal
+  to make it clear that it should not be called publicly and its method visibility
+  is subject to changes without any notice.
+
+- The method `Raven_ErrorHandler::handleException` has changed its signature by
+  removing the `$isError` and `$vars` arguments and it has been marked as internal
+  to make it clear that it should not be called publicly and its method visibility
+  is subject to changes without any notice.
+
+- The method `Raven_ErrorHandler::bitwiseOr` has been removed and there is no
+  replacement for it.
+
+- The method `Raven_ErrorHandler::shouldCaptureFatalError` has been removed and
+  there is no replacement for it.
