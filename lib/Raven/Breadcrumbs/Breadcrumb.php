@@ -78,9 +78,9 @@ final class Breadcrumb implements \JsonSerializable
      * @param string      $type     The type of the breadcrumb
      * @param string      $category The category of the breadcrumb
      * @param string|null $message  Optional text message
-     * @param array       $metaData Additional information about the breadcrumb
+     * @param array       $metadata Additional information about the breadcrumb
      */
-    public function __construct($level, $type, $category, $message = null, array $metaData = [])
+    public function __construct($level, $type, $category, $message = null, array $metadata = [])
     {
         if (!in_array($level, self::getLevels(), true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
@@ -90,7 +90,7 @@ final class Breadcrumb implements \JsonSerializable
         $this->level = $level;
         $this->category = $category;
         $this->message = $message;
-        $this->metadata = $metaData;
+        $this->metadata = $metadata;
         $this->timestamp = microtime(true);
     }
 
@@ -101,13 +101,13 @@ final class Breadcrumb implements \JsonSerializable
      * @param string      $type     The type of the breadcrumb
      * @param string      $category The category of the breadcrumb
      * @param string|null $message  Optional text message
-     * @param array       $metaData Additional information about the breadcrumb
+     * @param array       $metadata Additional information about the breadcrumb
      *
      * @return static
      */
-    public static function create($level, $type, $category, $message = null, array $metaData = [])
+    public static function create($level, $type, $category, $message = null, array $metadata = [])
     {
-        return new static($level, $type, $category, $message, $metaData);
+        return new static($level, $type, $category, $message, $metadata);
     }
 
     /**

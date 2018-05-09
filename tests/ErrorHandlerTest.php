@@ -11,82 +11,11 @@
 
 namespace Raven\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Raven\Client;
+use Raven\AbstractErrorHandler;
 use Raven\ErrorHandler;
 
-class ErrorHandlerTest extends TestCase
+class ErrorHandlerTest extends AbstractErrorHandlerTest
 {
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|Client
-     */
-    protected $client;
-
-    protected function setUp()
-    {
-        $this->client = $this->createMock(Client::class);
-    }
-
-    public function testConstructor()
-    {
-        try {
-            $errorHandler = ErrorHandler::register($this->client);
-            $previousErrorHandler = set_error_handler('var_dump');
-
-            restore_error_handler();
-
-            $this->assertSame([$errorHandler, 'handleError'], $previousErrorHandler);
-        } finally {
-            restore_error_handler();
-            restore_exception_handler();
-        }
-    }
-
-    /**
-     * @dataProvider constructorThrowsWhenReservedMemorySizeIsWrongDataProvider
-     *
-     * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage The value of the $reservedMemorySize argument must be an integer greater than 0.
-     */
-    public function testConstructorThrowsWhenReservedMemorySizeIsWrong($reservedMemorySize)
-    {
-        ErrorHandler::register($this->client, $reservedMemorySize);
-    }
-
-    public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider()
-    {
-        return [
-            [-1],
-            [0],
-            ['foo'],
-        ];
-    }
-
-    /**
-     * @dataProvider captureAtDataProvider
-     */
-    public function testCaptureAt($levels, $replace, $expectedCapturedErrors)
-    {
-        try {
-            $errorHandler = ErrorHandler::register($this->client);
-            $previousCapturedErrors = $this->getObjectAttribute($errorHandler, 'capturedErrors');
-
-            $this->assertEquals($previousCapturedErrors, $errorHandler->captureAt($levels, $replace));
-            $this->assertAttributeEquals($expectedCapturedErrors, 'capturedErrors', $errorHandler);
-        } finally {
-            restore_error_handler();
-            restore_exception_handler();
-        }
-    }
-
-    public function captureAtDataProvider()
-    {
-        return [
-            [E_USER_NOTICE, false, E_ALL],
-            [E_USER_NOTICE, true, E_USER_NOTICE],
-        ];
-    }
-
     public function testHandleError()
     {
         $this->client->expects($this->exactly(1))
@@ -104,7 +33,7 @@ class ErrorHandlerTest extends TestCase
                 $this->assertGreaterThanOrEqual(2, $backtrace);
 
                 $this->assertEquals('handleError', $backtrace[0]['function']);
-                $this->assertEquals(ErrorHandler::class, $backtrace[0]['class']);
+                $this->assertEquals(AbstractErrorHandler::class, $backtrace[0]['class']);
                 $this->assertEquals('->', $backtrace[0]['type']);
 
                 $this->assertEquals('testHandleError', $backtrace[1]['function']);
@@ -115,10 +44,10 @@ class ErrorHandlerTest extends TestCase
             }));
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
             $errorHandler->captureAt(0, true);
 
-            $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
             $reflectionProperty->setValue($errorHandler, null);
             $reflectionProperty->setAccessible(false);
@@ -152,7 +81,7 @@ class ErrorHandlerTest extends TestCase
                 $this->assertGreaterThanOrEqual(2, $backtrace);
 
                 $this->assertEquals('handleError', $backtrace[0]['function']);
-                $this->assertEquals(ErrorHandler::class, $backtrace[0]['class']);
+                $this->assertEquals(AbstractErrorHandler::class, $backtrace[0]['class']);
                 $this->assertEquals('->', $backtrace[0]['type']);
 
                 $this->assertEquals('testHandleErrorWithPreviousErrorHandler', $backtrace[1]['function']);
@@ -169,9 +98,9 @@ class ErrorHandlerTest extends TestCase
             ->willReturn(false);
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
 
-            $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
             $reflectionProperty->setValue($errorHandler, $previousErrorHandler);
             $reflectionProperty->setAccessible(false);
@@ -199,7 +128,7 @@ class ErrorHandlerTest extends TestCase
             }));
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
             $errorHandler->handleFatalError([
                 'type' => E_PARSE,
                 'message' => 'foo bar',
@@ -212,13 +141,13 @@ class ErrorHandlerTest extends TestCase
         }
     }
 
-    public function testHandleFatalErrorWithNonFatalError()
+    public function testHandleFatalErrorWithNonFatalErrorDoesNothing()
     {
         $this->client->expects($this->never())
             ->method('captureException');
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
             $errorHandler->handleFatalError([
                 'type' => E_USER_NOTICE,
                 'message' => 'foo bar',
@@ -240,7 +169,7 @@ class ErrorHandlerTest extends TestCase
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
 
             try {
                 $errorHandler->handleException($exception);
@@ -269,9 +198,9 @@ class ErrorHandlerTest extends TestCase
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
 
-            $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
             $reflectionProperty->setValue($errorHandler, $previousExceptionHandler);
             $reflectionProperty->setAccessible(false);
@@ -305,9 +234,9 @@ class ErrorHandlerTest extends TestCase
             ->will($this->throwException($exception2));
 
         try {
-            $errorHandler = ErrorHandler::register($this->client);
+            $errorHandler = $this->createErrorHandler($this->client);
 
-            $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
             $reflectionProperty->setValue($errorHandler, $previousExceptionHandler);
             $reflectionProperty->setAccessible(false);
@@ -323,5 +252,10 @@ class ErrorHandlerTest extends TestCase
             restore_error_handler();
             restore_exception_handler();
         }
+    }
+
+    protected function createErrorHandler(...$arguments)
+    {
+        return ErrorHandler::register(...$arguments);
     }
 }
