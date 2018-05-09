@@ -14,6 +14,15 @@ class Raven_StacktraceTestObject
     private $foo = 'bar';
 }
 
+class Raven_StacktraceTestObjectWithStringConversion
+{
+    private $foo = 'bar';
+
+    public function __toString() {
+        return 'no foo without a ' . $this->foo;
+    }
+}
+
 class Raven_Tests_UtilTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetReturnsDefaultOnMissing()
