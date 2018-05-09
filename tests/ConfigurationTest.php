@@ -45,7 +45,6 @@ class ConfigurationTest extends TestCase
     {
         return [
             ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
-            ['trust_x_forwarded_proto', false, 'isTrustXForwardedProto', 'setIsTrustXForwardedProto'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],

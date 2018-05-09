@@ -242,7 +242,6 @@ class ClientBuilderTest extends TestCase
     public function optionsDataProvider()
     {
         return [
-            ['setIsTrustXForwardedProto', true],
             ['setPrefixes', ['foo', 'bar']],
             ['setSerializeAllObjects', false],
             ['setSampleRate', 0.5],

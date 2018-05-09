@@ -41,8 +41,6 @@ use Raven\Transport\TransportInterface;
  *
  * @method int getSendAttempts()
  * @method setSendAttempts(int $attemptsCount)
- * @method bool isTrustXForwardedProto()
- * @method setIsTrustXForwardedProto(bool $value)
  * @method string[] getPrefixes()
  * @method setPrefixes(array $prefixes)
  * @method bool getSerializeAllObjects()

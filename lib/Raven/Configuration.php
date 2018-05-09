@@ -88,28 +88,6 @@ class Configuration
     }
 
     /**
-     * Checks whether the X-FORWARDED-PROTO header should be trusted.
-     *
-     * @return bool
-     */
-    public function isTrustXForwardedProto()
-    {
-        return $this->options['trust_x_forwarded_proto'];
-    }
-
-    /**
-     * Sets whether the X-FORWARDED-PROTO header should be trusted.
-     *
-     * @param bool $value The value of the option
-     */
-    public function setIsTrustXForwardedProto($value)
-    {
-        $options = array_merge($this->options, ['trust_x_forwarded_proto' => $value]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the prefixes which should be stripped from filenames to create
      * relative paths.
      *
@@ -642,7 +620,6 @@ class Configuration
     {
         $resolver->setDefaults([
             'send_attempts' => 6,
-            'trust_x_forwarded_proto' => false,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
             'sample_rate' => 1,
@@ -667,7 +644,6 @@ class Configuration
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
-        $resolver->setAllowedTypes('trust_x_forwarded_proto', 'bool');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
