@@ -33,7 +33,7 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * Raven PHP Client.
  *
- * @doc https://docs.sentry.io/clients/php/config/
+ * @see https://docs.sentry.io/clients/php/config/
  */
 class Client
 {
@@ -471,7 +471,7 @@ class Client
         $tagsContext = $event->getTagsContext();
 
         if (!empty($request)) {
-            $event = $event->withRequest($this->serializer->serialize($request));
+            $event = $event->withRequest($this->serializer->serialize($request, 5));
         }
         if (!empty($userContext)) {
             $event = $event->withUserContext($this->serializer->serialize($userContext, 3));

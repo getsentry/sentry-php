@@ -27,6 +27,7 @@ use Raven\Middleware\MiddlewareStack;
 use Raven\Processor\ProcessorInterface;
 use Raven\Processor\ProcessorRegistry;
 use Raven\Serializer;
+use Raven\Tests\Fixtures\classes\CarelessException;
 use Raven\Transport\TransportInterface;
 
 // XXX: Is there a better way to stub the client?
@@ -503,30 +504,77 @@ class ClientTest extends TestCase
         $this->assertEquals(['email' => 'foo@example.com'], $event->getUserContext());
     }
 
-    public function testSanitizeRequest()
+    /**
+     * @dataProvider deepRequestProvider
+     */
+    public function testSanitizeRequest(array $postData, array $expectedData)
     {
         $client = ClientBuilder::create()->getClient();
 
         $event = new Event($client->getConfig());
         $event = $event->withRequest([
-            'context' => [
-                'line' => 1216,
-                'stack' => [
-                    1, [2], 3,
-                ],
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => [
+                '_method' => 'POST',
+                'data' => $postData,
             ],
         ]);
 
         $event = $client->sanitize($event);
 
         $this->assertArraySubset([
-            'context' => [
-                'line' => 1216,
-                'stack' => [
-                    1, 'Array of length 1', 3,
-                ],
+            'method' => 'POST',
+            'url' => 'https://example.com/something',
+            'query_string' => '',
+            'data' => [
+                '_method' => 'POST',
+                'data' => $expectedData,
             ],
         ], $event->getRequest());
+    }
+
+    public function deepRequestProvider()
+    {
+        return [
+            [
+                [
+                    'MyModel' => [
+                        'flatField' => 'my value',
+                        'nestedField' => [
+                            'key' => 'my other value',
+                        ],
+                    ],
+                ],
+                [
+                    'MyModel' => [
+                        'flatField' => 'my value',
+                        'nestedField' => [
+                            'key' => 'my other value',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                [
+                    'Level 1' => [
+                        'Level 2' => [
+                            'Level 3' => [
+                                'Level 4' => 'something',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'Level 1' => [
+                        'Level 2' => [
+                            'Level 3' => 'Array of length 1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 
     private function assertMixedValueAndArray($expected_value, $actual_value)
@@ -794,5 +842,24 @@ class ClientTest extends TestCase
         $client->setReprSerializer($serializer);
 
         $this->assertSame($serializer, $client->getReprSerializer());
+    }
+
+    public function testHandlingExceptionThrowingAnException()
+    {
+        $client = ClientBuilder::create()->getClient();
+        $client->captureException($this->createCarelessExceptionWithStacktrace());
+        $event = $client->getLastEvent();
+        // Make sure the exception is of the careless exception and not the exception thrown inside
+        // the __set method of that exception caused by setting the event_id on the exception instance
+        $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
+    }
+
+    private function createCarelessExceptionWithStacktrace()
+    {
+        try {
+            throw new CarelessException('Foo bar');
+        } catch (\Exception $ex) {
+            return $ex;
+        }
     }
 }

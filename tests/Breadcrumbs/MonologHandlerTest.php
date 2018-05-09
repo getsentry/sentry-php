@@ -12,6 +12,7 @@
 namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
+use ParseError;
 use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\MonologHandler;
@@ -44,52 +45,108 @@ EOF;
 
     public function testSimple()
     {
-        $client = $client = ClientBuilder::create([
-            'install_default_breadcrumb_handlers' => false,
-        ])->getClient();
+        $client = $this->createClient();
+        $logger = $this->createLoggerWithHandler($client);
 
-        $handler = new MonologHandler($client);
-
-        $logger = new Logger('sentry');
-        $logger->pushHandler($handler);
         $logger->addWarning('foo');
 
-        $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
-
-        /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
-        $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
-
+        $breadcrumbs = $this->getBreadcrumbs($client);
         $this->assertCount(1, $breadcrumbs);
-
-        $this->assertEquals($breadcrumbs[0]->getMessage(), 'foo');
-        $this->assertEquals($breadcrumbs[0]->getLevel(), Client::LEVEL_WARNING);
-        $this->assertEquals($breadcrumbs[0]->getCategory(), 'sentry');
+        $this->assertEquals('foo', $breadcrumbs[0]->getMessage());
+        $this->assertEquals(Client::LEVEL_WARNING, $breadcrumbs[0]->getLevel());
+        $this->assertEquals('sentry', $breadcrumbs[0]->getCategory());
     }
 
     public function testErrorInMessage()
+    {
+        $client = $this->createClient();
+        $logger = $this->createLoggerWithHandler($client);
+
+        $logger->addError($this->getSampleErrorMessage());
+
+        $breadcrumbs = $this->getBreadcrumbs($client);
+        $this->assertCount(1, $breadcrumbs);
+        $this->assertEquals(Breadcrumb::TYPE_ERROR, $breadcrumbs[0]->getType());
+        $this->assertEquals(Client::LEVEL_ERROR, $breadcrumbs[0]->getLevel());
+        $this->assertEquals('sentry', $breadcrumbs[0]->getCategory());
+        $this->assertEquals('An unhandled exception', $breadcrumbs[0]->getMetadata()['value']);
+    }
+
+    public function testExceptionBeingParsed()
+    {
+        $client = $this->createClient();
+        $logger = $this->createLoggerWithHandler($client);
+
+        $logger->addError('A message', ['exception' => new \Exception('Foo bar')]);
+
+        $breadcrumbs = $this->getBreadcrumbs($client);
+        $this->assertCount(1, $breadcrumbs);
+        $this->assertEquals(Breadcrumb::TYPE_ERROR, $breadcrumbs[0]->getType());
+        $this->assertEquals('Foo bar', $breadcrumbs[0]->getMetadata()['value']);
+        $this->assertEquals('sentry', $breadcrumbs[0]->getCategory());
+        $this->assertEquals(Client::LEVEL_ERROR, $breadcrumbs[0]->getLevel());
+        $this->assertNull($breadcrumbs[0]->getMessage());
+    }
+
+    public function testThrowableBeingParsedAsException()
+    {
+        if (PHP_VERSION_ID <= 70000) {
+            $this->markTestSkipped('PHP 7.0 introduced Throwable');
+        }
+
+        $client = $this->createClient();
+        $logger = $this->createLoggerWithHandler($client);
+        $throwable = new ParseError('Foo bar');
+
+        $logger->addError('This is a throwable', ['exception' => $throwable]);
+
+        $breadcrumbs = $this->getBreadcrumbs($client);
+        $this->assertCount(1, $breadcrumbs);
+        $this->assertEquals(Breadcrumb::TYPE_ERROR, $breadcrumbs[0]->getType());
+        $this->assertEquals('Foo bar', $breadcrumbs[0]->getMetadata()['value']);
+        $this->assertEquals('sentry', $breadcrumbs[0]->getCategory());
+        $this->assertEquals(Client::LEVEL_ERROR, $breadcrumbs[0]->getLevel());
+        $this->assertNull($breadcrumbs[0]->getMessage());
+    }
+
+    /**
+     * @return Client
+     */
+    private function createClient()
     {
         $client = $client = ClientBuilder::create([
             'install_default_breadcrumb_handlers' => false,
         ])->getClient();
 
-        $handler = new MonologHandler($client);
+        return $client;
+    }
 
+    /**
+     * @param Client $client
+     *
+     * @return Logger
+     */
+    private function createLoggerWithHandler(Client $client)
+    {
+        $handler = new MonologHandler($client);
         $logger = new Logger('sentry');
         $logger->pushHandler($handler);
-        $logger->addError($this->getSampleErrorMessage());
 
+        return $logger;
+    }
+
+    /**
+     * @param Client $client
+     *
+     * @return Breadcrumb[]
+     */
+    private function getBreadcrumbs(Client $client)
+    {
         $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
 
-        /** @var \Raven\Breadcrumbs\Breadcrumb[] $breadcrumbs */
         $breadcrumbs = iterator_to_array($breadcrumbsRecorder);
+        $this->assertContainsOnlyInstancesOf(Breadcrumb::class, $breadcrumbs);
 
-        $this->assertCount(1, $breadcrumbs);
-
-        $metaData = $breadcrumbs[0]->getMetadata();
-
-        $this->assertEquals($breadcrumbs[0]->getType(), Breadcrumb::TYPE_ERROR);
-        $this->assertEquals($breadcrumbs[0]->getLevel(), Client::LEVEL_ERROR);
-        $this->assertEquals($breadcrumbs[0]->getCategory(), 'sentry');
-        $this->assertEquals($metaData['value'], 'An unhandled exception');
+        return $breadcrumbs;
     }
 }

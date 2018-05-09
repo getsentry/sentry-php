@@ -366,16 +366,27 @@ abstract class SerializerAbstractTest extends TestCase
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
-        for ($i = 0; $i < 100; ++$i) {
-            foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
-                $input = '';
-                for ($i = 0; $i < $length; ++$i) {
-                    $input .= chr(mt_rand(0, 255));
-                }
-                $result = $serializer->serialize($input);
-                $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual(1024, strlen($result));
-            }
+
+        foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
+            $input = str_repeat('x', $length);
+            $result = $serializer->serialize($input);
+            $this->assertInternalType('string', $result);
+            $this->assertLessThanOrEqual(1024, strlen($result));
+        }
+    }
+
+    public function testLongStringWithOverwrittenMessageLength()
+    {
+        $class_name = static::get_test_class();
+        /** @var \Raven\Serializer $serializer */
+        $serializer = new $class_name();
+        $serializer->setMessageLimit(500);
+
+        foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
+            $input = str_repeat('x', $length);
+            $result = $serializer->serialize($input);
+            $this->assertInternalType('string', $result);
+            $this->assertLessThanOrEqual(500, strlen($result));
         }
     }
 
@@ -408,6 +419,24 @@ abstract class SerializerAbstractTest extends TestCase
         $this->assertTrue($serializer->getAllObjectSerialize());
         $serializer->setAllObjectSerialize(false);
         $this->assertFalse($serializer->getAllObjectSerialize());
+    }
+
+    public function testClippingUTF8Characters()
+    {
+        if (!extension_loaded('mbstring')) {
+            $this->markTestSkipped('mbstring extension is not enabled.');
+        }
+
+        $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
+        $class_name = static::get_test_class();
+        /** @var \Raven\Serializer $serializer */
+        $serializer = new $class_name(null, 19);
+
+        $clipped = $serializer->serialize($testString);
+
+        $this->assertEquals('Прекратит {clipped}', $clipped);
+        $this->assertNotNull(json_encode($clipped));
+        $this->assertSame(JSON_ERROR_NONE, json_last_error());
     }
 }
 

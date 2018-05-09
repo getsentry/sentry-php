@@ -95,6 +95,22 @@ class RequestInterfaceMiddlewareTest extends TestCase
             ],
             [
                 [
+                    'uri' => 'http://www.example.com:123/foo',
+                    'method' => 'GET',
+                    'cookies' => [],
+                    'headers' => [],
+                ],
+                [
+                    'url' => 'http://www.example.com:123/foo',
+                    'method' => 'GET',
+                    'cookies' => [],
+                    'headers' => [
+                        'Host' => ['www.example.com:123'],
+                    ],
+                ],
+            ],
+            [
+                [
                     'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
                     'cookies' => [],
