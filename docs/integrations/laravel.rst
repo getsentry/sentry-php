@@ -124,9 +124,11 @@ Laravel 4.x
 
 Install the ``sentry/sentry-laravel`` package:
 
+Laravel 4.x is supported until version 0.8.x.
+
 .. code-block:: bash
 
-    $ composer require sentry/sentry-laravel
+    $ composer require "sentry/sentry-laravel:0.8.*"
 
 Add the Sentry service provider and facade in ``config/app.php``:
 
