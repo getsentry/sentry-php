@@ -51,7 +51,7 @@ Add your DSN to ``.env``:
 
 .. code-block:: bash
 
-    SENTRY_DSN=___DSN___
+    SENTRY_LARAVEL_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
 error view in `resources/views/errors/500.blade.php`.
