@@ -164,9 +164,7 @@ abstract class AbstractErrorHandler
         }
 
         $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
-
-        $backtrace = $errorAsException->getTrace();
-        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($backtrace, $file, $line);
+        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $file, $line);
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
@@ -200,21 +198,21 @@ abstract class AbstractErrorHandler
         }
 
         self::$reservedMemory = null;
-        $exception = null;
+        $errorAsException = null;
 
         if (null === $error) {
             $error = error_get_last();
         }
 
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
-            $exception = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
+            $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
         }
 
         try {
-            if (null !== $exception) {
-                $this->handleException($exception);
+            if (null !== $errorAsException) {
+                $this->handleException($errorAsException);
             }
-        } catch (\ErrorException $exception) {
+        } catch (\ErrorException $errorAsException) {
             // Ignore this re-throw
         }
     }
@@ -233,12 +231,6 @@ abstract class AbstractErrorHandler
     {
         $this->doHandleException($exception);
 
-        // If there is no exception handler that can run after the current one
-        // give back the exception to the native PHP handler
-        if (null === $this->previousExceptionHandler) {
-            throw $exception;
-        }
-
         $previousExceptionHandlerException = $exception;
 
         // Unset the previous exception handler to prevent infinite loop in case
@@ -247,7 +239,9 @@ abstract class AbstractErrorHandler
         $this->previousExceptionHandler = null;
 
         try {
-            $previousExceptionHandler($exception);
+            if (null !== $previousExceptionHandler) {
+                $previousExceptionHandler($exception);
+            }
         } catch (\Exception $previousExceptionHandlerException) {
             // Do nothing, we just need to set the $previousExceptionHandlerException
             // variable to the exception we just catched to compare it later
@@ -258,6 +252,9 @@ abstract class AbstractErrorHandler
         // the previous exception handler, if any, give it back to the native
         // PHP handler to prevent infinite circular loop
         if ($exception === $previousExceptionHandlerException) {
+            // Disable the fatal error handler or the error will be reported twice
+            self::$reservedMemory = null;
+
             throw $exception;
         }
 

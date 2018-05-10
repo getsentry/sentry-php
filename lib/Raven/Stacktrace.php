@@ -44,7 +44,7 @@ class Stacktrace implements \JsonSerializable
     protected $frames = [];
 
     /**
-     * @var array The list of functions to import a file
+     * @var string[] The list of functions to import a file
      */
     protected static $importStatements = [
         'include',
@@ -85,7 +85,7 @@ class Stacktrace implements \JsonSerializable
      * @param Client $client    The Raven client
      * @param array  $backtrace The backtrace
      * @param string $file      The file that originated the backtrace
-     * @param string $line      The line at which the backtrace originated
+     * @param int    $line      The line at which the backtrace originated
      *
      * @return static
      */
