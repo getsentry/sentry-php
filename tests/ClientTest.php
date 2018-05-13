@@ -14,10 +14,8 @@ use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
-use Raven\Breadcrumbs\ErrorHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
-use Raven\Configuration;
 use Raven\Context\Context;
 use Raven\Context\RuntimeContext;
 use Raven\Context\ServerOsContext;
@@ -29,44 +27,6 @@ use Raven\Processor\ProcessorRegistry;
 use Raven\Serializer;
 use Raven\Tests\Fixtures\classes\CarelessException;
 use Raven\Transport\TransportInterface;
-
-// XXX: Is there a better way to stub the client?
-class Dummy_Raven_Client extends \Raven\Client
-{
-    private $__sent_events = [];
-    public $dummy_breadcrumbs_handlers_has_set = false;
-    public $dummy_shutdown_handlers_has_set = false;
-
-    public function getSentEvents()
-    {
-        return $this->__sent_events;
-    }
-
-    public function send(Event $event)
-    {
-        if (!$this->config->shouldCapture($event)) {
-            return;
-        }
-
-        $this->__sent_events[] = $event;
-    }
-
-    public static function isHttpRequest()
-    {
-        return true;
-    }
-
-    // short circuit breadcrumbs
-    public function registerDefaultBreadcrumbHandlers()
-    {
-        $this->dummy_breadcrumbs_handlers_has_set = true;
-    }
-
-    public function registerShutdownFunction()
-    {
-        $this->dummy_shutdown_handlers_has_set = true;
-    }
-}
 
 class ClientTest extends TestCase
 {
@@ -383,18 +343,6 @@ class ClientTest extends TestCase
         $this->assertEquals('C:\\foo\\bar\\', $client->getConfig()->getProjectRoot());
     }
 
-    /**
-     * @expectedException \Raven\Exception
-     * @expectedExceptionMessage Raven\Client->install() must only be called once
-     */
-    public function testCannotInstallTwice()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->install();
-        $client->install();
-    }
-
     public function testSanitizeExtra()
     {
         $client = ClientBuilder::create()->getClient();
@@ -649,74 +597,12 @@ class ClientTest extends TestCase
         $this->assertEquals('error', $client->translateSeverity(123457));
     }
 
-    public function testRegisterDefaultBreadcrumbHandlers()
-    {
-        if (isset($_ENV['HHVM']) and (1 == $_ENV['HHVM'])) {
-            $this->markTestSkipped('HHVM stacktrace behaviour');
-
-            return;
-        }
-
-        $previous = set_error_handler([$this, 'stabClosureErrorHandler'], E_USER_NOTICE);
-
-        ClientBuilder::create()->getClient();
-
-        $this->_closure_called = false;
-
-        trigger_error('foobar', E_USER_NOTICE);
-        set_error_handler($previous, E_ALL);
-
-        $this->assertTrue($this->_closure_called);
-
-        if (isset($this->_debug_backtrace[1]['function']) && ($this->_debug_backtrace[1]['function'] == 'call_user_func') && version_compare(PHP_VERSION, '7.0', '>=')) {
-            $offset = 2;
-        } elseif (version_compare(PHP_VERSION, '7.0', '>=')) {
-            $offset = 1;
-        } else {
-            $offset = 2;
-        }
-
-        $this->assertEquals(ErrorHandler::class, $this->_debug_backtrace[$offset]['class']);
-    }
-
-    private $_closure_called = false;
-
-    public function stabClosureVoid()
-    {
-        $this->_closure_called = true;
-    }
-
-    public function stabClosureNull()
-    {
-        $this->_closure_called = true;
-
-        return null;
-    }
-
-    public function stabClosureFalse()
-    {
-        $this->_closure_called = true;
-
-        return false;
-    }
-
-    private $_debug_backtrace = [];
-
-    public function stabClosureErrorHandler($code, $message, $file = '', $line = 0, $context = [])
-    {
-        $this->_closure_called = true;
-        $this->_debug_backtrace = debug_backtrace();
-
-        return true;
-    }
-
     public function testSendChecksShouldCaptureOption()
     {
         $shouldCaptureCalled = false;
 
         $client = ClientBuilder::create([
             'server' => 'http://public:secret@example.com/1',
-            'install_default_breadcrumb_handlers' => false,
             'should_capture' => function () use (&$shouldCaptureCalled) {
                 $shouldCaptureCalled = true;
 
@@ -727,23 +613,6 @@ class ClientTest extends TestCase
         $client->capture([]);
 
         $this->assertTrue($shouldCaptureCalled);
-    }
-
-    public function test__construct_handlers()
-    {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        foreach ([true, false] as $u1) {
-            $client = new Dummy_Raven_Client(
-                new Configuration([
-                    'install_default_breadcrumb_handlers' => $u1,
-                ]),
-                $transport
-            );
-
-            $this->assertEquals($u1, $client->dummy_breadcrumbs_handlers_has_set);
-        }
     }
 
     /**
@@ -818,9 +687,11 @@ class ClientTest extends TestCase
         );
         $reflection = new \ReflectionProperty($client, 'breadcrumbRecorder');
         $reflection->setAccessible(true);
+
         $this->assertNotEmpty(iterator_to_array($reflection->getValue($client)));
 
         $client->clearBreadcrumbs();
+
         $this->assertEmpty(iterator_to_array($reflection->getValue($client)));
     }
 

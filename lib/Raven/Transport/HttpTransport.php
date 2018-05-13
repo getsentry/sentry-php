@@ -60,7 +60,10 @@ final class HttpTransport implements TransportInterface
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
 
-        register_shutdown_function(function () {
+        // By calling the cleanupPendingRequests function from a shutdown function
+        // registered inside another shutdown function we can be confident that it
+        // will be executed last
+        register_shutdown_function('register_shutdown_function', function () {
             // When the library will support PHP 7.1+ only this closure can be
             // replaced with a simple call to \Closure::fromCallable
             $this->cleanupPendingRequests();

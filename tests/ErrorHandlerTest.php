@@ -11,240 +11,251 @@
 
 namespace Raven\Tests;
 
-use PHPUnit\Framework\TestCase;
+use Raven\AbstractErrorHandler;
+use Raven\ErrorHandler;
 
-class ErrorHandlerTest extends TestCase
+class ErrorHandlerTest extends AbstractErrorHandlerTest
 {
-    private $errorLevel;
-    private $errorHandlerCalled;
-    private $existingErrorHandler;
-
-    public function setUp()
+    public function testHandleError()
     {
-        $this->errorLevel = error_reporting();
-        $this->errorHandlerCalled = false;
-        $this->existingErrorHandler = set_error_handler([$this, 'errorHandler'], -1);
-        // improves the reliability of tests
-        if (function_exists('error_clear_last')) {
-            error_clear_last();
-        }
-    }
+        $this->client->expects($this->exactly(1))
+            ->method('captureException')
+            ->with($this->callback(function ($exception) {
+                /* @var \ErrorException $exception */
+                $this->assertInstanceOf(\ErrorException::class, $exception);
+                $this->assertEquals(__FILE__, $exception->getFile());
+                $this->assertEquals(123, $exception->getLine());
+                $this->assertEquals(E_USER_NOTICE, $exception->getSeverity());
+                $this->assertEquals('User Notice: foo bar', $exception->getMessage());
 
-    public function errorHandler()
-    {
-        $this->errorHandlerCalled = true;
-    }
+                $backtrace = $exception->getTrace();
 
-    public function tearDown()
-    {
-        restore_exception_handler();
-        set_error_handler($this->existingErrorHandler);
-        // // XXX(dcramer): this isn't great as it doesnt restore the old error reporting level
-        // set_error_handler([$this, 'errorHandler'], error_reporting());
-        error_reporting($this->errorLevel);
-    }
+                $this->assertGreaterThanOrEqual(2, $backtrace);
 
-    public function testErrorsAreLoggedAsExceptions()
-    {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException', 'sendUnsentErrors'])
-                       ->getMock();
-        $client->expects($this->once())
-               ->method('captureException')
-               ->with($this->isInstanceOf('ErrorException'));
+                $this->assertEquals('handleError', $backtrace[0]['function']);
+                $this->assertEquals(AbstractErrorHandler::class, $backtrace[0]['class']);
+                $this->assertEquals('->', $backtrace[0]['type']);
 
-        $handler = new \Raven\ErrorHandler($client, E_ALL);
-        $handler->handleError(E_WARNING, 'message');
-    }
+                $this->assertEquals('testHandleError', $backtrace[1]['function']);
+                $this->assertEquals(__CLASS__, $backtrace[1]['class']);
+                $this->assertEquals('->', $backtrace[1]['type']);
 
-    public function testExceptionsAreLogged()
-    {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->once())
-               ->method('captureException')
-               ->with($this->isInstanceOf('ErrorException'));
+                return true;
+            }));
 
-        $e = new \ErrorException('message', 0, E_WARNING, '', 0);
-
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->handleException($e);
-    }
-
-    public function testErrorHandlerPassErrorReportingPass()
-    {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->once())
-               ->method('captureException');
-
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(false, -1);
-
-        error_reporting(E_USER_WARNING);
-        trigger_error('Warning', E_USER_WARNING);
-    }
-
-    public function testErrorHandlerPropagates()
-    {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->never())
-               ->method('captureException');
-
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(true, E_DEPRECATED);
-
-        error_reporting(E_USER_WARNING);
-        trigger_error('Warning', E_USER_WARNING);
-
-        $this->assertEquals($this->errorHandlerCalled, 1);
-    }
-
-    public function testExceptionHandlerPropagatesToNative()
-    {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->exactly(2))
-               ->method('captureException')
-               ->with($this->isInstanceOf('Exception'));
-
-        $handler = new \Raven\ErrorHandler($client);
-
-        set_exception_handler(null);
-        $handler->registerExceptionHandler(false);
-
-        $testException = new \Exception('Test exception');
-
-        $didRethrow = false;
         try {
-            $handler->handleException($testException);
-        } catch (\Exception $e) {
-            $didRethrow = true;
+            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler->captureAt(0, true);
+
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
+            $reflectionProperty->setAccessible(true);
+            $reflectionProperty->setValue($errorHandler, null);
+            $reflectionProperty->setAccessible(false);
+
+            $this->assertFalse($errorHandler->handleError(0, 'foo bar', __FILE__, __LINE__));
+
+            $errorHandler->captureAt(E_USER_NOTICE, true);
+
+            $this->assertFalse($errorHandler->handleError(E_USER_WARNING, 'foo bar', __FILE__, __LINE__));
+            $this->assertTrue($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123));
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
         }
+    }
 
-        $this->assertFalse($didRethrow);
+    public function testHandleErrorWithPreviousErrorHandler()
+    {
+        $this->client->expects($this->once())
+            ->method('captureException')
+            ->with($this->callback(function ($exception) {
+                /* @var \ErrorException $exception */
+                $this->assertInstanceOf(\ErrorException::class, $exception);
+                $this->assertEquals(__FILE__, $exception->getFile());
+                $this->assertEquals(123, $exception->getLine());
+                $this->assertEquals(E_USER_NOTICE, $exception->getSeverity());
+                $this->assertEquals('User Notice: foo bar', $exception->getMessage());
 
-        set_exception_handler(null);
-        $handler->registerExceptionHandler(true);
+                $backtrace = $exception->getTrace();
 
-        $didRethrow = false;
-        $rethrownException = null;
+                $this->assertGreaterThanOrEqual(2, $backtrace);
+
+                $this->assertEquals('handleError', $backtrace[0]['function']);
+                $this->assertEquals(AbstractErrorHandler::class, $backtrace[0]['class']);
+                $this->assertEquals('->', $backtrace[0]['type']);
+
+                $this->assertEquals('testHandleErrorWithPreviousErrorHandler', $backtrace[1]['function']);
+                $this->assertEquals(__CLASS__, $backtrace[1]['class']);
+                $this->assertEquals('->', $backtrace[1]['type']);
+
+                return true;
+            }));
+
+        $previousErrorHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
+        $previousErrorHandler->expects($this->once())
+            ->method('__invoke')
+            ->with(E_USER_NOTICE, 'foo bar', __FILE__, 123)
+            ->willReturn(false);
+
         try {
-            $handler->handleException($testException);
-        } catch (\Exception $e) {
-            $didRethrow = true;
-            $rethrownException = $e;
+            $errorHandler = $this->createErrorHandler($this->client);
+
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
+            $reflectionProperty->setAccessible(true);
+            $reflectionProperty->setValue($errorHandler, $previousErrorHandler);
+            $reflectionProperty->setAccessible(false);
+
+            $errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123);
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
         }
-
-        $this->assertTrue($didRethrow);
-        $this->assertSame($testException, $rethrownException);
     }
 
-    public function testErrorHandlerRespectsErrorReportingDefault()
+    public function testHandleFatalError()
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->once())
-               ->method('captureException');
+        $this->client->expects($this->exactly(1))
+            ->method('captureException')
+            ->with($this->callback(function ($exception) {
+                /* @var \ErrorException $exception */
+                $this->assertInstanceOf(\ErrorException::class, $exception);
+                $this->assertEquals(__FILE__, $exception->getFile());
+                $this->assertEquals(123, $exception->getLine());
+                $this->assertEquals(E_PARSE, $exception->getSeverity());
+                $this->assertEquals('Parse Error: foo bar', $exception->getMessage());
 
-        error_reporting(E_DEPRECATED);
+                return true;
+            }));
 
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(true);
-
-        error_reporting(E_ALL);
-        trigger_error('Warning', E_USER_WARNING);
-
-        $this->assertEquals($this->errorHandlerCalled, 1);
+        try {
+            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler->handleFatalError([
+                'type' => E_PARSE,
+                'message' => 'foo bar',
+                'file' => __FILE__,
+                'line' => 123,
+            ]);
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
-    // Because we cannot **know** that a user silenced an error, we always
-    // defer to respecting the error reporting settings.
-    public function testSilentErrorsAreNotReportedWithGlobal()
+    public function testHandleFatalErrorWithNonFatalErrorDoesNothing()
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->never())
-               ->method('captureException');
+        $this->client->expects($this->never())
+            ->method('captureException');
 
-        error_reporting(E_ALL);
-
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(true);
-
-        @$undefined;
-
-        // also ensure it doesnt get reported by the fatal handler
-        $handler->handleFatalError();
+        try {
+            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler->handleFatalError([
+                'type' => E_USER_NOTICE,
+                'message' => 'foo bar',
+                'file' => __FILE__,
+                'line' => __LINE__,
+            ]);
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
-    // Because we cannot **know** that a user silenced an error, we always
-    // defer to respecting the error reporting settings.
-    public function testSilentErrorsAreNotReportedWithLocal()
+    public function testHandleException()
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->never())
-               ->method('captureException');
+        $exception = new \Exception('foo bar');
 
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(true, E_ALL);
+        $this->client->expects($this->once())
+            ->method('captureException')
+            ->with($this->identicalTo($exception));
 
-        @$my_array[2];
+        try {
+            $errorHandler = $this->createErrorHandler($this->client);
 
-        // also ensure it doesnt get reported by the fatal handler
-        $handler->handleFatalError();
+            try {
+                $errorHandler->handleException($exception);
+
+                $this->fail('Exception expected');
+            } catch (\Exception $catchedException) {
+                $this->assertSame($exception, $catchedException);
+            }
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
-    public function testShouldCaptureFatalErrorBehavior()
+    public function testHandleExceptionWithPreviousExceptionHandler()
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $handler = new \Raven\ErrorHandler($client);
+        $exception = new \Exception('foo bar');
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_ERROR), PHP_VERSION_ID < 70000);
+        $this->client->expects($this->once())
+            ->method('captureException')
+            ->with($this->identicalTo($exception));
 
-        $this->assertEquals($handler->shouldCaptureFatalError(E_WARNING), false);
+        $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
+        $previousExceptionHandler->expects($this->once())
+            ->method('__invoke')
+            ->with($this->identicalTo($exception));
+
+        try {
+            $errorHandler = $this->createErrorHandler($this->client);
+
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
+            $reflectionProperty->setAccessible(true);
+            $reflectionProperty->setValue($errorHandler, $previousExceptionHandler);
+            $reflectionProperty->setAccessible(false);
+
+            try {
+                $errorHandler->handleException($exception);
+
+                $this->fail('Exception expected');
+            } catch (\Exception $catchedException) {
+                $this->assertSame($exception, $catchedException);
+            }
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
-    public function testErrorHandlerDefaultsErrorReporting()
+    public function testHandleExceptionWithThrowingPreviousExceptionHandler()
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $client->expects($this->never())
-               ->method('captureException');
+        $exception1 = new \Exception('foo bar');
+        $exception2 = new \Exception('bar foo');
 
-        error_reporting(E_USER_ERROR);
+        $this->client->expects($this->exactly(2))
+            ->method('captureException')
+            ->withConsecutive($this->identicalTo($exception1), $this->identicalTo($exception2));
 
-        $handler = new \Raven\ErrorHandler($client);
-        $handler->registerErrorHandler(false);
+        $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
+        $previousExceptionHandler->expects($this->once())
+            ->method('__invoke')
+            ->with($this->identicalTo($exception1))
+            ->will($this->throwException($exception2));
 
-        trigger_error('Warning', E_USER_WARNING);
+        try {
+            $errorHandler = $this->createErrorHandler($this->client);
+
+            $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
+            $reflectionProperty->setAccessible(true);
+            $reflectionProperty->setValue($errorHandler, $previousExceptionHandler);
+            $reflectionProperty->setAccessible(false);
+
+            try {
+                $errorHandler->handleException($exception1);
+
+                $this->fail('Exception expected');
+            } catch (\Exception $catchedException) {
+                $this->assertSame($exception2, $catchedException);
+            }
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
     }
 
-    public function testFluidInterface()
+    protected function createErrorHandler(...$arguments)
     {
-        $client = $this->getMockBuilder('Client')
-                       ->setMethods(['captureException'])
-                       ->getMock();
-        $handler = new \Raven\ErrorHandler($client);
-        $result = $handler->registerErrorHandler();
-        $this->assertEquals($result, $handler);
-        $result = $handler->registerExceptionHandler();
-        $this->assertEquals($result, $handler);
-        // TODO(dcramer): cant find a great way to test resetting the shutdown
-        // handler
-        // $result = $handler->registerShutdownHandler();
-        // $this->assertEquals($result, $handler);
+        return ErrorHandler::register(...$arguments);
     }
 }

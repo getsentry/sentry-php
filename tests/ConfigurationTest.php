@@ -48,7 +48,6 @@ class ConfigurationTest extends TestCase
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
-            ['install_default_breadcrumb_handlers', false, 'shouldInstallDefaultBreadcrumbHandlers', 'setInstallDefaultBreadcrumbHandlers'],
             ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],

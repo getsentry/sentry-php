@@ -67,11 +67,6 @@ class Client
     public $storeErrorsForBulkSend = false;
 
     /**
-     * @var ErrorHandler
-     */
-    protected $errorHandler;
-
-    /**
      * @var \Raven\Serializer
      */
     protected $serializer;
@@ -185,10 +180,6 @@ class Client
 
         if ($this->config->getSerializeAllObjects()) {
             $this->setAllObjectSerialize(true);
-        }
-
-        if ($this->config->shouldInstallDefaultBreadcrumbHandlers()) {
-            $this->registerDefaultBreadcrumbHandlers();
         }
     }
 
@@ -307,25 +298,6 @@ class Client
     }
 
     /**
-     * Installs any available automated hooks (such as error_reporting).
-     *
-     * @throws \Raven\Exception
-     */
-    public function install()
-    {
-        if ($this->errorHandler) {
-            throw new \Raven\Exception(__CLASS__ . '->install() must only be called once');
-        }
-
-        $this->errorHandler = new ErrorHandler($this, false, $this->getConfig()->getErrorTypes());
-        $this->errorHandler->registerExceptionHandler();
-        $this->errorHandler->registerErrorHandler();
-        $this->errorHandler->registerShutdownFunction();
-
-        return $this;
-    }
-
-    /**
      * Logs a message.
      *
      * @param string $message The message (primary description) for the event
@@ -400,12 +372,6 @@ class Client
         }
 
         return str_replace('-', '', $this->lastEvent->getId()->toString());
-    }
-
-    protected function registerDefaultBreadcrumbHandlers()
-    {
-        $handler = new Breadcrumbs\ErrorHandler($this);
-        $handler->install();
     }
 
     /**
@@ -526,15 +492,16 @@ class Client
             case E_DEPRECATED:
             case E_USER_DEPRECATED:
             case E_WARNING:
-            case E_CORE_WARNING:
-            case E_COMPILE_WARNING:
             case E_USER_WARNING:
             case E_RECOVERABLE_ERROR:
                 return self::LEVEL_WARNING;
             case E_ERROR:
             case E_PARSE:
             case E_CORE_ERROR:
+            case E_CORE_WARNING:
             case E_COMPILE_ERROR:
+            case E_COMPILE_WARNING:
+                return self::LEVEL_FATAL;
             case E_USER_ERROR:
                 return self::LEVEL_ERROR;
             case E_NOTICE:

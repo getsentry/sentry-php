@@ -47,8 +47,6 @@ use Raven\Transport\TransportInterface;
  * @method setSerializeAllObjects(bool $serializeAllObjects)
  * @method float getSampleRate()
  * @method setSampleRate(float $sampleRate)
- * @method bool shouldInstallDefaultBreadcrumbHandlers()
- * @method setInstallDefaultBreadcrumbHandlers($installDefaultBreadcrumbHandlers)
  * @method string getMbDetectOrder()
  * @method setMbDetectOrder(string $detectOrder)
  * @method bool getAutoLogStacks()

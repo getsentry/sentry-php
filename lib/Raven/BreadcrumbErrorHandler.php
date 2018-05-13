@@ -11,15 +11,14 @@
 
 namespace Raven;
 
+use Raven\Breadcrumbs\Breadcrumb;
+
 /**
- * This class implements a simple error handler that catches all configured
- * error types and logs them using a certain Raven client. Registering more
- * than once this error handler is not supported and will lead to nasty problems.
- * The code is based on the Symfony Debug component.
+ * This error handler records a breadcrumb for any raised error.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class ErrorHandler extends AbstractErrorHandler
+class BreadcrumbErrorHandler extends AbstractErrorHandler
 {
     /**
      * Registers this error handler by associating its instance with the given
@@ -28,7 +27,7 @@ class ErrorHandler extends AbstractErrorHandler
      * @param Client $client             The Raven client
      * @param int    $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
-     * @return ErrorHandler
+     * @return BreadcrumbErrorHandler
      */
     public static function register(Client $client, $reservedMemorySize = 10240)
     {
@@ -38,8 +37,22 @@ class ErrorHandler extends AbstractErrorHandler
     /**
      * {@inheritdoc}
      */
-    protected function doHandleException($exception)
+    public function doHandleException($exception)
     {
-        $this->client->captureException($exception);
+        if (!$exception instanceof \ErrorException) {
+            return;
+        }
+
+        $this->client->leaveBreadcrumb(new Breadcrumb(
+            $this->client->translateSeverity($exception->getSeverity()),
+            Breadcrumb::TYPE_ERROR,
+            'error_reporting',
+            $exception->getMessage(),
+            [
+                'code' => $exception->getCode(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]
+        ));
     }
 }
