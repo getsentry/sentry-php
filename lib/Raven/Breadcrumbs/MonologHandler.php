@@ -5,6 +5,7 @@ namespace Raven\Breadcrumbs;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Raven\Client;
+use Raven\ClientInterface;
 
 class MonologHandler extends AbstractProcessingHandler
 {
@@ -25,16 +26,16 @@ class MonologHandler extends AbstractProcessingHandler
     protected $excMatch = '/^exception \'([^\']+)\' with message \'(.+)\' in .+$/s';
 
     /**
-     * @var \Raven\Client the client object that sends the message to the server
+     * @var ClientInterface the client object that sends the message to the server
      */
     protected $ravenClient;
 
     /**
-     * @param Client $ravenClient The Raven client
-     * @param int    $level       The minimum logging level at which this handler will be triggered
-     * @param bool   $bubble      Whether the messages that are handled can bubble up the stack or not
+     * @param ClientInterface $ravenClient The Raven client
+     * @param int             $level       The minimum logging level at which this handler will be triggered
+     * @param bool            $bubble      Whether the messages that are handled can bubble up the stack or not
      */
-    public function __construct(Client $ravenClient, $level = Logger::DEBUG, $bubble = true)
+    public function __construct(ClientInterface $ravenClient, $level = Logger::DEBUG, $bubble = true)
     {
         parent::__construct($level, $bubble);
 

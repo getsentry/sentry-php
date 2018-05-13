@@ -12,12 +12,12 @@
 namespace Raven\Tests\Breadcrumbs;
 
 use Monolog\Logger;
-use ParseError;
 use PHPUnit\Framework\TestCase;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Breadcrumbs\MonologHandler;
 use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\ClientInterface;
 
 class MonologHandlerTest extends TestCase
 {
@@ -96,7 +96,7 @@ EOF;
 
         $client = $this->createClient();
         $logger = $this->createLoggerWithHandler($client);
-        $throwable = new ParseError('Foo bar');
+        $throwable = new \ParseError('Foo bar');
 
         $logger->addError('This is a throwable', ['exception' => $throwable]);
 
@@ -110,7 +110,7 @@ EOF;
     }
 
     /**
-     * @return Client
+     * @return ClientInterface
      */
     private function createClient()
     {

@@ -12,8 +12,8 @@
 namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\ClientInterface;
 use Raven\Event;
 use Raven\Processor\SanitizeDataProcessor;
 use Raven\Stacktrace;
@@ -21,7 +21,7 @@ use Raven\Stacktrace;
 class SanitizeDataProcessorTest extends TestCase
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
     protected $client;
 

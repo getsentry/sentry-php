@@ -12,15 +12,15 @@
 namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\ClientInterface;
 use Raven\Frame;
 use Raven\Stacktrace;
 
 class StacktraceTest extends TestCase
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
     protected $client;
 

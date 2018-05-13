@@ -32,15 +32,32 @@ use Raven\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * Raven PHP Client.
+ * Default implementation of the {@see ClientInterface} interface.
  *
- * @see https://docs.sentry.io/clients/php/config/
+ * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class Client
+class Client implements ClientInterface
 {
+    /**
+     * The version of the library.
+     */
     const VERSION = '2.0.x-dev';
 
-    const PROTOCOL = '6';
+    /**
+     * The version of the protocol to communicate with the Sentry server.
+     */
+    const PROTOCOL_VERSION = '6';
+
+    /**
+     * This constant defines the client's user-agent string.
+     */
+    const USER_AGENT = 'sentry-php/' . self::VERSION;
+
+    /**
+     * This constant defines the maximum length of the message captured by the
+     * message SDK interface.
+     */
+    const MESSAGE_MAX_LENGTH_LIMIT = 1024;
 
     /**
      * Debug log levels.
@@ -50,16 +67,6 @@ class Client
     const LEVEL_WARNING = 'warning';
     const LEVEL_ERROR = 'error';
     const LEVEL_FATAL = 'fatal';
-
-    /**
-     * Default message limit.
-     */
-    const MESSAGE_LIMIT = 1024;
-
-    /**
-     * This constant defines the client's user-agent string.
-     */
-    const USER_AGENT = 'sentry-php/' . self::VERSION;
 
     /**
      * @var string[]|null
@@ -72,9 +79,9 @@ class Client
     private $serializer;
 
     /**
-     * @var Serializer The representation serializer
+     * @var ReprSerializer The representation serializer
      */
-    private $reprSerializer;
+    private $representationSerializer;
 
     /**
      * @var Configuration The client configuration
@@ -155,7 +162,7 @@ class Client
         $this->breadcrumbRecorder = new Recorder();
         $this->transactionStack = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
-        $this->reprSerializer = new ReprSerializer($this->config->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->config->getMbDetectOrder());
         $this->middlewareStack = new MiddlewareStack(function (Event $event) {
             return $event;
         });
@@ -175,9 +182,7 @@ class Client
     }
 
     /**
-     * Records the given breadcrumb.
-     *
-     * @param Breadcrumb $breadcrumb The breadcrumb instance
+     * {@inheritdoc}
      */
     public function leaveBreadcrumb(Breadcrumb $breadcrumb)
     {
@@ -185,7 +190,7 @@ class Client
     }
 
     /**
-     * Clears all recorded breadcrumbs.
+     * {@inheritdoc}
      */
     public function clearBreadcrumbs()
     {
@@ -193,9 +198,7 @@ class Client
     }
 
     /**
-     * Gets the configuration of the client.
-     *
-     * @return Configuration
+     * {@inheritdoc}
      */
     public function getConfig()
     {
@@ -203,9 +206,7 @@ class Client
     }
 
     /**
-     * Gets the transaction stack.
-     *
-     * @return TransactionStack
+     * {@inheritdoc}
      */
     public function getTransactionStack()
     {
@@ -213,12 +214,7 @@ class Client
     }
 
     /**
-     * Adds a new middleware with the given priority to the stack.
-     *
-     * @param callable $middleware The middleware instance
-     * @param int      $priority   The priority. The higher this value, the
-     *                             earlier a processor will be executed in
-     *                             the chain (defaults to 0)
+     * {@inheritdoc}
      */
     public function addMiddleware(callable $middleware, $priority = 0)
     {
@@ -226,9 +222,7 @@ class Client
     }
 
     /**
-     * Removes the given middleware from the stack.
-     *
-     * @param callable $middleware The middleware instance
+     * {@inheritdoc}
      */
     public function removeMiddleware(callable $middleware)
     {
@@ -236,12 +230,7 @@ class Client
     }
 
     /**
-     * Adds a new processor to the processors chain with the specified priority.
-     *
-     * @param ProcessorInterface $processor The processor instance
-     * @param int                $priority  The priority. The higher this value,
-     *                                      the earlier a processor will be
-     *                                      executed in the chain (defaults to 0)
+     * {@inheritdoc}
      */
     public function addProcessor(ProcessorInterface $processor, $priority = 0)
     {
@@ -249,9 +238,7 @@ class Client
     }
 
     /**
-     * Removes the given processor from the list.
-     *
-     * @param ProcessorInterface $processor The processor instance
+     * {@inheritdoc}
      */
     public function removeProcessor(ProcessorInterface $processor)
     {
@@ -259,43 +246,48 @@ class Client
     }
 
     /**
-     * Gets the representation serializer.
-     *
-     * @return Serializer
+     * {@inheritdoc}
      */
-    public function getReprSerializer()
+    public function setAllObjectSerialize($value)
     {
-        return $this->reprSerializer;
-    }
-
-    public function setReprSerializer(Serializer $reprSerializer)
-    {
-        $this->reprSerializer = $reprSerializer;
+        $this->serializer->setAllObjectSerialize($value);
+        $this->representationSerializer->setAllObjectSerialize($value);
     }
 
     /**
-     * Gets the serializer.
-     *
-     * @return Serializer
+     * {@inheritdoc}
+     */
+    public function getRepresentationSerializer()
+    {
+        return $this->representationSerializer;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setRepresentationSerializer(ReprSerializer $representationSerializer)
+    {
+        $this->representationSerializer = $representationSerializer;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function getSerializer()
     {
         return $this->serializer;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setSerializer(Serializer $serializer)
     {
         $this->serializer = $serializer;
     }
 
     /**
-     * Logs a message.
-     *
-     * @param string $message The message (primary description) for the event
-     * @param array  $params  Params to use when formatting the message
-     * @param array  $payload Additional attributes to pass with this event
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function captureMessage($message, array $params = [], array $payload = [])
     {
@@ -306,12 +298,7 @@ class Client
     }
 
     /**
-     * Logs an exception.
-     *
-     * @param \Throwable|\Exception $exception The exception object
-     * @param array                 $payload   Additional attributes to pass with this event
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function captureException($exception, array $payload = [])
     {
@@ -321,9 +308,7 @@ class Client
     }
 
     /**
-     * Logs the most recent error (obtained with {@link error_get_last}).
-     *
-     * @return string|null
+     * {@inheritdoc}
      */
     public function captureLastError()
     {
@@ -339,10 +324,7 @@ class Client
     }
 
     /**
-     * Gets the last event that was captured by the client. However, it could
-     * have been sent or still sit in the queue of pending events.
-     *
-     * @return Event
+     * {@inheritdoc}
      */
     public function getLastEvent()
     {
@@ -350,9 +332,7 @@ class Client
     }
 
     /**
-     * Return the last captured event's ID or null if none available.
-     *
-     * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
+     * {@inheritdoc}
      */
     public function getLastEventId()
     {
@@ -366,11 +346,7 @@ class Client
     }
 
     /**
-     * Captures a new event using the provided data.
-     *
-     * @param array $payload The data of the event being captured
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function capture(array $payload)
     {
@@ -382,16 +358,8 @@ class Client
             $event = $event->withCulprit($this->transactionStack->peek());
         }
 
-        if (isset($payload['level'])) {
-            $event = $event->withLevel($payload['level']);
-        }
-
         if (isset($payload['logger'])) {
             $event = $event->withLogger($payload['logger']);
-        }
-
-        if (isset($payload['message'])) {
-            $payload['message'] = substr($payload['message'], 0, static::MESSAGE_LIMIT);
         }
 
         $event = $this->middlewareStack->executeStack(
@@ -409,9 +377,7 @@ class Client
     }
 
     /**
-     * Sends the given event to the Sentry server.
-     *
-     * @param Event $event The event to send
+     * {@inheritdoc}
      */
     public function send(Event $event)
     {
@@ -428,11 +394,7 @@ class Client
     }
 
     /**
-     * Translate a PHP Error constant into a Sentry log level group.
-     *
-     * @param string $severity PHP E_$x error constant
-     *
-     * @return string Sentry log level group
+     * {@inheritdoc}
      */
     public function translateSeverity($severity)
     {
@@ -466,10 +428,7 @@ class Client
     }
 
     /**
-     * Provide a map of PHP Error constants to Sentry logging groups to use instead
-     * of the defaults in translateSeverity().
-     *
-     * @param string[] $map
+     * {@inheritdoc}
      */
     public function registerSeverityMap($map)
     {
@@ -477,9 +436,7 @@ class Client
     }
 
     /**
-     * Gets the user context.
-     *
-     * @return Context
+     * {@inheritdoc}
      */
     public function getUserContext()
     {
@@ -487,9 +444,7 @@ class Client
     }
 
     /**
-     * Gets the tags context.
-     *
-     * @return TagsContext
+     * {@inheritdoc}
      */
     public function getTagsContext()
     {
@@ -497,9 +452,7 @@ class Client
     }
 
     /**
-     * Gets the extra context.
-     *
-     * @return Context
+     * {@inheritdoc}
      */
     public function getExtraContext()
     {
@@ -507,9 +460,7 @@ class Client
     }
 
     /**
-     * Gets the runtime context.
-     *
-     * @return RuntimeContext
+     * {@inheritdoc}
      */
     public function getRuntimeContext()
     {
@@ -517,19 +468,11 @@ class Client
     }
 
     /**
-     * Gets the server OS context.
-     *
-     * @return ServerOsContext
+     * {@inheritdoc}
      */
     public function getServerOsContext()
     {
         return $this->serverOsContext;
-    }
-
-    public function setAllObjectSerialize($value)
-    {
-        $this->serializer->setAllObjectSerialize($value);
-        $this->reprSerializer->setAllObjectSerialize($value);
     }
 
     /**

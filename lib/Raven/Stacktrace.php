@@ -24,7 +24,7 @@ class Stacktrace implements \JsonSerializable
     const CONTEXT_NUM_LINES = 5;
 
     /**
-     * @var Client The Raven client
+     * @var ClientInterface The Raven client
      */
     protected $client;
 
@@ -56,23 +56,23 @@ class Stacktrace implements \JsonSerializable
     /**
      * Constructor.
      *
-     * @param Client $client The Raven client
+     * @param ClientInterface $client The Raven client
      */
-    public function __construct(Client $client)
+    public function __construct(ClientInterface $client)
     {
         $this->client = $client;
         $this->serializer = $client->getSerializer();
-        $this->reprSerializer = $client->getReprSerializer();
+        $this->reprSerializer = $client->getRepresentationSerializer();
     }
 
     /**
      * Creates a new instance of this class using the current backtrace data.
      *
-     * @param Client $client The Raven client
+     * @param ClientInterface $client The Raven client
      *
      * @return static
      */
-    public static function create(Client $client)
+    public static function create(ClientInterface $client)
     {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
@@ -82,14 +82,14 @@ class Stacktrace implements \JsonSerializable
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param Client $client    The Raven client
-     * @param array  $backtrace The backtrace
-     * @param string $file      The file that originated the backtrace
-     * @param int    $line      The line at which the backtrace originated
+     * @param ClientInterface $client    The Raven client
+     * @param array           $backtrace The backtrace
+     * @param string          $file      The file that originated the backtrace
+     * @param int             $line      The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(Client $client, array $backtrace, $file, $line)
+    public static function createFromBacktrace(ClientInterface $client, array $backtrace, $file, $line)
     {
         $stacktrace = new static($client);
 
@@ -180,7 +180,7 @@ class Stacktrace implements \JsonSerializable
                 $argumentValue = $this->reprSerializer->serialize($argumentValue);
 
                 if (is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_LIMIT);
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -312,7 +312,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    protected static function getFrameArgumentsValues($frame, $maxValueLength = Client::MESSAGE_LIMIT)
+    protected static function getFrameArgumentsValues($frame, $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
     {
         if (!isset($frame['args'])) {
             return [];
@@ -335,7 +335,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_LIMIT)
+    public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
     {
         if (!isset($frame['args'])) {
             return [];

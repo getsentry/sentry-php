@@ -19,7 +19,7 @@ namespace Raven;
 abstract class AbstractErrorHandler
 {
     /**
-     * @var Client The Raven client
+     * @var ClientInterface The Raven client
      */
     protected $client;
 
@@ -80,10 +80,10 @@ abstract class AbstractErrorHandler
     /**
      * Constructor.
      *
-     * @param Client $client             The Raven client
-     * @param int    $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param ClientInterface $client             The Raven client
+     * @param int             $reservedMemorySize The amount of memory to reserve for the fatal error handler
      */
-    protected function __construct(Client $client, $reservedMemorySize = 10240)
+    protected function __construct(ClientInterface $client, $reservedMemorySize = 10240)
     {
         if (!is_int($reservedMemorySize) || $reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The value of the $reservedMemorySize argument must be an integer greater than 0.');

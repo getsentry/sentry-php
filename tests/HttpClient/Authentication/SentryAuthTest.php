@@ -37,7 +37,7 @@ class SentryAuthTest extends TestCase
 
         $headerValue = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public, sentry_secret=secret',
-            Client::PROTOCOL,
+            Client::PROTOCOL_VERSION,
             Client::USER_AGENT,
             microtime(true)
         );
@@ -65,7 +65,7 @@ class SentryAuthTest extends TestCase
 
         $headerValue = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public',
-            Client::PROTOCOL,
+            Client::PROTOCOL_VERSION,
             Client::USER_AGENT,
             microtime(true)
         );

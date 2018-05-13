@@ -9,6 +9,7 @@ use Ramsey\Uuid\UuidFactoryInterface;
 use Raven\Breadcrumbs\Breadcrumb;
 use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\ClientInterface;
 use Raven\Configuration;
 use Raven\Event;
 
@@ -35,7 +36,7 @@ class EventTest extends TestCase
     protected $configuration;
 
     /**
-     * @var Client
+     * @var ClientInterface
      */
     protected $client;
 
