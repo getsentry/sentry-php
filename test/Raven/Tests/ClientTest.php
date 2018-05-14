@@ -680,11 +680,11 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     {
         $client = new Dummy_Raven_Client();
         $ex = $this->create_exception();
-        $client->captureException($ex, array('culprit' => 'test'));
+        $client->captureException($ex, array('transaction' => 'test'));
         $events = $client->getSentEvents();
         $this->assertEquals(1, count($events));
         $event = array_pop($events);
-        $this->assertEquals('test', $event['culprit']);
+        $this->assertEquals('test', $event['transaction']);
     }
 
     /**
@@ -828,7 +828,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 'name' => 'sentry-php',
                 'version' => $client::VERSION,
             ),
-            'culprit' => 'test',
+            'transaction' => 'test',
         );
         $this->assertEquals($expected, $client->get_default_data());
     }

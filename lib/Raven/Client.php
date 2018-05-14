@@ -832,7 +832,7 @@ class Raven_Client
             'tags' => $this->tags,
             'platform' => 'php',
             'sdk' => $this->sdk,
-            'culprit' => $this->transaction->peek(),
+            'transaction' => $this->transaction->peek(),
         );
     }
 
