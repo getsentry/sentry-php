@@ -335,9 +335,8 @@
 - The method `Raven_Client::process` has been removed as there is no need to process event data
   from outside the `Client` class.
 
-- The `Raven_Processor` class has been removed. There is not anymore a base
-  abstract class for the processors, but a `ProcessorInterface` interface has
-  been introduced.
+- The method `Raven_Client::sanitize` has been removed and the sanitization
+  happens now inside the `SanitizerMiddleware` middleware.
 
 - The `Raven_Client::user_context` method has been removed. You should use
   `Client::getUserContext` instead.
@@ -461,9 +460,25 @@
 
 ### Processors
 
-- The `RemoveCookiesProessor` class has been renamed to `SanitizeCookiesProcessor` to
-  better reflect its purpose. The constructor accepts an array of options to make the
-  behaviour of which cookies to sanitize configurable.
+- The `Raven_Processor_RemoveCookiesProcessor` class has been renamed to `SanitizeCookiesProcessor`
+  to better reflect its purpose. The constructor accepts an array of options to
+  make the behaviour of which cookies to sanitize configurable.
+
+- The `Raven_Processor_SanitizeStacktraceProcessor` class has been renamed to
+  `SanitizeStacktraceProcessor` to follow the PSR-4 convention.
+
+- The `Raven_Processor_SanitizeHttpHeadersProcessor` class has been renamed to
+  `SanitizeHttpHeadersProcessor` to follow the PSR-4 convention.
+
+- The `Raven_Processor_RemoveHttpBodyProcessor` class has been renamed to
+  `RemoveHttpBodyProcessor` to follow the PSR-4 convention.
+
+- The `Raven_Processor_SanitizeDataProcessor` class has been renamed to
+  `SanitizeDataProcessor` to follow the PSR-4 convention.
+
+- The `Raven_Processor` class has been removed. There is not anymore a base
+  abstract class for the processors, but a `ProcessorInterface` interface has
+  been introduced.
 
 ### Context
 

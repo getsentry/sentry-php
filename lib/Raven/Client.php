@@ -24,6 +24,7 @@ use Raven\Middleware\MessageInterfaceMiddleware;
 use Raven\Middleware\MiddlewareStack;
 use Raven\Middleware\ProcessorMiddleware;
 use Raven\Middleware\RequestInterfaceMiddleware;
+use Raven\Middleware\SanitizerMiddleware;
 use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Processor\ProcessorInterface;
 use Raven\Processor\ProcessorRegistry;
@@ -64,21 +65,21 @@ class Client
      * @var string[]|null
      */
     public $severityMap;
-    public $storeErrorsForBulkSend = false;
 
     /**
-     * @var \Raven\Serializer
+     * @var Serializer The serializer
      */
-    protected $serializer;
+    private $serializer;
+
     /**
-     * @var \Raven\Serializer
+     * @var Serializer The representation serializer
      */
-    protected $reprSerializer;
+    private $reprSerializer;
 
     /**
      * @var Configuration The client configuration
      */
-    protected $config;
+    private $config;
 
     /**
      * @var Recorder The breadcrumbs recorder
@@ -159,17 +160,7 @@ class Client
             return $event;
         });
 
-        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -255);
-        $this->addMiddleware(new MessageInterfaceMiddleware());
-        $this->addMiddleware(new RequestInterfaceMiddleware());
-        $this->addMiddleware(new UserInterfaceMiddleware());
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
-        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->breadcrumbRecorder));
-        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
+        $this->addDefaultMiddlewares();
 
         $request = ServerRequestFactory::fromGlobals();
         $serverParams = $request->getServerParams();
@@ -375,15 +366,6 @@ class Client
     }
 
     /**
-     * @return bool
-     * @codeCoverageIgnore
-     */
-    protected static function isHttpRequest()
-    {
-        return isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli';
-    }
-
-    /**
      * Captures a new event using the provided data.
      *
      * @param array $payload The data of the event being captured
@@ -414,46 +396,16 @@ class Client
 
         $event = $this->middlewareStack->executeStack(
             $event,
-            static::isHttpRequest() ? ServerRequestFactory::fromGlobals() : null,
+            isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
             isset($payload['exception']) ? $payload['exception'] : null,
             $payload
         );
-
-        $event = $this->sanitize($event);
 
         $this->send($event);
 
         $this->lastEvent = $event;
 
         return str_replace('-', '', $event->getId()->toString());
-    }
-
-    public function sanitize(Event $event)
-    {
-        // attempt to sanitize any user provided data
-        $request = $event->getRequest();
-        $userContext = $event->getUserContext();
-        $extraContext = $event->getExtraContext();
-        $tagsContext = $event->getTagsContext();
-
-        if (!empty($request)) {
-            $event = $event->withRequest($this->serializer->serialize($request, 5));
-        }
-        if (!empty($userContext)) {
-            $event = $event->withUserContext($this->serializer->serialize($userContext, 3));
-        }
-        if (!empty($extraContext)) {
-            $event = $event->withExtraContext($this->serializer->serialize($extraContext));
-        }
-        if (!empty($tagsContext)) {
-            foreach ($tagsContext as $key => $value) {
-                $tagsContext[$key] = @(string) $value;
-            }
-
-            $event = $event->withTagsContext($tagsContext);
-        }
-
-        return $event;
     }
 
     /**
@@ -578,5 +530,24 @@ class Client
     {
         $this->serializer->setAllObjectSerialize($value);
         $this->reprSerializer->setAllObjectSerialize($value);
+    }
+
+    /**
+     * Adds the default middlewares to this client instance.
+     */
+    private function addDefaultMiddlewares()
+    {
+        $this->addMiddleware(new SanitizerMiddleware($this->serializer), -255);
+        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -250);
+        $this->addMiddleware(new MessageInterfaceMiddleware());
+        $this->addMiddleware(new RequestInterfaceMiddleware());
+        $this->addMiddleware(new UserInterfaceMiddleware());
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
+        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
+        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->breadcrumbRecorder));
+        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
     }
 }
