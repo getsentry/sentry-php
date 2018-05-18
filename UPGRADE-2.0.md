@@ -335,8 +335,8 @@
 - The method `Raven_Client::process` has been removed as there is no need to process event data
   from outside the `Client` class.
 
-- The method `Raven_Client::sanitize` has been removed and there is no replacement
-  for it.
+- The method `Raven_Client::sanitize` has been removed and the sanitization
+  happens now inside the `SanitizerMiddleware` middleware.
 
 - The `Raven_Client::user_context` method has been removed. You should use
   `Client::getUserContext` instead.
