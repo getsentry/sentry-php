@@ -900,7 +900,7 @@ class Raven_Client
         }
 
         $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
-        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $runtime_context = array('version' => PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION, 'name' => 'php');
         $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
 
         if (!$this->breadcrumbs->is_empty()) {
