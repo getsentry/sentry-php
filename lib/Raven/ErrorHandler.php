@@ -43,6 +43,7 @@ class Raven_ErrorHandler
         E_COMPILE_WARNING,
         E_STRICT,
     );
+    protected $exclude_exceptions = array();
 
     /**
      * @var array
@@ -78,17 +79,33 @@ class Raven_ErrorHandler
 
     public function handleException($e, $isError = false, $vars = null)
     {
-        $event_id = $this->client->captureException($e, null, null, $vars);
+        if (!$this->inExceptionExcludesArray($e)) {
+            $event_id = $this->client->captureException($e, null, null, $vars);
 
-        try {
-            $e->event_id = $event_id;
-        } catch (\Exception $e) {
-            // Ignore any errors while setting the event id on the exception object
-            // @see: https://github.com/getsentry/sentry-php/issues/579
+            try {
+                $e->event_id = $event_id;
+            } catch (\Exception $e) {
+                // Ignore any errors while setting the event id on the exception object
+                // @see: https://github.com/getsentry/sentry-php/issues/579
+            }
         }
 
         $this->lastHandledException = $e;
+        $this->callExistingExceptionHandler($e, $isError);
+    }
 
+    protected function inExceptionExcludesArray($e)
+    {
+        foreach ($this->exclude_exceptions as $e_class) {
+            if ($e instanceof $e_class) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function callExistingExceptionHandler($e, $isError)
+    {
         if (!$isError && $this->call_existing_exception_handler) {
             if ($this->old_exception_handler !== null) {
                 call_user_func($this->old_exception_handler, $e);
@@ -185,12 +202,17 @@ class Raven_ErrorHandler
      *
      * @param bool $call_existing Call any existing exception handlers after processing
      *                            this instance.
+     * @param array $excludes Exclude exceptions in this array.
      * @return Raven_ErrorHandler
      */
-    public function registerExceptionHandler($call_existing = true)
+    public function registerExceptionHandler($call_existing = true, $excludes = array())
     {
+        if (!is_array($excludes)) {
+            throw new Raven_Exception('Argument `excludes` must be an array.');
+        }
         $this->old_exception_handler = set_exception_handler(array($this, 'handleException'));
         $this->call_existing_exception_handler = $call_existing;
+        $this->exclude_exceptions = $excludes;
         return $this;
     }
 
