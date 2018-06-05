@@ -26,15 +26,19 @@ argument. For example, the code below will reserve 20 megabytes of memory.
 
     ErrorHandler::register($client, 20480);
 
-Capture different error types
+For some frameworks or projects there are specific integrations provided both
+officially and by third party users that automatically register the error
+handlers. In that case please refer to their documentation.
+
+Capture errors
 =============================
 
 The error handler can be customized to set which error types should be captured
 and sent to the Sentry server: you may want to report all the errors but capture
 only some of them. For example, the code below will capture all errors except
-``E_DEPRECATED`` and ``E_USER_DEPRECATED``. Note that the ``error_reporting`` PHP ini
-option will be respected and any other handler that was present before the Sentry
-error handler was registered will still be called regardeless.
+``E_DEPRECATED`` and ``E_USER_DEPRECATED``. Note that the ``error_reporting``
+PHP ini option will be respected and any other handler that was present before
+the Sentry error handler was registered will still be called regardeless.
 
 .. code-block:: php
 
@@ -45,10 +49,14 @@ error handler was registered will still be called regardeless.
     $errorHandler = ErrorHandler::register($client);
     $errorHandler->captureAt(E_ALL &~ E_DEPRECATED &~ E_USER_DEPRECATED, true);
 
-By calling the ``ErrorHandler::captureAt`` method you can decide whether the new
-mask will replace entirely the previous one or not. Taking as reference the
-previous example, to re-enable the ``E_DEPRECATED`` error type you can use the
-following code which will append the new value to the existing mask value:
+While calling the ``ErrorHandler::captureAt`` method you can decide whether the
+new mask will replace entirely the previous one or not by changing the value of
+the second argument. For example, suppose that you first disable the capturing
+of the ``E_DEPRECATED`` and ``E_USER_DEPRECATED`` error types and sometime later
+you want to re-enable only the first type of errors. In this case you have two
+ways to do the same thing: know in advance the old mask and replace it like you
+did in the example above or set to ``false`` the ``$replace`` argument (this is
+the default value) and the new value will be appended to the existing mask:
 
 .. code-block:: php
 
@@ -57,7 +65,11 @@ following code which will append the new value to the existing mask value:
     // Initialize the client
 
     $errorHandler = ErrorHandler::register($client);
-    $errorHandler->captureAt(E_DEPRECATED);
+    $errorHandler->captureAt(E_ALL &~ E_DEPRECATED &~ E_USER_DEPRECATED, true);
+    
+    // some time later you decide to re-enable capturing of E_DEPRECATED errors
+
+    $errorHandler->captureAt(E_DEPRECATED, false);
 
 Capture breadcrumbs
 ===================
@@ -77,6 +89,3 @@ handler the same way as before.
 
     $errorHandler = BreadcrumbErrorHandler::register($client);
     $errorHandler->captureAt(E_WARNING | E_USER_WARNING, true);
-
-For more specific integration of this feature with the respective frameworks
-please refer to the documentation of the packages supporting them.
