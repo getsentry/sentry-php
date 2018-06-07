@@ -1,44 +1,43 @@
 Middlewares
 ###########
 
-Middlewares are an essential part of the event sending lifecycle as it's processed
-through them before being sent to the server. Each middleware wraps the next to
-resemble an onion structure. There are several built-in middlewares whose list
-is:
+Middlewares are an essential part of the event sending lifecycle. Each captured
+event is passed through the middleware chain before being sent to the server and
+each middleware can edit the data to add, change or remove information. There are
+several built-in middlewares whose list is:
 
-- ``BreadcrumbInterfaceMiddleware``: it adds all the recorded breadcrumbs up to
-  the point the event was generated to the event.
-- ``ContextInterfaceMiddleware``: it adds the data stored in the contexts to the
+- ``BreadcrumbInterfaceMiddleware``: adds all the recorded breadcrumbs up to the
+  point the event was generated.
+- ``ContextInterfaceMiddleware``: adds the data stored in the contexts to the
   event.
-- ``ExceptionInterfaceMiddleware``: it fetches the stacktrace for the captured
-  exception (if any) and integrates additional data like a small piece of source
-  code present around each stackframe.
-- ``MessageInterfaceMiddleware``: it adds a message (if present) to the event
+- ``ExceptionInterfaceMiddleware``: fetches the stacktrace for the captured event
+  if it's an exception (and has an stacktrace) and integrates additional data like
+  a small piece of source code for each stackframe.
+- ``MessageInterfaceMiddleware``: adds a message (if present) to the event
   and optionally format it using ``vsprintf``.
-- ``ModulesMiddleware``: it fetches informations about the packages installed
-  through Composer. The ``composer.lock`` file must be present to make this
-  middleware working.
-- ``ProcessorMiddleware``: it's a special middleware that executes the registered
-  processors by passing to them the event instance.
-- ``RequestInterfaceMiddleware``: it adds the HTTP request information (e.g. the
+- ``ModulesMiddleware``: fetches informations about the packages installed through
+  Composer. The ``composer.lock`` file must be present for this middleware to work.
+- ``ProcessorMiddleware``: executes the registered processors by passing to them
+  the event instance.
+- ``RequestInterfaceMiddleware``: adds the HTTP request information (e.g. the
   headers or the query string) to the event.
-- ``SanitizerMiddleware``: it sanitizes the data of the event to ensure that it
+- ``SanitizerMiddleware``: sanitizes the data of the event to ensure that it
   can be encoded correctly as JSON and the data is serialized in the appropriate
   format for their representation.
-- ``UserInterfaceMiddleware``: it adds some user-related information like the
-  client IP address to the event.
+- ``UserInterfaceMiddleware``: adds some user-related information like the client
+  IP address to the event.
 
 Writing a middleware
 ====================
 
 The only requirement for a middleware is that it must be a callable. What this
-means is that you can register a lambda function as middleware as well as create
-a class with the magic method ``__invoke`` and they will both work fine. The
-signature of the function that will be called must be the following:
+means is that you can register an anonymous function as middleware as well as
+create a class with the magic method ``__invoke`` and they will both work fine.
+The signature of the function that will be called must be the following:
 
 .. code-block:: php
 
-  function (Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
+  function (\Raven\Event $event, callable $next, \Psr\Http\Message\ServerRequestInterface $request = null, $exception = null, array $payload = [])
 
 The middleware can call the next one in the chain or can directly return the
 event instance and break the chain. Additional data supplied by the user while
