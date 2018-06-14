@@ -76,7 +76,7 @@ class Raven_Serializer
      * @param int   $_depth
      * @return string|bool|double|int|null|object|array
      */
-    public function serialize($value, $max_depth = 3, $_depth = 0)
+    public function serialize($value, $max_depth = 10, $_depth = 0)
     {
         $className = is_object($value) ? get_class($value) : null;
         $toArray = is_array($value) || $className === 'stdClass';
