@@ -69,7 +69,7 @@ class MonologHandler extends AbstractProcessingHandler
             isset($record['context']['exception'])
             && (
                 $record['context']['exception'] instanceof \Exception
-                || (PHP_VERSION_ID >= 70000 && $record['context']['exception'] instanceof \Throwable)
+                || (\PHP_VERSION_ID >= 70000 && $record['context']['exception'] instanceof \Throwable)
             )
         ) {
             /**

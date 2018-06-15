@@ -49,7 +49,7 @@ final class ModulesMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $composerFilePath = $this->config->getProjectRoot() . DIRECTORY_SEPARATOR . 'composer.json';
+        $composerFilePath = $this->config->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
 
         if (file_exists($composerFilePath)) {
             $composer = Factory::create(new NullIO(), $composerFilePath, true);

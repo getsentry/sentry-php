@@ -742,11 +742,11 @@ class Configuration
         }
 
         if (
-            DIRECTORY_SEPARATOR === substr($path, 0, 1)
-            && DIRECTORY_SEPARATOR !== substr($path, -1)
+            \DIRECTORY_SEPARATOR === substr($path, 0, 1)
+            && \DIRECTORY_SEPARATOR !== substr($path, -1)
             && '.php' !== substr($path, -4)
         ) {
-            $path .= DIRECTORY_SEPARATOR;
+            $path .= \DIRECTORY_SEPARATOR;
         }
 
         return $path;

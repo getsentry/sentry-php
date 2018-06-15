@@ -289,7 +289,7 @@ class StacktraceTest extends TestCase
 
     protected function getFixturePath($file)
     {
-        return realpath(__DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . $file);
+        return realpath(__DIR__ . \DIRECTORY_SEPARATOR . 'Fixtures' . \DIRECTORY_SEPARATOR . $file);
     }
 
     protected function getFixture($file)
