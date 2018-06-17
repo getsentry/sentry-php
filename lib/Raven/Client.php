@@ -396,7 +396,7 @@ class Client
 
         $event = $this->middlewareStack->executeStack(
             $event,
-            isset($_SERVER['REQUEST_METHOD']) && PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
+            isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
             isset($payload['exception']) ? $payload['exception'] : null,
             $payload
         );

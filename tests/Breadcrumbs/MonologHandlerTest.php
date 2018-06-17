@@ -90,7 +90,7 @@ EOF;
 
     public function testThrowableBeingParsedAsException()
     {
-        if (PHP_VERSION_ID <= 70000) {
+        if (\PHP_VERSION_ID <= 70000) {
             $this->markTestSkipped('PHP 7.0 introduced Throwable');
         }
 
