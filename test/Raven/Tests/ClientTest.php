@@ -353,12 +353,15 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     {
         Raven_Client::ParseDSN('http://:secret@example.com/1');
     }
-    /**
-     * @expectedException InvalidArgumentException
-     */
+
     public function testParseDSNMissingSecretKey()
     {
-        Raven_Client::ParseDSN('http://public@example.com/1');
+        $parsed = Raven_Client::ParseDSN('http://public@example.com/1');
+
+        $this->assertEquals('http://example.com/api/1/store/', $parsed['server']);
+        $this->assertEquals('1', $parsed['project']);
+        $this->assertEquals('public', $parsed['public_key']);
+        $this->assertEquals(null, $parsed['secret_key']);
     }
 
     /**
@@ -1035,6 +1038,29 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                     "sentry_key=publickey, sentry_secret=secretkey";
 
         $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', 'secretkey'));
+
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
+                    "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
+                    "sentry_key=publickey";
+
+        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', null));
+    }
+
+    /**
+     * @covers Raven_Client::get_auth_header
+     */
+    public function testGet_Auth_Header_Public()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $clientstring = 'sentry-php/test';
+        $timestamp = '1234341324.340000';
+
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
+                    "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
+                    "sentry_key=publickey";
+
+        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', null));
     }
 
     /**
@@ -2575,7 +2601,6 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             array('honey' => 'clover'),
         ), $event['breadcrumbs']);
     }
-
 
     /**
      * @covers Raven_Client::capture
