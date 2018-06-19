@@ -51,7 +51,7 @@ Add your DSN to ``.env``:
 
 .. code-block:: bash
 
-    SENTRY_DSN=___DSN___
+    SENTRY_LARAVEL_DSN=___DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
 error view in `resources/views/errors/500.blade.php`.
@@ -124,9 +124,11 @@ Laravel 4.x
 
 Install the ``sentry/sentry-laravel`` package:
 
+Laravel 4.x is supported until version 0.8.x.
+
 .. code-block:: bash
 
-    $ composer require sentry/sentry-laravel
+    $ composer require "sentry/sentry-laravel:0.8.*"
 
 Add the Sentry service provider and facade in ``config/app.php``:
 
