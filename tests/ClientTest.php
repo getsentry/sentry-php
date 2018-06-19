@@ -197,6 +197,8 @@ class ClientTest extends TestCase
         @trigger_error('foo', E_USER_NOTICE);
 
         $client->captureLastError();
+
+        $this->clearLastError();
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
@@ -204,11 +206,13 @@ class ClientTest extends TestCase
         /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureException'])
+            ->setMethodsExcept(['captureLastError'])
             ->getMock();
 
         $client->expects($this->never())
-            ->method('capture');
+            ->method('captureException');
+
+        $this->clearLastError();
 
         $client->captureLastError();
     }
@@ -546,5 +550,17 @@ class ClientTest extends TestCase
         } catch (\Exception $ex) {
             return $ex;
         }
+    }
+
+    /**
+     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
+     */
+    private function clearLastError()
+    {
+        $handler = function() { return false; };
+
+        set_error_handler($handler);
+        @trigger_error('');
+        restore_error_handler();
     }
 }
