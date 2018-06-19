@@ -83,6 +83,15 @@ class ConfigurationTest extends TestCase
     {
         return [
             [
+                'http://public@example.com/1',
+                [
+                    'project_id' => 1,
+                    'public_key' => 'public',
+                    'secret_key' => null,
+                    'server' => 'http://example.com',
+                ],
+            ],
+            [
                 'http://public:secret@example.com/1',
                 [
                     'project_id' => 1,
@@ -156,7 +165,7 @@ class ConfigurationTest extends TestCase
             ['http://public:secret@/1'],
             ['http://public:secret@example.com'],
             ['http://:secret@example.com/1'],
-            ['http://public@example.com/1'],
+            ['http://public:@example.com'],
             ['tcp://public:secret@example.com/1'],
         ];
     }

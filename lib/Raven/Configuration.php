@@ -661,11 +661,11 @@ class Configuration
                 return false;
             }
 
-            if (!isset($parsed['scheme'], $parsed['user'], $parsed['pass'], $parsed['host'], $parsed['path'])) {
+            if (!isset($parsed['scheme'], $parsed['user'], $parsed['host'], $parsed['path'])) {
                 return false;
             }
 
-            if (empty($parsed['user']) || empty($parsed['pass'])) {
+            if (empty($parsed['user']) || (isset($parsed['pass']) && empty($parsed['pass']))) {
                 return false;
             }
 
@@ -700,7 +700,7 @@ class Configuration
 
             $this->server .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
             $this->publicKey = $parsed['user'];
-            $this->secretKey = $parsed['pass'];
+            $this->secretKey = isset($parsed['pass']) ? $parsed['pass'] : null;
 
             $parts = explode('/', $parsed['path']);
 
