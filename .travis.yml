@@ -22,17 +22,29 @@ cache:
 
 before_install:
   - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
-  - composer self-update
 
 install: travis_retry composer install --no-interaction
 
 script:
-  - composer phpcs
-  - composer tests-travis
+  - composer tests
 
-after_script:
-  - wget https://scrutinizer-ci.com/ocular.phar
-  - if [ $(phpenv version-name) = "5.6" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.0" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.1" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.2" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT; fi
+jobs:
+  include:
+    - stage: Test
+      php: 5.6
+      env: 
+        COMPOSER_OPTIONS: "--prefer-lowest"
+        REMOVE_XDEBUG: "1"
+      install: travis_retry composer install --no-interaction --prefer-lowest
+    - stage: Code style
+    - script: 
+        - composer phpcs
+      env: 
+        CS-FIXER: true
+        REMOVE_XDEBUG: "1"
+    - stage: Coverage
+      script: 
+        - phpdbg -qrr vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
+      after_success:
+        - wget https://scrutinizer-ci.com/ocular.phar
+        - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
