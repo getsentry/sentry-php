@@ -37,15 +37,18 @@ jobs:
         REMOVE_XDEBUG: "1"
       install: travis_retry composer update --no-interaction --prefer-lowest
     - stage: Code style
-      php: 7.2
+      php: 7.1
       env: 
         CS-FIXER: true
         REMOVE_XDEBUG: "1"
       script: 
         - composer phpcs
     - stage: Coverage
+      php: 7.1
+      env:
+        REMOVE_XDEBUG: "0"
       script:
-        - phpdbg -qrr vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
+        - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
       after_success:
         - wget https://scrutinizer-ci.com/ocular.phar
         - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
