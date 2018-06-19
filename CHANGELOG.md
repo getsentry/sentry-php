@@ -4,6 +4,11 @@
 
 - ...
 
+## 1.9.1 (2018-06-19)
+
+- Allow the use of a public DSN (private part of the DSN was deprecated in Sentry 9) (#615)
+- Send transaction as transaction not as culprit (#601)
+
 ## 1.9.0 (2018-05-03)
 
 - Fixed undefined variable (#588)
