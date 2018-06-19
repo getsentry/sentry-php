@@ -197,8 +197,6 @@ class ClientTest extends TestCase
         @trigger_error('foo', E_USER_NOTICE);
 
         $client->captureLastError();
-
-        error_clear_last();
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
@@ -211,9 +209,7 @@ class ClientTest extends TestCase
 
         $client->expects($this->never())
             ->method('capture');
-
-        error_clear_last();
-
+        
         $client->captureLastError();
     }
 
