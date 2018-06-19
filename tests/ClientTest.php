@@ -209,7 +209,7 @@ class ClientTest extends TestCase
 
         $client->expects($this->never())
             ->method('capture');
-        
+
         $client->captureLastError();
     }
 
