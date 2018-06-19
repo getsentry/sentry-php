@@ -557,7 +557,7 @@ class ClientTest extends TestCase
      */
     private function clearLastError()
     {
-        $handler = function() { return false; };
+        $handler = function () { return false; };
 
         set_error_handler($handler);
         @trigger_error('');
