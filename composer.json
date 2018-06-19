@@ -29,8 +29,8 @@
         "monolog/monolog": "~1.0",
         "php-http/curl-client": "~1.7",
         "php-http/mock-client": "~1.0",
-        "phpunit/phpunit": "^5.7|^6.0",
-        "symfony/phpunit-bridge": "~2.7|~3.0"
+        "phpunit/phpunit": "^5.7.27|^6.0",
+        "symfony/phpunit-bridge": "^4.0"
     },
     "suggest": {
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
