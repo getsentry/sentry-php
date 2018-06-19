@@ -261,7 +261,7 @@ class Raven_Client
         $this->error_handler->registerExceptionHandler();
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
-        
+
         if ($this->_curl_handler) {
             $this->_curl_handler->registerShutdownFunction();
         }
@@ -508,7 +508,7 @@ class Raven_Client
         }
         $username = (isset($url['user']) ? $url['user'] : null);
         $password = (isset($url['pass']) ? $url['pass'] : null);
-        if (empty($netloc) || empty($project) || empty($username) || empty($password)) {
+        if (empty($netloc) || empty($project) || empty($username)) {
             throw new InvalidArgumentException('Invalid Sentry DSN: ' . $dsn);
         }
 
