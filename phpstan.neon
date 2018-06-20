@@ -4,3 +4,5 @@ parameters:
         - '/Call to an undefined method Raven\\ClientBuilder::methodThatDoesNotExists\(\)/'
     excludes_analyse:
         - tests/resources
+includes:
+	- vendor/phpstan/phpstan-phpunit/extension.neon

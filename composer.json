@@ -30,6 +30,7 @@
         "php-http/curl-client": "^1.7.1",
         "php-http/message": "^1.5",
         "php-http/mock-client": "~1.0",
+        "phpstan/phpstan-phpunit": "^0.9.2",
         "phpstan/phpstan-shim": "^0.9.2",
         "phpunit/phpunit": "^5.7.27|^6.0",
         "symfony/phpunit-bridge": "^4.0"
@@ -67,7 +68,7 @@
             "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
         ],
         "phpstan": [
-            "composer require --dev phpstan/phpstan-shim ^0.9.2",
+            "composer require --dev phpstan/phpstan-shim ^0.9.2 phpstan/phpstan-phpunit ^0.9.2",
             "vendor/bin/phpstan.phar analyse lib tests -c phpstan.neon -l 3"
         ]
     },
