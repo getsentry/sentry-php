@@ -93,7 +93,7 @@ class ClientTest extends TestCase
         $reflectionProperty->setValue($client, $middlewareStack);
         $reflectionProperty->setAccessible(false);
 
-        $client->removeMiddleware($middleware, -10);
+        $client->removeMiddleware($middleware);
     }
 
     public function testAddProcessor()
@@ -287,7 +287,7 @@ class ClientTest extends TestCase
 
         Uuid::setFactory(new UuidFactory());
 
-        $this->assertEquals('ddbd643a51904ccea6ce3098506f9d33', $client->getLastEventID());
+        $this->assertEquals('ddbd643a51904ccea6ce3098506f9d33', $client->getLastEventId());
     }
 
     public function testGetUserContext()

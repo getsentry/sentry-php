@@ -55,7 +55,7 @@ final class TransactionStack implements \Countable
     /**
      * Pushes the given values onto the stack.
      *
-     * @param string[] $values The values to push
+     * @param array<int, string> $values The values to push
      *
      * @throws \InvalidArgumentException If any of the values is not a string
      */

@@ -1,5 +1,6 @@
 parameters:
     ignoreErrors:
         - '/Constructor of class Raven\\HttpClient\\Encoding\\Base64EncodingStream has an unused parameter \$(readFilterOptions|writeFilterOptions)/'
+        - '/Call to an undefined method Raven\\ClientBuilder::methodThatDoesNotExists\(\)/'
     excludes_analyse:
         - tests/resources
