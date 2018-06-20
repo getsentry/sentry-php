@@ -57,7 +57,7 @@ class RequestInterfaceMiddlewareTest extends TestCase
         }
 
         $invokationCount = 0;
-        $callback = function (Event $eventArg, ServerRequestInterface $requestArg) use ($event, $request, $expectedValue, &$invokationCount) {
+        $callback = function (Event $eventArg, ServerRequestInterface $requestArg) use ($request, $expectedValue, &$invokationCount) {
             $this->assertSame($request, $requestArg);
             $this->assertEquals($expectedValue, $eventArg->getRequest());
 
