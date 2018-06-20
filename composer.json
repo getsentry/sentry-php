@@ -67,7 +67,8 @@
             "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
         ],
         "phpstan": [
-            "vendor/bin/phpstan.phar analyse lib tests -c phpstan.neon -l 2"
+            "composer require --dev phpstan/phpstan-shim ^0.9.2",
+            "vendor/bin/phpstan.phar analyse lib tests -c phpstan.neon -l 3"
         ]
     },
     "config": {
