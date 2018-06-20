@@ -113,8 +113,6 @@ class ContextTest extends TestCase
         $this->assertInternalType('array', $error);
         $this->assertEquals('Undefined index: foo', $error['message']);
 
-        error_clear_last();
-
         $context['foo'] = 'bar';
 
         $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
