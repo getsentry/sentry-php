@@ -51,7 +51,7 @@ abstract class AbstractErrorHandler
     protected $isRoot = false;
 
     /**
-     * @var string A portion of pre-allocated memory data that will be reclaimed
+     * @var string|null A portion of pre-allocated memory data that will be reclaimed
      *             in case a fatal error occurs to handle it
      */
     protected static $reservedMemory;

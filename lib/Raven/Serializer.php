@@ -108,7 +108,7 @@ class Serializer
      * @param int      $_depth
      * @param string[] $hashes
      *
-     * @return array|string
+     * @return array|string|bool|float|int|null
      */
     public function serializeObject($object, $max_depth = 3, $_depth = 0, $hashes = [])
     {

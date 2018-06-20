@@ -32,7 +32,7 @@ class MiddlewareStack
     private $stack = [];
 
     /**
-     * @var callable The tip of the middleware call stack
+     * @var callable|null The tip of the middleware call stack
      */
     private $middlewareStackTip;
 

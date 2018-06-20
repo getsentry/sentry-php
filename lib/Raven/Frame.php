@@ -40,7 +40,7 @@ final class Frame implements \JsonSerializable
     private $preContext;
 
     /**
-     * @var string[] The source code written at the line number of the file that
+     * @var string|null The source code written at the line number of the file that
      *               originated this frame
      */
     private $contextLine;
@@ -131,7 +131,7 @@ final class Frame implements \JsonSerializable
      * Gets the source code written at the line number of the file that originated
      * this frame.
      *
-     * @return string[]|null
+     * @return string|null
      */
     public function getContextLine()
     {

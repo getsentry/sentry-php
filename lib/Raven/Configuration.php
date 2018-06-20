@@ -27,7 +27,7 @@ class Configuration
     private $options = [];
 
     /**
-     * @var string A simple server string, set to the DSN found on your Sentry settings
+     * @var string|null A simple server string, set to the DSN found on your Sentry settings
      */
     private $server;
 

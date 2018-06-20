@@ -259,9 +259,9 @@ class Client
     }
 
     /**
-     * Gets the representation serialier.
+     * Gets the representation serializer.
      *
-     * @return ReprSerializer
+     * @return Serializer
      */
     public function getReprSerializer()
     {
