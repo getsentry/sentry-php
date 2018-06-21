@@ -14,6 +14,7 @@
 namespace Raven\Processor;
 
 use Raven\Event;
+use Raven\Stacktrace;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -65,32 +66,47 @@ final class SanitizeDataProcessor implements ProcessorInterface
     /**
      * Replace any array values with our mask if the field name or the value matches a respective regex.
      *
-     * @param mixed  $item Associative array value
-     * @param string $key  Associative array key
+     * @param array $data Associative array to be sanitized
      */
-    public function sanitize(&$item, $key)
+    public function sanitize(&$data)
     {
-        if (empty($item)) {
-            return;
-        }
+        foreach ($data as $key => &$item) {
+            if (empty($key)) {
+                return;
+            }
 
-        if (preg_match($this->options['values_re'], $item)) {
-            $item = self::STRING_MASK;
-        }
+            if (preg_match($this->options['fields_re'], $key)) {
+                if (is_array($item)) {
+                    array_walk_recursive($item, function (&$value) {
+                        $value = self::STRING_MASK;
+                    });
+                    
+                    return;
+                }
+                
+                $item = self::STRING_MASK;
+            }
 
-        if (empty($key)) {
-            return;
-        }
+            if (empty($item)) {
+                return;
+            }
 
-        if (preg_match($this->options['fields_re'], $key)) {
-            $item = self::STRING_MASK;
+            if (is_array($item)) {
+                $this->sanitize($item);
+                
+                return;
+            }
+
+            if (preg_match($this->options['values_re'], $item)) {
+                $item = self::STRING_MASK;
+            }
         }
     }
 
     public function sanitizeException(&$data)
     {
         foreach ($data['values'] as &$value) {
-            if (!isset($value['stacktrace'])) {
+            if (! isset($value['stacktrace'])) {
                 continue;
             }
 
@@ -102,20 +118,24 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
     public function sanitizeHttp(&$data)
     {
-        if (!empty($data['cookies']) && is_array($data['cookies'])) {
+        if (! empty($data['cookies']) && is_array($data['cookies'])) {
             $cookies = &$data['cookies'];
-            if (!empty($cookies[$this->options['session_cookie_name']])) {
+            if (! empty($cookies[$this->options['session_cookie_name']])) {
                 $cookies[$this->options['session_cookie_name']] = self::STRING_MASK;
             }
         }
 
-        if (!empty($data['data']) && is_array($data['data'])) {
-            array_walk_recursive($data['data'], [$this, 'sanitize']);
+        if (! empty($data['data']) && is_array($data['data'])) {
+            $this->sanitize($data['data']);
         }
 
         return $data;
     }
 
+    /**
+     * @param Stacktrace $data
+     * @return Stacktrace
+     */
     public function sanitizeStacktrace($data)
     {
         foreach ($data->getFrames() as &$frame) {
@@ -125,8 +145,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
             $vars = $frame->getVars();
 
-            array_walk_recursive($vars, [$this, 'sanitize']);
-
+            $this->sanitize($vars);
             $frame->setVars($vars);
         }
 
@@ -143,21 +162,20 @@ final class SanitizeDataProcessor implements ProcessorInterface
         $request = $event->getRequest();
         $extraContext = $event->getExtraContext();
 
-        if (!empty($exception)) {
+        if (! empty($exception)) {
             $event = $event->withException($this->sanitizeException($exception));
         }
 
-        if (!empty($stacktrace)) {
+        if ($stacktrace) {
             $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
-        if (!empty($request)) {
+        if (! empty($request)) {
             $event = $event->withRequest($this->sanitizeHttp($request));
         }
 
-        if (!empty($extraContext)) {
-            array_walk_recursive($extraContext, [$this, 'sanitize']);
-
+        if (! empty($extraContext)) {
+            $this->sanitize($extraContext);
             $event = $event->withExtraContext($extraContext);
         }
 

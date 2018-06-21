@@ -72,10 +72,9 @@ class SanitizeDataProcessorTest extends TestCase
             // We must convert the backtrace to a Stacktrace instance here because
             // PHPUnit executes the data provider before the setUp method and so
             // the client instance cannot be accessed from there
-            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $event->getException());
+            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']),
+                $event->getException());
         }
-
-        $this->markTestIncomplete('Array scrubbing has not been implemented yet.');
     }
 
     public function processDataProvider()
@@ -188,6 +187,34 @@ class SanitizeDataProcessorTest extends TestCase
                                         ],
                                     ],
                                 ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                [
+                    'extra_context' => [
+                        'foobar' => 'some-data',
+                        'authorization' => [
+                            'foo' => 'secret1',
+                            'bar' => 'secret2',
+                            'baz' => [
+                                'nested1' => 'nestedSecret1', 
+                                'nested2' => 'nestedSecret2', 
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'extra_context' => [
+                        'foobar' => 'some-data',
+                        'authorization' => [
+                            'foo' => SanitizeDataProcessor::STRING_MASK,
+                            'bar' => SanitizeDataProcessor::STRING_MASK,
+                            'baz' => [
+                                'nested1' => SanitizeDataProcessor::STRING_MASK,
+                                'nested2' => SanitizeDataProcessor::STRING_MASK,
                             ],
                         ],
                     ],

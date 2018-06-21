@@ -123,7 +123,7 @@ final class Event implements \JsonSerializable
     private $exception;
 
     /**
-     * @var Stacktrace The stacktrace that generated this event
+     * @var Stacktrace|null The stacktrace that generated this event
      */
     private $stacktrace;
 
