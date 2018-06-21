@@ -41,7 +41,7 @@ final class Frame implements \JsonSerializable
 
     /**
      * @var string|null The source code written at the line number of the file that
-     *               originated this frame
+     *                  originated this frame
      */
     private $contextLine;
 

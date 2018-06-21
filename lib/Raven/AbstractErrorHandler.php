@@ -52,7 +52,7 @@ abstract class AbstractErrorHandler
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed
-     *             in case a fatal error occurs to handle it
+     *                  in case a fatal error occurs to handle it
      */
     protected static $reservedMemory;
 
