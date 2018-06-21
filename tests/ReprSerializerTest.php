@@ -11,25 +11,22 @@
 
 namespace Raven\Tests;
 
-require_once 'SerializerAbstractTest.php';
+use Raven\ReprSerializer;
 
-class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
+class ReprSerializerTest extends AbstractSerializerTest
 {
-    /**
-     * @return string
-     */
-    protected static function get_test_class()
+    protected function getSerializerUnderTest()
     {
-        return '\\Raven\\ReprSerializer';
+        return new ReprSerializer();
     }
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testIntsAreInts($serialize_all_objects)
     {
-        $serializer = new \Raven\ReprSerializer();
+        $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
@@ -41,11 +38,11 @@ class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testFloats($serialize_all_objects)
     {
-        $serializer = new \Raven\ReprSerializer();
+        $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
@@ -57,11 +54,11 @@ class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testBooleans($serialize_all_objects)
     {
-        $serializer = new \Raven\ReprSerializer();
+        $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
@@ -77,11 +74,11 @@ class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testNull($serialize_all_objects)
     {
-        $serializer = new \Raven\ReprSerializer();
+        $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
@@ -93,12 +90,12 @@ class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      * @covers \Raven\ReprSerializer::serializeValue
      */
     public function testSerializeRoundedFloat($serialize_all_objects)
     {
-        $serializer = new \Raven\ReprSerializer();
+        $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
@@ -107,11 +104,11 @@ class ReprSerializerTest extends \Raven\Tests\SerializerAbstractTest
         $this->assertInternalType('string', $result);
         $this->assertEquals('1.0', $result);
 
-        $result = $serializer->serialize((float) floor(5 / 2));
+        $result = $serializer->serialize(floor(5 / 2));
         $this->assertInternalType('string', $result);
         $this->assertEquals('2.0', $result);
 
-        $result = $serializer->serialize((float) floor(12345.678901234));
+        $result = $serializer->serialize(floor(12345.678901234));
         $this->assertInternalType('string', $result);
         $this->assertEquals('12345.0', $result);
     }

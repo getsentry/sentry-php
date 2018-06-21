@@ -93,7 +93,11 @@ class Serializer
             }
 
             if (is_object($value)) {
-                if (('stdClass' == get_class($value)) or $this->_all_object_serialize) {
+                if (is_callable($value)) {
+                    return $this->serializeCallable($value);
+                }
+
+                if ($this->_all_object_serialize || ('stdClass' === get_class($value))) {
                     return $this->serializeObject($value, $max_depth, $_depth, []);
                 }
             }
@@ -171,6 +175,72 @@ class Serializer
         } else {
             return $this->serializeString($value);
         }
+    }
+
+    /**
+     * @param callable $callable
+     *
+     * @return string
+     */
+    public function serializeCallable($callable)
+    {
+        if (is_array($callable)) {
+            $reflection = new \ReflectionMethod($callable[0], $callable[1]);
+            $class = $reflection->getDeclaringClass();
+        } else {
+            $reflection = new \ReflectionFunction($callable);
+            $class = null;
+        }
+
+        $value = $reflection->isClosure() ? 'Lambda ' : 'Callable ';
+
+        if (version_compare(PHP_VERSION, '7.0.0') >= 0 && $reflection->getReturnType()) {
+            $value .= $reflection->getReturnType() . ' ';
+        }
+
+        if ($class) {
+            $value .= $class->getName() . '::';
+        }
+
+        return $value . $reflection->getName() . ' ' . $this->serializeCallableParameters($reflection);
+    }
+
+    /**
+     * @param \ReflectionFunctionAbstract $reflection
+     *
+     * @return string
+     */
+    private function serializeCallableParameters(\ReflectionFunctionAbstract $reflection)
+    {
+        $params = [];
+        foreach ($reflection->getParameters() as &$param) {
+            $paramType = null;
+            if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+                $paramType = $param->hasType() ? $param->getType() : 'mixed';
+            } else {
+                if ($param->isArray()) {
+                    $paramType = 'array';
+                } elseif ($param->isCallable()) {
+                    $paramType = 'callable';
+                }
+            }
+            if ($paramType && $param->allowsNull()) {
+                $paramType .= '|null';
+            }
+
+            $paramName = ($param->isPassedByReference() ? '&' : '') . $param->getName();
+            if ($param->isOptional()) {
+                $paramName = '[' . $paramName . ']';
+            }
+
+            if ($paramType) {
+                $params[] = $paramType . ' ' . $paramName;
+            } else {
+                $params[] = $paramName;
+            }
+        }
+
+        return '[' . implode('; ', $params) . ']';
     }
 
     /**
