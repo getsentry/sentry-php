@@ -12,6 +12,7 @@
 namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Raven\Client;
 use Raven\Event;
 
 /**
@@ -39,7 +40,7 @@ final class MessageInterfaceMiddleware
         $messageParams = isset($payload['message_params']) ? $payload['message_params'] : [];
 
         if (null !== $message) {
-            $event = $event->withMessage($message, $messageParams);
+            $event = $event->withMessage(substr($message, 0, Client::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
         }
 
         return $next($event, $request, $exception, $payload);

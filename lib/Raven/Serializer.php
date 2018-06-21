@@ -61,7 +61,7 @@ class Serializer
      * @param null|string $mb_detect_order
      * @param null|int    $messageLimit
      */
-    public function __construct($mb_detect_order = null, $messageLimit = Client::MESSAGE_LIMIT)
+    public function __construct($mb_detect_order = null, $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
     {
         if (null != $mb_detect_order) {
             $this->mb_detect_order = $mb_detect_order;

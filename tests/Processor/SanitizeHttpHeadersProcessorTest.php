@@ -12,15 +12,15 @@
 namespace Raven\Tests\Processor;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
 use Raven\ClientBuilder;
+use Raven\ClientInterface;
 use Raven\Event;
 use Raven\Processor\SanitizeHttpHeadersProcessor;
 
 class SanitizeHttpHeadersProcessorTest extends TestCase
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
     protected $client;
 

@@ -12,7 +12,7 @@
 namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Client;
+use Raven\ClientInterface;
 use Raven\Event;
 use Raven\Stacktrace;
 
@@ -24,16 +24,16 @@ use Raven\Stacktrace;
 final class ExceptionInterfaceMiddleware
 {
     /**
-     * @var Client The Raven client
+     * @var ClientInterface The Raven client
      */
     private $client;
 
     /**
      * Constructor.
      *
-     * @param Client $client The Raven client
+     * @param ClientInterface $client The Raven client
      */
-    public function __construct(Client $client)
+    public function __construct(ClientInterface $client)
     {
         $this->client = $client;
     }
@@ -51,8 +51,9 @@ final class ExceptionInterfaceMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        // Do not override the level if it was set explicitly by the user
-        if (!isset($payload['level']) && $exception instanceof \ErrorException) {
+        if (isset($payload['level'])) {
+            $event = $event->withLevel($payload['level']);
+        } elseif ($exception instanceof \ErrorException) {
             $event = $event->withLevel($this->client->translateSeverity($exception->getSeverity()));
         }
 

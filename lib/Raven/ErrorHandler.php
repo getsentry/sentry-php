@@ -25,12 +25,12 @@ class ErrorHandler extends AbstractErrorHandler
      * Registers this error handler by associating its instance with the given
      * Raven client.
      *
-     * @param Client $client             The Raven client
-     * @param int    $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param ClientInterface $client             The Raven client
+     * @param int             $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
      * @return ErrorHandler
      */
-    public static function register(Client $client, $reservedMemorySize = 10240)
+    public static function register(ClientInterface $client, $reservedMemorySize = 10240)
     {
         return new self($client, $reservedMemorySize);
     }

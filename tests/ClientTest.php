@@ -24,6 +24,7 @@ use Raven\Event;
 use Raven\Middleware\MiddlewareStack;
 use Raven\Processor\ProcessorInterface;
 use Raven\Processor\ProcessorRegistry;
+use Raven\ReprSerializer;
 use Raven\Serializer;
 use Raven\Tests\Fixtures\classes\CarelessException;
 use Raven\Transport\TransportInterface;
@@ -483,12 +484,12 @@ class ClientTest extends TestCase
         $client->setAllObjectSerialize(true);
 
         $this->assertTrue($client->getSerializer()->getAllObjectSerialize());
-        $this->assertTrue($client->getReprSerializer()->getAllObjectSerialize());
+        $this->assertTrue($client->getRepresentationSerializer()->getAllObjectSerialize());
 
         $client->setAllObjectSerialize(false);
 
         $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
-        $this->assertFalse($client->getReprSerializer()->getAllObjectSerialize());
+        $this->assertFalse($client->getRepresentationSerializer()->getAllObjectSerialize());
     }
 
     public function testClearBreadcrumb()
@@ -526,11 +527,11 @@ class ClientTest extends TestCase
     public function testSetReprSerializer()
     {
         $client = ClientBuilder::create()->getClient();
-        $serializer = $this->prophesize(Serializer::class)->reveal();
+        $serializer = $this->prophesize(ReprSerializer::class)->reveal();
 
-        $client->setReprSerializer($serializer);
+        $client->setRepresentationSerializer($serializer);
 
-        $this->assertSame($serializer, $client->getReprSerializer());
+        $this->assertSame($serializer, $client->getRepresentationSerializer());
     }
 
     public function testHandlingExceptionThrowingAnException()
