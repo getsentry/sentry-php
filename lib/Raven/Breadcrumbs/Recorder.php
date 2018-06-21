@@ -42,7 +42,7 @@ final class Recorder implements \Countable, \Iterator
     private $size = 0;
 
     /**
-     * @var Breadcrumb[] The list of recorded breadcrumbs
+     * @var \SplFixedArray|Breadcrumb[] The list of recorded breadcrumbs
      */
     private $breadcrumbs;
 

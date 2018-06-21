@@ -34,7 +34,7 @@ class Stacktrace implements \JsonSerializable
     protected $serializer;
 
     /**
-     * @var ReprSerializer The representation serializer
+     * @var Serializer The representation serializer
      */
     protected $reprSerializer;
 

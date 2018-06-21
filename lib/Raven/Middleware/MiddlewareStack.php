@@ -27,12 +27,12 @@ class MiddlewareStack
     private $handler;
 
     /**
-     * @var array<int, MiddlewareInterface[]> The list of middlewares
+     * @var array<int, callable[]> The list of middlewares
      */
     private $stack = [];
 
     /**
-     * @var callable The tip of the middleware call stack
+     * @var callable|null The tip of the middleware call stack
      */
     private $middlewareStackTip;
 

@@ -1,0 +1,9 @@
+parameters:
+    ignoreErrors:
+        - '/Constructor of class Raven\\HttpClient\\Encoding\\Base64EncodingStream has an unused parameter \$(readFilterOptions|writeFilterOptions)/'
+        - '/Call to an undefined method Raven\\ClientBuilder::methodThatDoesNotExists\(\)/'
+        - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
+    excludes_analyse:
+        - tests/resources
+includes:
+	- vendor/phpstan/phpstan-phpunit/extension.neon

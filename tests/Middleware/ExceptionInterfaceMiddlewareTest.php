@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
