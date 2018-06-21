@@ -71,30 +71,22 @@ final class SanitizeDataProcessor implements ProcessorInterface
     public function sanitize(&$data)
     {
         foreach ($data as $key => &$item) {
-            if (empty($key)) {
-                return;
-            }
-
             if (preg_match($this->options['fields_re'], $key)) {
                 if (is_array($item)) {
                     array_walk_recursive($item, function (&$value) {
                         $value = self::STRING_MASK;
                     });
                     
-                    return;
+                    break;
                 }
                 
                 $item = self::STRING_MASK;
             }
 
-            if (empty($item)) {
-                return;
-            }
-
             if (is_array($item)) {
                 $this->sanitize($item);
                 
-                return;
+                break;
             }
 
             if (preg_match($this->options['values_re'], $item)) {
