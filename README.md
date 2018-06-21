@@ -58,7 +58,7 @@ use Raven\ClientBuilder;
 require 'vendor/autoload.php';
 
 // Instantiate the SDK with your DSN
-$client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])->getClient();
+$client = ClientBuilder::create(['server' => 'http://public@example.com/1'])->getClient();
 
 // Capture an exception
 $eventId = $client->captureException(new \RuntimeException('Hello World!'));
