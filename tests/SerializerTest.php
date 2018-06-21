@@ -2,45 +2,12 @@
 
 namespace Raven\Tests;
 
-require_once 'SerializerAbstractTest.php';
+use Raven\Serializer;
 
-class SerializerTest extends \Raven\Tests\SerializerAbstractTest
+class SerializerTest extends SerializerAbstractTest
 {
-    /**
-     * @return string
-     */
-    protected static function get_test_class()
+    protected function getSerializerUnderTest()
     {
-        return '\\Raven\\Serializer';
-    }
-
-    /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
-     * @covers \Raven\Serializer::serializeString
-     */
-    public function testBrokenEncoding($serialize_all_objects)
-    {
-        parent::testBrokenEncoding($serialize_all_objects);
-    }
-
-    /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
-     * @covers \Raven\Serializer::serializeString
-     */
-    public function testLongString($serialize_all_objects)
-    {
-        parent::testLongString($serialize_all_objects);
-    }
-
-    /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
-     * @covers \Raven\Serializer::serializeValue
-     */
-    public function testSerializeValueResource($serialize_all_objects)
-    {
-        parent::testSerializeValueResource($serialize_all_objects);
+        return new Serializer();
     }
 }

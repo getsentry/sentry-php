@@ -12,16 +12,14 @@
 namespace Raven\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Raven\Client;
 
 abstract class SerializerAbstractTest extends TestCase
 {
     /**
-     * @return string|\Raven\Serializer
+     * @return \Raven\Serializer
      */
-    protected static function get_test_class()
-    {
-        return '';
-    }
+    abstract protected function getSerializerUnderTest();
 
     /**
      * This method is only existed because of testSerializeCallable
@@ -44,7 +42,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testArraysAreArrays($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -64,7 +62,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testStdClassAreArrays($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -78,7 +76,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectsAreStrings()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $input = new \Raven\Tests\SerializerTestObject();
@@ -88,7 +86,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectsAreNotStrings()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
@@ -103,7 +101,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testIntsAreInts($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -121,7 +119,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testFloats($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -139,7 +137,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testBooleans($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -160,7 +158,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testNull($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -177,7 +175,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testRecursionMaxDepth($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -290,7 +288,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testRecursionInObjects($object, $result_serialize, $result_serialize_object)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
@@ -305,7 +303,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testRecursionMaxDepthForObject()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
@@ -325,7 +323,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectInArray()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
@@ -335,7 +333,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectInArraySerializeAll()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
@@ -350,7 +348,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testBrokenEncoding($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -372,7 +370,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testLongString($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -389,7 +387,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testLongStringWithOverwrittenMessageLength()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setMessageLimit(500);
@@ -408,7 +406,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testSerializeValueResource($serialize_all_objects)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         if ($serialize_all_objects) {
@@ -424,7 +422,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testSetAllObjectSerialize()
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name();
         $serializer->setAllObjectSerialize(true);
@@ -440,7 +438,7 @@ abstract class SerializerAbstractTest extends TestCase
         }
 
         $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer */
         $serializer = new $class_name(null, 19);
 
@@ -501,19 +499,19 @@ abstract class SerializerAbstractTest extends TestCase
                     'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
                 ], [
                     'callable' => [$this, 'dataSerializeCallable'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::dataSerializeCallable []',
+                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::dataSerializeCallable []',
                 ], [
-                    'callable' => ['\\Raven\\Client', 'getUserAgent'],
-                    'expected' => 'Callable Raven\Client::getUserAgent []',
+                    'callable' => [Client::class, 'getConfig'],
+                    'expected' => 'Callable Raven\Client::getConfig []',
                 ], [
-                    'callable' => ['\\PHPUnit_Framework_TestCase', 'setUpBeforeClass'],
-                    'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
+                    'callable' => [TestCase::class, 'setUpBeforeClass'],
+                    'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
                 ], [
                     'callable' => [$this, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::setUpBeforeClass []',
                 ], [
                     'callable' => [self::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::setUpBeforeClass []',
                 ],
             ];
             require_once('php70_serializing.inc');
@@ -574,7 +572,7 @@ abstract class SerializerAbstractTest extends TestCase
      */
     public function testSerializeCallable($callable, $expected)
     {
-        $class_name = static::get_test_class();
+        $class_name = static::getSerializerUnderTest();
         /** @var \Raven\Serializer $serializer **/
         $serializer = new $class_name();
         $actual = $serializer->serializeCallable($callable);
