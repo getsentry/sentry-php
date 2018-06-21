@@ -76,16 +76,16 @@ final class SanitizeDataProcessor implements ProcessorInterface
                     array_walk_recursive($item, function (&$value) {
                         $value = self::STRING_MASK;
                     });
-                    
+
                     break;
                 }
-                
+
                 $item = self::STRING_MASK;
             }
 
             if (is_array($item)) {
                 $this->sanitize($item);
-                
+
                 break;
             }
 
@@ -98,7 +98,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
     public function sanitizeException(&$data)
     {
         foreach ($data['values'] as &$value) {
-            if (! isset($value['stacktrace'])) {
+            if (!isset($value['stacktrace'])) {
                 continue;
             }
 
@@ -110,14 +110,14 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
     public function sanitizeHttp(&$data)
     {
-        if (! empty($data['cookies']) && is_array($data['cookies'])) {
+        if (!empty($data['cookies']) && is_array($data['cookies'])) {
             $cookies = &$data['cookies'];
-            if (! empty($cookies[$this->options['session_cookie_name']])) {
+            if (!empty($cookies[$this->options['session_cookie_name']])) {
                 $cookies[$this->options['session_cookie_name']] = self::STRING_MASK;
             }
         }
 
-        if (! empty($data['data']) && is_array($data['data'])) {
+        if (!empty($data['data']) && is_array($data['data'])) {
             $this->sanitize($data['data']);
         }
 
@@ -126,6 +126,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
     /**
      * @param Stacktrace $data
+     *
      * @return Stacktrace
      */
     public function sanitizeStacktrace($data)
@@ -154,7 +155,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
         $request = $event->getRequest();
         $extraContext = $event->getExtraContext();
 
-        if (! empty($exception)) {
+        if (!empty($exception)) {
             $event = $event->withException($this->sanitizeException($exception));
         }
 
@@ -162,11 +163,11 @@ final class SanitizeDataProcessor implements ProcessorInterface
             $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
-        if (! empty($request)) {
+        if (!empty($request)) {
             $event = $event->withRequest($this->sanitizeHttp($request));
         }
 
-        if (! empty($extraContext)) {
+        if (!empty($extraContext)) {
             $this->sanitize($extraContext);
             $event = $event->withExtraContext($extraContext);
         }

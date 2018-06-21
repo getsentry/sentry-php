@@ -200,8 +200,8 @@ class SanitizeDataProcessorTest extends TestCase
                             'foo' => 'secret1',
                             'bar' => 'secret2',
                             'baz' => [
-                                'nested1' => 'nestedSecret1', 
-                                'nested2' => 'nestedSecret2', 
+                                'nested1' => 'nestedSecret1',
+                                'nested2' => 'nestedSecret2',
                             ],
                         ],
                         'foobaz' => 'some-data',
