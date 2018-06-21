@@ -39,4 +39,4 @@ Add your DSN to ``app/config/config.yml``:
 .. code-block:: yaml
 
     sentry:
-        dsn: "___DSN___"
+        dsn: "___PUBLIC_DSN___"
