@@ -50,8 +50,8 @@ abstract class AbstractSerializerTest extends TestCase
         $result = $serializer->serialize($input);
         $this->assertEquals(['1', '2', '3'], $result);
 
-        $result = $serializer->serialize([Client::class, 'getUserAgent']);
-        $this->assertEquals([Client::class, 'getUserAgent'], $result);
+        $result = $serializer->serialize([Client::class, 'getConfig']);
+        $this->assertEquals([Client::class, 'getConfig'], $result);
     }
 
     /**
@@ -495,11 +495,11 @@ abstract class AbstractSerializerTest extends TestCase
                 'callable' => [$this, 'serializableCallableProvider'],
                 'expected' => 'Callable Raven\Tests\AbstractSerializerTest::serializableCallableProvider []',
             ], [
-                'callable' => [Client::class, 'getUserAgent'],
-                'expected' => 'Callable Raven\Client::getUserAgent []',
+                'callable' => [Client::class, 'getConfig'],
+                'expected' => 'Callable Raven\Client::getConfig []',
             ], [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
-                'expected' => 'Callable PHPUnit\Framework\TestCase::setUpBeforeClass []',
+                'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
             ], [
                 'callable' => [$this, 'setUpBeforeClass'],
                 'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
