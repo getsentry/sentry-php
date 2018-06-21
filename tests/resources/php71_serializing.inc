@@ -34,4 +34,3 @@ $data = array_merge(
         ]
     ]
 );
-?>

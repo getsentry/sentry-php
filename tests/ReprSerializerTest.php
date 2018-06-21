@@ -22,7 +22,7 @@ class ReprSerializerTest extends SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testIntsAreInts($serialize_all_objects)
     {
@@ -38,7 +38,7 @@ class ReprSerializerTest extends SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testFloats($serialize_all_objects)
     {
@@ -54,7 +54,7 @@ class ReprSerializerTest extends SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testBooleans($serialize_all_objects)
     {
@@ -74,7 +74,7 @@ class ReprSerializerTest extends SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      */
     public function testNull($serialize_all_objects)
     {
@@ -90,7 +90,7 @@ class ReprSerializerTest extends SerializerAbstractTest
 
     /**
      * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @dataProvider serializeAllObjectsProvider
      * @covers \Raven\ReprSerializer::serializeValue
      */
     public function testSerializeRoundedFloat($serialize_all_objects)

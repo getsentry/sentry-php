@@ -22,50 +22,46 @@ abstract class SerializerAbstractTest extends TestCase
     abstract protected function getSerializerUnderTest();
 
     /**
-     * This method is only existed because of testSerializeCallable
+     * This method is only existed because of testSerializeCallable.
      */
     public static function setUpBeforeClass()
     {
     }
 
-    public function dataGetBaseParam()
+    public function serializeAllObjectsProvider()
     {
         return [
-            ['serialize_all_objects' => false],
-            ['serialize_all_objects' => true],
+            ['serializeAllObjects' => false],
+            ['serializeAllObjects' => true],
         ];
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testArraysAreArrays($serialize_all_objects)
+    public function testArraysAreArrays($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = [1, 2, 3];
         $result = $serializer->serialize($input);
         $this->assertEquals(['1', '2', '3'], $result);
 
-        $result = $serializer->serialize(['\\Raven\\Client', 'getUserAgent']);
-        $this->assertEquals(['\\Raven\\Client', 'getUserAgent'], $result);
+        $result = $serializer->serialize([Client::class, 'getUserAgent']);
+        $this->assertEquals([Client::class, 'getUserAgent'], $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testStdClassAreArrays($serialize_all_objects)
+    public function testStdClassAreArrays($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = new \stdClass();
@@ -76,35 +72,29 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectsAreStrings()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        $input = new \Raven\Tests\SerializerTestObject();
+        $serializer = $this->getSerializerUnderTest();
+        $input = new SerializerTestObject();
         $result = $serializer->serialize($input);
         $this->assertEquals('Object Raven\Tests\SerializerTestObject', $result);
     }
 
     public function testObjectsAreNotStrings()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
-        $input = new \Raven\Tests\SerializerTestObject();
+        $input = new SerializerTestObject();
         $result = $serializer->serialize($input);
         $this->assertEquals(['key' => 'value'], $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testIntsAreInts($serialize_all_objects)
+    public function testIntsAreInts($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = 1;
@@ -114,15 +104,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testFloats($serialize_all_objects)
+    public function testFloats($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = 1.5;
@@ -132,15 +120,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testBooleans($serialize_all_objects)
+    public function testBooleans($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = true;
@@ -153,15 +139,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testNull($serialize_all_objects)
+    public function testNull($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = null;
@@ -170,15 +154,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testRecursionMaxDepth($serialize_all_objects)
+    public function testRecursionMaxDepth($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = [];
@@ -199,50 +181,44 @@ abstract class SerializerAbstractTest extends TestCase
         $this->assertEquals([[['Array of length 0']]], $result);
     }
 
-    public function dataRecursionInObjects()
+    public function dataRecursionInObjectsDataProvider()
     {
-        $data = [];
-        // case 1
         $object = new SerializerTestObject();
         $object->key = $object;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => 'Object Raven\Tests\SerializerTestObject'],
+            'expectedResult' => ['key' => 'Object Raven\Tests\SerializerTestObject'],
         ];
 
-        // case 2
         $object = new SerializerTestObject();
         $object2 = new SerializerTestObject();
         $object2->key = $object;
         $object->key = $object2;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => ['key' => 'Object Raven\Tests\SerializerTestObject']],
+            'expectedResult' => ['key' => ['key' => 'Object Raven\Tests\SerializerTestObject']],
         ];
 
-        // case 3
         $object = new SerializerTestObject();
         $object2 = new SerializerTestObject();
         $object2->key = 'foobar';
         $object->key = $object2;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => ['key' => 'foobar']],
+            'expectedResult' => ['key' => ['key' => 'foobar']],
         ];
 
-        // case 4
         $object3 = new SerializerTestObject();
         $object3->key = 'foobar';
         $object2 = new SerializerTestObject();
         $object2->key = $object3;
         $object = new SerializerTestObject();
         $object->key = $object2;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => ['key' => ['key' => 'foobar']]],
+            'expectedResult' => ['key' => ['key' => ['key' => 'foobar']]],
         ];
 
-        // case 5
         $object4 = new SerializerTestObject();
         $object4->key = 'foobar';
         $object3 = new SerializerTestObject();
@@ -251,12 +227,11 @@ abstract class SerializerAbstractTest extends TestCase
         $object2->key = $object3;
         $object = new SerializerTestObject();
         $object->key = $object2;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject']]],
+            'expectedResult' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject']]],
         ];
 
-        // case 6
         $object3 = new SerializerTestObject();
         $object2 = new SerializerTestObject();
         $object2->key = $object3;
@@ -264,48 +239,34 @@ abstract class SerializerAbstractTest extends TestCase
         $object = new SerializerTestObject();
         $object->key = $object2;
         $object3->key = $object2;
-        $data[] = [
+        yield [
             'object' => $object,
-            'result_serialize' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject'],
-                                             'keys' => 'keys', ]],
+            'expectedResult' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject'], 'keys' => 'keys']],
         ];
-
-        foreach ($data as &$datum) {
-            if (!isset($datum['result_serialize_object'])) {
-                $datum['result_serialize_object'] = $datum['result_serialize'];
-            }
-        }
-
-        return $data;
     }
 
     /**
      * @param object $object
-     * @param array  $result_serialize
-     * @param array  $result_serialize_object
+     * @param array  $expectedResult
      *
-     * @dataProvider dataRecursionInObjects
+     * @dataProvider dataRecursionInObjectsDataProvider
      */
-    public function testRecursionInObjects($object, $result_serialize, $result_serialize_object)
+    public function testRecursionInObjects($object, $expectedResult)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
 
         $result1 = $serializer->serialize($object, 3);
         $result2 = $serializer->serializeObject($object, 3);
-        $this->assertEquals($result_serialize, $result1);
-        $this->assertTrue(in_array(gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']));
-        $this->assertEquals($result_serialize_object, $result2);
-        $this->assertTrue(in_array(gettype($result2), ['array', 'string',]));
+        $this->assertEquals($expectedResult, $result1);
+        $this->assertContains(gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']);
+        $this->assertEquals($expectedResult, $result2);
+        $this->assertContains(gettype($result2), ['array', 'string']);
     }
 
     public function testRecursionMaxDepthForObject()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
 
         $result = $serializer->serialize((object) ['key' => (object) ['key' => 12345]], 3);
@@ -323,35 +284,29 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testObjectInArray()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
+        $serializer = $this->getSerializerUnderTest();
+        $input = ['foo' => new SerializerTestObject()];
         $result = $serializer->serialize($input);
         $this->assertEquals(['foo' => 'Object Raven\\Tests\\SerializerTestObject'], $result);
     }
 
     public function testObjectInArraySerializeAll()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
-        $input = ['foo' => new \Raven\Tests\SerializerTestObject()];
+        $input = ['foo' => new SerializerTestObject()];
         $result = $serializer->serialize($input);
         $this->assertEquals(['foo' => ['key' => 'value']], $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testBrokenEncoding($serialize_all_objects)
+    public function testBrokenEncoding($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
@@ -365,15 +320,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testLongString($serialize_all_objects)
+    public function testLongString($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
 
@@ -387,9 +340,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testLongStringWithOverwrittenMessageLength()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setMessageLimit(500);
 
         foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
@@ -401,15 +352,13 @@ abstract class SerializerAbstractTest extends TestCase
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider dataGetBaseParam
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
      */
-    public function testSerializeValueResource($serialize_all_objects)
+    public function testSerializeValueResource($serializeAllObjects)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
-        if ($serialize_all_objects) {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
             $serializer->setAllObjectSerialize(true);
         }
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
@@ -422,9 +371,7 @@ abstract class SerializerAbstractTest extends TestCase
 
     public function testSetAllObjectSerialize()
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
         $this->assertTrue($serializer->getAllObjectSerialize());
         $serializer->setAllObjectSerialize(false);
@@ -449,8 +396,7 @@ abstract class SerializerAbstractTest extends TestCase
         $this->assertSame(JSON_ERROR_NONE, json_last_error());
     }
 
-
-    public function dataSerializeCallable()
+    public function serializableCallableProvider()
     {
         $closure1 = function (array $param1) {
             return $param1 * 2;
@@ -498,8 +444,8 @@ abstract class SerializerAbstractTest extends TestCase
                     'callable' => $closure8,
                     'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
                 ], [
-                    'callable' => [$this, 'dataSerializeCallable'],
-                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::dataSerializeCallable []',
+                    'callable' => [$this, 'serializableCallableProvider'],
+                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::serializableCallableProvider []',
                 ], [
                     'callable' => [Client::class, 'getConfig'],
                     'expected' => 'Callable Raven\Client::getConfig []',
@@ -514,67 +460,65 @@ abstract class SerializerAbstractTest extends TestCase
                     'expected' => 'Callable Raven\Tests\SerializerAbstractTest::setUpBeforeClass []',
                 ],
             ];
-            require_once('php70_serializing.inc');
+            require_once 'resources/php70_serializing.inc';
 
             if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
-                require_once('php71_serializing.inc');
+                require_once 'resources/php71_serializing.inc';
             }
 
             return $data;
-        } else {
-            return [
-                [
-                    'callable' => $closure1,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
-                ], [
-                    'callable' => $closure2,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [param1a]',
-                ], [
-                    'callable' => $closure4,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
-                ], [
-                    'callable' => $closure5,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [param1d]',
-                ], [
-                    'callable' => $closure6,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [[param1e]]',
-                ], [
-                    'callable' => $closure7,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
-                ], [
-                    'callable' => $closure8,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
-                ], [
-                    'callable' => [$this, 'dataSerializeCallable'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::dataSerializeCallable []',
-                ], [
-                    'callable' => ['\\Raven\\Client', 'getUserAgent'],
-                    'expected' => 'Callable Raven\Client::getUserAgent []',
-                ], [
-                    'callable' => ['\\PHPUnit_Framework_TestCase', 'setUpBeforeClass'],
-                    'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
-                ], [
-                    'callable' => [$this, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
-                ], [
-                    'callable' => [self::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
-                ],
-            ];
         }
+
+        return [
+            [
+                'callable' => $closure1,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
+            ], [
+                'callable' => $closure2,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [param1a]',
+            ], [
+                'callable' => $closure4,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
+            ], [
+                'callable' => $closure5,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [param1d]',
+            ], [
+                'callable' => $closure6,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [[param1e]]',
+            ], [
+                'callable' => $closure7,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
+            ], [
+                'callable' => $closure8,
+                'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
+            ], [
+                'callable' => [$this, 'serializableCallableProvider'],
+                'expected' => 'Callable Raven\Tests\SerializerAbstractTest::serializableCallableProvider []',
+            ], [
+                'callable' => [Client::class, 'getUserAgent'],
+                'expected' => 'Callable Raven\Client::getUserAgent []',
+            ], [
+                'callable' => [TestCase::class, 'setUpBeforeClass'],
+                'expected' => 'Callable PHPUnit\Framework\TestCase::setUpBeforeClass []',
+            ], [
+                'callable' => [$this, 'setUpBeforeClass'],
+                'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+            ], [
+                'callable' => [self::class, 'setUpBeforeClass'],
+                'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+            ],
+        ];
     }
 
     /**
-     * @param Callable $callable
+     * @param callable $callable
      * @param string   $expected
      *
-     * @dataProvider dataSerializeCallable
+     * @dataProvider serializableCallableProvider
      */
     public function testSerializeCallable($callable, $expected)
     {
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer **/
-        $serializer = new $class_name();
+        $serializer = $this->getSerializerUnderTest();
         $actual = $serializer->serializeCallable($callable);
         $this->assertEquals($expected, $actual);
 
