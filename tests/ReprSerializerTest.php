@@ -13,7 +13,7 @@ namespace Raven\Tests;
 
 use Raven\ReprSerializer;
 
-class ReprSerializerTest extends SerializerAbstractTest
+class ReprSerializerTest extends AbstractSerializerTest
 {
     protected function getSerializerUnderTest()
     {

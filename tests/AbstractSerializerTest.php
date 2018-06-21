@@ -14,7 +14,7 @@ namespace Raven\Tests;
 use PHPUnit\Framework\TestCase;
 use Raven\Client;
 
-abstract class SerializerAbstractTest extends TestCase
+abstract class AbstractSerializerTest extends TestCase
 {
     /**
      * @return \Raven\Serializer
@@ -445,7 +445,7 @@ abstract class SerializerAbstractTest extends TestCase
                     'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
                 ], [
                     'callable' => [$this, 'serializableCallableProvider'],
-                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::serializableCallableProvider []',
+                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::serializableCallableProvider []',
                 ], [
                     'callable' => [Client::class, 'getConfig'],
                     'expected' => 'Callable Raven\Client::getConfig []',
@@ -454,10 +454,10 @@ abstract class SerializerAbstractTest extends TestCase
                     'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
                 ], [
                     'callable' => [$this, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::setUpBeforeClass []',
+                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
                 ], [
                     'callable' => [self::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\SerializerAbstractTest::setUpBeforeClass []',
+                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
                 ],
             ];
             require_once 'resources/php70_serializing.inc';
@@ -493,7 +493,7 @@ abstract class SerializerAbstractTest extends TestCase
                 'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
             ], [
                 'callable' => [$this, 'serializableCallableProvider'],
-                'expected' => 'Callable Raven\Tests\SerializerAbstractTest::serializableCallableProvider []',
+                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::serializableCallableProvider []',
             ], [
                 'callable' => [Client::class, 'getUserAgent'],
                 'expected' => 'Callable Raven\Client::getUserAgent []',
@@ -502,10 +502,10 @@ abstract class SerializerAbstractTest extends TestCase
                 'expected' => 'Callable PHPUnit\Framework\TestCase::setUpBeforeClass []',
             ], [
                 'callable' => [$this, 'setUpBeforeClass'],
-                'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
             ], [
                 'callable' => [self::class, 'setUpBeforeClass'],
-                'expected' => 'Callable Raven\Tests\Raven_Tests_SerializerAbstractTest::setUpBeforeClass []',
+                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
             ],
         ];
     }

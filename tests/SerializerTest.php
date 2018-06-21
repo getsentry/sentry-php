@@ -4,7 +4,7 @@ namespace Raven\Tests;
 
 use Raven\Serializer;
 
-class SerializerTest extends SerializerAbstractTest
+class SerializerTest extends AbstractSerializerTest
 {
     protected function getSerializerUnderTest()
     {
