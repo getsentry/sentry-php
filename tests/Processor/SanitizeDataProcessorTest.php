@@ -202,6 +202,9 @@ class SanitizeDataProcessorTest extends TestCase
                             'baz' => [
                                 'nested1' => 'nestedSecret1',
                                 'nested2' => 'nestedSecret2',
+                                'nested3' => [
+                                    'deep' => 'nestedSecret2',
+                                ],
                             ],
                         ],
                         'foobaz' => 'some-data',
@@ -216,6 +219,9 @@ class SanitizeDataProcessorTest extends TestCase
                             'baz' => [
                                 'nested1' => SanitizeDataProcessor::STRING_MASK,
                                 'nested2' => SanitizeDataProcessor::STRING_MASK,
+                                'nested3' => [
+                                    'deep' => SanitizeDataProcessor::STRING_MASK,
+                                ],
                             ],
                         ],
                         'foobaz' => 'some-data',
