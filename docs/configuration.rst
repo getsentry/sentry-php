@@ -26,15 +26,15 @@ The DSN of the Sentry server the authenticated user is bound to.
 
 .. code-block:: php
 
-    // Before Sentry 1.9 the private DSN must be used
+    // Before Sentry 9 the private DSN must be used
     $configuration = new Configuration(['server' => 'http://public:private@example.com/1']);
 
-    // After Sentry 1.9 the public DSN must be used
+    // After Sentry 9 the public DSN must be used
     $configuration = new Configuration(['server' => 'http://public@example.com/1']);
 
 By default this option is borrowed from the ``SENTRY_DSN`` environment variable,
 if it exists. A value of ``null`` disables completely the sending of any event.
-Since Sentry 1.9 the public DSN must be used instead of the private one, which
+Since Sentry 9 the public DSN must be used instead of the private one, which
 is deprecated and whose support will be removed in future releases of the server.
 
 Server name
@@ -44,8 +44,8 @@ The name of the server the SDK is running on (it's usually the hostname).
 
 .. code-block:: php
 
-    $configuration = new Configuration(['server_name' => 'foo']);
-    $configuration->setServerName('foo');
+    $configuration = new Configuration(['server_name' => 'www.my-site.com']);
+    $configuration->setServerName('www.my-site.com');
 
 By default this option is set to the hostname of the server the SDK is running
 on retrieved from a call to the ``gethostname()`` method.
@@ -92,8 +92,8 @@ mark the directory containing all the source code of the application.
 
 .. code-block:: php
 
-    $configuration = new Configuration(['project_root' => '/foo/bar']);
-    $configuration->setProjectRoot('/foo/bar');
+    $configuration = new Configuration(['project_root' => 'project-folder/src/']);
+    $configuration->setProjectRoot('project-folder/src/');
 
 For example, assuming that the directory structure shown below exists, marking
 the project root as ``project-folder/src/`` means that every file inside that
@@ -116,8 +116,8 @@ application, and each event belongs to one of them.
 
 .. code-block:: php
 
-    $configuration = new Configuration(['current_environment' => 'foo']);
-    $configuration->setCurrentEnvironment('foo');
+    $configuration = new Configuration(['current_environment' => 'development']);
+    $configuration->setCurrentEnvironment('development');
 
 Environments
 ============
@@ -126,12 +126,15 @@ The environments are a feature that allows events to be easily filtered in
 Sentry. An application can have multiple environments, but just one is active
 at the same time. This option let you configure the environments names: if
 the current environment is not whitelisted here, any event tagged with it
-won't be sent.
+won't be sent. If no environment is listed here, the behavior of checking
+the whitelist won't be considered and any event will be sent regardeless.
 
 .. code-block:: php
 
-    $configuration = new Configuration(['environments' => ['foo', 'bar']]);
-    $configuration->setEnvironments(['foo', 'bar']);
+    $configuration = new Configuration(['environments' => ['development', 'production']]);
+    $configuration->setEnvironments(['development', 'production']);
+
+By default this option is set to an empty array.
 
 Encoding
 ========
@@ -160,6 +163,8 @@ set as the value, no source code lines will be added to each stacktrace frame.
     $configuration = new Configuration(['context_lines' => 3]);
     $configuration->setContextLines(3);
 
+By default this option is set to 3.
+
 Stacktrace logging
 ==================
 
@@ -179,7 +184,7 @@ Excluded exceptions
 Sometimes you may want to skip capturing certain exceptions. This option sets
 the FCQN of the classes of the exceptions that you don't want to capture. The
 check is done using the ``instanceof`` operator against each item of the array
-and if at least one of them passes the event will be recorded.
+and if at least one of them passes the event will be discarded.
 
 .. code-block:: php
 
@@ -218,8 +223,8 @@ to create relative paths.
 
 .. code-block:: php
 
-    $configuration = new Configuration(['prefixes' => ['foo']);
-    $configuration->setPrefixes(['foo']);
+    $configuration = new Configuration(['prefixes' => ['/var/www']);
+    $configuration->setPrefixes(['/var/www']);
 
 Should capture callback
 =======================
