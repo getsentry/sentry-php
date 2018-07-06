@@ -29,7 +29,7 @@ class Configuration
     /**
      * @var string|null A simple server string, set to the DSN found on your Sentry settings
      */
-    private $server;
+    private $dsn;
 
     /**
      * @var string The project ID number to send to the Sentry server
@@ -479,9 +479,9 @@ class Configuration
      *
      * @return string
      */
-    public function getServer()
+    public function getDsn()
     {
-        return $this->server;
+        return $this->dsn;
     }
 
     /**
@@ -613,7 +613,7 @@ class Configuration
             'project_root' => null,
             'logger' => 'php',
             'release' => null,
-            'server' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
+            'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
             'should_capture' => null,
             'tags' => [],
@@ -636,14 +636,14 @@ class Configuration
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
-        $resolver->setAllowedTypes('server', ['null', 'boolean', 'string']);
+        $resolver->setAllowedTypes('dsn', ['null', 'boolean', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
-        $resolver->setAllowedValues('server', function ($value) {
+        $resolver->setAllowedValues('dsn', function ($value) {
             switch (strtolower($value)) {
                 case '':
                 case 'false':
@@ -676,7 +676,7 @@ class Configuration
             return true;
         });
 
-        $resolver->setNormalizer('server', function (Options $options, $value) {
+        $resolver->setNormalizer('dsn', function (Options $options, $value) {
             switch (strtolower($value)) {
                 case '':
                 case 'false':
@@ -685,20 +685,20 @@ class Configuration
                 case '(empty)':
                 case 'null':
                 case '(null)':
-                    $this->server = null;
+                    $this->dsn = null;
 
                     return null;
             }
 
             $parsed = @parse_url($value);
 
-            $this->server = $parsed['scheme'] . '://' . $parsed['host'];
+            $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
 
             if (isset($parsed['port']) && ((80 !== $parsed['port'] && 'http' === $parsed['scheme']) || (443 !== $parsed['port'] && 'https' === $parsed['scheme']))) {
-                $this->server .= ':' . $parsed['port'];
+                $this->dsn .= ':' . $parsed['port'];
             }
 
-            $this->server .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
+            $this->dsn .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
             $this->publicKey = $parsed['user'];
             $this->secretKey = isset($parsed['pass']) ? $parsed['pass'] : null;
 

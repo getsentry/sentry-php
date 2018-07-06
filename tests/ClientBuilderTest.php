@@ -37,7 +37,7 @@ class ClientBuilderTest extends TestCase
 
     public function testHttpTransportIsUsedWhenServeIsConfigured()
     {
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
 
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
@@ -58,7 +58,7 @@ class ClientBuilderTest extends TestCase
         /** @var UriFactory|\PHPUnit_Framework_MockObject_MockObject $uriFactory */
         $uriFactory = $this->createMock(UriFactory::class);
 
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setUriFactory($uriFactory);
 
         $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
@@ -69,7 +69,7 @@ class ClientBuilderTest extends TestCase
         /** @var MessageFactory|\PHPUnit_Framework_MockObject_MockObject $messageFactory */
         $messageFactory = $this->createMock(MessageFactory::class);
 
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setMessageFactory($messageFactory);
 
         $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
@@ -84,7 +84,7 @@ class ClientBuilderTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setTransport($transport);
 
         $this->assertAttributeSame($transport, 'transport', $clientBuilder);
@@ -96,7 +96,7 @@ class ClientBuilderTest extends TestCase
         /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
 
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setHttpClient($httpClient);
 
         $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
@@ -191,7 +191,7 @@ class ClientBuilderTest extends TestCase
 
     public function testGetClient()
     {
-        $clientBuilder = new ClientBuilder(['server' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $client = $clientBuilder->getClient();
 
         $this->assertInstanceOf(Client::class, $client);

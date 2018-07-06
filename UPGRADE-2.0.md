@@ -42,6 +42,7 @@
   object instances should be serialized.
 - The `context_lines` option has been added to configure the number of lines of
   code context to capture.
+- The `server` option has been renamed to `dsn`.
 
 ### Client
 
@@ -176,7 +177,7 @@
   $client->getConfig()->setShouldCapture(...);
 
 - The method `Raven_Client::getServerEndpoint` has been removed. You should use
-  `Configuration::getServer` instead.
+  `Configuration::getDsn` instead.
 
   Before:
 

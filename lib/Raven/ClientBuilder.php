@@ -69,7 +69,7 @@ use Raven\Transport\TransportInterface;
  * @method setLogger(string $logger)
  * @method string getRelease()
  * @method setRelease(string $release)
- * @method string getServer()
+ * @method string getDsn()
  * @method string getServerName()
  * @method setServerName(string $serverName)
  * @method string[] getTags()
@@ -317,8 +317,8 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createHttpClientInstance()
     {
-        if (null !== $this->configuration->getServer()) {
-            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getServer())));
+        if (null !== $this->configuration->getDsn()) {
+            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getDsn())));
         }
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
@@ -340,7 +340,7 @@ final class ClientBuilder implements ClientBuilderInterface
             return $this->transport;
         }
 
-        if (null !== $this->configuration->getServer()) {
+        if (null !== $this->configuration->getDsn()) {
             return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
         }
 

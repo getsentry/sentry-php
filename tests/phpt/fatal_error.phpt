@@ -18,7 +18,7 @@ while (!file_exists($vendor . '/vendor')) {
 require $vendor . '/vendor/autoload.php';
 
 $client = ClientBuilder::create([
-    'server' => 'http://public:secret@local.host/1',
+    'dsn' => 'http://public:secret@local.host/1',
     'send_attempts' => 1,
 ])->getClient();
 
