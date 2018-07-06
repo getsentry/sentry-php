@@ -71,12 +71,12 @@ class ConfigurationTest extends TestCase
      */
     public function testServerOption($dsn, $options)
     {
-        $configuration = new Configuration(['server' => $dsn]);
+        $configuration = new Configuration(['dsn' => $dsn]);
 
         $this->assertEquals($options['project_id'], $configuration->getProjectId());
         $this->assertEquals($options['public_key'], $configuration->getPublicKey());
         $this->assertEquals($options['secret_key'], $configuration->getSecretKey());
-        $this->assertEquals($options['server'], $configuration->getServer());
+        $this->assertEquals($options['server'], $configuration->getDsn());
     }
 
     public function serverOptionDataProvider()
@@ -152,11 +152,11 @@ class ConfigurationTest extends TestCase
      * @dataProvider invalidServerOptionDataProvider
      *
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
-     * @expectedExceptionMessageRegExp /^The option "server" with value "(.*)" is invalid.$/
+     * @expectedExceptionMessageRegExp /^The option "dsn" with value "(.*)" is invalid.$/
      */
     public function testServerOptionsWithInvalidServer($dsn)
     {
-        new Configuration(['server' => $dsn]);
+        new Configuration(['dsn' => $dsn]);
     }
 
     public function invalidServerOptionDataProvider()
@@ -175,12 +175,12 @@ class ConfigurationTest extends TestCase
      */
     public function testParseDSNWithDisabledValue($dsn)
     {
-        $configuration = new Configuration(['server' => $dsn]);
+        $configuration = new Configuration(['dsn' => $dsn]);
 
         $this->assertNull($configuration->getProjectId());
         $this->assertNull($configuration->getPublicKey());
         $this->assertNull($configuration->getSecretKey());
-        $this->assertNull($configuration->getServer());
+        $this->assertNull($configuration->getDsn());
     }
 
     public function disabledDsnProvider()

@@ -225,7 +225,7 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send');
 
-        $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransport($transport)
             ->getClient();
 
@@ -421,7 +421,7 @@ class ClientTest extends TestCase
         $shouldCaptureCalled = false;
 
         $client = ClientBuilder::create([
-            'server' => 'http://public:secret@example.com/1',
+            'dsn' => 'http://public:secret@example.com/1',
             'should_capture' => function () use (&$shouldCaptureCalled) {
                 $shouldCaptureCalled = true;
 
@@ -464,13 +464,13 @@ class ClientTest extends TestCase
         return [
             [
                 [
-                    'server' => 'http://public:secret@example.com/1',
+                    'dsn' => 'http://public:secret@example.com/1',
                     'sample_rate' => 0,
                 ],
             ],
             [
                 [
-                    'server' => 'http://public:secret@example.com/1',
+                    'dsn' => 'http://public:secret@example.com/1',
                     'sample_rate' => 1,
                 ],
             ],

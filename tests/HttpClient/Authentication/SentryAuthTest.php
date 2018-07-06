@@ -24,7 +24,7 @@ class SentryAuthTest extends TestCase
 {
     public function testAuthenticate()
     {
-        $configuration = new Configuration(['server' => 'http://public:secret@example.com/']);
+        $configuration = new Configuration(['dsn' => 'http://public:secret@example.com/']);
         $authentication = new SentryAuth($configuration);
 
         /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */
@@ -52,7 +52,7 @@ class SentryAuthTest extends TestCase
 
     public function testAuthenticateWithNoSecretKey()
     {
-        $configuration = new Configuration(['server' => 'http://public@example.com/']);
+        $configuration = new Configuration(['dsn' => 'http://public@example.com/']);
         $authentication = new SentryAuth($configuration);
 
         /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */
