@@ -166,7 +166,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
                 }
                 $result = $serializer->serialize($input);
                 $this->assertInternalType('string', $result);
-                $this->assertLessThanOrEqual($length, strlen($result));
+                $this->assertEquals($length, strlen($result));
             }
         }
     }
