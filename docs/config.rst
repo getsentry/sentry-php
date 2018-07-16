@@ -261,6 +261,17 @@ The following settings are available for the client:
 
         'excluded_exceptions' => array('LogicException'),
 
+.. describe:: ignore_server_port
+
+    By default the server port will be added to the logged URL when it is a non
+    standard port (80, 443).
+    Setting this to ``true`` will ignore the server port altogether and will
+    result in the server port never getting appended to the logged URL.
+
+    .. code-block:: php
+
+        'ignore_server_port' => true,
+
 .. _sentry-php-request-context:
 
 Providing Request Context
