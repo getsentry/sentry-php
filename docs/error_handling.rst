@@ -31,7 +31,7 @@ officially and by third party users that automatically register the error
 handlers. In that case please refer to their documentation.
 
 Capture errors
-=============================
+==============
 
 The error handler can be customized to set which error types should be captured
 and sent to the Sentry server: you may want to report all the errors but capture
