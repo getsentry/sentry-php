@@ -104,11 +104,11 @@ class Raven_Serializer
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
 
-            if (mb_strlen($value) > $this->message_limit) {
+            if ($this->message_limit !== 0 && mb_strlen($value) > $this->message_limit) {
                 $value = mb_substr($value, 0, $this->message_limit - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
-            if (strlen($value) > $this->message_limit) {
+            if ($this->message_limit !== 0 && strlen($value) > $this->message_limit) {
                 $value = substr($value, 0, $this->message_limit - 10) . ' {clipped}';
             }
         }
