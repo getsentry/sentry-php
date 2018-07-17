@@ -1803,6 +1803,16 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(),
                 'http://example.com:81/',
                 'Port is not appended'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => 81
+                ),
+                array('ignore_server_port' => true),
+                'http://example.com/',
+                'Port is appended'
             )
         );
     }

@@ -91,6 +91,7 @@ class Raven_Client
     public $exclude;
     public $excluded_exceptions;
     public $http_proxy;
+    public $ignore_server_port;
     protected $send_callback;
     public $curl_method;
     public $curl_path;
@@ -173,6 +174,7 @@ class Raven_Client
         $this->excluded_exceptions = Raven_Util::get($options, 'excluded_exceptions', array());
         $this->severity_map = null;
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
+        $this->ignore_server_port = Raven_Util::get($options, 'ignore_server_port', false);
         $this->extra_data = Raven_Util::get($options, 'extra', array());
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
@@ -1311,9 +1313,11 @@ class Raven_Client
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
-        $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
-        if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
-            $host .= ':' . $_SERVER['SERVER_PORT'];
+        if (!$this->ignore_server_port) {
+            $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
+            if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
+                $host .= ':' . $_SERVER['SERVER_PORT'];
+            }
         }
 
         $httpS = $this->isHttps() ? 's' : '';
