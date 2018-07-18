@@ -53,6 +53,13 @@ class Raven_Serializer
     protected $message_limit = Raven_Client::MESSAGE_LIMIT;
 
     /**
+     * The default max depth.
+     *
+     * @var int
+     */
+    protected $default_max_depth = 3;
+
+    /**
      * @param null|string $mb_detect_order
      * @param null|int    $message_limit
      */
@@ -71,14 +78,17 @@ class Raven_Serializer
      * Serialize an object (recursively) into something safe for data
      * sanitization and encoding.
      *
-     * @param mixed $value
-     * @param int   $max_depth
-     * @param int   $_depth
+     * @param mixed    $value
+     * @param int|null $max_depth
+     * @param int      $_depth
      * @return string|bool|double|int|null|object|array
      */
-    public function serialize($value, $max_depth = 3, $_depth = 0)
+    public function serialize($value, $max_depth = null, $_depth = 0)
     {
         $className = is_object($value) ? get_class($value) : null;
+        if (is_null($max_depth)) {
+            $max_depth = $this->default_max_depth;
+        }
         $toArray = is_array($value) || $className === 'stdClass';
         if ($toArray && $_depth < $max_depth) {
             $new = array();
@@ -174,5 +184,23 @@ class Raven_Serializer
     public function setMessageLimit($message_limit)
     {
         $this->message_limit = (int)$message_limit;
+    }
+
+    /**
+     * @return int
+     * @codeCoverageIgnore
+     */
+    public function getDefaultMaxDepth()
+    {
+        return $this->default_max_depth;
+    }
+
+    /**
+     * @param int $max_depth
+     * @codeCoverageIgnore
+     */
+    public function setDefaultMaxDepth($max_depth)
+    {
+        $this->default_max_depth = (int)$max_depth;
     }
 }
