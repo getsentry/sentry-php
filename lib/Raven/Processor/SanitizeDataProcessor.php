@@ -14,6 +14,7 @@
 namespace Raven\Processor;
 
 use Raven\Event;
+use Raven\Stacktrace;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -65,25 +66,32 @@ final class SanitizeDataProcessor implements ProcessorInterface
     /**
      * Replace any array values with our mask if the field name or the value matches a respective regex.
      *
-     * @param mixed  $item Associative array value
-     * @param string $key  Associative array key
+     * @param array $data Associative array to be sanitized
      */
-    public function sanitize(&$item, $key)
+    public function sanitize(&$data)
     {
-        if (empty($item)) {
-            return;
-        }
+        foreach ($data as $key => &$item) {
+            if (preg_match($this->options['fields_re'], $key)) {
+                if (is_array($item)) {
+                    array_walk_recursive($item, function (&$value) {
+                        $value = self::STRING_MASK;
+                    });
 
-        if (preg_match($this->options['values_re'], $item)) {
-            $item = self::STRING_MASK;
-        }
+                    break;
+                }
 
-        if (empty($key)) {
-            return;
-        }
+                $item = self::STRING_MASK;
+            }
 
-        if (preg_match($this->options['fields_re'], $key)) {
-            $item = self::STRING_MASK;
+            if (is_array($item)) {
+                $this->sanitize($item);
+
+                break;
+            }
+
+            if (preg_match($this->options['values_re'], $item)) {
+                $item = self::STRING_MASK;
+            }
         }
     }
 
@@ -110,12 +118,17 @@ final class SanitizeDataProcessor implements ProcessorInterface
         }
 
         if (!empty($data['data']) && is_array($data['data'])) {
-            array_walk_recursive($data['data'], [$this, 'sanitize']);
+            $this->sanitize($data['data']);
         }
 
         return $data;
     }
 
+    /**
+     * @param Stacktrace $data
+     *
+     * @return Stacktrace
+     */
     public function sanitizeStacktrace($data)
     {
         foreach ($data->getFrames() as &$frame) {
@@ -125,8 +138,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
             $vars = $frame->getVars();
 
-            array_walk_recursive($vars, [$this, 'sanitize']);
-
+            $this->sanitize($vars);
             $frame->setVars($vars);
         }
 
@@ -147,7 +159,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
             $event = $event->withException($this->sanitizeException($exception));
         }
 
-        if (!empty($stacktrace)) {
+        if ($stacktrace) {
             $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
@@ -156,8 +168,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
         }
 
         if (!empty($extraContext)) {
-            array_walk_recursive($extraContext, [$this, 'sanitize']);
-
+            $this->sanitize($extraContext);
             $event = $event->withExtraContext($extraContext);
         }
 
