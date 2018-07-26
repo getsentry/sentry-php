@@ -109,9 +109,11 @@ interface ClientInterface
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
+     * @param array $payload Additional attributes to pass with this event
+     *
      * @return string|null
      */
-    public function captureLastError();
+    public function captureLastError(array $payload = []);
 
     /**
      * Gets the last event that was captured by the client. However, it could
@@ -123,6 +125,8 @@ interface ClientInterface
 
     /**
      * Return the last captured event's ID or null if none available.
+     *
+     * @return string|null
      *
      * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
      */

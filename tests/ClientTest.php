@@ -186,18 +186,21 @@ class ClientTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureException')
-            ->with($this->logicalAnd(
-                $this->isInstanceOf(\ErrorException::class),
-                $this->attributeEqualTo('message', 'foo'),
-                $this->attributeEqualTo('code', 0),
-                $this->attributeEqualTo('severity', E_USER_NOTICE),
-                $this->attributeEqualTo('file', __FILE__),
-                $this->attributeEqualTo('line', __LINE__ + 3)
-            ));
+            ->with(
+                $this->logicalAnd(
+                    $this->isInstanceOf(\ErrorException::class),
+                    $this->attributeEqualTo('message', 'foo'),
+                    $this->attributeEqualTo('code', 0),
+                    $this->attributeEqualTo('severity', E_USER_NOTICE),
+                    $this->attributeEqualTo('file', __FILE__),
+                    $this->attributeEqualTo('line', __LINE__ + 5)
+                ),
+                ['foo' => 'bar']
+            );
 
         @trigger_error('foo', E_USER_NOTICE);
 
-        $client->captureLastError();
+        $client->captureLastError(['foo' => 'bar']);
 
         $this->clearLastError();
     }

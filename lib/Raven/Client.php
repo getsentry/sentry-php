@@ -310,7 +310,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError()
+    public function captureLastError(array $payload = [])
     {
         $error = error_get_last();
 
@@ -320,7 +320,7 @@ class Client implements ClientInterface
 
         $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
-        return $this->captureException($exception);
+        return $this->captureException($exception, $payload);
     }
 
     /**
