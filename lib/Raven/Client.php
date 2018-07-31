@@ -210,8 +210,8 @@ class Raven_Client
             'name' => 'sentry-php',
             'version' => self::VERSION,
         ));
-        $this->serializer = new Raven_Serializer($this->mb_detect_order);
-        $this->reprSerializer = new Raven_ReprSerializer($this->mb_detect_order);
+        $this->serializer = new Raven_Serializer($this->mb_detect_order, $this->message_limit);
+        $this->reprSerializer = new Raven_ReprSerializer($this->mb_detect_order, $this->message_limit);
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
