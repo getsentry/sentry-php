@@ -88,7 +88,7 @@ class Raven_Tests_SanitizeDataProcessorTest extends \PHPUnit\Framework\TestCase
         $processor  = new Raven_Processor_SanitizeDataProcessor($client);
 
         $this->assertEquals($processor->getFieldsRe(), '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i', 'got default fields');
-        $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,16}$/', 'got default values');
+        $this->assertEquals($processor->getValuesRe(), '/^(?:\d[ -]*?){13,19}$/', 'got default values');
 
         $options = array(
             'fields_re' => '/(api_token)/i',
