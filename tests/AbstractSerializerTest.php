@@ -351,6 +351,17 @@ abstract class AbstractSerializerTest extends TestCase
         }
     }
 
+    public function testLongStringWithOverwrittenMessageLengthZero()
+    {
+        $serializer = $this->getSerializerUnderTest();
+        $serializer->setMessageLimit(0);
+
+        foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
+            $input = str_repeat('x', $length);
+            $this->assertSame($input, $serializer->serialize($input));
+        }
+    }
+
     /**
      * @param bool $serializeAllObjects
      * @dataProvider serializeAllObjectsProvider
