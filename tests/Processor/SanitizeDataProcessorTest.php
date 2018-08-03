@@ -125,7 +125,19 @@ class SanitizeDataProcessorTest extends TestCase
             [
                 [
                     'extra_context' => [
-                        'ccnumba' => '4242424242424242',
+                        'ccnumba' => str_repeat('9', 13),
+                    ],
+                ],
+                [
+                    'extra_context' => [
+                        'ccnumba' => SanitizeDataProcessor::STRING_MASK,
+                    ],
+                ],
+            ],
+            [
+                [
+                    'extra_context' => [
+                        'ccnumba' => str_repeat('9', 19),
                     ],
                 ],
                 [

@@ -54,7 +54,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
     {
         $resolver->setDefaults([
             'fields_re' => '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i',
-            'values_re' => '/^(?:\d[ -]*?){13,16}$/',
+            'values_re' => '/^(?:\d[ -]*?){13,19}$/',
             'session_cookie_name' => ini_get('session.name'),
         ]);
 
