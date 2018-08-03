@@ -126,7 +126,7 @@ Tagging a Release
 2. Create a new branch for the minor version (if not present):
 
 ```
-$ git checkout -b releases/1.10.x
+$ git checkout -b releases/2.1.x
 ```
 
 3. Update the hardcoded version tag in ``Client.php``:
@@ -134,20 +134,20 @@ $ git checkout -b releases/1.10.x
 ```php
 class Raven_Client
 {
-    const VERSION = '1.10.0';
+    const VERSION = '2.1.0';
 }
 ```
 
 4. Commit the change:
 
 ```
-$ git commit -a -m "1.10.0"
+$ git commit -a -m "2.1.0"
 ```
 
 5. Tag the branch:
 
 ```
-git tag 1.10.0
+git tag 2.1.0
 ```
 
 6. Push the tag:
