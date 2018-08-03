@@ -902,7 +902,7 @@ class Raven_Client
         }
 
         $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
-        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $runtime_context = array('version' => self::cleanup_php_version(), 'name' => 'php');
         $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
 
         if (!$this->breadcrumbs->is_empty()) {
@@ -1523,6 +1523,24 @@ class Raven_Client
     public function setReprSerializer(Raven_ReprSerializer $reprSerializer)
     {
         $this->reprSerializer = $reprSerializer;
+    }
+
+    /**
+     * Cleans up the PHP version string by extracting junk from the extra part of the version.
+     *
+     * @param string $extra
+     *
+     * @return string
+     */
+    public static function cleanup_php_version($extra = PHP_EXTRA_VERSION)
+    {
+        $version = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION;
+
+        if (!empty($extra) && preg_match('{^-(?<extra>(beta|rc)-?([0-9]+)?(-dev)?)}i', $extra, $matches) === 1) {
+            $version .= '-' . $matches['extra'];
+        }
+
+        return $version;
     }
 
     private function triggerAutoload()
