@@ -181,7 +181,7 @@ class EventTest extends TestCase
         return [
             ['level', 'info', ['level' => 'info']],
             ['logger', 'ruby', ['logger' => 'ruby']],
-            ['culprit', 'foo', ['culprit' => 'foo']],
+            ['transaction', 'foo', ['transaction' => 'foo']],
             ['serverName', 'local.host', ['server_name' => 'local.host']],
             ['release', '0.0.1', ['release' => '0.0.1']],
             ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], ['modules' => ['foo' => '0.0.1', 'bar' => '0.0.2']]],
