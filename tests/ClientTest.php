@@ -233,7 +233,7 @@ class ClientTest extends TestCase
             ->getClient();
 
         $inputData = [
-            'culprit' => 'foo bar',
+            'transaction' => 'foo bar',
             'level' => Client::LEVEL_DEBUG,
             'logger' => 'foo',
             'tags_context' => ['foo', 'bar'],
@@ -246,7 +246,7 @@ class ClientTest extends TestCase
         $event = $client->getLastEvent();
 
         $this->assertEquals(str_replace('-', '', $event->getId()->toString()), $eventId);
-        $this->assertEquals($inputData['culprit'], $event->getCulprit());
+        $this->assertEquals($inputData['transaction'], $event->getTransaction());
         $this->assertEquals($inputData['level'], $event->getLevel());
         $this->assertEquals($inputData['logger'], $event->getLogger());
         $this->assertEquals($inputData['tags_context'], $event->getTagsContext());

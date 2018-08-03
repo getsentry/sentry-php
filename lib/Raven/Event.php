@@ -45,7 +45,7 @@ final class Event implements \JsonSerializable
     /**
      * @var string the name of the transaction (or culprit) which caused this exception
      */
-    private $culprit;
+    private $transaction;
 
     /**
      * @var string The name of the server (e.g. the host name)
@@ -238,27 +238,27 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getCulprit()
+    public function getTransaction()
     {
-        return $this->culprit;
+        return $this->transaction;
     }
 
     /**
      * Sets the name of the transaction (or culprit) which caused this
      * exception.
      *
-     * @param string $culprit The transaction name
+     * @param string $transaction The transaction name
      *
      * @return static
      */
-    public function withCulprit($culprit)
+    public function withTransaction($transaction)
     {
-        if ($culprit === $this->culprit) {
+        if ($transaction === $this->transaction) {
             return $this;
         }
 
         $new = clone $this;
-        $new->culprit = $culprit;
+        $new->transaction = $transaction;
 
         return $new;
     }
@@ -735,8 +735,8 @@ final class Event implements \JsonSerializable
             $data['logger'] = $this->logger;
         }
 
-        if (null !== $this->culprit) {
-            $data['culprit'] = $this->culprit;
+        if (null !== $this->transaction) {
+            $data['transaction'] = $this->transaction;
         }
 
         if (null !== $this->serverName) {
