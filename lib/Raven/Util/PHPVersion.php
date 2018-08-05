@@ -18,7 +18,7 @@ class PHPVersion
 
         $version = $matches['base'];
         if (isset($matches['extra'])) {
-            $version .=  $matches['extra'];
+            $version .= $matches['extra'];
         }
 
         return $version;
