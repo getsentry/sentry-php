@@ -13,33 +13,18 @@ namespace Raven\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Raven\Event;
-use Raven\Processor\ProcessorRegistry;
 
 /**
- * This middleware loops through all registered processors and execute them
- * in their order.
+ * This middleware removes all the data of the HTTP body to ensure no sensitive
+ * information are sent to the server in case the request method is POST, PUT,
+ * PATCH or DELETE.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ProcessorMiddleware
+final class SanitizeHttpBodyMiddleware implements ProcessorMiddlewareInterface
 {
     /**
-     * @var ProcessorRegistry The registry of processors
-     */
-    private $processorRegistry;
-
-    /**
-     * Constructor.
-     *
-     * @param ProcessorRegistry $processorRegistry The registry of processors
-     */
-    public function __construct(ProcessorRegistry $processorRegistry)
-    {
-        $this->processorRegistry = $processorRegistry;
-    }
-
-    /**
-     * Invokes all the processors to process the event before it's sent.
+     * Collects the needed data and sets it in the given event object.
      *
      * @param Event                       $event     The event being processed
      * @param callable                    $next      The next middleware to call
@@ -51,13 +36,13 @@ final class ProcessorMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        foreach ($this->processorRegistry->getProcessors() as $processor) {
-            $event = $processor->process($event);
+        $request = $event->getRequest();
 
-            if (!$event instanceof Event) {
-                throw new \UnexpectedValueException(sprintf('The processor must return an instance of the "%s" class.', Event::class));
-            }
+        if (isset($request['method']) && \in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            $request['data'] = self::STRING_MASK;
         }
+
+        $event->setRequest($request);
 
         return $next($event, $request, $exception, $payload);
     }

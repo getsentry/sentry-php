@@ -27,6 +27,21 @@ several built-in middlewares whose list is:
 - ``UserInterfaceMiddleware``: adds some user-related information like the client
   IP address to the event.
 
+There are also some "special" middlewares that should be executed after all the
+other middlewares so that they can sanitize and remove sensitive information before
+they reach the Sentry server (not all of them are enabled by default):
+
+- ``SanitizeHttpBodyMiddleware``: sanitizes the data sent as body of a POST
+  request.
+- ``SanitizeCookiesMiddleware``: sanitizes the cookies sent with the request
+  by hiding sensitive information.
+- ``SanitizeDataMiddleware``: sanitizes the data of the event by removing
+  sensitive information.
+- ``SanitizeHttpHeadersMiddleware``: sanitizes the headers of the request by
+  hiding sensitive information.
+- ``SanitizeStacktraceMiddleware``: sanitizes the captured stacktrace by
+  removing the excerpts of source code attached to each frame.
+
 Writing a middleware
 ====================
 
@@ -53,7 +68,7 @@ middleware that customizes the message captured with an event can be written:
 
   class CustomMiddleware
   {
-      public function (Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
+      public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
       {
           $event = $event->withMessage('hello world');
 
@@ -79,11 +94,19 @@ have the following priorities:
 - ``ExceptionInterfaceMiddleware``: 0
 - ``MessageInterfaceMiddleware``: 0
 - ``ModulesMiddleware``: 0
-- ``ProcessorMiddleware``: -250 (this middleware should always be at the end of
-  the chain)
 - ``RequestInterfaceMiddleware``: 0
 - ``SanitizerMiddleware``: -255 (this middleware should always be the last one)
 - ``UserInterfaceMiddleware``: 0
+- ``SanitizeHttpBodyMiddleware``: -200 (this middleware should always be after
+  all "standard" middlewares)
+- ``SanitizeCookiesMiddleware``: -200 (this middleware should always be after
+  all "standard" middlewares)
+- ``SanitizeDataMiddleware``: -200 (this middleware should always be after
+  all "standard" middlewares)
+- ``SanitizeHttpHeadersMiddleware``: -200 (this middleware should always be after
+  all "standard" middlewares)
+- ``SanitizeStacktraceMiddleware``: -200 (this middleware should always be after
+  all "standard" middlewares)
 
 The higher the priority value is, the earlier a middleware will be executed in
 the chain. To add the middleware to the stack you can use the ``addMiddleware``

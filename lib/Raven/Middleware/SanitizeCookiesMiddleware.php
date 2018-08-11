@@ -9,19 +9,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Processor;
+namespace Raven\Middleware;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Raven\Event;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * This processor sanitizes the cookies to ensure no sensitive information are
+ * This middleware sanitizes the cookies to ensure no sensitive information are
  * sent to the server.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SanitizeCookiesProcessor implements ProcessorInterface
+final class SanitizeCookiesMiddleware implements ProcessorMiddlewareInterface
 {
     /**
      * @var array The configuration options
@@ -47,9 +48,17 @@ final class SanitizeCookiesProcessor implements ProcessorInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Collects the needed data and sets it in the given event object.
+     *
+     * @param Event                       $event     The event being processed
+     * @param callable                    $next      The next middleware to call
+     * @param ServerRequestInterface|null $request   The request, if available
+     * @param \Exception|\Throwable|null  $exception The thrown exception, if available
+     * @param array                       $payload   Additional data
+     *
+     * @return Event
      */
-    public function process(Event $event)
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         $request = $event->getRequest();
 
@@ -77,7 +86,7 @@ final class SanitizeCookiesProcessor implements ProcessorInterface
 
         $event->setRequest($request);
 
-        return $event;
+        return $next($event, $request, $exception, $payload);
     }
 
     /**

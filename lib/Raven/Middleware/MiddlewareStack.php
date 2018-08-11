@@ -83,7 +83,7 @@ class MiddlewareStack
      *
      * @param callable $middleware The middleware instance
      * @param int      $priority   The priority. The higher this value, the
-     *                             earlier a processor will be executed in
+     *                             earlier a middleware will be executed in
      *                             the chain (defaults to 0)
      *
      * @throws \RuntimeException If the method is called while the stack is dequeuing

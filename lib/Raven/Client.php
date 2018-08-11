@@ -17,17 +17,7 @@ use Raven\Context\Context;
 use Raven\Context\RuntimeContext;
 use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
-use Raven\Middleware\BreadcrumbInterfaceMiddleware;
-use Raven\Middleware\ContextInterfaceMiddleware;
-use Raven\Middleware\ExceptionInterfaceMiddleware;
-use Raven\Middleware\MessageInterfaceMiddleware;
 use Raven\Middleware\MiddlewareStack;
-use Raven\Middleware\ProcessorMiddleware;
-use Raven\Middleware\RequestInterfaceMiddleware;
-use Raven\Middleware\SanitizerMiddleware;
-use Raven\Middleware\UserInterfaceMiddleware;
-use Raven\Processor\ProcessorInterface;
-use Raven\Processor\ProcessorRegistry;
 use Raven\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -104,11 +94,6 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var ProcessorRegistry The registry of processors
-     */
-    private $processorRegistry;
-
-    /**
      * @var TagsContext The tags context
      */
     private $tagsContext;
@@ -153,7 +138,6 @@ class Client implements ClientInterface
     {
         $this->config = $config;
         $this->transport = $transport;
-        $this->processorRegistry = new ProcessorRegistry();
         $this->tagsContext = new TagsContext();
         $this->userContext = new Context();
         $this->extraContext = new Context();
@@ -167,8 +151,6 @@ class Client implements ClientInterface
             return $event;
         });
 
-        $this->addDefaultMiddlewares();
-
         $request = ServerRequestFactory::fromGlobals();
         $serverParams = $request->getServerParams();
 
@@ -179,6 +161,14 @@ class Client implements ClientInterface
         if ($this->config->getSerializeAllObjects()) {
             $this->setAllObjectSerialize(true);
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getBreadcrumbsRecorder()
+    {
+        return $this->breadcrumbRecorder;
     }
 
     /**
@@ -227,22 +217,6 @@ class Client implements ClientInterface
     public function removeMiddleware(callable $middleware)
     {
         $this->middlewareStack->removeMiddleware($middleware);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addProcessor(ProcessorInterface $processor, $priority = 0)
-    {
-        $this->processorRegistry->addProcessor($processor, $priority);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeProcessor(ProcessorInterface $processor)
-    {
-        $this->processorRegistry->removeProcessor($processor);
     }
 
     /**
@@ -473,24 +447,5 @@ class Client implements ClientInterface
     public function getServerOsContext()
     {
         return $this->serverOsContext;
-    }
-
-    /**
-     * Adds the default middlewares to this client instance.
-     */
-    private function addDefaultMiddlewares()
-    {
-        $this->addMiddleware(new SanitizerMiddleware($this->serializer), -255);
-        $this->addMiddleware(new ProcessorMiddleware($this->processorRegistry), -250);
-        $this->addMiddleware(new MessageInterfaceMiddleware());
-        $this->addMiddleware(new RequestInterfaceMiddleware());
-        $this->addMiddleware(new UserInterfaceMiddleware());
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->tagsContext, Context::CONTEXT_TAGS));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->userContext, Context::CONTEXT_USER));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->extraContext, Context::CONTEXT_EXTRA));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->runtimeContext, Context::CONTEXT_RUNTIME));
-        $this->addMiddleware(new ContextInterfaceMiddleware($this->serverOsContext, Context::CONTEXT_SERVER_OS));
-        $this->addMiddleware(new BreadcrumbInterfaceMiddleware($this->breadcrumbRecorder));
-        $this->addMiddleware(new ExceptionInterfaceMiddleware($this));
     }
 }
