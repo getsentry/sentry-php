@@ -444,7 +444,7 @@ class Raven_Client
     public function setProcessorsFromOptions($options)
     {
         $processors = array();
-        foreach (Raven_util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
+        foreach (Raven_Util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
             /**
              * @var Raven_Processor        $new_processor
              * @var Raven_Processor|string $processor
