@@ -4,6 +4,16 @@
 
 - ...
 
+## 1.9.2 (2018-08-17)
+
+- Remove secret_key from required keys for CLI test command. (#645)
+- Proper case in Raven_Util class name usage. (#642)
+- Support longer creditcard numbers. (#635)
+- Use configured message limit when creating serializers. (#634)
+- Do not truncate strings if message limit is set to zero. (#630)
+- Add option to ignore SERVER_PORT getting added to url. (#629)
+- Cleanup the PHP version reported. (#604)
+
 ## 1.9.1 (2018-06-19)
 
 - Allow the use of a public DSN (private part of the DSN was deprecated in Sentry 9) (#615)
