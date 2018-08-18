@@ -30,7 +30,7 @@ more about [automatic PHP error reporting with Sentry](https://sentry.io/for/php
 ```php
 // Instantiate a new client with a compatible DSN and install built-in
 // handlers
-$client = (new Raven_Client('http://public:secret@example.com/1'))->install();
+$client = (new Raven_Client('http://public@example.com/1'))->install();
 
 // Capture an exception
 $event_id = $client->captureException($ex);

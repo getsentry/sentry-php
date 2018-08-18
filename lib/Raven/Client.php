@@ -91,6 +91,7 @@ class Raven_Client
     public $exclude;
     public $excluded_exceptions;
     public $http_proxy;
+    public $ignore_server_port;
     protected $send_callback;
     public $curl_method;
     public $curl_path;
@@ -173,6 +174,7 @@ class Raven_Client
         $this->excluded_exceptions = Raven_Util::get($options, 'excluded_exceptions', array());
         $this->severity_map = null;
         $this->http_proxy = Raven_Util::get($options, 'http_proxy');
+        $this->ignore_server_port = Raven_Util::get($options, 'ignore_server_port', false);
         $this->extra_data = Raven_Util::get($options, 'extra', array());
         $this->send_callback = Raven_Util::get($options, 'send_callback', null);
         $this->curl_method = Raven_Util::get($options, 'curl_method', 'sync');
@@ -208,8 +210,8 @@ class Raven_Client
             'name' => 'sentry-php',
             'version' => self::VERSION,
         ));
-        $this->serializer = new Raven_Serializer($this->mb_detect_order);
-        $this->reprSerializer = new Raven_ReprSerializer($this->mb_detect_order);
+        $this->serializer = new Raven_Serializer($this->mb_detect_order, $this->message_limit);
+        $this->reprSerializer = new Raven_ReprSerializer($this->mb_detect_order, $this->message_limit);
 
         if ($this->curl_method == 'async') {
             $this->_curl_handler = new Raven_CurlHandler($this->get_curl_options());
@@ -442,7 +444,7 @@ class Raven_Client
     public function setProcessorsFromOptions($options)
     {
         $processors = array();
-        foreach (Raven_util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
+        foreach (Raven_Util::get($options, 'processors', static::getDefaultProcessors()) as $processor) {
             /**
              * @var Raven_Processor        $new_processor
              * @var Raven_Processor|string $processor
@@ -900,7 +902,7 @@ class Raven_Client
         }
 
         $existing_runtime_context = isset($data['contexts']['runtime']) ? $data['contexts']['runtime'] : array();
-        $runtime_context = array('version' => PHP_VERSION, 'name' => 'php');
+        $runtime_context = array('version' => self::cleanup_php_version(), 'name' => 'php');
         $data['contexts']['runtime'] =  array_merge($runtime_context, $existing_runtime_context);
 
         if (!$this->breadcrumbs->is_empty()) {
@@ -1311,9 +1313,11 @@ class Raven_Client
             : (!empty($_SERVER['LOCAL_ADDR'])  ? $_SERVER['LOCAL_ADDR']
             : (!empty($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '')));
 
-        $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
-        if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
-            $host .= ':' . $_SERVER['SERVER_PORT'];
+        if (!$this->ignore_server_port) {
+            $hasNonDefaultPort = !empty($_SERVER['SERVER_PORT']) && !in_array((int)$_SERVER['SERVER_PORT'], array(80, 443));
+            if ($hasNonDefaultPort && !preg_match('#:[0-9]*$#', $host)) {
+                $host .= ':' . $_SERVER['SERVER_PORT'];
+            }
         }
 
         $httpS = $this->isHttps() ? 's' : '';
@@ -1519,6 +1523,24 @@ class Raven_Client
     public function setReprSerializer(Raven_ReprSerializer $reprSerializer)
     {
         $this->reprSerializer = $reprSerializer;
+    }
+
+    /**
+     * Cleans up the PHP version string by extracting junk from the extra part of the version.
+     *
+     * @param string $extra
+     *
+     * @return string
+     */
+    public static function cleanup_php_version($extra = PHP_EXTRA_VERSION)
+    {
+        $version = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION;
+
+        if (!empty($extra) && preg_match('{^-(?<extra>(beta|rc)-?([0-9]+)?(-dev)?)}i', $extra, $matches) === 1) {
+            $version .= '-' . $matches['extra'];
+        }
+
+        return $version;
     }
 
     private function triggerAutoload()
