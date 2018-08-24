@@ -58,24 +58,24 @@ final class ContextInterfaceMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $context = isset($payload[$this->contextName . '_context']) ? $payload[$this->contextName . '_context'] : [];
-        $context = array_merge($this->context->toArray(), $context);
+        $contextData = isset($payload[$this->contextName . '_context']) ? $payload[$this->contextName . '_context'] : [];
+        $contextData = array_merge($this->context->toArray(), $contextData);
 
         switch ($this->contextName) {
             case Context::CONTEXT_USER:
-                $event->setUserContext($context, false);
+                $event->getUserContext()->setData($contextData);
                 break;
             case Context::CONTEXT_RUNTIME:
-                $event->setRuntimeContext($context, false);
+                $event->getRuntimeContext()->setData($contextData);
                 break;
             case Context::CONTEXT_TAGS:
-                $event->setTagsContext($context, false);
+                $event->getTagsContext()->setData($contextData);
                 break;
             case Context::CONTEXT_EXTRA:
-                $event->setExtraContext($context, false);
+                $event->getExtraContext()->setData($contextData);
                 break;
             case Context::CONTEXT_SERVER_OS:
-                $event->setServerOsContext($context, false);
+                $event->getServerOsContext()->setData($contextData);
                 break;
             default:
                 throw new \RuntimeException(sprintf('The "%s" context is not supported.', $this->contextName));

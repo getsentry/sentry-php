@@ -23,52 +23,32 @@ class SanitizerMiddlewareTest extends TestCase
     {
         $event = new Event(new Configuration());
         $event->setRequest(['bar' => 'baz']);
-        $event->setUserContext(['foo' => 'bar']);
-        $event->setTagsContext(['foo', 'bar']);
-        $event->setServerOsContext(['bar' => 'foo']);
-        $event->setRuntimeContext(['foo' => 'baz']);
-        $event->setExtraContext(['baz' => 'foo']);
+        $event->getUserContext()->replaceData(['foo' => 'bar']);
+        $event->getTagsContext()->replaceData(['foo', 'bar']);
+        $event->getServerOsContext()->replaceData(['name' => 'foo']);
+        $event->getRuntimeContext()->replaceData(['name' => 'baz']);
+        $event->getExtraContext()->replaceData(['baz' => 'foo']);
 
         /** @var Serializer|\PHPUnit_Framework_MockObject_MockObject $sanitizer */
         $sanitizer = $this->createMock(Serializer::class);
         $sanitizer->expects($this->exactly(6))
             ->method('serialize')
-            ->withConsecutive(
-                [
-                    $event->getRequest(),
-                    5,
-                ],
-                [
-                    $event->getUserContext(),
-                ],
-                [
-                    $event->getRuntimeContext(),
-                ],
-                [
-                    $event->getServerOsContext(),
-                ],
-                [
-                    $event->getExtraContext(),
-                ],
-                [
-                    $event->getTagsContext(),
-                ]
-            )
             ->willReturnCallback(function ($eventData) {
-                // This is here just because otherwise the event object will
-                // not be updated if the new value being set is the same as
-                // the previous one
-                return array_flip($eventData);
+                foreach ($eventData as $key => $value) {
+                    $eventData[$key] = strrev($value);
+                }
+
+                return $eventData;
             });
 
         $callbackInvoked = false;
         $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $this->assertEquals(['baz' => 'bar'], $eventArg->getRequest());
-            $this->assertEquals(['bar' => 'foo'], $eventArg->getUserContext());
-            $this->assertEquals(['baz' => 'foo'], $eventArg->getRuntimeContext());
-            $this->assertEquals(['foo' => 'bar'], $eventArg->getServerOsContext());
-            $this->assertEquals(['foo' => 'baz'], $eventArg->getExtraContext());
-            $this->assertEquals(['foo' => 0, 'bar' => 1], $eventArg->getTagsContext());
+            $this->assertArraySubset(['bar' => 'zab'], $eventArg->getRequest());
+            $this->assertArraySubset(['foo' => 'rab'], $eventArg->getUserContext());
+            $this->assertArraySubset(['name' => 'zab'], $eventArg->getRuntimeContext());
+            $this->assertArraySubset(['name' => 'oof'], $eventArg->getServerOsContext());
+            $this->assertArraySubset(['baz' => 'oof'], $eventArg->getExtraContext());
+            $this->assertArraySubset(['oof', 'rab'], $eventArg->getTagsContext());
 
             $callbackInvoked = true;
         };

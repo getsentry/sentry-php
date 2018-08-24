@@ -28,16 +28,16 @@ final class SanitizeStacktraceProcessor implements ProcessorInterface
     {
         $stacktrace = $event->getStacktrace();
 
-        if (null === $stacktrace) {
-            return $event;
+        if (null !== $stacktrace) {
+            foreach ($stacktrace->getFrames() as $frame) {
+                $frame->setPreContext(null);
+                $frame->setContextLine(null);
+                $frame->setPostContext(null);
+            }
+
+            $event->setStacktrace($stacktrace);
         }
 
-        foreach ($stacktrace->getFrames() as $frame) {
-            $frame->setPreContext(null);
-            $frame->setContextLine(null);
-            $frame->setPostContext(null);
-        }
-
-        return $event->setStacktrace($stacktrace);
+        return $event;
     }
 }

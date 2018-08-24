@@ -14,6 +14,10 @@ namespace Raven;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Context\Context;
+use Raven\Context\RuntimeContext;
+use Raven\Context\ServerOsContext;
+use Raven\Context\TagsContext;
 
 /**
  * This is the base class for classes containing event data.
@@ -83,29 +87,29 @@ final class Event implements \JsonSerializable
     private $request = [];
 
     /**
-     * @var array The server OS context data
+     * @var ServerOsContext The server OS context data
      */
-    private $serverOsContext = [];
+    private $serverOsContext;
 
     /**
-     * @var array The runtime context data
+     * @var RuntimeContext The runtime context data
      */
-    private $runtimeContext = [];
+    private $runtimeContext;
 
     /**
-     * @var array The user context data
+     * @var Context The user context data
      */
-    private $userContext = [];
+    private $userContext;
 
     /**
-     * @var array An arbitrary mapping of additional metadata
+     * @var Context An arbitrary mapping of additional metadata
      */
-    private $extraContext = [];
+    private $extraContext;
 
     /**
-     * @var string[] A List of tags associated to this event
+     * @var TagsContext A List of tags associated to this event
      */
-    private $tagsContext = [];
+    private $tagsContext;
 
     /**
      * @var string[] An array of strings used to dictate the deduplication of this event
@@ -140,18 +144,11 @@ final class Event implements \JsonSerializable
         $this->serverName = $config->getServerName();
         $this->release = $config->getRelease();
         $this->environment = $config->getCurrentEnvironment();
-    }
-
-    /**
-     * Creates a new instance of this class.
-     *
-     * @param Configuration $config The client configuration
-     *
-     * @return static
-     */
-    public static function create(Configuration $config)
-    {
-        return new static($config);
+        $this->serverOsContext = new ServerOsContext();
+        $this->runtimeContext = new RuntimeContext();
+        $this->userContext = new Context();
+        $this->extraContext = new Context();
+        $this->tagsContext = new TagsContext();
     }
 
     /**
@@ -188,14 +185,10 @@ final class Event implements \JsonSerializable
      * Sets the severity of this event.
      *
      * @param string $level The severity
-     *
-     * @return static
      */
     public function setLevel($level)
     {
         $this->level = $level;
-
-        return $this;
     }
 
     /**
@@ -212,14 +205,10 @@ final class Event implements \JsonSerializable
      * Sets the name of the logger which created the event.
      *
      * @param string $logger The logger name
-     *
-     * @return static
      */
     public function setLogger($logger)
     {
         $this->logger = $logger;
-
-        return $this;
     }
 
     /**
@@ -258,14 +247,10 @@ final class Event implements \JsonSerializable
      * Sets the name of the server.
      *
      * @param string $serverName The server name
-     *
-     * @return static
      */
     public function setServerName($serverName)
     {
         $this->serverName = $serverName;
-
-        return $this;
     }
 
     /**
@@ -282,14 +267,10 @@ final class Event implements \JsonSerializable
      * Sets the release of the program.
      *
      * @param string $release The release
-     *
-     * @return static
      */
     public function setRelease($release)
     {
         $this->release = $release;
-
-        return $this;
     }
 
     /**
@@ -317,15 +298,11 @@ final class Event implements \JsonSerializable
      *
      * @param string $message The message
      * @param array  $params  The parameters to use to format the message
-     *
-     * @return static
      */
     public function setMessage($message, array $params = [])
     {
         $this->message = $message;
         $this->messageParams = $params;
-
-        return $this;
     }
 
     /**
@@ -342,14 +319,10 @@ final class Event implements \JsonSerializable
      * Sets a list of relevant modules and their versions.
      *
      * @param array $modules
-     *
-     * @return static
      */
     public function setModules(array $modules)
     {
         $this->modules = $modules;
-
-        return $this;
     }
 
     /**
@@ -366,20 +339,16 @@ final class Event implements \JsonSerializable
      * Sets the request data.
      *
      * @param array $request The request data
-     *
-     * @return static
      */
     public function setRequest(array $request)
     {
         $this->request = $request;
-
-        return $this;
     }
 
     /**
      * Gets an arbitrary mapping of additional metadata.
      *
-     * @return array
+     * @return Context
      */
     public function getExtraContext()
     {
@@ -387,24 +356,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets an arbitrary mapping of additional metadata.
-     *
-     * @param array $extraContext Additional metadata
-     * @param bool  $replace      Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function setExtraContext(array $extraContext, $replace = true)
-    {
-        $this->extraContext = $replace ? $extraContext : array_merge($this->extraContext, $extraContext);
-
-        return $this;
-    }
-
-    /**
      * Gets a list of tags.
      *
-     * @return string[]
+     * @return TagsContext
      */
     public function getTagsContext()
     {
@@ -412,24 +366,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets a list of tags.
-     *
-     * @param string[] $tagsContext The tags
-     * @param bool     $replace     Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function setTagsContext(array $tagsContext, $replace = true)
-    {
-        $this->tagsContext = $replace ? $tagsContext : array_merge($this->tagsContext, $tagsContext);
-
-        return $this;
-    }
-
-    /**
      * Gets the user context.
      *
-     * @return array
+     * @return Context
      */
     public function getUserContext()
     {
@@ -437,24 +376,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets the user context.
-     *
-     * @param array $userContext The context data
-     * @param bool  $replace     Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function setUserContext(array $userContext, $replace = true)
-    {
-        $this->userContext = $replace ? $userContext : array_merge($this->userContext, $userContext);
-
-        return $this;
-    }
-
-    /**
      * Gets the server OS context.
      *
-     * @return array
+     * @return ServerOsContext
      */
     public function getServerOsContext()
     {
@@ -462,43 +386,13 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Gets the server OS context.
-     *
-     * @param array $serverOsContext The context data
-     * @param bool  $replace         Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function setServerOsContext(array $serverOsContext, $replace = true)
-    {
-        $this->serverOsContext = $replace ? $serverOsContext : array_merge($this->serverOsContext, $serverOsContext);
-
-        return $this;
-    }
-
-    /**
      * Gets the runtime context data.
      *
-     * @return array
+     * @return RuntimeContext
      */
     public function getRuntimeContext()
     {
         return $this->runtimeContext;
-    }
-
-    /**
-     * Sets the runtime context data.
-     *
-     * @param array $runtimeContext The context data
-     * @param bool  $replace        Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function setRuntimeContext(array $runtimeContext, $replace = true)
-    {
-        $this->runtimeContext = $replace ? $runtimeContext : array_merge($this->runtimeContext, $runtimeContext);
-
-        return $this;
     }
 
     /**
@@ -517,14 +411,10 @@ final class Event implements \JsonSerializable
      * event.
      *
      * @param string[] $fingerprint The strings
-     *
-     * @return static
      */
     public function setFingerprint(array $fingerprint)
     {
         $this->fingerprint = $fingerprint;
-
-        return $this;
     }
 
     /**
@@ -541,14 +431,10 @@ final class Event implements \JsonSerializable
      * Sets the environment in which this event was generated.
      *
      * @param string $environment The name of the environment
-     *
-     * @return static
      */
     public function setEnvironment($environment)
     {
         $this->environment = $environment;
-
-        return $this;
     }
 
     /**
@@ -565,14 +451,10 @@ final class Event implements \JsonSerializable
      * Adds a new breadcrumb to the event.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb
-     *
-     * @return static
      */
     public function setBreadcrumb(Breadcrumb $breadcrumb)
     {
         $this->breadcrumbs[] = $breadcrumb;
-
-        return $this;
     }
 
     /**
@@ -589,14 +471,10 @@ final class Event implements \JsonSerializable
      * Sets the exception.
      *
      * @param array $exception The exception
-     *
-     * @return static
      */
     public function setException(array $exception)
     {
         $this->exception = $exception;
-
-        return $this;
     }
 
     /**
@@ -613,14 +491,10 @@ final class Event implements \JsonSerializable
      * Sets the stacktrace that generated this event.
      *
      * @param Stacktrace $stacktrace The stacktrace instance
-     *
-     * @return static
      */
     public function setStacktrace(Stacktrace $stacktrace)
     {
         $this->stacktrace = $stacktrace;
-
-        return $this;
     }
 
     /**
@@ -669,24 +543,24 @@ final class Event implements \JsonSerializable
             $data['modules'] = $this->modules;
         }
 
-        if (!empty($this->extraContext)) {
-            $data['extra'] = $this->extraContext;
+        if (!$this->extraContext->isEmpty()) {
+            $data['extra'] = $this->extraContext->toArray();
         }
 
-        if (!empty($this->tagsContext)) {
-            $data['tags'] = $this->tagsContext;
+        if (!$this->tagsContext->isEmpty()) {
+            $data['tags'] = $this->tagsContext->toArray();
         }
 
-        if (!empty($this->userContext)) {
-            $data['user'] = $this->userContext;
+        if (!$this->userContext->isEmpty()) {
+            $data['user'] = $this->userContext->toArray();
         }
 
-        if (!empty($this->serverOsContext)) {
-            $data['contexts']['os'] = $this->serverOsContext;
+        if (!$this->serverOsContext->isEmpty()) {
+            $data['contexts']['os'] = $this->serverOsContext->toArray();
         }
 
-        if (!empty($this->runtimeContext)) {
-            $data['contexts']['runtime'] = $this->runtimeContext;
+        if (!$this->runtimeContext->isEmpty()) {
+            $data['contexts']['runtime'] = $this->runtimeContext->toArray();
         }
 
         if (!empty($this->breadcrumbs)) {

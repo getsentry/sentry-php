@@ -40,8 +40,6 @@ final class UserInterfaceMiddleware
             $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
         }
 
-        $event->setUserContext($userContext);
-
         return $next($event, $request, $exception, $payload);
     }
 }

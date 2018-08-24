@@ -48,7 +48,7 @@ class SanitizeDataProcessorTest extends TestCase
         }
 
         if (isset($inputData['extra_context'])) {
-            $event->setExtraContext($inputData['extra_context']);
+            $event->getExtraContext()->replaceData($inputData['extra_context']);
         }
 
         if (isset($inputData['exception'])) {
@@ -72,8 +72,7 @@ class SanitizeDataProcessorTest extends TestCase
             // We must convert the backtrace to a Stacktrace instance here because
             // PHPUnit executes the data provider before the setUp method and so
             // the client instance cannot be accessed from there
-            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']),
-                $event->getException());
+            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $event->getException());
         }
     }
 

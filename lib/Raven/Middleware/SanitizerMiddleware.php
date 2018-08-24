@@ -55,25 +55,11 @@ final class SanitizerMiddleware
             $event->setRequest($this->serializer->serialize($request, 5));
         }
 
-        if (!empty($userContext = $event->getUserContext())) {
-            $event->setUserContext($this->serializer->serialize($userContext));
-        }
-
-        if (!empty($runtimeContext = $event->getRuntimeContext())) {
-            $event->setRuntimeContext($this->serializer->serialize($runtimeContext));
-        }
-
-        if (!empty($serverOsContext = $event->getServerOsContext())) {
-            $event->setServerOsContext($this->serializer->serialize($serverOsContext));
-        }
-
-        if (!empty($extraContext = $event->getExtraContext())) {
-            $event->setExtraContext($this->serializer->serialize($extraContext));
-        }
-
-        if (!empty($tagsContext = $event->getTagsContext())) {
-            $event->setTagsContext($this->serializer->serialize($tagsContext));
-        }
+        $event->getUserContext()->replaceData($this->serializer->serialize($event->getUserContext()->toArray()));
+        $event->getRuntimeContext()->replaceData($this->serializer->serialize($event->getRuntimeContext()->toArray()));
+        $event->getServerOsContext()->replaceData($this->serializer->serialize($event->getServerOsContext()->toArray()));
+        $event->getExtraContext()->replaceData($this->serializer->serialize($event->getExtraContext()->toArray()));
+        $event->getTagsContext()->replaceData($this->serializer->serialize($event->getTagsContext()->toArray()));
 
         return $next($event, $request, $exception, $payload);
     }

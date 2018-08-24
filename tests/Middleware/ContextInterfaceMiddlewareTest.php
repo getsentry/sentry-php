@@ -29,11 +29,8 @@ class ContextInterfaceMiddlewareTest extends TestCase
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
-        $context = new Context();
-        $context->setData($initialData);
-
-        $configuration = new Configuration();
-        $event = new Event($configuration);
+        $context = new Context($initialData);
+        $event = new Event(new Configuration());
 
         $callbackInvoked = false;
         $callback = function (Event $eventArg) use ($contextName, $expectedData, &$callbackInvoked) {
@@ -41,7 +38,7 @@ class ContextInterfaceMiddlewareTest extends TestCase
                 return strtoupper($matches[0][1]);
             }, 'get_' . $contextName . '_context');
 
-            $this->assertEquals($expectedData, $eventArg->$method());
+            $this->assertEquals($expectedData, $eventArg->$method()->toArray());
 
             $callbackInvoked = true;
         };
@@ -59,16 +56,31 @@ class ContextInterfaceMiddlewareTest extends TestCase
         return [
             [
                 Context::CONTEXT_USER,
-                ['foo' => 'bar', 'foobaz' => 'bazfoo'],
-                ['foobaz' => 'bazfoo'],
-                ['foo' => 'bar', 'foobaz' => 'bazfoo'],
+                [
+                    'foo' => 'bar',
+                    'foobaz' => 'bazfoo',
+                ],
+                [
+                    'foobaz' => 'bazfoo',
+                ],
+                [
+                    'foo' => 'bar',
+                    'foobaz' => 'bazfoo',
+                ],
                 null,
             ],
             [
                 Context::CONTEXT_RUNTIME,
-                ['baz' => 'foo'],
-                ['barfoo' => 'foobar'],
-                ['baz' => 'foo', 'barfoo' => 'foobar'],
+                [
+                    'name' => 'foo',
+                ],
+                [
+                    'name' => 'foobar',
+                ],
+                [
+                    'name' => 'foobar',
+                    'version' => PHP_VERSION,
+                ],
                 null,
             ],
             [
@@ -80,16 +92,32 @@ class ContextInterfaceMiddlewareTest extends TestCase
             ],
             [
                 Context::CONTEXT_EXTRA,
-                ['bar' => 'foo'],
-                ['barbaz' => 'bazbar'],
-                ['bar' => 'foo', 'barbaz' => 'bazbar'],
+                [
+                    'bar' => 'foo',
+                ],
+                [
+                    'barbaz' => 'bazbar',
+                ],
+                [
+                    'bar' => 'foo',
+                    'barbaz' => 'bazbar',
+                ],
                 null,
             ],
             [
                 Context::CONTEXT_SERVER_OS,
-                ['foo' => 'baz'],
-                ['bazfoo' => 'foobaz'],
-                ['foo' => 'baz', 'bazfoo' => 'foobaz'],
+                [
+                    'name' => 'baz',
+                ],
+                [
+                    'name' => 'foobaz',
+                ],
+                [
+                    'name' => 'foobaz',
+                    'version' => php_uname('r'),
+                    'build' => php_uname('v'),
+                    'kernel_version' => php_uname('a'),
+                ],
                 null,
             ],
             [
