@@ -22,12 +22,12 @@ class SanitizerMiddlewareTest extends TestCase
     public function testInvoke()
     {
         $event = new Event(new Configuration());
-        $event = $event->withRequest(['bar' => 'baz']);
-        $event = $event->withUserContext(['foo' => 'bar']);
-        $event = $event->withTagsContext(['foo', 'bar']);
-        $event = $event->withServerOsContext(['bar' => 'foo']);
-        $event = $event->withRuntimeContext(['foo' => 'baz']);
-        $event = $event->withExtraContext(['baz' => 'foo']);
+        $event->setRequest(['bar' => 'baz']);
+        $event->setUserContext(['foo' => 'bar']);
+        $event->setTagsContext(['foo', 'bar']);
+        $event->setServerOsContext(['bar' => 'foo']);
+        $event->setRuntimeContext(['foo' => 'baz']);
+        $event->setExtraContext(['baz' => 'foo']);
 
         /** @var Serializer|\PHPUnit_Framework_MockObject_MockObject $sanitizer */
         $sanitizer = $this->createMock(Serializer::class);
@@ -62,8 +62,7 @@ class SanitizerMiddlewareTest extends TestCase
             });
 
         $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
-            $this->assertNotSame($event, $eventArg);
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $this->assertEquals(['baz' => 'bar'], $eventArg->getRequest());
             $this->assertEquals(['bar' => 'foo'], $eventArg->getUserContext());
             $this->assertEquals(['baz' => 'foo'], $eventArg->getRuntimeContext());

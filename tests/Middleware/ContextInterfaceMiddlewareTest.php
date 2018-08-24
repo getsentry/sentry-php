@@ -35,16 +35,15 @@ class ContextInterfaceMiddlewareTest extends TestCase
         $configuration = new Configuration();
         $event = new Event($configuration);
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, $contextName, $expectedData, &$invokationCount) {
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($contextName, $expectedData, &$callbackInvoked) {
             $method = preg_replace_callback('/_[a-zA-Z]/', function ($matches) {
                 return strtoupper($matches[0][1]);
             }, 'get_' . $contextName . '_context');
 
-            $this->assertNotSame($event, $eventArg);
             $this->assertEquals($expectedData, $eventArg->$method());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ContextInterfaceMiddleware($context, $contextName);
@@ -52,7 +51,7 @@ class ContextInterfaceMiddlewareTest extends TestCase
             $contextName . '_context' => $payloadData,
         ]);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function invokeDataProvider()

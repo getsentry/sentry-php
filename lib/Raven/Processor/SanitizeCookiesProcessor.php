@@ -75,7 +75,7 @@ final class SanitizeCookiesProcessor implements ProcessorInterface
 
         unset($request['headers']['cookie']);
 
-        return $event->withRequest($request);
+        return $event->setRequest($request);
     }
 
     /**

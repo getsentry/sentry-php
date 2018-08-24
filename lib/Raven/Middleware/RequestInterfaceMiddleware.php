@@ -54,7 +54,7 @@ final class RequestInterfaceMiddleware
             $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
         }
 
-        $event = $event->withRequest($requestData);
+        $event->setRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }

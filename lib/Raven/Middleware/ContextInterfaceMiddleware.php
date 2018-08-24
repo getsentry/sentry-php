@@ -63,19 +63,19 @@ final class ContextInterfaceMiddleware
 
         switch ($this->contextName) {
             case Context::CONTEXT_USER:
-                $event = $event->withUserContext($context, false);
+                $event->setUserContext($context, false);
                 break;
             case Context::CONTEXT_RUNTIME:
-                $event = $event->withRuntimeContext($context, false);
+                $event->setRuntimeContext($context, false);
                 break;
             case Context::CONTEXT_TAGS:
-                $event = $event->withTagsContext($context, false);
+                $event->setTagsContext($context, false);
                 break;
             case Context::CONTEXT_EXTRA:
-                $event = $event->withExtraContext($context, false);
+                $event->setExtraContext($context, false);
                 break;
             case Context::CONTEXT_SERVER_OS:
-                $event = $event->withServerOsContext($context, false);
+                $event->setServerOsContext($context, false);
                 break;
             default:
                 throw new \RuntimeException(sprintf('The "%s" context is not supported.', $this->contextName));

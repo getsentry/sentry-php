@@ -102,7 +102,7 @@ class EventTest extends TestCase
     public function testToArrayWithMessage()
     {
         $event = Event::create($this->configuration)
-            ->withMessage('foo bar');
+            ->setMessage('foo bar');
 
         $data = $event->toArray();
 
@@ -119,7 +119,7 @@ class EventTest extends TestCase
         ];
 
         $event = Event::create($this->configuration)
-            ->withMessage('foo %s', ['bar']);
+            ->setMessage('foo %s', ['bar']);
 
         $data = $event->toArray();
 
@@ -137,7 +137,7 @@ class EventTest extends TestCase
         $event = new Event($this->configuration);
 
         foreach ($breadcrumbs as $breadcrumb) {
-            $event = $event->withBreadcrumb($breadcrumb);
+            $event->setBreadcrumb($breadcrumb);
         }
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
@@ -154,26 +154,13 @@ class EventTest extends TestCase
     public function testGettersAndSetters($propertyName, $propertyValue, $expectedValue)
     {
         $getterMethod = 'get' . ucfirst($propertyName);
-        $setterMethod = 'with' . ucfirst($propertyName);
+        $setterMethod = 'set' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
-        $newEvent = \call_user_func([$event, $setterMethod], \call_user_func([$event, $getterMethod]));
+        $event->$setterMethod($propertyValue);
 
-        $this->assertSame($event, $newEvent);
-
-        $newEvent = \call_user_func([$event, $setterMethod], $propertyValue);
-
-        $this->assertNotSame($event, $newEvent);
-
-        $value = \call_user_func([$event, $getterMethod]);
-        $newValue = \call_user_func([$newEvent, $getterMethod]);
-
-        $this->assertNotSame($value, $newValue);
-        $this->assertSame($newValue, $propertyValue);
-
-        $data = $newEvent->toArray();
-
-        $this->assertArraySubset($expectedValue, $data);
+        $this->assertSame($event->$getterMethod(), $propertyValue);
+        $this->assertArraySubset($expectedValue, $event->toArray());
     }
 
     public function gettersAndSettersDataProvider()

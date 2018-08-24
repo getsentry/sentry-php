@@ -44,18 +44,18 @@ class SanitizeDataProcessorTest extends TestCase
         $event = new Event($this->client->getConfig());
 
         if (isset($inputData['request'])) {
-            $event = $event->withRequest($inputData['request']);
+            $event->setRequest($inputData['request']);
         }
 
         if (isset($inputData['extra_context'])) {
-            $event = $event->withExtraContext($inputData['extra_context']);
+            $event->setExtraContext($inputData['extra_context']);
         }
 
         if (isset($inputData['exception'])) {
             // We must convert the backtrace to a Stacktrace instance here because
             // PHPUnit executes the data provider before the setUp method and so
             // the client instance cannot be accessed from there
-            $event = $event->withException($this->convertExceptionValuesToStacktrace($expectedData['exception']));
+            $event->setException($this->convertExceptionValuesToStacktrace($expectedData['exception']));
         }
 
         $event = $this->processor->process($event);

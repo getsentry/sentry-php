@@ -22,7 +22,7 @@ class UserInterfaceMiddlewareTest extends TestCase
     public function testInvoke()
     {
         $event = new Event(new Configuration());
-        $event = $event->withUserContext(['foo' => 'bar']);
+        $event->setUserContext(['foo' => 'bar']);
 
         $invokationCount = 0;
         $callback = function (Event $eventArg) use ($event, &$invokationCount) {
@@ -40,22 +40,21 @@ class UserInterfaceMiddlewareTest extends TestCase
     public function testInvokeWithRequest()
     {
         $event = new Event(new Configuration());
-        $event = $event->withUserContext(['foo' => 'bar']);
+        $event->setUserContext(['foo' => 'bar']);
 
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $eventArg->getUserContext());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new UserInterfaceMiddleware();
         $middleware($event, $callback, $request);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 }

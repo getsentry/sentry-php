@@ -38,6 +38,6 @@ final class SanitizeStacktraceProcessor implements ProcessorInterface
             $frame->setPostContext(null);
         }
 
-        return $event->withStacktrace($stacktrace);
+        return $event->setStacktrace($stacktrace);
     }
 }

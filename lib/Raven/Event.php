@@ -191,16 +191,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withLevel($level)
+    public function setLevel($level)
     {
-        if ($level === $this->level) {
-            return $this;
-        }
+        $this->level = $level;
 
-        $new = clone $this;
-        $new->level = $level;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -220,16 +215,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withLogger($logger)
+    public function setLogger($logger)
     {
-        if ($logger === $this->logger) {
-            return $this;
-        }
+        $this->logger = $logger;
 
-        $new = clone $this;
-        $new->logger = $logger;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -248,19 +238,10 @@ final class Event implements \JsonSerializable
      * exception.
      *
      * @param string $transaction The transaction name
-     *
-     * @return static
      */
-    public function withTransaction($transaction)
+    public function setTransaction($transaction)
     {
-        if ($transaction === $this->transaction) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->transaction = $transaction;
-
-        return $new;
+        $this->transaction = $transaction;
     }
 
     /**
@@ -280,16 +261,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withServerName($serverName)
+    public function setServerName($serverName)
     {
-        if ($serverName === $this->serverName) {
-            return $this;
-        }
+        $this->serverName = $serverName;
 
-        $new = clone $this;
-        $new->serverName = $serverName;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -309,16 +285,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withRelease($release)
+    public function setRelease($release)
     {
-        if ($release === $this->release) {
-            return $this;
-        }
+        $this->release = $release;
 
-        $new = clone $this;
-        $new->release = $release;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -349,17 +320,12 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withMessage($message, array $params = [])
+    public function setMessage($message, array $params = [])
     {
-        if ($message === $this->message && $params === $this->messageParams) {
-            return $this;
-        }
+        $this->message = $message;
+        $this->messageParams = $params;
 
-        $new = clone $this;
-        $new->message = $message;
-        $new->messageParams = $params;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -379,16 +345,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withModules(array $modules)
+    public function setModules(array $modules)
     {
-        if ($modules === $this->modules) {
-            return $this;
-        }
+        $this->modules = $modules;
 
-        $new = clone $this;
-        $new->modules = $modules;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -408,16 +369,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withRequest(array $request)
+    public function setRequest(array $request)
     {
-        if ($request === $this->request) {
-            return $this;
-        }
+        $this->request = $request;
 
-        $new = clone $this;
-        $new->request = $request;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -438,16 +394,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withExtraContext(array $extraContext, $replace = true)
+    public function setExtraContext(array $extraContext, $replace = true)
     {
-        if ($extraContext === $this->extraContext) {
-            return $this;
-        }
+        $this->extraContext = $replace ? $extraContext : array_merge($this->extraContext, $extraContext);
 
-        $new = clone $this;
-        $new->extraContext = $replace ? $extraContext : array_merge($this->extraContext, $extraContext);
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -468,16 +419,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withTagsContext(array $tagsContext, $replace = true)
+    public function setTagsContext(array $tagsContext, $replace = true)
     {
-        if ($tagsContext === $this->tagsContext) {
-            return $this;
-        }
+        $this->tagsContext = $replace ? $tagsContext : array_merge($this->tagsContext, $tagsContext);
 
-        $new = clone $this;
-        $new->tagsContext = $replace ? $tagsContext : array_merge($this->tagsContext, $tagsContext);
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -498,16 +444,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withUserContext(array $userContext, $replace = true)
+    public function setUserContext(array $userContext, $replace = true)
     {
-        if ($userContext === $this->userContext) {
-            return $this;
-        }
+        $this->userContext = $replace ? $userContext : array_merge($this->userContext, $userContext);
 
-        $new = clone $this;
-        $new->userContext = $replace ? $userContext : array_merge($this->userContext, $userContext);
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -528,16 +469,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withServerOsContext(array $serverOsContext, $replace = true)
+    public function setServerOsContext(array $serverOsContext, $replace = true)
     {
-        if ($serverOsContext === $this->serverOsContext) {
-            return $this;
-        }
+        $this->serverOsContext = $replace ? $serverOsContext : array_merge($this->serverOsContext, $serverOsContext);
 
-        $new = clone $this;
-        $new->serverOsContext = $replace ? $serverOsContext : array_merge($this->serverOsContext, $serverOsContext);
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -558,16 +494,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withRuntimeContext(array $runtimeContext, $replace = true)
+    public function setRuntimeContext(array $runtimeContext, $replace = true)
     {
-        if ($runtimeContext === $this->runtimeContext) {
-            return $this;
-        }
+        $this->runtimeContext = $replace ? $runtimeContext : array_merge($this->runtimeContext, $runtimeContext);
 
-        $new = clone $this;
-        $new->runtimeContext = $replace ? $runtimeContext : array_merge($this->runtimeContext, $runtimeContext);
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -589,16 +520,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withFingerprint(array $fingerprint)
+    public function setFingerprint(array $fingerprint)
     {
-        if ($fingerprint === $this->fingerprint) {
-            return $this;
-        }
+        $this->fingerprint = $fingerprint;
 
-        $new = clone $this;
-        $new->fingerprint = $fingerprint;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -618,16 +544,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withEnvironment($environment)
+    public function setEnvironment($environment)
     {
-        if ($environment === $this->environment) {
-            return $this;
-        }
+        $this->environment = $environment;
 
-        $new = clone $this;
-        $new->environment = $environment;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -647,12 +568,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withBreadcrumb(Breadcrumb $breadcrumb)
+    public function setBreadcrumb(Breadcrumb $breadcrumb)
     {
-        $new = clone $this;
-        $new->breadcrumbs[] = $breadcrumb;
+        $this->breadcrumbs[] = $breadcrumb;
 
-        return $new;
+        return $this;
     }
 
     /**
@@ -672,16 +592,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withException(array $exception)
+    public function setException(array $exception)
     {
-        if ($exception === $this->exception) {
-            return $this;
-        }
+        $this->exception = $exception;
 
-        $new = clone $this;
-        $new->exception = $exception;
-
-        return $new;
+        return $this;
     }
 
     /**
@@ -701,16 +616,11 @@ final class Event implements \JsonSerializable
      *
      * @return static
      */
-    public function withStacktrace(Stacktrace $stacktrace)
+    public function setStacktrace(Stacktrace $stacktrace)
     {
-        if ($stacktrace === $this->stacktrace) {
-            return $this;
-        }
+        $this->stacktrace = $stacktrace;
 
-        $new = clone $this;
-        $new->stacktrace = $stacktrace;
-
-        return $new;
+        return $this;
     }
 
     /**

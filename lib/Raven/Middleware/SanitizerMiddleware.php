@@ -52,27 +52,27 @@ final class SanitizerMiddleware
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         if (!empty($request = $event->getRequest())) {
-            $event = $event->withRequest($this->serializer->serialize($request, 5));
+            $event->setRequest($this->serializer->serialize($request, 5));
         }
 
         if (!empty($userContext = $event->getUserContext())) {
-            $event = $event->withUserContext($this->serializer->serialize($userContext));
+            $event->setUserContext($this->serializer->serialize($userContext));
         }
 
         if (!empty($runtimeContext = $event->getRuntimeContext())) {
-            $event = $event->withRuntimeContext($this->serializer->serialize($runtimeContext));
+            $event->setRuntimeContext($this->serializer->serialize($runtimeContext));
         }
 
         if (!empty($serverOsContext = $event->getServerOsContext())) {
-            $event = $event->withServerOsContext($this->serializer->serialize($serverOsContext));
+            $event->setServerOsContext($this->serializer->serialize($serverOsContext));
         }
 
         if (!empty($extraContext = $event->getExtraContext())) {
-            $event = $event->withExtraContext($this->serializer->serialize($extraContext));
+            $event->setExtraContext($this->serializer->serialize($extraContext));
         }
 
         if (!empty($tagsContext = $event->getTagsContext())) {
-            $event = $event->withTagsContext($this->serializer->serialize($tagsContext));
+            $event->setTagsContext($this->serializer->serialize($tagsContext));
         }
 
         return $next($event, $request, $exception, $payload);

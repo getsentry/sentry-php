@@ -156,20 +156,20 @@ final class SanitizeDataProcessor implements ProcessorInterface
         $extraContext = $event->getExtraContext();
 
         if (!empty($exception)) {
-            $event = $event->withException($this->sanitizeException($exception));
+            $event->setException($this->sanitizeException($exception));
         }
 
         if ($stacktrace) {
-            $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
+            $event->setStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
         if (!empty($request)) {
-            $event = $event->withRequest($this->sanitizeHttp($request));
+            $event->setRequest($this->sanitizeHttp($request));
         }
 
         if (!empty($extraContext)) {
             $this->sanitize($extraContext);
-            $event = $event->withExtraContext($extraContext);
+            $event->setExtraContext($extraContext);
         }
 
         return $event;
