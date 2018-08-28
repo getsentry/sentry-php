@@ -9,12 +9,10 @@ class PHPVersionTest extends TestCase
 {
     /**
      * @dataProvider versionProvider
-     * @param $expected
-     * @param $rawVersion
      */
     public function testGetParsed($expected, $rawVersion)
     {
-        $this->assertSame($expected, PHPVersion::getParsed($rawVersion));
+        $this->assertSame($expected, PHPVersion::parseVersion($rawVersion));
     }
 
     public function versionProvider()

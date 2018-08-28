@@ -155,7 +155,7 @@ class RuntimeContext extends Context
     {
         $resolver->setDefaults([
             'name' => 'php',
-            'version' => PHPVersion::getParsed(),
+            'version' => PHPVersion::parseVersion(),
         ]);
 
         $resolver->setAllowedTypes('name', 'string');

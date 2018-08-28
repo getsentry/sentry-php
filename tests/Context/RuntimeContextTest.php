@@ -89,7 +89,7 @@ class RuntimeContextTest extends TestCase
                 [],
                 [
                     'name' => 'php',
-                    'version' => PHPVersion::getParsed(),
+                    'version' => PHPVersion::parseVersion(),
                 ],
                 null,
                 null,
@@ -100,7 +100,7 @@ class RuntimeContextTest extends TestCase
                 ],
                 [
                     'name' => 'foo',
-                    'version' => PHPVersion::getParsed(),
+                    'version' => PHPVersion::parseVersion(),
                 ],
                 null,
                 null,
