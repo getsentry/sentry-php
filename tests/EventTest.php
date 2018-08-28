@@ -157,16 +157,16 @@ class EventTest extends TestCase
         $setterMethod = 'with' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
-        $newEvent = call_user_func([$event, $setterMethod], call_user_func([$event, $getterMethod]));
+        $newEvent = \call_user_func([$event, $setterMethod], \call_user_func([$event, $getterMethod]));
 
         $this->assertSame($event, $newEvent);
 
-        $newEvent = call_user_func([$event, $setterMethod], $propertyValue);
+        $newEvent = \call_user_func([$event, $setterMethod], $propertyValue);
 
         $this->assertNotSame($event, $newEvent);
 
-        $value = call_user_func([$event, $getterMethod]);
-        $newValue = call_user_func([$newEvent, $getterMethod]);
+        $value = \call_user_func([$event, $getterMethod]);
+        $newValue = \call_user_func([$newEvent, $getterMethod]);
 
         $this->assertNotSame($value, $newValue);
         $this->assertSame($newValue, $propertyValue);
@@ -181,7 +181,7 @@ class EventTest extends TestCase
         return [
             ['level', 'info', ['level' => 'info']],
             ['logger', 'ruby', ['logger' => 'ruby']],
-            ['culprit', 'foo', ['culprit' => 'foo']],
+            ['transaction', 'foo', ['transaction' => 'foo']],
             ['serverName', 'local.host', ['server_name' => 'local.host']],
             ['release', '0.0.1', ['release' => '0.0.1']],
             ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], ['modules' => ['foo' => '0.0.1', 'bar' => '0.0.2']]],

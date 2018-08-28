@@ -352,10 +352,10 @@ class Client implements ClientInterface
     {
         $event = new Event($this->config);
 
-        if (isset($payload['culprit'])) {
-            $event = $event->withCulprit($payload['culprit']);
+        if (isset($payload['transaction'])) {
+            $event = $event->withTransaction($payload['transaction']);
         } else {
-            $event = $event->withCulprit($this->transactionStack->peek());
+            $event = $event->withTransaction($this->transactionStack->peek());
         }
 
         if (isset($payload['logger'])) {
@@ -398,7 +398,7 @@ class Client implements ClientInterface
      */
     public function translateSeverity($severity)
     {
-        if (is_array($this->severityMap) && isset($this->severityMap[$severity])) {
+        if (\is_array($this->severityMap) && isset($this->severityMap[$severity])) {
             return $this->severityMap[$severity];
         }
 

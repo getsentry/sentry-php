@@ -29,7 +29,7 @@ final class RemoveHttpBodyProcessor implements ProcessorInterface
     {
         $request = $event->getRequest();
 
-        if (isset($request['method']) && in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        if (isset($request['method']) && \in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
             $request['data'] = self::STRING_MASK;
         }
 

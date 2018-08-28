@@ -233,7 +233,7 @@ class ClientTest extends TestCase
             ->getClient();
 
         $inputData = [
-            'culprit' => 'foo bar',
+            'transaction' => 'foo bar',
             'level' => Client::LEVEL_DEBUG,
             'logger' => 'foo',
             'tags_context' => ['foo', 'bar'],
@@ -246,7 +246,7 @@ class ClientTest extends TestCase
         $event = $client->getLastEvent();
 
         $this->assertEquals(str_replace('-', '', $event->getId()->toString()), $eventId);
-        $this->assertEquals($inputData['culprit'], $event->getCulprit());
+        $this->assertEquals($inputData['transaction'], $event->getTransaction());
         $this->assertEquals($inputData['level'], $event->getLevel());
         $this->assertEquals($inputData['logger'], $event->getLogger());
         $this->assertEquals($inputData['tags_context'], $event->getTagsContext());
@@ -355,16 +355,16 @@ class ClientTest extends TestCase
             $this->assertTrue($actual_value);
         } elseif (false === $expected_value) {
             $this->assertFalse($actual_value);
-        } elseif (is_string($expected_value) or is_int($expected_value) or is_float($expected_value)) {
+        } elseif (\is_string($expected_value) or \is_int($expected_value) or \is_float($expected_value)) {
             $this->assertEquals($expected_value, $actual_value);
-        } elseif (is_array($expected_value)) {
+        } elseif (\is_array($expected_value)) {
             $this->assertInternalType('array', $actual_value);
-            $this->assertEquals(count($expected_value), count($actual_value));
+            $this->assertEquals(\count($expected_value), \count($actual_value));
             foreach ($expected_value as $key => $value) {
                 $this->assertArrayHasKey($key, $actual_value);
                 $this->assertMixedValueAndArray($value, $actual_value[$key]);
             }
-        } elseif (is_callable($expected_value) or is_object($expected_value)) {
+        } elseif (\is_callable($expected_value) or \is_object($expected_value)) {
             $this->assertEquals(spl_object_hash($expected_value), spl_object_hash($actual_value));
         }
     }

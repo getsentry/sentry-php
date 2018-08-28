@@ -85,7 +85,7 @@ abstract class AbstractErrorHandler
      */
     protected function __construct(ClientInterface $client, $reservedMemorySize = 10240)
     {
-        if (!is_int($reservedMemorySize) || $reservedMemorySize <= 0) {
+        if (!\is_int($reservedMemorySize) || $reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The value of the $reservedMemorySize argument must be an integer greater than 0.');
         }
 
@@ -175,7 +175,7 @@ abstract class AbstractErrorHandler
         }
 
         if (null !== $this->previousErrorHandler) {
-            return call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
+            return \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
         }
 
         return $shouldReportError;
@@ -274,7 +274,7 @@ abstract class AbstractErrorHandler
         }
 
         $handler = set_error_handler('var_dump');
-        $handler = is_array($handler) ? $handler[0] : null;
+        $handler = \is_array($handler) ? $handler[0] : null;
 
         restore_error_handler();
 
@@ -304,9 +304,9 @@ abstract class AbstractErrorHandler
         $cleanedBacktrace = $backtrace;
         $index = 0;
 
-        while ($index < count($backtrace)) {
+        while ($index < \count($backtrace)) {
             if (isset($backtrace[$index]['file'], $backtrace[$index]['line']) && $backtrace[$index]['line'] === $line && $backtrace[$index]['file'] === $file) {
-                $cleanedBacktrace = array_slice($cleanedBacktrace, 1 + $index);
+                $cleanedBacktrace = \array_slice($cleanedBacktrace, 1 + $index);
 
                 break;
             }

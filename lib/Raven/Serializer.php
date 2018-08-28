@@ -83,7 +83,7 @@ class Serializer
     public function serialize($value, $max_depth = 3, $_depth = 0)
     {
         if ($_depth < $max_depth) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $new = [];
                 foreach ($value as $k => $v) {
                     $new[$this->serializeValue($k)] = $this->serialize($v, $max_depth, $_depth + 1);
@@ -92,12 +92,12 @@ class Serializer
                 return $new;
             }
 
-            if (is_object($value)) {
-                if (is_callable($value)) {
+            if (\is_object($value)) {
+                if (\is_callable($value)) {
                     return $this->serializeCallable($value);
                 }
 
-                if ($this->_all_object_serialize || ('stdClass' === get_class($value))) {
+                if ($this->_all_object_serialize || ('stdClass' === \get_class($value))) {
                     return $this->serializeObject($value, $max_depth, $_depth, []);
                 }
             }
@@ -116,13 +116,13 @@ class Serializer
      */
     public function serializeObject($object, $max_depth = 3, $_depth = 0, $hashes = [])
     {
-        if (($_depth >= $max_depth) or in_array(spl_object_hash($object), $hashes)) {
+        if (($_depth >= $max_depth) or \in_array(spl_object_hash($object), $hashes)) {
             return $this->serializeValue($object);
         }
         $hashes[] = spl_object_hash($object);
         $return = [];
         foreach ($object as $key => &$value) {
-            if (is_object($value)) {
+            if (\is_object($value)) {
                 $new_value = $this->serializeObject($value, $max_depth, $_depth + 1, $hashes);
             } else {
                 $new_value = $this->serialize($value, $max_depth, $_depth + 1);
@@ -137,7 +137,7 @@ class Serializer
     {
         $value = (string) $value;
 
-        if (extension_loaded('mbstring')) {
+        if (\extension_loaded('mbstring')) {
             // we always guarantee this is coerced, even if we can't detect encoding
             if ($currentEncoding = mb_detect_encoding($value, $this->mb_detect_order)) {
                 $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
@@ -149,7 +149,7 @@ class Serializer
                 $value = mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
-            if ($this->messageLimit !== 0 && strlen($value) > $this->messageLimit) {
+            if ($this->messageLimit !== 0 && \strlen($value) > $this->messageLimit) {
                 $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
             }
         }
@@ -164,14 +164,14 @@ class Serializer
      */
     protected function serializeValue($value)
     {
-        if ((null === $value) || is_bool($value) || is_float($value) || is_int($value)) {
+        if ((null === $value) || \is_bool($value) || \is_float($value) || \is_int($value)) {
             return $value;
-        } elseif (is_object($value) || 'object' == gettype($value)) {
-            return 'Object ' . get_class($value);
-        } elseif (is_resource($value)) {
+        } elseif (\is_object($value) || 'object' == \gettype($value)) {
+            return 'Object ' . \get_class($value);
+        } elseif (\is_resource($value)) {
             return 'Resource ' . get_resource_type($value);
-        } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+        } elseif (\is_array($value)) {
+            return 'Array of length ' . \count($value);
         } else {
             return $this->serializeString($value);
         }
@@ -184,7 +184,7 @@ class Serializer
      */
     public function serializeCallable($callable)
     {
-        if (is_array($callable)) {
+        if (\is_array($callable)) {
             $reflection = new \ReflectionMethod($callable[0], $callable[1]);
             $class = $reflection->getDeclaringClass();
         } else {

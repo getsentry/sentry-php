@@ -259,9 +259,9 @@ abstract class AbstractSerializerTest extends TestCase
         $result1 = $serializer->serialize($object, 3);
         $result2 = $serializer->serializeObject($object, 3);
         $this->assertEquals($expectedResult, $result1);
-        $this->assertContains(gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']);
+        $this->assertContains(\gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']);
         $this->assertEquals($expectedResult, $result2);
-        $this->assertContains(gettype($result2), ['array', 'string']);
+        $this->assertContains(\gettype($result2), ['array', 'string']);
     }
 
     public function testRecursionMaxDepthForObject()
@@ -313,7 +313,7 @@ abstract class AbstractSerializerTest extends TestCase
             $input = pack('H*', $key);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);
-            if (function_exists('mb_detect_encoding')) {
+            if (\function_exists('mb_detect_encoding')) {
                 $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
             }
         }
@@ -334,7 +334,7 @@ abstract class AbstractSerializerTest extends TestCase
             $input = str_repeat('x', $length);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);
-            $this->assertLessThanOrEqual(1024, strlen($result));
+            $this->assertLessThanOrEqual(1024, \strlen($result));
         }
     }
 
@@ -347,7 +347,7 @@ abstract class AbstractSerializerTest extends TestCase
             $input = str_repeat('x', $length);
             $result = $serializer->serialize($input);
             $this->assertInternalType('string', $result);
-            $this->assertLessThanOrEqual(500, strlen($result));
+            $this->assertLessThanOrEqual(500, \strlen($result));
         }
     }
 
@@ -391,7 +391,7 @@ abstract class AbstractSerializerTest extends TestCase
 
     public function testClippingUTF8Characters()
     {
-        if (!extension_loaded('mbstring')) {
+        if (!\extension_loaded('mbstring')) {
             $this->markTestSkipped('mbstring extension is not enabled.');
         }
 
@@ -535,7 +535,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $actual2 = $serializer->serialize($callable);
         $actual3 = $serializer->serialize([$callable]);
-        if (is_array($callable)) {
+        if (\is_array($callable)) {
             $this->assertInternalType('array', $actual2);
             $this->assertInternalType('array', $actual3);
         } else {

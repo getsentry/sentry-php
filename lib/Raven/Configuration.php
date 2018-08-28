@@ -518,7 +518,7 @@ class Configuration
     {
         $result = true;
 
-        if (!empty($this->options['environments']) && !in_array($this->options['current_environment'], $this->options['environments'])) {
+        if (!empty($this->options['environments']) && !\in_array($this->options['current_environment'], $this->options['environments'])) {
             $result = false;
         }
 
@@ -669,7 +669,7 @@ class Configuration
                 return false;
             }
 
-            if (!in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
+            if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
                 return false;
             }
 

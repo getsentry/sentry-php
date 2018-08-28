@@ -53,7 +53,7 @@ final class SanitizeHttpHeadersProcessor implements ProcessorInterface
         }
 
         foreach ($request['headers'] as $header => &$value) {
-            if (in_array($header, $this->options['sanitize_http_headers'], true)) {
+            if (\in_array($header, $this->options['sanitize_http_headers'], true)) {
                 $value = self::STRING_MASK;
             }
         }
