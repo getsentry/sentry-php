@@ -145,11 +145,11 @@ class Serializer
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
 
-            if ($this->messageLimit !== 0 && mb_strlen($value) > $this->messageLimit) {
+            if (0 !== $this->messageLimit && mb_strlen($value) > $this->messageLimit) {
                 $value = mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
-            if ($this->messageLimit !== 0 && \strlen($value) > $this->messageLimit) {
+            if (0 !== $this->messageLimit && \strlen($value) > $this->messageLimit) {
                 $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
             }
         }
