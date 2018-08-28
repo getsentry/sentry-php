@@ -62,7 +62,7 @@ final class TransactionStack implements \Countable
     public function push(...$values)
     {
         foreach ($values as $value) {
-            if (!is_string($value)) {
+            if (!\is_string($value)) {
                 throw new \InvalidArgumentException(sprintf('The $values argument must contain string values only.'));
             }
 
@@ -81,7 +81,7 @@ final class TransactionStack implements \Countable
             return null;
         }
 
-        return $this->transactions[count($this->transactions) - 1];
+        return $this->transactions[\count($this->transactions) - 1];
     }
 
     /**
@@ -103,6 +103,6 @@ final class TransactionStack implements \Countable
      */
     public function count()
     {
-        return count($this->transactions);
+        return \count($this->transactions);
     }
 }

@@ -157,16 +157,16 @@ class EventTest extends TestCase
         $setterMethod = 'with' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
-        $newEvent = call_user_func([$event, $setterMethod], call_user_func([$event, $getterMethod]));
+        $newEvent = \call_user_func([$event, $setterMethod], \call_user_func([$event, $getterMethod]));
 
         $this->assertSame($event, $newEvent);
 
-        $newEvent = call_user_func([$event, $setterMethod], $propertyValue);
+        $newEvent = \call_user_func([$event, $setterMethod], $propertyValue);
 
         $this->assertNotSame($event, $newEvent);
 
-        $value = call_user_func([$event, $getterMethod]);
-        $newValue = call_user_func([$newEvent, $getterMethod]);
+        $value = \call_user_func([$event, $getterMethod]);
+        $newValue = \call_user_func([$newEvent, $getterMethod]);
 
         $this->assertNotSame($value, $newValue);
         $this->assertSame($newValue, $propertyValue);

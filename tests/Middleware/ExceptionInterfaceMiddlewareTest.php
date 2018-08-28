@@ -222,7 +222,7 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             /** @var \Raven\Frame $frame */
             foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
-                if (null !== $frame->getPreContext() && in_array('// äöü', $frame->getPreContext(), true)) {
+                if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
                     $latin1StringFound = true;
 
                     break;

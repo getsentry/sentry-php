@@ -67,7 +67,7 @@ final class ExceptionInterfaceMiddleware
                 }
 
                 $data = [
-                    'type' => get_class($currentException),
+                    'type' => \get_class($currentException),
                     'value' => $this->client->getSerializer()->serialize($currentException->getMessage()),
                 ];
 

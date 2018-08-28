@@ -65,7 +65,7 @@ final class SanitizeCookiesProcessor implements ProcessorInterface
             }
 
             foreach ($request['cookies'] as $name => $value) {
-                if (!in_array($name, $cookiesToSanitize)) {
+                if (!\in_array($name, $cookiesToSanitize)) {
                     continue;
                 }
 

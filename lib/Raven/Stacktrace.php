@@ -179,7 +179,7 @@ class Stacktrace implements \JsonSerializable
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->reprSerializer->serialize($argumentValue);
 
-                if (is_string($argumentValue) || is_numeric($argumentValue)) {
+                if (\is_string($argumentValue) || is_numeric($argumentValue)) {
                     $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
@@ -297,7 +297,7 @@ class Stacktrace implements \JsonSerializable
     {
         foreach ($this->client->getConfig()->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
-                return substr($filePath, strlen($prefix));
+                return substr($filePath, \strlen($prefix));
             }
         }
 
@@ -320,7 +320,7 @@ class Stacktrace implements \JsonSerializable
 
         $result = [];
 
-        for ($i = 0; $i < count($frame['args']); ++$i) {
+        for ($i = 0; $i < \count($frame['args']); ++$i) {
             $result['param' . ($i + 1)] = self::serializeArgument($frame['args'][$i], $maxValueLength);
         }
 
@@ -359,7 +359,7 @@ class Stacktrace implements \JsonSerializable
             return self::getFrameArgumentsValues($frame, $maxValueLength);
         }
 
-        if (in_array($frame['function'], static::$importStatements, true)) {
+        if (\in_array($frame['function'], static::$importStatements, true)) {
             if (empty($frame['args'])) {
                 return [];
             }
@@ -378,7 +378,7 @@ class Stacktrace implements \JsonSerializable
                 } else {
                     $reflection = new \ReflectionMethod($frame['class'], '__call');
                 }
-            } elseif (function_exists($frame['function'])) {
+            } elseif (\function_exists($frame['function'])) {
                 $reflection = new \ReflectionFunction($frame['function']);
             } else {
                 return self::getFrameArgumentsValues($frame, $maxValueLength);
@@ -406,11 +406,11 @@ class Stacktrace implements \JsonSerializable
 
     protected static function serializeArgument($arg, $maxValueLength)
     {
-        if (is_array($arg)) {
+        if (\is_array($arg)) {
             $result = [];
 
             foreach ($arg as $key => $value) {
-                if (is_string($value) || is_numeric($value)) {
+                if (\is_string($value) || is_numeric($value)) {
                     $result[$key] = substr($value, 0, $maxValueLength);
                 } else {
                     $result[$key] = $value;
@@ -418,7 +418,7 @@ class Stacktrace implements \JsonSerializable
             }
 
             return $result;
-        } elseif (is_string($arg) || is_numeric($arg)) {
+        } elseif (\is_string($arg) || is_numeric($arg)) {
             return substr($arg, 0, $maxValueLength);
         } else {
             return $arg;

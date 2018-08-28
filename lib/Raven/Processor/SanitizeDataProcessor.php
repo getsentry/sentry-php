@@ -72,7 +72,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
     {
         foreach ($data as $key => &$item) {
             if (preg_match($this->options['fields_re'], $key)) {
-                if (is_array($item)) {
+                if (\is_array($item)) {
                     array_walk_recursive($item, function (&$value) {
                         $value = self::STRING_MASK;
                     });
@@ -83,7 +83,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
                 $item = self::STRING_MASK;
             }
 
-            if (is_array($item)) {
+            if (\is_array($item)) {
                 $this->sanitize($item);
 
                 break;
@@ -110,14 +110,14 @@ final class SanitizeDataProcessor implements ProcessorInterface
 
     public function sanitizeHttp(&$data)
     {
-        if (!empty($data['cookies']) && is_array($data['cookies'])) {
+        if (!empty($data['cookies']) && \is_array($data['cookies'])) {
             $cookies = &$data['cookies'];
             if (!empty($cookies[$this->options['session_cookie_name']])) {
                 $cookies[$this->options['session_cookie_name']] = self::STRING_MASK;
             }
         }
 
-        if (!empty($data['data']) && is_array($data['data'])) {
+        if (!empty($data['data']) && \is_array($data['data'])) {
             $this->sanitize($data['data']);
         }
 
