@@ -305,7 +305,7 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
         }
 
-        call_user_func_array([$this->configuration, $name], $arguments);
+        \call_user_func_array([$this->configuration, $name], $arguments);
 
         return $this;
     }

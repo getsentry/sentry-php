@@ -398,7 +398,7 @@ class Client implements ClientInterface
      */
     public function translateSeverity($severity)
     {
-        if (is_array($this->severityMap) && isset($this->severityMap[$severity])) {
+        if (\is_array($this->severityMap) && isset($this->severityMap[$severity])) {
             return $this->severityMap[$severity];
         }
 

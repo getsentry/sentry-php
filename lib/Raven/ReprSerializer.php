@@ -25,16 +25,16 @@ class ReprSerializer extends \Raven\Serializer
             return 'false';
         } elseif (true === $value) {
             return 'true';
-        } elseif (is_float($value) && (int) $value == $value) {
+        } elseif (\is_float($value) && (int) $value == $value) {
             return $value . '.0';
-        } elseif (is_int($value) || is_float($value)) {
+        } elseif (\is_int($value) || \is_float($value)) {
             return (string) $value;
-        } elseif (is_object($value) || 'object' == gettype($value)) {
-            return 'Object ' . get_class($value);
-        } elseif (is_resource($value)) {
+        } elseif (\is_object($value) || 'object' == \gettype($value)) {
+            return 'Object ' . \get_class($value);
+        } elseif (\is_resource($value)) {
             return 'Resource ' . get_resource_type($value);
-        } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+        } elseif (\is_array($value)) {
+            return 'Array of length ' . \count($value);
         } else {
             return $this->serializeString($value);
         }

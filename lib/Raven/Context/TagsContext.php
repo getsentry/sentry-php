@@ -29,7 +29,7 @@ class TagsContext extends Context
         }
 
         foreach ($data as $value) {
-            if (!is_string($value)) {
+            if (!\is_string($value)) {
                 throw new \InvalidArgumentException('The $data argument must contains a simple array of string values.');
             }
         }
@@ -43,7 +43,7 @@ class TagsContext extends Context
     public function setData(array $data)
     {
         foreach ($data as $value) {
-            if (!is_string($value)) {
+            if (!\is_string($value)) {
                 throw new \InvalidArgumentException('The $data argument must contains a simple array of string values.');
             }
         }
@@ -57,7 +57,7 @@ class TagsContext extends Context
     public function replaceData(array $data)
     {
         foreach ($data as $value) {
-            if (!is_string($value)) {
+            if (!\is_string($value)) {
                 throw new \InvalidArgumentException('The $data argument must contains a simple array of string values.');
             }
         }
@@ -70,7 +70,7 @@ class TagsContext extends Context
      */
     public function offsetSet($offset, $value)
     {
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             throw new \InvalidArgumentException('The $value argument must be a string.');
         }
 

@@ -82,7 +82,7 @@ final class Breadcrumb implements \JsonSerializable
      */
     public function __construct($level, $type, $category, $message = null, array $metadata = [])
     {
-        if (!in_array($level, self::getLevels(), true)) {
+        if (!\in_array($level, self::getLevels(), true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
         }
 
@@ -158,7 +158,7 @@ final class Breadcrumb implements \JsonSerializable
      */
     public function withLevel($level)
     {
-        if (!in_array($level, self::getLevels(), true)) {
+        if (!\in_array($level, self::getLevels(), true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
         }
 

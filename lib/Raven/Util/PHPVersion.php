@@ -8,11 +8,12 @@ class PHPVersion
 
     /**
      * @param string $version
+     *
      * @return string
      */
     public static function parseVersion($version = PHP_VERSION)
     {
-        if (! preg_match(self::VERSION_PARSING_REGEX, $version, $matches)) {
+        if (!preg_match(self::VERSION_PARSING_REGEX, $version, $matches)) {
             return $version;
         }
 
