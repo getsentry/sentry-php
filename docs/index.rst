@@ -29,7 +29,7 @@ once and reference it from anywhere you want to interface with Sentry:
 
 .. code-block:: php
 
-    $client = new \Raven\Client('___DSN___');
+    $client = new \Raven\Client('___PUBLIC_DSN___');
 
 Once you have the client you can either use it manually or enable the
 automatic error and exception capturing which is recomended:

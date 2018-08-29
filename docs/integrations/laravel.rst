@@ -51,7 +51,7 @@ Add your DSN to ``.env``:
 
 .. code-block:: bash
 
-    SENTRY_DSN=___DSN___
+    SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom
 error view in `resources/views/errors/500.blade.php`.
@@ -124,9 +124,11 @@ Laravel 4.x
 
 Install the ``sentry/sentry-laravel`` package:
 
+Laravel 4.x is supported until version 0.8.x.
+
 .. code-block:: bash
 
-    $ composer require sentry/sentry-laravel
+    $ composer require "sentry/sentry-laravel:0.8.*"
 
 Add the Sentry service provider and facade in ``config/app.php``:
 
@@ -155,7 +157,7 @@ Add your DSN to ``config/sentry.php``:
     <?php
 
     return array(
-        'dsn' => '___DSN___',
+        'dsn' => '___PUBLIC_DSN___',
 
         // ...
     );
@@ -206,7 +208,7 @@ Create the Sentry configuration file (``config/sentry.php``):
     <?php
 
     return array(
-        'dsn' => '___DSN___',
+        'dsn' => '___PUBLIC_DSN___',
 
         // capture release as git sha
         // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
@@ -283,7 +285,7 @@ The following settings are available for the client:
 
     .. code-block:: php
 
-        'dsn' => '___DSN___',
+        'dsn' => '___PUBLIC_DSN___',
 
 .. describe:: release
 
