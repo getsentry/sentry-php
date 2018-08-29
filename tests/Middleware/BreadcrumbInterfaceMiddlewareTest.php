@@ -33,17 +33,16 @@ class BreadcrumbInterfaceMiddlewareTest extends TestCase
         $configuration = new Configuration();
         $event = new Event($configuration);
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, $breadcrumb, $breadcrumb2, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($breadcrumb, $breadcrumb2, &$callbackInvoked) {
             $this->assertEquals([$breadcrumb, $breadcrumb2], $eventArg->getBreadcrumbs());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new BreadcrumbInterfaceMiddleware($recorder);
         $middleware($event, $callback);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 }

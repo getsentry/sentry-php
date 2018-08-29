@@ -249,9 +249,9 @@ class ClientTest extends TestCase
         $this->assertEquals($inputData['transaction'], $event->getTransaction());
         $this->assertEquals($inputData['level'], $event->getLevel());
         $this->assertEquals($inputData['logger'], $event->getLogger());
-        $this->assertEquals($inputData['tags_context'], $event->getTagsContext());
-        $this->assertEquals($inputData['extra_context'], $event->getExtraContext());
-        $this->assertEquals($inputData['user_context'], $event->getUserContext());
+        $this->assertEquals($inputData['tags_context'], $event->getTagsContext()->toArray());
+        $this->assertEquals($inputData['extra_context'], $event->getExtraContext()->toArray());
+        $this->assertEquals($inputData['user_context'], $event->getUserContext()->toArray());
     }
 
     public function testGetLastEvent()

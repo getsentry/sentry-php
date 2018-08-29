@@ -47,7 +47,7 @@ class SanitizeCookiesProcessorTest extends TestCase
     public function testProcess($options, $expectedData)
     {
         $event = new Event($this->client->getConfig());
-        $event = $event->withRequest([
+        $event->setRequest([
             'foo' => 'bar',
             'cookies' => [
                 'foo' => 'bar',

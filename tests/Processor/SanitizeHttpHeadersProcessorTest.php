@@ -43,7 +43,7 @@ class SanitizeHttpHeadersProcessorTest extends TestCase
     public function testProcess($inputData, $expectedData)
     {
         $event = new Event($this->client->getConfig());
-        $event = $event->withRequest($inputData);
+        $event->setRequest($inputData);
 
         $event = $this->processor->process($event);
 

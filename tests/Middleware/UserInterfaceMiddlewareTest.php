@@ -22,40 +22,39 @@ class UserInterfaceMiddlewareTest extends TestCase
     public function testInvoke()
     {
         $event = new Event(new Configuration());
-        $event = $event->withUserContext(['foo' => 'bar']);
+        $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertSame($event, $eventArg);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
+            $this->assertArrayNotHasKey('ip_address', $eventArg->getUserContext());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new UserInterfaceMiddleware();
         $middleware($event, $callback);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function testInvokeWithRequest()
     {
         $event = new Event(new Configuration());
-        $event = $event->withUserContext(['foo' => 'bar']);
+        $event->getUserContext()->setData(['foo' => 'bar']);
 
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-            $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $eventArg->getUserContext());
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
+            $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $eventArg->getUserContext()->toArray());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new UserInterfaceMiddleware();
         $middleware($event, $callback, $request);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 }

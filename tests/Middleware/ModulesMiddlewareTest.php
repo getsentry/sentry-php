@@ -24,27 +24,8 @@ class ModulesMiddlewareTest extends TestCase
         $event = new Event($configuration);
 
         $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
-            $this->assertNotSame($event, $eventArg);
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $eventArg->getModules());
-
-            $callbackInvoked = true;
-        };
-
-        $middleware = new ModulesMiddleware($configuration);
-        $middleware($event, $callback);
-
-        $this->assertTrue($callbackInvoked);
-    }
-
-    public function testInvokeDoesNothingWhenNoComposerLockFileExists()
-    {
-        $configuration = new Configuration(['project_root' => __DIR__]);
-        $event = new Event($configuration);
-
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
-            $this->assertSame($event, $eventArg);
 
             $callbackInvoked = true;
         };

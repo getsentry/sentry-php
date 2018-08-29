@@ -42,7 +42,7 @@ class SanitizeStacktraceProcessorTest extends TestCase
         $exception = new \Exception();
 
         $event = new Event($this->client->getConfig());
-        $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
+        $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
 
         $event = $this->processor->process($event);
 
@@ -59,7 +59,7 @@ class SanitizeStacktraceProcessorTest extends TestCase
         $exception2 = new \Exception('', 0, $exception1);
 
         $event = new Event($this->client->getConfig());
-        $event = $event->withStacktrace(Stacktrace::createFromBacktrace($this->client, $exception2->getTrace(), $exception2->getFile(), $exception2->getLine()));
+        $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception2->getTrace(), $exception2->getFile(), $exception2->getLine()));
 
         $event = $this->processor->process($event);
 
