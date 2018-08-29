@@ -62,7 +62,7 @@ final class ModulesMiddleware
                     $modules[$package->getName()] = $package->getVersion();
                 }
 
-                $event = $event->withModules($modules);
+                $event->setModules($modules);
             }
         }
 

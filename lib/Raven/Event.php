@@ -14,6 +14,10 @@ namespace Raven;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Context\Context;
+use Raven\Context\RuntimeContext;
+use Raven\Context\ServerOsContext;
+use Raven\Context\TagsContext;
 
 /**
  * This is the base class for classes containing event data.
@@ -45,7 +49,7 @@ final class Event implements \JsonSerializable
     /**
      * @var string the name of the transaction (or culprit) which caused this exception
      */
-    private $culprit;
+    private $transaction;
 
     /**
      * @var string The name of the server (e.g. the host name)
@@ -83,29 +87,29 @@ final class Event implements \JsonSerializable
     private $request = [];
 
     /**
-     * @var array The server OS context data
+     * @var ServerOsContext The server OS context data
      */
-    private $serverOsContext = [];
+    private $serverOsContext;
 
     /**
-     * @var array The runtime context data
+     * @var RuntimeContext The runtime context data
      */
-    private $runtimeContext = [];
+    private $runtimeContext;
 
     /**
-     * @var array The user context data
+     * @var Context The user context data
      */
-    private $userContext = [];
+    private $userContext;
 
     /**
-     * @var array An arbitrary mapping of additional metadata
+     * @var Context An arbitrary mapping of additional metadata
      */
-    private $extraContext = [];
+    private $extraContext;
 
     /**
-     * @var string[] A List of tags associated to this event
+     * @var TagsContext A List of tags associated to this event
      */
-    private $tagsContext = [];
+    private $tagsContext;
 
     /**
      * @var string[] An array of strings used to dictate the deduplication of this event
@@ -140,18 +144,11 @@ final class Event implements \JsonSerializable
         $this->serverName = $config->getServerName();
         $this->release = $config->getRelease();
         $this->environment = $config->getCurrentEnvironment();
-    }
-
-    /**
-     * Creates a new instance of this class.
-     *
-     * @param Configuration $config The client configuration
-     *
-     * @return static
-     */
-    public static function create(Configuration $config)
-    {
-        return new static($config);
+        $this->serverOsContext = new ServerOsContext();
+        $this->runtimeContext = new RuntimeContext();
+        $this->userContext = new Context();
+        $this->extraContext = new Context();
+        $this->tagsContext = new TagsContext();
     }
 
     /**
@@ -188,19 +185,10 @@ final class Event implements \JsonSerializable
      * Sets the severity of this event.
      *
      * @param string $level The severity
-     *
-     * @return static
      */
-    public function withLevel($level)
+    public function setLevel($level)
     {
-        if ($level === $this->level) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->level = $level;
-
-        return $new;
+        $this->level = $level;
     }
 
     /**
@@ -217,19 +205,10 @@ final class Event implements \JsonSerializable
      * Sets the name of the logger which created the event.
      *
      * @param string $logger The logger name
-     *
-     * @return static
      */
-    public function withLogger($logger)
+    public function setLogger($logger)
     {
-        if ($logger === $this->logger) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->logger = $logger;
-
-        return $new;
+        $this->logger = $logger;
     }
 
     /**
@@ -238,29 +217,20 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getCulprit()
+    public function getTransaction()
     {
-        return $this->culprit;
+        return $this->transaction;
     }
 
     /**
      * Sets the name of the transaction (or culprit) which caused this
      * exception.
      *
-     * @param string $culprit The transaction name
-     *
-     * @return static
+     * @param string $transaction The transaction name
      */
-    public function withCulprit($culprit)
+    public function setTransaction($transaction)
     {
-        if ($culprit === $this->culprit) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->culprit = $culprit;
-
-        return $new;
+        $this->transaction = $transaction;
     }
 
     /**
@@ -277,19 +247,10 @@ final class Event implements \JsonSerializable
      * Sets the name of the server.
      *
      * @param string $serverName The server name
-     *
-     * @return static
      */
-    public function withServerName($serverName)
+    public function setServerName($serverName)
     {
-        if ($serverName === $this->serverName) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->serverName = $serverName;
-
-        return $new;
+        $this->serverName = $serverName;
     }
 
     /**
@@ -306,19 +267,10 @@ final class Event implements \JsonSerializable
      * Sets the release of the program.
      *
      * @param string $release The release
-     *
-     * @return static
      */
-    public function withRelease($release)
+    public function setRelease($release)
     {
-        if ($release === $this->release) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->release = $release;
-
-        return $new;
+        $this->release = $release;
     }
 
     /**
@@ -346,20 +298,11 @@ final class Event implements \JsonSerializable
      *
      * @param string $message The message
      * @param array  $params  The parameters to use to format the message
-     *
-     * @return static
      */
-    public function withMessage($message, array $params = [])
+    public function setMessage($message, array $params = [])
     {
-        if ($message === $this->message && $params === $this->messageParams) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->message = $message;
-        $new->messageParams = $params;
-
-        return $new;
+        $this->message = $message;
+        $this->messageParams = $params;
     }
 
     /**
@@ -376,19 +319,10 @@ final class Event implements \JsonSerializable
      * Sets a list of relevant modules and their versions.
      *
      * @param array $modules
-     *
-     * @return static
      */
-    public function withModules(array $modules)
+    public function setModules(array $modules)
     {
-        if ($modules === $this->modules) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->modules = $modules;
-
-        return $new;
+        $this->modules = $modules;
     }
 
     /**
@@ -405,25 +339,16 @@ final class Event implements \JsonSerializable
      * Sets the request data.
      *
      * @param array $request The request data
-     *
-     * @return static
      */
-    public function withRequest(array $request)
+    public function setRequest(array $request)
     {
-        if ($request === $this->request) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->request = $request;
-
-        return $new;
+        $this->request = $request;
     }
 
     /**
      * Gets an arbitrary mapping of additional metadata.
      *
-     * @return array
+     * @return Context
      */
     public function getExtraContext()
     {
@@ -431,29 +356,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets an arbitrary mapping of additional metadata.
-     *
-     * @param array $extraContext Additional metadata
-     * @param bool  $replace      Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function withExtraContext(array $extraContext, $replace = true)
-    {
-        if ($extraContext === $this->extraContext) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->extraContext = $replace ? $extraContext : array_merge($this->extraContext, $extraContext);
-
-        return $new;
-    }
-
-    /**
      * Gets a list of tags.
      *
-     * @return string[]
+     * @return TagsContext
      */
     public function getTagsContext()
     {
@@ -461,29 +366,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets a list of tags.
-     *
-     * @param string[] $tagsContext The tags
-     * @param bool     $replace     Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function withTagsContext(array $tagsContext, $replace = true)
-    {
-        if ($tagsContext === $this->tagsContext) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->tagsContext = $replace ? $tagsContext : array_merge($this->tagsContext, $tagsContext);
-
-        return $new;
-    }
-
-    /**
      * Gets the user context.
      *
-     * @return array
+     * @return Context
      */
     public function getUserContext()
     {
@@ -491,29 +376,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets the user context.
-     *
-     * @param array $userContext The context data
-     * @param bool  $replace     Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function withUserContext(array $userContext, $replace = true)
-    {
-        if ($userContext === $this->userContext) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->userContext = $replace ? $userContext : array_merge($this->userContext, $userContext);
-
-        return $new;
-    }
-
-    /**
      * Gets the server OS context.
      *
-     * @return array
+     * @return ServerOsContext
      */
     public function getServerOsContext()
     {
@@ -521,53 +386,13 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Gets the server OS context.
-     *
-     * @param array $serverOsContext The context data
-     * @param bool  $replace         Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function withServerOsContext(array $serverOsContext, $replace = true)
-    {
-        if ($serverOsContext === $this->serverOsContext) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->serverOsContext = $replace ? $serverOsContext : array_merge($this->serverOsContext, $serverOsContext);
-
-        return $new;
-    }
-
-    /**
      * Gets the runtime context data.
      *
-     * @return array
+     * @return RuntimeContext
      */
     public function getRuntimeContext()
     {
         return $this->runtimeContext;
-    }
-
-    /**
-     * Sets the runtime context data.
-     *
-     * @param array $runtimeContext The context data
-     * @param bool  $replace        Whether to merge the old data with the new one or replace entirely it
-     *
-     * @return static
-     */
-    public function withRuntimeContext(array $runtimeContext, $replace = true)
-    {
-        if ($runtimeContext === $this->runtimeContext) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->runtimeContext = $replace ? $runtimeContext : array_merge($this->runtimeContext, $runtimeContext);
-
-        return $new;
     }
 
     /**
@@ -586,19 +411,10 @@ final class Event implements \JsonSerializable
      * event.
      *
      * @param string[] $fingerprint The strings
-     *
-     * @return static
      */
-    public function withFingerprint(array $fingerprint)
+    public function setFingerprint(array $fingerprint)
     {
-        if ($fingerprint === $this->fingerprint) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->fingerprint = $fingerprint;
-
-        return $new;
+        $this->fingerprint = $fingerprint;
     }
 
     /**
@@ -615,19 +431,10 @@ final class Event implements \JsonSerializable
      * Sets the environment in which this event was generated.
      *
      * @param string $environment The name of the environment
-     *
-     * @return static
      */
-    public function withEnvironment($environment)
+    public function setEnvironment($environment)
     {
-        if ($environment === $this->environment) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->environment = $environment;
-
-        return $new;
+        $this->environment = $environment;
     }
 
     /**
@@ -644,15 +451,10 @@ final class Event implements \JsonSerializable
      * Adds a new breadcrumb to the event.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb
-     *
-     * @return static
      */
-    public function withBreadcrumb(Breadcrumb $breadcrumb)
+    public function setBreadcrumb(Breadcrumb $breadcrumb)
     {
-        $new = clone $this;
-        $new->breadcrumbs[] = $breadcrumb;
-
-        return $new;
+        $this->breadcrumbs[] = $breadcrumb;
     }
 
     /**
@@ -669,19 +471,10 @@ final class Event implements \JsonSerializable
      * Sets the exception.
      *
      * @param array $exception The exception
-     *
-     * @return static
      */
-    public function withException(array $exception)
+    public function setException(array $exception)
     {
-        if ($exception === $this->exception) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->exception = $exception;
-
-        return $new;
+        $this->exception = $exception;
     }
 
     /**
@@ -698,19 +491,10 @@ final class Event implements \JsonSerializable
      * Sets the stacktrace that generated this event.
      *
      * @param Stacktrace $stacktrace The stacktrace instance
-     *
-     * @return static
      */
-    public function withStacktrace(Stacktrace $stacktrace)
+    public function setStacktrace(Stacktrace $stacktrace)
     {
-        if ($stacktrace === $this->stacktrace) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->stacktrace = $stacktrace;
-
-        return $new;
+        $this->stacktrace = $stacktrace;
     }
 
     /**
@@ -735,8 +519,8 @@ final class Event implements \JsonSerializable
             $data['logger'] = $this->logger;
         }
 
-        if (null !== $this->culprit) {
-            $data['culprit'] = $this->culprit;
+        if (null !== $this->transaction) {
+            $data['transaction'] = $this->transaction;
         }
 
         if (null !== $this->serverName) {
@@ -759,24 +543,24 @@ final class Event implements \JsonSerializable
             $data['modules'] = $this->modules;
         }
 
-        if (!empty($this->extraContext)) {
-            $data['extra'] = $this->extraContext;
+        if (!$this->extraContext->isEmpty()) {
+            $data['extra'] = $this->extraContext->toArray();
         }
 
-        if (!empty($this->tagsContext)) {
-            $data['tags'] = $this->tagsContext;
+        if (!$this->tagsContext->isEmpty()) {
+            $data['tags'] = $this->tagsContext->toArray();
         }
 
-        if (!empty($this->userContext)) {
-            $data['user'] = $this->userContext;
+        if (!$this->userContext->isEmpty()) {
+            $data['user'] = $this->userContext->toArray();
         }
 
-        if (!empty($this->serverOsContext)) {
-            $data['contexts']['os'] = $this->serverOsContext;
+        if (!$this->serverOsContext->isEmpty()) {
+            $data['contexts']['os'] = $this->serverOsContext->toArray();
         }
 
-        if (!empty($this->runtimeContext)) {
-            $data['contexts']['runtime'] = $this->runtimeContext;
+        if (!$this->runtimeContext->isEmpty()) {
+            $data['contexts']['runtime'] = $this->runtimeContext->toArray();
         }
 
         if (!empty($this->breadcrumbs)) {

@@ -30,9 +30,8 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
         $event = new Event($client->getConfig());
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, $assertHasStacktrace, $expectedResult, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
+        $callbackInvoked = 0;
+        $callback = function (Event $eventArg) use ($assertHasStacktrace, $expectedResult, &$callbackInvoked) {
             $this->assertArraySubset($expectedResult, $eventArg->toArray());
 
             foreach ($eventArg->getException()['values'] as $exception) {
@@ -44,13 +43,13 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
                 }
             }
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, $exception, $payload);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function invokeDataProvider()
@@ -139,11 +138,9 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
         $event = new Event($client->getConfig());
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
-        $invokationCount = 0;
 
-        $callback = function (Event $eventArg) use ($event, &$invokationCount, $utf8String) {
-            $this->assertNotSame($event, $eventArg);
-
+        $callbackInvoked = 0;
+        $callback = function (Event $eventArg) use (&$callbackInvoked, $utf8String) {
             $expectedValue = [
                 'values' => [
                     [
@@ -155,24 +152,22 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             $this->assertArraySubset($expectedValue, $eventArg->getException());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception($latin1String));
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
     {
         $client = ClientBuilder::create()->getClient();
         $event = new Event($client->getConfig());
-        $invokationCount = 0;
 
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-
+        $callbackInvoked = 0;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $expectedValue = [
                 'values' => [
                     [
@@ -184,13 +179,13 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             $this->assertArraySubset($expectedValue, $eventArg->getException());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception("\xC2\xA2\xC2")); // ill-formed 2-byte character U+00A2 (CENT SIGN)
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function testInvokeWithExceptionThrownInLatin1File()
@@ -202,11 +197,9 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
         $event = new Event($client->getConfig());
 
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $result = $eventArg->getException();
-
             $expectedValue = [
                 'values' => [
                     [
@@ -231,13 +224,13 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             $this->assertTrue($latin1StringFound);
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function testInvokeWithAutoLogStacksDisabled()
@@ -245,10 +238,8 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
         $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
         $event = new Event($client->getConfig());
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use (&$callbackInvoked) {
             $result = $eventArg->getException();
 
             $this->assertNotEmpty($result);
@@ -257,12 +248,12 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
             $this->assertEquals('foo', $result['values'][0]['value']);
             $this->assertArrayNotHasKey('stacktrace', $result['values'][0]);
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new ExceptionInterfaceMiddleware($client);
         $middleware($event, $callback, null, new \Exception('foo'));
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 }

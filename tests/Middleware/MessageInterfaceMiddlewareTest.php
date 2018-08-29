@@ -44,20 +44,18 @@ class MessageInterfaceMiddlewareTest extends TestCase
         $configuration = new Configuration();
         $event = new Event($configuration);
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, $payload, &$invokationCount) {
-            $this->assertNotSame($event, $eventArg);
-
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($payload, &$callbackInvoked) {
             $this->assertEquals($payload['message'], $eventArg->getMessage());
             $this->assertEquals($payload['message_params'], $eventArg->getMessageParams());
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new MessageInterfaceMiddleware();
         $middleware($event, $callback, null, null, $payload);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked);
     }
 
     public function invokeDataProvider()

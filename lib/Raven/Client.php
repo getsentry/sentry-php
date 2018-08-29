@@ -352,14 +352,14 @@ class Client implements ClientInterface
     {
         $event = new Event($this->config);
 
-        if (isset($payload['culprit'])) {
-            $event = $event->withCulprit($payload['culprit']);
+        if (isset($payload['transaction'])) {
+            $event->setTransaction($payload['transaction']);
         } else {
-            $event = $event->withCulprit($this->transactionStack->peek());
+            $event->setTransaction($this->transactionStack->peek());
         }
 
         if (isset($payload['logger'])) {
-            $event = $event->withLogger($payload['logger']);
+            $event->setLogger($payload['logger']);
         }
 
         $event = $this->middlewareStack->executeStack(

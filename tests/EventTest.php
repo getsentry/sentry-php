@@ -11,6 +11,10 @@ use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\ClientInterface;
 use Raven\Configuration;
+use Raven\Context\Context;
+use Raven\Context\RuntimeContext;
+use Raven\Context\ServerOsContext;
+use Raven\Context\TagsContext;
 use Raven\Event;
 
 /**
@@ -92,6 +96,18 @@ class EventTest extends TestCase
             'server_name' => $this->configuration->getServerName(),
             'release' => $this->configuration->getRelease(),
             'environment' => $this->configuration->getCurrentEnvironment(),
+            'contexts' => [
+                'os' => [
+                    'name' => php_uname('s'),
+                    'version' => php_uname('r'),
+                    'build' => php_uname('v'),
+                    'kernel_version' => php_uname('a'),
+                ],
+                'runtime' => [
+                    'name' => 'php',
+                    'version' => PHP_VERSION,
+                ],
+            ],
         ];
 
         $event = new Event($this->configuration);
@@ -101,8 +117,8 @@ class EventTest extends TestCase
 
     public function testToArrayWithMessage()
     {
-        $event = Event::create($this->configuration)
-            ->withMessage('foo bar');
+        $event = new Event($this->configuration);
+        $event->setMessage('foo bar');
 
         $data = $event->toArray();
 
@@ -118,8 +134,8 @@ class EventTest extends TestCase
             'formatted' => 'foo bar',
         ];
 
-        $event = Event::create($this->configuration)
-            ->withMessage('foo %s', ['bar']);
+        $event = new Event($this->configuration);
+        $event->setMessage('foo %s', ['bar']);
 
         $data = $event->toArray();
 
@@ -137,7 +153,7 @@ class EventTest extends TestCase
         $event = new Event($this->configuration);
 
         foreach ($breadcrumbs as $breadcrumb) {
-            $event = $event->withBreadcrumb($breadcrumb);
+            $event->setBreadcrumb($breadcrumb);
         }
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
@@ -148,32 +164,54 @@ class EventTest extends TestCase
         $this->assertSame($breadcrumbs, $data['breadcrumbs']);
     }
 
+    public function testGetServerOsContext()
+    {
+        $event = new Event($this->configuration);
+
+        $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
+    }
+
+    public function testGetRuntimeContext()
+    {
+        $event = new Event($this->configuration);
+
+        $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
+    }
+
+    public function testGetUserContext()
+    {
+        $event = new Event($this->configuration);
+
+        $this->assertInstanceOf(Context::class, $event->getUserContext());
+    }
+
+    public function testGetExtraContext()
+    {
+        $event = new Event($this->configuration);
+
+        $this->assertInstanceOf(Context::class, $event->getExtraContext());
+    }
+
+    public function getTagsContext()
+    {
+        $event = new Event($this->configuration);
+
+        $this->assertInstanceOf(TagsContext::class, $event->getTagsContext());
+    }
+
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
     public function testGettersAndSetters($propertyName, $propertyValue, $expectedValue)
     {
         $getterMethod = 'get' . ucfirst($propertyName);
-        $setterMethod = 'with' . ucfirst($propertyName);
+        $setterMethod = 'set' . ucfirst($propertyName);
 
         $event = new Event($this->configuration);
-        $newEvent = \call_user_func([$event, $setterMethod], \call_user_func([$event, $getterMethod]));
+        $event->$setterMethod($propertyValue);
 
-        $this->assertSame($event, $newEvent);
-
-        $newEvent = \call_user_func([$event, $setterMethod], $propertyValue);
-
-        $this->assertNotSame($event, $newEvent);
-
-        $value = \call_user_func([$event, $getterMethod]);
-        $newValue = \call_user_func([$newEvent, $getterMethod]);
-
-        $this->assertNotSame($value, $newValue);
-        $this->assertSame($newValue, $propertyValue);
-
-        $data = $newEvent->toArray();
-
-        $this->assertArraySubset($expectedValue, $data);
+        $this->assertSame($event->$getterMethod(), $propertyValue);
+        $this->assertArraySubset($expectedValue, $event->toArray());
     }
 
     public function gettersAndSettersDataProvider()
@@ -181,15 +219,10 @@ class EventTest extends TestCase
         return [
             ['level', 'info', ['level' => 'info']],
             ['logger', 'ruby', ['logger' => 'ruby']],
-            ['culprit', 'foo', ['culprit' => 'foo']],
+            ['transaction', 'foo', ['transaction' => 'foo']],
             ['serverName', 'local.host', ['server_name' => 'local.host']],
             ['release', '0.0.1', ['release' => '0.0.1']],
             ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], ['modules' => ['foo' => '0.0.1', 'bar' => '0.0.2']]],
-            ['extraContext', ['foo' => 'bar'], ['extra' => ['foo' => 'bar']]],
-            ['tagsContext', ['bar' => 'foo'], ['tags' => ['bar' => 'foo']]],
-            ['userContext', ['bar' => 'baz'], ['user' => ['bar' => 'baz']]],
-            ['serverOsContext', ['foobar' => 'barfoo'], ['contexts' => ['os' => ['foobar' => 'barfoo']]]],
-            ['runtimeContext', ['barfoo' => 'foobar'], ['contexts' => ['runtime' => ['barfoo' => 'foobar']]]],
             ['fingerprint', ['foo', 'bar'], ['fingerprint' => ['foo', 'bar']]],
             ['environment', 'foo', ['environment' => 'foo']],
         ];

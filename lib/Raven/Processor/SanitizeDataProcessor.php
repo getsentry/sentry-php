@@ -54,7 +54,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
     {
         $resolver->setDefaults([
             'fields_re' => '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i',
-            'values_re' => '/^(?:\d[ -]*?){13,16}$/',
+            'values_re' => '/^(?:\d[ -]*?){13,19}$/',
             'session_cookie_name' => ini_get('session.name'),
         ]);
 
@@ -153,23 +153,24 @@ final class SanitizeDataProcessor implements ProcessorInterface
         $exception = $event->getException();
         $stacktrace = $event->getStacktrace();
         $request = $event->getRequest();
-        $extraContext = $event->getExtraContext();
+        $extraContext = $event->getExtraContext()->toArray();
 
         if (!empty($exception)) {
-            $event = $event->withException($this->sanitizeException($exception));
+            $event->setException($this->sanitizeException($exception));
         }
 
         if ($stacktrace) {
-            $event = $event->withStacktrace($this->sanitizeStacktrace($stacktrace));
+            $event->setStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
         if (!empty($request)) {
-            $event = $event->withRequest($this->sanitizeHttp($request));
+            $event->setRequest($this->sanitizeHttp($request));
         }
 
         if (!empty($extraContext)) {
             $this->sanitize($extraContext);
-            $event = $event->withExtraContext($extraContext);
+
+            $event->getExtraContext()->replaceData($extraContext);
         }
 
         return $event;

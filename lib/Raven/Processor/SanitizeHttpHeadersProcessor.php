@@ -58,7 +58,9 @@ final class SanitizeHttpHeadersProcessor implements ProcessorInterface
             }
         }
 
-        return $event->withRequest($request);
+        $event->setRequest($request);
+
+        return $event;
     }
 
     /**

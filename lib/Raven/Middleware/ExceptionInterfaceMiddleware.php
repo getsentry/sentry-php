@@ -52,9 +52,9 @@ final class ExceptionInterfaceMiddleware
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         if (isset($payload['level'])) {
-            $event = $event->withLevel($payload['level']);
+            $event->setLevel($payload['level']);
         } elseif ($exception instanceof \ErrorException) {
-            $event = $event->withLevel($this->client->translateSeverity($exception->getSeverity()));
+            $event->setLevel($this->client->translateSeverity($exception->getSeverity()));
         }
 
         if (null !== $exception) {
@@ -82,7 +82,7 @@ final class ExceptionInterfaceMiddleware
                 'values' => array_reverse($exceptions),
             ];
 
-            $event = $event->withException($exceptions);
+            $event->setException($exceptions);
         }
 
         return $next($event, $request, $exception, $payload);

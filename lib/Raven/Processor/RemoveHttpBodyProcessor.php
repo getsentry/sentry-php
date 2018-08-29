@@ -33,6 +33,8 @@ final class RemoveHttpBodyProcessor implements ProcessorInterface
             $request['data'] = self::STRING_MASK;
         }
 
-        return $event->withRequest($request);
+        $event->setRequest($request);
+
+        return $event;
     }
 }
