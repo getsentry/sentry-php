@@ -132,7 +132,9 @@ $ git checkout -b releases/2.1.x
 3. Update the hardcoded version tag in ``Client.php``:
 
 ```php
-class Raven_Client
+namespace Raven;
+
+class Client
 {
     const VERSION = '2.1.0';
 }
@@ -165,15 +167,17 @@ git checkout master
 8. Add the next minor release to the ``CHANGES`` file:
 
 ```
-## 1.11.0 (unreleased)
+## 2.1.0 (unreleased)
 ```
 
 9. Update the version in ``Client.php``:
 
 ```php
-class Raven_Client
+namespace Raven;
+
+class Client implements ClientInterface
 {
-    const VERSION = '1.11.x-dev';
+    const VERSION = '2.1.x-dev';
 }
 ```
 
@@ -182,7 +186,7 @@ class Raven_Client
 ```json
     "extra": {
         "branch-alias": {
-            "dev-master": "1.11.x-dev"
+            "dev-master": "2.1.x-dev"
         }
     }
 ```
