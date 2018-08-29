@@ -7,8 +7,7 @@
       "doc_link": "",
       "wizard": [
         "index#installation",
-        "index#configuration",
-        "usage#capturing-errors"
+        "quickstart#creating-a-client"
       ]
     },
     "php.laravel": {
