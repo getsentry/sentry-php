@@ -11,6 +11,7 @@
 
 namespace Raven\Context;
 
+use Raven\Util\PHPVersion;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -154,7 +155,7 @@ class RuntimeContext extends Context
     {
         $resolver->setDefaults([
             'name' => 'php',
-            'version' => PHP_VERSION,
+            'version' => PHPVersion::parseVersion(),
         ]);
 
         $resolver->setAllowedTypes('name', 'string');

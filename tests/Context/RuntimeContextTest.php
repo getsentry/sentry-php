@@ -13,6 +13,7 @@ namespace Raven\Tests\Context;
 
 use PHPUnit\Framework\TestCase;
 use Raven\Context\RuntimeContext;
+use Raven\Util\PHPVersion;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 
@@ -88,7 +89,7 @@ class RuntimeContextTest extends TestCase
                 [],
                 [
                     'name' => 'php',
-                    'version' => PHP_VERSION,
+                    'version' => PHPVersion::parseVersion(),
                 ],
                 null,
                 null,
@@ -99,7 +100,7 @@ class RuntimeContextTest extends TestCase
                 ],
                 [
                     'name' => 'foo',
-                    'version' => PHP_VERSION,
+                    'version' => PHPVersion::parseVersion(),
                 ],
                 null,
                 null,
