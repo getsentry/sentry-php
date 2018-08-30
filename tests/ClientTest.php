@@ -14,6 +14,7 @@ use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
+use Raven\Breadcrumbs\Recorder as BreadcrumbsRecorder;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Context\Context;
@@ -22,11 +23,10 @@ use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
 use Raven\Event;
 use Raven\Middleware\MiddlewareStack;
-use Raven\Processor\ProcessorInterface;
-use Raven\Processor\ProcessorRegistry;
 use Raven\ReprSerializer;
 use Raven\Serializer;
 use Raven\Tests\Fixtures\classes\CarelessException;
+use Raven\TransactionStack;
 use Raven\Transport\TransportInterface;
 
 class ClientTest extends TestCase
@@ -50,11 +50,18 @@ class ClientTest extends TestCase
         $this->assertEmpty($client->getTransactionStack());
     }
 
+    public function testGetBreadcrumbsRecorder()
+    {
+        $client = ClientBuilder::create()->getClient();
+
+        $this->assertInstanceOf(BreadcrumbsRecorder::class, $client->getBreadcrumbsRecorder());
+    }
+
     public function testGetTransactionStack()
     {
         $client = ClientBuilder::create()->getClient();
 
-        $this->assertAttributeSame($client->getTransactionStack(), 'transactionStack', $client);
+        $this->assertInstanceOf(TransactionStack::class, $client->getTransactionStack());
     }
 
     public function testAddMiddleware()
@@ -95,46 +102,6 @@ class ClientTest extends TestCase
         $reflectionProperty->setAccessible(false);
 
         $client->removeMiddleware($middleware);
-    }
-
-    public function testAddProcessor()
-    {
-        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
-        $processor = $this->createMock(ProcessorInterface::class);
-
-        $processorRegistry = $this->createMock(ProcessorRegistry::class);
-        $processorRegistry->expects($this->once())
-            ->method('addProcessor')
-            ->with($processor, -10);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'processorRegistry');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $processorRegistry);
-        $reflectionProperty->setAccessible(false);
-
-        $client->addProcessor($processor, -10);
-    }
-
-    public function testRemoveProcessor()
-    {
-        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
-        $processor = $this->createMock(ProcessorInterface::class);
-
-        $processorRegistry = $this->createMock(ProcessorRegistry::class);
-        $processorRegistry->expects($this->once())
-            ->method('removeProcessor')
-            ->with($processor);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'processorRegistry');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $processorRegistry);
-        $reflectionProperty->setAccessible(false);
-
-        $client->removeProcessor($processor);
     }
 
     public function testCaptureMessage()
@@ -561,7 +528,9 @@ class ClientTest extends TestCase
      */
     private function clearLastError()
     {
-        $handler = function () { return false; };
+        $handler = function () {
+            return false;
+        };
 
         set_error_handler($handler);
         @trigger_error('');

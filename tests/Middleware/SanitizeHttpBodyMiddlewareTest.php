@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Processor;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\ClientInterface;
 use Raven\Event;
-use Raven\Processor\RemoveHttpBodyProcessor;
+use Raven\Middleware\SanitizeHttpBodyMiddleware;
 
-class RemoveHttpBodyProcessorTest extends TestCase
+class SanitizeHttpBodyMiddlewareTest extends TestCase
 {
     /**
      * @var ClientInterface
@@ -25,30 +25,38 @@ class RemoveHttpBodyProcessorTest extends TestCase
     protected $client;
 
     /**
-     * @var RemoveHttpBodyProcessor|\PHPUnit_Framework_MockObject_MockObject
+     * @var SanitizeHttpBodyMiddleware|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected $processor;
+    protected $middleware;
 
     protected function setUp()
     {
         $this->client = ClientBuilder::create()->getClient();
-        $this->processor = new RemoveHttpBodyProcessor();
+        $this->middleware = new SanitizeHttpBodyMiddleware();
     }
 
     /**
-     * @dataProvider processDataProvider
+     * @dataProvider invokeDataProvider
      */
-    public function testProcess($inputData, $expectedData)
+    public function testInvoke($inputData, $expectedData)
     {
         $event = new Event($this->client->getConfig());
         $event->setRequest($inputData);
 
-        $event = $this->processor->process($event);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
+            $this->assertArraySubset($expectedData, $eventArg->getRequest());
 
-        $this->assertArraySubset($expectedData, $event->getRequest());
+            $callbackInvoked = true;
+        };
+
+        $middleware = new SanitizeHttpBodyMiddleware();
+        $middleware($event, $callback);
+
+        $this->assertTrue($callbackInvoked);
     }
 
-    public function processDataProvider()
+    public function invokeDataProvider()
     {
         return [
             [
@@ -59,7 +67,7 @@ class RemoveHttpBodyProcessorTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -70,7 +78,7 @@ class RemoveHttpBodyProcessorTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -81,7 +89,7 @@ class RemoveHttpBodyProcessorTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -92,7 +100,7 @@ class RemoveHttpBodyProcessorTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => RemoveHttpBodyProcessor::STRING_MASK,
+                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [

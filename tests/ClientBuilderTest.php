@@ -21,7 +21,6 @@ use Psr\Http\Message\RequestInterface;
 use Raven\Client;
 use Raven\ClientBuilder;
 use Raven\Configuration;
-use Raven\Processor\ProcessorInterface;
 use Raven\Transport\HttpTransport;
 use Raven\Transport\NullTransport;
 use Raven\Transport\TransportInterface;
@@ -164,29 +163,6 @@ class ClientBuilderTest extends TestCase
         $clientBuilder->removeMiddleware($middleware2);
 
         $this->assertEquals([[$middleware1, -10]], $clientBuilder->getMiddlewares());
-    }
-
-    public function testAddProcessor()
-    {
-        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
-        $processor = $this->createMock(ProcessorInterface::class);
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addProcessor($processor, -10);
-
-        $this->assertContains([$processor, -10], $clientBuilder->getProcessors());
-    }
-
-    public function testRemoveProcessor()
-    {
-        /** @var ProcessorInterface|\PHPUnit_Framework_MockObject_MockObject $processor */
-        $processor = $this->createMock(ProcessorInterface::class);
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addProcessor($processor, -10);
-        $clientBuilder->removeProcessor($processor);
-
-        $this->assertNotContains([$processor, -10], $clientBuilder->getProcessors());
     }
 
     public function testGetClient()

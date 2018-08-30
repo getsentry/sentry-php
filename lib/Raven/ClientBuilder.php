@@ -24,12 +24,19 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Raven\Context\Context;
 use Raven\HttpClient\Authentication\SentryAuth;
-use Raven\Processor\ProcessorInterface;
-use Raven\Processor\RemoveHttpBodyProcessor;
-use Raven\Processor\SanitizeCookiesProcessor;
-use Raven\Processor\SanitizeDataProcessor;
-use Raven\Processor\SanitizeHttpHeadersProcessor;
+use Raven\Middleware\BreadcrumbInterfaceMiddleware;
+use Raven\Middleware\ContextInterfaceMiddleware;
+use Raven\Middleware\ExceptionInterfaceMiddleware;
+use Raven\Middleware\MessageInterfaceMiddleware;
+use Raven\Middleware\RequestInterfaceMiddleware;
+use Raven\Middleware\SanitizeCookiesMiddleware;
+use Raven\Middleware\SanitizeDataMiddleware;
+use Raven\Middleware\SanitizeHttpBodyMiddleware;
+use Raven\Middleware\SanitizeHttpHeadersMiddleware;
+use Raven\Middleware\SanitizerMiddleware;
+use Raven\Middleware\UserInterfaceMiddleware;
 use Raven\Transport\HttpTransport;
 use Raven\Transport\NullTransport;
 use Raven\Transport\TransportInterface;
@@ -113,11 +120,6 @@ final class ClientBuilder implements ClientBuilderInterface
     private $middlewares = [];
 
     /**
-     * @var array List of processors and their priorities
-     */
-    private $processors = [];
-
-    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -125,7 +127,6 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(array $options = [])
     {
         $this->configuration = new Configuration($options);
-        $this->processors = self::getDefaultProcessors();
     }
 
     /**
@@ -239,40 +240,6 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addProcessor(ProcessorInterface $processor, $priority = 0)
-    {
-        $this->processors[] = [$processor, $priority];
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeProcessor(ProcessorInterface $processor)
-    {
-        foreach ($this->processors as $key => $value) {
-            if ($value[0] !== $processor) {
-                continue;
-            }
-
-            unset($this->processors[$key]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getProcessors()
-    {
-        return $this->processors;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getClient()
     {
         $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
@@ -281,9 +248,24 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->transport = $this->createTransportInstance();
 
         $client = new Client($this->configuration, $this->transport);
+        $client->addMiddleware(new SanitizerMiddleware($client->getSerializer()), -255);
+        $client->addMiddleware(new SanitizeDataMiddleware(), -200);
+        $client->addMiddleware(new SanitizeCookiesMiddleware(), -200);
+        $client->addMiddleware(new SanitizeHttpBodyMiddleware(), -200);
+        $client->addMiddleware(new SanitizeHttpHeadersMiddleware(), -200);
+        $client->addMiddleware(new MessageInterfaceMiddleware());
+        $client->addMiddleware(new RequestInterfaceMiddleware());
+        $client->addMiddleware(new UserInterfaceMiddleware());
+        $client->addMiddleware(new ContextInterfaceMiddleware($client->getTagsContext(), Context::CONTEXT_TAGS));
+        $client->addMiddleware(new ContextInterfaceMiddleware($client->getUserContext(), Context::CONTEXT_USER));
+        $client->addMiddleware(new ContextInterfaceMiddleware($client->getExtraContext(), Context::CONTEXT_EXTRA));
+        $client->addMiddleware(new ContextInterfaceMiddleware($client->getRuntimeContext(), Context::CONTEXT_RUNTIME));
+        $client->addMiddleware(new ContextInterfaceMiddleware($client->getServerOsContext(), Context::CONTEXT_SERVER_OS));
+        $client->addMiddleware(new BreadcrumbInterfaceMiddleware($client->getBreadcrumbsRecorder()));
+        $client->addMiddleware(new ExceptionInterfaceMiddleware($client));
 
-        foreach ($this->processors as $value) {
-            $client->addProcessor($value[0], $value[1]);
+        foreach ($this->middlewares as $middleware) {
+            $client->addMiddleware($middleware[0], $middleware[1]);
         }
 
         return $client;
@@ -345,20 +327,5 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         return new NullTransport();
-    }
-
-    /**
-     * Returns a list of processors that are enabled by default.
-     *
-     * @return array
-     */
-    private static function getDefaultProcessors()
-    {
-        return [
-            [new SanitizeCookiesProcessor(), 0],
-            [new RemoveHttpBodyProcessor(), 0],
-            [new SanitizeHttpHeadersProcessor(), 0],
-            [new SanitizeDataProcessor(), -255],
-        ];
     }
 }

@@ -12,11 +12,11 @@
 namespace Raven;
 
 use Raven\Breadcrumbs\Breadcrumb;
+use Raven\Breadcrumbs\Recorder as BreadcrumbRecorder;
 use Raven\Context\Context;
 use Raven\Context\RuntimeContext;
 use Raven\Context\ServerOsContext;
 use Raven\Context\TagsContext;
-use Raven\Processor\ProcessorInterface;
 
 /**
  * This interface must be implemented by all Raven client classes.
@@ -57,21 +57,11 @@ interface ClientInterface
     public function removeMiddleware(callable $middleware);
 
     /**
-     * Adds a new processor to the processors chain with the specified priority.
+     * Gets the breadcrumbs recorder.
      *
-     * @param ProcessorInterface $processor The processor instance
-     * @param int                $priority  The priority. The higher this value,
-     *                                      the earlier a processor will be
-     *                                      executed in the chain (defaults to 0)
+     * @return BreadcrumbRecorder
      */
-    public function addProcessor(ProcessorInterface $processor, $priority = 0);
-
-    /**
-     * Removes the given processor from the list.
-     *
-     * @param ProcessorInterface $processor The processor instance
-     */
-    public function removeProcessor(ProcessorInterface $processor);
+    public function getBreadcrumbsRecorder();
 
     /**
      * Records the given breadcrumb.

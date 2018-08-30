@@ -11,8 +11,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Processor;
+namespace Raven\Middleware;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Raven\Event;
 use Raven\Stacktrace;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -24,7 +25,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * @author David Cramer <dcramer@gmail.com>
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SanitizeDataProcessor implements ProcessorInterface
+final class SanitizeDataMiddleware implements ProcessorMiddlewareInterface
 {
     /**
      * @var array The configuration options
@@ -46,21 +47,42 @@ final class SanitizeDataProcessor implements ProcessorInterface
     }
 
     /**
-     * Configures the options for this processor.
+     * Collects the needed data and sets it in the given event object.
      *
-     * @param OptionsResolver $resolver The resolver for the options
+     * @param Event                       $event     The event being processed
+     * @param callable                    $next      The next middleware to call
+     * @param ServerRequestInterface|null $request   The request, if available
+     * @param \Exception|\Throwable|null  $exception The thrown exception, if available
+     * @param array                       $payload   Additional data
+     *
+     * @return Event
      */
-    private function configureOptions(OptionsResolver $resolver)
+    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $resolver->setDefaults([
-            'fields_re' => '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i',
-            'values_re' => '/^(?:\d[ -]*?){13,19}$/',
-            'session_cookie_name' => ini_get('session.name'),
-        ]);
+        $exception = $event->getException();
+        $stacktrace = $event->getStacktrace();
+        $request = $event->getRequest();
+        $extraContext = $event->getExtraContext()->toArray();
 
-        $resolver->setAllowedTypes('fields_re', 'string');
-        $resolver->setAllowedTypes('values_re', 'string');
-        $resolver->setAllowedTypes('session_cookie_name', 'string');
+        if (!empty($exception)) {
+            $event->setException($this->sanitizeException($exception));
+        }
+
+        if ($stacktrace) {
+            $event->setStacktrace($this->sanitizeStacktrace($stacktrace));
+        }
+
+        if (!empty($request)) {
+            $event->setRequest($this->sanitizeHttp($request));
+        }
+
+        if (!empty($extraContext)) {
+            $this->sanitize($extraContext);
+
+            $event->getExtraContext()->replaceData($extraContext);
+        }
+
+        return $next($event, $request, $exception, $payload);
     }
 
     /**
@@ -68,7 +90,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
      *
      * @param array $data Associative array to be sanitized
      */
-    public function sanitize(&$data)
+    private function sanitize(&$data)
     {
         foreach ($data as $key => &$item) {
             if (preg_match($this->options['fields_re'], $key)) {
@@ -95,7 +117,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
         }
     }
 
-    public function sanitizeException(&$data)
+    private function sanitizeException(&$data)
     {
         foreach ($data['values'] as &$value) {
             if (!isset($value['stacktrace'])) {
@@ -108,7 +130,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
         return $data;
     }
 
-    public function sanitizeHttp(&$data)
+    private function sanitizeHttp(&$data)
     {
         if (!empty($data['cookies']) && \is_array($data['cookies'])) {
             $cookies = &$data['cookies'];
@@ -129,7 +151,7 @@ final class SanitizeDataProcessor implements ProcessorInterface
      *
      * @return Stacktrace
      */
-    public function sanitizeStacktrace($data)
+    private function sanitizeStacktrace($data)
     {
         foreach ($data->getFrames() as &$frame) {
             if (empty($frame->getVars())) {
@@ -146,33 +168,20 @@ final class SanitizeDataProcessor implements ProcessorInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Configures the options for this processor.
+     *
+     * @param OptionsResolver $resolver The resolver for the options
      */
-    public function process(Event $event)
+    private function configureOptions(OptionsResolver $resolver)
     {
-        $exception = $event->getException();
-        $stacktrace = $event->getStacktrace();
-        $request = $event->getRequest();
-        $extraContext = $event->getExtraContext()->toArray();
+        $resolver->setDefaults([
+            'fields_re' => '/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i',
+            'values_re' => '/^(?:\d[ -]*?){13,19}$/',
+            'session_cookie_name' => ini_get('session.name'),
+        ]);
 
-        if (!empty($exception)) {
-            $event->setException($this->sanitizeException($exception));
-        }
-
-        if ($stacktrace) {
-            $event->setStacktrace($this->sanitizeStacktrace($stacktrace));
-        }
-
-        if (!empty($request)) {
-            $event->setRequest($this->sanitizeHttp($request));
-        }
-
-        if (!empty($extraContext)) {
-            $this->sanitize($extraContext);
-
-            $event->getExtraContext()->replaceData($extraContext);
-        }
-
-        return $event;
+        $resolver->setAllowedTypes('fields_re', 'string');
+        $resolver->setAllowedTypes('values_re', 'string');
+        $resolver->setAllowedTypes('session_cookie_name', 'string');
     }
 }

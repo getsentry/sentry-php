@@ -9,37 +9,31 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Processor;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\ClientInterface;
 use Raven\Event;
-use Raven\Processor\SanitizeDataProcessor;
+use Raven\Middleware\SanitizeDataMiddleware;
 use Raven\Stacktrace;
 
-class SanitizeDataProcessorTest extends TestCase
+class SanitizeDataMiddlewareTest extends TestCase
 {
     /**
      * @var ClientInterface
      */
     protected $client;
 
-    /**
-     * @var SanitizeDataProcessor
-     */
-    protected $processor;
-
     protected function setUp()
     {
         $this->client = ClientBuilder::create()->getClient();
-        $this->processor = new SanitizeDataProcessor();
     }
 
     /**
-     * @dataProvider processDataProvider
+     * @dataProvider invokeDataProvider
      */
-    public function testProcess($inputData, $expectedData)
+    public function testInvoke($inputData, $expectedData)
     {
         $event = new Event($this->client->getConfig());
 
@@ -58,25 +52,33 @@ class SanitizeDataProcessorTest extends TestCase
             $event->setException($this->convertExceptionValuesToStacktrace($expectedData['exception']));
         }
 
-        $event = $this->processor->process($event);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
+            if (isset($expectedData['request'])) {
+                $this->assertArraySubset($expectedData['request'], $eventArg->getRequest());
+            }
 
-        if (isset($expectedData['request'])) {
-            $this->assertArraySubset($expectedData['request'], $event->getRequest());
-        }
+            if (isset($expectedData['extra_context'])) {
+                $this->assertArraySubset($expectedData['extra_context'], $eventArg->getExtraContext());
+            }
 
-        if (isset($expectedData['extra_context'])) {
-            $this->assertArraySubset($expectedData['extra_context'], $event->getExtraContext());
-        }
+            if (isset($expectedData['exception'])) {
+                // We must convert the backtrace to a Stacktrace instance here because
+                // PHPUnit executes the data provider before the setUp method and so
+                // the client instance cannot be accessed from there
+                $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $eventArg->getException());
+            }
 
-        if (isset($expectedData['exception'])) {
-            // We must convert the backtrace to a Stacktrace instance here because
-            // PHPUnit executes the data provider before the setUp method and so
-            // the client instance cannot be accessed from there
-            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $event->getException());
-        }
+            $callbackInvoked = true;
+        };
+
+        $middleware = new SanitizeDataMiddleware();
+        $middleware($event, $callback);
+
+        $this->assertTrue($callbackInvoked);
     }
 
-    public function processDataProvider()
+    public function invokeDataProvider()
     {
         return [
             [
@@ -96,11 +98,11 @@ class SanitizeDataProcessorTest extends TestCase
                     'request' => [
                         'data' => [
                             'foo' => 'bar',
-                            'password' => SanitizeDataProcessor::STRING_MASK,
-                            'the_secret' => SanitizeDataProcessor::STRING_MASK,
-                            'a_password_here' => SanitizeDataProcessor::STRING_MASK,
-                            'mypasswd' => SanitizeDataProcessor::STRING_MASK,
-                            'authorization' => SanitizeDataProcessor::STRING_MASK,
+                            'password' => SanitizeDataMiddleware::STRING_MASK,
+                            'the_secret' => SanitizeDataMiddleware::STRING_MASK,
+                            'a_password_here' => SanitizeDataMiddleware::STRING_MASK,
+                            'mypasswd' => SanitizeDataMiddleware::STRING_MASK,
+                            'authorization' => SanitizeDataMiddleware::STRING_MASK,
                         ],
                     ],
                 ],
@@ -116,7 +118,7 @@ class SanitizeDataProcessorTest extends TestCase
                 [
                     'request' => [
                         'cookies' => [
-                            ini_get('session.name') => SanitizeDataProcessor::STRING_MASK,
+                            ini_get('session.name') => SanitizeDataMiddleware::STRING_MASK,
                         ],
                     ],
                 ],
@@ -129,7 +131,7 @@ class SanitizeDataProcessorTest extends TestCase
                 ],
                 [
                     'extra_context' => [
-                        'ccnumba' => SanitizeDataProcessor::STRING_MASK,
+                        'ccnumba' => SanitizeDataMiddleware::STRING_MASK,
                     ],
                 ],
             ],
@@ -141,7 +143,7 @@ class SanitizeDataProcessorTest extends TestCase
                 ],
                 [
                     'extra_context' => [
-                        'ccnumba' => SanitizeDataProcessor::STRING_MASK,
+                        'ccnumba' => SanitizeDataMiddleware::STRING_MASK,
                     ],
                 ],
             ],
@@ -182,7 +184,7 @@ class SanitizeDataProcessorTest extends TestCase
                                     [
                                         'args' => [
                                             [
-                                                'password' => SanitizeDataProcessor::STRING_MASK,
+                                                'password' => SanitizeDataMiddleware::STRING_MASK,
                                             ],
                                         ],
                                     ],
@@ -193,7 +195,7 @@ class SanitizeDataProcessorTest extends TestCase
                                     [
                                         'args' => [
                                             [
-                                                'password' => SanitizeDataProcessor::STRING_MASK,
+                                                'password' => SanitizeDataMiddleware::STRING_MASK,
                                             ],
                                         ],
                                     ],
@@ -225,13 +227,13 @@ class SanitizeDataProcessorTest extends TestCase
                     'extra_context' => [
                         'foobar' => 'some-data',
                         'authorization' => [
-                            'foo' => SanitizeDataProcessor::STRING_MASK,
-                            'bar' => SanitizeDataProcessor::STRING_MASK,
+                            'foo' => SanitizeDataMiddleware::STRING_MASK,
+                            'bar' => SanitizeDataMiddleware::STRING_MASK,
                             'baz' => [
-                                'nested1' => SanitizeDataProcessor::STRING_MASK,
-                                'nested2' => SanitizeDataProcessor::STRING_MASK,
+                                'nested1' => SanitizeDataMiddleware::STRING_MASK,
+                                'nested2' => SanitizeDataMiddleware::STRING_MASK,
                                 'nested3' => [
-                                    'deep' => SanitizeDataProcessor::STRING_MASK,
+                                    'deep' => SanitizeDataMiddleware::STRING_MASK,
                                 ],
                             ],
                         ],

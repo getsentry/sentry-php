@@ -9,44 +9,33 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Processor;
+namespace Raven\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\ClientBuilder;
-use Raven\ClientInterface;
+use Raven\Configuration;
 use Raven\Event;
-use Raven\Processor\SanitizeCookiesProcessor;
+use Raven\Middleware\SanitizeCookiesMiddleware;
 
-class SanitizeCookiesProcessorTest extends TestCase
+class SanitizeCookiesMiddlewareTest extends TestCase
 {
-    /**
-     * @var ClientInterface
-     */
-    protected $client;
-
-    protected function setUp()
-    {
-        $this->client = ClientBuilder::create()->getClient();
-    }
-
     /**
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      * @expectedExceptionMessage You can configure only one of "only" and "except" options.
      */
     public function testConstructorThrowsIfBothOnlyAndExceptOptionsAreSet()
     {
-        new SanitizeCookiesProcessor([
+        new SanitizeCookiesMiddleware([
             'only' => ['foo'],
             'except' => ['bar'],
         ]);
     }
 
     /**
-     * @dataProvider processDataProvider
+     * @dataProvider invokeDataProvider
      */
-    public function testProcess($options, $expectedData)
+    public function testInvoke($options, $expectedData)
     {
-        $event = new Event($this->client->getConfig());
+        $event = new Event(new Configuration());
         $event->setRequest([
             'foo' => 'bar',
             'cookies' => [
@@ -59,16 +48,23 @@ class SanitizeCookiesProcessorTest extends TestCase
             ],
         ]);
 
-        $processor = new SanitizeCookiesProcessor($options);
-        $event = $processor->process($event);
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
+            $request = $eventArg->getRequest();
 
-        $requestData = $event->getRequest();
+            $this->assertArraySubset($expectedData, $request);
+            $this->assertArrayNotHasKey('cookie', $request['headers']);
 
-        $this->assertArraySubset($expectedData, $requestData);
-        $this->assertArrayNotHasKey('cookie', $requestData['headers']);
+            $callbackInvoked = true;
+        };
+
+        $middleware = new SanitizeCookiesMiddleware($options);
+        $middleware($event, $callback);
+
+        $this->assertTrue($callbackInvoked);
     }
 
-    public function processDataProvider()
+    public function invokeDataProvider()
     {
         return [
             [
@@ -76,8 +72,8 @@ class SanitizeCookiesProcessorTest extends TestCase
                 [
                     'foo' => 'bar',
                     'cookies' => [
-                        'foo' => SanitizeCookiesProcessor::STRING_MASK,
-                        'bar' => SanitizeCookiesProcessor::STRING_MASK,
+                        'foo' => SanitizeCookiesMiddleware::STRING_MASK,
+                        'bar' => SanitizeCookiesMiddleware::STRING_MASK,
                     ],
                     'headers' => [
                         'another-header' => 'foo',
@@ -91,7 +87,7 @@ class SanitizeCookiesProcessorTest extends TestCase
                 [
                     'foo' => 'bar',
                     'cookies' => [
-                        'foo' => SanitizeCookiesProcessor::STRING_MASK,
+                        'foo' => SanitizeCookiesMiddleware::STRING_MASK,
                         'bar' => 'foo',
                     ],
                     'headers' => [
@@ -107,7 +103,7 @@ class SanitizeCookiesProcessorTest extends TestCase
                     'foo' => 'bar',
                     'cookies' => [
                         'foo' => 'bar',
-                        'bar' => SanitizeCookiesProcessor::STRING_MASK,
+                        'bar' => SanitizeCookiesMiddleware::STRING_MASK,
                     ],
                     'headers' => [
                         'another-header' => 'foo',
