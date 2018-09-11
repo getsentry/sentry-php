@@ -298,7 +298,7 @@ need to ensure you cleanup the context (to reset its state):
 Processors
 ----------
 
-The following processors are available bundled with sentry-php. They can used in ``processors`` configuration, and configured through ``processorOptions`` as described above.
+The following processors are available bundled with sentry-php. They can be used in ``processors`` configuration, and configured through ``processorOptions`` as described above.
 
 .. describe:: Raven_Processor_SanitizeDataProcessor
 
@@ -307,9 +307,9 @@ The following processors are available bundled with sentry-php. They can used in
    
    Available options:
    
-   - ``fields_re``: takes an regex expression of fields to sanitize
+   - ``fields_re``: takes a regex expression of fields to sanitize
      Defaults to ``/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i``
-   - ``values_re``: takes an regex expression of values to sanitize
+   - ``values_re``: takes a regex expression of values to sanitize
      Defaults to ``/^(?:\d[ -]*?){13,16}$/``
 
 .. describe:: Raven_Processor_SanitizeHttpHeadersProcessor
@@ -325,15 +325,15 @@ The following processors are available bundled with sentry-php. They can used in
 .. describe:: Raven_Processor_SanitizeStacktraceProcessor
 
    This processor removes the `pre_context`, `context_line` and `post_context`
-   informations from all exceptions captured by an event.
+   information from all exceptions captured by an event.
 
 .. describe:: Raven_Processor_RemoveHttpBodyProcessor
 
    This processor removes all the data of the HTTP body to ensure no sensitive
-   informations are sent to the server in case the request method is POST, PUT,
+   information is sent to the server in case the request method is POST, PUT,
    PATCH or DELETE.
  
 .. describe:: Raven_Processor_RemoveCookiesProcessor
  
    This processor removes all the cookies from the request to ensure no sensitive
-   informations are sent to the server.
+   information is sent to the server.
