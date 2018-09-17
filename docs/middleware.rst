@@ -67,20 +67,15 @@ middleware that customizes the message captured with an event can be written:
   use Raven\ClientBuilder;
   use Raven\Event;
 
-  class CustomMiddleware
+  final class CustomMiddleware
   {
       public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
       {
-          $event = $event->withMessage('hello world');
+          $event->setMessage('hello world');
 
           return $next($event, $request, $exception, $payload);
       }
   }
-
-As you can see the ``$event`` variable must always be reassigned to the result of
-the called ``with*`` method: this is because the ``Event`` class is immutable by
-design and any method that edit its data will act on a new instance of the event
-instead of the original one.
 
 Using a middleware
 ==================

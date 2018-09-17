@@ -10,53 +10,81 @@
     PHP
     ===
 
-The PHP SDK for Sentry supports PHP 5.3 and higher.  It's
-available as a BSD licensed Open Source library.
+The PHP SDK for Sentry supports PHP 5.6 and higher and is available as a BSD
+licensed Open Source library.
 
 Installation
 ------------
+To install the SDK you will need to be using Composer_ in your project. To install
+it please see the `docs <https://getcomposer.org/download/>`_.
 
-There are various ways to install the PHP integration for Sentry.  The
-recommended way is to use `Composer <http://getcomposer.org/>`__::
+Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
+it uses Httplug_ to let users choose whichever PSR-7 implementation and HTTP client
+they want to use.
 
-    $ composer require "sentry/sentry"
+If you just want to get started quickly you should run the following command:
 
-Configuration
--------------
+.. code-block:: bash
 
-The most important part is the creation of the raven client.  Create it
-once and reference it from anywhere you want to interface with Sentry:
+    php composer.phar require sentry/sentry php-http/curl-client guzzlehttp/psr7
+
+This will install the library itself along with an HTTP client adapter that uses
+cURL as transport method (provided by Httplug) and a PSR-7 implementation
+(provided by Guzzle). You do not have to use those packages if you do not want to.
+The SDK does not care about which transport method you want to use because it's
+an implementation detail of your application. You may use any package that provides
+`php-http/async-client-implementation`_ and `http-message-implementation`_.
+
+If you want to use Guzzle as underlying HTTP client, you just need to run the
+following command to install the adapter and Guzzle itself:
+
+.. code-block:: bash
+
+    php composer.phar require php-http/guzzle6-adapter
+
+You can then use the client builder to create a Raven client instance that will
+use the configured HTTP client based on Guzzle. The code looks like the one
+below:
 
 .. code-block:: php
 
-    $client = new \Raven\Client('___PUBLIC_DSN___');
+    use Http\Adapter\Guzzle6\Client as GuzzleClientAdapter;
+    use Raven\ClientBuilder;
 
-Once you have the client you can either use it manually or enable the
-automatic error and exception capturing which is recomended:
+    require 'vendor/autoload.php';
+
+    // The client will use a Guzzle client to send the HTTP requests
+    $client = ClientBuilder::create(['server' => 'http://___PUBLIC_DSN___@example.com/1'])
+        ->setHttpClient(new GuzzleClientAdapter())
+        ->getClient();
+
+If you want to have more control on the Guzzle HTTP client you can create the
+instance yourself and tell the adapter to use it instead of creating one
+on-the-fly. Please refer to the `HTTPlug Guzzle 6 Adapter documentation`_ for
+instructions on how to do it.
+
+Usage
+-----
 
 .. code-block:: php
 
-    $error_handler = new \Raven\ErrorHandler($client);
-    $error_handler->registerExceptionHandler();
-    $error_handler->registerErrorHandler();
-    $error_handler->registerShutdownFunction();
+    use Raven\ClientBuilder;
+    use Raven\ErrorHandler;
 
-Adding Context
---------------
+    require 'vendor/autoload.php';
 
-Much of the usefulness of Sentry comes from additional context data with
-the events.  The PHP client makes this very convenient by providing
-methods to set thread local context data that is then submitted
-automatically with all events.  For instance you can use the
-``setUserContext`` method to add information about the current user:
+    // Instantiate the SDK with your DSN
+    $client = ClientBuilder::create(['server' => 'http://___PUBLIC_DSN___@example.com/1'])->getClient();
 
-.. sourcecode:: php
+    // Register error handler to automatically capture errors and exceptions
+    ErrorHandler::register($client);
 
-    $client->setUserContext(array(
-        'email' => $USER->getEmail()
-    ));
+    // Capture an exception manually
+    $eventId = $client->captureException(new \RuntimeException('Hello World!'));
 
-For more information see :ref:`sentry-php-request-context`.
+    // Give the user feedback
+    echo 'Sorry, there was an error!';
+    echo 'Your reference ID is ' . $eventId;
 
 Deep Dive
 ---------
@@ -67,11 +95,23 @@ Want more?  Have a look at the full documentation for more information.
    :maxdepth: 2
    :titlesonly:
 
-   usage
-   config
+   quickstart
+   configuration
+   transport
+   middleware
+   error_handling
    integrations/index
 
 Resources:
 
 * `Bug Tracker <http://github.com/getsentry/sentry-php/issues>`_
 * `Github Project <http://github.com/getsentry/sentry-php>`_
+* `Code <http://github.com/getsentry/sentry-php>`_
+* `Mailing List <https://groups.google.com/group/getsentry>`_
+* `IRC (irc.freenode.net, #sentry) <irc://irc.freenode.net/sentry>`_
+
+.. _Httplug: https://github.com/php-http/httplug
+.. _Composer: https://getcomposer.org
+.. _php-http/async-client-implementation: https://packagist.org/providers/php-http/async-client-implementation
+.. _http-message-implementation: https://packagist.org/providers/psr/http-message-implementation
+.. _HTTPlug Guzzle 6 Adapter documentation: http://docs.php-http.org/en/latest/clients/guzzle6-adapter.html
