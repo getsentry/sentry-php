@@ -15,10 +15,10 @@ use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\ClientInterface;
 use Raven\Event;
-use Raven\Middleware\SanitizeStacktraceMiddleware;
+use Raven\Middleware\RemoveStacktraceContextMiddleware;
 use Raven\Stacktrace;
 
-class SanitizeStacktraceMiddlewareTest extends TestCase
+class RemoveStacktraceContextMiddlewareTest extends TestCase
 {
     /**
      * @var ClientInterface
@@ -49,7 +49,7 @@ class SanitizeStacktraceMiddlewareTest extends TestCase
             $callbackInvoked = true;
         };
 
-        $middleware = new SanitizeStacktraceMiddleware();
+        $middleware = new RemoveStacktraceContextMiddleware();
         $middleware($event, $callback);
 
         $this->assertTrue($callbackInvoked);
@@ -74,7 +74,7 @@ class SanitizeStacktraceMiddlewareTest extends TestCase
             $callbackInvoked = true;
         };
 
-        $middleware = new SanitizeStacktraceMiddleware();
+        $middleware = new RemoveStacktraceContextMiddleware();
         $middleware($event, $callback);
 
         $this->assertTrue($callbackInvoked);

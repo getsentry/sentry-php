@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
 use Raven\ClientBuilder;
 use Raven\ClientInterface;
 use Raven\Event;
-use Raven\Middleware\SanitizeHttpBodyMiddleware;
+use Raven\Middleware\RemoveHttpBodyMiddleware;
 
-class SanitizeHttpBodyMiddlewareTest extends TestCase
+class RemoveHttpBodyMiddlewareTest extends TestCase
 {
     /**
      * @var ClientInterface
@@ -25,14 +25,14 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
     protected $client;
 
     /**
-     * @var SanitizeHttpBodyMiddleware|\PHPUnit_Framework_MockObject_MockObject
+     * @var RemoveHttpBodyMiddleware|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $middleware;
 
     protected function setUp()
     {
         $this->client = ClientBuilder::create()->getClient();
-        $this->middleware = new SanitizeHttpBodyMiddleware();
+        $this->middleware = new RemoveHttpBodyMiddleware();
     }
 
     /**
@@ -50,7 +50,7 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
             $callbackInvoked = true;
         };
 
-        $middleware = new SanitizeHttpBodyMiddleware();
+        $middleware = new RemoveHttpBodyMiddleware();
         $middleware($event, $callback);
 
         $this->assertTrue($callbackInvoked);
@@ -67,7 +67,7 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
+                    'data' => RemoveHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -78,7 +78,7 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
+                    'data' => RemoveHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -89,7 +89,7 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
+                    'data' => RemoveHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [
@@ -100,7 +100,7 @@ class SanitizeHttpBodyMiddlewareTest extends TestCase
                     ],
                 ],
                 [
-                    'data' => SanitizeHttpBodyMiddleware::STRING_MASK,
+                    'data' => RemoveHttpBodyMiddleware::STRING_MASK,
                 ],
             ],
             [

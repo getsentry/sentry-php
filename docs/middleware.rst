@@ -31,7 +31,7 @@ There are also some "special" middlewares that should be executed after all the
 other middlewares so that they can sanitize and remove sensitive information before
 they reach the Sentry server:
 
-- ``SanitizeHttpBodyMiddleware``: sanitizes the data sent as body of a POST
+- ``RemoveHttpBodyMiddleware``: sanitizes the data sent as body of a POST
   request.
 - ``SanitizeCookiesMiddleware``: sanitizes the cookies sent with the request
   by hiding sensitive information.
@@ -39,7 +39,7 @@ they reach the Sentry server:
   sensitive information.
 - ``SanitizeHttpHeadersMiddleware``: sanitizes the headers of the request by
   hiding sensitive information.
-- ``SanitizeStacktraceMiddleware``: sanitizes the captured stacktrace by
+- ``RemoveStacktraceContextMiddleware``: sanitizes the captured stacktrace by
   removing the excerpts of source code attached to each frame. This middleware
   is not enabled by default.
 
@@ -90,11 +90,11 @@ have the following priorities:
   all "standard" middlewares)
 - ``SanitizeCookiesMiddleware``: -200 (this middleware should always be after
   all "standard" middlewares)
-- ``SanitizeHttpBodyMiddleware``: -200 (this middleware should always be after
+- ``RemoveHttpBodyMiddleware``: -200 (this middleware should always be after
   all "standard" middlewares)
 - ``SanitizeHttpHeadersMiddleware``: -200 (this middleware should always be after
   all "standard" middlewares)
-- ``SanitizeStacktraceMiddleware``: -200 (this middleware should always be after
+- ``RemoveStacktraceContextMiddleware``: -200 (this middleware should always be after
   all "standard" middlewares)
 - ``MessageInterfaceMiddleware``: 0
 - ``RequestInterfaceMiddleware``: 0

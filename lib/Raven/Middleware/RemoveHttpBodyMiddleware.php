@@ -15,12 +15,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Raven\Event;
 
 /**
- * This middleware removes the `pre_context`, `context_line` and `post_context`
- * information from all exception frames captured by an event.
+ * This middleware removes all the data of the HTTP body to ensure no sensitive
+ * information are sent to the server in case the request method is POST, PUT,
+ * PATCH or DELETE.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SanitizeStacktraceMiddleware implements ProcessorMiddlewareInterface
+final class RemoveHttpBodyMiddleware implements ProcessorMiddlewareInterface
 {
     /**
      * Collects the needed data and sets it in the given event object.
@@ -35,17 +36,13 @@ final class SanitizeStacktraceMiddleware implements ProcessorMiddlewareInterface
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $stacktrace = $event->getStacktrace();
+        $request = $event->getRequest();
 
-        if (null !== $stacktrace) {
-            foreach ($stacktrace->getFrames() as $frame) {
-                $frame->setPreContext(null);
-                $frame->setContextLine(null);
-                $frame->setPostContext(null);
-            }
-
-            $event->setStacktrace($stacktrace);
+        if (isset($request['method']) && \in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            $request['data'] = self::STRING_MASK;
         }
+
+        $event->setRequest($request);
 
         return $next($event, $request, $exception, $payload);
     }
