@@ -461,24 +461,29 @@
 
 ### Processors
 
-- The `Raven_Processor_RemoveCookiesProcessor` class has been renamed to `SanitizeCookiesProcessor`
-  to better reflect its purpose. The constructor accepts an array of options to
-  make the behaviour of which cookies to sanitize configurable.
+All processor have been refactored into middlewares, and have changed names
+to follow PSR-4 convention.
+
+- The `Raven_Processor_RemoveCookiesProcessor` class has been renamed to 
+  `SanitizeCookiesMiddleware` to better reflect its purpose. The constructor 
+  accepts an array of options to make the behaviour of which cookies to 
+  sanitize configurable.
 
 - The `Raven_Processor_SanitizeStacktraceProcessor` class has been renamed to
-  `SanitizeStacktraceProcessor` to follow the PSR-4 convention.
+  `RemoveStacktraceContextMiddleware` to follow the PSR-4 convention and better
+  reflect its purpose.
 
 - The `Raven_Processor_SanitizeHttpHeadersProcessor` class has been renamed to
-  `SanitizeHttpHeadersProcessor` to follow the PSR-4 convention.
+  `SanitizeHttpHeadersMiddleware` to follow the PSR-4 convention.
 
 - The `Raven_Processor_RemoveHttpBodyProcessor` class has been renamed to
-  `RemoveHttpBodyProcessor` to follow the PSR-4 convention.
+  `RemoveHttpBodyMiddleware` to follow the PSR-4 convention.
 
 - The `Raven_Processor_SanitizeDataProcessor` class has been renamed to
-  `SanitizeDataProcessor` to follow the PSR-4 convention.
+  `SanitizeDataMiddleware` to follow the PSR-4 convention.
 
 - The `Raven_Processor` class has been removed. There is not anymore a base
-  abstract class for the processors, but a `ProcessorInterface` interface has
+  abstract class for the processors, but a `ProcessorMiddlewareInterface` interface has
   been introduced.
 
 ### Context

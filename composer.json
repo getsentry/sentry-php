@@ -38,6 +38,7 @@
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
+        "php-http/client-common": "^1.8.0",
         "raven/raven": "*"
     },
     "bin": [
