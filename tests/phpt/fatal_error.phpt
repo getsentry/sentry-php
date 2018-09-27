@@ -3,11 +3,11 @@ Test catching fatal errors
 --FILE--
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
-use Raven\ClientBuilder;
-use Raven\ErrorHandler;
+use Sentry\ClientBuilder;
+use Sentry\ErrorHandler;
 
 $vendor = __DIR__;
 
@@ -25,7 +25,7 @@ $client = ClientBuilder::create([
 ErrorHandler::register($client);
 
 register_shutdown_function('register_shutdown_function', function () use ($client) {
-    /** @var \Raven\Transport\HttpTransport $transport */
+    /** @var \Sentry\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
 
     Assert::assertNotNull($client->getLastEvent());
@@ -39,5 +39,5 @@ class TestClass implements \Serializable
 }
 ?>
 --EXPECTF--
-Fatal error: Class Raven\Tests\TestClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
+Fatal error: Class Sentry\Tests\TestClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
 Shutdown function called

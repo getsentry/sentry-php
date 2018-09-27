@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Sentry\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Client;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Client;
 
 /**
  * @group time-sensitive
@@ -21,8 +21,8 @@ use Raven\Client;
 class BreadcrumbTest extends TestCase
 {
     /**
-     * @expectedException \Raven\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.
+     * @expectedException \Sentry\Exception\InvalidArgumentException
+     * @expectedExceptionMessage The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.
      */
     public function testConstructorThrowsOnInvalidLevel()
     {
@@ -30,8 +30,8 @@ class BreadcrumbTest extends TestCase
     }
 
     /**
-     * @expectedException \Raven\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.
+     * @expectedException \Sentry\Exception\InvalidArgumentException
+     * @expectedExceptionMessage The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.
      */
     public function testSetLevelThrowsOnInvalidLevel()
     {

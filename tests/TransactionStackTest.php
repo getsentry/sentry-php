@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Raven\TransactionStack;
+use Sentry\TransactionStack;
 
 class TransactionStackTest extends TestCase
 {

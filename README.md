@@ -53,7 +53,7 @@ and [`http-message-implementation`](https://packagist.org/providers/psr/http-mes
 ```php
 namespace XXX;
 
-use Raven\ClientBuilder;
+use Sentry\ClientBuilder;
 
 require 'vendor/autoload.php';
 
@@ -132,7 +132,7 @@ $ git checkout -b releases/2.1.x
 3. Update the hardcoded version tag in ``Client.php``:
 
 ```php
-namespace Raven;
+namespace Sentry;
 
 class Client
 {
@@ -173,7 +173,7 @@ git checkout master
 9. Update the version in ``Client.php``:
 
 ```php
-namespace Raven;
+namespace Sentry;
 
 class Client implements ClientInterface
 {

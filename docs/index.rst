@@ -49,7 +49,7 @@ below:
 .. code-block:: php
 
     use Http\Adapter\Guzzle6\Client as GuzzleClientAdapter;
-    use Raven\ClientBuilder;
+    use Sentry\ClientBuilder;
 
     require 'vendor/autoload.php';
 
@@ -68,8 +68,8 @@ Usage
 
 .. code-block:: php
 
-    use Raven\ClientBuilder;
-    use Raven\ErrorHandler;
+    use Sentry\ClientBuilder;
+    use Sentry\ErrorHandler;
 
     require 'vendor/autoload.php';
 

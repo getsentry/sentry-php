@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Breadcrumbs\Recorder;
-use Raven\Client;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\BreadcrumbInterfaceMiddleware;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\Recorder;
+use Sentry\Client;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\BreadcrumbInterfaceMiddleware;
 
 class BreadcrumbInterfaceMiddlewareTest extends TestCase
 {

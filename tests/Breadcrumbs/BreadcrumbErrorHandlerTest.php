@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Sentry\Tests\Breadcrumbs;
 
-use Raven\BreadcrumbErrorHandler;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Client;
-use Raven\Tests\AbstractErrorHandlerTest;
+use Sentry\BreadcrumbErrorHandler;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Client;
+use Sentry\Tests\AbstractErrorHandlerTest;
 
 class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
 {

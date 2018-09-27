@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Transport;
+namespace Sentry\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Spool\SpoolInterface;
-use Raven\Transport\SpoolTransport;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Spool\SpoolInterface;
+use Sentry\Transport\SpoolTransport;
 
 class SpoolTransportTest extends TestCase
 {

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Transport;
+namespace Sentry\Tests\Transport;
 
 use Http\Client\Exception\HttpException;
 use Http\Client\HttpAsyncClient;
@@ -17,10 +17,10 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Promise\Promise;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Transport\HttpTransport;
-use Raven\Util\JSON;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Transport\HttpTransport;
+use Sentry\Util\JSON;
 
 class HttpTransportTest extends TestCase
 {

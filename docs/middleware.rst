@@ -53,7 +53,7 @@ The signature of the function that will be called must be the following:
 
 .. code-block:: php
 
-  function (\Raven\Event $event, callable $next, \Psr\Http\Message\ServerRequestInterface $request = null, $exception = null, array $payload = [])
+  function (\Sentry\Event $event, callable $next, \Psr\Http\Message\ServerRequestInterface $request = null, $exception = null, array $payload = [])
 
 The middleware can call the next one in the chain or can directly return the
 event instance and break the chain. Additional data supplied by the user while
@@ -64,8 +64,8 @@ middleware that customizes the message captured with an event can be written:
 .. code-block:: php
 
   use Psr\Http\Message\ServerRequestInterface;
-  use Raven\ClientBuilder;
-  use Raven\Event;
+  use Sentry\ClientBuilder;
+  use Sentry\Event;
 
   final class CustomMiddleware
   {
@@ -122,8 +122,8 @@ can manage the middlewares at runtime and the chain will be recomputed according
 .. code-block:: php
 
   use Psr\Http\Message\ServerRequestInterface;
-  use Raven\ClientBuilder;
-  use Raven\Event;
+  use Sentry\ClientBuilder;
+  use Sentry\Event;
 
   $middleware = function (Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = []) {
       // Do something here

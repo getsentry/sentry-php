@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Util\Fixtures;
+namespace Sentry\Tests\Util\Fixtures;
 
 class SimpleClass
 {

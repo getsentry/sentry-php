@@ -1,8 +1,8 @@
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
-use Raven\Serializer;
+use Sentry\Serializer;
 
 class SerializerTest extends AbstractSerializerTest
 {

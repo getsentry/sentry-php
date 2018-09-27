@@ -29,9 +29,9 @@ the events, but report them as sent.
 
 .. code-block:: php
 
-  use Raven\Client;
-  use Raven\Configuration;
-  use Raven\Transport\NullTransport;
+  use Sentry\Client;
+  use Sentry\Configuration;
+  use Sentry\Transport\NullTransport;
 
   // Even though the server is configured for the client, using the NullTransport
   // transport won't send any event
@@ -48,9 +48,9 @@ through the client builder, but you can override it using the appropriate method
 
 .. code-block:: php
 
-  use Raven\Client;
-  use Raven\Configuration;
-  use Raven\Transport\HttpTransport;
+  use Sentry\Client;
+  use Sentry\Configuration;
+  use Sentry\Transport\HttpTransport;
 
   $configuration = new Configuration(['server' => 'http://public:secret@example.com/1']);
   $transport = new HttpTransport($configuration, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
@@ -67,9 +67,9 @@ care of sending them. Currently only spooling to memory is supported.
 
 .. code-block:: php
 
-  use Raven\Client;
-  use Raven\Configuration;
-  use Raven\Transport\SpoolTransport;
+  use Sentry\Client;
+  use Sentry\Configuration;
+  use Sentry\Transport\SpoolTransport;
 
   // The transport used by the client to send the events uses the memory spool
   // which stores the events in a queue in-memory

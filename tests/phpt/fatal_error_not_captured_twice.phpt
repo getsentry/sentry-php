@@ -3,13 +3,13 @@ Test catching fatal errors does not capture twice
 --FILE--
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
-use Raven\ClientBuilder;
-use Raven\ErrorHandler;
-use Raven\Spool\MemorySpool;
-use Raven\Transport\SpoolTransport;
+use Sentry\ClientBuilder;
+use Sentry\ErrorHandler;
+use Sentry\Spool\MemorySpool;
+use Sentry\Transport\SpoolTransport;
 
 $vendor = __DIR__;
 

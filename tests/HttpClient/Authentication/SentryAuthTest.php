@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\HttpClient\Authentication;
+namespace Sentry\Tests\HttpClient\Authentication;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use Raven\Client;
-use Raven\Configuration;
-use Raven\HttpClient\Authentication\SentryAuth;
+use Sentry\Client;
+use Sentry\Configuration;
+use Sentry\HttpClient\Authentication\SentryAuth;
 
 /**
  * @group time-sensitive

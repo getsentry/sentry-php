@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\ModulesMiddleware;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\ModulesMiddleware;
 
 class ModulesMiddlewareTest extends TestCase
 {

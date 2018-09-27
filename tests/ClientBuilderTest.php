@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\PluginClient;
@@ -18,12 +18,12 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use Raven\Client;
-use Raven\ClientBuilder;
-use Raven\Configuration;
-use Raven\Transport\HttpTransport;
-use Raven\Transport\NullTransport;
-use Raven\Transport\TransportInterface;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\Configuration;
+use Sentry\Transport\HttpTransport;
+use Sentry\Transport\NullTransport;
+use Sentry\Transport\TransportInterface;
 
 class ClientBuilderTest extends TestCase
 {

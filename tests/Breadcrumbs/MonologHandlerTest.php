@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Sentry\Tests\Breadcrumbs;
 
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Breadcrumbs\MonologHandler;
-use Raven\Client;
-use Raven\ClientBuilder;
-use Raven\ClientInterface;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\MonologHandler;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
 
 class MonologHandlerTest extends TestCase
 {

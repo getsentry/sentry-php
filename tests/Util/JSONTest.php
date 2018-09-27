@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Util;
+namespace Sentry\Tests\Util;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Tests\Util\Fixtures\JsonSerializableClass;
-use Raven\Tests\Util\Fixtures\SimpleClass;
-use Raven\Util\JSON;
+use Sentry\Tests\Util\Fixtures\JsonSerializableClass;
+use Sentry\Tests\Util\Fixtures\SimpleClass;
+use Sentry\Util\JSON;
 
 class JSONTest extends TestCase
 {

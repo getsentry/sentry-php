@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Raven\ClientBuilder;
-use Raven\ClientInterface;
-use Raven\Frame;
-use Raven\Stacktrace;
+use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
+use Sentry\Frame;
+use Sentry\Stacktrace;
 
 class StacktraceTest extends TestCase
 {

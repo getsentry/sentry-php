@@ -1,21 +1,21 @@
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidFactoryInterface;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Client;
-use Raven\ClientBuilder;
-use Raven\ClientInterface;
-use Raven\Configuration;
-use Raven\Context\Context;
-use Raven\Context\RuntimeContext;
-use Raven\Context\ServerOsContext;
-use Raven\Context\TagsContext;
-use Raven\Event;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
+use Sentry\Configuration;
+use Sentry\Context\Context;
+use Sentry\Context\RuntimeContext;
+use Sentry\Context\ServerOsContext;
+use Sentry\Context\TagsContext;
+use Sentry\Event;
 
 /**
  * @group time-sensitive

@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\RequestInterfaceMiddleware;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\RequestInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 

@@ -3,11 +3,11 @@ Test catching out of memory fatal error
 --FILE--
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
-use Raven\ClientBuilder;
-use Raven\ErrorHandler;
+use Sentry\ClientBuilder;
+use Sentry\ErrorHandler;
 
 ini_set('memory_limit', '20M');
 
@@ -27,7 +27,7 @@ $client = ClientBuilder::create([
 ErrorHandler::register($client);
 
 register_shutdown_function('register_shutdown_function', function () use ($client) {
-    /** @var \Raven\Transport\HttpTransport $transport */
+    /** @var \Sentry\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
 
     Assert::assertNotNull($client->getLastEvent());

@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
-use Raven\AbstractErrorHandler;
-use Raven\ErrorHandler;
+use Sentry\AbstractErrorHandler;
+use Sentry\ErrorHandler;
 
 class ErrorHandlerTest extends AbstractErrorHandlerTest
 {

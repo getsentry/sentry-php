@@ -9,14 +9,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
-use Raven\ClientBuilder;
-use Raven\Event;
-use Raven\Middleware\ExceptionInterfaceMiddleware;
-use Raven\Stacktrace;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\Event;
+use Sentry\Middleware\ExceptionInterfaceMiddleware;
+use Sentry\Stacktrace;
 
 class ExceptionInterfaceMiddlewareTest extends TestCase
 {
@@ -213,7 +213,7 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
             $latin1StringFound = false;
 
-            /** @var \Raven\Frame $frame */
+            /** @var \Sentry\Frame $frame */
             foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
                 if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
                     $latin1StringFound = true;
