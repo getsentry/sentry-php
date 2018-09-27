@@ -46,15 +46,12 @@
     ],
     "autoload": {
         "psr-4" : {
-            "Raven\\" : "lib/Raven/"
-        },
-        "exclude-from-classmap": [
-            "/tests/"
-        ]
+            "Sentry\\" : "src/"
+        }
     },
     "autoload-dev": {
         "psr-4": {
-            "Raven\\Tests\\": "tests/"
+            "Sentry\\Tests\\": "tests/"
         }
     },
     "scripts": {
