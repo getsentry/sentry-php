@@ -79,7 +79,7 @@ class ContextInterfaceMiddlewareTest extends TestCase
                 ],
                 [
                     'name' => 'foobar',
-                    'version' => PHP_VERSION,
+                    'version' => PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION,
                 ],
                 null,
             ],
