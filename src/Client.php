@@ -9,16 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Breadcrumbs\Recorder;
-use Raven\Context\Context;
-use Raven\Context\RuntimeContext;
-use Raven\Context\ServerOsContext;
-use Raven\Context\TagsContext;
-use Raven\Middleware\MiddlewareStack;
-use Raven\Transport\TransportInterface;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\Recorder;
+use Sentry\Context\Context;
+use Sentry\Context\RuntimeContext;
+use Sentry\Context\ServerOsContext;
+use Sentry\Context\TagsContext;
+use Sentry\Middleware\MiddlewareStack;
+use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**

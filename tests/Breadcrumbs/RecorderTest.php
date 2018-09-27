@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Breadcrumbs;
+namespace Sentry\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Breadcrumbs\Recorder;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\Recorder;
 
 /**
  * @group time-sensitive

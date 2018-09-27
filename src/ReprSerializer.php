@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 /**
  * Serializes a value into a representation that should reasonably suggest
  * both the type and value, and be serializable into JSON.
  */
-class ReprSerializer extends \Raven\Serializer
+class ReprSerializer extends \Sentry\Serializer
 {
     protected function serializeValue($value)
     {

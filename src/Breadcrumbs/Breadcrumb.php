@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Breadcrumbs;
+namespace Sentry\Breadcrumbs;
 
-use Raven\Client;
-use Raven\Exception\InvalidArgumentException;
+use Sentry\Client;
+use Sentry\Exception\InvalidArgumentException;
 
 /**
  * This class stores all the informations about a breadcrumb.
@@ -83,7 +83,7 @@ final class Breadcrumb implements \JsonSerializable
     public function __construct($level, $type, $category, $message = null, array $metadata = [])
     {
         if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
+            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
         }
 
         $this->type = $type;
@@ -159,7 +159,7 @@ final class Breadcrumb implements \JsonSerializable
     public function withLevel($level)
     {
         if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Raven\Client::LEVEL_* constants.');
+            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
         }
 
         if ($level === $this->level) {

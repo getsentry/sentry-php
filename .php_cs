@@ -8,6 +8,8 @@ return PhpCsFixer\Config::create()
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
         'ordered_imports' => true,
+        'psr0' => true,
+        'psr4' => true,
         'random_api_migration' => true,
         'yoda_style' => true,
         'phpdoc_align' => [

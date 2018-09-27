@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\HttpClient\Encoding;
+namespace Sentry\Tests\HttpClient\Encoding;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
-use Raven\HttpClient\Encoding\Base64EncodingStream;
+use Sentry\HttpClient\Encoding\Base64EncodingStream;
 use Zend\Diactoros\Stream;
 
 class Base64EncodingStreamTest extends TestCase

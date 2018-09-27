@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
+use Sentry\Configuration;
+use Sentry\Event;
 
 class ConfigurationTest extends TestCase
 {

@@ -8,26 +8,26 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
-use Raven\Breadcrumbs\Recorder as BreadcrumbsRecorder;
-use Raven\Client;
-use Raven\ClientBuilder;
-use Raven\Context\Context;
-use Raven\Context\RuntimeContext;
-use Raven\Context\ServerOsContext;
-use Raven\Context\TagsContext;
-use Raven\Event;
-use Raven\Middleware\MiddlewareStack;
-use Raven\ReprSerializer;
-use Raven\Serializer;
-use Raven\Tests\Fixtures\classes\CarelessException;
-use Raven\TransactionStack;
-use Raven\Transport\TransportInterface;
+use Sentry\Breadcrumbs\Recorder as BreadcrumbsRecorder;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\Context\Context;
+use Sentry\Context\RuntimeContext;
+use Sentry\Context\ServerOsContext;
+use Sentry\Context\TagsContext;
+use Sentry\Event;
+use Sentry\Middleware\MiddlewareStack;
+use Sentry\ReprSerializer;
+use Sentry\Serializer;
+use Sentry\Tests\Fixtures\classes\CarelessException;
+use Sentry\TransactionStack;
+use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
@@ -240,7 +240,7 @@ class ClientTest extends TestCase
     /**
      * @group legacy
      *
-     * @expectedDeprecation The Raven\Client::getLastEventId() method is deprecated since version 2.0. Use getLastEvent() instead.
+     * @expectedDeprecation The Sentry\Client::getLastEventId() method is deprecated since version 2.0. Use getLastEvent() instead.
      */
     public function testGetLastEventId()
     {
@@ -337,8 +337,8 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @covers \Raven\Client::translateSeverity
-     * @covers \Raven\Client::registerSeverityMap
+     * @covers \Sentry\Client::translateSeverity
+     * @covers \Sentry\Client::registerSeverityMap
      */
     public function testTranslateSeverity()
     {
@@ -466,8 +466,8 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create()->getClient();
         $client->leaveBreadcrumb(
-            new \Raven\Breadcrumbs\Breadcrumb(
-                'warning', \Raven\Breadcrumbs\Breadcrumb::TYPE_ERROR, 'error_reporting', 'message', [
+            new \Sentry\Breadcrumbs\Breadcrumb(
+                'warning', \Sentry\Breadcrumbs\Breadcrumb::TYPE_ERROR, 'error_reporting', 'message', [
                     'code' => 127,
                     'line' => 10,
                     'file' => '/tmp/delme.php',

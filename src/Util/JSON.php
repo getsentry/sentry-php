@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Util;
+namespace Sentry\Util;
 
 /**
  * This class provides some utility methods to encode/decode JSON data.

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 /**
  * This class implements a simple error handler that catches all configured

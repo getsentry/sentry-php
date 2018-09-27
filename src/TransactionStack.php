@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 /**
  * This class is a LIFO collection that only allows access to the value at the

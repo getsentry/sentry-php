@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
-use Raven\ReprSerializer;
+use Sentry\ReprSerializer;
 
 class ReprSerializerTest extends AbstractSerializerTest
 {
@@ -91,7 +91,7 @@ class ReprSerializerTest extends AbstractSerializerTest
     /**
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
-     * @covers \Raven\ReprSerializer::serializeValue
+     * @covers \Sentry\ReprSerializer::serializeValue
      */
     public function testSerializeRoundedFloat($serialize_all_objects)
     {

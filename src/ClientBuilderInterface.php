@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
-use Raven\Transport\TransportInterface;
+use Sentry\Transport\TransportInterface;
 
 /**
  * A configurable builder for Client objects.

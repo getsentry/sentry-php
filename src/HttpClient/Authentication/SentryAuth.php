@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\HttpClient\Authentication;
+namespace Sentry\HttpClient\Authentication;
 
 use Http\Message\Authentication;
 use Psr\Http\Message\RequestInterface;
-use Raven\Client;
-use Raven\Configuration;
+use Sentry\Client;
+use Sentry\Configuration;
 
 /**
  * This authentication method sends the requests along with a X-Sentry-Auth

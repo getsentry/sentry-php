@@ -9,16 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Sentry\Transport;
 
 use Http\Client\HttpAsyncClient;
 use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\HttpClient\Encoding\Base64EncodingStream;
-use Raven\Util\JSON;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\HttpClient\Encoding\Base64EncodingStream;
+use Sentry\Util\JSON;
 
 /**
  * This transport sends the events using an HTTP client.

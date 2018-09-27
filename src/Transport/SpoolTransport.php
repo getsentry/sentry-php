@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Sentry\Transport;
 
-use Raven\Event;
-use Raven\Spool\SpoolInterface;
+use Sentry\Event;
+use Sentry\Spool\SpoolInterface;
 
 /**
  * This transport stores the events in a queue to send them later.

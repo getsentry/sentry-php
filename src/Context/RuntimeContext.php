@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Context;
+namespace Sentry\Context;
 
-use Raven\Util\PHPVersion;
+use Sentry\Util\PHPVersion;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;

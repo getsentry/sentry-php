@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Context;
+namespace Sentry\Context;
 
 /**
  * This class stores generic information that will be attached to an event

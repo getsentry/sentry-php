@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Client;
+use Sentry\Client;
 
 abstract class AbstractSerializerTest extends TestCase
 {
     /**
-     * @return \Raven\Serializer
+     * @return \Sentry\Serializer
      */
     abstract protected function getSerializerUnderTest();
 
@@ -75,7 +75,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $input = new SerializerTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven\Tests\SerializerTestObject', $result);
+        $this->assertEquals('Object Sentry\Tests\SerializerTestObject', $result);
     }
 
     public function testObjectsAreNotStrings()
@@ -187,7 +187,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => 'Object Raven\Tests\SerializerTestObject'],
+            'expectedResult' => ['key' => 'Object Sentry\Tests\SerializerTestObject'],
         ];
 
         $object = new SerializerTestObject();
@@ -196,7 +196,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => 'Object Raven\Tests\SerializerTestObject']],
+            'expectedResult' => ['key' => ['key' => 'Object Sentry\Tests\SerializerTestObject']],
         ];
 
         $object = new SerializerTestObject();
@@ -229,7 +229,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject']]],
+            'expectedResult' => ['key' => ['key' => ['key' => 'Object Sentry\\Tests\\SerializerTestObject']]],
         ];
 
         $object3 = new SerializerTestObject();
@@ -241,7 +241,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object3->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => ['key' => 'Object Raven\\Tests\\SerializerTestObject'], 'keys' => 'keys']],
+            'expectedResult' => ['key' => ['key' => ['key' => 'Object Sentry\\Tests\\SerializerTestObject'], 'keys' => 'keys']],
         ];
     }
 
@@ -287,7 +287,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $input = ['foo' => new SerializerTestObject()];
         $result = $serializer->serialize($input);
-        $this->assertEquals(['foo' => 'Object Raven\\Tests\\SerializerTestObject'], $result);
+        $this->assertEquals(['foo' => 'Object Sentry\\Tests\\SerializerTestObject'], $result);
     }
 
     public function testObjectInArraySerializeAll()
@@ -386,7 +386,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
         $class_name = static::getSerializerUnderTest();
-        /** @var \Raven\Serializer $serializer */
+        /** @var \Sentry\Serializer $serializer */
         $serializer = new $class_name(null, 19);
 
         $clipped = $serializer->serialize($testString);
@@ -424,40 +424,40 @@ abstract class AbstractSerializerTest extends TestCase
             $data = [
                 [
                     'callable' => $closure1,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array param1]',
                 ], [
                     'callable' => $closure2,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [mixed|null param1a]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [mixed|null param1a]',
                 ], [
                     'callable' => $closure4,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [callable param1c]',
                 ], [
                     'callable' => $closure5,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [stdClass param1d]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [stdClass param1d]',
                 ], [
                     'callable' => $closure6,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [stdClass|null [param1e]]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [stdClass|null [param1e]]',
                 ], [
                     'callable' => $closure7,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array &param1f]',
                 ], [
                     'callable' => $closure8,
-                    'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
+                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array|null [&param1g]]',
                 ], [
                     'callable' => [$this, 'serializableCallableProvider'],
-                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::serializableCallableProvider []',
+                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
                 ], [
                     'callable' => [Client::class, 'getConfig'],
-                    'expected' => 'Callable Raven\Client::getConfig []',
+                    'expected' => 'Callable Sentry\Client::getConfig []',
                 ], [
                     'callable' => [TestCase::class, 'setUpBeforeClass'],
                     'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
                 ], [
                     'callable' => [$this, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
                 ], [
                     'callable' => [self::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
                 ],
             ];
             require_once 'resources/php70_serializing.inc';
@@ -472,40 +472,40 @@ abstract class AbstractSerializerTest extends TestCase
         return [
             [
                 'callable' => $closure1,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [array param1]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [array param1]',
             ], [
                 'callable' => $closure2,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [param1a]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [param1a]',
             ], [
                 'callable' => $closure4,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [callable param1c]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [callable param1c]',
             ], [
                 'callable' => $closure5,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [param1d]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [param1d]',
             ], [
                 'callable' => $closure6,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [[param1e]]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [[param1e]]',
             ], [
                 'callable' => $closure7,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [array &param1f]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [array &param1f]',
             ], [
                 'callable' => $closure8,
-                'expected' => 'Lambda Raven\\Tests\\{closure} [array|null [&param1g]]',
+                'expected' => 'Lambda Sentry\\Tests\\{closure} [array|null [&param1g]]',
             ], [
                 'callable' => [$this, 'serializableCallableProvider'],
-                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::serializableCallableProvider []',
+                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
             ], [
                 'callable' => [Client::class, 'getConfig'],
-                'expected' => 'Callable Raven\Client::getConfig []',
+                'expected' => 'Callable Sentry\Client::getConfig []',
             ], [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
                 'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
             ], [
                 'callable' => [$this, 'setUpBeforeClass'],
-                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
             ], [
                 'callable' => [self::class, 'setUpBeforeClass'],
-                'expected' => 'Callable Raven\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
             ],
         ];
     }

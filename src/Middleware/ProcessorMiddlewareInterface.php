@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 /**
  * This interface can be implemented by the middlewares that sanitizes

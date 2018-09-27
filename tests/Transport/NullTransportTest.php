@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Transport;
+namespace Sentry\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Transport\NullTransport;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Transport\NullTransport;
 
 class NullTransportTest extends TestCase
 {

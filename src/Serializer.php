@@ -15,7 +15,7 @@
  * limitations under the License.
 */
 
-namespace Raven;
+namespace Sentry;
 
 /**
  * This helper is based on code from Facebook's Phabricator project.
@@ -255,7 +255,7 @@ class Serializer
     /**
      * @param string $mb_detect_order
      *
-     * @return \Raven\Serializer
+     * @return \Sentry\Serializer
      * @codeCoverageIgnore
      */
     public function setMbDetectOrder($mb_detect_order)

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
@@ -24,22 +24,22 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
-use Raven\Context\Context;
-use Raven\HttpClient\Authentication\SentryAuth;
-use Raven\Middleware\BreadcrumbInterfaceMiddleware;
-use Raven\Middleware\ContextInterfaceMiddleware;
-use Raven\Middleware\ExceptionInterfaceMiddleware;
-use Raven\Middleware\MessageInterfaceMiddleware;
-use Raven\Middleware\RemoveHttpBodyMiddleware;
-use Raven\Middleware\RequestInterfaceMiddleware;
-use Raven\Middleware\SanitizeCookiesMiddleware;
-use Raven\Middleware\SanitizeDataMiddleware;
-use Raven\Middleware\SanitizeHttpHeadersMiddleware;
-use Raven\Middleware\SanitizerMiddleware;
-use Raven\Middleware\UserInterfaceMiddleware;
-use Raven\Transport\HttpTransport;
-use Raven\Transport\NullTransport;
-use Raven\Transport\TransportInterface;
+use Sentry\Context\Context;
+use Sentry\HttpClient\Authentication\SentryAuth;
+use Sentry\Middleware\BreadcrumbInterfaceMiddleware;
+use Sentry\Middleware\ContextInterfaceMiddleware;
+use Sentry\Middleware\ExceptionInterfaceMiddleware;
+use Sentry\Middleware\MessageInterfaceMiddleware;
+use Sentry\Middleware\RemoveHttpBodyMiddleware;
+use Sentry\Middleware\RequestInterfaceMiddleware;
+use Sentry\Middleware\SanitizeCookiesMiddleware;
+use Sentry\Middleware\SanitizeDataMiddleware;
+use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
+use Sentry\Middleware\SanitizerMiddleware;
+use Sentry\Middleware\UserInterfaceMiddleware;
+use Sentry\Transport\HttpTransport;
+use Sentry\Transport\NullTransport;
+use Sentry\Transport\TransportInterface;
 
 /**
  * The default implementation of {@link ClientBuilderInterface}.

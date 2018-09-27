@@ -11,11 +11,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Event;
-use Raven\Stacktrace;
+use Sentry\Event;
+use Sentry\Stacktrace;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**

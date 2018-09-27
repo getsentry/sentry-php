@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
-use Raven\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\Breadcrumb;
 
 /**
  * This error handler records a breadcrumb for any raised error.

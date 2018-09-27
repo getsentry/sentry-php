@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Breadcrumbs;
+namespace Sentry\Breadcrumbs;
 
-use Raven\Exception\InvalidArgumentException;
+use Sentry\Exception\InvalidArgumentException;
 
 /**
  * This class is a circular FIFO buffer that can store up to a certain amount

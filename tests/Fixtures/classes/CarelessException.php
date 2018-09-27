@@ -1,6 +1,6 @@
 <?php
 
-namespace Raven\Tests\Fixtures\classes;
+namespace Sentry\Tests\Fixtures\classes;
 
 class CarelessException extends \Exception
 {

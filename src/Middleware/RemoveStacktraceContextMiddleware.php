@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Event;
+use Sentry\Event;
 
 /**
  * This middleware removes the `pre_context`, `context_line` and `post_context`

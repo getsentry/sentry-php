@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\SanitizerMiddleware;
-use Raven\Serializer;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\SanitizerMiddleware;
+use Sentry\Serializer;
 
 class SanitizerMiddlewareTest extends TestCase
 {

@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Breadcrumbs\Recorder;
-use Raven\Event;
+use Sentry\Breadcrumbs\Recorder;
+use Sentry\Event;
 
 /**
  * This middleware collects all the recorded breadcrumbs up to this moment and

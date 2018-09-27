@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Context;
+namespace Sentry\Context;
 
 /**
  * This class is a specialized version of the base `Context` adapted to work

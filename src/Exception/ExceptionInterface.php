@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Exception;
+namespace Sentry\Exception;
 
 /**
  * This interface must be implemented by all exception classes of this library.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Raven\Util;
+namespace Sentry\Util;
 
 class PHPVersion
 {

@@ -411,7 +411,7 @@
   After:
 
   ```php
-  use Raven\ErrorHandler;
+  use Sentry\ErrorHandler;
 
   ErrorHandler::register($client);
   ```
@@ -429,7 +429,7 @@
   After:
 
   ```php
-  use Raven\BreadcrumbErrorHandler;
+  use Sentry\BreadcrumbErrorHandler;
 
   $client = new Client([...]);
 
@@ -568,7 +568,7 @@ to follow PSR-4 convention.
   After:
 
   ```php
-  use Raven\BreadcrumbErrorHandler;
+  use Sentry\BreadcrumbErrorHandler;
 
   $errorHandler = BreadcrumbErrorHandler::register($client);
   ```
@@ -589,7 +589,7 @@ to follow PSR-4 convention.
   After:
 
   ```php
-  use Raven\ErrorHandler;
+  use Sentry\ErrorHandler;
 
   $errorHandler = ErrorHandler::register($client);
   ```
@@ -617,7 +617,7 @@ to follow PSR-4 convention.
   After:
 
   ```php
-  use Raven\ErrorHandler;
+  use Sentry\ErrorHandler;
 
   $errorHandler = ErrorHandler::register($client);
   ```

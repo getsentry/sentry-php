@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Client;
-use Raven\Event;
+use Sentry\Client;
+use Sentry\Event;
 
 /**
  * This middleware collects the needed data to store a message with optional

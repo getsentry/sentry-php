@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Sentry\Transport;
 
-use Raven\Event;
+use Sentry\Event;
 
 /**
  * This transport fakes the sending of events by just ignoring them.

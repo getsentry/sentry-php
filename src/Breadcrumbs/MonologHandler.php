@@ -1,11 +1,11 @@
 <?php
 
-namespace Raven\Breadcrumbs;
+namespace Sentry\Breadcrumbs;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
-use Raven\Client;
-use Raven\ClientInterface;
+use Sentry\Client;
+use Sentry\ClientInterface;
 
 class MonologHandler extends AbstractProcessingHandler
 {

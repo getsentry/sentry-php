@@ -1,13 +1,13 @@
 <?php
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Configuration;
-use Raven\Event;
+use Sentry\Configuration;
+use Sentry\Event;
 
 /**
  * This middleware logs with the event details all the versions of the packages

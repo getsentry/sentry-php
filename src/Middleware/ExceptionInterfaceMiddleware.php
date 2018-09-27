@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\ClientInterface;
-use Raven\Event;
-use Raven\Stacktrace;
+use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\Stacktrace;
 
 /**
  * This middleware collects information about the thrown exceptions.

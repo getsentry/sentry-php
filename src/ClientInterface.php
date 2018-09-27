@@ -9,14 +9,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Breadcrumbs\Recorder as BreadcrumbRecorder;
-use Raven\Context\Context;
-use Raven\Context\RuntimeContext;
-use Raven\Context\ServerOsContext;
-use Raven\Context\TagsContext;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumbs\Recorder as BreadcrumbRecorder;
+use Sentry\Context\Context;
+use Sentry\Context\RuntimeContext;
+use Sentry\Context\ServerOsContext;
+use Sentry\Context\TagsContext;
 
 /**
  * This interface must be implemented by all Raven client classes.

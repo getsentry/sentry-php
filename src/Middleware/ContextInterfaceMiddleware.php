@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Context\Context;
-use Raven\Event;
+use Sentry\Context\Context;
+use Sentry\Event;
 
 /**
  * This middleware collects additional context data. Typically this is data

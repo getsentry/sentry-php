@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\UserInterfaceMiddleware;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\UserInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 
 class UserInterfaceMiddlewareTest extends TestCase

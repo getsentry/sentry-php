@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Middleware;
+namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Event;
+use Sentry\Event;
 
 /**
  * This class implements a stack of middlewares that can be sorted by priority.

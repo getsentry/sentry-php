@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Context;
+namespace Sentry\Tests\Context;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Context\ServerOsContext;
+use Sentry\Context\ServerOsContext;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 

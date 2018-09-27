@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Transport;
+namespace Sentry\Transport;
 
-use Raven\Event;
+use Sentry\Event;
 
 /**
  * This interface must be implemented by all classes willing to provide a way

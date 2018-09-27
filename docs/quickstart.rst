@@ -30,7 +30,7 @@ before the client instance is initialized.
 
 .. code-block:: php
 
-  use Raven\ClientBuilder;
+  use Sentry\ClientBuilder;
 
   $client = ClientBuilder::create(['server' => 'http://public:secret@example.com/1'])->getClient();
 
@@ -113,7 +113,7 @@ methods to report and clear the breadcrumbs.
 
 .. code-block:: php
 
-  use Raven\Breadcrumbs\Breadcrumb;
+  use Sentry\Breadcrumbs\Breadcrumb;
 
   $client->leaveBreadcrumb(Breadcrumb::create('debug', 'error', 'error_reporting', 'foo bar'));
   $client->clearBreadcrumbs();

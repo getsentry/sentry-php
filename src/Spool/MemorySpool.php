@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Spool;
+namespace Sentry\Spool;
 
-use Raven\Event;
-use Raven\Transport\TransportInterface;
+use Sentry\Event;
+use Sentry\Transport\TransportInterface;
 
 /**
  * This spool stores the events in memory.

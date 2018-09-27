@@ -3,10 +3,10 @@ Test throwing exception in custom exception handler
 --FILE--
 <?php
 
-namespace Raven\Tests;
+namespace Sentry\Tests;
 
-use Raven\ClientBuilder;
-use Raven\ErrorHandler;
+use Sentry\ClientBuilder;
+use Sentry\ErrorHandler;
 
 $vendor = __DIR__;
 

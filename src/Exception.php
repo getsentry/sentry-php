@@ -1,6 +1,6 @@
 <?php
 
-namespace Raven;
+namespace Sentry;
 
 class Exception extends \Exception
 {

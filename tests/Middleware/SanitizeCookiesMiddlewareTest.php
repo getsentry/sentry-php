@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\SanitizeCookiesMiddleware;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\SanitizeCookiesMiddleware;
 
 class SanitizeCookiesMiddlewareTest extends TestCase
 {

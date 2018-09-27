@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use Raven\Breadcrumbs\Breadcrumb;
-use Raven\Context\Context;
-use Raven\Context\RuntimeContext;
-use Raven\Context\ServerOsContext;
-use Raven\Context\TagsContext;
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Context\Context;
+use Sentry\Context\RuntimeContext;
+use Sentry\Context\ServerOsContext;
+use Sentry\Context\TagsContext;
 
 /**
  * This is the base class for classes containing event data.

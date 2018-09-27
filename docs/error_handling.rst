@@ -8,7 +8,7 @@ client instance as first argument.
 
 .. code-block:: php
 
-    use Raven\ErrorHandler;
+    use Sentry\ErrorHandler;
 
     // Initialize the client
 
@@ -20,7 +20,7 @@ argument. For example, the code below will reserve 20 megabytes of memory.
 
 .. code-block:: php
 
-    use Raven\ErrorHandler;
+    use Sentry\ErrorHandler;
 
     // Initialize the client
 
@@ -42,7 +42,7 @@ the Sentry error handler was registered will still be called regardeless.
 
 .. code-block:: php
 
-    use Raven\ErrorHandler;
+    use Sentry\ErrorHandler;
 
     // Initialize the client
 
@@ -60,7 +60,7 @@ the default value) and the new value will be appended to the existing mask:
 
 .. code-block:: php
 
-    use Raven\ErrorHandler;
+    use Sentry\ErrorHandler;
 
     // Initialize the client
 
@@ -83,7 +83,7 @@ handler the same way as before.
 
 .. code-block:: php
 
-    use Raven\BreadcrumbErrorHandler;
+    use Sentry\BreadcrumbErrorHandler;
 
     // Initialize the client
 

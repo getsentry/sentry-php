@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Configuration;
-use Raven\Context\Context;
-use Raven\Event;
-use Raven\Middleware\ContextInterfaceMiddleware;
+use Sentry\Configuration;
+use Sentry\Context\Context;
+use Sentry\Event;
+use Sentry\Middleware\ContextInterfaceMiddleware;
 
 class ContextInterfaceMiddlewareTest extends TestCase
 {

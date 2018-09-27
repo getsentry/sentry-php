@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Tests\Middleware;
+namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Raven\Configuration;
-use Raven\Event;
-use Raven\Middleware\MiddlewareStack;
+use Sentry\Configuration;
+use Sentry\Event;
+use Sentry\Middleware\MiddlewareStack;
 
 class MiddlewareStackTest extends TestCase
 {
@@ -173,7 +173,7 @@ class MiddlewareStackTest extends TestCase
 
     /**
      * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage Middleware must return an instance of the "Raven\Event" class.
+     * @expectedExceptionMessage Middleware must return an instance of the "Sentry\Event" class.
      */
     public function testMiddlewareThrowsWhenBadValueIsReturned()
     {
@@ -191,7 +191,7 @@ class MiddlewareStackTest extends TestCase
 
     /**
      * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage Middleware must return an instance of the "Raven\Event" class.
+     * @expectedExceptionMessage Middleware must return an instance of the "Sentry\Event" class.
      */
     public function testMiddlewareThrowsWhenBadValueIsReturnedFromHandler()
     {

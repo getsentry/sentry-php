@@ -1,9 +1,9 @@
 <?php
 
-namespace Raven\Tests\Util;
+namespace Sentry\Tests\Util;
 
 use PHPUnit\Framework\TestCase;
-use Raven\Util\PHPVersion;
+use Sentry\Util\PHPVersion;
 
 class PHPVersionTest extends TestCase
 {

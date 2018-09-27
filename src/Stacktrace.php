@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven;
+namespace Sentry;
 
 /**
  * This class contains all the information about an error stacktrace.

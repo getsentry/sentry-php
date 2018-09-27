@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Raven\Exception;
+namespace Sentry\Exception;
 
 /**
  * This class represents an exception thrown if an argument does not match with
