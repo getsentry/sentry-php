@@ -135,6 +135,11 @@ class Raven_Client
      */
     public $useCompression;
 
+    /**
+     * @var Raven_TransactionStack
+     */
+    public $transaction;
+
     public function __construct($options_or_dsn = null, $options = array())
     {
         if (is_array($options_or_dsn)) {
