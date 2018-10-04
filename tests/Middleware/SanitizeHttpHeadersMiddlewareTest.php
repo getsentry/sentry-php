@@ -26,7 +26,7 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
     {
         $event = new Event(new Configuration());
         $event->setRequest($inputData);
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $request = $this->createMock(ServerRequestInterface::class);
 
         $callbackInvoked = false;
         $callback = function (
