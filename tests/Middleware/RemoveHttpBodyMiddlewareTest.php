@@ -11,13 +11,12 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Middleware\RemoveHttpBodyMiddleware;
 
-class RemoveHttpBodyMiddlewareTest extends TestCase
+class RemoveHttpBodyMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @var ClientInterface
@@ -43,17 +42,11 @@ class RemoveHttpBodyMiddlewareTest extends TestCase
         $event = new Event($this->client->getConfig());
         $event->setRequest($inputData);
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
-            $this->assertArraySubset($expectedData, $eventArg->getRequest());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new RemoveHttpBodyMiddleware();
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+
+        $this->assertArraySubset($expectedData, $returnedEvent->getRequest());
     }
 
     public function invokeDataProvider()
