@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Middleware\ProcessorMiddlewareInterface;
 use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
 
 class SanitizeHttpHeadersMiddlewareTest extends TestCase
@@ -28,6 +29,19 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
         $event->setRequest($inputData);
         $request = $this->createMock(ServerRequestInterface::class);
 
+        $middleware = new SanitizeHttpHeadersMiddleware([
+            'sanitize_http_headers' => ['User-Defined-Header'],
+        ]);
+
+        $this->invokeMiddleware($middleware, $event, $request, $expectedData);
+    }
+
+    protected function invokeMiddleware(
+        ProcessorMiddlewareInterface $middleware,
+        Event $event,
+        ServerRequestInterface $request = null,
+        array $expectedData = []
+    ) {
         $callbackInvoked = false;
         $callback = function (
             Event $eventArg,
@@ -41,13 +55,9 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
             $callbackInvoked = true;
         };
 
-        $middleware = new SanitizeHttpHeadersMiddleware([
-            'sanitize_http_headers' => ['User-Defined-Header'],
-        ]);
-
         $middleware($event, $callback, $request);
 
-        $this->assertTrue($callbackInvoked);
+        $this->assertTrue($callbackInvoked, 'Next middleware was not invoked');
     }
 
     public function invokeDataProvider()
