@@ -11,30 +11,23 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\UserInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 
-class UserInterfaceMiddlewareTest extends TestCase
+class UserInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
         $event = new Event(new Configuration());
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $this->assertArrayNotHasKey('ip_address', $eventArg->getUserContext());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new UserInterfaceMiddleware();
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+
+        $this->assertArrayNotHasKey('ip_address', $returnedEvent->getUserContext());
     }
 
     public function testInvokeWithRequest()
@@ -45,16 +38,10 @@ class UserInterfaceMiddlewareTest extends TestCase
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $eventArg->getUserContext()->toArray());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new UserInterfaceMiddleware();
-        $middleware($event, $callback, $request);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, $request);
+
+        $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $returnedEvent->getUserContext()->toArray());
     }
 }
