@@ -11,45 +11,38 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Middleware\ExceptionInterfaceMiddleware;
 use Sentry\Stacktrace;
 
-class ExceptionInterfaceMiddlewareTest extends TestCase
+class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke($exception, $clientConfig, $payload, $expectedResult)
+    public function testInvoke(\Exception $exception, array $clientConfig, array $payload, array $expectedResult)
     {
         $client = ClientBuilder::create($clientConfig)->getClient();
         $assertHasStacktrace = $client->getConfig()->getAutoLogStacks();
 
         $event = new Event($client->getConfig());
 
-        $callbackInvoked = 0;
-        $callback = function (Event $eventArg) use ($assertHasStacktrace, $expectedResult, &$callbackInvoked) {
-            $this->assertArraySubset($expectedResult, $eventArg->toArray());
-
-            foreach ($eventArg->getException()['values'] as $exception) {
-                if ($assertHasStacktrace) {
-                    $this->assertArrayHasKey('stacktrace', $exception);
-                    $this->assertInstanceOf(Stacktrace::class, $exception['stacktrace']);
-                } else {
-                    $this->assertArrayNotHasKey('stacktrace', $exception);
-                }
-            }
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ExceptionInterfaceMiddleware($client);
-        $middleware($event, $callback, null, $exception, $payload);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, $exception, $payload);
+
+        $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
+
+        foreach ($returnedEvent->getException()['values'] as $exceptionData) {
+            if ($assertHasStacktrace) {
+                $this->assertArrayHasKey('stacktrace', $exceptionData);
+                $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
+            } else {
+                $this->assertArrayNotHasKey('stacktrace', $exceptionData);
+            }
+        }
     }
 
     public function invokeDataProvider()
@@ -139,26 +132,20 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
-        $callbackInvoked = 0;
-        $callback = function (Event $eventArg) use (&$callbackInvoked, $utf8String) {
-            $expectedValue = [
-                'values' => [
-                    [
-                        'type' => \Exception::class,
-                        'value' => $utf8String,
-                    ],
-                ],
-            ];
-
-            $this->assertArraySubset($expectedValue, $eventArg->getException());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ExceptionInterfaceMiddleware($client);
-        $middleware($event, $callback, null, new \Exception($latin1String));
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception($latin1String));
+
+        $expectedValue = [
+            'values' => [
+                [
+                    'type' => \Exception::class,
+                    'value' => $utf8String,
+                ],
+            ],
+        ];
+
+        $this->assertArraySubset($expectedValue, $returnedEvent->getException());
     }
 
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
@@ -166,26 +153,21 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
         $client = ClientBuilder::create()->getClient();
         $event = new Event($client->getConfig());
 
-        $callbackInvoked = 0;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $expectedValue = [
-                'values' => [
-                    [
-                        'type' => \Exception::class,
-                        'value' => "\xC2\xA2\x3F",
-                    ],
-                ],
-            ];
-
-            $this->assertArraySubset($expectedValue, $eventArg->getException());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ExceptionInterfaceMiddleware($client);
-        $middleware($event, $callback, null, new \Exception("\xC2\xA2\xC2")); // ill-formed 2-byte character U+00A2 (CENT SIGN)
 
-        $this->assertTrue($callbackInvoked);
+        $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception($malformedString));
+
+        $expectedValue = [
+            'values' => [
+                [
+                    'type' => \Exception::class,
+                    'value' => "\xC2\xA2\x3F",
+                ],
+            ],
+        ];
+
+        $this->assertArraySubset($expectedValue, $returnedEvent->getException());
     }
 
     public function testInvokeWithExceptionThrownInLatin1File()
@@ -197,40 +179,39 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
 
         $event = new Event($client->getConfig());
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $result = $eventArg->getException();
-            $expectedValue = [
-                'values' => [
-                    [
-                        'type' => \Exception::class,
-                        'value' => 'foo',
-                    ],
-                ],
-            ];
-
-            $this->assertArraySubset($expectedValue, $result);
-
-            $latin1StringFound = false;
-
-            /** @var \Sentry\Frame $frame */
-            foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
-                if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
-                    $latin1StringFound = true;
-
-                    break;
-                }
-            }
-
-            $this->assertTrue($latin1StringFound);
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ExceptionInterfaceMiddleware($client);
-        $middleware($event, $callback, null, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly(
+            $middleware,
+            $event,
+            null,
+            require_once __DIR__ . '/../Fixtures/code/Latin1File.php'
+        );
+
+        $result = $returnedEvent->getException();
+        $expectedValue = [
+            'values' => [
+                [
+                    'type' => \Exception::class,
+                    'value' => 'foo',
+                ],
+            ],
+        ];
+
+        $this->assertArraySubset($expectedValue, $result);
+
+        $latin1StringFound = false;
+
+        /** @var \Sentry\Frame $frame */
+        foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
+            if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
+                $latin1StringFound = true;
+
+                break;
+            }
+        }
+
+        $this->assertTrue($latin1StringFound);
     }
 
     public function testInvokeWithAutoLogStacksDisabled()
@@ -238,22 +219,15 @@ class ExceptionInterfaceMiddlewareTest extends TestCase
         $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
         $event = new Event($client->getConfig());
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $result = $eventArg->getException();
-
-            $this->assertNotEmpty($result);
-            $this->assertInternalType('array', $result['values'][0]);
-            $this->assertEquals(\Exception::class, $result['values'][0]['type']);
-            $this->assertEquals('foo', $result['values'][0]['value']);
-            $this->assertArrayNotHasKey('stacktrace', $result['values'][0]);
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ExceptionInterfaceMiddleware($client);
-        $middleware($event, $callback, null, new \Exception('foo'));
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception('foo'));
+
+        $result = $returnedEvent->getException();
+        $this->assertNotEmpty($result);
+        $this->assertInternalType('array', $result['values'][0]);
+        $this->assertEquals(\Exception::class, $result['values'][0]['type']);
+        $this->assertEquals('foo', $result['values'][0]['value']);
+        $this->assertArrayNotHasKey('stacktrace', $result['values'][0]);
     }
 }

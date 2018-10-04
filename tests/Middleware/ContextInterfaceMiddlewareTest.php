@@ -31,7 +31,7 @@ class ContextInterfaceMiddlewareTest extends MiddlewareTestCase
             $contextName . '_context' => $payloadData,
         ];
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, null, null, $payload);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, null, null, null, $payload);
 
         $method = preg_replace_callback('/_[a-zA-Z]/', function ($matches) {
             return strtoupper($matches[0][1]);
