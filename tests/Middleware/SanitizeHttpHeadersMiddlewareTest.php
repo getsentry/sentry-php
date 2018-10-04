@@ -12,6 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
@@ -25,10 +26,17 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
     {
         $event = new Event(new Configuration());
         $event->setRequest($inputData);
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
 
         $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
+        $callback = function (
+            Event $eventArg,
+            ServerRequestInterface $passedRequest = null,
+            $exception = null,
+            array $payload = []
+        ) use ($request, $expectedData, &$callbackInvoked) {
             $this->assertArraySubset($expectedData, $eventArg->getRequest());
+            $this->assertSame($request, $passedRequest);
 
             $callbackInvoked = true;
         };
@@ -37,7 +45,7 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
             'sanitize_http_headers' => ['User-Defined-Header'],
         ]);
 
-        $middleware($event, $callback);
+        $middleware($event, $callback, $request);
 
         $this->assertTrue($callbackInvoked);
     }
