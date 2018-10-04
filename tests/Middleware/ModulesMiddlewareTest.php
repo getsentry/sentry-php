@@ -11,28 +11,21 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\ModulesMiddleware;
 
-class ModulesMiddlewareTest extends TestCase
+class ModulesMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
         $configuration = new Configuration(['project_root' => __DIR__ . '/../Fixtures']);
         $event = new Event($configuration);
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $eventArg->getModules());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new ModulesMiddleware($configuration);
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+
+        $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $returnedEvent->getModules());
     }
 }

@@ -32,7 +32,6 @@ abstract class MiddlewareTestCase extends TestCase
             $passedException = null
         ) use ($exception, &$callbackInvoked) {
             $this->assertInstanceOf(ServerRequestInterface::class, $passedRequest);
-//            $this->assertSame($exception, $passedException, 'Wrong exception passed through');
 
             $callbackInvoked = true;
 
