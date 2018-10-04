@@ -11,14 +11,11 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Configuration;
 use Sentry\Event;
-use Sentry\Middleware\ProcessorMiddlewareInterface;
 use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
 
-class SanitizeHttpHeadersMiddlewareTest extends TestCase
+class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -27,37 +24,14 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
     {
         $event = new Event(new Configuration());
         $event->setRequest($inputData);
-        $request = $this->createMock(ServerRequestInterface::class);
 
         $middleware = new SanitizeHttpHeadersMiddleware([
             'sanitize_http_headers' => ['User-Defined-Header'],
         ]);
 
-        $this->invokeMiddleware($middleware, $event, $request, $expectedData);
-    }
+        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
 
-    protected function invokeMiddleware(
-        ProcessorMiddlewareInterface $middleware,
-        Event $event,
-        ServerRequestInterface $request = null,
-        array $expectedData = []
-    ) {
-        $callbackInvoked = false;
-        $callback = function (
-            Event $eventArg,
-            ServerRequestInterface $passedRequest = null,
-            $exception = null,
-            array $payload = []
-        ) use ($request, $expectedData, &$callbackInvoked) {
-            $this->assertArraySubset($expectedData, $eventArg->getRequest());
-            $this->assertSame($request, $passedRequest);
-
-            $callbackInvoked = true;
-        };
-
-        $middleware($event, $callback, $request);
-
-        $this->assertTrue($callbackInvoked, 'Next middleware was not invoked');
+        $this->assertArraySubset($expectedData, $returnedEvent->getRequest());
     }
 
     public function invokeDataProvider()

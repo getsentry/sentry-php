@@ -57,20 +57,18 @@ final class SanitizeHttpHeadersMiddleware implements ProcessorMiddlewareInterfac
     {
         $requestData = $event->getRequest();
 
-        if (!isset($requestData['headers'])) {
-            return $event;
-        }
-
-        foreach ($requestData['headers'] as $header => &$value) {
-            if (\in_array($header, $this->options['sanitize_http_headers'], true)) {
-                $value = self::STRING_MASK;
+        if (isset($requestData['headers'])) {
+            foreach ($requestData['headers'] as $header => &$value) {
+                if (\in_array($header, $this->options['sanitize_http_headers'], true)) {
+                    $value = self::STRING_MASK;
+                }
             }
+
+            // Break the reference and free some memory
+            unset($value);
+
+            $event->setRequest($requestData);
         }
-
-        // Break the reference and free some memory
-        unset($value);
-
-        $event->setRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }
