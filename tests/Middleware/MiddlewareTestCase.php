@@ -30,8 +30,11 @@ abstract class MiddlewareTestCase extends TestCase
             Event $passedEvent,
             $passedRequest = null,
             $passedException = null
-        ) use ($exception, &$callbackInvoked) {
+        ) use (&$callbackInvoked) {
             $this->assertInstanceOf(ServerRequestInterface::class, $passedRequest);
+            if ($passedException) {
+                $this->assertInstanceOf(\Exception::class, $passedException);
+            }
 
             $callbackInvoked = true;
 
