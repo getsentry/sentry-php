@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of Raven.
+ *
+ * (c) Sentry Team
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
@@ -18,7 +27,7 @@ abstract class MiddlewareTestCase extends TestCase
      *
      * @return Event The event returned by the middleware
      */
-    protected function assertMiddlewareInvokesNextCorrectly(
+    protected function assertMiddlewareInvokesNext(
         callable $middleware,
         Event $event = null,
         ServerRequestInterface $request = null,
@@ -26,12 +35,9 @@ abstract class MiddlewareTestCase extends TestCase
         array $payload = []
     ) {
         $callbackInvoked = false;
-        $callback = function (
-            Event $passedEvent,
-            $passedRequest = null,
-            $passedException = null
-        ) use (&$callbackInvoked) {
+        $callback = function (Event $passedEvent, $passedRequest = null, $passedException = null) use (&$callbackInvoked) {
             $this->assertInstanceOf(ServerRequestInterface::class, $passedRequest);
+
             if ($passedException) {
                 $this->assertInstanceOf(\Exception::class, $passedException);
             }
@@ -41,20 +47,20 @@ abstract class MiddlewareTestCase extends TestCase
             return $passedEvent;
         };
 
-        if (!$event) {
+        if (null === $event) {
             $event = new Event($this->createMock(Configuration::class));
         }
-        if (!$request) {
+        if (null === $request) {
             $request = $this->createMock(ServerRequestInterface::class);
         }
-        if (!$exception) {
+        if (null === $exception) {
             $exception = new \Exception();
         }
 
         $returnedEvent = $middleware($event, $callback, $request, $exception, $payload);
 
         $this->assertTrue($callbackInvoked, 'Next middleware was not invoked');
-        $this->assertSame($event, $returnedEvent, 'Middleware must return a ' . Event::class);
+        $this->assertSame($event, $returnedEvent);
 
         return $returnedEvent;
     }

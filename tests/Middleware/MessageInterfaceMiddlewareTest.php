@@ -24,7 +24,7 @@ class MessageInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new MessageInterfaceMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertSame($event, $returnedEvent);
     }
@@ -39,7 +39,7 @@ class MessageInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new MessageInterfaceMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, null, $payload);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, null, $payload);
 
         $this->assertEquals($payload['message'], $returnedEvent->getMessage());
         $this->assertEquals($payload['message_params'], $returnedEvent->getMessageParams());

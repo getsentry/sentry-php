@@ -56,7 +56,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new RequestInterfaceMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, $request);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
 
         $this->assertEquals($expectedValue, $returnedEvent->getRequest());
     }

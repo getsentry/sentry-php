@@ -44,7 +44,7 @@ class RemoveHttpBodyMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new RemoveHttpBodyMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertArraySubset($expectedData, $returnedEvent->getRequest());
     }

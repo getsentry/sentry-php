@@ -49,9 +49,10 @@ class SanitizeCookiesMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new SanitizeCookiesMiddleware($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $request = $returnedEvent->getRequest();
+
         $this->assertArraySubset($expectedData, $request);
         $this->assertArrayNotHasKey('cookie', $request['headers']);
     }

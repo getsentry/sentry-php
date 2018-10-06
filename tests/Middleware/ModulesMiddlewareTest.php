@@ -24,7 +24,7 @@ class ModulesMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new ModulesMiddleware($configuration);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $returnedEvent->getModules());
     }

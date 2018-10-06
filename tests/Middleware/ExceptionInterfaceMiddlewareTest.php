@@ -31,7 +31,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, $exception, $payload);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, $exception, $payload);
 
         $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
 
@@ -134,7 +134,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception($latin1String));
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($latin1String));
 
         $expectedValue = [
             'values' => [
@@ -156,7 +156,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $middleware = new ExceptionInterfaceMiddleware($client);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception($malformedString));
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($malformedString));
 
         $expectedValue = [
             'values' => [
@@ -181,7 +181,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly(
+        $returnedEvent = $this->assertMiddlewareInvokesNext(
             $middleware,
             $event,
             null,
@@ -221,7 +221,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, null, new \Exception('foo'));
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception('foo'));
 
         $result = $returnedEvent->getException();
         $this->assertNotEmpty($result);

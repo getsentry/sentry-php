@@ -29,7 +29,7 @@ class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase
             'sanitize_http_headers' => ['User-Defined-Header'],
         ]);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertArraySubset($expectedData, $returnedEvent->getRequest());
     }

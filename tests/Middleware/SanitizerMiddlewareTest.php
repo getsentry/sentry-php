@@ -42,7 +42,7 @@ class SanitizerMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new SanitizerMiddleware($sanitizer);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertArraySubset(['bar' => 'zab'], $returnedEvent->getRequest());
         $this->assertArraySubset(['foo' => 'rab'], $returnedEvent->getUserContext());

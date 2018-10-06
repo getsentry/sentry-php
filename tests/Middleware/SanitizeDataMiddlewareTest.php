@@ -53,7 +53,7 @@ class SanitizeDataMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new SanitizeDataMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         if (isset($expectedData['request'])) {
             $this->assertArraySubset($expectedData['request'], $returnedEvent->getRequest());

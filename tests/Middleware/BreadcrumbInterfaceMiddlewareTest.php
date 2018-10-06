@@ -29,7 +29,7 @@ class BreadcrumbInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new BreadcrumbInterfaceMiddleware($recorder);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware);
 
         $this->assertEquals([$breadcrumb, $breadcrumb2], $returnedEvent->getBreadcrumbs());
     }

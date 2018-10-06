@@ -25,7 +25,7 @@ class UserInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new UserInterfaceMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
         $this->assertArrayNotHasKey('ip_address', $returnedEvent->getUserContext());
     }
@@ -40,7 +40,7 @@ class UserInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $middleware = new UserInterfaceMiddleware();
 
-        $returnedEvent = $this->assertMiddlewareInvokesNextCorrectly($middleware, $event, $request);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
 
         $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $returnedEvent->getUserContext()->toArray());
     }
