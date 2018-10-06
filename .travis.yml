@@ -27,6 +27,9 @@ matrix:
     - php: 5.3
       env: REMOVE_XDEBUG="1"
       dist: precise
+  exclude:
+    - php: nightly
+      env: REMOVE_XDEBUG="1"
 
 cache:
   directories:
