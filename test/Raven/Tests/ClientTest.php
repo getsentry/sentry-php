@@ -1106,7 +1106,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
     }
 
@@ -1133,7 +1133,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
         $this->assertEquals(1216, $event['contexts']['mine']['line']);
     }
@@ -1183,7 +1183,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
         $this->assertEquals(1216, $event['contexts']['runtime']['line']);
     }
