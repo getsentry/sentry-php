@@ -1358,6 +1358,21 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Client::getLastEventID
+     */
+    public function testGetLastEventIDWithoutServerOverwritesEarlierEvents()
+    {
+        $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
+        $client->capture(array('message' => 'test', 'event_id' => 'abc'));
+        $this->assertEquals('abc', $client->getLastEventID());
+
+        $client->server = null;
+
+        $client->capture(array('message' => 'test', 'event_id' => 'abc'));
+        $this->assertEquals(null, $client->getLastEventID());
+    }
+
+    /**
      * @covers Raven_Client::setTransport
      */
     public function testCustomTransport()
