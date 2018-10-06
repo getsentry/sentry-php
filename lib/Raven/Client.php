@@ -934,7 +934,11 @@ class Raven_Client
         $this->process($data);
 
         if (!$this->store_errors_for_bulk_send) {
-            $this->send($data);
+            if ($this->send($data) === false) {
+                $this->_last_event_id = null;
+
+                return null;
+            }
         } else {
             $this->_pending_events[] = $data;
         }
@@ -1032,21 +1036,20 @@ class Raven_Client
             && call_user_func_array($this->send_callback, array(&$data)) === false
         ) {
             // if send_callback returns false, end native send
-            return;
+            return false;
         }
 
         if (!$this->server) {
-            return;
+            return false;
         }
 
         if ($this->transport) {
-            call_user_func($this->transport, $this, $data);
-            return;
+            return call_user_func($this->transport, $this, $data);
         }
 
         // should this event be sampled?
         if (rand(1, 100) / 100.0 > $this->sample_rate) {
-            return;
+            return false;
         }
 
         $message = $this->encode($data);

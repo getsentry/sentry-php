@@ -38,9 +38,14 @@ class Dummy_Raven_Client extends Raven_Client
     {
         if (is_callable($this->send_callback) && call_user_func_array($this->send_callback, array(&$data)) === false) {
             // if send_callback returns falsely, end native send
-            return;
+            return false;
         }
+
         $this->__sent_events[] = $data;
+
+        if (!$this->server) {
+            return false;
+        }
     }
 
     public static function is_http_request()
@@ -1337,9 +1342,19 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
      */
     public function testGetLastEventID()
     {
-        $client = new Dummy_Raven_Client();
+        $client = new Dummy_Raven_Client('http://public:secret@example.com/1');
         $client->capture(array('message' => 'test', 'event_id' => 'abc'));
         $this->assertEquals('abc', $client->getLastEventID());
+    }
+
+    /**
+     * @covers Raven_Client::getLastEventID
+     */
+    public function testGetLastEventIDWithoutServer()
+    {
+        $client = new Dummy_Raven_Client();
+        $client->capture(array('message' => 'test', 'event_id' => 'abc'));
+        $this->assertEquals(null, $client->getLastEventID());
     }
 
     /**
