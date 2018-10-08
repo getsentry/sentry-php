@@ -27,13 +27,8 @@ abstract class MiddlewareTestCase extends TestCase
      *
      * @return Event The event returned by the middleware
      */
-    protected function assertMiddlewareInvokesNext(
-        callable $middleware,
-        Event $event = null,
-        ServerRequestInterface $request = null,
-        \Exception $exception = null,
-        array $payload = []
-    ) {
+    protected function assertMiddlewareInvokesNext(callable $middleware, Event $event = null, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    {
         $callbackInvoked = false;
         $callback = function (Event $passedEvent, $passedRequest = null, $passedException = null) use (&$callbackInvoked) {
             $this->assertInstanceOf(ServerRequestInterface::class, $passedRequest);
@@ -50,9 +45,11 @@ abstract class MiddlewareTestCase extends TestCase
         if (null === $event) {
             $event = new Event($this->createMock(Configuration::class));
         }
+
         if (null === $request) {
             $request = $this->createMock(ServerRequestInterface::class);
         }
+
         if (null === $exception) {
             $exception = new \Exception();
         }
