@@ -24,17 +24,17 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
         $configuration = new Configuration();
         $event = new Event($configuration);
 
-        $invocationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invocationCount) {
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
             $this->assertSame($event, $eventArg);
 
-            ++$invocationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new RequestInterfaceMiddleware();
         $middleware($event, $callback);
 
-        $this->assertSame(1, $invocationCount);
+        $this->assertTrue($callbackInvoked, 'Next middleware NOT invoked');
     }
 
     /**
