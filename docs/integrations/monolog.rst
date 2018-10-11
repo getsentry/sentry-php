@@ -8,7 +8,7 @@ Monolog supports Sentry out of the box, so you'll just need to configure a handl
 
 .. sourcecode:: php
 
-    $client = new Raven_Client('___DSN___');
+    $client = new Raven_Client('___PUBLIC_DSN___');
 
     $handler = new Monolog\Handler\RavenHandler($client);
     $handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
@@ -48,7 +48,7 @@ Sentry provides a breadcrumb handler to automatically send logs along as crumbs:
 
 .. sourcecode:: php
 
-    $client = new Raven_Client('___DSN___');
+    $client = new Raven_Client('___PUBLIC_DSN___');
 
     $handler = new \Raven_Breadcrumbs_MonologHandler($client);
     $monolog->pushHandler($handler);

@@ -261,6 +261,17 @@ The following settings are available for the client:
 
         'excluded_exceptions' => array('LogicException'),
 
+.. describe:: ignore_server_port
+
+    By default the server port will be added to the logged URL when it is a non
+    standard port (80, 443).
+    Setting this to ``true`` will ignore the server port altogether and will
+    result in the server port never getting appended to the logged URL.
+
+    .. code-block:: php
+
+        'ignore_server_port' => true,
+
 .. _sentry-php-request-context:
 
 Providing Request Context
@@ -294,3 +305,46 @@ need to ensure you cleanup the context (to reset its state):
 .. code-block:: php
 
     $client->context->clear();
+    
+Processors
+----------
+
+The following processors are available bundled with sentry-php. They can be used in ``processors`` configuration, and configured through ``processorOptions`` as described above.
+
+.. describe:: Raven_Processor_SanitizeDataProcessor
+
+    This is the default processor. It replaces fields or values with asterisks
+    in frames, http, and basic extra data.
+   
+   Available options:
+   
+   - ``fields_re``: takes a regex expression of fields to sanitize
+     Defaults to ``/(authorization|password|passwd|secret|password_confirmation|card_number|auth_pw)/i``
+   - ``values_re``: takes a regex expression of values to sanitize
+     Defaults to ``/^(?:\d[ -]*?){13,16}$/``
+
+.. describe:: Raven_Processor_SanitizeHttpHeadersProcessor
+
+   This processor sanitizes the configured HTTP headers to ensure no sensitive
+   information is sent to the server.
+   
+   Available options:
+   
+   - ``sanitize_http_headers``: takes an array of headers to sanitize. 
+     Defaults to ``['Authorization', 'Proxy-Authorization', 'X-Csrf-Token', 'X-CSRFToken', 'X-XSRF-TOKEN']``
+
+.. describe:: Raven_Processor_SanitizeStacktraceProcessor
+
+   This processor removes the `pre_context`, `context_line` and `post_context`
+   information from all exceptions captured by an event.
+
+.. describe:: Raven_Processor_RemoveHttpBodyProcessor
+
+   This processor removes all the data of the HTTP body to ensure no sensitive
+   information is sent to the server in case the request method is POST, PUT,
+   PATCH or DELETE.
+ 
+.. describe:: Raven_Processor_RemoveCookiesProcessor
+ 
+   This processor removes all the cookies from the request to ensure no sensitive
+   information is sent to the server.

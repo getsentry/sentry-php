@@ -12,7 +12,7 @@ once and reference it from anywhere you want to interface with Sentry:
 
 .. code-block:: php
 
-    $sentryClient = new Raven_Client('___DSN___');
+    $sentryClient = new Raven_Client('___PUBLIC_DSN___');
 
 
 Capturing Errors
@@ -185,7 +185,7 @@ which is aware of the last event ID.
 
     <?php
 
-    $sentry = new \Raven_Client(___DSN___);
+    $sentry = new \Raven_Client(___PUBLIC_DSN___);
 
     public class App {
         function error500($exc) {
@@ -298,12 +298,11 @@ Testing Your Connection
 The PHP client includes a simple helper script to test your connection and
 credentials with the Sentry master server::
 
-    $ bin/sentry test ___DSN___
+    $ bin/sentry test ___PUBLIC_DSN___
     Client configuration:
     -> server: [___API_URL___]
     -> project: ___PROJECT_ID___
     -> public_key: ___PUBLIC_KEY___
-    -> secret_key: ___SECRET_KEY___
 
     Sending a test event:
     -> event ID: f1765c9aed4f4ceebe5a93df9eb2d34f

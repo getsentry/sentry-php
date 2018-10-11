@@ -152,6 +152,26 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @covers Raven_Serializer::serializeString
+     */
+    public function testLongStringWithOverwrittenMessageLengthZero()
+    {
+        $serializer = new Raven_Serializer();
+        $serializer->setMessageLimit(0);
+        for ($i = 0; $i < 100; $i++) {
+            foreach (array(100, 490, 499, 500, 501, 1000, 10000) as $length) {
+                $input = '';
+                for ($j = 0; $j < $length; $j++) {
+                    $input .= chr(mt_rand(ord('a'), ord('z')));
+                }
+                $result = $serializer->serialize($input);
+                $this->assertInternalType('string', $result);
+                $this->assertEquals($length, strlen($result));
+            }
+        }
+    }
+
+    /**
      * @covers Raven_Serializer::serializeValue
      */
     public function testSerializeValueResource()

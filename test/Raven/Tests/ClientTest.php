@@ -353,12 +353,15 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
     {
         Raven_Client::ParseDSN('http://:secret@example.com/1');
     }
-    /**
-     * @expectedException InvalidArgumentException
-     */
+
     public function testParseDSNMissingSecretKey()
     {
-        Raven_Client::ParseDSN('http://public@example.com/1');
+        $parsed = Raven_Client::ParseDSN('http://public@example.com/1');
+
+        $this->assertEquals('http://example.com/api/1/store/', $parsed['server']);
+        $this->assertEquals('1', $parsed['project']);
+        $this->assertEquals('public', $parsed['public_key']);
+        $this->assertEquals(null, $parsed['secret_key']);
     }
 
     /**
@@ -1035,6 +1038,29 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                     "sentry_key=publickey, sentry_secret=secretkey";
 
         $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', 'secretkey'));
+
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
+                    "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
+                    "sentry_key=publickey";
+
+        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', null));
+    }
+
+    /**
+     * @covers Raven_Client::get_auth_header
+     */
+    public function testGet_Auth_Header_Public()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $clientstring = 'sentry-php/test';
+        $timestamp = '1234341324.340000';
+
+        $expected = "Sentry sentry_timestamp={$timestamp}, sentry_client={$clientstring}, " .
+                    "sentry_version=" . Dummy_Raven_Client::PROTOCOL . ", " .
+                    "sentry_key=publickey";
+
+        $this->assertEquals($expected, $client->get_auth_header($timestamp, 'sentry-php/test', 'publickey', null));
     }
 
     /**
@@ -1080,7 +1106,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $client->captureMessage('test');
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
     }
 
@@ -1107,7 +1133,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
         $this->assertEquals(1216, $event['contexts']['mine']['line']);
     }
@@ -1157,7 +1183,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
 
         $events = $client->getSentEvents();
         $event = array_pop($events);
-        $this->assertEquals(PHP_VERSION, $event['contexts']['runtime']['version']);
+        $this->assertEquals(Raven_Client::cleanup_php_version(PHP_VERSION), $event['contexts']['runtime']['version']);
         $this->assertEquals('php', $event['contexts']['runtime']['name']);
         $this->assertEquals(1216, $event['contexts']['runtime']['line']);
     }
@@ -1777,6 +1803,16 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 array(),
                 'http://example.com:81/',
                 'Port is not appended'
+            ),
+            array(
+                array(
+                    'REQUEST_URI' => '/',
+                    'HTTP_HOST' => 'example.com',
+                    'SERVER_PORT' => 81
+                ),
+                array('ignore_server_port' => true),
+                'http://example.com/',
+                'Port is appended'
             )
         );
     }
@@ -2576,7 +2612,6 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         ), $event['breadcrumbs']);
     }
 
-
     /**
      * @covers Raven_Client::capture
      */
@@ -2624,5 +2659,30 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
         $this->assertInternalType('resource', $reflection->getValue($raven));
         $raven->close_curl_resource();
         $this->assertNull($reflection->getValue($raven));
+    }
+
+    /** @covers Raven_Client::cleanup_php_version */
+    public function testPhpVersionCleanup()
+    {
+        $baseVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION;
+        $phpExtraVersions = array(
+            '' => $baseVersion,
+            '-1+ubuntu17.04.1+deb.sury.org+1' => $baseVersion,
+            '-beta3-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-beta3",
+            '-beta5-dev-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-beta5-dev",
+            '-rc-9-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-rc-9",
+            '-2~ubuntu16.04.1+deb.sury.org+1' => $baseVersion,
+            '-beta1-dev' => "{$baseVersion}-beta1-dev",
+            '-rc10' => "{$baseVersion}-rc10",
+            '-RC10' => "{$baseVersion}-RC10",
+            '-rc2-dev' => "{$baseVersion}-rc2-dev",
+            '-beta-2-dev' => "{$baseVersion}-beta-2-dev",
+            '-beta2' => "{$baseVersion}-beta2",
+            '-beta-9' => "{$baseVersion}-beta-9",
+        );
+
+        foreach ($phpExtraVersions as $extraVersion => $expectedVersion) {
+            $this->assertEquals($expectedVersion, Raven_Client::cleanup_php_version($extraVersion));
+        }
     }
 }

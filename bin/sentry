@@ -38,7 +38,7 @@ function cmd_test($dsn)
     ));
 
     $config = get_object_vars($client);
-    $required_keys = array('server', 'project', 'public_key', 'secret_key');
+    $required_keys = array('server', 'project', 'public_key');
 
     echo "Client configuration:\n";
     foreach ($required_keys as $key) {
