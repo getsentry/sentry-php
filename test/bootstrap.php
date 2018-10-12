@@ -15,3 +15,5 @@ session_start();
 
 require_once dirname(__FILE__).'/../lib/Raven/Autoloader.php';
 Raven_Autoloader::register();
+
+require_once dirname(__FILE__).'/DummyRaven/Dummy_Raven_Client.php';
