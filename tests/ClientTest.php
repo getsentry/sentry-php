@@ -237,6 +237,19 @@ class ClientTest extends TestCase
         $this->assertSame($lastEvent, $client->getLastEvent());
     }
 
+    public function testGetLastEventEmptyIfNotSent()
+    {
+        $client = ClientBuilder::create([
+            'should_capture' => function () {
+                return false;
+            },
+        ])->getClient();
+
+        $client->capture(['message' => 'foo']);
+
+        $this->assertNull($client->getLastEvent());
+    }
+
     /**
      * @group legacy
      *
