@@ -109,7 +109,7 @@ interface ClientInterface
      * Gets the last event that was captured by the client. However, it could
      * have been sent or still sit in the queue of pending events.
      *
-     * @return Event
+     * @return Event|null
      */
     public function getLastEvent();
 
@@ -127,7 +127,7 @@ interface ClientInterface
      *
      * @param array $payload The data of the event being captured
      *
-     * @return string
+     * @return string|null
      */
     public function capture(array $payload);
 
@@ -135,6 +135,8 @@ interface ClientInterface
      * Sends the given event to the Sentry server.
      *
      * @param Event $event The event to send
+     *
+     * @return bool|null
      */
     public function send(Event $event);
 

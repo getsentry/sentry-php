@@ -124,7 +124,7 @@ class Client implements ClientInterface
     private $middlewareStack;
 
     /**
-     * @var Event The last event that was captured
+     * @var Event|null The last event that was captured
      */
     private $lastEvent;
 
@@ -343,7 +343,11 @@ class Client implements ClientInterface
             $payload
         );
 
-        $this->send($event);
+        if (false === $this->send($event)) {
+            $this->lastEvent = null;
+
+            return null;
+        }
 
         $this->lastEvent = $event;
 
@@ -356,15 +360,15 @@ class Client implements ClientInterface
     public function send(Event $event)
     {
         if (!$this->config->shouldCapture($event)) {
-            return;
+            return false;
         }
 
         // should this event be sampled?
         if (mt_rand(1, 100) / 100.0 > $this->config->getSampleRate()) {
-            return;
+            return false;
         }
 
-        $this->transport->send($event);
+        return $this->transport->send($event);
     }
 
     /**
