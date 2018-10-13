@@ -251,7 +251,7 @@ final class Breadcrumb implements \JsonSerializable
      */
     public function withMetadata($name, $value)
     {
-        if (isset($this->metadata[$name]) && $value === $this->message[$name]) {
+        if (isset($this->metadata[$name]) && $value === $this->metadata[$name]) {
             return $this;
         }
 

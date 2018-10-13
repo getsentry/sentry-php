@@ -38,7 +38,7 @@ interface ClientBuilderInterface
      *
      * @param UriFactory $uriFactory The factory
      *
-     * @return $this
+     * @return self
      */
     public function setUriFactory(UriFactory $uriFactory);
 
@@ -47,7 +47,7 @@ interface ClientBuilderInterface
      *
      * @param MessageFactory $messageFactory The factory
      *
-     * @return $this
+     * @return self
      */
     public function setMessageFactory(MessageFactory $messageFactory);
 
@@ -56,7 +56,7 @@ interface ClientBuilderInterface
      *
      * @param TransportInterface $transport The transport
      *
-     * @return $this
+     * @return self
      */
     public function setTransport(TransportInterface $transport);
 
@@ -65,7 +65,7 @@ interface ClientBuilderInterface
      *
      * @param HttpAsyncClient $httpClient The HTTP client
      *
-     * @return $this
+     * @return self
      */
     public function setHttpClient(HttpAsyncClient $httpClient);
 
@@ -74,7 +74,7 @@ interface ClientBuilderInterface
      *
      * @param Plugin $plugin The plugin instance
      *
-     * @return $this
+     * @return self
      */
     public function addHttpClientPlugin(Plugin $plugin);
 
@@ -83,7 +83,7 @@ interface ClientBuilderInterface
      *
      * @param string $className The class name
      *
-     * @return $this
+     * @return self
      */
     public function removeHttpClientPlugin($className);
 
@@ -95,7 +95,7 @@ interface ClientBuilderInterface
      *                             earlier a processor will be executed in
      *                             the chain (defaults to 0)
      *
-     * @return $this
+     * @return self
      */
     public function addMiddleware(callable $middleware, $priority = 0);
 
@@ -104,7 +104,7 @@ interface ClientBuilderInterface
      *
      * @param callable $middleware The middleware instance
      *
-     * @return $this
+     * @return self
      */
     public function removeMiddleware(callable $middleware);
 
