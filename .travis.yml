@@ -3,13 +3,9 @@ language: php
 php:
   - 7.1
   - 7.2
-  - nightly
 
 matrix:
   fast_finish: true
-  exclude:
-    - php: nightly
-      env: REMOVE_XDEBUG="1"
 
 env:
   - REMOVE_XDEBUG="0"
