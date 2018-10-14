@@ -67,7 +67,7 @@
             "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
         ],
         "phpstan": [
-            "vendor/bin/phpstan analyse src tests -c phpstan.neon -l 3"
+            "vendor/bin/phpstan analyse"
         ]
     },
     "config": {

@@ -1,4 +1,8 @@
 parameters:
+    level: 3
+    paths:
+        - src
+        - tests
     ignoreErrors:
         - '/Constructor of class Sentry\\HttpClient\\Encoding\\Base64EncodingStream has an unused parameter \$(readFilterOptions|writeFilterOptions)/'
         - '/Call to an undefined method Sentry\\ClientBuilder::methodThatDoesNotExists\(\)/'
