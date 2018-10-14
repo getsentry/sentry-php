@@ -12,6 +12,7 @@
 namespace Sentry\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Sentry\Context\Context;
 use Sentry\Event;
 
 /**
@@ -34,6 +35,7 @@ final class UserInterfaceMiddleware
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
+        /** @var array|Context $userContext */
         $userContext = $event->getUserContext();
 
         if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {

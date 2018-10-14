@@ -32,7 +32,7 @@ class Configuration
     private $dsn;
 
     /**
-     * @var string The project ID number to send to the Sentry server
+     * @var string|null The project ID number to send to the Sentry server
      */
     private $projectId;
 
@@ -381,7 +381,7 @@ class Configuration
     /**
      * Gets the project ID number to send to the Sentry server.
      *
-     * @return string
+     * @return string|null
      */
     public function getProjectId()
     {
@@ -477,7 +477,7 @@ class Configuration
     /**
      * Gets the DSN of the Sentry server the authenticated user is bound to.
      *
-     * @return string
+     * @return string|null
      */
     public function getDsn()
     {

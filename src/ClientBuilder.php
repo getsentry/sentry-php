@@ -90,12 +90,12 @@ final class ClientBuilder implements ClientBuilderInterface
     private $configuration;
 
     /**
-     * @var UriFactory The PSR-7 URI factory
+     * @var UriFactory|null The PSR-7 URI factory
      */
     private $uriFactory;
 
     /**
-     * @var MessageFactory The PSR-7 message factory
+     * @var MessageFactory|null The PSR-7 message factory
      */
     private $messageFactory;
 
@@ -105,7 +105,7 @@ final class ClientBuilder implements ClientBuilderInterface
     private $transport;
 
     /**
-     * @var HttpAsyncClient The HTTP client
+     * @var HttpAsyncClient|null The HTTP client
      */
     private $httpClient;
 
@@ -242,9 +242,9 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient()
     {
-        $this->messageFactory = $this->messageFactory ?: MessageFactoryDiscovery::find();
-        $this->uriFactory = $this->uriFactory ?: UriFactoryDiscovery::find();
-        $this->httpClient = $this->httpClient ?: HttpAsyncClientDiscovery::find();
+        $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
+        $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
+        $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->createTransportInstance();
 
         $client = new Client($this->configuration, $this->transport);
