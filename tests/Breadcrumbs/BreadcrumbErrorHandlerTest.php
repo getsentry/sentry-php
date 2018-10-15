@@ -53,7 +53,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
             $errorHandler->captureAt(E_USER_NOTICE, true);
 
             $this->assertFalse($errorHandler->handleError(E_USER_WARNING, 'foo bar', __FILE__, __LINE__));
-            $this->assertTrue($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, __LINE__));
+            $this->assertFalse($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, __LINE__));
         } finally {
             restore_error_handler();
             restore_exception_handler();

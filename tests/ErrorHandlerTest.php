@@ -57,7 +57,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             $errorHandler->captureAt(E_USER_NOTICE, true);
 
             $this->assertFalse($errorHandler->handleError(E_USER_WARNING, 'foo bar', __FILE__, __LINE__));
-            $this->assertTrue($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123));
+            $this->assertFalse($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123));
         } finally {
             restore_error_handler();
             restore_exception_handler();
