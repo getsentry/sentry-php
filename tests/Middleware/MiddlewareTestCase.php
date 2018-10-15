@@ -21,9 +21,7 @@ abstract class MiddlewareTestCase extends TestCase
     protected function assertMiddlewareInvokesNext(callable $middleware, Event $event = null, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
     {
         $callbackInvoked = false;
-        $callback = function (Event $passedEvent, $passedRequest = null, $passedException = null) use (&$callbackInvoked) {
-            $this->assertInstanceOf(ServerRequestInterface::class, $passedRequest);
-
+        $callback = function (Event $passedEvent, ServerRequestInterface $passedRequest = null, $passedException = null) use (&$callbackInvoked) {
             if ($passedException) {
                 $this->assertInstanceOf(\Exception::class, $passedException);
             }
