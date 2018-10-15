@@ -4,7 +4,7 @@ namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 
-class Scope
+final class Scope
 {
     private $breadcrumbs = [];
     private $user = null;
