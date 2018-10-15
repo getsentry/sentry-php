@@ -36,7 +36,7 @@ jobs:
     - php: nightly
       allow_failure: true
       before_install:
-        - composer remove friendsofphp/php-cs-fixer
+        - composer remove --dev friendsofphp/php-cs-fixer
       env: 
         REMOVE_XDEBUG: "0"
     - stage: Code style & static analysis
