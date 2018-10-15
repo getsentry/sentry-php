@@ -56,9 +56,9 @@ abstract class AbstractErrorHandlerTest extends TestCase
         }
         $errorHandler = $this->createErrorHandler($this->client);
         $errorHandler->captureAt($captureAt, true);
+        $prevErrorReporting = error_reporting($errorReporting);
 
         try {
-            $prevErrorReporting = error_reporting($errorReporting);
             $this->assertFalse($errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
         } finally {
             error_reporting($prevErrorReporting);
