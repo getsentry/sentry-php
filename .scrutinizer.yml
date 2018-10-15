@@ -1,4 +1,5 @@
 tools:
+    php_cs_fixer: false
     external_code_coverage:
         runs: 1
 
