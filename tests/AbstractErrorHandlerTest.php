@@ -12,6 +12,7 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\AbstractErrorHandler;
 use Sentry\Client;
 
 abstract class AbstractErrorHandlerTest extends TestCase
@@ -42,6 +43,30 @@ abstract class AbstractErrorHandlerTest extends TestCase
             restore_error_handler();
             restore_exception_handler();
         }
+    }
+
+    /**
+     * @dataProvider errorReportingConstantProvider
+     */
+    public function testHandleErrorShouldNotCapture(bool $expectedReturn, int $captureAt, int $errorReporting)
+    {
+        $errorHandler = $this->createErrorHandler($this->client);
+        $errorHandler->captureAt($captureAt, true);
+
+        try {
+            $prevErrorReporting = error_reporting($errorReporting);
+            $this->assertSame($expectedReturn, $errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
+        } finally {
+            error_reporting($prevErrorReporting);
+        }
+    }
+
+    public function errorReportingConstantProvider()
+    {
+        yield [false, E_ERROR, E_ERROR];
+        yield [false, E_ALL, E_ERROR];
+        yield [true, E_ERROR, E_ALL];
+        yield [true, E_ALL, E_ALL];
     }
 
     /**
@@ -89,5 +114,5 @@ abstract class AbstractErrorHandlerTest extends TestCase
         ];
     }
 
-    abstract protected function createErrorHandler(...$arguments);
+    abstract protected function createErrorHandler(...$arguments): AbstractErrorHandler;
 }

@@ -159,8 +159,8 @@ abstract class AbstractErrorHandler
         $shouldReportError = (bool) (error_reporting() & $level);
         $shouldCaptureError = (bool) ($this->capturedErrors & $level);
 
-        if (!$shouldCaptureError || (!$shouldCaptureError && !$shouldReportError)) {
-            return false;
+        if (!$shouldCaptureError || !$shouldReportError) {
+            return $shouldReportError;
         }
 
         $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);

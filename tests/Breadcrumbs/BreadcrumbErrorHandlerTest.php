@@ -11,6 +11,7 @@
 
 namespace Sentry\Tests\Breadcrumbs;
 
+use Sentry\AbstractErrorHandler;
 use Sentry\BreadcrumbErrorHandler;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
@@ -318,7 +319,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
         }
     }
 
-    protected function createErrorHandler(...$arguments)
+    protected function createErrorHandler(...$arguments): AbstractErrorHandler
     {
         return BreadcrumbErrorHandler::register(...$arguments);
     }
