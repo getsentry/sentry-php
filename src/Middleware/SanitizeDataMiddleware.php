@@ -59,21 +59,21 @@ final class SanitizeDataMiddleware implements ProcessorMiddlewareInterface
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $exception = $event->getException();
+        $exceptionData = $event->getException();
         $stacktrace = $event->getStacktrace();
-        $request = $event->getRequest();
+        $requestData = $event->getRequest();
         $extraContext = $event->getExtraContext()->toArray();
 
-        if (!empty($exception)) {
-            $event->setException($this->sanitizeException($exception));
+        if (!empty($exceptionData)) {
+            $event->setException($this->sanitizeException($exceptionData));
         }
 
         if ($stacktrace) {
             $event->setStacktrace($this->sanitizeStacktrace($stacktrace));
         }
 
-        if (!empty($request)) {
-            $event->setRequest($this->sanitizeHttp($request));
+        if (!empty($requestData)) {
+            $event->setRequest($this->sanitizeHttp($requestData));
         }
 
         if (!empty($extraContext)) {

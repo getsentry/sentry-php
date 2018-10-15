@@ -11,12 +11,11 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeCookiesMiddleware;
 
-class SanitizeCookiesMiddlewareTest extends TestCase
+class SanitizeCookiesMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
@@ -33,7 +32,7 @@ class SanitizeCookiesMiddlewareTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke($options, $expectedData)
+    public function testInvoke(array $options, array $expectedData)
     {
         $event = new Event(new Configuration());
         $event->setRequest([
@@ -48,20 +47,14 @@ class SanitizeCookiesMiddlewareTest extends TestCase
             ],
         ]);
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
-            $request = $eventArg->getRequest();
-
-            $this->assertArraySubset($expectedData, $request);
-            $this->assertArrayNotHasKey('cookie', $request['headers']);
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new SanitizeCookiesMiddleware($options);
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        $request = $returnedEvent->getRequest();
+
+        $this->assertArraySubset($expectedData, $request);
+        $this->assertArrayNotHasKey('cookie', $request['headers']);
     }
 
     public function invokeDataProvider()

@@ -11,12 +11,11 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
 
-class SanitizeHttpHeadersMiddlewareTest extends TestCase
+class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -26,20 +25,13 @@ class SanitizeHttpHeadersMiddlewareTest extends TestCase
         $event = new Event(new Configuration());
         $event->setRequest($inputData);
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
-            $this->assertArraySubset($expectedData, $eventArg->getRequest());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new SanitizeHttpHeadersMiddleware([
             'sanitize_http_headers' => ['User-Defined-Header'],
         ]);
 
-        $middleware($event, $callback);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
-        $this->assertTrue($callbackInvoked);
+        $this->assertArraySubset($expectedData, $returnedEvent->getRequest());
     }
 
     public function invokeDataProvider()

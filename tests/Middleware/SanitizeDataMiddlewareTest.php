@@ -11,14 +11,13 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeDataMiddleware;
 use Sentry\Stacktrace;
 
-class SanitizeDataMiddlewareTest extends TestCase
+class SanitizeDataMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @var ClientInterface
@@ -33,7 +32,7 @@ class SanitizeDataMiddlewareTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke($inputData, $expectedData)
+    public function testInvoke(array $inputData, array $expectedData)
     {
         $event = new Event($this->client->getConfig());
 
@@ -52,30 +51,24 @@ class SanitizeDataMiddlewareTest extends TestCase
             $event->setException($this->convertExceptionValuesToStacktrace($expectedData['exception']));
         }
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($expectedData, &$callbackInvoked) {
-            if (isset($expectedData['request'])) {
-                $this->assertArraySubset($expectedData['request'], $eventArg->getRequest());
-            }
-
-            if (isset($expectedData['extra_context'])) {
-                $this->assertArraySubset($expectedData['extra_context'], $eventArg->getExtraContext());
-            }
-
-            if (isset($expectedData['exception'])) {
-                // We must convert the backtrace to a Stacktrace instance here because
-                // PHPUnit executes the data provider before the setUp method and so
-                // the client instance cannot be accessed from there
-                $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $eventArg->getException());
-            }
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new SanitizeDataMiddleware();
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        if (isset($expectedData['request'])) {
+            $this->assertArraySubset($expectedData['request'], $returnedEvent->getRequest());
+        }
+
+        if (isset($expectedData['extra_context'])) {
+            $this->assertArraySubset($expectedData['extra_context'], $returnedEvent->getExtraContext());
+        }
+
+        if (isset($expectedData['exception'])) {
+            // We must convert the backtrace to a Stacktrace instance here because
+            // PHPUnit executes the data provider before the setUp method and so
+            // the client instance cannot be accessed from there
+            $this->assertArraySubset($this->convertExceptionValuesToStacktrace($expectedData['exception']), $returnedEvent->getException());
+        }
     }
 
     public function invokeDataProvider()

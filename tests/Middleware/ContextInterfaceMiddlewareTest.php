@@ -11,13 +11,10 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
-use Sentry\Configuration;
 use Sentry\Context\Context;
-use Sentry\Event;
 use Sentry\Middleware\ContextInterfaceMiddleware;
 
-class ContextInterfaceMiddlewareTest extends TestCase
+class ContextInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -29,26 +26,18 @@ class ContextInterfaceMiddlewareTest extends TestCase
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
-        $context = new Context($initialData);
-        $event = new Event(new Configuration());
-
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($contextName, $expectedData, &$callbackInvoked) {
-            $method = preg_replace_callback('/_[a-zA-Z]/', function ($matches) {
-                return strtoupper($matches[0][1]);
-            }, 'get_' . $contextName . '_context');
-
-            $this->assertEquals($expectedData, $eventArg->$method()->toArray());
-
-            $callbackInvoked = true;
-        };
-
-        $middleware = new ContextInterfaceMiddleware($context, $contextName);
-        $middleware($event, $callback, null, null, [
+        $middleware = new ContextInterfaceMiddleware(new Context($initialData), $contextName);
+        $payload = [
             $contextName . '_context' => $payloadData,
-        ]);
+        ];
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, null, null, null, $payload);
+
+        $method = preg_replace_callback('/_[a-zA-Z]/', function ($matches) {
+            return strtoupper($matches[0][1]);
+        }, 'get_' . $contextName . '_context');
+
+        $this->assertEquals($expectedData, $returnedEvent->$method()->toArray());
     }
 
     public function invokeDataProvider()

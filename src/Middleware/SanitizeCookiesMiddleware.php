@@ -60,10 +60,10 @@ final class SanitizeCookiesMiddleware implements ProcessorMiddlewareInterface
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $request = $event->getRequest();
+        $requestData = $event->getRequest();
 
-        if (isset($request['cookies'])) {
-            $cookiesToSanitize = array_keys($request['cookies']);
+        if (isset($requestData['cookies'])) {
+            $cookiesToSanitize = array_keys($requestData['cookies']);
 
             if (!empty($this->options['only'])) {
                 $cookiesToSanitize = $this->options['only'];
@@ -73,18 +73,18 @@ final class SanitizeCookiesMiddleware implements ProcessorMiddlewareInterface
                 $cookiesToSanitize = array_diff($cookiesToSanitize, $this->options['except']);
             }
 
-            foreach ($request['cookies'] as $name => $value) {
+            foreach ($requestData['cookies'] as $name => $value) {
                 if (!\in_array($name, $cookiesToSanitize)) {
                     continue;
                 }
 
-                $request['cookies'][$name] = self::STRING_MASK;
+                $requestData['cookies'][$name] = self::STRING_MASK;
             }
         }
 
-        unset($request['headers']['cookie']);
+        unset($requestData['headers']['cookie']);
 
-        $event->setRequest($request);
+        $event->setRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }

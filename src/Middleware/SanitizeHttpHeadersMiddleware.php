@@ -55,22 +55,20 @@ final class SanitizeHttpHeadersMiddleware implements ProcessorMiddlewareInterfac
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $request = $event->getRequest();
+        $requestData = $event->getRequest();
 
-        if (!isset($request['headers'])) {
-            return $event;
-        }
-
-        foreach ($request['headers'] as $header => &$value) {
-            if (\in_array($header, $this->options['sanitize_http_headers'], true)) {
-                $value = self::STRING_MASK;
+        if (isset($requestData['headers'])) {
+            foreach ($requestData['headers'] as $header => &$value) {
+                if (\in_array($header, $this->options['sanitize_http_headers'], true)) {
+                    $value = self::STRING_MASK;
+                }
             }
+
+            // Break the reference and free some memory
+            unset($value);
+
+            $event->setRequest($requestData);
         }
-
-        // Break the reference and free some memory
-        unset($value);
-
-        $event->setRequest($request);
 
         return $next($event, $request, $exception, $payload);
     }

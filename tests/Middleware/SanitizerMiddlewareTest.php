@@ -11,13 +11,12 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizerMiddleware;
 use Sentry\Serializer;
 
-class SanitizerMiddlewareTest extends TestCase
+class SanitizerMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
@@ -41,21 +40,15 @@ class SanitizerMiddlewareTest extends TestCase
                 return $eventData;
             });
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            $this->assertArraySubset(['bar' => 'zab'], $eventArg->getRequest());
-            $this->assertArraySubset(['foo' => 'rab'], $eventArg->getUserContext());
-            $this->assertArraySubset(['name' => 'zab'], $eventArg->getRuntimeContext());
-            $this->assertArraySubset(['name' => 'oof'], $eventArg->getServerOsContext());
-            $this->assertArraySubset(['baz' => 'oof'], $eventArg->getExtraContext());
-            $this->assertArraySubset(['oof', 'rab'], $eventArg->getTagsContext());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new SanitizerMiddleware($sanitizer);
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        $this->assertArraySubset(['bar' => 'zab'], $returnedEvent->getRequest());
+        $this->assertArraySubset(['foo' => 'rab'], $returnedEvent->getUserContext());
+        $this->assertArraySubset(['name' => 'zab'], $returnedEvent->getRuntimeContext());
+        $this->assertArraySubset(['name' => 'oof'], $returnedEvent->getServerOsContext());
+        $this->assertArraySubset(['baz' => 'oof'], $returnedEvent->getExtraContext());
+        $this->assertArraySubset(['oof', 'rab'], $returnedEvent->getTagsContext());
     }
 }

@@ -11,15 +11,12 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Breadcrumbs\Recorder;
 use Sentry\Client;
-use Sentry\Configuration;
-use Sentry\Event;
 use Sentry\Middleware\BreadcrumbInterfaceMiddleware;
 
-class BreadcrumbInterfaceMiddlewareTest extends TestCase
+class BreadcrumbInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
@@ -30,19 +27,10 @@ class BreadcrumbInterfaceMiddlewareTest extends TestCase
         $recorder->record($breadcrumb);
         $recorder->record($breadcrumb2);
 
-        $configuration = new Configuration();
-        $event = new Event($configuration);
-
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($breadcrumb, $breadcrumb2, &$callbackInvoked) {
-            $this->assertEquals([$breadcrumb, $breadcrumb2], $eventArg->getBreadcrumbs());
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new BreadcrumbInterfaceMiddleware($recorder);
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware);
+
+        $this->assertEquals([$breadcrumb, $breadcrumb2], $returnedEvent->getBreadcrumbs());
     }
 }

@@ -11,38 +11,36 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\RequestInterfaceMiddleware;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestInterfaceMiddlewareTest extends TestCase
+class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvokeWithNoRequest()
     {
         $configuration = new Configuration();
         $event = new Event($configuration);
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg) use ($event, &$invokationCount) {
+        $callbackInvoked = false;
+        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
             $this->assertSame($event, $eventArg);
 
-            ++$invokationCount;
+            $callbackInvoked = true;
         };
 
         $middleware = new RequestInterfaceMiddleware();
         $middleware($event, $callback);
 
-        $this->assertEquals(1, $invokationCount);
+        $this->assertTrue($callbackInvoked, 'Next middleware NOT invoked');
     }
 
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke($requestData, $expectedValue)
+    public function testInvoke(array $requestData, array $expectedValue)
     {
         $configuration = new Configuration();
         $event = new Event($configuration);
@@ -56,18 +54,11 @@ class RequestInterfaceMiddlewareTest extends TestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $invokationCount = 0;
-        $callback = function (Event $eventArg, ServerRequestInterface $requestArg) use ($request, $expectedValue, &$invokationCount) {
-            $this->assertSame($request, $requestArg);
-            $this->assertEquals($expectedValue, $eventArg->getRequest());
-
-            ++$invokationCount;
-        };
-
         $middleware = new RequestInterfaceMiddleware();
-        $middleware($event, $callback, $request);
 
-        $this->assertEquals(1, $invokationCount);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
+
+        $this->assertEquals($expectedValue, $returnedEvent->getRequest());
     }
 
     public function invokeDataProvider()

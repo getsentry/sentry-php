@@ -11,14 +11,13 @@
 
 namespace Sentry\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Middleware\RemoveStacktraceContextMiddleware;
 use Sentry\Stacktrace;
 
-class RemoveStacktraceContextMiddlewareTest extends TestCase
+class RemoveStacktraceContextMiddlewareTest extends MiddlewareTestCase
 {
     /**
      * @var ClientInterface
@@ -38,21 +37,15 @@ class RemoveStacktraceContextMiddlewareTest extends TestCase
         $event = new Event($this->client->getConfig());
         $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            foreach ($eventArg->getStacktrace()->getFrames() as $frame) {
-                $this->assertNull($frame->getPreContext());
-                $this->assertNull($frame->getContextLine());
-                $this->assertNull($frame->getPostContext());
-            }
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new RemoveStacktraceContextMiddleware();
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        foreach ($returnedEvent->getStacktrace()->getFrames() as $frame) {
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
+        }
     }
 
     public function testInvokeWithPreviousException()
@@ -63,20 +56,14 @@ class RemoveStacktraceContextMiddlewareTest extends TestCase
         $event = new Event($this->client->getConfig());
         $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception2->getTrace(), $exception2->getFile(), $exception2->getLine()));
 
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use (&$callbackInvoked) {
-            foreach ($eventArg->getStacktrace()->getFrames() as $frame) {
-                $this->assertNull($frame->getPreContext());
-                $this->assertNull($frame->getContextLine());
-                $this->assertNull($frame->getPostContext());
-            }
-
-            $callbackInvoked = true;
-        };
-
         $middleware = new RemoveStacktraceContextMiddleware();
-        $middleware($event, $callback);
 
-        $this->assertTrue($callbackInvoked);
+        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        foreach ($returnedEvent->getStacktrace()->getFrames() as $frame) {
+            $this->assertNull($frame->getPreContext());
+            $this->assertNull($frame->getContextLine());
+            $this->assertNull($frame->getPostContext());
+        }
     }
 }

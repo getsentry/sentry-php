@@ -36,13 +36,13 @@ final class RemoveHttpBodyMiddleware implements ProcessorMiddlewareInterface
      */
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
-        $request = $event->getRequest();
+        $requestData = $event->getRequest();
 
-        if (isset($request['method']) && \in_array(strtoupper($request['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
-            $request['data'] = self::STRING_MASK;
+        if (isset($requestData['method']) && \in_array(strtoupper($requestData['method']), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            $requestData['data'] = self::STRING_MASK;
         }
 
-        $event->setRequest($request);
+        $event->setRequest($requestData);
 
         return $next($event, $request, $exception, $payload);
     }
