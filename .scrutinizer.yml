@@ -1,11 +1,16 @@
 tools:
-    php_sim: false
-    php_pdepend: true
-    php_analyzer: true
-    php_code_coverage: true
-    external_code_coverage:
-        timeout: 2400 # There can be another pull request in progress
-        runs: 1
+  external_code_coverage:
+    timeout: 2400 # There can be another pull request in progress
+    runs: 1
+
+build:
+  nodes:
+    analysis:
+      tests:
+        override:
+        - php-scrutinizer-run
 
 filter:
-    excluded_paths: [vendor/*, tests/*, bin/*, docs/*, examples/*]
+  paths: 
+    - src/
+    - tests/
