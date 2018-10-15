@@ -114,17 +114,15 @@ EOF;
      */
     private function createClient()
     {
-        $client = $client = ClientBuilder::create()->getClient();
-
-        return $client;
+        return ClientBuilder::create()->getClient();
     }
 
     /**
-     * @param Client $client
+     * @param ClientInterface $client
      *
      * @return Logger
      */
-    private function createLoggerWithHandler(Client $client)
+    private function createLoggerWithHandler(ClientInterface $client)
     {
         $handler = new MonologHandler($client);
         $logger = new Logger('sentry');
@@ -134,11 +132,11 @@ EOF;
     }
 
     /**
-     * @param Client $client
+     * @param ClientInterface $client
      *
      * @return Breadcrumb[]
      */
-    private function getBreadcrumbs(Client $client)
+    private function getBreadcrumbs(ClientInterface $client)
     {
         $breadcrumbsRecorder = $this->getObjectAttribute($client, 'breadcrumbRecorder');
 

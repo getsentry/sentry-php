@@ -487,7 +487,7 @@ class ClientTest extends TestCase
     public function testSetSerializer()
     {
         $client = ClientBuilder::create()->getClient();
-        $serializer = $this->prophesize(Serializer::class)->reveal();
+        $serializer = $this->createMock(Serializer::class);
 
         $client->setSerializer($serializer);
 
@@ -497,7 +497,7 @@ class ClientTest extends TestCase
     public function testSetReprSerializer()
     {
         $client = ClientBuilder::create()->getClient();
-        $serializer = $this->prophesize(ReprSerializer::class)->reveal();
+        $serializer = $this->createMock(ReprSerializer::class);
 
         $client->setRepresentationSerializer($serializer);
 
