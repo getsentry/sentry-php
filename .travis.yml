@@ -31,6 +31,7 @@ jobs:
       php: 7.2
       env:
         REMOVE_XDEBUG: "0"
+        COVERAGE: true
       script:
       - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
       - wget https://scrutinizer-ci.com/ocular.phar
