@@ -16,6 +16,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Event;
+use Sentry\Util\PHPVersion;
 
 /**
  * @group time-sensitive
@@ -105,7 +106,7 @@ class EventTest extends TestCase
                 ],
                 'runtime' => [
                     'name' => 'php',
-                    'version' => PHP_VERSION,
+                    'version' => PHPVersion::parseVersion(),
                 ],
             ],
         ];

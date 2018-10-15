@@ -6,6 +6,8 @@ php:
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - php: nightly
 
 env:
   - REMOVE_XDEBUG="0"
@@ -26,11 +28,25 @@ script:
 jobs:
   include:
     - stage: Test
-      php: 7.1
+      php: 7.2
+      env:
+        REMOVE_XDEBUG: "0"
+        COVERAGE: true
+      script:
+      - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
+      - wget https://scrutinizer-ci.com/ocular.phar
+      - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
+    - php: 7.1
       env: 
         COMPOSER_OPTIONS: "--prefer-lowest"
         REMOVE_XDEBUG: "1"
       install: travis_retry composer update --no-interaction --prefer-lowest
+    - php: nightly
+      allow_failure: true
+      before_install:
+        - composer remove --dev friendsofphp/php-cs-fixer
+      env: 
+        REMOVE_XDEBUG: "0"
     - stage: Code style & static analysis
       env: 
         CS-FIXER: true
@@ -42,11 +58,3 @@ jobs:
         REMOVE_XDEBUG: "1"
       script: 
         - composer phpstan
-    - stage: Coverage
-      env:
-        REMOVE_XDEBUG: "0"
-      script:
-        - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
-      after_success:
-        - wget https://scrutinizer-ci.com/ocular.phar
-        - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
