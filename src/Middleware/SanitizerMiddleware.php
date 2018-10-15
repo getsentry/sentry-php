@@ -52,7 +52,9 @@ final class SanitizerMiddleware
     public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
     {
         if (!empty($requestData = $event->getRequest())) {
-            $event->setRequest($this->serializer->serialize($requestData, 5));
+            /** @var array $serializedRequest */
+            $serializedRequest = $this->serializer->serialize($requestData, 5);
+            $event->setRequest($serializedRequest);
         }
 
         $event->getUserContext()->replaceData($this->serializer->serialize($event->getUserContext()->toArray()));

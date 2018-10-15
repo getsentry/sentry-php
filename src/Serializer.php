@@ -41,7 +41,7 @@ class Serializer
     /**
      * This is the default mb detect order for the detection of encoding.
      *
-     * @var string
+     * @var string[]|string
      */
     protected $mb_detect_order = self::DEFAULT_MB_DETECT_ORDER;
 
@@ -58,8 +58,8 @@ class Serializer
     protected $messageLimit;
 
     /**
-     * @param null|string $mb_detect_order
-     * @param null|int    $messageLimit
+     * @param null|string|string[] $mb_detect_order
+     * @param null|int             $messageLimit
      */
     public function __construct($mb_detect_order = null, $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
     {
@@ -182,19 +182,21 @@ class Serializer
      *
      * @return string
      */
-    public function serializeCallable($callable)
+    public function serializeCallable(callable $callable)
     {
         if (\is_array($callable)) {
             $reflection = new \ReflectionMethod($callable[0], $callable[1]);
             $class = $reflection->getDeclaringClass();
-        } else {
+        } elseif ($callable instanceof \Closure || \is_string($callable)) {
             $reflection = new \ReflectionFunction($callable);
             $class = null;
+        } else {
+            throw new \InvalidArgumentException('Unrecognized type of callable');
         }
 
         $value = $reflection->isClosure() ? 'Lambda ' : 'Callable ';
 
-        if (version_compare(PHP_VERSION, '7.0.0') >= 0 && $reflection->getReturnType()) {
+        if ($reflection->getReturnType()) {
             $value .= $reflection->getReturnType() . ' ';
         }
 
@@ -244,7 +246,7 @@ class Serializer
     }
 
     /**
-     * @return string
+     * @return string|string[]
      * @codeCoverageIgnore
      */
     public function getMbDetectOrder()

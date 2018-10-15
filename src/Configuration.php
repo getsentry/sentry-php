@@ -698,9 +698,9 @@ class Configuration
                 $this->dsn .= ':' . $parsed['port'];
             }
 
-            $this->dsn .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
+            $this->dsn .= substr($parsed['path'], 0, strrpos($parsed['path'], '/') ?: null);
             $this->publicKey = $parsed['user'];
-            $this->secretKey = isset($parsed['pass']) ? $parsed['pass'] : null;
+            $this->secretKey = $parsed['pass'] ?? null;
 
             $parts = explode('/', $parsed['path']);
 

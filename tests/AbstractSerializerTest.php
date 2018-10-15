@@ -362,6 +362,7 @@ abstract class AbstractSerializerTest extends TestCase
             $serializer->setAllObjectSerialize(true);
         }
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
+        $this->assertNotFalse($filename, 'Temp file creation failed');
         $fo = fopen($filename, 'wb');
 
         $result = $serializer->serialize($fo);

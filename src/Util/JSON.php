@@ -29,7 +29,7 @@ final class JSON
     {
         $encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (JSON_ERROR_NONE !== json_last_error() || false === $encoded) {
             throw new \InvalidArgumentException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 

@@ -40,13 +40,13 @@ final class Base64EncodingStream extends FilteredStream
         $inputSize = $this->stream->getSize();
 
         if (null === $inputSize) {
-            return $inputSize;
+            return null;
         }
 
         // See https://stackoverflow.com/questions/1533113/calculate-the-size-to-a-base-64-encoded-message
         $adjustment = (($inputSize % 3) ? (3 - ($inputSize % 3)) : 0);
 
-        return (($inputSize + $adjustment) / 3) * 4;
+        return (int) ((($inputSize + $adjustment) / 3) * 4);
     }
 
     /**

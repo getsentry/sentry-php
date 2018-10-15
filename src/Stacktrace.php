@@ -180,7 +180,7 @@ class Stacktrace implements \JsonSerializable
                 $argumentValue = $this->reprSerializer->serialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
+                    $frameArguments[(string) $argumentName] = substr((string) $argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -256,7 +256,9 @@ class Stacktrace implements \JsonSerializable
             $file->seek($target);
 
             while (!$file->eof()) {
-                $line = rtrim($file->current(), "\r\n");
+                /** @var string $row */
+                $row = $file->current();
+                $line = rtrim($row, "\r\n");
 
                 if ($currentLineNumber == $lineNumber) {
                     $frame['context_line'] = $line;
@@ -411,7 +413,7 @@ class Stacktrace implements \JsonSerializable
 
             foreach ($arg as $key => $value) {
                 if (\is_string($value) || is_numeric($value)) {
-                    $result[$key] = substr($value, 0, $maxValueLength);
+                    $result[$key] = substr((string) $value, 0, $maxValueLength);
                 } else {
                     $result[$key] = $value;
                 }
@@ -419,7 +421,7 @@ class Stacktrace implements \JsonSerializable
 
             return $result;
         } elseif (\is_string($arg) || is_numeric($arg)) {
-            return substr($arg, 0, $maxValueLength);
+            return substr((string) $arg, 0, $maxValueLength);
         } else {
             return $arg;
         }

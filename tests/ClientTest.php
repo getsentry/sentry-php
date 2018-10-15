@@ -322,7 +322,7 @@ class ClientTest extends TestCase
             $this->assertTrue($actual_value);
         } elseif (false === $expected_value) {
             $this->assertFalse($actual_value);
-        } elseif (\is_string($expected_value) or \is_int($expected_value) or \is_float($expected_value)) {
+        } elseif (\is_string($expected_value) || \is_numeric($expected_value)) {
             $this->assertEquals($expected_value, $actual_value);
         } elseif (\is_array($expected_value)) {
             $this->assertInternalType('array', $actual_value);
@@ -331,7 +331,9 @@ class ClientTest extends TestCase
                 $this->assertArrayHasKey($key, $actual_value);
                 $this->assertMixedValueAndArray($value, $actual_value[$key]);
             }
-        } elseif (\is_callable($expected_value) or \is_object($expected_value)) {
+        } elseif (\is_callable($expected_value)) {
+            $this->assertEquals($expected_value, $actual_value);
+        } elseif (\is_object($expected_value)) {
             $this->assertEquals(spl_object_hash($expected_value), spl_object_hash($actual_value));
         }
     }

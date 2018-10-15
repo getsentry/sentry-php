@@ -233,6 +233,11 @@ class EventTest extends TestCase
     {
         $event = new Event($this->configuration);
 
-        $this->assertJsonStringEqualsJsonString(json_encode($event->toArray()), json_encode($event));
+        $encodingOfToArray = json_encode($event->toArray());
+        $serializedEvent = json_encode($event);
+
+        $this->assertNotFalse($encodingOfToArray);
+        $this->assertNotFalse($serializedEvent);
+        $this->assertJsonStringEqualsJsonString($encodingOfToArray, $serializedEvent);
     }
 }
