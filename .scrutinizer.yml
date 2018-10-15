@@ -1,19 +1,21 @@
 tools:
-    php_sim: false
-    php_pdepend: true
-    php_analyzer: true
-    php_code_coverage: true
     external_code_coverage:
-        timeout: 2400 # There can be another pull request in progress
         runs: 1
 
 build:
-    environment:
-        php:
-            version: 5.6.0
-        redis: false
-        postgresql: false
-        mongodb: false
+    nodes:
+        analysis:
+            tests:
+                override:
+                    - php-scrutinizer-run
 
 filter:
-    excluded_paths: [vendor/*, tests/*, bin/*, docs/*, examples/*]
+    paths:
+        - src/
+        - tests/
+
+coding_style:
+    php:
+        spaces:
+            around_operators:
+                concatenation: true
