@@ -27,7 +27,7 @@ final class TransactionStack implements \Countable
     /**
      * Class constructor.
      *
-     * @param array $values An array of initial values
+     * @param string[] $values An array of initial values
      */
     public function __construct(array $values = [])
     {

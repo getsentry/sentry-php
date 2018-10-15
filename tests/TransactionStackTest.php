@@ -23,13 +23,11 @@ class TransactionStackTest extends TestCase
         $this->assertAttributeEquals(['a', 'b'], 'transactions', $stack);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage The $values argument must contain string values only.
-     */
     public function testConstructorThrowsIfValuesAreNotAllStrings()
     {
-        new TransactionStack(['a', 1]);
+        $this->expectException(\TypeError::class);
+
+        new TransactionStack(['a', new \stdClass()]);
     }
 
     public function testClear()
