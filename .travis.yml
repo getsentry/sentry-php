@@ -33,7 +33,6 @@ jobs:
         REMOVE_XDEBUG: "0"
       script:
       - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
-      after_success:
       - wget https://scrutinizer-ci.com/ocular.phar
       - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
     - php: 7.1
