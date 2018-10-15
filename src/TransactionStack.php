@@ -55,17 +55,11 @@ final class TransactionStack implements \Countable
     /**
      * Pushes the given values onto the stack.
      *
-     * @param array<int, string> $values The values to push
-     *
-     * @throws \InvalidArgumentException If any of the values is not a string
+     * @param string[] $values
      */
-    public function push(...$values)
+    public function push(string ...$values)
     {
         foreach ($values as $value) {
-            if (!\is_string($value)) {
-                throw new \InvalidArgumentException(sprintf('The $values argument must contain string values only.'));
-            }
-
             $this->transactions[] = $value;
         }
     }

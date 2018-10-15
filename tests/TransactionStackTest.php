@@ -69,19 +69,6 @@ class TransactionStackTest extends TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage The $values argument must contain string values only.
-     */
-    public function testPushThrowsIfValuesAreNotAllStrings()
-    {
-        $stack = new TransactionStack();
-
-        $this->assertEmpty($stack);
-
-        $stack->push('a', 1);
-    }
-
-    /**
      * @dataProvider peekDataProvider
      */
     public function testPeek($initialData, $expectedData, $expectedRemainingData)
