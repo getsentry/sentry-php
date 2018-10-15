@@ -1,16 +1,15 @@
 tools:
-  external_code_coverage:
-    timeout: 2400 # There can be another pull request in progress
-    runs: 1
+    external_code_coverage:
+        runs: 1
 
 build:
-  nodes:
-    analysis:
-      tests:
-        override:
-        - php-scrutinizer-run
+    nodes:
+        analysis:
+            tests:
+                override:
+                - php-scrutinizer-run
 
 filter:
-  paths: 
+    paths:
     - src/
     - tests/
