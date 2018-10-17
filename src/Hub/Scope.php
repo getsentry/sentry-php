@@ -5,7 +5,7 @@ namespace Sentry\Hub;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Event;
 use Sentry\Interfaces\Severity;
-use Sentry\Interfaces\User;
+use Sentry\Interfaces\UserContext;
 
 final class Scope
 {
@@ -84,9 +84,9 @@ final class Scope
     /**
      * @internal
      *
-     * @return null|User
+     * @return null|UserContext
      */
-    public function getUser(): ?User
+    public function getUser(): ?UserContext
     {
         return $this->user;
     }
@@ -158,11 +158,11 @@ final class Scope
     }
 
     /**
-     * @param User $user
+     * @param UserContext $user
      *
      * @return Scope
      */
-    public function setUser(User $user): self
+    public function setUser(UserContext $user): self
     {
         $this->user = $user;
 
