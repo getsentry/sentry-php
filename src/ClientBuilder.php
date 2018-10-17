@@ -299,6 +299,14 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createHttpClientInstance()
     {
+        if (!$this->uriFactory instanceof UriFactory) {
+            throw new \RuntimeException('UriFactory is not ready');
+        }
+
+        if (null === $this->httpClient) {
+            throw new \RuntimeException('HttpClient is not ready');
+        }
+
         if (null !== $this->configuration->getDsn()) {
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getDsn())));
         }
@@ -322,10 +330,14 @@ final class ClientBuilder implements ClientBuilderInterface
             return $this->transport;
         }
 
-        if (null !== $this->configuration->getDsn()) {
-            return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        if (null === $this->configuration->getDsn()) {
+            return new NullTransport();
         }
 
-        return new NullTransport();
+        if (!$this->messageFactory instanceof MessageFactory) {
+            throw new \RuntimeException('MessageFactory is not ready');
+        }
+
+        return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
     }
 }

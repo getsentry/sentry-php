@@ -37,7 +37,7 @@ final class Frame implements \JsonSerializable
      * @var string[] A list of source code lines before the one where the frame
      *               originated
      */
-    private $preContext;
+    private $preContext = [];
 
     /**
      * @var string|null The source code written at the line number of the file that
@@ -49,7 +49,7 @@ final class Frame implements \JsonSerializable
      * @var string[] A list of source code lines after the one where the frame
      *               originated
      */
-    private $postContext;
+    private $postContext = [];
 
     /**
      * @var bool Flag telling whether the frame is related to the execution of
