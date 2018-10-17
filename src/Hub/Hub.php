@@ -6,10 +6,24 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\Interfaces\Severity;
 
+/**
+ * Class Hub.
+ *
+ * Responsible for maintaining a stack of Client <-> Scope. Basically it's the main entry point to talk to the Client.
+ */
 final class Hub
 {
+    /**
+     * @var array Containing {@link Layer}
+     */
     private $stack = [];
 
+    /**
+     * Hub constructor.
+     *
+     * @param null|Client $client
+     * @param null|Scope  $scope
+     */
     public function __construct(?Client $client = null, ?Scope $scope = null)
     {
         if (null === $scope) {
@@ -108,8 +122,6 @@ final class Hub
     }
 
     /**
-     * TODO: Fix Create Level "enum".
-     *
      * @param string $message
      * @param $level
      *
@@ -118,6 +130,7 @@ final class Hub
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
         if ($client = $this->getClient()) {
+            // TODO: add level to call
             return $client->captureMessage($message);
         }
     }

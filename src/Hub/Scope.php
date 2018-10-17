@@ -55,6 +55,23 @@ final class Scope
     private $eventProcessors;
 
     /**
+     * @param Event $event
+     *
+     * @return null|Event
+     */
+    private function notifyEventProcessors(Event $event): ?Event
+    {
+        foreach ($this->eventProcessors as $processor) {
+            $event = $processor($event);
+            if (null === $event) {
+                return null;
+            }
+        }
+
+        return $event;
+    }
+
+    /**
      * @internal
      *
      * @return array
@@ -67,7 +84,7 @@ final class Scope
     /**
      * @internal
      *
-     * @return ?User
+     * @return null|User
      */
     public function getUser(): ?User
     {
@@ -107,7 +124,7 @@ final class Scope
     /**
      * @internal
      *
-     * @return ?Severity
+     * @return null|Severity
      */
     public function getLevel(): ?Severity
     {
@@ -190,6 +207,12 @@ final class Scope
         return $this;
     }
 
+    /**
+     * @param Event $event
+     * @param int   $maxBreadcrumbs
+     *
+     * @return null|Event
+     */
     public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
     {
         if ($this->level) {
@@ -203,6 +226,9 @@ final class Scope
         return $this->notifyEventProcessors($event);
     }
 
+    /**
+     * @return Scope
+     */
     public function clear(): self
     {
         $this->tags = [];
@@ -214,22 +240,15 @@ final class Scope
         return $this;
     }
 
+    /**
+     * @param \Closure $callback
+     *
+     * @return Scope
+     */
     public function addEventProcessor(\Closure $callback): self
     {
         $this->eventProcessors[] = $callback;
 
         return $this;
-    }
-
-    public function notifyEventProcessors(Event $event): ?Event
-    {
-        foreach ($this->eventProcessors as $processor) {
-            $event = $processor($event);
-            if (null === $event) {
-                return null;
-            }
-        }
-
-        return $event;
     }
 }

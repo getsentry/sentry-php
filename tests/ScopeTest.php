@@ -53,18 +53,26 @@ class ScopeTest extends TestCase
     {
         $scope = new Scope();
         $this->assertEquals([], $scope->getBreadcrumbs());
-        $this->assertEquals($scope->addBreadcrumb(new Breadcrumb('warning', Breadcrumb::TYPE_ERROR, 'first')), $scope);
+        $scope->addBreadcrumb(new Breadcrumb('warning', Breadcrumb::TYPE_ERROR, 'first'));
         $this->assertInstanceOf(Breadcrumb::class, $scope->getBreadcrumbs()[0]);
         for ($i = 0; $i <= 5; ++$i) {
             $scope->addBreadcrumb(new Breadcrumb('warning', Breadcrumb::TYPE_ERROR, 'for'));
         }
         $breadcrumbs = $scope->getBreadcrumbs();
         $this->assertEquals('first', $breadcrumbs[0]->getCategory());
-        $this->assertEquals(7, \count($scope->getBreadcrumbs()));
+        $this->assertCount(7, $scope->getBreadcrumbs());
         $scope->addBreadcrumb(new Breadcrumb('warning', Breadcrumb::TYPE_ERROR, 'last'), 7);
         $breadcrumbs = $scope->getBreadcrumbs();
-        $this->assertEquals(7, \count($scope->getBreadcrumbs()));
+        $this->assertCount(7, $scope->getBreadcrumbs());
         $this->assertEquals('last', \end($breadcrumbs)->getCategory());
         $this->assertEquals('for', $breadcrumbs[0]->getCategory());
+    }
+
+    public function testClear()
+    {
+        $scope = new Scope();
+        $this->assertEquals($scope->addBreadcrumb(new Breadcrumb('warning', Breadcrumb::TYPE_ERROR, 'first')), $scope);
+        $scope->clear();
+        $this->assertCount(0, $scope->getBreadcrumbs());
     }
 }

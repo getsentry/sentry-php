@@ -2,27 +2,44 @@
 
 namespace Sentry\Interfaces;
 
-final class User
+final class User implements \JsonSerializable
 {
     /**
-     * @var ?string
+     * @var null|string
      */
     private $id;
     /**
-     * @var ?string
+     * @var null|string
      */
     private $username;
     /**
-     * @var ?string
+     * @var null|string
      */
     private $email;
+
     /**
-     * @var ?array
+     * @var null|array
      */
     private $data;
 
     /**
-     * @return ?string
+     * User constructor.
+     *
+     * @param null|string $id
+     * @param null|string $username
+     * @param null|string $email
+     * @param array|null  $data
+     */
+    public function __construct(?string $id = null, ?string $username = null, ?string $email = null, ?array $data = null)
+    {
+        $this->id = $id;
+        $this->username = $username;
+        $this->email = $email;
+        $this->data = $data;
+    }
+
+    /**
+     * @return null|string
      */
     public function getId(): ?string
     {
@@ -30,9 +47,9 @@ final class User
     }
 
     /**
-     * @param ?string $id
+     * @param null|string $id
      *
-     * @return self
+     * @return User
      */
     public function setId($id): self
     {
@@ -42,7 +59,7 @@ final class User
     }
 
     /**
-     * @return ?string
+     * @return null|string
      */
     public function getUsername(): ?string
     {
@@ -52,7 +69,7 @@ final class User
     /**
      * @param mixed $username
      *
-     * @return self
+     * @return User
      */
     public function setUsername($username): self
     {
@@ -62,7 +79,7 @@ final class User
     }
 
     /**
-     * @return ?string
+     * @return null|string
      */
     public function getEmail(): ?string
     {
@@ -72,7 +89,7 @@ final class User
     /**
      * @param mixed $email
      *
-     * @return self
+     * @return User
      */
     public function setEmail($email): self
     {
@@ -82,7 +99,7 @@ final class User
     }
 
     /**
-     * @return ?array
+     * @return null|array
      */
     public function getData(): ?array
     {
@@ -92,12 +109,48 @@ final class User
     /**
      * @param mixed $data
      *
-     * @return self
+     * @return User
      */
     public function setData($data): self
     {
         $this->data = $data;
 
         return $this;
+    }
+
+    /**
+     * Gets the User as an array.
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $data = [];
+
+        if (null !== $this->getId()) {
+            $data['id'] = $this->getId();
+        }
+
+        if (null !== $this->getUsername()) {
+            $data['username'] = $this->getUsername();
+        }
+
+        if (null !== $this->getEmail()) {
+            $data['email'] = $this->getEmail();
+        }
+
+        if (null !== $this->getData()) {
+            $data['data'] = $this->getData();
+        }
+
+        return $data;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 }
