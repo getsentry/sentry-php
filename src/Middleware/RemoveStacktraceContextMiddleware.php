@@ -39,9 +39,9 @@ final class RemoveStacktraceContextMiddleware implements ProcessorMiddlewareInte
 
         if (null !== $stacktrace) {
             foreach ($stacktrace->getFrames() as $frame) {
-                $frame->setPreContext(null);
+                $frame->setPreContext([]);
                 $frame->setContextLine(null);
-                $frame->setPostContext(null);
+                $frame->setPostContext([]);
             }
 
             $event->setStacktrace($stacktrace);

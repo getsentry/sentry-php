@@ -110,7 +110,7 @@ final class Frame implements \JsonSerializable
     /**
      * Gets a list of source code lines before the one where the frame originated.
      *
-     * @return string[]|null
+     * @return string[]
      */
     public function getPreContext()
     {
@@ -120,9 +120,9 @@ final class Frame implements \JsonSerializable
     /**
      * Sets a list of source code lines before the one where the frame originated.
      *
-     * @param string[]|null $preContext The source code lines
+     * @param string[] $preContext The source code lines
      */
-    public function setPreContext(array $preContext = null)
+    public function setPreContext(array $preContext)
     {
         $this->preContext = $preContext;
     }
@@ -152,7 +152,7 @@ final class Frame implements \JsonSerializable
     /**
      * Gets a list of source code lines after the one where the frame originated.
      *
-     * @return string[]|null
+     * @return string[]
      */
     public function getPostContext()
     {
@@ -162,9 +162,9 @@ final class Frame implements \JsonSerializable
     /**
      * Sets a list of source code lines after the one where the frame originated.
      *
-     * @param string[]|null $postContext The source code lines
+     * @param string[] $postContext The source code lines
      */
-    public function setPostContext(array $postContext = null)
+    public function setPostContext(array $postContext)
     {
         $this->postContext = $postContext;
     }
@@ -228,7 +228,7 @@ final class Frame implements \JsonSerializable
             'in_app' => $this->inApp,
         ];
 
-        if (null !== $this->preContext) {
+        if (\count($this->preContext)) {
             $result['pre_context'] = $this->preContext;
         }
 
@@ -236,7 +236,7 @@ final class Frame implements \JsonSerializable
             $result['context_line'] = $this->contextLine;
         }
 
-        if (null !== $this->postContext) {
+        if (\count($this->postContext)) {
             $result['post_context'] = $this->postContext;
         }
 
