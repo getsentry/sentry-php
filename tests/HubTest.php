@@ -90,7 +90,7 @@ class HubTest extends TestCase
         $hub = new Hub($client);
         $hub->configureScope(function ($scope) use ($event) {
             $scope->setTag('foo', 'bar');
-            $scope->addEventProcessor(function ($event) {
+            $scope->addEventProcessor(function () {
                 return null;
             });
             $finalEvent = $scope->applyToEvent($event);

@@ -146,7 +146,7 @@ final class Scope
 
     /**
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
      *
      * @return Scope
      */
@@ -218,7 +218,7 @@ final class Scope
         if ($this->level) {
             $event->setLevel($this->level);
         }
-        if ($this->fingerprint) {
+        if (!empty($this->fingerprint)) {
             $event->setFingerprint($this->fingerprint);
         }
         // TODO: extra, tags, breadcrumbs, user

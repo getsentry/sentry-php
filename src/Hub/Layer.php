@@ -36,9 +36,9 @@ final class Layer
     }
 
     /**
-     * @return Scope
+     * @return null|Scope
      */
-    public function getScope(): Scope
+    public function getScope(): ?Scope
     {
         return $this->scope;
     }
