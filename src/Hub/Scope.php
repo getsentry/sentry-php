@@ -1,8 +1,9 @@
 <?php
 
-namespace Sentry;
+namespace Sentry\Hub;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Event;
 
 final class Scope
 {
@@ -144,7 +145,7 @@ final class Scope
         return $this;
     }
 
-    public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): Event
+    public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
     {
         if ($this->level) {
             $event->setLevel($this->level);
@@ -153,6 +154,8 @@ final class Scope
             $event->setFingerprint($this->fingerprint);
         }
         // TODO: extra, tags, breadcrumbs, user
+
+        return $this->notifyEventProcessors($event);
     }
 
     public function clear(): self
@@ -164,5 +167,24 @@ final class Scope
         $this->breadcrumbs = [];
 
         return $this;
+    }
+
+    public function addEventProcessor(\Closure $callback): self
+    {
+        $this->eventProcessors[] = $callback;
+
+        return $this;
+    }
+
+    public function notifyEventProcessors(Event $event): ?Event
+    {
+        foreach ($this->eventProcessors as $processor) {
+            $event = $processor($event);
+            if (null === $event) {
+                return null;
+            }
+        }
+
+        return $event;
     }
 }

@@ -4,7 +4,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Scope;
+use Sentry\Hub\Scope;
 
 class ScopeTest extends TestCase
 {
