@@ -698,7 +698,8 @@ class Configuration
                 $this->dsn .= ':' . $parsed['port'];
             }
 
-            if ($lastSlashPosition = strrpos($parsed['path'], '/')) {
+            $lastSlashPosition = strrpos($parsed['path'], '/');
+            if (false !== $lastSlashPosition) {
                 $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
             } else {
                 $this->dsn .= $parsed['path'];
