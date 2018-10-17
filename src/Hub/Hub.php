@@ -123,7 +123,7 @@ final class Hub
 
     /**
      * @param string $message
-     * @param $level
+     * @param Severity $level
      *
      * @return null|string
      */
@@ -136,7 +136,7 @@ final class Hub
     }
 
     /**
-     * @param $exception
+     * @param mixed $exception
      *
      * @return null|string
      */

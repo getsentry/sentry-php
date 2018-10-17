@@ -24,7 +24,7 @@ final class Layer
     }
 
     /**
-     * @param mixed $client
+     * @param Client $client
      *
      * @return Layer
      */
@@ -44,11 +44,11 @@ final class Layer
     }
 
     /**
-     * @param $scope
+     * @param Scope $scope
      *
      * @return Layer
      */
-    public function setScope($scope): self
+    public function setScope(Scope $scope): self
     {
         $this->scope = $scope;
 

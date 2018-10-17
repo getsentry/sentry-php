@@ -133,11 +133,11 @@ final class Scope
 
     /**
      * @param string $key
-     * @param $value
+     * @param string $value
      *
      * @return Scope
      */
-    public function setTag(string $key, $value): self
+    public function setTag(string $key, string $value): self
     {
         $this->tags[$key] = $value;
 
@@ -146,7 +146,7 @@ final class Scope
 
     /**
      * @param string $key
-     * @param $value
+     * @param mixed $value
      *
      * @return Scope
      */
