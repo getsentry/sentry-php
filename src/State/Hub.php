@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentry\Hub;
+namespace Sentry\State;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
@@ -33,21 +33,9 @@ final class Hub
     }
 
     /**
-     * @internal
-     *
-     * @return array
-     */
-    public function getStack(): array
-    {
-        return $this->stack;
-    }
-
-    /**
-     * @internal
-     *
      * @return Layer
      */
-    public function getStackTop(): Layer
+    private function getStackTop(): Layer
     {
         return \end($this->stack);
     }

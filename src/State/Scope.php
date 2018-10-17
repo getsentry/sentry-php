@@ -1,11 +1,13 @@
 <?php
 
-namespace Sentry\Hub;
+namespace Sentry\State;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Context\Context;
+use Sentry\Context\TagsContext;
+use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\Interfaces\Severity;
-use Sentry\Interfaces\UserContext;
 
 final class Scope
 {
@@ -17,33 +19,33 @@ final class Scope
     private $breadcrumbs = [];
 
     /**
-     * @var ?User
+     * @var null|UserContext
      */
     private $user = null;
 
     /**
      * Array holding all tags.
      *
-     * @var array
+     * @var null|TagsContext
      */
-    private $tags = [];
+    private $tags = null;
 
     /**
      * Array holding all extra.
      *
-     * @var array
+     * @var null|Context
      */
-    private $extra = [];
+    private $extra = null;
 
     /**
      * Array holding all fingerprints. This is used to group events together in Sentry.
      *
-     * @var array
+     * @var string[]
      */
     private $fingerprint = [];
 
     /**
-     * @var ?Severity
+     * @var null|Severity
      */
     private $level = null;
 
@@ -72,66 +74,6 @@ final class Scope
     }
 
     /**
-     * @internal
-     *
-     * @return array
-     */
-    public function getBreadcrumbs(): array
-    {
-        return $this->breadcrumbs;
-    }
-
-    /**
-     * @internal
-     *
-     * @return null|UserContext
-     */
-    public function getUser(): ?UserContext
-    {
-        return $this->user;
-    }
-
-    /**
-     * @internal
-     *
-     * @return array
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @internal
-     *
-     * @return array
-     */
-    public function getExtra(): array
-    {
-        return $this->extra;
-    }
-
-    /**
-     * @internal
-     *
-     * @return array
-     */
-    public function getFingerprint(): array
-    {
-        return $this->fingerprint;
-    }
-
-    /**
-     * @internal
-     *
-     * @return null|Severity
-     */
-    public function getLevel(): ?Severity
-    {
-        return $this->level;
-    }
-
-    /**
      * @param string $key
      * @param string $value
      *
@@ -139,7 +81,10 @@ final class Scope
      */
     public function setTag(string $key, string $value): self
     {
-        $this->tags[$key] = $value;
+        if (null === $this->tags) {
+            $this->tags = new TagsContext();
+        }
+        $this->tags->offsetSet($key, $value);
 
         return $this;
     }
@@ -152,17 +97,20 @@ final class Scope
      */
     public function setExtra(string $key, $value): self
     {
+        if (null === $this->extra) {
+            $this->extra = new Context();
+        }
         $this->extra[$key] = $value;
 
         return $this;
     }
 
     /**
-     * @param UserContext $user
+     * @param null|UserContext $user
      *
      * @return Scope
      */
-    public function setUser(UserContext $user): self
+    public function setUser(?UserContext $user): self
     {
         $this->user = $user;
 
@@ -170,7 +118,7 @@ final class Scope
     }
 
     /**
-     * @param array $fingerprint
+     * @param string[] $fingerprint
      *
      * @return Scope
      */
@@ -182,7 +130,7 @@ final class Scope
     }
 
     /**
-     * @param Severity $level
+     * @param null|Severity $level
      *
      * @return Scope
      */
@@ -227,6 +175,18 @@ final class Scope
     }
 
     /**
+     * @param \Closure $callback
+     *
+     * @return Scope
+     */
+    public function addEventProcessor(\Closure $callback): self
+    {
+        $this->eventProcessors[] = $callback;
+
+        return $this;
+    }
+
+    /**
      * @return Scope
      */
     public function clear(): self
@@ -236,18 +196,6 @@ final class Scope
         $this->user = null;
         $this->level = null;
         $this->breadcrumbs = [];
-
-        return $this;
-    }
-
-    /**
-     * @param \Closure $callback
-     *
-     * @return Scope
-     */
-    public function addEventProcessor(\Closure $callback): self
-    {
-        $this->eventProcessors[] = $callback;
 
         return $this;
     }

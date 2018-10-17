@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentry\Hub;
+namespace Sentry\State;
 
 use Sentry\Client;
 

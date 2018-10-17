@@ -1,58 +1,82 @@
 <?php
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
+use Sentry\Context\TagsContext;
 use Sentry\Event;
-use Sentry\Hub\Hub;
+use Sentry\State\Hub;
+use Sentry\State\Scope;
 
 class HubTest extends TestCase
 {
     public function testWithScope()
     {
+        $reflectionProperty = new \ReflectionProperty(Scope::class, 'tags');
+        $reflectionProperty->setAccessible(true);
         $hub = new Hub();
-        $hub->withScope(function ($scope) use ($hub) {
+        $hub->withScope(function (Scope $scope) use ($hub, $reflectionProperty) {
             $scope->setTag('foo', 'bar');
-            $this->assertEquals(['foo' => 'bar'], $hub->getScope()->getTags());
+            /* @var $tags TagsContext */
+            $tags = $reflectionProperty->getValue($hub->getScope());
+            $this->assertInstanceOf(TagsContext::class, $tags);
+            $this->assertEquals(['foo' => 'bar'], $tags->toArray());
         });
-        $this->assertEquals([], $hub->getStackTop()->getScope()->getTags());
+        /* @var $tags TagsContext */
+        $tags = $reflectionProperty->getValue($hub->getScope());
+        $this->assertNull($tags);
+        $reflectionProperty->setAccessible(false);
     }
 
     public function testConfigureScope()
     {
+        $reflectionProperty = new \ReflectionProperty(Scope::class, 'tags');
+        $reflectionProperty->setAccessible(true);
         $hub = new Hub();
         $hub->configureScope(function ($scope) {
             // This should never be called since there is no client on the hub
             $scope->setTag('foo', 'bar');
         });
-        $this->assertEquals([], $hub->getScope()->getTags());
+        /* @var $tags TagsContext */
+        $tags = $reflectionProperty->getValue($hub->getScope());
+        $this->assertNull($tags);
 
         $client = ClientBuilder::create()->getClient();
         $hub = new Hub($client);
         $hub->configureScope(function ($scope) {
             $scope->setTag('foo', 'bar');
         });
-        $this->assertEquals(['foo' => 'bar'], $hub->getScope()->getTags());
+        /* @var $tags TagsContext */
+        $tags = $reflectionProperty->getValue($hub->getScope());
+        $this->assertInstanceOf(TagsContext::class, $tags);
+        $this->assertEquals(['foo' => 'bar'], $tags->toArray());
+        $reflectionProperty->setAccessible(false);
     }
 
     public function testPush()
     {
+        $reflectionProperty = new \ReflectionProperty(Hub::class, 'stack');
+        $reflectionProperty->setAccessible(true);
         $hub = new Hub();
         $scope = $hub->pushScope();
         $this->assertEquals($scope, $hub->getScope());
-        $this->assertEquals(2, \count($hub->getStack()));
+        $this->assertCount(2, $reflectionProperty->getValue($hub));
+        $reflectionProperty->setAccessible(false);
     }
 
     public function testPop()
     {
+        $reflectionProperty = new \ReflectionProperty(Hub::class, 'stack');
+        $reflectionProperty->setAccessible(true);
         $hub = new Hub();
         $hub->pushScope();
-        $this->assertEquals(2, \count($hub->getStack()));
+        $this->assertCount(2, $reflectionProperty->getValue($hub));
         $hub->popScope();
-        $this->assertEquals(1, \count($hub->getStack()));
+        $this->assertCount(1, $reflectionProperty->getValue($hub));
         $hub->popScope();
-        $this->assertEquals(1, \count($hub->getStack()));
+        $this->assertCount(1, $reflectionProperty->getValue($hub));
+        $reflectionProperty->setAccessible(false);
     }
 
     public function testBindClient()
