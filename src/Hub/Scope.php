@@ -4,15 +4,54 @@ namespace Sentry\Hub;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Event;
+use Sentry\Interfaces\Severity;
+use Sentry\Interfaces\User;
 
 final class Scope
 {
+    /**
+     * Array holding all breadcrumbs.
+     *
+     * @var array
+     */
     private $breadcrumbs = [];
+
+    /**
+     * @var ?User
+     */
     private $user = null;
+
+    /**
+     * Array holding all tags.
+     *
+     * @var array
+     */
     private $tags = [];
+
+    /**
+     * Array holding all extra.
+     *
+     * @var array
+     */
     private $extra = [];
+
+    /**
+     * Array holding all fingerprints. This is used to group events together in Sentry.
+     *
+     * @var array
+     */
     private $fingerprint = [];
+
+    /**
+     * @var ?Severity
+     */
     private $level = null;
+
+    /**
+     * Array of eventProcessors. Closure receiving the event, they should return an event or null.
+     *
+     * @var array
+     */
     private $eventProcessors;
 
     /**
@@ -28,9 +67,9 @@ final class Scope
     /**
      * @internal
      *
-     * @return User|null
+     * @return ?User
      */
-    public function getUser()
+    public function getUser(): ?User
     {
         return $this->user;
     }
@@ -68,9 +107,9 @@ final class Scope
     /**
      * @internal
      *
-     * @return string|null
+     * @return ?Severity
      */
-    public function getLevel()
+    public function getLevel(): ?Severity
     {
         return $this->level;
     }
@@ -126,17 +165,23 @@ final class Scope
     }
 
     /**
-     * @param string $level
+     * @param Severity $level
      *
      * @return Scope
      */
-    public function setLevel(string $level): self
+    public function setLevel(Severity $level): self
     {
         $this->level = $level;
 
         return $this;
     }
 
+    /**
+     * @param Breadcrumb $crumb
+     * @param int        $maxBreadcrumbs
+     *
+     * @return Scope
+     */
     public function addBreadcrumb(Breadcrumb $crumb, int $maxBreadcrumbs = 100): self
     {
         $this->breadcrumbs[] = $crumb;

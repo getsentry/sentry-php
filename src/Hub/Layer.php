@@ -16,25 +16,27 @@ final class Layer
     }
 
     /**
-     * @return null|Client
+     * @return ?Client
      */
     public function getClient(): ?Client
     {
         return $this->client;
+    }
+
+    /**
+     * @param mixed $client
+     *
+     * @return self
+     */
+    public function setClient(Client $client): self
+    {
+        $this->client = $client;
 
         return $this;
     }
 
     /**
-     * @param mixed $client
-     */
-    public function setClient($client): void
-    {
-        $this->client = $client;
-    }
-
-    /**
-     * @return mixed
+     * @return Scope
      */
     public function getScope(): Scope
     {
@@ -44,7 +46,7 @@ final class Layer
     /**
      * @param $scope
      *
-     * @return Layer
+     * @return self
      */
     public function setScope($scope): self
     {

@@ -5,6 +5,7 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Hub\Scope;
+use Sentry\Interfaces\Severity;
 
 class ScopeTest extends TestCase
 {
@@ -42,9 +43,9 @@ class ScopeTest extends TestCase
     {
         $scope = new Scope();
         $this->assertNull($scope->getLevel());
-        $this->assertEquals($scope->setLevel('warning'), $scope);
+        $this->assertEquals($scope->setLevel(new Severity(Severity::WARNING)), $scope);
         $this->assertEquals('warning', $scope->getLevel());
-        $scope->setLevel('fatal');
+        $scope->setLevel(new Severity(Severity::FATAL));
         $this->assertEquals('fatal', $scope->getLevel());
     }
 

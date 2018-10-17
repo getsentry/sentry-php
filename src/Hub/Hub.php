@@ -4,6 +4,7 @@ namespace Sentry\Hub;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
+use Sentry\Interfaces\Severity;
 
 final class Hub
 {
@@ -114,7 +115,7 @@ final class Hub
      *
      * @return null|string
      */
-    public function captureMessage(string $message, $level): ?string
+    public function captureMessage(string $message, ?Severity $level = null): ?string
     {
         if ($client = $this->getClient()) {
             return $client->captureMessage($message);
