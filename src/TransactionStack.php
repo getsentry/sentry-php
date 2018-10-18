@@ -11,6 +11,8 @@
 
 namespace Sentry;
 
+use phpDocumentor\Reflection\Types\This;
+
 /**
  * This class is a LIFO collection that only allows access to the value at the
  * top of the stack.
@@ -54,10 +56,12 @@ final class TransactionStack implements \Countable
 
     /**
      * Pushes the given values onto the stack.
+     *
+     * @param array<int, string> $values The values to push
      */
     public function push(string ...$values)
     {
-        $this->transactions[] += $values;
+        $this->transactions = array_merge($this->transactions, $values);
     }
 
     /**
