@@ -57,7 +57,7 @@ final class UserContext extends OptionsResolverContext
     /**
      * @return null|array
      */
-    public function getData(): ?array
+    public function getExtra(): ?array
     {
         return $this->data['data'];
     }
@@ -65,7 +65,7 @@ final class UserContext extends OptionsResolverContext
     /**
      * @param mixed $data
      */
-    public function setData($data): void
+    public function setExtra($data): void
     {
         $this->offsetSet('data', $data);
     }

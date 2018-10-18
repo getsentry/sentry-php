@@ -37,8 +37,8 @@ class UserContextTest extends TestCase
                 'baz',
             ],
             [
-                'getData',
-                'setData',
+                'getExtra',
+                'setExtra',
                 ['a' => 'b'],
             ],
         ];
