@@ -54,9 +54,7 @@ final class RuntimeContext extends OptionsResolverContext
     }
 
     /**
-     * Configures the options of the context.
-     *
-     * @param OptionsResolver $resolver The resolver for the options
+     * {@inheritdoc}
      */
     protected function configureOptions(OptionsResolver $resolver)
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentry\Tests\Interfaces;
+namespace Sentry\Tests\Context;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Context\UserContext;

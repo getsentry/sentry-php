@@ -149,7 +149,7 @@ final class Scope
      *
      * @return Scope
      */
-    public function setLevel(Severity $level): self
+    public function setLevel(?Severity $level): self
     {
         $this->level = $level;
 
@@ -206,9 +206,9 @@ final class Scope
      */
     public function clear(): self
     {
-        $this->tags = [];
-        $this->extra = [];
-        $this->user = null;
+        $this->tags = new TagsContext();
+        $this->extra = new Context();
+        $this->user = new UserContext();
         $this->level = null;
         $this->breadcrumbs = [];
 

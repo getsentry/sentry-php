@@ -89,4 +89,11 @@ abstract class OptionsResolverContext extends Context
 
         parent::offsetSet($offset, $data[$offset]);
     }
+
+    /**
+     * Configures the options of the context.
+     *
+     * @param OptionsResolver $resolver The resolver for the options
+     */
+    abstract protected function configureOptions(OptionsResolver $resolver);
 }
