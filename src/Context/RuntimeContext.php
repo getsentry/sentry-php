@@ -11,10 +11,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class RuntimeContext extends Context
+final class RuntimeContext extends OptionsResolverContext
 {
-    use DefaultContextTrait;
-
     /**
      * Gets the name of the runtime.
      *
@@ -60,7 +58,7 @@ class RuntimeContext extends Context
      *
      * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(OptionsResolver $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
             'name' => 'php',

@@ -6,12 +6,12 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-trait DefaultContextTrait
+abstract class OptionsResolverContext extends Context
 {
     /**
      * @var OptionsResolver The options resolver
      */
-    private $resolver;
+    protected $resolver;
 
     /**
      * {@inheritdoc}

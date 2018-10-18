@@ -19,10 +19,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class ServerOsContext extends Context
+final class ServerOsContext extends OptionsResolverContext
 {
-    use DefaultContextTrait;
-
     /**
      * Gets the name of the operating system.
      *
@@ -108,7 +106,7 @@ class ServerOsContext extends Context
      *
      * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(OptionsResolver $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
             'name' => php_uname('s'),

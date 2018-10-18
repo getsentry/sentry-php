@@ -14,28 +14,28 @@ final class Scope
     /**
      * Array holding all breadcrumbs.
      *
-     * @var array
+     * @var Breadcrumb[]
      */
     private $breadcrumbs = [];
 
     /**
      * @var null|UserContext
      */
-    private $user = null;
+    private $user;
 
     /**
      * Array holding all tags.
      *
      * @var null|TagsContext
      */
-    private $tags = null;
+    private $tags;
 
     /**
      * Array holding all extra.
      *
      * @var null|Context
      */
-    private $extra = null;
+    private $extra;
 
     /**
      * Array holding all fingerprints. This is used to group events together in Sentry.
@@ -55,6 +55,27 @@ final class Scope
      * @var array
      */
     private $eventProcessors;
+
+    /**
+     * Scope constructor.
+     */
+    public function __construct()
+    {
+        $this->user = new UserContext();
+        $this->tags = new TagsContext();
+        $this->extra = new Context();
+    }
+
+    /**
+     * Scope __clone function.
+     */
+    public function __clone()
+    {
+        // We need to create new Contexts here
+        $this->user = new UserContext($this->user->toArray());
+        $this->tags = new TagsContext($this->tags->toArray());
+        $this->extra = new Context($this->extra->toArray());
+    }
 
     /**
      * @param Event $event
@@ -81,9 +102,6 @@ final class Scope
      */
     public function setTag(string $key, string $value): self
     {
-        if (null === $this->tags) {
-            $this->tags = new TagsContext();
-        }
         $this->tags->offsetSet($key, $value);
 
         return $this;
@@ -97,9 +115,6 @@ final class Scope
      */
     public function setExtra(string $key, $value): self
     {
-        if (null === $this->extra) {
-            $this->extra = new Context();
-        }
         $this->extra[$key] = $value;
 
         return $this;

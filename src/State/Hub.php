@@ -14,7 +14,7 @@ use Sentry\Interfaces\Severity;
 final class Hub
 {
     /**
-     * @var array Containing {@link Layer}
+     * @var Layer[]
      */
     private $stack = [];
 
@@ -124,7 +124,7 @@ final class Hub
     }
 
     /**
-     * @param mixed $exception
+     * @param \Throwable $exception
      *
      * @return null|string
      */

@@ -25,7 +25,7 @@ class HubTest extends TestCase
         });
         /* @var $tags TagsContext */
         $tags = $reflectionProperty->getValue($hub->getScope());
-        $this->assertNull($tags);
+        $this->assertTrue($tags->isEmpty());
         $reflectionProperty->setAccessible(false);
     }
 
@@ -40,7 +40,7 @@ class HubTest extends TestCase
         });
         /* @var $tags TagsContext */
         $tags = $reflectionProperty->getValue($hub->getScope());
-        $this->assertNull($tags);
+        $this->assertTrue($tags->isEmpty());
 
         $client = ClientBuilder::create()->getClient();
         $hub = new Hub($client);

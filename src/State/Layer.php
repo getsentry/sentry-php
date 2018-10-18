@@ -9,7 +9,7 @@ final class Layer
     private $client;
     private $scope;
 
-    public function __construct(?Client $client, ?Scope $scope)
+    public function __construct(?Client $client, Scope $scope)
     {
         $this->client = $client;
         $this->scope = $scope;
@@ -36,9 +36,9 @@ final class Layer
     }
 
     /**
-     * @return null|Scope
+     * @return Scope
      */
-    public function getScope(): ?Scope
+    public function getScope(): Scope
     {
         return $this->scope;
     }

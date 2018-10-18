@@ -14,7 +14,7 @@ class ScopeTest extends TestCase
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'tags');
         $reflectionProperty->setAccessible(true);
         $scope = new Scope();
-        $this->assertNull($reflectionProperty->getValue($scope));
+        $this->assertTrue($reflectionProperty->getValue($scope)->isEmpty());
         $this->assertEquals($scope->setTag('foo', 'bar'), $scope);
         $this->assertEquals(['foo' => 'bar'], $reflectionProperty->getValue($scope)->toArray());
         $scope->setTag('foo', 'bar1');
@@ -27,7 +27,7 @@ class ScopeTest extends TestCase
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'extra');
         $reflectionProperty->setAccessible(true);
         $scope = new Scope();
-        $this->assertNull($reflectionProperty->getValue($scope));
+        $this->assertTrue($reflectionProperty->getValue($scope)->isEmpty());
         $this->assertEquals($scope->setExtra('foo', 'bar'), $scope);
         $this->assertEquals(['foo' => 'bar'], $reflectionProperty->getValue($scope)->toArray());
         $scope->setExtra('foo', 'bar1');

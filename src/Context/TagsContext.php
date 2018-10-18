@@ -17,7 +17,7 @@ namespace Sentry\Context;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class TagsContext extends Context
+final class TagsContext extends Context
 {
     /**
      * {@inheritdoc}

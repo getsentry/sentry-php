@@ -4,10 +4,8 @@ namespace Sentry\Context;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class UserContext extends Context
+final class UserContext extends OptionsResolverContext
 {
-    use DefaultContextTrait;
-
     /**
      * @return null|string
      */
@@ -77,7 +75,7 @@ final class UserContext extends Context
      *
      * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(OptionsResolver $resolver)
+    protected function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefined(['id', 'username', 'email', 'data']);
         $resolver->setAllowedTypes('id', 'string');
