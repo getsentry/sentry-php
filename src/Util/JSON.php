@@ -27,12 +27,12 @@ final class JSON
      */
     public static function encode($data)
     {
-        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $encodedData = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (JSON_ERROR_NONE !== json_last_error() || false === $encodedData) {
             throw new \InvalidArgumentException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
-        return $encoded;
+        return $encodedData;
     }
 }

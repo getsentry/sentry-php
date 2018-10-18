@@ -50,6 +50,8 @@ class JSONTest extends TestCase
     {
         $resource = fopen('php://memory', 'rb');
 
+        $this->assertNotFalse($resource);
+
         fclose($resource);
 
         JSON::encode($resource);

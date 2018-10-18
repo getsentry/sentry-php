@@ -141,11 +141,11 @@ interface ClientInterface
     /**
      * Translate a PHP Error constant into a Sentry log level group.
      *
-     * @param string $severity PHP E_$x error constant
+     * @param int $severity PHP E_$x error constant
      *
      * @return string Sentry log level group
      */
-    public function translateSeverity($severity);
+    public function translateSeverity(int $severity);
 
     /**
      * Provide a map of PHP Error constants to Sentry logging groups to use instead

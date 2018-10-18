@@ -370,7 +370,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function translateSeverity($severity)
+    public function translateSeverity(int $severity)
     {
         if (\is_array($this->severityMap) && isset($this->severityMap[$severity])) {
             return $this->severityMap[$severity];

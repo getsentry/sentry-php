@@ -130,8 +130,12 @@ class HttpTransportTest extends TestCase
             ->with($this->callback(function (RequestInterface $request) use ($event) {
                 $request->getBody()->rewind();
 
+                $compressedPayload = gzcompress(JSON::encode($event));
+
+                $this->assertNotFalse($compressedPayload);
+
                 return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
-                    && base64_encode(gzcompress(JSON::encode($event))) === $request->getBody()->getContents();
+                    && base64_encode($compressedPayload) === $request->getBody()->getContents();
             }))
             ->willReturn($promise);
 

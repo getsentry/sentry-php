@@ -11,6 +11,8 @@
 
 namespace Sentry;
 
+use phpDocumentor\Reflection\Types\This;
+
 /**
  * This class is a LIFO collection that only allows access to the value at the
  * top of the stack.
@@ -27,7 +29,7 @@ final class TransactionStack implements \Countable
     /**
      * Class constructor.
      *
-     * @param array $values An array of initial values
+     * @param string[] $values An array of initial values
      */
     public function __construct(array $values = [])
     {
@@ -55,19 +57,11 @@ final class TransactionStack implements \Countable
     /**
      * Pushes the given values onto the stack.
      *
-     * @param array<int, string> $values The values to push
-     *
-     * @throws \InvalidArgumentException If any of the values is not a string
+     * @param string ...$values The values to push
      */
-    public function push(...$values)
+    public function push(string ...$values)
     {
-        foreach ($values as $value) {
-            if (!\is_string($value)) {
-                throw new \InvalidArgumentException(sprintf('The $values argument must contain string values only.'));
-            }
-
-            $this->transactions[] = $value;
-        }
+        $this->transactions = array_merge($this->transactions, $values);
     }
 
     /**

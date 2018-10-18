@@ -1,5 +1,5 @@
 parameters:
-    level: 4
+    level: 6
     paths:
         - src
         - tests
@@ -9,6 +9,9 @@ parameters:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
         - '/Method Sentry\\ClientBuilder::\w+\(\) should return \$this\(Sentry\\ClientBuilderInterface\) but returns \$this\(Sentry\\ClientBuilder\)\./'
+        - '/Parameter #1 \$values of class Sentry\\TransactionStack constructor expects array<string>, array<int, stdClass\|string> given\./'
+        # to be removed with serializer refactoring
+        - '/Parameter #1 \$data of method Sentry\\Context\\\w*Context::replaceData\(\) expects array, array\|bool\|float\|int\|object\|string\|null given\./'
     excludes_analyse:
         - tests/resources
 includes:

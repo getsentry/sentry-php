@@ -51,9 +51,12 @@ class StacktraceTest extends TestCase
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
 
-        $frames = $stacktrace->getFrames();
+        $frames = json_encode($stacktrace->getFrames());
+        $serializedStacktrace = json_encode($stacktrace);
 
-        $this->assertJsonStringEqualsJsonString(json_encode($frames), json_encode($stacktrace));
+        $this->assertNotFalse($frames);
+        $this->assertNotFalse($serializedStacktrace);
+        $this->assertJsonStringEqualsJsonString($frames, $serializedStacktrace);
     }
 
     public function testAddFrame()

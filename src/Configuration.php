@@ -160,7 +160,7 @@ class Configuration
     /**
      * Gets the character encoding detection order.
      *
-     * @return string[]|null
+     * @return string|string[]|null
      */
     public function getMbDetectOrder()
     {
@@ -170,7 +170,7 @@ class Configuration
     /**
      * Sets the character encoding detection order.
      *
-     * @param string[]|null $detectOrder The detection order
+     * @param string|string[]|null $detectOrder The detection order
      */
     public function setMbDetectOrder($detectOrder)
     {
@@ -624,7 +624,7 @@ class Configuration
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array']);
+        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('encoding', 'string');
@@ -698,9 +698,9 @@ class Configuration
                 $this->dsn .= ':' . $parsed['port'];
             }
 
-            $this->dsn .= substr($parsed['path'], 0, strripos($parsed['path'], '/'));
+            $this->dsn .= substr($parsed['path'], 0, strrpos($parsed['path'], '/') ?: null);
             $this->publicKey = $parsed['user'];
-            $this->secretKey = isset($parsed['pass']) ? $parsed['pass'] : null;
+            $this->secretKey = $parsed['pass'] ?? null;
 
             $parts = explode('/', $parsed['path']);
 
