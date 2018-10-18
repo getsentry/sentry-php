@@ -14,7 +14,13 @@ cs:
 cs-dry-run:
 	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run
 
-test: cs-dry-run
+cs-fix:
+	vendor/bin/php-cs-fixer fix --config=.php_cs
+
+phpstan:
+	vendor/bin/phpstan analyse src tests -c phpstan.neon -l 3
+
+test: cs-fix phpstan
 	vendor/bin/phpunit
 
 setup-git:
