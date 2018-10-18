@@ -49,6 +49,7 @@ class JSONTest extends TestCase
     public function testEncodeThrowsIfValueIsResource()
     {
         $resource = fopen('php://memory', 'rb');
+
         $this->assertNotFalse($resource);
 
         fclose($resource);

@@ -131,7 +131,8 @@ class HttpTransportTest extends TestCase
                 $request->getBody()->rewind();
 
                 $compressedPayload = gzcompress(JSON::encode($event));
-                $this->assertNotFalse($compressedPayload, 'Payload compression failed');
+
+                $this->assertNotFalse($compressedPayload);
 
                 return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
                     && base64_encode($compressedPayload) === $request->getBody()->getContents();

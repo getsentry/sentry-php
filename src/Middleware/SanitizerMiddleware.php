@@ -54,6 +54,7 @@ final class SanitizerMiddleware
         if (!empty($requestData = $event->getRequest())) {
             /** @var array $serializedRequest */
             $serializedRequest = $this->serializer->serialize($requestData, 5);
+
             $event->setRequest($serializedRequest);
         }
 

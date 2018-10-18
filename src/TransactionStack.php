@@ -54,14 +54,10 @@ final class TransactionStack implements \Countable
 
     /**
      * Pushes the given values onto the stack.
-     *
-     * @param array<int, string> $values
      */
     public function push(string ...$values)
     {
-        foreach ($values as $value) {
-            $this->transactions[] = $value;
-        }
+        $this->transactions[] += $values;
     }
 
     /**
