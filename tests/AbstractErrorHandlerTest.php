@@ -45,6 +45,26 @@ abstract class AbstractErrorHandlerTest extends TestCase
     }
 
     /**
+     * @dataProvider constructorThrowsWhenReservedMemorySizeIsWrongDataProvider
+     *
+     * @expectedException \UnexpectedValueException
+     * @expectedExceptionMessage The value of the $reservedMemorySize argument must be an integer greater than 0.
+     */
+    public function testConstructorThrowsWhenReservedMemorySizeIsWrong($reservedMemorySize)
+    {
+        $this->createErrorHandler($this->client, $reservedMemorySize);
+    }
+
+    public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider()
+    {
+        return [
+            [-1],
+            [0],
+            ['foo'],
+        ];
+    }
+
+    /**
      * @dataProvider handleErrorShouldNotCaptureDataProvider
      */
     public function testHandleErrorShouldNotCapture(bool $expectedToCapture, int $captureAt, int $errorReporting)
@@ -73,26 +93,6 @@ abstract class AbstractErrorHandlerTest extends TestCase
             [false, E_ALL, E_ERROR],
             [true, E_ERROR, E_ALL],
             [true, E_ALL, E_ALL],
-        ];
-    }
-
-    /**
-     * @dataProvider constructorThrowsWhenReservedMemorySizeIsWrongDataProvider
-     *
-     * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage The value of the $reservedMemorySize argument must be an integer greater than 0.
-     */
-    public function testConstructorThrowsWhenReservedMemorySizeIsWrong($reservedMemorySize)
-    {
-        $this->createErrorHandler($this->client, $reservedMemorySize);
-    }
-
-    public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider()
-    {
-        return [
-            [-1],
-            [0],
-            ['foo'],
         ];
     }
 
