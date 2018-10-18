@@ -57,7 +57,7 @@ final class TransactionStack implements \Countable
     /**
      * Pushes the given values onto the stack.
      *
-     * @param array<int, string> $values The values to push
+     * @param string ...$values The values to push
      */
     public function push(string ...$values)
     {
