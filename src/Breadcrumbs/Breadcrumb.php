@@ -11,8 +11,7 @@
 
 namespace Sentry\Breadcrumbs;
 
-use Sentry\Client;
-use Sentry\Exception\InvalidArgumentException;
+use Sentry\Severity;
 
 /**
  * This class stores all the informations about a breadcrumb.
@@ -57,7 +56,7 @@ final class Breadcrumb implements \JsonSerializable
     private $message;
 
     /**
-     * @var string The level of the breadcrumb
+     * @var Severity The level of the breadcrumb
      */
     private $level;
 
@@ -74,18 +73,14 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Constructor.
      *
-     * @param string      $level    The error level of the breadcrumb
+     * @param Severity    $level    The error level of the breadcrumb
      * @param string      $type     The type of the breadcrumb
      * @param string      $category The category of the breadcrumb
      * @param string|null $message  Optional text message
      * @param array       $metadata Additional information about the breadcrumb
      */
-    public function __construct($level, $type, $category, $message = null, array $metadata = [])
+    public function __construct(Severity $level, $type, $category, $message = null, array $metadata = [])
     {
-        if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
-        }
-
         $this->type = $type;
         $this->level = $level;
         $this->category = $category;
@@ -97,7 +92,7 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Creates a new instance of this class configured with the given params.
      *
-     * @param string      $level    The error level of the breadcrumb
+     * @param Severity    $level    The error level of the breadcrumb
      * @param string      $type     The type of the breadcrumb
      * @param string      $category The category of the breadcrumb
      * @param string|null $message  Optional text message
@@ -105,7 +100,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public static function create($level, $type, $category, $message = null, array $metadata = [])
+    public static function create(Severity $level, $type, $category, $message = null, array $metadata = [])
     {
         return new static($level, $type, $category, $message, $metadata);
     }
@@ -142,9 +137,9 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Gets the breadcrumb level.
      *
-     * @return string
+     * @return Severity
      */
-    public function getLevel()
+    public function getLevel(): Severity
     {
         return $this->level;
     }
@@ -152,17 +147,13 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Sets the error level of the breadcrumb.
      *
-     * @param string $level The level
+     * @param Severity $level The level
      *
      * @return static
      */
-    public function withLevel($level)
+    public function withLevel(Severity $level)
     {
-        if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
-        }
-
-        if ($level === $this->level) {
+        if ($this->level->isEqualTo($level)) {
             return $this;
         }
 
@@ -321,7 +312,7 @@ final class Breadcrumb implements \JsonSerializable
         return [
             'type' => $this->type,
             'category' => $this->category,
-            'level' => $this->level,
+            'level' => (string) $this->level,
             'message' => $this->message,
             'timestamp' => $this->timestamp,
             'data' => $this->metadata,
@@ -334,21 +325,5 @@ final class Breadcrumb implements \JsonSerializable
     public function jsonSerialize()
     {
         return $this->toArray();
-    }
-
-    /**
-     * Gets the list of allowed breadcrumb error levels.
-     *
-     * @return string[]
-     */
-    private static function getLevels()
-    {
-        return [
-            Client::LEVEL_DEBUG,
-            Client::LEVEL_INFO,
-            Client::LEVEL_WARNING,
-            Client::LEVEL_ERROR,
-            Client::LEVEL_FATAL,
-        ];
     }
 }

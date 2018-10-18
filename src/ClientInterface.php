@@ -84,17 +84,17 @@ interface ClientInterface
      *
      * @return string
      */
-    public function captureMessage($message, array $params = [], array $payload = []);
+    public function captureMessage(string $message, array $params = [], array $payload = []);
 
     /**
      * Logs an exception.
      *
-     * @param \Throwable|\Exception $exception The exception object
-     * @param array                 $payload   Additional attributes to pass with this event
+     * @param \Throwable $exception The exception object
+     * @param array      $payload   Additional attributes to pass with this event
      *
      * @return string
      */
-    public function captureException($exception, array $payload = []);
+    public function captureException(\Throwable $exception, array $payload = []);
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).

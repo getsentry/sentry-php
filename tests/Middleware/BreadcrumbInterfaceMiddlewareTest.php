@@ -13,15 +13,15 @@ namespace Sentry\Tests\Middleware;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Breadcrumbs\Recorder;
-use Sentry\Client;
 use Sentry\Middleware\BreadcrumbInterfaceMiddleware;
+use Sentry\Severity;
 
 class BreadcrumbInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
-        $breadcrumb2 = new Breadcrumb(Client::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar');
+        $breadcrumb = new Breadcrumb(Severity::info(), Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb2 = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'bar');
 
         $recorder = new Recorder();
         $recorder->record($breadcrumb);

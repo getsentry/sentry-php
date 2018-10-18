@@ -12,9 +12,9 @@
 namespace Sentry\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LogLevel;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Breadcrumbs\Recorder;
+use Sentry\Severity;
 
 /**
  * @group time-sensitive
@@ -42,8 +42,8 @@ class RecorderTest extends TestCase
 
     public function testRecord()
     {
-        $breadcrumb = new Breadcrumb(LogLevel::DEBUG, Breadcrumb::TYPE_USER, 'foo');
-        $breadcrumb2 = new Breadcrumb(LogLevel::ERROR, Breadcrumb::TYPE_NAVIGATION, 'bar');
+        $breadcrumb = new Breadcrumb(Severity::debug(), Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb2 = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_NAVIGATION, 'bar');
 
         $recorder = new Recorder(3);
 
@@ -73,7 +73,7 @@ class RecorderTest extends TestCase
     public function testClear()
     {
         $recorder = new Recorder(1);
-        $breadcrumb = new Breadcrumb(LogLevel::DEBUG, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Severity::debug(), Breadcrumb::TYPE_USER, 'foo');
 
         $this->assertCount(0, $recorder);
         $this->assertEquals([], iterator_to_array($recorder));

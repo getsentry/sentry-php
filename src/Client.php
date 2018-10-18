@@ -17,6 +17,7 @@ use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
+use Sentry\Context\UserContext;
 use Sentry\Middleware\MiddlewareStack;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
@@ -99,7 +100,7 @@ class Client implements ClientInterface
     private $tagsContext;
 
     /**
-     * @var Context The user context
+     * @var UserContext The user context
      */
     private $userContext;
 
@@ -139,7 +140,7 @@ class Client implements ClientInterface
         $this->config = $config;
         $this->transport = $transport;
         $this->tagsContext = new TagsContext();
-        $this->userContext = new Context();
+        $this->userContext = new UserContext();
         $this->extraContext = new Context();
         $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new ServerOsContext();
@@ -263,7 +264,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage($message, array $params = [], array $payload = [])
+    public function captureMessage(string $message, array $params = [], array $payload = [])
     {
         $payload['message'] = $message;
         $payload['message_params'] = $params;
@@ -274,7 +275,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException($exception, array $payload = [])
+    public function captureException(\Throwable $exception, array $payload = [])
     {
         $payload['exception'] = $exception;
 

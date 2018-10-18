@@ -14,6 +14,7 @@ use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
+use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Breadcrumbs\Recorder as BreadcrumbsRecorder;
 use Sentry\Client;
 use Sentry\ClientBuilder;
@@ -25,6 +26,7 @@ use Sentry\Event;
 use Sentry\Middleware\MiddlewareStack;
 use Sentry\ReprSerializer;
 use Sentry\Serializer;
+use Sentry\Severity;
 use Sentry\Tests\Fixtures\classes\CarelessException;
 use Sentry\TransactionStack;
 use Sentry\Transport\TransportInterface;
@@ -201,7 +203,7 @@ class ClientTest extends TestCase
 
         $inputData = [
             'transaction' => 'foo bar',
-            'level' => Client::LEVEL_DEBUG,
+            'level' => Severity::debug(),
             'logger' => 'foo',
             'tags_context' => ['foo', 'bar'],
             'extra_context' => ['foo' => 'bar'],
@@ -464,26 +466,16 @@ class ClientTest extends TestCase
         $this->assertFalse($client->getRepresentationSerializer()->getAllObjectSerialize());
     }
 
-    public function testClearBreadcrumb()
+    public function testClearBreadcrumbs()
     {
         $client = ClientBuilder::create()->getClient();
-        $client->leaveBreadcrumb(
-            new \Sentry\Breadcrumbs\Breadcrumb(
-                'warning', \Sentry\Breadcrumbs\Breadcrumb::TYPE_ERROR, 'error_reporting', 'message', [
-                    'code' => 127,
-                    'line' => 10,
-                    'file' => '/tmp/delme.php',
-                ]
-            )
-        );
-        $reflection = new \ReflectionProperty($client, 'breadcrumbRecorder');
-        $reflection->setAccessible(true);
+        $client->leaveBreadcrumb(new Breadcrumb(Severity::warning(), Breadcrumb::TYPE_ERROR, 'error_reporting', 'message'));
 
-        $this->assertNotEmpty(iterator_to_array($reflection->getValue($client)));
+        $this->assertNotEmpty($client->getBreadcrumbsRecorder());
 
         $client->clearBreadcrumbs();
 
-        $this->assertEmpty(iterator_to_array($reflection->getValue($client)));
+        $this->assertEmpty($client->getBreadcrumbsRecorder());
     }
 
     public function testSetSerializer()

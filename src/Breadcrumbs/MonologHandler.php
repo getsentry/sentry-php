@@ -6,6 +6,7 @@ use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Client;
 use Sentry\ClientInterface;
+use Sentry\Severity;
 
 class MonologHandler extends AbstractProcessingHandler
 {
@@ -66,6 +67,8 @@ class MonologHandler extends AbstractProcessingHandler
             return;
         }
 
+        $level = Severity::fromString($this->logLevels[$record['level']]);
+
         if (
             isset($record['context']['exception'])
             && (
@@ -79,7 +82,7 @@ class MonologHandler extends AbstractProcessingHandler
             $exc = $record['context']['exception'];
 
             /** @noinspection PhpUndefinedMethodInspection */
-            $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
+            $breadcrumb = new Breadcrumb($level, Breadcrumb::TYPE_ERROR, $record['channel'], null, [
                 'type' => \get_class($exc),
                 'value' => $exc->getMessage(),
             ]);
@@ -88,14 +91,14 @@ class MonologHandler extends AbstractProcessingHandler
         } else {
             // TODO(dcramer): parse exceptions out of messages and format as above
             if ($error = $this->parseException($record['message'])) {
-                $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], null, [
+                $breadcrumb = new Breadcrumb($level, Breadcrumb::TYPE_ERROR, $record['channel'], null, [
                     'type' => $error[0],
                     'value' => $error[1],
                 ]);
 
                 $this->ravenClient->leaveBreadcrumb($breadcrumb);
             } else {
-                $breadcrumb = new Breadcrumb($this->logLevels[$record['level']], Breadcrumb::TYPE_ERROR, $record['channel'], $record['message']);
+                $breadcrumb = new Breadcrumb($level, Breadcrumb::TYPE_ERROR, $record['channel'], $record['message']);
 
                 $this->ravenClient->leaveBreadcrumb($breadcrumb);
             }

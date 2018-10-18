@@ -1,0 +1,310 @@
+<?php
+
+/*
+ * This file is part of Raven.
+ *
+ * (c) Sentry Team
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace Sentry\State;
+
+use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Context\Context;
+use Sentry\Context\TagsContext;
+use Sentry\Context\UserContext;
+use Sentry\Event;
+use Sentry\Severity;
+
+/**
+ * The scope holds data that should implicitly be sent with Sentry events. It
+ * can hold context data, extra parameters, level overrides, fingerprints etc.
+ */
+final class Scope
+{
+    /**
+     * @var Breadcrumb[] The list of breadcrumbs recorded in this scope
+     */
+    private $breadcrumbs = [];
+
+    /**
+     * @var UserContext The user data associated to this scope
+     */
+    private $user;
+
+    /**
+     * @var TagsContext The list of tags associated to this scope
+     */
+    private $tags;
+
+    /**
+     * @var Context A set of extra data associated to this scope
+     */
+    private $extra;
+
+    /**
+     * @var string[] List of fingerprints used to group events together in
+     *               Sentry
+     */
+    private $fingerprint = [];
+
+    /**
+     * @var Severity|null The severity to associate to the events captured in
+     *                    this scope
+     */
+    private $level;
+
+    /**
+     * @var callable[] List of event processors
+     */
+    private $eventProcessors = [];
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        $this->user = new UserContext();
+        $this->tags = new TagsContext();
+        $this->extra = new Context();
+    }
+
+    /**
+     * Sets a new tag in the tags context.
+     *
+     * @param string $key   The key that uniquely identifies the tag
+     * @param string $value The value
+     *
+     * @return $this
+     */
+    public function setTag(string $key, string $value): self
+    {
+        $this->tags[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Gets the tags contained in the tags context.
+     *
+     * @return array<string, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags->toArray();
+    }
+
+    /**
+     * Sets a new information in the extra context.
+     *
+     * @param string $key   The key that uniquely identifies the information
+     * @param mixed  $value The value
+     *
+     * @return $this
+     */
+    public function setExtra(string $key, $value): self
+    {
+        $this->extra[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Gets the information contained in the extra context.
+     *
+     * @return array<string, mixed>
+     */
+    public function getExtra(): array
+    {
+        return $this->extra->toArray();
+    }
+
+    /**
+     * Sets the given data in the user context.
+     *
+     * @param array $data The data
+     *
+     * @return $this
+     */
+    public function setUser(array $data): self
+    {
+        $this->user->replaceData($data);
+
+        return $this;
+    }
+
+    /**
+     * Gets the information contained in the user context.
+     *
+     * @return array<string, mixed>
+     */
+    public function getUser(): array
+    {
+        return $this->user->toArray();
+    }
+
+    /**
+     * Sets the list of strings used to dictate the deduplication of this event.
+     *
+     * @param string[] $fingerprint The fingerprint values
+     *
+     * @return $this
+     */
+    public function setFingerprint(array $fingerprint): self
+    {
+        $this->fingerprint = $fingerprint;
+
+        return $this;
+    }
+
+    /**
+     * Gets the list of strings used to dictate the deduplication of this event.
+     *
+     * @return string[]
+     */
+    public function getFingerprint(): array
+    {
+        return $this->fingerprint;
+    }
+
+    /**
+     * Sets the severity to apply to all events captured in this scope.
+     *
+     * @param null|Severity $level The severity
+     *
+     * @return $this
+     */
+    public function setLevel(?Severity $level): self
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+
+    /**
+     * Gets the severity to apply to all events captured in this scope.
+     *
+     * @return null|Severity
+     */
+    public function getLevel(): ?Severity
+    {
+        return $this->level;
+    }
+
+    /**
+     * Add the given breadcrumb to the scope.
+     *
+     * @param Breadcrumb $breadcrumb     The breadcrumb to add
+     * @param int        $maxBreadcrumbs The maximum number of breadcrumbs to record
+     *
+     * @return $this
+     */
+    public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): self
+    {
+        $this->breadcrumbs[] = $breadcrumb;
+        $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+
+        return $this;
+    }
+
+    /**
+     * Gets the breadcrumbs.
+     *
+     * @return Breadcrumb[]
+     */
+    public function getBreadcrumbs(): array
+    {
+        return $this->breadcrumbs;
+    }
+
+    /**
+     * Adds a new event processor that will be called after {@see Scope::applyToEvent}
+     * finished its work.
+     *
+     * @param callable $eventProcessor The event processor
+     *
+     * @return $this
+     */
+    public function addEventProcessor(callable $eventProcessor): self
+    {
+        $this->eventProcessors[] = $eventProcessor;
+
+        return $this;
+    }
+
+    /**
+     * Clears the scope and resets any data it contains.
+     *
+     * @return $this
+     */
+    public function clear(): self
+    {
+        $this->tags->clear();
+        $this->extra->clear();
+        $this->user->clear();
+
+        $this->level = null;
+        $this->fingerprint = [];
+        $this->breadcrumbs = [];
+
+        return $this;
+    }
+
+    /**
+     * Applies the current context and fingerprint to the event. If the event has
+     * already some breadcrumbs on it, the ones from this scope won't get merged.
+     *
+     * @param Event $event          The event object
+     * @param int   $maxBreadcrumbs The maximum number of breadcrumbs to add to
+     *                              the event
+     *
+     * @return Event|null
+     */
+    public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
+    {
+        if (!empty($this->fingerprint) && empty($event->getFingerprint())) {
+            $event->setFingerprint($this->fingerprint);
+        }
+
+        if (!empty($this->breadcrumbs) && empty($event->getBreadcrumbs())) {
+            $breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+
+            foreach ($breadcrumbs as $breadcrumb) {
+                $event->setBreadcrumb($breadcrumb);
+            }
+        }
+
+        if (null !== $this->level) {
+            $event->setLevel($this->level);
+        }
+
+        $event->getTagsContext()->merge($this->tags->toArray());
+        $event->getExtraContext()->merge($this->extra->toArray());
+        $event->getUserContext()->merge($this->user->toArray());
+
+        foreach ($this->eventProcessors as $processor) {
+            $event = $processor($event);
+
+            if (null !== $event && !($event instanceof Event)) {
+                throw new \InvalidArgumentException(sprintf('The event processor must return null or an instance of the %s class', Event::class));
+            }
+
+            if (null === $event) {
+                return null;
+            }
+        }
+
+        return $event;
+    }
+
+    public function __clone()
+    {
+        $this->user = clone $this->user;
+        $this->tags = clone $this->tags;
+        $this->extra = clone $this->extra;
+    }
+}

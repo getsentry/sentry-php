@@ -44,7 +44,7 @@ class BreadcrumbErrorHandler extends AbstractErrorHandler
         }
 
         $this->client->leaveBreadcrumb(new Breadcrumb(
-            $this->client->translateSeverity($exception->getSeverity()),
+            Severity::fromString($this->client->translateSeverity($exception->getSeverity())),
             Breadcrumb::TYPE_ERROR,
             'error_reporting',
             $exception->getMessage(),
