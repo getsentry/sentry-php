@@ -102,7 +102,7 @@ class ContextTest extends TestCase
         $context = new Context();
 
         $this->assertAttributeEquals([], 'data', $context);
-        $this->assertFalse(isset($context['foo']));
+        $this->assertArrayNotHasKey('foo', $context);
 
         // Accessing a key that does not exists in the data object should behave
         // like accessing a non-existent key of an array

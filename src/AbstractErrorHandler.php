@@ -150,16 +150,15 @@ abstract class AbstractErrorHandler
      * @param string $file    The filename the error was raised in
      * @param int    $line    The line number the error was raised at
      *
-     * @return bool Whether the standard PHP error handler should be called
+     * @return bool If the function returns FALSE then the normal error handler continues
      *
      * @internal
      */
     public function handleError($level, $message, $file, $line)
     {
-        $shouldReportError = (bool) (error_reporting() & $level);
         $shouldCaptureError = (bool) ($this->capturedErrors & $level);
 
-        if (!$shouldCaptureError || (!$shouldCaptureError && !$shouldReportError)) {
+        if (!$shouldCaptureError) {
             return false;
         }
 
@@ -178,7 +177,7 @@ abstract class AbstractErrorHandler
             return \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
         }
 
-        return $shouldReportError;
+        return false;
     }
 
     /**

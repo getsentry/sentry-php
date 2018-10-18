@@ -480,7 +480,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the stacktrace that generated this event.
      *
-     * @return Stacktrace
+     * @return Stacktrace|null
      */
     public function getStacktrace()
     {

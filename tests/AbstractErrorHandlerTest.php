@@ -65,6 +65,38 @@ abstract class AbstractErrorHandlerTest extends TestCase
     }
 
     /**
+     * @dataProvider handleErrorShouldNotCaptureDataProvider
+     */
+    public function testHandleErrorShouldNotCapture(bool $expectedToCapture, int $captureAt, int $errorReporting)
+    {
+        if (!$expectedToCapture) {
+            $this->client->expects($this->never())
+                ->method('capture');
+        }
+
+        $errorHandler = $this->createErrorHandler($this->client);
+        $errorHandler->captureAt($captureAt, true);
+
+        $prevErrorReporting = error_reporting($errorReporting);
+
+        try {
+            $this->assertFalse($errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
+        } finally {
+            error_reporting($prevErrorReporting);
+        }
+    }
+
+    public function handleErrorShouldNotCaptureDataProvider()
+    {
+        return [
+            [false, E_ERROR, E_ERROR],
+            [false, E_ALL, E_ERROR],
+            [true, E_ERROR, E_ALL],
+            [true, E_ALL, E_ALL],
+        ];
+    }
+
+    /**
      * @dataProvider captureAtDataProvider
      */
     public function testCaptureAt($levels, $replace, $expectedCapturedErrors)

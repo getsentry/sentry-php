@@ -186,9 +186,9 @@ final class Frame implements \JsonSerializable
      *
      * @param bool $inApp flag indicating whether the frame is application-related
      */
-    public function setIsInApp($inApp)
+    public function setIsInApp(bool $inApp)
     {
-        $this->inApp = (bool) $inApp;
+        $this->inApp = $inApp;
     }
 
     /**
