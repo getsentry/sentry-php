@@ -228,7 +228,7 @@ final class Frame implements \JsonSerializable
             'in_app' => $this->inApp,
         ];
 
-        if (\count($this->preContext)) {
+        if (0 !== \count($this->preContext)) {
             $result['pre_context'] = $this->preContext;
         }
 
@@ -236,7 +236,7 @@ final class Frame implements \JsonSerializable
             $result['context_line'] = $this->contextLine;
         }
 
-        if (\count($this->postContext)) {
+        if (0 !== \count($this->postContext)) {
             $result['post_context'] = $this->postContext;
         }
 
