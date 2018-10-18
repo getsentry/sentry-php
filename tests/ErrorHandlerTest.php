@@ -254,7 +254,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
         }
     }
 
-    protected function createErrorHandler(...$arguments): AbstractErrorHandler
+    protected function createErrorHandler(...$arguments): ErrorHandler
     {
         return ErrorHandler::register(...$arguments);
     }
