@@ -47,7 +47,7 @@ final class Event implements \JsonSerializable
     private $logger;
 
     /**
-     * @var string the name of the transaction (or culprit) which caused this exception
+     * @var string|null the name of the transaction (or culprit) which caused this exception
      */
     private $transaction;
 
@@ -215,7 +215,7 @@ final class Event implements \JsonSerializable
      * Gets the name of the transaction (or culprit) which caused this
      * exception.
      *
-     * @return string
+     * @return string|null
      */
     public function getTransaction()
     {
@@ -226,7 +226,7 @@ final class Event implements \JsonSerializable
      * Sets the name of the transaction (or culprit) which caused this
      * exception.
      *
-     * @param string $transaction The transaction name
+     * @param string|null $transaction The transaction name
      */
     public function setTransaction($transaction)
     {

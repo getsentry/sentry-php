@@ -52,7 +52,7 @@ final class Breadcrumb implements \JsonSerializable
     private $type;
 
     /**
-     * @var string The message of the breadcrumb
+     * @var string|null The message of the breadcrumb
      */
     private $message;
 

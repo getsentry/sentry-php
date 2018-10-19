@@ -299,6 +299,14 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createHttpClientInstance()
     {
+        if (null === $this->uriFactory) {
+            throw new \RuntimeException('The PSR-7 URI factory must be set.');
+        }
+
+        if (null === $this->httpClient) {
+            throw new \RuntimeException('The PSR-18 HTTP client must be set.');
+        }
+
         if (null !== $this->configuration->getDsn()) {
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getDsn())));
         }
@@ -322,10 +330,14 @@ final class ClientBuilder implements ClientBuilderInterface
             return $this->transport;
         }
 
-        if (null !== $this->configuration->getDsn()) {
-            return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        if (null === $this->configuration->getDsn()) {
+            return new NullTransport();
         }
 
-        return new NullTransport();
+        if (null === $this->messageFactory) {
+            throw new \RuntimeException('The PSR-7 message factory must be set.');
+        }
+
+        return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
     }
 }

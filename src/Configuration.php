@@ -698,7 +698,14 @@ class Configuration
                 $this->dsn .= ':' . $parsed['port'];
             }
 
-            $this->dsn .= substr($parsed['path'], 0, strrpos($parsed['path'], '/') ?: null);
+            $lastSlashPosition = strrpos($parsed['path'], '/');
+
+            if (false !== $lastSlashPosition) {
+                $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
+            } else {
+                $this->dsn .= $parsed['path'];
+            }
+
             $this->publicKey = $parsed['user'];
             $this->secretKey = $parsed['pass'] ?? null;
 
