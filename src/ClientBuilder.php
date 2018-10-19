@@ -132,7 +132,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public static function create(array $options = [])
+    public static function create(array $options = []): self
     {
         return new static($options);
     }
@@ -240,7 +240,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function getClient()
+    public function getClient(): Client
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();

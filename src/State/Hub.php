@@ -4,6 +4,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
+use Sentry\Event;
 use Sentry\Interfaces\Severity;
 
 /**
@@ -17,6 +18,11 @@ final class Hub
      * @var Layer[]
      */
     private $stack = [];
+
+    /**
+     * @var Hub
+     */
+    public static $currentHub;
 
     /**
      * Hub constructor.
@@ -136,12 +142,55 @@ final class Hub
     }
 
     /**
-     * @param Breadcrumb $crumb
+     * Send a event to Sentry.
+     *
+     * @param Event $event
+     *
+     * @return null|string
      */
-    public function addBreadcrumb(Breadcrumb $crumb): void
+    public function captureEvent(Event $event): ?string
     {
         if ($client = $this->getClient()) {
-            $client->leaveBreadcrumb($crumb);
+            // TODO
+            // $client->captureEvent
         }
+    }
+
+    /**
+     * @param Breadcrumb $breadcrumb
+     */
+    public function addBreadcrumb(Breadcrumb $breadcrumb): void
+    {
+        if ($client = $this->getClient()) {
+            $client->leaveBreadcrumb($breadcrumb);
+        }
+    }
+
+    /**
+     * Returns the current global Hub.
+     *
+     * @return Hub
+     */
+    public static function getCurrent(): self
+    {
+        if (null === self::$currentHub) {
+            self::$currentHub = new self();
+        }
+
+        return self::$currentHub;
+    }
+
+    /**
+     * Sets the Hub as the current.
+     *
+     * @param Hub $hub
+     *
+     * @return Hub
+     */
+    public static function setCurrent(self $hub): self
+    {
+        self::$currentHub = $hub;
+
+        return $hub;
     }
 }

@@ -47,11 +47,13 @@
         "bin/sentry"
     ],
     "autoload": {
+        "files": ["src/Sdk.php"],
         "psr-4" : {
             "Sentry\\" : "src/"
         }
     },
     "autoload-dev": {
+        "files": ["src/Sdk.php"],
         "psr-4": {
             "Sentry\\Tests\\": "tests/"
         }

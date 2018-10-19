@@ -6,9 +6,22 @@ use Sentry\Client;
 
 final class Layer
 {
+    /**
+     * @var null|Client
+     */
     private $client;
+
+    /**
+     * @var Scope
+     */
     private $scope;
 
+    /**
+     * Layer constructor.
+     *
+     * @param null|Client $client
+     * @param Scope       $scope
+     */
     public function __construct(?Client $client, Scope $scope)
     {
         $this->client = $client;

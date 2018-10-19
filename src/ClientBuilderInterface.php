@@ -119,7 +119,7 @@ interface ClientBuilderInterface
     /**
      * Gets the instance of the client built using the configured options.
      *
-     * @return ClientInterface
+     * @return Client
      */
-    public function getClient();
+    public function getClient(): Client;
 }

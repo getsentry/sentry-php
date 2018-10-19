@@ -19,21 +19,21 @@ final class Scope
     private $breadcrumbs = [];
 
     /**
-     * @var null|UserContext
+     * @var UserContext
      */
     private $user;
 
     /**
      * Array holding all tags.
      *
-     * @var null|TagsContext
+     * @var TagsContext
      */
     private $tags;
 
     /**
      * Array holding all extra.
      *
-     * @var null|Context
+     * @var Context
      */
     private $extra;
 
@@ -121,11 +121,11 @@ final class Scope
     }
 
     /**
-     * @param null|UserContext $user
+     * @param UserContext $user
      *
      * @return Scope
      */
-    public function setUser(?UserContext $user): self
+    public function setUser(UserContext $user): self
     {
         $this->user = $user;
 
