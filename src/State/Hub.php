@@ -34,6 +34,13 @@ final class Hub
     /**
      * Constructor.
      *
+     * @var Hub
+     */
+    public static $currentHub;
+
+    /**
+     * Hub constructor.
+     *
      * @param ClientInterface|null $client The client bound to the hub
      * @param Scope|null           $scope  The scope bound to the hub
      */
@@ -220,5 +227,33 @@ final class Hub
         if (null !== $client) {
             $client->addBreadcrumb($breadcrumb, $this->getScope());
         }
+    }
+
+    /**
+     * Returns the current global Hub.
+     *
+     * @return Hub
+     */
+    public static function getCurrent(): self
+    {
+        if (null === self::$currentHub) {
+            self::$currentHub = new self();
+        }
+
+        return self::$currentHub;
+    }
+
+    /**
+     * Sets the Hub as the current.
+     *
+     * @param self $hub
+     *
+     * @return Hub
+     */
+    public static function setCurrent(self $hub): self
+    {
+        self::$currentHub = $hub;
+
+        return $hub;
     }
 }
