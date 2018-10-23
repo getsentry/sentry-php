@@ -15,7 +15,6 @@ use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Breadcrumbs\Recorder as BreadcrumbsRecorder;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Context\Context;
@@ -27,6 +26,7 @@ use Sentry\Middleware\MiddlewareStack;
 use Sentry\ReprSerializer;
 use Sentry\Serializer;
 use Sentry\Severity;
+use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\classes\CarelessException;
 use Sentry\TransactionStack;
 use Sentry\Transport\TransportInterface;
@@ -50,13 +50,6 @@ class ClientTest extends TestCase
         $client = ClientBuilder::create()->getClient();
 
         $this->assertEmpty($client->getTransactionStack());
-    }
-
-    public function testGetBreadcrumbsRecorder()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(BreadcrumbsRecorder::class, $client->getBreadcrumbsRecorder());
     }
 
     public function testGetTransactionStack()
@@ -466,16 +459,79 @@ class ClientTest extends TestCase
         $this->assertFalse($client->getRepresentationSerializer()->getAllObjectSerialize());
     }
 
-    public function testClearBreadcrumbs()
+    /**
+     * @dataProvider addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider
+     */
+    public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLow(int $maxBreadcrumbs): void
     {
-        $client = ClientBuilder::create()->getClient();
-        $client->leaveBreadcrumb(new Breadcrumb(Severity::warning(), Breadcrumb::TYPE_ERROR, 'error_reporting', 'message'));
+        $client = ClientBuilder::create(['max_breadcrumbs' => $maxBreadcrumbs])->getClient();
+        $scope = new Scope();
 
-        $this->assertNotEmpty($client->getBreadcrumbsRecorder());
+        $client->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'), $scope);
 
-        $client->clearBreadcrumbs();
+        $this->assertEmpty($scope->getBreadcrumbs());
+    }
 
-        $this->assertEmpty($client->getBreadcrumbsRecorder());
+    public function addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider(): array
+    {
+        return [
+            [0],
+            [-1],
+        ];
+    }
+
+    public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void
+    {
+        $client = ClientBuilder::create(['max_breadcrumbs' => 2])->getClient();
+        $scope = new Scope();
+
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'foo');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'bar');
+        $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'baz');
+
+        $client->addBreadcrumb($breadcrumb1, $scope);
+        $client->addBreadcrumb($breadcrumb2, $scope);
+
+        $this->assertSame([$breadcrumb1, $breadcrumb2], $scope->getBreadcrumbs());
+
+        $client->addBreadcrumb($breadcrumb3, $scope);
+
+        $this->assertSame([$breadcrumb2, $breadcrumb3], $scope->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumbDoesNothingWhenBeforeBreadcrumbCallbackReturnsNull(): void
+    {
+        $scope = new Scope();
+        $client = ClientBuilder::create(
+            [
+                'before_breadcrumb' => function (): ?Breadcrumb {
+                    return null;
+                },
+            ]
+        )->getClient();
+
+        $client->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'), $scope);
+
+        $this->assertEmpty($scope->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumbStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void
+    {
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        $scope = new Scope();
+        $client = ClientBuilder::create(
+            [
+                'before_breadcrumb' => function () use ($breadcrumb2): ?Breadcrumb {
+                    return $breadcrumb2;
+                },
+            ]
+        )->getClient();
+
+        $client->addBreadcrumb($breadcrumb1, $scope);
+
+        $this->assertSame([$breadcrumb2], $scope->getBreadcrumbs());
     }
 
     public function testSetSerializer()

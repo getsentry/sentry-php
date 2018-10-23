@@ -24,37 +24,37 @@ final class Severity
     /**
      * This constant represents the "debug" severity level.
      */
-    public const SEVERITY_DEBUG = 'debug';
+    public const DEBUG = 'debug';
 
     /**
      * This constant represents the "info" severity level.
      */
-    public const SEVERITY_INFO = 'info';
+    public const INFO = 'info';
 
     /**
      * This constant represents the "warning" severity level.
      */
-    public const SEVERITY_WARNING = 'warning';
+    public const WARNING = 'warning';
 
     /**
      * This constant represents the "error" severity level.
      */
-    public const SEVERITY_ERROR = 'error';
+    public const ERROR = 'error';
 
     /**
      * This constant represents the "fatal" severity level.
      */
-    public const SEVERITY_FATAL = 'fatal';
+    public const FATAL = 'fatal';
 
     /**
      * This constant contains the list of allowed enum values.
      */
     public const ALLOWED_SEVERITIES = [
-        self::SEVERITY_DEBUG,
-        self::SEVERITY_INFO,
-        self::SEVERITY_WARNING,
-        self::SEVERITY_ERROR,
-        self::SEVERITY_FATAL,
+        self::DEBUG,
+        self::INFO,
+        self::WARNING,
+        self::ERROR,
+        self::FATAL,
     ];
 
     /**
@@ -67,7 +67,7 @@ final class Severity
      *
      * @param string $value The value this instance represents
      */
-    private function __construct(string $value = self::SEVERITY_INFO)
+    private function __construct(string $value = self::INFO)
     {
         if (!\in_array($value, self::ALLOWED_SEVERITIES, true)) {
             throw new \InvalidArgumentException(sprintf('The "%s" is not a valid enum value.', $value));
@@ -95,7 +95,7 @@ final class Severity
      */
     public static function debug(): self
     {
-        return new self(self::SEVERITY_DEBUG);
+        return new self(self::DEBUG);
     }
 
     /**
@@ -105,7 +105,7 @@ final class Severity
      */
     public static function info(): self
     {
-        return new self(self::SEVERITY_INFO);
+        return new self(self::INFO);
     }
 
     /**
@@ -115,7 +115,7 @@ final class Severity
      */
     public static function warning(): self
     {
-        return new self(self::SEVERITY_WARNING);
+        return new self(self::WARNING);
     }
 
     /**
@@ -125,7 +125,7 @@ final class Severity
      */
     public static function error(): self
     {
-        return new self(self::SEVERITY_ERROR);
+        return new self(self::ERROR);
     }
 
     /**
@@ -135,7 +135,7 @@ final class Severity
      */
     public static function fatal(): self
     {
-        return new self(self::SEVERITY_FATAL);
+        return new self(self::FATAL);
     }
 
     /**
@@ -150,6 +150,9 @@ final class Severity
         return $this->value === (string) $other;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function __toString(): string
     {
         return $this->value;

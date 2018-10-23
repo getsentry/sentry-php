@@ -219,10 +219,7 @@ final class Hub
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): void
     {
-        $client = $this->getClient();
-
-        if (null !== $client) {
-            $client->leaveBreadcrumb($breadcrumb);
-        }
+        $scope = $this->getScope();
+        $scope->addBreadcrumb($breadcrumb);
     }
 }

@@ -12,13 +12,13 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Breadcrumbs\Recorder;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
 use Sentry\Middleware\MiddlewareStack;
+use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -80,11 +80,6 @@ class Client implements ClientInterface
     private $config;
 
     /**
-     * @var Recorder The breadcrumbs recorder
-     */
-    private $breadcrumbRecorder;
-
-    /**
      * @var TransactionStack The transaction stack
      */
     private $transactionStack;
@@ -144,7 +139,6 @@ class Client implements ClientInterface
         $this->extraContext = new Context();
         $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new ServerOsContext();
-        $this->breadcrumbRecorder = new Recorder();
         $this->transactionStack = new TransactionStack();
         $this->serializer = new Serializer($this->config->getMbDetectOrder());
         $this->representationSerializer = new ReprSerializer($this->config->getMbDetectOrder());
@@ -167,25 +161,20 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getBreadcrumbsRecorder()
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null)
     {
-        return $this->breadcrumbRecorder;
-    }
+        $beforeBreadcrumbCallback = $this->config->getBeforeBreadcrumbCallback();
+        $maxBreadcrumbs = $this->config->getMaxBreadcrumbs();
 
-    /**
-     * {@inheritdoc}
-     */
-    public function leaveBreadcrumb(Breadcrumb $breadcrumb)
-    {
-        $this->breadcrumbRecorder->record($breadcrumb);
-    }
+        if ($maxBreadcrumbs <= 0) {
+            return;
+        }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function clearBreadcrumbs()
-    {
-        $this->breadcrumbRecorder->clear();
+        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+
+        if (null !== $breadcrumb && null !== $scope) {
+            $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
+        }
     }
 
     /**

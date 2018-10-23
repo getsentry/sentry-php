@@ -230,15 +230,12 @@ final class HubTest extends TestCase
 
     public function testAddBreadcrumb(): void
     {
-        $breadcrumb = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $scope = new Scope();
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('leaveBreadcrumb')
-            ->with($breadcrumb);
-
-        $hub = new Hub($client);
+        $hub = new Hub(null, $scope);
         $hub->addBreadcrumb($breadcrumb);
+
+        $this->assertSame([$breadcrumb], $scope->getBreadcrumbs());
     }
 }

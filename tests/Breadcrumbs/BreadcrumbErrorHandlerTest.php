@@ -21,7 +21,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
     public function testHandleError()
     {
         $this->client->expects($this->once())
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->with($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);
@@ -62,7 +62,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
     public function testHandleErrorWithPreviousErrorHandler()
     {
         $this->client->expects($this->once())
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->with($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);
@@ -103,13 +103,13 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
     public function testHandleFatalError()
     {
         $this->client->expects($this->once())
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->with($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);
                 $this->assertEquals('Parse Error: foo bar', $breadcrumb->getMessage());
                 $this->assertEquals(Breadcrumb::TYPE_ERROR, $breadcrumb->getType());
-                $this->assertEquals(Client::LEVEL_FATAL, $breadcrumb->getLevel());
+                $this->assertEquals(Breadcrumb::LEVEL_CRITICAL, $breadcrumb->getLevel());
                 $this->assertEquals('error_reporting', $breadcrumb->getCategory());
                 $this->assertArraySubset([
                     'code' => 0,
@@ -137,7 +137,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
     public function testHandleFatalErrorWithNonFatalErrorDoesNothing()
     {
         $this->client->expects($this->never())
-            ->method('leaveBreadcrumb');
+            ->method('addBreadcrumb');
 
         try {
             $errorHandler = $this->createErrorHandler($this->client);
@@ -158,7 +158,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
         $exception = new \Exception('foo bar');
 
         $this->client->expects($this->never())
-            ->method('leaveBreadcrumb');
+            ->method('addBreadcrumb');
 
         try {
             $errorHandler = $this->createErrorHandler($this->client);
@@ -181,7 +181,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
         $exception = new \ErrorException('foo bar', 0, E_USER_NOTICE);
 
         $this->client->expects($this->once())
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->with($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);
@@ -230,7 +230,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
         $exception2 = new \ErrorException('bar foo', 0, E_USER_NOTICE);
 
         $this->client->expects($this->exactly(2))
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->withConsecutive($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);
@@ -291,7 +291,7 @@ class BreadcrumbErrorHandlerTest extends AbstractErrorHandlerTest
     public function testThrownErrorLeavesBreadcrumb()
     {
         $this->client->expects($this->once())
-            ->method('leaveBreadcrumb')
+            ->method('addBreadcrumb')
             ->with($this->callback(function ($breadcrumb) {
                 /* @var Breadcrumb $breadcrumb */
                 $this->assertInstanceOf(Breadcrumb::class, $breadcrumb);

@@ -115,8 +115,7 @@ methods to report and clear the breadcrumbs.
 
   use Sentry\Breadcrumbs\Breadcrumb;
 
-  $client->leaveBreadcrumb(Breadcrumb::create('debug', 'error', 'error_reporting', 'foo bar'));
-  $client->clearBreadcrumbs();
+  $client->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting', 'foo bar'));
 
 The default implementation of the breadcrumbs recorder is a circular buffer, so
 when you reach out the maximum number of items that it can store at the same time

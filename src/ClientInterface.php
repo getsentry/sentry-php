@@ -12,11 +12,11 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Breadcrumbs\Recorder as BreadcrumbRecorder;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
+use Sentry\State\Scope;
 
 /**
  * This interface must be implemented by all Raven client classes.
@@ -57,23 +57,12 @@ interface ClientInterface
     public function removeMiddleware(callable $middleware);
 
     /**
-     * Gets the breadcrumbs recorder.
-     *
-     * @return BreadcrumbRecorder
-     */
-    public function getBreadcrumbsRecorder();
-
-    /**
      * Records the given breadcrumb.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb instance
+     * @param Scope|null $scope      an optional scope to store this breadcrumb in
      */
-    public function leaveBreadcrumb(Breadcrumb $breadcrumb);
-
-    /**
-     * Clears all recorded breadcrumbs.
-     */
-    public function clearBreadcrumbs();
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null);
 
     /**
      * Logs a message.

@@ -148,8 +148,8 @@ class EventTest extends TestCase
     public function testToArrayWithBreadcrumbs()
     {
         $breadcrumbs = [
-            new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'foo'),
-            new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'bar'),
+            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'foo'),
+            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
         ];
 
         $event = new Event($this->configuration);

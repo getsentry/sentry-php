@@ -37,23 +37,23 @@ final class SeverityTest extends TestCase
     {
         return [
             [
-                Severity::SEVERITY_DEBUG,
+                Severity::DEBUG,
                 true,
             ],
             [
-                Severity::SEVERITY_INFO,
+                Severity::INFO,
                 true,
             ],
             [
-                Severity::SEVERITY_WARNING,
+                Severity::WARNING,
                 true,
             ],
             [
-                Severity::SEVERITY_ERROR,
+                Severity::ERROR,
                 true,
             ],
             [
-                Severity::SEVERITY_FATAL,
+                Severity::FATAL,
                 true,
             ],
             [
@@ -67,35 +67,35 @@ final class SeverityTest extends TestCase
     {
         $severity = Severity::debug();
 
-        $this->assertSame(Severity::SEVERITY_DEBUG, (string) $severity);
+        $this->assertSame(Severity::DEBUG, (string) $severity);
     }
 
     public function testInfo(): void
     {
         $severity = Severity::info();
 
-        $this->assertSame(Severity::SEVERITY_INFO, (string) $severity);
+        $this->assertSame(Severity::INFO, (string) $severity);
     }
 
     public function testWarning(): void
     {
         $severity = Severity::warning();
 
-        $this->assertSame(Severity::SEVERITY_WARNING, (string) $severity);
+        $this->assertSame(Severity::WARNING, (string) $severity);
     }
 
     public function testError(): void
     {
         $severity = Severity::error();
 
-        $this->assertSame(Severity::SEVERITY_ERROR, (string) $severity);
+        $this->assertSame(Severity::ERROR, (string) $severity);
     }
 
     public function testFatal(): void
     {
         $severity = Severity::fatal();
 
-        $this->assertSame(Severity::SEVERITY_FATAL, (string) $severity);
+        $this->assertSame(Severity::FATAL, (string) $severity);
     }
 
     public function testIsEqualTo(): void

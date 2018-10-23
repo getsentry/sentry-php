@@ -12,10 +12,13 @@ abstract class AbstractContextTest extends TestCase
     /**
      * @dataProvider valuesDataProvider
      */
-    public function testConstructor($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
+    public function testConstructor(array $initialData, array $expectedData, ?string $expectedExceptionClass, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionClass) {
             $this->expectException($expectedExceptionClass);
+        }
+
+        if (null !== $expectedExceptionMessage) {
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
@@ -27,10 +30,13 @@ abstract class AbstractContextTest extends TestCase
     /**
      * @dataProvider valuesDataProvider
      */
-    public function testMerge($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
+    public function testMerge(array $initialData, array $expectedData, ?string $expectedExceptionClass, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionClass) {
             $this->expectException($expectedExceptionClass);
+        }
+
+        if (null !== $expectedExceptionMessage) {
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
@@ -43,10 +49,13 @@ abstract class AbstractContextTest extends TestCase
     /**
      * @dataProvider valuesDataProvider
      */
-    public function testSetData($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
+    public function testSetData(array $initialData, array $expectedData, ?string $expectedExceptionClass, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionClass) {
             $this->expectException($expectedExceptionClass);
+        }
+
+        if (null !== $expectedExceptionMessage) {
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
@@ -59,10 +68,13 @@ abstract class AbstractContextTest extends TestCase
     /**
      * @dataProvider valuesDataProvider
      */
-    public function testReplaceData($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
+    public function testReplaceData(array $initialData, array $expectedData, ?string $expectedExceptionClass, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionClass) {
             $this->expectException($expectedExceptionClass);
+        }
+
+        if (null !== $expectedExceptionMessage) {
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
@@ -72,15 +84,16 @@ abstract class AbstractContextTest extends TestCase
         $this->assertEquals($expectedData, $context->toArray());
     }
 
-    abstract public function valuesDataProvider(): array;
-
     /**
      * @dataProvider offsetSetDataProvider
      */
-    public function testOffsetSet($key, $value, $expectedExceptionClass, $expectedExceptionMessage)
+    public function testOffsetSet(string $key, $value, ?string $expectedExceptionClass, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionClass) {
             $this->expectException($expectedExceptionClass);
+        }
+
+        if (null !== $expectedExceptionMessage) {
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
@@ -90,18 +103,20 @@ abstract class AbstractContextTest extends TestCase
         $this->assertArraySubset([$key => $value], $context->toArray());
     }
 
-    abstract public function offsetSetDataProvider(): array;
-
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
-    public function testGettersAndSetters($getterMethod, $setterMethod, $value)
+    public function testGettersAndSetters(string $getterMethod, string $setterMethod, $value): void
     {
         $context = $this->createContext();
         $context->$setterMethod($value);
 
         $this->assertEquals($value, $context->$getterMethod());
     }
+
+    abstract public function valuesDataProvider(): array;
+
+    abstract public function offsetSetDataProvider(): array;
 
     abstract public function gettersAndSettersDataProvider(): array;
 

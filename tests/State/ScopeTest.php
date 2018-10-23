@@ -80,15 +80,15 @@ final class ScopeTest extends TestCase
 
         $scope->setLevel(Severity::debug());
 
-        $this->assertEquals(Severity::debug(), $scope->getLevel());
+        $this->assertEquals(Breadcrumb::LEVEL_DEBUG, $scope->getLevel());
     }
 
     public function testAddBreadcrumb(): void
     {
         $scope = new Scope();
-        $breadcrumb1 = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting');
-        $breadcrumb2 = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting');
-        $breadcrumb3 = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $this->assertEmpty($scope->getBreadcrumbs());
 
@@ -111,7 +111,10 @@ final class ScopeTest extends TestCase
         $event = new Event(new Configuration());
         $scope = new Scope();
 
-        $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called): ?Event {
+        $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called, $callback2Called, $callback3Called): ?Event {
+            $this->assertFalse($callback2Called);
+            $this->assertFalse($callback3Called);
+
             $callback1Called = true;
 
             return $eventArg;
@@ -120,7 +123,10 @@ final class ScopeTest extends TestCase
         $this->assertSame($event, $scope->applyToEvent($event));
         $this->assertTrue($callback1Called);
 
-        $scope->addEventProcessor(function () use (&$callback2Called): ?Event {
+        $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called): ?Event {
+            $this->assertTrue($callback1Called);
+            $this->assertFalse($callback3Called);
+
             $callback2Called = true;
 
             return null;
@@ -141,7 +147,7 @@ final class ScopeTest extends TestCase
     {
         $scope = new Scope();
         $scope->setLevel(Severity::error());
-        $scope->addBreadcrumb(new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting'));
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->setFingerprint(['foo']);
 
         $this->assertNotNull($scope->getLevel());
@@ -158,7 +164,7 @@ final class ScopeTest extends TestCase
     public function testApplyToEvent(): void
     {
         $event = new Event(new Configuration());
-        $breadcrumb = new Breadcrumb(Severity::error(), Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope = new Scope();
         $scope->setLevel(Severity::warning());
@@ -179,7 +185,7 @@ final class ScopeTest extends TestCase
         $this->assertEquals(['foo' => 'baz'], $event->getUserContext()->toArray());
 
         $scope->setFingerprint(['foo', 'bar']);
-        $scope->addBreadcrumb(new Breadcrumb(Severity::fatal(), Breadcrumb::TYPE_ERROR, 'error_reporting'));
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_CRITICAL, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->setLevel(Severity::fatal());
         $scope->setTag('bar', 'foo');
         $scope->setExtra('foo', 'bar');

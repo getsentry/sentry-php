@@ -11,6 +11,7 @@
 
 namespace Sentry;
 
+use Sentry\Breadcrumbs\Breadcrumb;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -21,6 +22,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class Configuration
 {
+    /**
+     * The default maximum number of breadcrumbs that will be sent with an event.
+     */
+    public const DEFAULT_MAX_BREADCRUMBS = 100;
+
     /**
      * @var array The configuration options
      */
@@ -587,6 +593,54 @@ class Configuration
     }
 
     /**
+     * Gets the maximum number of breadcrumbs sent with events.
+     *
+     * @return int
+     */
+    public function getMaxBreadcrumbs(): int
+    {
+        return $this->options['max_breadcrumbs'];
+    }
+
+    /**
+     * Sets the maximum number of breadcrumbs sent with events.
+     *
+     * @param int $maxBreadcrumbs The maximum number of breadcrumbs
+     */
+    public function setMaxBreadcrumbs(int $maxBreadcrumbs): void
+    {
+        $options = array_merge($this->options, ['max_breadcrumbs' => $maxBreadcrumbs]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets a callback that will be invoked when adding a breadcrumb.
+     *
+     * @return callable
+     */
+    public function getBeforeBreadcrumbCallback(): callable
+    {
+        return $this->options['before_breadcrumb'];
+    }
+
+    /**
+     * Sets a callback that will be invoked when adding a breadcrumb, allowing
+     * to optionally modify it before adding it to future events. Note that you
+     * must return a valid breadcrumb from this callback. If you do not wish to
+     * modify the breadcrumb, simply return it at the end. Returning `null` will
+     * cause the breadcrumb to be dropped.
+     *
+     * @param callable $callback The callback
+     */
+    public function setBeforeBreadcrumbCallback(callable $callback): void
+    {
+        $options = array_merge($this->options, ['before_breadcrumb' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -618,6 +672,10 @@ class Configuration
             'should_capture' => null,
             'tags' => [],
             'error_types' => null,
+            'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
+            'before_breadcrumb' => function (Breadcrumb $breadcrumb) {
+                return $breadcrumb;
+            },
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -641,6 +699,8 @@ class Configuration
         $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
+        $resolver->setAllowedTypes('max_breadcrumbs', 'int');
+        $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
@@ -674,6 +734,10 @@ class Configuration
             }
 
             return true;
+        });
+
+        $resolver->setAllowedValues('max_breadcrumbs', function ($value) {
+            return $value <= self::DEFAULT_MAX_BREADCRUMBS;
         });
 
         $resolver->setNormalizer('dsn', function (Options $options, $value) {

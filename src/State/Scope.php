@@ -92,6 +92,8 @@ final class Scope
      * Gets the tags contained in the tags context.
      *
      * @return array<string, string>
+     *
+     * @internal
      */
     public function getTags(): array
     {
@@ -117,6 +119,8 @@ final class Scope
      * Gets the information contained in the extra context.
      *
      * @return array<string, mixed>
+     *
+     * @internal
      */
     public function getExtra(): array
     {
@@ -141,6 +145,8 @@ final class Scope
      * Gets the information contained in the user context.
      *
      * @return array<string, mixed>
+     *
+     * @internal
      */
     public function getUser(): array
     {
@@ -165,6 +171,8 @@ final class Scope
      * Gets the list of strings used to dictate the deduplication of this event.
      *
      * @return string[]
+     *
+     * @internal
      */
     public function getFingerprint(): array
     {
@@ -189,6 +197,8 @@ final class Scope
      * Gets the severity to apply to all events captured in this scope.
      *
      * @return null|Severity
+     *
+     * @internal
      */
     public function getLevel(): ?Severity
     {
@@ -215,6 +225,8 @@ final class Scope
      * Gets the breadcrumbs.
      *
      * @return Breadcrumb[]
+     *
+     * @internal
      */
     public function getBreadcrumbs(): array
     {
@@ -266,11 +278,11 @@ final class Scope
      */
     public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
     {
-        if (!empty($this->fingerprint) && empty($event->getFingerprint())) {
+        if (empty($event->getFingerprint())) {
             $event->setFingerprint($this->fingerprint);
         }
 
-        if (!empty($this->breadcrumbs) && empty($event->getBreadcrumbs())) {
+        if (empty($event->getBreadcrumbs())) {
             $breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
 
             foreach ($breadcrumbs as $breadcrumb) {
@@ -289,12 +301,12 @@ final class Scope
         foreach ($this->eventProcessors as $processor) {
             $event = $processor($event);
 
-            if (null !== $event && !($event instanceof Event)) {
-                throw new \InvalidArgumentException(sprintf('The event processor must return null or an instance of the %s class', Event::class));
-            }
-
             if (null === $event) {
                 return null;
+            }
+
+            if (!$event instanceof Event) {
+                throw new \InvalidArgumentException(sprintf('The event processor must return null or an instance of the %s class', Event::class));
             }
         }
 

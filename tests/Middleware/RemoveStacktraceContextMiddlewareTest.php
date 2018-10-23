@@ -41,6 +41,8 @@ class RemoveStacktraceContextMiddlewareTest extends MiddlewareTestCase
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
+        $this->assertNotNull($returnedEvent->getStacktrace());
+
         foreach ($returnedEvent->getStacktrace()->getFrames() as $frame) {
             $this->assertEmpty($frame->getPreContext());
             $this->assertNull($frame->getContextLine());
@@ -59,6 +61,8 @@ class RemoveStacktraceContextMiddlewareTest extends MiddlewareTestCase
         $middleware = new RemoveStacktraceContextMiddleware();
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+
+        $this->assertNotNull($returnedEvent->getStacktrace());
 
         foreach ($returnedEvent->getStacktrace()->getFrames() as $frame) {
             $this->assertEmpty($frame->getPreContext());
