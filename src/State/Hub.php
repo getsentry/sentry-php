@@ -155,11 +155,7 @@ final class Hub
      */
     public function configureScope(callable $callback): void
     {
-        $layer = $this->getStackTop();
-
-        if (null !== $layer->getClient()) {
-            $callback($layer->getScope());
-        }
+        $callback($this->getScope());
     }
 
     /**
@@ -179,7 +175,7 @@ final class Hub
      * @param string   $message The message
      * @param Severity $level   The severity level of the message
      *
-     * @return null|string
+     * @return string
      */
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
@@ -219,7 +215,10 @@ final class Hub
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): void
     {
-        $scope = $this->getScope();
-        $scope->addBreadcrumb($breadcrumb);
+        $client = $this->getClient();
+
+        if (null !== $client) {
+            $client->addBreadcrumb($breadcrumb, $this->getScope());
+        }
     }
 }

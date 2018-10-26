@@ -23,6 +23,13 @@ use Sentry\State\Scope;
 
 final class HubTest extends TestCase
 {
+    public function testConstructorCreatesScopeAutomatically(): void
+    {
+        $hub = new Hub(null, null);
+
+        $this->assertNotNull($hub->getScope());
+    }
+
     public function testGetClient(): void
     {
         /** @var ClientInterface|MockObject $client */
@@ -35,7 +42,7 @@ final class HubTest extends TestCase
     public function testGetScope(): void
     {
         $scope = new Scope();
-        $hub = new Hub(null, $scope);
+        $hub = new Hub($this->createMock(ClientInterface::class), $scope);
 
         $this->assertSame($scope, $hub->getScope());
     }
@@ -45,11 +52,11 @@ final class HubTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $scope = new Scope();
-
         $hub = new Hub($client, $scope);
+
         $stack = $hub->getStack();
 
-        $this->assertNotEmpty($stack);
+        $this->assertCount(1, $stack);
         $this->assertSame($client, $stack[0]->getClient());
         $this->assertSame($scope, $stack[0]->getScope());
     }
@@ -58,13 +65,20 @@ final class HubTest extends TestCase
     {
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-        $scope1 = new Scope();
+        $scope = new Scope();
+        $hub = new Hub($client, $scope);
 
-        $hub = new Hub($client, $scope1);
-        $layer = $hub->getStackTop();
+        $stackTop = $hub->getStackTop();
 
-        $this->assertSame($client, $layer->getClient());
-        $this->assertSame($scope1, $layer->getScope());
+        $this->assertSame($client, $stackTop->getClient());
+        $this->assertSame($scope, $stackTop->getScope());
+
+        $scope = $hub->pushScope();
+
+        $stackTop = $hub->getStackTop();
+
+        $this->assertSame($client, $stackTop->getClient());
+        $this->assertSame($scope, $stackTop->getScope());
     }
 
     public function testGetLastEventId(): void
@@ -76,18 +90,15 @@ final class HubTest extends TestCase
             ->with('foo', [], ['level' => null])
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
-        $hub = new Hub();
+        $hub = new Hub($client);
 
         $this->assertNull($hub->getLastEventId());
-
-        $hub->bindClient($client);
-
         $this->assertEquals($hub->captureMessage('foo'), $hub->getLastEventId());
     }
 
     public function testPushScope(): void
     {
-        $hub = new Hub();
+        $hub = new Hub($this->createMock(ClientInterface::class));
 
         $this->assertCount(1, $hub->getStack());
 
@@ -104,7 +115,7 @@ final class HubTest extends TestCase
 
     public function testPopScope(): void
     {
-        $hub = new Hub();
+        $hub = new Hub($this->createMock(ClientInterface::class));
 
         $this->assertCount(1, $hub->getStack());
 
@@ -123,7 +134,7 @@ final class HubTest extends TestCase
     public function testWithScope(): void
     {
         $scope = new Scope();
-        $hub = new Hub(null, $scope);
+        $hub = new Hub($this->createMock(ClientInterface::class), $scope);
 
         $this->assertSame($scope, $hub->getScope());
 
@@ -151,20 +162,9 @@ final class HubTest extends TestCase
     {
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-        $scope = new Scope();
-        $hub = new Hub(null, $scope);
 
-        $this->assertSame($scope, $hub->getScope());
-
-        $callbackInvoked = false;
-
-        $hub->configureScope(function () use (&$callbackInvoked): void {
-            $callbackInvoked = true;
-        });
-
-        $this->assertFalse($callbackInvoked);
-
-        $hub->bindClient($client);
+        $hub = new Hub($client);
+        $scope = $hub->pushScope();
 
         $hub->configureScope(function (Scope $scopeArg) use ($scope, &$callbackInvoked): void {
             $this->assertSame($scope, $scopeArg);
@@ -178,64 +178,88 @@ final class HubTest extends TestCase
 
     public function testBindClient(): void
     {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
+        /** @var ClientInterface|MockObject $client1 */
+        $client1 = $this->createMock(ClientInterface::class);
+
+        /** @var ClientInterface|MockObject $client2 */
+        $client2 = $this->createMock(ClientInterface::class);
+
+        $hub = new Hub($client1);
+
+        $this->assertSame($client1, $hub->getClient());
+
+        $hub->bindClient($client2);
+
+        $this->assertSame($client2, $hub->getClient());
+    }
+
+    public function testCaptureMessageDoesNothingIfClientIsNotBinded()
+    {
         $hub = new Hub();
 
-        $this->assertNull($hub->getClient());
-
-        $hub->bindClient($client);
-
-        $this->assertNotNull($hub->getClient());
-        $this->assertSame($client, $hub->getClient());
+        $this->assertNull($hub->captureMessage('foo'));
     }
 
     public function testCaptureMessage(): void
     {
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-        $hub = new Hub();
-
-        $this->assertNull($hub->captureMessage('foo'));
-
-        $hub->bindClient($client);
-
         $client->expects($this->once())
             ->method('captureMessage')
             ->with('foo', [], ['level' => Severity::debug()])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
+        $hub = new Hub($client);
+
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureMessage('foo', Severity::debug()));
+    }
+
+    public function testCaptureExceptionDoesNothingIfClientIsNotBinded()
+    {
+        $hub = new Hub();
+
+        $this->assertNull($hub->captureException(new \RuntimeException()));
     }
 
     public function testCaptureException(): void
     {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $hub = new Hub();
-
         $exception = new \RuntimeException('foo');
 
-        $this->assertNull($hub->captureException($exception));
-
-        $hub->bindClient($client);
-
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureException')
             ->with($exception)
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
+        $hub = new Hub($client);
+
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureException($exception));
     }
 
-    public function testAddBreadcrumb(): void
+    public function testAddBreadcrumbDoesNothingIfClientIsNotBinded(): void
     {
-        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $scope = new Scope();
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $hub = new Hub(null, $scope);
         $hub->addBreadcrumb($breadcrumb);
 
-        $this->assertSame([$breadcrumb], $scope->getBreadcrumbs());
+        $this->assertEmpty($scope->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumb(): void
+    {
+        $scope = new Scope();
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('addBreadcrumb')
+            ->with($breadcrumb, $scope);
+
+        $hub = new Hub($client, $scope);
+        $hub->addBreadcrumb($breadcrumb);
     }
 }

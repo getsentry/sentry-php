@@ -67,25 +67,13 @@ final class Severity
      *
      * @param string $value The value this instance represents
      */
-    private function __construct(string $value = self::INFO)
+    public function __construct(string $value = self::INFO)
     {
         if (!\in_array($value, self::ALLOWED_SEVERITIES, true)) {
             throw new \InvalidArgumentException(sprintf('The "%s" is not a valid enum value.', $value));
         }
 
         $this->value = $value;
-    }
-
-    /**
-     * Creates a new instance of this class with the given severity value.
-     *
-     * @param string $severity The severity
-     *
-     * @return self
-     */
-    public static function fromString(string $severity): self
-    {
-        return new self($severity);
     }
 
     /**

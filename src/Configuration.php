@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
@@ -673,7 +675,7 @@ class Configuration
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
-            'before_breadcrumb' => function (Breadcrumb $breadcrumb) {
+            'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
                 return $breadcrumb;
             },
         ]);
@@ -704,6 +706,10 @@ class Configuration
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
+            if (empty($value)) {
+                return true;
+            }
+
             switch (strtolower($value)) {
                 case '':
                 case 'false':
@@ -741,6 +747,12 @@ class Configuration
         });
 
         $resolver->setNormalizer('dsn', function (Options $options, $value) {
+            if (empty($value)) {
+                $this->dsn = null;
+
+                return null;
+            }
+
             switch (strtolower($value)) {
                 case '':
                 case 'false':

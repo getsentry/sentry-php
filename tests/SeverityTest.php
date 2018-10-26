@@ -19,48 +19,12 @@ use Sentry\Severity;
 final class SeverityTest extends TestCase
 {
     /**
-     * @dataProvider fromStringDataProvider
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage The "foo" is not a valid enum value.
      */
-    public function testFromString(string $value, bool $isAllowed): void
+    public function testConstructorThrowsOnInvalidValue(): void
     {
-        if (!$isAllowed) {
-            $this->expectException(\InvalidArgumentException::class);
-            $this->expectExceptionMessage(sprintf('The "%s" is not a valid enum value.', $value));
-        }
-
-        $severity = Severity::fromString($value);
-
-        $this->assertSame($value, (string) $severity);
-    }
-
-    public function fromStringDataProvider(): array
-    {
-        return [
-            [
-                Severity::DEBUG,
-                true,
-            ],
-            [
-                Severity::INFO,
-                true,
-            ],
-            [
-                Severity::WARNING,
-                true,
-            ],
-            [
-                Severity::ERROR,
-                true,
-            ],
-            [
-                Severity::FATAL,
-                true,
-            ],
-            [
-                'foo',
-                false,
-            ],
-        ];
+        new Severity('foo');
     }
 
     public function testDebug(): void

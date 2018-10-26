@@ -55,7 +55,7 @@ final class ExceptionInterfaceMiddleware
         if (isset($payload['level'])) {
             $event->setLevel($payload['level']);
         } elseif ($exception instanceof \ErrorException) {
-            $event->setLevel(Severity::fromString($this->client->translateSeverity($exception->getSeverity())));
+            $event->setLevel(new Severity($this->client->translateSeverity($exception->getSeverity())));
         }
 
         if (null !== $exception) {

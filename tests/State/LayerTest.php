@@ -21,29 +21,26 @@ use Sentry\State\Scope;
 
 final class LayerTest extends TestCase
 {
-    public function testConstructor(): void
-    {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $scope = new Scope();
-
-        $layer = new Layer($client, $scope);
-
-        $this->assertSame($client, $layer->getClient());
-        $this->assertSame($scope, $layer->getScope());
-    }
-
     public function testGettersAndSetters(): void
     {
-        /** @var ClientInterface|MockObject $client */
-        $client = null;
-        $scope = new Scope();
+        /** @var ClientInterface|MockObject $client1 */
+        $client1 = $this->createMock(ClientInterface::class);
 
-        $layer = new Layer(null, new Scope());
-        $layer->setClient($client);
-        $layer->setScope($scope);
+        /** @var ClientInterface|MockObject $client2 */
+        $client2 = $this->createMock(ClientInterface::class);
 
-        $this->assertSame($client, $layer->getClient());
-        $this->assertSame($scope, $layer->getScope());
+        $scope1 = new Scope();
+        $scope2 = new Scope();
+
+        $layer = new Layer($client1, $scope1);
+
+        $this->assertSame($client1, $layer->getClient());
+        $this->assertSame($scope1, $layer->getScope());
+
+        $layer->setClient($client2);
+        $layer->setScope($scope2);
+
+        $this->assertSame($client2, $layer->getClient());
+        $this->assertSame($scope2, $layer->getScope());
     }
 }
