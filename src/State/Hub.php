@@ -175,7 +175,7 @@ final class Hub
      * @param string   $message The message
      * @param Severity $level   The severity level of the message
      *
-     * @return string
+     * @return null|string
      */
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
