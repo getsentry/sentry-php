@@ -5,52 +5,59 @@ namespace Sentry;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\State\Hub;
 
+/**
+ * Creates a new Client and Hub which will be set as current.
+ *
+ * @param array $options
+ */
 function init(array $options = []): void
 {
     Hub::setCurrent(new Hub(ClientBuilder::create($options)->getClient()));
 }
 
 /**
- * Capture a message and send it to Sentry.
+ * Captures a message event and sends it to Sentry.
  *
- * @param string $message
+ * @param string   $message The message
+ * @param Severity $level   The severity level of the message
  *
- * @return string
+ * @return null|string
  */
-function captureMessage(string $message): ?string
+function captureMessage(string $message, ?Severity $level = null): ?string
 {
-    return Hub::getCurrent()->captureMessage($message);
+    return Hub::getCurrent()->captureMessage($message, $level);
 }
 
 /**
- * Capture a \Throwable and send it to Sentry.
+ * Captures an exception event and sends it to Sentry.
  *
- * @param \Throwable $exception
+ * @param \Throwable $exception The exception
  *
- * @return string
+ * @return null|string
  */
-function captureException($exception): ?string
+function captureException(\Throwable $exception): ?string
 {
     return Hub::getCurrent()->captureException($exception);
 }
 
-// TODO
-///**
-// * Captures and event and send it to Sentry.
-// *
-// * @param Event $event
-// *
-// * @return null|string
-// */
-//function captureEvent(Event $event): ?string
-//{
-//    return Hub::getCurrent()->captureEvent($event);
-//}
+/**
+ * Captures a new event using the provided data.
+ *
+ * @param array $payload The data of the event being captured
+ *
+ * @return null|string
+ */
+function captureEvent(array $payload): ?string
+{
+    return Hub::getCurrent()->captureEvent($payload);
+}
 
 /**
- * Add a breadcrumb which will be send with the next event.
+ * Records a new breadcrumb which will be attached to future events. They
+ * will be added to subsequent events to provide more context on user's
+ * actions prior to an error or crash.
  *
- * @param Breadcrumb $breadcrumb
+ * @param Breadcrumb $breadcrumb The breadcrumb to record
  */
 function addBreadcrumb(Breadcrumb $breadcrumb): void
 {
@@ -58,21 +65,23 @@ function addBreadcrumb(Breadcrumb $breadcrumb): void
 }
 
 /**
- * Configure the current scope to send context information with the event.
+ * Calls the given callback passing to it the current scope so that any
+ * operation can be run within its context.
  *
- * @param \Closure $callback
+ * @param callable $callback The callback to be executed
  */
-function configureScope(\Closure $callback): void
+function configureScope(callable $callback): void
 {
     Hub::getCurrent()->configureScope($callback);
 }
 
 /**
- * Pushes and Pops a Scope. Use this to have an isolated state before sending a event.
+ * Creates a new scope with and executes the given operation within. The scope
+ * is automatically removed once the operation finishes or throws.
  *
- * @param \Closure $callback
+ * @param callable $callback The callback to be executed
  */
-function withScope(\Closure $callback): void
+function withScope(callable $callback): void
 {
     Hub::getCurrent()->withScope($callback);
 }

@@ -214,6 +214,24 @@ final class Hub
     }
 
     /**
+     * Captures a new event using the provided data.
+     *
+     * @param array $payload The data of the event being captured
+     *
+     * @return null|string
+     */
+    public function captureEvent(array $payload): ?string
+    {
+        $client = $this->getClient();
+
+        if (null !== $client) {
+            return $this->lastEventId = $client->capture($payload);
+        }
+
+        return null;
+    }
+
+    /**
      * Records a new breadcrumb which will be attached to future events. They
      * will be added to subsequent events to provide more context on user's
      * actions prior to an error or crash.
