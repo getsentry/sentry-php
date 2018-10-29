@@ -36,7 +36,7 @@ final class Hub
      *
      * @var Hub
      */
-    public static $currentHub;
+    private static $currentHub;
 
     /**
      * Hub constructor.

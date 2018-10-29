@@ -53,7 +53,6 @@
         }
     },
     "autoload-dev": {
-        "files": ["src/Sdk.php"],
         "psr-4": {
             "Sentry\\Tests\\": "tests/"
         }
