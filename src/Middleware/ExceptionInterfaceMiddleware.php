@@ -14,6 +14,7 @@ namespace Sentry\Middleware;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Severity;
 use Sentry\Stacktrace;
 
 /**
@@ -54,7 +55,7 @@ final class ExceptionInterfaceMiddleware
         if (isset($payload['level'])) {
             $event->setLevel($payload['level']);
         } elseif ($exception instanceof \ErrorException) {
-            $event->setLevel($this->client->translateSeverity($exception->getSeverity()));
+            $event->setLevel(new Severity($this->client->translateSeverity($exception->getSeverity())));
         }
 
         if (null !== $exception) {

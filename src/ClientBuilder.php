@@ -26,7 +26,6 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\Context\Context;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Middleware\BreadcrumbInterfaceMiddleware;
 use Sentry\Middleware\ContextInterfaceMiddleware;
 use Sentry\Middleware\ExceptionInterfaceMiddleware;
 use Sentry\Middleware\MessageInterfaceMiddleware;
@@ -261,7 +260,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $client->addMiddleware(new ContextInterfaceMiddleware($client->getExtraContext(), Context::CONTEXT_EXTRA));
         $client->addMiddleware(new ContextInterfaceMiddleware($client->getRuntimeContext(), Context::CONTEXT_RUNTIME));
         $client->addMiddleware(new ContextInterfaceMiddleware($client->getServerOsContext(), Context::CONTEXT_SERVER_OS));
-        $client->addMiddleware(new BreadcrumbInterfaceMiddleware($client->getBreadcrumbsRecorder()));
         $client->addMiddleware(new ExceptionInterfaceMiddleware($client));
 
         foreach ($this->middlewares as $middleware) {

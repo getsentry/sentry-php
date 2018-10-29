@@ -22,7 +22,7 @@ class BreadcrumbTest extends TestCase
 {
     /**
      * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.
+     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
      */
     public function testConstructorThrowsOnInvalidLevel()
     {
@@ -31,7 +31,7 @@ class BreadcrumbTest extends TestCase
 
     /**
      * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.
+     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
      */
     public function testSetLevelThrowsOnInvalidLevel()
     {

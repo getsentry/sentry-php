@@ -6,8 +6,6 @@ event is passed through the middleware chain before being sent to the server and
 each middleware can edit the data to add, change or remove information. There are
 several built-in middlewares whose list is:
 
-- ``BreadcrumbInterfaceMiddleware``: adds all the recorded breadcrumbs up to the
-  point the event was generated.
 - ``ContextInterfaceMiddleware``: adds the data stored in the contexts to the
   event.
 - ``ExceptionInterfaceMiddleware``: fetches the stacktrace for the captured event
@@ -109,7 +107,6 @@ have the following priorities:
   the runtime context)
 - ``ContextInterfaceMiddleware``: 0 (this middleware fills the information about
   the server OS context)
-- ``BreadcrumbInterfaceMiddleware``: 0
 - ``ExceptionInterfaceMiddleware``: 0
 - ``ModulesMiddleware``: 0 (this middleware is not enabled by default)
 

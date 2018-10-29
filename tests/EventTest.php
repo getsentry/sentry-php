@@ -16,6 +16,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Event;
+use Sentry\Severity;
 use Sentry\Util\PHPVersion;
 
 /**
@@ -147,8 +148,8 @@ class EventTest extends TestCase
     public function testToArrayWithBreadcrumbs()
     {
         $breadcrumbs = [
-            new Breadcrumb(Client::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'foo'),
-            new Breadcrumb(Client::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
+            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'foo'),
+            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
         ];
 
         $event = new Event($this->configuration);
@@ -211,14 +212,14 @@ class EventTest extends TestCase
         $event = new Event($this->configuration);
         $event->$setterMethod($propertyValue);
 
-        $this->assertSame($event->$getterMethod(), $propertyValue);
+        $this->assertEquals($event->$getterMethod(), $propertyValue);
         $this->assertArraySubset($expectedValue, $event->toArray());
     }
 
     public function gettersAndSettersDataProvider()
     {
         return [
-            ['level', 'info', ['level' => 'info']],
+            ['level', Severity::info(), ['level' => Severity::info()]],
             ['logger', 'ruby', ['logger' => 'ruby']],
             ['transaction', 'foo', ['transaction' => 'foo']],
             ['serverName', 'local.host', ['server_name' => 'local.host']],

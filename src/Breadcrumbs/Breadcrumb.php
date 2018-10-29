@@ -11,7 +11,6 @@
 
 namespace Sentry\Breadcrumbs;
 
-use Sentry\Client;
 use Sentry\Exception\InvalidArgumentException;
 
 /**
@@ -24,22 +23,59 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * This constant defines the http breadcrumb type.
      */
-    const TYPE_HTTP = 'http';
+    public const TYPE_HTTP = 'http';
 
     /**
      * This constant defines the user breadcrumb type.
      */
-    const TYPE_USER = 'user';
+    public const TYPE_USER = 'user';
 
     /**
      * This constant defines the navigation breadcrumb type.
      */
-    const TYPE_NAVIGATION = 'navigation';
+    public const TYPE_NAVIGATION = 'navigation';
 
     /**
      * This constant defines the error breadcrumb type.
      */
-    const TYPE_ERROR = 'error';
+    public const TYPE_ERROR = 'error';
+
+    /**
+     * This constant defines the debug level for a breadcrumb.
+     */
+    public const LEVEL_DEBUG = 'debug';
+
+    /**
+     * This constant defines the info level for a breadcrumb.
+     */
+    public const LEVEL_INFO = 'info';
+
+    /**
+     * This constant defines the warning level for a breadcrumb.
+     */
+    public const LEVEL_WARNING = 'warning';
+
+    /**
+     * This constant defines the error level for a breadcrumb.
+     */
+    public const LEVEL_ERROR = 'error';
+
+    /**
+     * This constant defines the critical level for a breadcrumb.
+     */
+    public const LEVEL_CRITICAL = 'critical';
+
+    /**
+     * This constant defines the list of values allowed to be set as severity
+     * level of the breadcrumb.
+     */
+    private const ALLOWED_LEVELS = [
+        self::LEVEL_DEBUG,
+        self::LEVEL_INFO,
+        self::LEVEL_WARNING,
+        self::LEVEL_ERROR,
+        self::LEVEL_CRITICAL,
+    ];
 
     /**
      * @var string The category of the breadcrumb
@@ -82,8 +118,8 @@ final class Breadcrumb implements \JsonSerializable
      */
     public function __construct($level, $type, $category, $message = null, array $metadata = [])
     {
-        if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
+        if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
+            throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
         }
 
         $this->type = $type;
@@ -158,8 +194,8 @@ final class Breadcrumb implements \JsonSerializable
      */
     public function withLevel($level)
     {
-        if (!\in_array($level, self::getLevels(), true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Sentry\Client::LEVEL_* constants.');
+        if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
+            throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
         }
 
         if ($level === $this->level) {
@@ -334,21 +370,5 @@ final class Breadcrumb implements \JsonSerializable
     public function jsonSerialize()
     {
         return $this->toArray();
-    }
-
-    /**
-     * Gets the list of allowed breadcrumb error levels.
-     *
-     * @return string[]
-     */
-    private static function getLevels()
-    {
-        return [
-            Client::LEVEL_DEBUG,
-            Client::LEVEL_INFO,
-            Client::LEVEL_WARNING,
-            Client::LEVEL_ERROR,
-            Client::LEVEL_FATAL,
-        ];
     }
 }

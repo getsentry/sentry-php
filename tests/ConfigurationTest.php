@@ -65,6 +65,8 @@ class ConfigurationTest extends TestCase
             ['server_name', 'foo', 'getServerName', 'setServerName'],
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
+            ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
+            ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
         ];
     }
 

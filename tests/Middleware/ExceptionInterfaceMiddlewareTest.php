@@ -28,7 +28,6 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $assertHasStacktrace = $client->getConfig()->getAutoLogStacks();
 
         $event = new Event($client->getConfig());
-
         $middleware = new ExceptionInterfaceMiddleware($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, $exception, $payload);

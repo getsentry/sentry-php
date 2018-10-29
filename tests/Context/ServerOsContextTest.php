@@ -11,77 +11,14 @@
 
 namespace Sentry\Tests\Context;
 
-use PHPUnit\Framework\TestCase;
+use Sentry\Context\Context;
 use Sentry\Context\ServerOsContext;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 
-class ServerOsContextTest extends TestCase
+class ServerOsContextTest extends AbstractContextTest
 {
-    /**
-     * @dataProvider valuesDataProvider
-     */
-    public function testConstructor($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
-    {
-        if (null !== $expectedExceptionClass) {
-            $this->expectException($expectedExceptionClass);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        }
-
-        $context = new ServerOsContext($initialData);
-
-        $this->assertEquals($expectedData, $context->toArray());
-    }
-
-    /**
-     * @dataProvider valuesDataProvider
-     */
-    public function testMerge($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
-    {
-        if (null !== $expectedExceptionClass) {
-            $this->expectException($expectedExceptionClass);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        }
-
-        $context = new ServerOsContext();
-        $context->merge($initialData);
-
-        $this->assertEquals($expectedData, $context->toArray());
-    }
-
-    /**
-     * @dataProvider valuesDataProvider
-     */
-    public function testSetData($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
-    {
-        if (null !== $expectedExceptionClass) {
-            $this->expectException($expectedExceptionClass);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        }
-
-        $context = new ServerOsContext();
-        $context->setData($initialData);
-
-        $this->assertEquals($expectedData, $context->toArray());
-    }
-
-    /**
-     * @dataProvider valuesDataProvider
-     */
-    public function testReplaceData($initialData, $expectedData, $expectedExceptionClass, $expectedExceptionMessage)
-    {
-        if (null !== $expectedExceptionClass) {
-            $this->expectException($expectedExceptionClass);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        }
-
-        $context = new ServerOsContext();
-        $context->replaceData($initialData);
-
-        $this->assertEquals($expectedData, $context->toArray());
-    }
-
-    public function valuesDataProvider()
+    public function valuesDataProvider(): array
     {
         return [
             [
@@ -190,23 +127,7 @@ class ServerOsContextTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider offsetSetDataProvider
-     */
-    public function testOffsetSet($key, $value, $expectedExceptionClass, $expectedExceptionMessage)
-    {
-        if (null !== $expectedExceptionClass) {
-            $this->expectException($expectedExceptionClass);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        }
-
-        $context = new ServerOsContext();
-        $context[$key] = $value;
-
-        $this->assertArraySubset([$key => $value], $context->toArray());
-    }
-
-    public function offsetSetDataProvider()
+    public function offsetSetDataProvider(): array
     {
         return [
             [
@@ -266,18 +187,7 @@ class ServerOsContextTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider gettersAndSettersDataProvider
-     */
-    public function testGettersAndSetters($getterMethod, $setterMethod, $value)
-    {
-        $context = new ServerOsContext();
-        $context->$setterMethod($value);
-
-        $this->assertEquals($value, $context->$getterMethod());
-    }
-
-    public function gettersAndSettersDataProvider()
+    public function gettersAndSettersDataProvider(): array
     {
         return [
             [
@@ -301,5 +211,10 @@ class ServerOsContextTest extends TestCase
                 'foobarbaz',
             ],
         ];
+    }
+
+    protected function createContext(array $initialData = []): Context
+    {
+        return new ServerOsContext($initialData);
     }
 }

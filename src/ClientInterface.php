@@ -12,11 +12,11 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Breadcrumbs\Recorder as BreadcrumbRecorder;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
+use Sentry\State\Scope;
 
 /**
  * This interface must be implemented by all Raven client classes.
@@ -57,23 +57,12 @@ interface ClientInterface
     public function removeMiddleware(callable $middleware);
 
     /**
-     * Gets the breadcrumbs recorder.
-     *
-     * @return BreadcrumbRecorder
-     */
-    public function getBreadcrumbsRecorder();
-
-    /**
      * Records the given breadcrumb.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb instance
+     * @param Scope|null $scope      an optional scope to store this breadcrumb in
      */
-    public function leaveBreadcrumb(Breadcrumb $breadcrumb);
-
-    /**
-     * Clears all recorded breadcrumbs.
-     */
-    public function clearBreadcrumbs();
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null);
 
     /**
      * Logs a message.
@@ -84,17 +73,17 @@ interface ClientInterface
      *
      * @return string
      */
-    public function captureMessage($message, array $params = [], array $payload = []);
+    public function captureMessage(string $message, array $params = [], array $payload = []);
 
     /**
      * Logs an exception.
      *
-     * @param \Throwable|\Exception $exception The exception object
-     * @param array                 $payload   Additional attributes to pass with this event
+     * @param \Throwable $exception The exception object
+     * @param array      $payload   Additional attributes to pass with this event
      *
      * @return string
      */
-    public function captureException($exception, array $payload = []);
+    public function captureException(\Throwable $exception, array $payload = []);
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).

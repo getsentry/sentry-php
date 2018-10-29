@@ -18,7 +18,7 @@ use Sentry\Event;
 
 abstract class MiddlewareTestCase extends TestCase
 {
-    protected function assertMiddlewareInvokesNext(callable $middleware, Event $event = null, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = [])
+    protected function assertMiddlewareInvokesNext(callable $middleware, Event $event = null, ServerRequestInterface $request = null, \Exception $exception = null, array $payload = []): Event
     {
         $callbackInvoked = false;
         $callback = function (Event $passedEvent, ServerRequestInterface $passedRequest = null, $passedException = null) use (&$callbackInvoked) {

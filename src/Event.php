@@ -37,7 +37,7 @@ final class Event implements \JsonSerializable
     private $timestamp;
 
     /**
-     * @var string The severity of this event
+     * @var Severity The severity of this event
      */
     private $level;
 
@@ -140,7 +140,7 @@ final class Event implements \JsonSerializable
     {
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
-        $this->level = Client::LEVEL_ERROR;
+        $this->level = Severity::error();
         $this->serverName = $config->getServerName();
         $this->release = $config->getRelease();
         $this->environment = $config->getCurrentEnvironment();
@@ -174,9 +174,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the severity of this event.
      *
-     * @return string
+     * @return Severity
      */
-    public function getLevel()
+    public function getLevel(): Severity
     {
         return $this->level;
     }
@@ -184,9 +184,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the severity of this event.
      *
-     * @param string $level The severity
+     * @param Severity $level The severity
      */
-    public function setLevel($level)
+    public function setLevel(Severity $level)
     {
         $this->level = $level;
     }
@@ -507,7 +507,7 @@ final class Event implements \JsonSerializable
         $data = [
             'event_id' => str_replace('-', '', $this->id->toString()),
             'timestamp' => $this->timestamp,
-            'level' => $this->level,
+            'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
                 'name' => 'sentry-php',
