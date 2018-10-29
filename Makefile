@@ -21,7 +21,7 @@ phpstan:
 	vendor/bin/phpstan analyse
 
 test: cs-fix phpstan
-	vendor/bin/phpunit
+	vendor/bin/phpunit --verbose
 
 setup-git:
 	git config branch.autosetuprebase always

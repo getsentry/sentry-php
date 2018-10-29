@@ -121,5 +121,5 @@ interface ClientBuilderInterface
      *
      * @return ClientInterface
      */
-    public function getClient();
+    public function getClient(): ClientInterface;
 }

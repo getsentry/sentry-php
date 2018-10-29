@@ -34,6 +34,13 @@ final class Hub
     /**
      * Constructor.
      *
+     * @var Hub
+     */
+    private static $currentHub;
+
+    /**
+     * Hub constructor.
+     *
      * @param ClientInterface|null $client The client bound to the hub
      * @param Scope|null           $scope  The scope bound to the hub
      */
@@ -207,6 +214,24 @@ final class Hub
     }
 
     /**
+     * Captures a new event using the provided data.
+     *
+     * @param array $payload The data of the event being captured
+     *
+     * @return null|string
+     */
+    public function captureEvent(array $payload): ?string
+    {
+        $client = $this->getClient();
+
+        if (null !== $client) {
+            return $this->lastEventId = $client->capture($payload);
+        }
+
+        return null;
+    }
+
+    /**
      * Records a new breadcrumb which will be attached to future events. They
      * will be added to subsequent events to provide more context on user's
      * actions prior to an error or crash.
@@ -220,5 +245,33 @@ final class Hub
         if (null !== $client) {
             $client->addBreadcrumb($breadcrumb, $this->getScope());
         }
+    }
+
+    /**
+     * Returns the current global Hub.
+     *
+     * @return Hub
+     */
+    public static function getCurrent(): self
+    {
+        if (null === self::$currentHub) {
+            self::$currentHub = new self();
+        }
+
+        return self::$currentHub;
+    }
+
+    /**
+     * Sets the Hub as the current.
+     *
+     * @param self $hub
+     *
+     * @return Hub
+     */
+    public static function setCurrent(self $hub): self
+    {
+        self::$currentHub = $hub;
+
+        return $hub;
     }
 }
