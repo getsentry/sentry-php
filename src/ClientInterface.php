@@ -28,7 +28,58 @@ interface ClientInterface
      *
      * @return Options
      */
-    public function getOptions();
+    public function getOptions(): Options;
+
+    /**
+     * Records the given breadcrumb.
+     *
+     * @param Breadcrumb $breadcrumb The breadcrumb instance
+     * @param Scope|null $scope      An optional scope to store this breadcrumb in
+     */
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void;
+
+    /**
+     * Logs a message.
+     *
+     * @param string     $message The message (primary description) for the event
+     * @param Severity   $level   The level of the message to be sent
+     * @param Scope|null $scope   An optional scope keeping the state
+     *
+     * @return null|string
+     */
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string;
+
+    /**
+     * Logs an exception.
+     *
+     * @param \Throwable $exception The exception object
+     * @param Scope|null $scope     An optional scope keeping the state
+     *
+     * @return null|string
+     */
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string;
+
+    /**
+     * Captures a new event using the provided data.
+     *
+     * @param array      $payload The data of the event being captured
+     * @param Scope|null $scope   An optional scope keeping the state
+     *
+     * @return null|string
+     */
+    public function captureEvent(array $payload, ?Scope $scope = null): ?string;
+
+    /**
+     * Sends the given event to the Sentry server.
+     *
+     * @param Event $event The event to send
+     *
+     * @return null|string
+     */
+    public function send(Event $event): ?string;
+
+    // TODO -------------------------------------------------------------------------
+    // These functions shouldn't probably not live on the client
 
     /**
      * Gets the transaction stack.
@@ -53,51 +104,6 @@ interface ClientInterface
      * @param callable $middleware The middleware instance
      */
     public function removeMiddleware(callable $middleware);
-
-    /**
-     * Records the given breadcrumb.
-     *
-     * @param Breadcrumb $breadcrumb The breadcrumb instance
-     * @param Scope|null $scope      an optional scope to store this breadcrumb in
-     */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null);
-
-    /**
-     * Logs a message.
-     *
-     * @param string $message The message (primary description) for the event
-     * @param array  $params  Params to use when formatting the message
-     * @param array  $payload Additional attributes to pass with this event
-     *
-     * @return string
-     */
-    public function captureMessage(string $message, array $params = [], array $payload = []);
-
-    /**
-     * Logs an exception.
-     *
-     * @param \Throwable $exception The exception object
-     * @param array      $payload   Additional attributes to pass with this event
-     *
-     * @return string
-     */
-    public function captureException(\Throwable $exception, array $payload = []);
-
-    /**
-     * Captures a new event using the provided data.
-     *
-     * @param array $payload The data of the event being captured
-     *
-     * @return string
-     */
-    public function captureEvent(array $payload);
-
-    /**
-     * Sends the given event to the Sentry server.
-     *
-     * @param Event $event The event to send
-     */
-    public function send(Event $event);
 
     /**
      * Translate a PHP Error constant into a Sentry log level group.

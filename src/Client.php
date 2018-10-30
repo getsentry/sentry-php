@@ -107,14 +107,9 @@ class Client implements ClientInterface
     private $middlewareStack;
 
     /**
-     * @var Event The last event that was captured
-     */
-    private $lastEvent;
-
-    /**
      * Constructor.
      *
-     * @param Options            $options    The client configuration
+     * @param Options            $options   The client configuration
      * @param TransportInterface $transport The transport
      */
     public function __construct(Options $options, TransportInterface $transport)
@@ -145,7 +140,15 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null)
+    public function getOptions(): Options
+    {
+        return $this->options;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void
     {
         $beforeBreadcrumbCallback = $this->options->getBeforeBreadcrumbCallback();
         $maxBreadcrumbs = $this->options->getMaxBreadcrumbs();
@@ -162,12 +165,93 @@ class Client implements ClientInterface
     }
 
     /**
+     * Assembles an event and prepares it to be sent of to Sentry.
+     *
+     * @param array      $payload
+     * @param null|Scope $scope
+     *
+     * @return null|Event
+     */
+    protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    {
+        $event = new Event();
+
+        $event->setServerName($this->getOptions()->getServerName());
+        $event->setRelease($this->getOptions()->getRelease());
+        $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
+
+        if (isset($payload['transaction'])) {
+            $event->setTransaction($payload['transaction']);
+        } else {
+            $event->setTransaction($this->transactionStack->peek());
+        }
+
+        if (isset($payload['logger'])) {
+            $event->setLogger($payload['logger']);
+        }
+
+        // TODO these should be integrations -> eventprocessors on the scope
+        $event = $this->middlewareStack->executeStack(
+            $event,
+            isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
+            isset($payload['exception']) ? $payload['exception'] : null,
+            $payload
+        );
+
+        if (null !== $scope) {
+            $event = $scope->applyToEvent($event);
+        }
+
+        return $event;
+    }
+
+    /**
      * {@inheritdoc}
      */
-    public function getOptions()
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
-        return $this->options;
+        $payload['message'] = $message;
+
+        return $this->captureEvent($payload);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
+    {
+        $payload['exception'] = $exception;
+
+        return $this->captureEvent($payload);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function captureEvent(array $payload, ?Scope $scope = null): ?string
+    {
+        if ($event = $this->prepareEvent($payload, $scope)) {
+            return $this->send($event);
+        }
+
+        return $event;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function send(Event $event): ?string
+    {
+        // TODO move this into an integration
+//        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
+//            return;
+//        }
+
+        return $this->transport->send($event);
+    }
+
+    // TODO -------------------------------------------------------------------------
+    // These functions shouldn't probably not live on the client
 
     /**
      * {@inheritdoc}
@@ -232,75 +316,6 @@ class Client implements ClientInterface
     public function setSerializer(Serializer $serializer)
     {
         $this->serializer = $serializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function captureMessage(string $message, array $params = [], array $payload = [])
-    {
-        $payload['message'] = $message;
-        $payload['message_params'] = $params;
-
-        return $this->captureEvent($payload);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function captureException(\Throwable $exception, array $payload = [])
-    {
-        $payload['exception'] = $exception;
-
-        return $this->captureEvent($payload);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function captureEvent(array $payload)
-    {
-        $event = new Event($this->options);
-
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
-        } else {
-            $event->setTransaction($this->transactionStack->peek());
-        }
-
-        if (isset($payload['logger'])) {
-            $event->setLogger($payload['logger']);
-        }
-
-        $event = $this->middlewareStack->executeStack(
-            $event,
-            isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
-            isset($payload['exception']) ? $payload['exception'] : null,
-            $payload
-        );
-
-        $this->send($event);
-
-        $this->lastEvent = $event;
-
-        return str_replace('-', '', $event->getId()->toString());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Event $event)
-    {
-        if (!$this->options->shouldCapture($event)) {
-            return;
-        }
-
-        // should this event be sampled?
-        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
-            return;
-        }
-
-        $this->transport->send($event);
     }
 
     /**

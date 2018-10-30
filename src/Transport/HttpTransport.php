@@ -81,7 +81,7 @@ final class HttpTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event)
+    public function send(Event $event): ?string
     {
         $request = $this->requestFactory->createRequest(
             'POST',
@@ -113,7 +113,7 @@ final class HttpTransport implements TransportInterface
 
         $this->pendingRequests[] = $promise;
 
-        return true;
+        return $event->getId();
     }
 
     /**

@@ -18,6 +18,7 @@ use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
+use Sentry\Context\UserContext;
 
 /**
  * This is the base class for classes containing event data.
@@ -132,21 +133,21 @@ final class Event implements \JsonSerializable
     private $stacktrace;
 
     /**
-     * Class constructor.
-     *
-     * @param Options $config The client configuration
+     * Event constructor.
      */
-    public function __construct(Options $config)
+    public function __construct()
     {
-        $this->id = Uuid::uuid4();
+        try {
+            $this->id = Uuid::uuid4();
+        } catch (\Exception $e) {
+            // TODO: This happens when Uuid::uuid4 has issues, fallback to something else?
+        }
+
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
-        $this->serverName = $config->getServerName();
-        $this->release = $config->getRelease();
-        $this->environment = $config->getCurrentEnvironment();
         $this->serverOsContext = new ServerOsContext();
         $this->runtimeContext = new RuntimeContext();
-        $this->userContext = new Context();
+        $this->userContext = new UserContext();
         $this->extraContext = new Context();
         $this->tagsContext = new TagsContext();
     }
@@ -154,11 +155,11 @@ final class Event implements \JsonSerializable
     /**
      * Gets the UUID of this event.
      *
-     * @return UuidInterface
+     * @return string
      */
     public function getId()
     {
-        return $this->id;
+        return str_replace('-', '', $this->id->toString());
     }
 
     /**

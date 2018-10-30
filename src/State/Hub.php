@@ -189,7 +189,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureMessage($message, [], ['level' => $level]);
+            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope());
         }
 
         return null;
@@ -207,7 +207,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureException($exception);
+            return $this->lastEventId = $client->captureException($exception, $this->getScope());
         }
 
         return null;
@@ -225,7 +225,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureEvent($payload);
+            return $this->lastEventId = $client->captureEvent($payload, $this->getScope());
         }
 
         return null;

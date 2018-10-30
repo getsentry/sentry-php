@@ -23,8 +23,8 @@ class NullTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event)
+    public function send(Event $event): ?string
     {
-        return true;
+        return $event->getId();
     }
 }

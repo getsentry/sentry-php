@@ -104,11 +104,10 @@ class ClientTest extends TestCase
             ->method('captureEvent')
             ->with([
                 'message' => 'foo',
-                'message_params' => ['bar'],
-                'foo' => 'bar',
+                'level' => Severity::fatal(),
             ]);
 
-        $client->captureMessage('foo', ['bar'], ['foo' => 'bar']);
+        $client->captureMessage('foo', Severity::fatal());
     }
 
     public function testCaptureException()
@@ -125,10 +124,9 @@ class ClientTest extends TestCase
             ->method('captureEvent')
             ->with([
                 'exception' => $exception,
-                'foo' => 'bar',
             ]);
 
-        $client->captureException(new \Exception(), ['foo' => 'bar']);
+        $client->captureException(new \Exception());
     }
 
     public function testCapture()

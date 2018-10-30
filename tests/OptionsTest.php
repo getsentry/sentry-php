@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Options;
 
-class ConfigurationTest extends TestCase
+class OptionsTest extends TestCase
 {
     /**
      * @dataProvider optionsDataProvider
@@ -225,7 +225,7 @@ class ConfigurationTest extends TestCase
 
         $this->assertTrue($configuration->shouldCapture());
 
-        $this->assertFalse($configuration->shouldCapture(new Event($configuration)));
+        $this->assertFalse($configuration->shouldCapture(new Event()));
     }
 
     /**

@@ -40,7 +40,7 @@ class HttpTransportTest extends TestCase
         $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event($config));
+        $transport->send(new Event());
 
         // In PHP calling the destructor manually does not destroy the object,
         // but for testing we will do it anyway because otherwise we could not
@@ -73,8 +73,8 @@ class HttpTransportTest extends TestCase
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
 
-        $transport->send(new Event($config));
-        $transport->send(new Event($config));
+        $transport->send(new Event());
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
@@ -87,7 +87,7 @@ class HttpTransportTest extends TestCase
     public function testSendWithoutCompressedEncoding()
     {
         $config = new Options(['encoding' => 'json']);
-        $event = new Event($config);
+        $event = new Event();
 
         $promise = $this->createMock(Promise::class);
         $promise->expects($this->once())
@@ -117,7 +117,7 @@ class HttpTransportTest extends TestCase
     public function testSendWithCompressedEncoding()
     {
         $config = new Options(['encoding' => 'gzip']);
-        $event = new Event($config);
+        $event = new Event();
 
         $promise = $this->createMock(Promise::class);
         $promise->expects($this->once())
@@ -164,7 +164,7 @@ class HttpTransportTest extends TestCase
         $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event($config));
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
         $this->assertSame($exception, $promise->wait(true));

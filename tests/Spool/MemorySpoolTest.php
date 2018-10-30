@@ -13,7 +13,6 @@ namespace Sentry\Tests\Spool;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Sentry\Options;
 use Sentry\Spool\MemorySpool;
 use Sentry\Transport\TransportInterface;
 
@@ -33,15 +32,15 @@ class MemorySpoolTest extends TestCase
     {
         $this->assertAttributeEmpty('events', $this->spool);
 
-        $this->spool->queueEvent(new Event(new Options()));
+        $this->spool->queueEvent(new Event());
 
         $this->assertAttributeNotEmpty('events', $this->spool);
     }
 
     public function testFlushQueue()
     {
-        $event1 = new Event(new Options());
-        $event2 = new Event(new Options());
+        $event1 = new Event();
+        $event2 = new Event();
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
