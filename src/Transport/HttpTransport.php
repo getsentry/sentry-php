@@ -17,7 +17,6 @@ use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Sentry\Configuration;
 use Sentry\Event;
-use Sentry\HttpClient\Encoding\Base64EncodingStream;
 use Sentry\Util\JSON;
 
 /**
@@ -93,9 +92,7 @@ final class HttpTransport implements TransportInterface
 
         if ($this->isEncodingCompressed()) {
             $request = $request->withBody(
-                new Base64EncodingStream(
-                    new CompressStream($request->getBody())
-                )
+                new CompressStream($request->getBody())
             );
         }
 

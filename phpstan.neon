@@ -4,7 +4,6 @@ parameters:
         - src
         - tests
     ignoreErrors:
-        - '/Constructor of class Sentry\\HttpClient\\Encoding\\Base64EncodingStream has an unused parameter \$(readFilterOptions|writeFilterOptions)/'
         - '/Call to an undefined method Sentry\\ClientBuilder::methodThatDoesNotExists\(\)/'
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
