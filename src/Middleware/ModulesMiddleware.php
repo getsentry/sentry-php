@@ -18,7 +18,7 @@ use Sentry\Options;
 final class ModulesMiddleware
 {
     /**
-     * @var Options The Raven client configuration
+     * @var Options The client option
      */
     private $config;
 

@@ -24,7 +24,7 @@ use Sentry\State\Scope;
 interface ClientInterface
 {
     /**
-     * Gets the configuration of the client.
+     * Returns the options of the client.
      *
      * @return Options
      */

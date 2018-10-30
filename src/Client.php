@@ -77,9 +77,9 @@ class Client implements ClientInterface
     private $representationSerializer;
 
     /**
-     * @var Options The client configuration
+     * @var Options The client options
      */
-    private $config;
+    private $options;
 
     /**
      * @var TransactionStack The transaction stack
@@ -114,18 +114,18 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options            $config    The client configuration
+     * @param Options            $options    The client configuration
      * @param TransportInterface $transport The transport
      */
-    public function __construct(Options $config, TransportInterface $transport)
+    public function __construct(Options $options, TransportInterface $transport)
     {
-        $this->config = $config;
+        $this->options = $options;
         $this->transport = $transport;
         $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new ServerOsContext();
         $this->transactionStack = new TransactionStack();
-        $this->serializer = new Serializer($this->config->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->config->getMbDetectOrder());
+        $this->serializer = new Serializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
         $this->middlewareStack = new MiddlewareStack(function (Event $event) {
             return $event;
         });
@@ -137,7 +137,7 @@ class Client implements ClientInterface
             $this->transactionStack->push($serverParams['PATH_INFO']);
         }
 
-        if ($this->config->getSerializeAllObjects()) {
+        if ($this->options->getSerializeAllObjects()) {
             $this->setAllObjectSerialize(true);
         }
     }
@@ -147,8 +147,8 @@ class Client implements ClientInterface
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null)
     {
-        $beforeBreadcrumbCallback = $this->config->getBeforeBreadcrumbCallback();
-        $maxBreadcrumbs = $this->config->getMaxBreadcrumbs();
+        $beforeBreadcrumbCallback = $this->options->getBeforeBreadcrumbCallback();
+        $maxBreadcrumbs = $this->options->getMaxBreadcrumbs();
 
         if ($maxBreadcrumbs <= 0) {
             return;
@@ -166,7 +166,7 @@ class Client implements ClientInterface
      */
     public function getOptions()
     {
-        return $this->config;
+        return $this->options;
     }
 
     /**
@@ -260,7 +260,7 @@ class Client implements ClientInterface
      */
     public function captureEvent(array $payload)
     {
-        $event = new Event($this->config);
+        $event = new Event($this->options);
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
@@ -291,12 +291,12 @@ class Client implements ClientInterface
      */
     public function send(Event $event)
     {
-        if (!$this->config->shouldCapture($event)) {
+        if (!$this->options->shouldCapture($event)) {
             return;
         }
 
         // should this event be sampled?
-        if (mt_rand(1, 100) / 100.0 > $this->config->getSampleRate()) {
+        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
             return;
         }
 

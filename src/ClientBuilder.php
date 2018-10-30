@@ -84,9 +84,9 @@ use Sentry\Transport\TransportInterface;
 final class ClientBuilder implements ClientBuilderInterface
 {
     /**
-     * @var Options The client configuration
+     * @var Options The client options
      */
-    private $configuration;
+    private $options;
 
     /**
      * @var UriFactory|null The PSR-7 URI factory
@@ -125,7 +125,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __construct(array $options = [])
     {
-        $this->configuration = new Options($options);
+        $this->options = new Options($options);
     }
 
     /**
@@ -246,7 +246,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->createTransportInstance();
 
-        $client = new Client($this->configuration, $this->transport);
+        $client = new Client($this->options, $this->transport);
         $client->addMiddleware(new SanitizerMiddleware($client->getSerializer()), -255);
         $client->addMiddleware(new SanitizeDataMiddleware(), -200);
         $client->addMiddleware(new SanitizeCookiesMiddleware(), -200);
@@ -278,11 +278,11 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __call($name, $arguments)
     {
-        if (!method_exists($this->configuration, $name)) {
+        if (!method_exists($this->options, $name)) {
             throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
         }
 
-        $this->configuration->$name(...$arguments);
+        $this->options->$name(...$arguments);
 
         return $this;
     }
@@ -302,13 +302,13 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-18 HTTP client must be set.');
         }
 
-        if (null !== $this->configuration->getDsn()) {
-            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getDsn())));
+        if (null !== $this->options->getDsn()) {
+            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
-        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->configuration->getSendAttempts()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
@@ -325,7 +325,7 @@ final class ClientBuilder implements ClientBuilderInterface
             return $this->transport;
         }
 
-        if (null === $this->configuration->getDsn()) {
+        if (null === $this->options->getDsn()) {
             return new NullTransport();
         }
 
@@ -333,6 +333,6 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-7 message factory must be set.');
         }
 
-        return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
     }
 }
