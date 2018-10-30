@@ -269,9 +269,8 @@ class Raven_Client
         $this->error_handler->registerErrorHandler();
         $this->error_handler->registerShutdownFunction();
 
-        if ($this->_curl_handler) {
-            $this->_curl_handler->registerShutdownFunction();
-        }
+        // Register final shutdown function to send fatal error via curl async.
+        $this->registerShutdownFunction();
 
         return $this;
     }
@@ -742,12 +741,10 @@ class Raven_Client
         $handler->install();
     }
 
-    protected function registerShutdownFunction()
+    public function registerShutdownFunction()
     {
-        if (!$this->_shutdown_function_has_been_set) {
-            $this->_shutdown_function_has_been_set = true;
-            register_shutdown_function(array($this, 'onShutdown'));
-        }
+        $this->_shutdown_function_has_been_set = true;
+        register_shutdown_function(array($this, 'onShutdown'));
     }
 
     /**
