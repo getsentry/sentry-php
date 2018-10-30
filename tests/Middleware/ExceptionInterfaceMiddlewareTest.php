@@ -25,9 +25,9 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
     public function testInvoke(\Exception $exception, array $clientConfig, array $payload, array $expectedResult)
     {
         $client = ClientBuilder::create($clientConfig)->getClient();
-        $assertHasStacktrace = $client->getConfig()->getAutoLogStacks();
+        $assertHasStacktrace = $client->getOptions()->getAutoLogStacks();
 
-        $event = new Event($client->getConfig());
+        $event = new Event($client->getOptions());
         $middleware = new ExceptionInterfaceMiddleware($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, $exception, $payload);
@@ -127,7 +127,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])
             ->getClient();
 
-        $event = new Event($client->getConfig());
+        $event = new Event($client->getOptions());
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
@@ -150,7 +150,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
     {
         $client = ClientBuilder::create()->getClient();
-        $event = new Event($client->getConfig());
+        $event = new Event($client->getOptions());
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
@@ -176,7 +176,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
         ])->getClient();
 
-        $event = new Event($client->getConfig());
+        $event = new Event($client->getOptions());
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 
@@ -216,7 +216,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
     public function testInvokeWithAutoLogStacksDisabled()
     {
         $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
-        $event = new Event($client->getConfig());
+        $event = new Event($client->getOptions());
 
         $middleware = new ExceptionInterfaceMiddleware($client);
 

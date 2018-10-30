@@ -157,10 +157,10 @@ class Stacktrace implements \JsonSerializable
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
         }
 
-        if (null !== $this->client->getConfig()->getProjectRoot()) {
-            $excludedAppPaths = $this->client->getConfig()->getExcludedProjectPaths();
+        if (null !== $this->client->getOptions()->getProjectRoot()) {
+            $excludedAppPaths = $this->client->getOptions()->getExcludedProjectPaths();
             $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getConfig()->getProjectRoot());
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getOptions()->getProjectRoot());
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
@@ -297,7 +297,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function stripPrefixFromFilePath($filePath)
     {
-        foreach ($this->client->getConfig()->getPrefixes() as $prefix) {
+        foreach ($this->client->getOptions()->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
                 return substr($filePath, \strlen($prefix));
             }

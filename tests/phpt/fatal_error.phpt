@@ -28,7 +28,6 @@ register_shutdown_function('register_shutdown_function', function () use ($clien
     /** @var \Sentry\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
 
-    Assert::assertNotNull($client->getLastEvent());
     Assert::assertAttributeEmpty('pendingRequests', $transport);
 
     echo 'Shutdown function called';

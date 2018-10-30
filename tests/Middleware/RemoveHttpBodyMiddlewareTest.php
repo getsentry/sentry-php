@@ -39,7 +39,7 @@ class RemoveHttpBodyMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke($inputData, $expectedData)
     {
-        $event = new Event($this->client->getConfig());
+        $event = new Event($this->client->getOptions());
         $event->setRequest($inputData);
 
         $middleware = new RemoveHttpBodyMiddleware();

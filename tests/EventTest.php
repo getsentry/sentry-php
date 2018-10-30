@@ -51,7 +51,7 @@ class EventTest extends TestCase
         $this->uuidGeneratorInvokationCount = 0;
         $this->originalUuidFactory = new UuidFactory();
         $this->client = ClientBuilder::create()->getClient();
-        $this->configuration = $this->client->getConfig();
+        $this->configuration = $this->client->getOptions();
 
         /** @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
         $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)

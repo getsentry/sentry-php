@@ -34,7 +34,7 @@ class RemoveStacktraceContextMiddlewareTest extends MiddlewareTestCase
     {
         $exception = new \Exception();
 
-        $event = new Event($this->client->getConfig());
+        $event = new Event($this->client->getOptions());
         $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception->getTrace(), $exception->getFile(), $exception->getLine()));
 
         $middleware = new RemoveStacktraceContextMiddleware();
@@ -55,7 +55,7 @@ class RemoveStacktraceContextMiddlewareTest extends MiddlewareTestCase
         $exception1 = new \Exception();
         $exception2 = new \Exception('foo', 0, $exception1);
 
-        $event = new Event($this->client->getConfig());
+        $event = new Event($this->client->getOptions());
         $event->setStacktrace(Stacktrace::createFromBacktrace($this->client, $exception2->getTrace(), $exception2->getFile(), $exception2->getLine()));
 
         $middleware = new RemoveStacktraceContextMiddleware();

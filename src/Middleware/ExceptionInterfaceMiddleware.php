@@ -63,7 +63,7 @@ final class ExceptionInterfaceMiddleware
             $currentException = $exception;
 
             do {
-                if ($this->client->getConfig()->isExcludedException($currentException)) {
+                if ($this->client->getOptions()->isExcludedException($currentException)) {
                     continue;
                 }
 
@@ -72,7 +72,7 @@ final class ExceptionInterfaceMiddleware
                     'value' => $this->client->getSerializer()->serialize($currentException->getMessage()),
                 ];
 
-                if ($this->client->getConfig()->getAutoLogStacks()) {
+                if ($this->client->getOptions()->getAutoLogStacks()) {
                     $data['stacktrace'] = Stacktrace::createFromBacktrace($this->client, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
                 }
 

@@ -34,7 +34,7 @@ class SanitizeDataMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke(array $inputData, array $expectedData)
     {
-        $event = new Event($this->client->getConfig());
+        $event = new Event($this->client->getOptions());
 
         if (isset($inputData['request'])) {
             $event->setRequest($inputData['request']);

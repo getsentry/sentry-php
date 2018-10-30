@@ -15,8 +15,6 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
-use Sentry\Context\UserContext;
 use Sentry\Middleware\MiddlewareStack;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
@@ -95,21 +93,6 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var TagsContext The tags context
-     */
-    private $tagsContext;
-
-    /**
-     * @var UserContext The user context
-     */
-    private $userContext;
-
-    /**
-     * @var Context The extra context
-     */
-    private $extraContext;
-
-    /**
      * @var RuntimeContext The runtime context
      */
     private $runtimeContext;
@@ -139,9 +122,6 @@ class Client implements ClientInterface
     {
         $this->config = $config;
         $this->transport = $transport;
-        $this->tagsContext = new TagsContext();
-        $this->userContext = new UserContext();
-        $this->extraContext = new Context();
         $this->runtimeContext = new RuntimeContext();
         $this->serverOsContext = new ServerOsContext();
         $this->transactionStack = new TransactionStack();
@@ -185,7 +165,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfig()
+    public function getOptions()
     {
         return $this->config;
     }
@@ -295,28 +275,6 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getLastEvent()
-    {
-        return $this->lastEvent;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLastEventId()
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.0. Use getLastEvent() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        if (null === $this->lastEvent) {
-            return null;
-        }
-
-        return str_replace('-', '', $this->lastEvent->getId()->toString());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function capture(array $payload)
     {
         $event = new Event($this->config);
@@ -402,30 +360,6 @@ class Client implements ClientInterface
     public function registerSeverityMap($map)
     {
         $this->severityMap = $map;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUserContext()
-    {
-        return $this->userContext;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTagsContext()
-    {
-        return $this->tagsContext;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtraContext()
-    {
-        return $this->extraContext;
     }
 
     /**

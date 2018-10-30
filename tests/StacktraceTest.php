@@ -99,7 +99,7 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameStripsPath()
     {
-        $this->client->getConfig()->setPrefixes(['path/to/', 'path/to/app']);
+        $this->client->getOptions()->setPrefixes(['path/to/', 'path/to/app']);
 
         $stacktrace = new Stacktrace($this->client);
 
@@ -118,8 +118,8 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameMarksAsInApp()
     {
-        $this->client->getConfig()->setProjectRoot('path/to');
-        $this->client->getConfig()->setExcludedProjectPaths(['path/to/excluded/path']);
+        $this->client->getOptions()->setProjectRoot('path/to');
+        $this->client->getOptions()->setExcludedProjectPaths(['path/to/excluded/path']);
 
         $stacktrace = new Stacktrace($this->client);
 

@@ -255,9 +255,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $client->addMiddleware(new MessageInterfaceMiddleware());
         $client->addMiddleware(new RequestInterfaceMiddleware());
         $client->addMiddleware(new UserInterfaceMiddleware());
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getTagsContext(), Context::CONTEXT_TAGS));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getUserContext(), Context::CONTEXT_USER));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getExtraContext(), Context::CONTEXT_EXTRA));
         $client->addMiddleware(new ContextInterfaceMiddleware($client->getRuntimeContext(), Context::CONTEXT_RUNTIME));
         $client->addMiddleware(new ContextInterfaceMiddleware($client->getServerOsContext(), Context::CONTEXT_SERVER_OS));
         $client->addMiddleware(new ExceptionInterfaceMiddleware($client));

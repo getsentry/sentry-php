@@ -15,7 +15,6 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
 use Sentry\State\Scope;
 
 /**
@@ -30,7 +29,7 @@ interface ClientInterface
      *
      * @return Options
      */
-    public function getConfig();
+    public function getOptions();
 
     /**
      * Gets the transaction stack.
@@ -95,23 +94,6 @@ interface ClientInterface
     public function captureLastError(array $payload = []);
 
     /**
-     * Gets the last event that was captured by the client. However, it could
-     * have been sent or still sit in the queue of pending events.
-     *
-     * @return Event
-     */
-    public function getLastEvent();
-
-    /**
-     * Return the last captured event's ID or null if none available.
-     *
-     * @return string|null
-     *
-     * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
-     */
-    public function getLastEventId();
-
-    /**
      * Captures a new event using the provided data.
      *
      * @param array $payload The data of the event being captured
@@ -143,27 +125,6 @@ interface ClientInterface
      * @param string[] $map
      */
     public function registerSeverityMap($map);
-
-    /**
-     * Gets the user context.
-     *
-     * @return Context
-     */
-    public function getUserContext();
-
-    /**
-     * Gets the tags context.
-     *
-     * @return TagsContext
-     */
-    public function getTagsContext();
-
-    /**
-     * Gets the extra context.
-     *
-     * @return Context
-     */
-    public function getExtraContext();
 
     /**
      * Gets the runtime context.
