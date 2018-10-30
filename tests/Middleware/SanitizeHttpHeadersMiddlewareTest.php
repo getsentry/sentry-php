@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
+use Sentry\Integration\SanitizeHttpHeadersMiddleware;
 use Sentry\Options;
 
 class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase

@@ -26,16 +26,10 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\Context\Context;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Middleware\ContextInterfaceMiddleware;
-use Sentry\Middleware\ExceptionInterfaceMiddleware;
-use Sentry\Middleware\MessageInterfaceMiddleware;
-use Sentry\Middleware\RemoveHttpBodyMiddleware;
-use Sentry\Middleware\RequestInterfaceMiddleware;
-use Sentry\Middleware\SanitizeCookiesMiddleware;
-use Sentry\Middleware\SanitizeDataMiddleware;
-use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
-use Sentry\Middleware\SanitizerMiddleware;
-use Sentry\Middleware\UserInterfaceMiddleware;
+use Sentry\Integration\ContextInterfaceMiddleware;
+use Sentry\Integration\ExceptionInterfaceMiddleware;
+use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\UserIntegration;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -247,16 +241,8 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->transport = $this->createTransportInstance();
 
         $client = new Client($this->options, $this->transport);
-        $client->addMiddleware(new SanitizerMiddleware($client->getSerializer()), -255);
-        $client->addMiddleware(new SanitizeDataMiddleware(), -200);
-        $client->addMiddleware(new SanitizeCookiesMiddleware(), -200);
-        $client->addMiddleware(new RemoveHttpBodyMiddleware(), -200);
-        $client->addMiddleware(new SanitizeHttpHeadersMiddleware(), -200);
-        $client->addMiddleware(new MessageInterfaceMiddleware());
-        $client->addMiddleware(new RequestInterfaceMiddleware());
-        $client->addMiddleware(new UserInterfaceMiddleware());
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getRuntimeContext(), Context::CONTEXT_RUNTIME));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getServerOsContext(), Context::CONTEXT_SERVER_OS));
+        $client->addMiddleware(new RequestIntegration());
+        $client->addMiddleware(new UserIntegration());
         $client->addMiddleware(new ExceptionInterfaceMiddleware($client));
 
         foreach ($this->middlewares as $middleware) {

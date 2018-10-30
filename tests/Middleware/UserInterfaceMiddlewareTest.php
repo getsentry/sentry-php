@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\UserInterfaceMiddleware;
+use Sentry\Integration\UserIntegration;
 use Sentry\Options;
 use Zend\Diactoros\ServerRequest;
 
@@ -23,7 +23,7 @@ class UserInterfaceMiddlewareTest extends MiddlewareTestCase
         $event = new Event(new Options());
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $middleware = new UserInterfaceMiddleware();
+        $middleware = new UserIntegration();
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 
@@ -38,7 +38,7 @@ class UserInterfaceMiddlewareTest extends MiddlewareTestCase
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $middleware = new UserInterfaceMiddleware();
+        $middleware = new UserIntegration();
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
 

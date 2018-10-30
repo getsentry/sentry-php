@@ -14,7 +14,7 @@ namespace Sentry\Tests\Middleware;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
-use Sentry\Middleware\SanitizeDataMiddleware;
+use Sentry\Integration\SanitizeDataMiddleware;
 use Sentry\Stacktrace;
 
 class SanitizeDataMiddlewareTest extends MiddlewareTestCase

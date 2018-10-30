@@ -14,7 +14,7 @@ namespace Sentry\Tests\Middleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Event;
-use Sentry\Middleware\MiddlewareStack;
+use Sentry\Integration\IntegrationStack;
 use Sentry\Options;
 
 class MiddlewareStackTest extends TestCase
@@ -44,7 +44,7 @@ class MiddlewareStackTest extends TestCase
 
         $middlewareCalls = [false, false];
 
-        $middlewareStack = new MiddlewareStack($handler);
+        $middlewareStack = new IntegrationStack($handler);
         $middlewareStack->addMiddleware($this->createMiddlewareAssertingInvokation($middlewareCalls[0]));
         $middlewareStack->addMiddleware($this->createMiddlewareAssertingInvokation($middlewareCalls[1]));
 
@@ -82,7 +82,7 @@ class MiddlewareStackTest extends TestCase
             return $next($event);
         };
 
-        $middlewareStack = new MiddlewareStack($handler);
+        $middlewareStack = new IntegrationStack($handler);
         $middlewareStack->addMiddleware($middleware1, -10);
         $middlewareStack->addMiddleware($middleware2);
         $middlewareStack->addMiddleware($middleware3, -10);
@@ -98,10 +98,10 @@ class MiddlewareStackTest extends TestCase
      */
     public function testAddMiddlewareThrowsWhileStackIsRunning()
     {
-        /** @var MiddlewareStack $middlewareStack */
+        /** @var IntegrationStack $middlewareStack */
         $middlewareStack = null;
 
-        $middlewareStack = new MiddlewareStack(function () use (&$middlewareStack) {
+        $middlewareStack = new IntegrationStack(function () use (&$middlewareStack) {
             $middlewareStack->addMiddleware(function () {
                 // Returning something is not important as the expected exception
                 // should be thrown before this point is ever reached
@@ -133,7 +133,7 @@ class MiddlewareStackTest extends TestCase
             return $next($event);
         };
 
-        $middlewareStack = new MiddlewareStack(function (Event $event) use (&$middlewareCalls) {
+        $middlewareStack = new IntegrationStack(function (Event $event) use (&$middlewareCalls) {
             $middlewareCalls[] = 4;
 
             return $event;
@@ -158,10 +158,10 @@ class MiddlewareStackTest extends TestCase
      */
     public function testRemoveMiddlewareThrowsWhileStackIsRunning()
     {
-        /** @var MiddlewareStack $middlewareStack */
+        /** @var IntegrationStack $middlewareStack */
         $middlewareStack = null;
 
-        $middlewareStack = new MiddlewareStack(function () use (&$middlewareStack) {
+        $middlewareStack = new IntegrationStack(function () use (&$middlewareStack) {
             $middlewareStack->removeMiddleware(function () {
                 // Returning something is not important as the expected exception
                 // should be thrown before this point is ever reached
@@ -178,7 +178,7 @@ class MiddlewareStackTest extends TestCase
     public function testMiddlewareThrowsWhenBadValueIsReturned()
     {
         $event = new Event(new Options());
-        $middlewareStack = new MiddlewareStack(function (Event $event) {
+        $middlewareStack = new IntegrationStack(function (Event $event) {
             return $event;
         });
 
@@ -196,7 +196,7 @@ class MiddlewareStackTest extends TestCase
     public function testMiddlewareThrowsWhenBadValueIsReturnedFromHandler()
     {
         $event = new Event(new Options());
-        $middlewareStack = new MiddlewareStack(function () {
+        $middlewareStack = new IntegrationStack(function () {
             // Return nothing so that the expected exception is triggered
         });
 

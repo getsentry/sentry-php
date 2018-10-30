@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Context\Context;
-use Sentry\Middleware\ContextInterfaceMiddleware;
+use Sentry\Integration\ContextInterfaceMiddleware;
 
 class ContextInterfaceMiddlewareTest extends MiddlewareTestCase
 {

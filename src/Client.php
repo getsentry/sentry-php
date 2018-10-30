@@ -12,12 +12,9 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Middleware\MiddlewareStack;
+use Sentry\Integration\IntegrationStack;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
@@ -92,36 +89,25 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var RuntimeContext The runtime context
+     * @var IntegrationStack The stack of middlewares to compose an event to send
      */
-    private $runtimeContext;
-
-    /**
-     * @var ServerOsContext The server OS context
-     */
-    private $serverOsContext;
-
-    /**
-     * @var MiddlewareStack The stack of middlewares to compose an event to send
-     */
-    private $middlewareStack;
+    private $installedIntegrations;
 
     /**
      * Constructor.
      *
      * @param Options            $options   The client configuration
      * @param TransportInterface $transport The transport
+     * @param Integration[]      $integrations The integrations used by the client
      */
-    public function __construct(Options $options, TransportInterface $transport)
+    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
     {
         $this->options = $options;
         $this->transport = $transport;
-        $this->runtimeContext = new RuntimeContext();
-        $this->serverOsContext = new ServerOsContext();
-        $this->transactionStack = new TransactionStack();
+
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
         $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
-        $this->middlewareStack = new MiddlewareStack(function (Event $event) {
+        $this->installedIntegrations = new IntegrationStack(function (Event $event) {
             return $event;
         });
 
@@ -190,13 +176,9 @@ class Client implements ClientInterface
             $event->setLogger($payload['logger']);
         }
 
-        // TODO these should be integrations -> eventprocessors on the scope
-        $event = $this->middlewareStack->executeStack(
-            $event,
-            isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
-            isset($payload['exception']) ? $payload['exception'] : null,
-            $payload
-        );
+        if ($event->getMessage()) {
+            $event->setMessage(substr($event->getMessage(), 0, Client::MESSAGE_MAX_LENGTH_LIMIT));
+        }
 
         if (null !== $scope) {
             $event = $scope->applyToEvent($event);
@@ -250,31 +232,12 @@ class Client implements ClientInterface
         return $this->transport->send($event);
     }
 
-    // TODO -------------------------------------------------------------------------
-    // These functions shouldn't probably not live on the client
-
     /**
      * {@inheritdoc}
      */
     public function getTransactionStack()
     {
         return $this->transactionStack;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addMiddleware(callable $middleware, $priority = 0)
-    {
-        $this->middlewareStack->addMiddleware($middleware, $priority);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeMiddleware(callable $middleware)
-    {
-        $this->middlewareStack->removeMiddleware($middleware);
     }
 
     /**
@@ -318,61 +281,4 @@ class Client implements ClientInterface
         $this->serializer = $serializer;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function translateSeverity(int $severity)
-    {
-        if (\is_array($this->severityMap) && isset($this->severityMap[$severity])) {
-            return $this->severityMap[$severity];
-        }
-
-        switch ($severity) {
-            case E_DEPRECATED:
-            case E_USER_DEPRECATED:
-            case E_WARNING:
-            case E_USER_WARNING:
-            case E_RECOVERABLE_ERROR:
-                return self::LEVEL_WARNING;
-            case E_ERROR:
-            case E_PARSE:
-            case E_CORE_ERROR:
-            case E_CORE_WARNING:
-            case E_COMPILE_ERROR:
-            case E_COMPILE_WARNING:
-                return self::LEVEL_FATAL;
-            case E_USER_ERROR:
-                return self::LEVEL_ERROR;
-            case E_NOTICE:
-            case E_USER_NOTICE:
-            case E_STRICT:
-                return self::LEVEL_INFO;
-            default:
-                return self::LEVEL_ERROR;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function registerSeverityMap($map)
-    {
-        $this->severityMap = $map;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRuntimeContext()
-    {
-        return $this->runtimeContext;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getServerOsContext()
-    {
-        return $this->serverOsContext;
-    }
 }

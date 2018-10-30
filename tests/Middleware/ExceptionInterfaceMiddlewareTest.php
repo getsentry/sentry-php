@@ -14,7 +14,7 @@ namespace Sentry\Tests\Middleware;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Middleware\ExceptionInterfaceMiddleware;
+use Sentry\Integration\ExceptionInterfaceMiddleware;
 use Sentry\Stacktrace;
 
 class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase

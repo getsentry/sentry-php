@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\SanitizeCookiesMiddleware;
+use Sentry\Integration\SanitizeCookiesMiddleware;
 use Sentry\Options;
 
 class SanitizeCookiesMiddlewareTest extends MiddlewareTestCase

@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\SanitizerMiddleware;
+use Sentry\Integration\SanitizerMiddleware;
 use Sentry\Options;
 use Sentry\Serializer;
 

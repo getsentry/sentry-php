@@ -12,8 +12,6 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
 use Sentry\State\Scope;
 
 /**
@@ -78,9 +76,6 @@ interface ClientInterface
      */
     public function send(Event $event): ?string;
 
-    // TODO -------------------------------------------------------------------------
-    // These functions shouldn't probably not live on the client
-
     /**
      * Gets the transaction stack.
      *
@@ -88,53 +83,6 @@ interface ClientInterface
      */
     public function getTransactionStack();
 
-    /**
-     * Adds a new middleware with the given priority to the stack.
-     *
-     * @param callable $middleware The middleware instance
-     * @param int      $priority   The priority. The higher this value, the
-     *                             earlier a processor will be executed in
-     *                             the chain (defaults to 0)
-     */
-    public function addMiddleware(callable $middleware, $priority = 0);
-
-    /**
-     * Removes the given middleware from the stack.
-     *
-     * @param callable $middleware The middleware instance
-     */
-    public function removeMiddleware(callable $middleware);
-
-    /**
-     * Translate a PHP Error constant into a Sentry log level group.
-     *
-     * @param int $severity PHP E_$x error constant
-     *
-     * @return string Sentry log level group
-     */
-    public function translateSeverity(int $severity);
-
-    /**
-     * Provide a map of PHP Error constants to Sentry logging groups to use instead
-     * of the defaults in translateSeverity().
-     *
-     * @param string[] $map
-     */
-    public function registerSeverityMap($map);
-
-    /**
-     * Gets the runtime context.
-     *
-     * @return RuntimeContext
-     */
-    public function getRuntimeContext();
-
-    /**
-     * Gets the server OS context.
-     *
-     * @return ServerOsContext
-     */
-    public function getServerOsContext();
 
     /**
      * Sets whether all the objects should be serialized by the representation

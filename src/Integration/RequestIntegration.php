@@ -9,9 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Middleware;
+namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\ServerRequestFactory;
 use Sentry\Event;
 
 /**
@@ -20,23 +21,23 @@ use Sentry\Event;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RequestInterfaceMiddleware
+final class RequestIntegration
 {
     /**
      * Collects the needed data and sets it in the given event object.
      *
      * @param Event                       $event     The event being processed
-     * @param callable                    $next      The next middleware to call
-     * @param ServerRequestInterface|null $request   The request, if available
      * @param \Exception|\Throwable|null  $exception The thrown exception, if available
-     * @param array                       $payload   Additional data
      *
      * @return Event
      */
-    public function __invoke(Event $event, callable $next, ServerRequestInterface $request = null, $exception = null, array $payload = [])
+    public function __invoke(Event $event, $exception = null)
     {
+        /** @var ServerRequestInterface $request*/
+        $request = isset($_SERVER[ 'REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
+
         if (null === $request) {
-            return $next($event, $request, $exception, $payload);
+            return $event;
         }
 
         $requestData = [
@@ -56,6 +57,13 @@ final class RequestInterfaceMiddleware
 
         $event->setRequest($requestData);
 
-        return $next($event, $request, $exception, $payload);
+        /** @var array|Context $userContext */
+        $userContext = $event->getUserContext();
+
+        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+        }
+
+        return $event;
     }
 }

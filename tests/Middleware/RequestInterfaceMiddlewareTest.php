@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\RequestInterfaceMiddleware;
+use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
@@ -31,7 +31,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
             $callbackInvoked = true;
         };
 
-        $middleware = new RequestInterfaceMiddleware();
+        $middleware = new RequestIntegration();
         $middleware($event, $callback);
 
         $this->assertTrue($callbackInvoked, 'Next middleware NOT invoked');
@@ -54,7 +54,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $middleware = new RequestInterfaceMiddleware();
+        $middleware = new RequestIntegration();
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
 

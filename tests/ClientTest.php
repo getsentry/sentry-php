@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Middleware\MiddlewareStack;
+use Sentry\Integration\IntegrationStack;
 use Sentry\ReprSerializer;
 use Sentry\Serializer;
 use Sentry\Severity;
@@ -56,8 +56,8 @@ class ClientTest extends TestCase
     {
         $middleware = function () {};
 
-        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(MiddlewareStack::class);
+        /** @var IntegrationStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
+        $middlewareStack = $this->createMock(IntegrationStack::class);
         $middlewareStack->expects($this->once())
             ->method('addMiddleware')
             ->with($middleware, -10);
@@ -76,8 +76,8 @@ class ClientTest extends TestCase
     {
         $middleware = function () {};
 
-        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(MiddlewareStack::class);
+        /** @var IntegrationStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
+        $middlewareStack = $this->createMock(IntegrationStack::class);
         $middlewareStack->expects($this->once())
             ->method('removeMiddleware')
             ->with($middleware);

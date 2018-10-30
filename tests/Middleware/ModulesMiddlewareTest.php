@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\ModulesMiddleware;
+use Sentry\Integration\ModulesIntegration;
 use Sentry\Options;
 
 class ModulesMiddlewareTest extends MiddlewareTestCase
@@ -22,7 +22,7 @@ class ModulesMiddlewareTest extends MiddlewareTestCase
         $configuration = new Options(['project_root' => __DIR__ . '/../Fixtures']);
         $event = new Event($configuration);
 
-        $middleware = new ModulesMiddleware($configuration);
+        $middleware = new ModulesIntegration($configuration);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
 

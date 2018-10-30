@@ -12,7 +12,7 @@
 namespace Sentry\Tests\Middleware;
 
 use Sentry\Event;
-use Sentry\Middleware\MessageInterfaceMiddleware;
+use Sentry\Integration\MessageInterfaceMiddleware;
 use Sentry\Options;
 
 class MessageInterfaceMiddlewareTest extends MiddlewareTestCase

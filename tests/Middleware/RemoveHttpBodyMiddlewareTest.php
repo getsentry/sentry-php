@@ -14,7 +14,7 @@ namespace Sentry\Tests\Middleware;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
-use Sentry\Middleware\RemoveHttpBodyMiddleware;
+use Sentry\Integration\RemoveHttpBodyMiddleware;
 
 class RemoveHttpBodyMiddlewareTest extends MiddlewareTestCase
 {
