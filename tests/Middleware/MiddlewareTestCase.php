@@ -13,8 +13,8 @@ namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 
 abstract class MiddlewareTestCase extends TestCase
 {
@@ -32,7 +32,7 @@ abstract class MiddlewareTestCase extends TestCase
         };
 
         if (null === $event) {
-            $event = new Event($this->createMock(Configuration::class));
+            $event = new Event($this->createMock(Options::class));
         }
 
         if (null === $request) {

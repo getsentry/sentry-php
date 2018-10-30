@@ -37,12 +37,17 @@ class Client implements ClientInterface
     /**
      * The version of the protocol to communicate with the Sentry server.
      */
-    const PROTOCOL_VERSION = '6';
+    const PROTOCOL_VERSION = '7';
+
+    /**
+     * The identifier of the SDK.
+     */
+    const SDK_IDENTIFIER = 'sentry.php';
 
     /**
      * This constant defines the client's user-agent string.
      */
-    const USER_AGENT = 'sentry-php/' . self::VERSION;
+    const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
@@ -75,7 +80,7 @@ class Client implements ClientInterface
     private $representationSerializer;
 
     /**
-     * @var Configuration The client configuration
+     * @var Options The client configuration
      */
     private $config;
 
@@ -127,10 +132,10 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Configuration      $config    The client configuration
+     * @param Options            $config    The client configuration
      * @param TransportInterface $transport The transport
      */
-    public function __construct(Configuration $config, TransportInterface $transport)
+    public function __construct(Options $config, TransportInterface $transport)
     {
         $this->config = $config;
         $this->transport = $transport;

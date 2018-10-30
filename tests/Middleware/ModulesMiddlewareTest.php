@@ -11,15 +11,15 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\ModulesMiddleware;
+use Sentry\Options;
 
 class ModulesMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
-        $configuration = new Configuration(['project_root' => __DIR__ . '/../Fixtures']);
+        $configuration = new Options(['project_root' => __DIR__ . '/../Fixtures']);
         $event = new Event($configuration);
 
         $middleware = new ModulesMiddleware($configuration);

@@ -11,16 +11,16 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\UserInterfaceMiddleware;
+use Sentry\Options;
 use Zend\Diactoros\ServerRequest;
 
 class UserInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $event->getUserContext()->setData(['foo' => 'bar']);
 
         $middleware = new UserInterfaceMiddleware();
@@ -32,7 +32,7 @@ class UserInterfaceMiddlewareTest extends MiddlewareTestCase
 
     public function testInvokeWithRequest()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $event->getUserContext()->setData(['foo' => 'bar']);
 
         $request = new ServerRequest();

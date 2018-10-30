@@ -17,8 +17,8 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Promise\Promise;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Util\JSON;
 
@@ -37,7 +37,7 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
         $transport->send(new Event($config));
@@ -68,7 +68,7 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturnOnConsecutiveCalls($promise1, $promise2);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
@@ -86,7 +86,7 @@ class HttpTransportTest extends TestCase
 
     public function testSendWithoutCompressedEncoding()
     {
-        $config = new Configuration(['encoding' => 'json']);
+        $config = new Options(['encoding' => 'json']);
         $event = new Event($config);
 
         $promise = $this->createMock(Promise::class);
@@ -116,7 +116,7 @@ class HttpTransportTest extends TestCase
 
     public function testSendWithCompressedEncoding()
     {
-        $config = new Configuration(['encoding' => 'gzip']);
+        $config = new Options(['encoding' => 'gzip']);
         $event = new Event($config);
 
         $promise = $this->createMock(Promise::class);
@@ -161,7 +161,7 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
         $transport->send(new Event($config));

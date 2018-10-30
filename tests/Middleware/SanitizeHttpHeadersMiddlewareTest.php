@@ -11,9 +11,9 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
+use Sentry\Options;
 
 class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase
 {
@@ -22,7 +22,7 @@ class SanitizeHttpHeadersMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke($inputData, $expectedData)
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $event->setRequest($inputData);
 
         $middleware = new SanitizeHttpHeadersMiddleware([

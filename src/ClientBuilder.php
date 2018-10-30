@@ -84,7 +84,7 @@ use Sentry\Transport\TransportInterface;
 final class ClientBuilder implements ClientBuilderInterface
 {
     /**
-     * @var Configuration The client configuration
+     * @var Options The client configuration
      */
     private $configuration;
 
@@ -125,7 +125,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __construct(array $options = [])
     {
-        $this->configuration = new Configuration($options);
+        $this->configuration = new Options($options);
     }
 
     /**

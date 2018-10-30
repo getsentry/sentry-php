@@ -15,8 +15,8 @@ namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
 
@@ -108,7 +108,7 @@ final class ScopeTest extends TestCase
         $callback2Called = false;
         $callback3Called = false;
 
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $scope = new Scope();
 
         $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called, $callback2Called, $callback3Called): ?Event {
@@ -163,7 +163,7 @@ final class ScopeTest extends TestCase
 
     public function testApplyToEvent(): void
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope = new Scope();

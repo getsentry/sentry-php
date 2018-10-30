@@ -13,15 +13,15 @@ namespace Sentry\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\MiddlewareStack;
+use Sentry\Options;
 
 class MiddlewareStackTest extends TestCase
 {
     public function testExecuteStack()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
 
         /** @var ServerRequestInterface|\PHPUnit_Framework_MockObject_MockObject $capturedRequest */
         $capturedRequest = $this->createMock(ServerRequestInterface::class);
@@ -87,7 +87,7 @@ class MiddlewareStackTest extends TestCase
         $middlewareStack->addMiddleware($middleware2);
         $middlewareStack->addMiddleware($middleware3, -10);
 
-        $middlewareStack->executeStack(new Event(new Configuration()));
+        $middlewareStack->executeStack(new Event(new Options()));
 
         $this->assertEquals([2, 3, 1, 4], $middlewareCalls);
     }
@@ -108,7 +108,7 @@ class MiddlewareStackTest extends TestCase
             });
         });
 
-        $middlewareStack->executeStack(new Event(new Configuration()));
+        $middlewareStack->executeStack(new Event(new Options()));
     }
 
     public function testRemoveMiddleware()
@@ -147,7 +147,7 @@ class MiddlewareStackTest extends TestCase
 
         $this->assertTrue($middlewareStack->removeMiddleware($middleware3));
 
-        $middlewareStack->executeStack(new Event(new Configuration()));
+        $middlewareStack->executeStack(new Event(new Options()));
 
         $this->assertEquals([2, 1, 4], $middlewareCalls);
     }
@@ -168,7 +168,7 @@ class MiddlewareStackTest extends TestCase
             });
         });
 
-        $middlewareStack->executeStack(new Event(new Configuration()));
+        $middlewareStack->executeStack(new Event(new Options()));
     }
 
     /**
@@ -177,7 +177,7 @@ class MiddlewareStackTest extends TestCase
      */
     public function testMiddlewareThrowsWhenBadValueIsReturned()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $middlewareStack = new MiddlewareStack(function (Event $event) {
             return $event;
         });
@@ -195,7 +195,7 @@ class MiddlewareStackTest extends TestCase
      */
     public function testMiddlewareThrowsWhenBadValueIsReturnedFromHandler()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $middlewareStack = new MiddlewareStack(function () {
             // Return nothing so that the expected exception is triggered
         });

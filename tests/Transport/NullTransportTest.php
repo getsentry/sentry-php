@@ -12,8 +12,8 @@
 namespace Sentry\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Transport\NullTransport;
 
 class NullTransportTest extends TestCase
@@ -21,7 +21,7 @@ class NullTransportTest extends TestCase
     public function testSend()
     {
         $transport = new NullTransport();
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
 
         $this->assertTrue($transport->send($event));
     }

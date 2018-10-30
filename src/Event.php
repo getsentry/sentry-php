@@ -134,9 +134,9 @@ final class Event implements \JsonSerializable
     /**
      * Class constructor.
      *
-     * @param Configuration $config The client configuration
+     * @param Options $config The client configuration
      */
-    public function __construct(Configuration $config)
+    public function __construct(Options $config)
     {
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');

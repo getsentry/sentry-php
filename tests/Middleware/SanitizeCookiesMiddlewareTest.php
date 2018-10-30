@@ -11,9 +11,9 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizeCookiesMiddleware;
+use Sentry\Options;
 
 class SanitizeCookiesMiddlewareTest extends MiddlewareTestCase
 {
@@ -34,7 +34,7 @@ class SanitizeCookiesMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke(array $options, array $expectedData)
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $event->setRequest([
             'foo' => 'bar',
             'cookies' => [

@@ -11,9 +11,9 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\RequestInterfaceMiddleware;
+use Sentry\Options;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
@@ -21,7 +21,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvokeWithNoRequest()
     {
-        $configuration = new Configuration();
+        $configuration = new Options();
         $event = new Event($configuration);
 
         $callbackInvoked = false;
@@ -42,7 +42,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke(array $requestData, array $expectedValue)
     {
-        $configuration = new Configuration();
+        $configuration = new Options();
         $event = new Event($configuration);
 
         $request = new ServerRequest();

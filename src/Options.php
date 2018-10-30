@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -22,7 +22,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class Configuration
+class Options
 {
     /**
      * The default maximum number of breadcrumbs that will be sent with an event.
@@ -746,7 +746,7 @@ class Configuration
             return $value <= self::DEFAULT_MAX_BREADCRUMBS;
         });
 
-        $resolver->setNormalizer('dsn', function (Options $options, $value) {
+        $resolver->setNormalizer('dsn', function (SymfonyOptions $options, $value) {
             if (empty($value)) {
                 $this->dsn = null;
 
@@ -792,7 +792,7 @@ class Configuration
             return $value;
         });
 
-        $resolver->setNormalizer('project_root', function (Options $options, $value) {
+        $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
             if (null === $value) {
                 return null;
             }
@@ -800,11 +800,11 @@ class Configuration
             return $this->normalizeAbsolutePath($value);
         });
 
-        $resolver->setNormalizer('prefixes', function (Options $options, $value) {
+        $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
-        $resolver->setNormalizer('excluded_app_paths', function (Options $options, $value) {
+        $resolver->setNormalizer('excluded_app_paths', function (SymfonyOptions $options, $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }

@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Configuration;
+use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -198,7 +198,7 @@ class ClientBuilderTest extends TestCase
      */
     public function testCallExistingMethodForwardsCallToConfiguration($setterMethod, $value)
     {
-        $configuration = $this->getMockBuilder(Configuration::class)
+        $configuration = $this->getMockBuilder(Options::class)
             ->getMock();
 
         $configuration->expects($this->once())

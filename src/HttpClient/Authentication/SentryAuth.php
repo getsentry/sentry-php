@@ -14,7 +14,7 @@ namespace Sentry\HttpClient\Authentication;
 use Http\Message\Authentication;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
-use Sentry\Configuration;
+use Sentry\Options;
 
 /**
  * This authentication method sends the requests along with a X-Sentry-Auth
@@ -25,16 +25,16 @@ use Sentry\Configuration;
 final class SentryAuth implements Authentication
 {
     /**
-     * @var Configuration The Raven client configuration
+     * @var Options The Raven client configuration
      */
     private $configuration;
 
     /**
      * Constructor.
      *
-     * @param Configuration $configuration The Raven client configuration
+     * @param Options $configuration The Raven client configuration
      */
-    public function __construct(Configuration $configuration)
+    public function __construct(Options $configuration)
     {
         $this->configuration = $configuration;
     }

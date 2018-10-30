@@ -28,7 +28,7 @@ interface ClientInterface
     /**
      * Gets the configuration of the client.
      *
-     * @return Configuration
+     * @return Options
      */
     public function getConfig();
 

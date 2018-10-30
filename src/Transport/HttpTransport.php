@@ -15,8 +15,8 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Util\JSON;
 
 /**
@@ -27,7 +27,7 @@ use Sentry\Util\JSON;
 final class HttpTransport implements TransportInterface
 {
     /**
-     * @var Configuration The Raven client configuration
+     * @var Options The Raven client configuration
      */
     private $config;
 
@@ -49,11 +49,11 @@ final class HttpTransport implements TransportInterface
     /**
      * Constructor.
      *
-     * @param Configuration   $config         The Raven client configuration
+     * @param Options         $config         The Raven client configuration
      * @param HttpAsyncClient $httpClient     The HTTP client
      * @param RequestFactory  $requestFactory The PSR-7 request factory
      */
-    public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
+    public function __construct(Options $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
     {
         $this->config = $config;
         $this->httpClient = $httpClient;

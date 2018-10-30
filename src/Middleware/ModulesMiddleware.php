@@ -6,8 +6,8 @@ use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Psr\Http\Message\ServerRequestInterface;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 
 /**
  * This middleware logs with the event details all the versions of the packages
@@ -18,16 +18,16 @@ use Sentry\Event;
 final class ModulesMiddleware
 {
     /**
-     * @var Configuration The Raven client configuration
+     * @var Options The Raven client configuration
      */
     private $config;
 
     /**
      * Constructor.
      *
-     * @param Configuration $config The Raven client configuration
+     * @param Options $config The Raven client configuration
      */
-    public function __construct(Configuration $config)
+    public function __construct(Options $config)
     {
         if (!class_exists(Composer::class)) {
             throw new \LogicException('You need the "composer/composer" package in order to use this middleware.');

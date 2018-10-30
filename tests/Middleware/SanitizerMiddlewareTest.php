@@ -11,16 +11,16 @@
 
 namespace Sentry\Tests\Middleware;
 
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Middleware\SanitizerMiddleware;
+use Sentry\Options;
 use Sentry\Serializer;
 
 class SanitizerMiddlewareTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
-        $event = new Event(new Configuration());
+        $event = new Event(new Options());
         $event->setRequest(['bar' => 'baz']);
         $event->getUserContext()->replaceData(['foo' => 'bar']);
         $event->getTagsContext()->replaceData(['foo', 'bar']);
