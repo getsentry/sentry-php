@@ -12,6 +12,7 @@ use Sentry\State\Hub;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
+use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\init;
@@ -64,13 +65,54 @@ class SdkTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with(['message' => 'test'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
         Hub::getCurrent()->bindClient($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'test']));
+    }
+
+    public function testCaptureLastError()
+    {
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureException')
+            ->with(
+                $this->logicalAnd(
+                    $this->isInstanceOf(\ErrorException::class),
+                    $this->attributeEqualTo('message', 'foo'),
+                    $this->attributeEqualTo('code', 0),
+                    $this->attributeEqualTo('severity', E_USER_NOTICE),
+                    $this->attributeEqualTo('file', __FILE__),
+                    $this->attributeEqualTo('line', __LINE__ + 5)
+                )
+            );
+
+        Hub::getCurrent()->bindClient($client);
+
+        @trigger_error('foo', E_USER_NOTICE);
+
+        captureLastError();
+
+        $this->clearLastError();
+    }
+
+    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
+    {
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+
+        Hub::getCurrent()->bindClient($client);
+
+        $client->expects($this->never())
+            ->method('captureException');
+
+        $this->clearLastError();
+
+        captureLastError();
     }
 
     public function testAddBreadcrumb(): void
@@ -107,5 +149,19 @@ class SdkTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
+    }
+
+    /**
+     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
+     */
+    private function clearLastError()
+    {
+        $handler = function () {
+            return false;
+        };
+
+        set_error_handler($handler);
+        @trigger_error('');
+        restore_error_handler();
     }
 }

@@ -12,7 +12,6 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\State\Scope;
@@ -85,22 +84,13 @@ interface ClientInterface
     public function captureException(\Throwable $exception, array $payload = []);
 
     /**
-     * Logs the most recent error (obtained with {@link error_get_last}).
-     *
-     * @param array $payload Additional attributes to pass with this event
-     *
-     * @return string|null
-     */
-    public function captureLastError(array $payload = []);
-
-    /**
      * Captures a new event using the provided data.
      *
      * @param array $payload The data of the event being captured
      *
      * @return string
      */
-    public function capture(array $payload);
+    public function captureEvent(array $payload);
 
     /**
      * Sends the given event to the Sentry server.

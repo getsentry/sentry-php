@@ -12,7 +12,6 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Middleware\MiddlewareStack;
@@ -243,7 +242,7 @@ class Client implements ClientInterface
         $payload['message'] = $message;
         $payload['message_params'] = $params;
 
-        return $this->capture($payload);
+        return $this->captureEvent($payload);
     }
 
     /**
@@ -253,29 +252,13 @@ class Client implements ClientInterface
     {
         $payload['exception'] = $exception;
 
-        return $this->capture($payload);
+        return $this->captureEvent($payload);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(array $payload = [])
-    {
-        $error = error_get_last();
-
-        if (null === $error || !isset($error['message'][0])) {
-            return null;
-        }
-
-        $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
-
-        return $this->captureException($exception, $payload);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function capture(array $payload)
+    public function captureEvent(array $payload)
     {
         $event = new Event($this->config);
 

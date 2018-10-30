@@ -268,7 +268,7 @@ final class HubTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with(['message' => 'test'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 

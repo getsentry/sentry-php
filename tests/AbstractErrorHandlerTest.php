@@ -71,7 +71,7 @@ abstract class AbstractErrorHandlerTest extends TestCase
     {
         if (!$expectedToCapture) {
             $this->client->expects($this->never())
-                ->method('capture');
+                ->method('captureEvent');
         }
 
         $errorHandler = $this->createErrorHandler($this->client);

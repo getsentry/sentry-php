@@ -15,7 +15,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Event;
 use Sentry\Middleware\MiddlewareStack;
 use Sentry\ReprSerializer;
 use Sentry\Serializer;
@@ -102,7 +101,7 @@ class ClientTest extends TestCase
             ->getMock();
 
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with([
                 'message' => 'foo',
                 'message_params' => ['bar'],
@@ -123,58 +122,13 @@ class ClientTest extends TestCase
             ->getMock();
 
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with([
                 'exception' => $exception,
                 'foo' => 'bar',
             ]);
 
         $client->captureException(new \Exception(), ['foo' => 'bar']);
-    }
-
-    public function testCaptureLastError()
-    {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureLastError'])
-            ->getMock();
-
-        $client->expects($this->once())
-            ->method('captureException')
-            ->with(
-                $this->logicalAnd(
-                    $this->isInstanceOf(\ErrorException::class),
-                    $this->attributeEqualTo('message', 'foo'),
-                    $this->attributeEqualTo('code', 0),
-                    $this->attributeEqualTo('severity', E_USER_NOTICE),
-                    $this->attributeEqualTo('file', __FILE__),
-                    $this->attributeEqualTo('line', __LINE__ + 5)
-                ),
-                ['foo' => 'bar']
-            );
-
-        @trigger_error('foo', E_USER_NOTICE);
-
-        $client->captureLastError(['foo' => 'bar']);
-
-        $this->clearLastError();
-    }
-
-    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
-    {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureLastError'])
-            ->getMock();
-
-        $client->expects($this->never())
-            ->method('captureException');
-
-        $this->clearLastError();
-
-        $client->captureLastError();
     }
 
     public function testCapture()
@@ -197,7 +151,7 @@ class ClientTest extends TestCase
             'user_context' => ['bar' => 'foo'],
         ];
 
-        $eventId = $client->capture($inputData);
+        $eventId = $client->captureEvent($inputData);
 
         $this->assertNotNull($eventId);
     }
@@ -307,7 +261,7 @@ class ClientTest extends TestCase
             },
         ])->getClient();
 
-        $client->capture([]);
+        $client->captureEvent([]);
 
         $this->assertTrue($shouldCaptureCalled);
     }
@@ -476,26 +430,12 @@ class ClientTest extends TestCase
 //        $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
 //    }
 
-    private function createCarelessExceptionWithStacktrace()
-    {
-        try {
-            throw new CarelessException('Foo bar');
-        } catch (\Exception $ex) {
-            return $ex;
-        }
-    }
-
-    /**
-     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
-     */
-    private function clearLastError()
-    {
-        $handler = function () {
-            return false;
-        };
-
-        set_error_handler($handler);
-        @trigger_error('');
-        restore_error_handler();
-    }
+//    private function createCarelessExceptionWithStacktrace()
+//    {
+//        try {
+//            throw new CarelessException('Foo bar');
+//        } catch (\Exception $ex) {
+//            return $ex;
+//        }
+//    }
 }

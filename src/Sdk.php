@@ -53,6 +53,24 @@ function captureEvent(array $payload): ?string
 }
 
 /**
+ * Logs the most recent error (obtained with {@link error_get_last}).
+ *
+ * @return null|string
+ */
+function captureLastError(): ?string
+{
+    $error = error_get_last();
+
+    if (null === $error || !isset($error['message'][0])) {
+        return null;
+    }
+
+    $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
+
+    return captureException($exception);
+}
+
+/**
  * Records a new breadcrumb which will be attached to future events. They
  * will be added to subsequent events to provide more context on user's
  * actions prior to an error or crash.

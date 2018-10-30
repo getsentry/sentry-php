@@ -225,7 +225,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->capture($payload);
+            return $this->lastEventId = $client->captureEvent($payload);
         }
 
         return null;
