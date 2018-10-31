@@ -24,9 +24,9 @@ class Stacktrace implements \JsonSerializable
     const CONTEXT_NUM_LINES = 5;
 
     /**
-     * @var ClientInterface The Raven client
+     * @var Options The client options
      */
-    protected $client;
+    protected $options;
 
     /**
      * @var Serializer The serializer
@@ -36,7 +36,7 @@ class Stacktrace implements \JsonSerializable
     /**
      * @var Serializer The representation serializer
      */
-    protected $reprSerializer;
+    protected $representationSerializer;
 
     /**
      * @var Frame[] The frames that compose the stacktrace
@@ -56,42 +56,48 @@ class Stacktrace implements \JsonSerializable
     /**
      * Constructor.
      *
-     * @param ClientInterface $client The Raven client
+     * @param Options $options The client options
      */
-    public function __construct(ClientInterface $client)
+    public function __construct(Options $options)
     {
-        $this->client = $client;
-        $this->serializer = $client->getSerializer();
-        $this->reprSerializer = $client->getRepresentationSerializer();
+        $this->options = $options;
+        $this->serializer = new Serializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+
+
+        if ($this->options->getSerializeAllObjects()) {
+            $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+            $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+        }
     }
 
     /**
      * Creates a new instance of this class using the current backtrace data.
      *
-     * @param ClientInterface $client The Raven client
+     * @param Options $options The client options
      *
      * @return static
      */
-    public static function create(ClientInterface $client)
+    public static function create(Options $options)
     {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
-        return static::createFromBacktrace($client, $backtrace, __FILE__, __LINE__);
+        return static::createFromBacktrace($options, $backtrace, __FILE__, __LINE__);
     }
 
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param ClientInterface $client    The Raven client
+     * @param Options $options    The client options
      * @param array           $backtrace The backtrace
      * @param string          $file      The file that originated the backtrace
      * @param int             $line      The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(ClientInterface $client, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Options $options, array $backtrace, $file, $line)
     {
-        $stacktrace = new static($client);
+        $stacktrace = new static($options);
 
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
@@ -157,10 +163,10 @@ class Stacktrace implements \JsonSerializable
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
         }
 
-        if (null !== $this->client->getOptions()->getProjectRoot()) {
-            $excludedAppPaths = $this->client->getOptions()->getExcludedProjectPaths();
+        if (null !== $this->options->getProjectRoot()) {
+            $excludedAppPaths = $this->options->getExcludedProjectPaths();
             $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->client->getOptions()->getProjectRoot());
+            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->options->getProjectRoot());
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
@@ -177,7 +183,7 @@ class Stacktrace implements \JsonSerializable
 
         if (!empty($frameArguments)) {
             foreach ($frameArguments as $argumentName => $argumentValue) {
-                $argumentValue = $this->reprSerializer->serialize($argumentValue);
+                $argumentValue = $this->representationSerializer->serialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
                     $frameArguments[(string) $argumentName] = substr((string) $argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
@@ -297,7 +303,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function stripPrefixFromFilePath($filePath)
     {
-        foreach ($this->client->getOptions()->getPrefixes() as $prefix) {
+        foreach ($this->options->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
                 return substr($filePath, \strlen($prefix));
             }

@@ -14,7 +14,7 @@ namespace Sentry\Tests\Middleware;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Integration\ExceptionInterfaceMiddleware;
+use Sentry\Integration\ExceptionIntegration;
 use Sentry\Stacktrace;
 
 class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
@@ -28,7 +28,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $assertHasStacktrace = $client->getOptions()->getAutoLogStacks();
 
         $event = new Event($client->getOptions());
-        $middleware = new ExceptionInterfaceMiddleware($client);
+        $middleware = new ExceptionIntegration($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, $exception, $payload);
 
@@ -131,7 +131,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
-        $middleware = new ExceptionInterfaceMiddleware($client);
+        $middleware = new ExceptionIntegration($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($latin1String));
 
@@ -152,7 +152,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $client = ClientBuilder::create()->getClient();
         $event = new Event($client->getOptions());
 
-        $middleware = new ExceptionInterfaceMiddleware($client);
+        $middleware = new ExceptionIntegration($client);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($malformedString));
@@ -178,7 +178,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
         $event = new Event($client->getOptions());
 
-        $middleware = new ExceptionInterfaceMiddleware($client);
+        $middleware = new ExceptionIntegration($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext(
             $middleware,
@@ -218,7 +218,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
         $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
         $event = new Event($client->getOptions());
 
-        $middleware = new ExceptionInterfaceMiddleware($client);
+        $middleware = new ExceptionIntegration($client);
 
         $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception('foo'));
 

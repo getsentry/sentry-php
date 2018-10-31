@@ -12,8 +12,10 @@
 namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\ServerRequestFactory;
 use Sentry\Event;
+use Sentry\State\Hub;
+use Sentry\State\Scope;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * This middleware collects information from the request and attaches them to
@@ -21,49 +23,50 @@ use Sentry\Event;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RequestIntegration
+final class RequestIntegration implements Integration
 {
     /**
-     * Collects the needed data and sets it in the given event object.
      *
-     * @param Event                       $event     The event being processed
-     * @param \Exception|\Throwable|null  $exception The thrown exception, if available
-     *
-     * @return Event
      */
-    public function __invoke(Event $event, $exception = null)
+    public function setupOnce(): void
     {
-        /** @var ServerRequestInterface $request*/
-        $request = isset($_SERVER[ 'REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
+        Scope::addGlobalEventProcessor(function (Event $event) {
+            if (null === Hub::getCurrent()->getIntegration($this)) {
+                return $event;
+            }
 
-        if (null === $request) {
+            /** @var ServerRequestInterface $request */
+            $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
+
+            if (null === $request) {
+                return $event;
+            }
+
+            $requestData = [
+                'url' => (string) $request->getUri(),
+                'method' => $request->getMethod(),
+                'headers' => $request->getHeaders(),
+                'cookies' => $request->getCookieParams(),
+            ];
+
+            if ('' !== $request->getUri()->getQuery()) {
+                $requestData['query_string'] = $request->getUri()->getQuery();
+            }
+
+            if ($request->hasHeader('REMOTE_ADDR')) {
+                $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+            }
+
+            $event->setRequest($requestData);
+
+            /** @var array|Context $userContext */
+            $userContext = $event->getUserContext();
+
+            if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+                $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+            }
+
             return $event;
-        }
-
-        $requestData = [
-            'url' => (string) $request->getUri(),
-            'method' => $request->getMethod(),
-            'headers' => $request->getHeaders(),
-            'cookies' => $request->getCookieParams(),
-        ];
-
-        if ('' !== $request->getUri()->getQuery()) {
-            $requestData['query_string'] = $request->getUri()->getQuery();
-        }
-
-        if ($request->hasHeader('REMOTE_ADDR')) {
-            $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
-        }
-
-        $event->setRequest($requestData);
-
-        /** @var array|Context $userContext */
-        $userContext = $event->getUserContext();
-
-        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
-            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
-        }
-
-        return $event;
+        });
     }
 }

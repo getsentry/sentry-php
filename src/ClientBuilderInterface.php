@@ -88,27 +88,6 @@ interface ClientBuilderInterface
     public function removeHttpClientPlugin($className);
 
     /**
-     * Adds a new middleware with the given priority to the stack.
-     *
-     * @param callable $middleware The middleware instance
-     * @param int      $priority   The priority. The higher this value, the
-     *                             earlier a processor will be executed in
-     *                             the chain (defaults to 0)
-     *
-     * @return $this
-     */
-    public function addMiddleware(callable $middleware, $priority = 0);
-
-    /**
-     * Removes the given middleware from the stack.
-     *
-     * @param callable $middleware The middleware instance
-     *
-     * @return $this
-     */
-    public function removeMiddleware(callable $middleware);
-
-    /**
      * Gets the list of middlewares that will be added to the client at the
      * given priority.
      *

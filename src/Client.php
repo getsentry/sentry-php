@@ -12,9 +12,11 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Integration\Integration;
 use Sentry\Integration\IntegrationStack;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
@@ -50,38 +52,9 @@ class Client implements ClientInterface
     const MESSAGE_MAX_LENGTH_LIMIT = 1024;
 
     /**
-     * Debug log levels.
-     */
-    const LEVEL_DEBUG = 'debug';
-    const LEVEL_INFO = 'info';
-    const LEVEL_WARNING = 'warning';
-    const LEVEL_ERROR = 'error';
-    const LEVEL_FATAL = 'fatal';
-
-    /**
-     * @var string[]|null
-     */
-    public $severityMap;
-
-    /**
-     * @var Serializer The serializer
-     */
-    private $serializer;
-
-    /**
-     * @var ReprSerializer The representation serializer
-     */
-    private $representationSerializer;
-
-    /**
      * @var Options The client options
      */
     private $options;
-
-    /**
-     * @var TransactionStack The transaction stack
-     */
-    private $transactionStack;
 
     /**
      * @var TransportInterface The transport
@@ -89,15 +62,15 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var IntegrationStack The stack of middlewares to compose an event to send
+     * @var Integration[] The stack of installed integrations
      */
     private $installedIntegrations;
 
     /**
      * Constructor.
      *
-     * @param Options            $options   The client configuration
-     * @param TransportInterface $transport The transport
+     * @param Options            $options      The client configuration
+     * @param TransportInterface $transport    The transport
      * @param Integration[]      $integrations The integrations used by the client
      */
     public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
@@ -105,8 +78,6 @@ class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
 
-        $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
         $this->installedIntegrations = new IntegrationStack(function (Event $event) {
             return $event;
         });
@@ -116,10 +87,6 @@ class Client implements ClientInterface
 
         if (isset($serverParams['PATH_INFO'])) {
             $this->transactionStack->push($serverParams['PATH_INFO']);
-        }
-
-        if ($this->options->getSerializeAllObjects()) {
-            $this->setAllObjectSerialize(true);
         }
     }
 
@@ -160,6 +127,10 @@ class Client implements ClientInterface
      */
     protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
+        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
+            return null;
+        }
+
         $event = new Event();
 
         $event->setServerName($this->getOptions()->getServerName());
@@ -177,7 +148,7 @@ class Client implements ClientInterface
         }
 
         if ($event->getMessage()) {
-            $event->setMessage(substr($event->getMessage(), 0, Client::MESSAGE_MAX_LENGTH_LIMIT));
+            $event->setMessage(substr($event->getMessage(), 0, self::MESSAGE_MAX_LENGTH_LIMIT));
         }
 
         if (null !== $scope) {
@@ -224,61 +195,14 @@ class Client implements ClientInterface
      */
     public function send(Event $event): ?string
     {
-        // TODO move this into an integration
-//        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
-//            return;
-//        }
-
         return $this->transport->send($event);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getTransactionStack()
+    public function getIntegration(Integration $integration): ?Integration
     {
-        return $this->transactionStack;
+        if ($foundIntegration = $this->installedIntegrations[\get_class($integration)]) {
+            return $foundIntegration;
+        }
+        return null;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setAllObjectSerialize($value)
-    {
-        $this->serializer->setAllObjectSerialize($value);
-        $this->representationSerializer->setAllObjectSerialize($value);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRepresentationSerializer()
-    {
-        return $this->representationSerializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setRepresentationSerializer(ReprSerializer $representationSerializer)
-    {
-        $this->representationSerializer = $representationSerializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSerializer()
-    {
-        return $this->serializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setSerializer(Serializer $serializer)
-    {
-        $this->serializer = $serializer;
-    }
-
 }

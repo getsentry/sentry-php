@@ -12,6 +12,7 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Integration\Integration;
 use Sentry\State\Scope;
 
 /**
@@ -76,47 +77,5 @@ interface ClientInterface
      */
     public function send(Event $event): ?string;
 
-    /**
-     * Gets the transaction stack.
-     *
-     * @return TransactionStack
-     */
-    public function getTransactionStack();
-
-
-    /**
-     * Sets whether all the objects should be serialized by the representation
-     * serializer.
-     *
-     * @param bool $value Whether the serialization of all objects is enabled or not
-     */
-    public function setAllObjectSerialize($value);
-
-    /**
-     * Gets the representation serialier.
-     *
-     * @return ReprSerializer
-     */
-    public function getRepresentationSerializer();
-
-    /**
-     * Sets the representation serializer.
-     *
-     * @param ReprSerializer $representationSerializer The serializer instance
-     */
-    public function setRepresentationSerializer(ReprSerializer $representationSerializer);
-
-    /**
-     * Gets the serializer.
-     *
-     * @return Serializer
-     */
-    public function getSerializer();
-
-    /**
-     * Sets the serializer.
-     *
-     * @param Serializer $serializer The serializer instance
-     */
-    public function setSerializer(Serializer $serializer);
+    public function getIntegration(Integration $integration): ?Integration;
 }

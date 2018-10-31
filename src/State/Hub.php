@@ -13,6 +13,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Integration\Integration;
 use Sentry\Severity;
 
 /**
@@ -273,5 +274,13 @@ final class Hub
         self::$currentHub = $hub;
 
         return $hub;
+    }
+
+    public function getIntegration(Integration $integration): ?Integration
+    {
+        if ($client = $this->getClient()) {
+            return $client->getIntegration($integration);
+        }
+        return null;
     }
 }

@@ -24,12 +24,9 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
-use Sentry\Context\Context;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Integration\ContextInterfaceMiddleware;
-use Sentry\Integration\ExceptionInterfaceMiddleware;
+use Sentry\Integration\ExceptionIntegration;
 use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\UserIntegration;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -106,11 +103,6 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var Plugin[] The list of Httplug plugins
      */
     private $httpClientPlugins = [];
-
-    /**
-     * @var array List of middlewares and their priorities
-     */
-    private $middlewares = [];
 
     /**
      * Class constructor.
@@ -199,40 +191,6 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addMiddleware(callable $middleware, $priority = 0)
-    {
-        $this->middlewares[] = [$middleware, $priority];
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeMiddleware(callable $middleware)
-    {
-        foreach ($this->middlewares as $key => $value) {
-            if ($value[0] !== $middleware) {
-                continue;
-            }
-
-            unset($this->middlewares[$key]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMiddlewares()
-    {
-        return $this->middlewares;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getClient(): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
@@ -240,14 +198,10 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->createTransportInstance();
 
-        $client = new Client($this->options, $this->transport);
-        $client->addMiddleware(new RequestIntegration());
-        $client->addMiddleware(new UserIntegration());
-        $client->addMiddleware(new ExceptionInterfaceMiddleware($client));
-
-        foreach ($this->middlewares as $middleware) {
-            $client->addMiddleware($middleware[0], $middleware[1]);
-        }
+        $client = new Client($this->options, $this->transport, [
+            new RequestIntegration(),
+            new ExceptionIntegration($this->options),
+        ]);
 
         return $client;
     }

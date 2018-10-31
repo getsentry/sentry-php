@@ -5,9 +5,10 @@ namespace Sentry\Integration;
 use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\NullIO;
-use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Event;
 use Sentry\Options;
+use Sentry\State\Hub;
+use Sentry\State\Scope;
 
 /**
  * This middleware logs with the event details all the versions of the packages
@@ -15,12 +16,17 @@ use Sentry\Options;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ModulesIntegration
+final class ModulesIntegration implements Integration
 {
     /**
      * @var Options The client option
      */
     private $options;
+
+    /**
+     * @var array
+     */
+    private static $loadedModules = [];
 
     /**
      * Constructor.
@@ -37,32 +43,30 @@ final class ModulesIntegration
     }
 
     /**
-     * Collects the needed data and sets it in the given event object.
      *
-     * @param Event                       $event     The event being processed
-     * @param \Exception|\Throwable|null  $exception The thrown exception, if available
-     *
-     * @return Event
      */
-    public function __invoke(Event $event, $exception = null)
+    public function setupOnce(): void
     {
-        $composerFilePath = $this->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
+        Scope::addGlobalEventProcessor(function (Event $event) {
+            if ($self = Hub::getCurrent()->getIntegration($this)) {
+                /** @var ModulesIntegration $self */
+                $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
 
-        if (file_exists($composerFilePath)) {
-            $composer = Factory::create(new NullIO(), $composerFilePath, true);
-            $locker = $composer->getLocker();
+                if (file_exists($composerFilePath) && \count(self::$loadedModules) == 0) {
+                    $composer = Factory::create(new NullIO(), $composerFilePath, true);
+                    $locker = $composer->getLocker();
 
-            if ($locker->isLocked()) {
-                $modules = [];
-
-                foreach ($locker->getLockedRepository()->getPackages() as $package) {
-                    $modules[$package->getName()] = $package->getVersion();
+                    if ($locker->isLocked()) {
+                        foreach ($locker->getLockedRepository()->getPackages() as $package) {
+                            self::$loadedModules[$package->getName()] = $package->getVersion();
+                        }
+                    }
                 }
 
-                $event->setModules($modules);
+                $event->setModules(self::$loadedModules);
+                return $event;
             }
-        }
-
-        return $event;
+            return $event;
+        });
     }
 }

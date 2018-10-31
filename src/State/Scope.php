@@ -64,6 +64,11 @@ final class Scope
     private $eventProcessors = [];
 
     /**
+     * @var callable[] List of event processors
+     */
+    private static $globalEventProcessors = [];
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -249,6 +254,18 @@ final class Scope
     }
 
     /**
+     * Adds a new event processor that will be called after {@see Scope::applyToEvent}
+     * finished its work.
+     *
+     * @param callable $eventProcessor The event processor
+     */
+    public static function addGlobalEventProcessor(callable $eventProcessor): void
+    {
+        self::$globalEventProcessors[] = $eventProcessor;
+    }
+
+
+    /**
      * Clears the scope and resets any data it contains.
      *
      * @return $this
@@ -298,7 +315,7 @@ final class Scope
         $event->getExtraContext()->merge($this->extra->toArray());
         $event->getUserContext()->merge($this->user->toArray());
 
-        foreach ($this->eventProcessors as $processor) {
+        foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
             $event = $processor($event);
 
             if (null === $event) {
@@ -318,5 +335,6 @@ final class Scope
         $this->user = clone $this->user;
         $this->tags = clone $this->tags;
         $this->extra = clone $this->extra;
+        $this->eventProcessors = clone $this->eventProcessors;
     }
 }
