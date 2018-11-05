@@ -5,8 +5,7 @@ Test throwing exception in custom exception handler
 
 namespace Sentry\Tests;
 
-use Sentry\ClientBuilder;
-use Sentry\ErrorHandler;
+use function Sentry\init;
 
 $vendor = __DIR__;
 
@@ -22,9 +21,7 @@ set_exception_handler(function ($exception) {
     throw new \Exception('bar foo');
 });
 
-$client = ClientBuilder::create()->getClient();
-
-ErrorHandler::register($client);
+init();
 
 throw new \Exception('foo bar');
 ?>

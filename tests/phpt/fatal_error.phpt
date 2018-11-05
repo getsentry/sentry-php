@@ -6,8 +6,8 @@ Test catching fatal errors
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
-use Sentry\ClientBuilder;
-use Sentry\ErrorHandler;
+use function Sentry\init;
+use Sentry\State\Hub;
 
 $vendor = __DIR__;
 
@@ -17,14 +17,13 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$client = ClientBuilder::create([
+init([
     'dsn' => 'http://public:secret@local.host/1',
     'send_attempts' => 1,
-])->getClient();
+]);
 
-ErrorHandler::register($client);
-
-register_shutdown_function('register_shutdown_function', function () use ($client) {
+register_shutdown_function('register_shutdown_function', function () {
+    $client = Hub::getCurrent()->getClient();
     /** @var \Sentry\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
 

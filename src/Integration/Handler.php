@@ -4,7 +4,7 @@ namespace Sentry\Integration;
 
 final class Handler
 {
-    private static $integrations;
+    private static $integrations = [];
 
     public static function setupIntegrations(array $integrations): array
     {

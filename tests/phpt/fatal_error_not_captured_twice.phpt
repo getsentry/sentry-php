@@ -6,10 +6,9 @@ Test catching fatal errors does not capture twice
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
-use Sentry\ClientBuilder;
-use Sentry\ErrorHandler;
 use Sentry\Spool\MemorySpool;
 use Sentry\Transport\SpoolTransport;
+use function Sentry\init;
 
 $vendor = __DIR__;
 
@@ -22,11 +21,7 @@ require $vendor . '/vendor/autoload.php';
 $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
 
-$client = ClientBuilder::create()
-    ->setTransport($transport)
-    ->getClient();
-
-ErrorHandler::register($client);
+init(["transport" => $transport]);
 
 register_shutdown_function('register_shutdown_function', function () use ($spool) {
     Assert::assertAttributeCount(1, 'events', $spool);

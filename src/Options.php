@@ -16,6 +16,7 @@ namespace Sentry;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Sentry\Transport\TransportInterface;
 
 /**
  * Configuration container for the Sentry client.
@@ -643,6 +644,14 @@ class Options
     }
 
     /**
+     * @return null|TransportInterface
+     */
+    public function getTransport(): ?TransportInterface
+    {
+        return $this->options['transport'];
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -673,6 +682,7 @@ class Options
             'server_name' => gethostname(),
             'should_capture' => null,
             'tags' => [],
+            'transport' => null,
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
@@ -703,6 +713,7 @@ class Options
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
+        $resolver->setAllowedTypes('transport', ['null', 'Sentry\Transport\TransportInterface']);
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {

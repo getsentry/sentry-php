@@ -25,6 +25,7 @@ use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
+use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\ExceptionIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Transport\HttpTransport;
@@ -196,9 +197,10 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-        $this->transport = $this->createTransportInstance();
+        $this->transport = $this->options->getTransport() ?? $this->createTransportInstance();
 
         $client = new Client($this->options, $this->transport, [
+            new ErrorHandlerIntegration(),
             new RequestIntegration(),
             new ExceptionIntegration($this->options),
         ]);
