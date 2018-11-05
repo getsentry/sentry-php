@@ -12,6 +12,7 @@
 namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -26,19 +27,20 @@ use Zend\Diactoros\ServerRequestFactory;
 final class RequestIntegration implements Integration
 {
     /**
-     *
+     * {@inheritdoc}
      */
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
-            if (null === Hub::getCurrent()->getIntegration($this)) {
+            $self = Hub::getCurrent()->getIntegration($this);
+            if (!$self instanceof self) {
                 return $event;
             }
 
             /** @var ServerRequestInterface $request */
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
 
-            if (null === $request) {
+            if (null == $request) {
                 return $event;
             }
 
@@ -59,12 +61,13 @@ final class RequestIntegration implements Integration
 
             $event->setRequest($requestData);
 
-            /** @var array|Context $userContext */
-            $userContext = $event->getUserContext();
-
-            if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
-                $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
-            }
+//            TODO
+//            /** @var UserContext $userContext */
+//            $userContext = $event->getUserContext();
+//
+//            if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+//                $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+//            }
 
             return $event;
         });

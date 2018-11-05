@@ -44,8 +44,8 @@ final class ExceptionIntegration implements Integration
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event, $exception) {
-            /** @var ExceptionIntegration $self */
-            if ($self = Hub::getCurrent()->getIntegration($this)) {
+            $self = Hub::getCurrent()->getIntegration($this);
+            if ($self instanceof self) {
                 if ($exception instanceof \ErrorException) {
                     $event->setLevel($self->translateSeverity($exception->getSeverity()));
                 }
@@ -60,9 +60,9 @@ final class ExceptionIntegration implements Integration
                         }
 
                         $data = [
-                            'type' => \get_class($currentException),
-                            'value' => (new Serializer($this->options->getMbDetectOrder()))->serialize($currentException->getMessage()),
-                        ];
+                                'type' => \get_class($currentException),
+                                'value' => (new Serializer($self->options->getMbDetectOrder()))->serialize($currentException->getMessage()),
+                            ];
 
                         if ($self->options->getAutoLogStacks()) {
                             $data['stacktrace'] = Stacktrace::createFromBacktrace($self->options, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
@@ -72,14 +72,16 @@ final class ExceptionIntegration implements Integration
                     } while ($currentException = $currentException->getPrevious());
 
                     $exceptions = [
-                        'values' => array_reverse($exceptions),
-                    ];
+                            'values' => array_reverse($exceptions),
+                        ];
 
                     $event->setException($exceptions);
                 }
 
                 return $event;
             }
+
+            return $event;
         });
     }
 

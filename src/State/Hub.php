@@ -281,6 +281,7 @@ final class Hub
         if ($client = $this->getClient()) {
             return $client->getIntegration($integration);
         }
+
         return null;
     }
 }

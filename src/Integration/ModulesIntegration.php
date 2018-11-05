@@ -42,17 +42,14 @@ final class ModulesIntegration implements Integration
         $this->options = $options;
     }
 
-    /**
-     *
-     */
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
-            if ($self = Hub::getCurrent()->getIntegration($this)) {
-                /** @var ModulesIntegration $self */
+            $self = Hub::getCurrent()->getIntegration($this);
+            if ($self instanceof self) {
                 $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
 
-                if (file_exists($composerFilePath) && \count(self::$loadedModules) == 0) {
+                if (file_exists($composerFilePath) && 0 == \count(self::$loadedModules)) {
                     $composer = Factory::create(new NullIO(), $composerFilePath, true);
                     $locker = $composer->getLocker();
 
@@ -64,8 +61,10 @@ final class ModulesIntegration implements Integration
                 }
 
                 $event->setModules(self::$loadedModules);
+
                 return $event;
             }
+
             return $event;
         });
     }

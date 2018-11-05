@@ -64,7 +64,6 @@ class Stacktrace implements \JsonSerializable
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
         $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
 
-
         if ($this->options->getSerializeAllObjects()) {
             $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
             $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
@@ -88,10 +87,10 @@ class Stacktrace implements \JsonSerializable
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param Options $options    The client options
-     * @param array           $backtrace The backtrace
-     * @param string          $file      The file that originated the backtrace
-     * @param int             $line      The line at which the backtrace originated
+     * @param Options $options   The client options
+     * @param array   $backtrace The backtrace
+     * @param string  $file      The file that originated the backtrace
+     * @param int     $line      The line at which the backtrace originated
      *
      * @return static
      */

@@ -264,7 +264,6 @@ final class Scope
         self::$globalEventProcessors[] = $eventProcessor;
     }
 
-
     /**
      * Clears the scope and resets any data it contains.
      *
@@ -335,6 +334,5 @@ final class Scope
         $this->user = clone $this->user;
         $this->tags = clone $this->tags;
         $this->extra = clone $this->extra;
-        $this->eventProcessors = clone $this->eventProcessors;
     }
 }

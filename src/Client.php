@@ -12,8 +12,8 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Integration\Handler;
 use Sentry\Integration\Integration;
-use Sentry\Integration\IntegrationStack;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
@@ -78,16 +78,14 @@ class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
 
-        $this->installedIntegrations = new IntegrationStack(function (Event $event) {
-            return $event;
-        });
+        $this->installedIntegrations = Handler::setupIntegrations($integrations);
 
-        $request = ServerRequestFactory::fromGlobals();
-        $serverParams = $request->getServerParams();
-
-        if (isset($serverParams['PATH_INFO'])) {
-            $this->transactionStack->push($serverParams['PATH_INFO']);
-        }
+//        TODO use integration
+//        $request = ServerRequestFactory::fromGlobals();
+//        $serverParams = $request->getServerParams();
+//        if (isset($serverParams['PATH_INFO'])) {
+//            $this->transactionStack->push($serverParams['PATH_INFO']);
+//        }
     }
 
     /**
@@ -140,7 +138,8 @@ class Client implements ClientInterface
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
         } else {
-            $event->setTransaction($this->transactionStack->peek());
+            // TODO
+//            $event->setTransaction($this->transactionStack->peek());
         }
 
         if (isset($payload['logger'])) {
@@ -200,9 +199,11 @@ class Client implements ClientInterface
 
     public function getIntegration(Integration $integration): ?Integration
     {
-        if ($foundIntegration = $this->installedIntegrations[\get_class($integration)]) {
-            return $foundIntegration;
+        $class = \get_class($integration);
+        if (\array_key_exists($class, $this->installedIntegrations)) {
+            return $this->installedIntegrations[$class];
         }
+
         return null;
     }
 }

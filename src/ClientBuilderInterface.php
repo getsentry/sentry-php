@@ -88,14 +88,6 @@ interface ClientBuilderInterface
     public function removeHttpClientPlugin($className);
 
     /**
-     * Gets the list of middlewares that will be added to the client at the
-     * given priority.
-     *
-     * @return array
-     */
-    public function getMiddlewares();
-
-    /**
      * Gets the instance of the client built using the configured options.
      *
      * @return ClientInterface

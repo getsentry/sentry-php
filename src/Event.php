@@ -450,6 +450,7 @@ final class Event implements \JsonSerializable
 
     /**
      * Adds a new breadcrumb to the event.
+     * TODO: set all breadcrumbs.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb
      */
