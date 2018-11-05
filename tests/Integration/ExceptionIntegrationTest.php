@@ -9,28 +9,31 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Tests\Middleware;
+namespace Sentry\Tests\Integration;
 
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\ExceptionIntegration;
+use Sentry\Options;
+use Sentry\Severity;
 use Sentry\Stacktrace;
 
-class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
+class ExceptionIntegrationTest extends MiddlewareTestCase
 {
     /**
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(\Exception $exception, array $clientConfig, array $payload, array $expectedResult)
     {
-        $client = ClientBuilder::create($clientConfig)->getClient();
-        $assertHasStacktrace = $client->getOptions()->getAutoLogStacks();
+        $options = new Options($clientConfig);
+        $assertHasStacktrace = $options->getAutoLogStacks();
 
-        $event = new Event($client->getOptions());
-        $middleware = new ExceptionIntegration($client);
+        $event = new Event($options);
+        $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, $exception, $payload);
+        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, $exception);
+
 
         $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
 
@@ -52,7 +55,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
                 [],
                 [],
                 [
-                    'level' => Client::LEVEL_ERROR,
+                    'level' => Severity::ERROR,
                     'exception' => [
                         'values' => [
                             [
@@ -70,7 +73,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
                 ],
                 [],
                 [
-                    'level' => Client::LEVEL_ERROR,
+                    'level' => Severity::ERROR,
                     'exception' => [
                         'values' => [
                             [
@@ -86,7 +89,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
                 [],
                 [],
                 [
-                    'level' => Client::LEVEL_WARNING,
+                    'level' => Severity::WARNING,
                     'exception' => [
                         'values' => [
                             [
@@ -104,7 +107,7 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
                 ],
                 [],
                 [
-                    'level' => Client::LEVEL_ERROR,
+                    'level' => Severity::ERROR,
                     'exception' => [
                         'values' => [
                             [
@@ -124,16 +127,15 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
     public function testInvokeWithExceptionContainingLatin1Characters()
     {
-        $client = ClientBuilder::create(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']])
-            ->getClient();
+        $options = new Options(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]);
 
-        $event = new Event($client->getOptions());
+        $event = new Event($options);
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
-        $middleware = new ExceptionIntegration($client);
+        $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($latin1String));
+        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($latin1String));
 
         $expectedValue = [
             'values' => [
@@ -149,13 +151,13 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
     {
-        $client = ClientBuilder::create()->getClient();
-        $event = new Event($client->getOptions());
+        $options = new Options();
+        $event = new Event($options);
 
-        $middleware = new ExceptionIntegration($client);
+        $integration = new ExceptionIntegration($options);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception($malformedString));
+        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($malformedString));
 
         $expectedValue = [
             'values' => [
@@ -171,21 +173,16 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
     public function testInvokeWithExceptionThrownInLatin1File()
     {
-        $client = ClientBuilder::create([
+        $options = new Options([
             'auto_log_stacks' => true,
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
-        ])->getClient();
+        ]);
 
-        $event = new Event($client->getOptions());
+        $event = new Event($options);
 
-        $middleware = new ExceptionIntegration($client);
+        $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext(
-            $middleware,
-            $event,
-            null,
-            require_once __DIR__ . '/../Fixtures/code/Latin1File.php'
-        );
+        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
 
         $result = $returnedEvent->getException();
         $expectedValue = [
@@ -215,12 +212,12 @@ class ExceptionInterfaceMiddlewareTest extends MiddlewareTestCase
 
     public function testInvokeWithAutoLogStacksDisabled()
     {
-        $client = ClientBuilder::create(['auto_log_stacks' => false])->getClient();
-        $event = new Event($client->getOptions());
+        $options = new Options(['auto_log_stacks' => false]);
+        $event = new Event($options);
 
-        $middleware = new ExceptionIntegration($client);
+        $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, null, new \Exception('foo'));
+        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception('foo'));
 
         $result = $returnedEvent->getException();
         $this->assertNotEmpty($result);

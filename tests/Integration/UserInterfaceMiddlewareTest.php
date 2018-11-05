@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Tests\Middleware;
+namespace Sentry\Tests\Integration;
 
 use Sentry\Event;
 use Sentry\Integration\UserIntegration;

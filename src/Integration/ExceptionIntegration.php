@@ -41,48 +41,64 @@ final class ExceptionIntegration implements Integration
         $this->options = $options;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event, $exception) {
             $self = Hub::getCurrent()->getIntegration($this);
             if ($self instanceof self) {
-                if ($exception instanceof \ErrorException) {
-                    $event->setLevel($self->translateSeverity($exception->getSeverity()));
-                }
-
-                if (null !== $exception) {
-                    $exceptions = [];
-                    $currentException = $exception;
-
-                    do {
-                        if ($self->options->isExcludedException($currentException)) {
-                            continue;
-                        }
-
-                        $data = [
-                                'type' => \get_class($currentException),
-                                'value' => (new Serializer($self->options->getMbDetectOrder()))->serialize($currentException->getMessage()),
-                            ];
-
-                        if ($self->options->getAutoLogStacks()) {
-                            $data['stacktrace'] = Stacktrace::createFromBacktrace($self->options, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
-                        }
-
-                        $exceptions[] = $data;
-                    } while ($currentException = $currentException->getPrevious());
-
-                    $exceptions = [
-                            'values' => array_reverse($exceptions),
-                        ];
-
-                    $event->setException($exceptions);
-                }
-
-                return $event;
+                self::applyToEvent($self, $event, $exception);
             }
 
             return $event;
         });
+    }
+
+    /**
+     * Applies exception to the passed event
+     *
+     * @param ExceptionIntegration $self
+     * @param Event $event
+     * @param null|$exception
+     * @return null|Event
+     */
+    public static function applyToEvent(ExceptionIntegration $self, Event $event, $exception = null): ?Event
+    {
+        if ($exception instanceof \ErrorException) {
+            $event->setLevel($self->translateSeverity($exception->getSeverity()));
+        }
+
+        if (null !== $exception) {
+            $exceptions = [];
+            $currentException = $exception;
+
+            do {
+                if ($self->options->isExcludedException($currentException)) {
+                    continue;
+                }
+
+                $data = [
+                    'type' => \get_class($currentException),
+                    'value' => (new Serializer($self->options->getMbDetectOrder()))->serialize($currentException->getMessage()),
+                ];
+
+                if ($self->options->getAutoLogStacks()) {
+                    $data['stacktrace'] = Stacktrace::createFromBacktrace($self->options, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+                }
+
+                $exceptions[] = $data;
+            } while ($currentException = $currentException->getPrevious());
+
+            $exceptions = [
+                'values' => array_reverse($exceptions),
+            ];
+
+            $event->setException($exceptions);
+        }
+
+        return $event;
     }
 
     /**

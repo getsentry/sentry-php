@@ -12,12 +12,11 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 
 abstract class AbstractErrorHandlerTest extends TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|Client
+     * @var \PHPUnit_Framework_MockObject_MockObject
      */
     protected $callbackMock;
 

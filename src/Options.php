@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Sentry\Transport\TransportInterface;
 
 /**
  * Configuration container for the Sentry client.
