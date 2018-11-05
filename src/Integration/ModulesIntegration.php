@@ -42,30 +42,45 @@ final class ModulesIntegration implements Integration
         $this->options = $options;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
             $self = Hub::getCurrent()->getIntegration($this);
             if ($self instanceof self) {
-                $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
-
-                if (file_exists($composerFilePath) && 0 == \count(self::$loadedModules)) {
-                    $composer = Factory::create(new NullIO(), $composerFilePath, true);
-                    $locker = $composer->getLocker();
-
-                    if ($locker->isLocked()) {
-                        foreach ($locker->getLockedRepository()->getPackages() as $package) {
-                            self::$loadedModules[$package->getName()] = $package->getVersion();
-                        }
-                    }
-                }
-
-                $event->setModules(self::$loadedModules);
-
-                return $event;
+                self::applyToEvent($self, $event);
             }
 
             return $event;
         });
+    }
+
+    /**
+     *
+     *
+     * @param ModulesIntegration $self
+     * @param Event $event
+     * @return null|Event
+     */
+    public static function applyToEvent(ModulesIntegration $self, Event $event): ?Event
+    {
+        $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
+
+        if (file_exists($composerFilePath) && 0 == \count(self::$loadedModules)) {
+            $composer = Factory::create(new NullIO(), $composerFilePath, true);
+            $locker = $composer->getLocker();
+
+            if ($locker->isLocked()) {
+                foreach ($locker->getLockedRepository()->getPackages() as $package) {
+                    self::$loadedModules[$package->getName()] = $package->getVersion();
+                }
+            }
+        }
+
+        $event->setModules(self::$loadedModules);
+
+        return $event;
     }
 }

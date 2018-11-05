@@ -17,33 +17,15 @@ use Sentry\Options;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
+class RequestIntegrationTest extends MiddlewareTestCase
 {
-    public function testInvokeWithNoRequest()
-    {
-        $configuration = new Options();
-        $event = new Event($configuration);
-
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
-            $this->assertSame($event, $eventArg);
-
-            $callbackInvoked = true;
-        };
-
-        $middleware = new RequestIntegration();
-        $middleware($event, $callback);
-
-        $this->assertTrue($callbackInvoked, 'Next middleware NOT invoked');
-    }
-
     /**
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(array $requestData, array $expectedValue)
     {
-        $configuration = new Options();
-        $event = new Event($configuration);
+        $options = new Options();
+        $event = new Event($options);
 
         $request = new ServerRequest();
         $request = $request->withUri(new Uri($requestData['uri']));
@@ -54,9 +36,7 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $middleware = new RequestIntegration();
-
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
+        $returnedEvent = RequestIntegration::applyToEvent($event, $request);
 
         $this->assertEquals($expectedValue, $returnedEvent->getRequest());
     }

@@ -37,29 +37,42 @@ final class RequestIntegration implements Integration
                 return $event;
             }
 
+            return self::applyToEvent($event);
+        });
+    }
+
+    /**
+     * @param Event $event
+     * @param null|ServerRequestInterface $request
+     * @return Event
+     */
+    public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): Event
+    {
+        if (null == $request) {
             /** @var ServerRequestInterface $request */
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
+        }
 
-            if (null == $request) {
-                return $event;
-            }
+        if (null == $request) {
+            return $event;
+        }
 
-            $requestData = [
-                'url' => (string) $request->getUri(),
-                'method' => $request->getMethod(),
-                'headers' => $request->getHeaders(),
-                'cookies' => $request->getCookieParams(),
-            ];
+        $requestData = [
+            'url' => (string) $request->getUri(),
+            'method' => $request->getMethod(),
+            'headers' => $request->getHeaders(),
+            'cookies' => $request->getCookieParams(),
+        ];
 
-            if ('' !== $request->getUri()->getQuery()) {
-                $requestData['query_string'] = $request->getUri()->getQuery();
-            }
+        if ('' !== $request->getUri()->getQuery()) {
+            $requestData['query_string'] = $request->getUri()->getQuery();
+        }
 
-            if ($request->hasHeader('REMOTE_ADDR')) {
-                $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
-            }
+        if ($request->hasHeader('REMOTE_ADDR')) {
+            $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+        }
 
-            $event->setRequest($requestData);
+        $event->setRequest($requestData);
 
 //            TODO
 //            /** @var UserContext $userContext */
@@ -69,7 +82,6 @@ final class RequestIntegration implements Integration
 //                $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
 //            }
 
-            return $event;
-        });
+        return $event;
     }
 }

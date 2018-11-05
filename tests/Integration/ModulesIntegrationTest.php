@@ -15,16 +15,16 @@ use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\Options;
 
-class ModulesMiddlewareTest extends MiddlewareTestCase
+class ModulesIntegrationTest extends MiddlewareTestCase
 {
     public function testInvoke()
     {
-        $configuration = new Options(['project_root' => __DIR__ . '/../Fixtures']);
-        $event = new Event($configuration);
+        $options = new Options(['project_root' => __DIR__ . '/../Fixtures']);
+        $event = new Event($options);
 
-        $middleware = new ModulesIntegration($configuration);
+        $integration = new ModulesIntegration($options);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event);
+        $returnedEvent = ModulesIntegration::applyToEvent($integration, $event);
 
         $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $returnedEvent->getModules());
     }
