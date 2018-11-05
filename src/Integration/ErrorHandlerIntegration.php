@@ -10,20 +10,22 @@ final class ErrorHandlerIntegration implements Integration
 {
     public function setupOnce(): void
     {
-        new ErrorHandler(function ($exception) {
+        ErrorHandler::register(function ($exception) {
             if ($self = Hub::getCurrent()->getIntegration($this)) {
-                /* @var \ErrorException $exception */
-                Hub::getCurrent()->addBreadcrumb(new Breadcrumb(
-                    $this->getSeverityFromErrorException($exception),
-                    Breadcrumb::TYPE_ERROR,
-                    'error_reporting',
-                    $exception->getMessage(),
-                    [
-                        'code' => $exception->getCode(),
-                        'file' => $exception->getFile(),
-                        'line' => $exception->getLine(),
-                    ]
-                ));
+                if ($exception instanceof \ErrorException) {
+                    /* @var \ErrorException $exception */
+                    Hub::getCurrent()->addBreadcrumb(new Breadcrumb(
+                        $this->getSeverityFromErrorException($exception),
+                        Breadcrumb::TYPE_ERROR,
+                        'error_reporting',
+                        $exception->getMessage(),
+                        [
+                            'code' => $exception->getCode(),
+                            'file' => $exception->getFile(),
+                            'line' => $exception->getLine(),
+                        ]
+                    ));
+                }
 
                 Hub::getCurrent()->captureException($exception);
             }

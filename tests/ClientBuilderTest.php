@@ -139,32 +139,6 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
-    public function testAddMiddlewares()
-    {
-        $middleware = function () {};
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addMiddleware($middleware, -10);
-
-        $this->assertEquals([[$middleware, -10]], $clientBuilder->getMiddlewares());
-    }
-
-    public function testRemoveMiddleware()
-    {
-        $middleware1 = function () {};
-        $middleware2 = function () {};
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addMiddleware($middleware1, -10);
-        $clientBuilder->addMiddleware($middleware2, 10);
-
-        $this->assertEquals([[$middleware1, -10], [$middleware2, 10]], $clientBuilder->getMiddlewares());
-
-        $clientBuilder->removeMiddleware($middleware2);
-
-        $this->assertEquals([[$middleware1, -10]], $clientBuilder->getMiddlewares());
-    }
-
     public function testGetClient()
     {
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
