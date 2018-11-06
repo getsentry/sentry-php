@@ -15,6 +15,7 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\Handler;
 use Sentry\Integration\Integration;
 use Sentry\State\Scope;
+use Sentry\Transport\Factory;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -43,7 +44,7 @@ class Client implements ClientInterface
     /**
      * This constant defines the client's user-agent string.
      */
-    const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
+    const USER_AGENT = self::SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
@@ -160,6 +161,7 @@ class Client implements ClientInterface
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
         $payload['message'] = $message;
+        $payload['level'] = $level;
 
         return $this->captureEvent($payload, $scope);
     }
@@ -191,13 +193,16 @@ class Client implements ClientInterface
      */
     public function send(Event $event): ?string
     {
-        if (null === $this->transport && null !== $this->getOptions()->getTransport()) {
-            $this->transport = $this->getOptions()->getTransport();
+        if (null === $this->transport) {
+            $this->transport = $this->getOptions()->getTransport() ?? Factory::make($this->getOptions());
         }
 
         return $this->transport->send($event);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getIntegration(Integration $integration): ?Integration
     {
         $class = \get_class($integration);

@@ -14,7 +14,6 @@ use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
-use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\ExceptionIntegration;
 use Sentry\Options;
@@ -22,6 +21,7 @@ use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\classes\CarelessException;
+use Sentry\Transport\Factory;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
@@ -48,6 +48,9 @@ class ClientTest extends TestCase
             }));
 
         $client->captureMessage('test');
+
+        unset($_SERVER['PATH_INFO']);
+        unset($_SERVER['REQUEST_METHOD']);
     }
 
     public function testConstructorInitializesTransactionStackInCli()
@@ -113,11 +116,10 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send');
+            ->method('send')
+            ->willReturn('eventid');
 
-        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
-            ->getClient();
+        $client = new Client(new Options(['dsn' => 'http://public:secret@example.com/1', 'transport' => $transport]));
 
         $inputData = [
             'transaction' => 'foo bar',
@@ -135,7 +137,7 @@ class ClientTest extends TestCase
 
     public function testAppPathLinux()
     {
-        $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
+        $client = new Client(new Options(['project_root' => '/foo/bar']));
 
         $this->assertEquals('/foo/bar/', $client->getOptions()->getProjectRoot());
 
@@ -146,7 +148,7 @@ class ClientTest extends TestCase
 
     public function testAppPathWindows()
     {
-        $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
+        $client = new Client(new Options(['project_root' => 'C:\\foo\\bar\\']));
 
         $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
@@ -179,14 +181,12 @@ class ClientTest extends TestCase
     {
         $shouldCaptureCalled = false;
 
-        $client = ClientBuilder::create([
-            'dsn' => 'http://public:secret@example.com/1',
+        $client = new Client(new Options(['dsn' => 'http://public:secret@example.com/1',
             'should_capture' => function () use (&$shouldCaptureCalled) {
                 $shouldCaptureCalled = true;
 
                 return false;
-            },
-        ])->getClient();
+            }, ]));
 
         $client->captureEvent([]);
 
@@ -199,10 +199,9 @@ class ClientTest extends TestCase
     public function testSampleRateAbsolute($options)
     {
         $httpClient = new MockClient();
+        $transport = Factory::make(new Options($options), null, $httpClient);
 
-        $client = ClientBuilder::create($options)
-            ->setHttpClient($httpClient)
-            ->getClient();
+        $client = new Client(new Options(\array_merge($options, ['transport' => $transport])));
 
         for ($i = 0; $i < 10; ++$i) {
             $client->captureMessage('foobar');
@@ -241,7 +240,7 @@ class ClientTest extends TestCase
      */
     public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLow(int $maxBreadcrumbs): void
     {
-        $client = ClientBuilder::create(['max_breadcrumbs' => $maxBreadcrumbs])->getClient();
+        $client = new Client(new Options(['max_breadcrumbs' => $maxBreadcrumbs]));
         $scope = new Scope();
 
         $client->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'), $scope);
@@ -259,7 +258,7 @@ class ClientTest extends TestCase
 
     public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void
     {
-        $client = ClientBuilder::create(['max_breadcrumbs' => 2])->getClient();
+        $client = new Client(new Options(['max_breadcrumbs' => 2]));
         $scope = new Scope();
 
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'foo');
@@ -279,13 +278,11 @@ class ClientTest extends TestCase
     public function testAddBreadcrumbDoesNothingWhenBeforeBreadcrumbCallbackReturnsNull(): void
     {
         $scope = new Scope();
-        $client = ClientBuilder::create(
-            [
-                'before_breadcrumb' => function (): ?Breadcrumb {
-                    return null;
-                },
-            ]
-        )->getClient();
+        $client = new Client(new Options([
+            'before_breadcrumb' => function (): ?Breadcrumb {
+                return null;
+            },
+        ]));
 
         $client->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'), $scope);
 
@@ -298,13 +295,11 @@ class ClientTest extends TestCase
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope = new Scope();
-        $client = ClientBuilder::create(
-            [
-                'before_breadcrumb' => function () use ($breadcrumb2): ?Breadcrumb {
-                    return $breadcrumb2;
-                },
-            ]
-        )->getClient();
+        $client = new Client(new Options([
+            'before_breadcrumb' => function () use ($breadcrumb2): ?Breadcrumb {
+                return $breadcrumb2;
+            },
+        ]));
 
         $client->addBreadcrumb($breadcrumb1, $scope);
 
