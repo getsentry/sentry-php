@@ -644,6 +644,14 @@ class Options
     }
 
     /**
+     * @param null|TransportInterface $transport
+     */
+    public function setTransport(?TransportInterface $transport): void
+    {
+        $this->options['transport'] = $transport;
+    }
+
+    /**
      * @return null|TransportInterface
      */
     public function getTransport(): ?TransportInterface

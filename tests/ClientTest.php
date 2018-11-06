@@ -15,13 +15,13 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Integration\IntegrationStack;
-use Sentry\ReprSerializer;
-use Sentry\Serializer;
+use Sentry\Event;
+use Sentry\Integration\ExceptionIntegration;
+use Sentry\Options;
 use Sentry\Severity;
+use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\classes\CarelessException;
-use Sentry\TransactionStack;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
@@ -31,65 +31,44 @@ class ClientTest extends TestCase
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        $client = ClientBuilder::create()->getClient();
-        $transactionStack = $client->getTransactionStack();
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
+            ->setConstructorArgs([new Options()])
+            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent'])
+            ->getMock();
 
-        $this->assertNotEmpty($transactionStack);
-        $this->assertEquals('/foo', $transactionStack->peek());
+        $client->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function ($event) {
+                /* @var Event $event*/
+                $this->assertInstanceOf(Event::class, $event);
+                $this->assertEquals('/foo', $event->getTransaction());
+
+                return true;
+            }));
+
+        $client->captureMessage('test');
     }
 
     public function testConstructorInitializesTransactionStackInCli()
     {
-        $client = ClientBuilder::create()->getClient();
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
+            ->setConstructorArgs([new Options()])
+            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent'])
+            ->getMock();
 
-        $this->assertEmpty($client->getTransactionStack());
-    }
+        $client->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function ($event) {
+                /* @var Event $event*/
+                $this->assertInstanceOf(Event::class, $event);
+                $this->assertNull($event->getTransaction());
 
-    public function testGetTransactionStack()
-    {
-        $client = ClientBuilder::create()->getClient();
+                return true;
+            }));
 
-        $this->assertInstanceOf(TransactionStack::class, $client->getTransactionStack());
-    }
-
-    public function testAddMiddleware()
-    {
-        $middleware = function () {};
-
-        /** @var IntegrationStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(IntegrationStack::class);
-        $middlewareStack->expects($this->once())
-            ->method('addMiddleware')
-            ->with($middleware, -10);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $middlewareStack);
-        $reflectionProperty->setAccessible(false);
-
-        $client->addMiddleware($middleware, -10);
-    }
-
-    public function testRemoveMiddleware()
-    {
-        $middleware = function () {};
-
-        /** @var IntegrationStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(IntegrationStack::class);
-        $middlewareStack->expects($this->once())
-            ->method('removeMiddleware')
-            ->with($middleware);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $middlewareStack);
-        $reflectionProperty->setAccessible(false);
-
-        $client->removeMiddleware($middleware);
+        $client->captureMessage('test');
     }
 
     public function testCaptureMessage()
@@ -196,56 +175,6 @@ class ClientTest extends TestCase
         }
     }
 
-    /**
-     * @covers \Sentry\Client::translateSeverity
-     * @covers \Sentry\Client::registerSeverityMap
-     */
-    public function testTranslateSeverity()
-    {
-        $reflection = new \ReflectionProperty(Client::class, 'severityMap');
-        $reflection->setAccessible(true);
-        $client = ClientBuilder::create()->getClient();
-
-        $predefined = [E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
-                       E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
-                       E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, ];
-        $predefined[] = E_DEPRECATED;
-        $predefined[] = E_USER_DEPRECATED;
-        $predefined_values = ['debug', 'info', 'warning', 'warning', 'error', 'fatal'];
-
-        // step 1
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        // step 2
-        $client->registerSeverityMap([]);
-        $this->assertMixedValueAndArray([], $reflection->getValue($client));
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        // step 3
-        $client->registerSeverityMap([123456 => 'foo']);
-        $this->assertMixedValueAndArray([123456 => 'foo'], $reflection->getValue($client));
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('foo', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-        // step 4
-        $client->registerSeverityMap([E_USER_ERROR => 'bar']);
-        $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-        // step 5
-        $client->registerSeverityMap([E_USER_ERROR => 'bar', 123456 => 'foo']);
-        $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
-        $this->assertEquals('foo', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-    }
-
     public function testSendChecksShouldCaptureOption()
     {
         $shouldCaptureCalled = false;
@@ -305,21 +234,6 @@ class ClientTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testSetAllObjectSerialize()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setAllObjectSerialize(true);
-
-        $this->assertTrue($client->getSerializer()->getAllObjectSerialize());
-        $this->assertTrue($client->getRepresentationSerializer()->getAllObjectSerialize());
-
-        $client->setAllObjectSerialize(false);
-
-        $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
-        $this->assertFalse($client->getRepresentationSerializer()->getAllObjectSerialize());
     }
 
     /**
@@ -397,43 +311,36 @@ class ClientTest extends TestCase
         $this->assertSame([$breadcrumb2], $scope->getBreadcrumbs());
     }
 
-    public function testSetSerializer()
+    public function testHandlingExceptionThrowingAnException()
     {
-        $client = ClientBuilder::create()->getClient();
-        $serializer = $this->createMock(Serializer::class);
+        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        $client = $this->getMockBuilder(Client::class)
+            ->setConstructorArgs([new Options(), [new ExceptionIntegration(new Options())]])
+            ->setMethodsExcept(['captureException', 'prepareEvent', 'captureEvent', 'getIntegration'])
+            ->getMock();
 
-        $client->setSerializer($serializer);
+        Hub::getCurrent()->bindClient($client);
 
-        $this->assertSame($serializer, $client->getSerializer());
+        $client->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function ($event) {
+                /* @var Event $event*/
+                // Make sure the exception is of the careless exception and not the exception thrown inside
+                // the __set method of that exception caused by setting the event_id on the exception instance
+                $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
+
+                return true;
+            }));
+
+        $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
 
-    public function testSetReprSerializer()
+    private function createCarelessExceptionWithStacktrace()
     {
-        $client = ClientBuilder::create()->getClient();
-        $serializer = $this->createMock(ReprSerializer::class);
-
-        $client->setRepresentationSerializer($serializer);
-
-        $this->assertSame($serializer, $client->getRepresentationSerializer());
+        try {
+            throw new CarelessException('Foo bar');
+        } catch (\Exception $ex) {
+            return $ex;
+        }
     }
-
-//    TODO
-//    public function testHandlingExceptionThrowingAnException()
-//    {
-//        $client = ClientBuilder::create()->getClient();
-//        $client->captureException($this->createCarelessExceptionWithStacktrace());
-//        $event = $client->getLastEvent();
-//        // Make sure the exception is of the careless exception and not the exception thrown inside
-//        // the __set method of that exception caused by setting the event_id on the exception instance
-//        $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
-//    }
-
-//    private function createCarelessExceptionWithStacktrace()
-//    {
-//        try {
-//            throw new CarelessException('Foo bar');
-//        } catch (\Exception $ex) {
-//            return $ex;
-//        }
-//    }
 }

@@ -78,7 +78,7 @@ final class RequestIntegration implements Integration
         /** @var UserContext $userContext */
         $userContext = $event->getUserContext();
 
-        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+        if (null !== $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
             $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
         }
 

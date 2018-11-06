@@ -69,23 +69,14 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options            $options      The client configuration
-     * @param TransportInterface $transport    The transport
-     * @param Integration[]      $integrations The integrations used by the client
+     * @param Options       $options      The client configuration
+     * @param Integration[] $integrations The integrations used by the client
      */
-    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
+    public function __construct(Options $options, array $integrations = [])
     {
         $this->options = $options;
-        $this->transport = $transport;
 
         $this->installedIntegrations = Handler::setupIntegrations($integrations);
-
-//        TODO use integration
-//        $request = ServerRequestFactory::fromGlobals();
-//        $serverParams = $request->getServerParams();
-//        if (isset($serverParams['PATH_INFO'])) {
-//            $this->transactionStack->push($serverParams['PATH_INFO']);
-//        }
     }
 
     /**
@@ -138,20 +129,26 @@ class Client implements ClientInterface
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
         } else {
-            // TODO
-//            $event->setTransaction($this->transactionStack->peek());
+            $request = ServerRequestFactory::fromGlobals();
+            $serverParams = $request->getServerParams();
+            if (isset($serverParams['PATH_INFO'])) {
+                $event->setTransaction($serverParams['PATH_INFO']);
+            }
         }
 
         if (isset($payload['logger'])) {
             $event->setLogger($payload['logger']);
         }
 
-        if ($event->getMessage()) {
-            $event->setMessage(substr($event->getMessage(), 0, self::MESSAGE_MAX_LENGTH_LIMIT));
+        $message = isset($payload['message']) ? $payload['message'] : null;
+        $messageParams = isset($payload['message_params']) ? $payload['message_params'] : [];
+
+        if (null !== $message) {
+            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
         }
 
         if (null !== $scope) {
-            $event = $scope->applyToEvent($event);
+            $event = $scope->applyToEvent($event, $payload);
         }
 
         return $event;
@@ -164,7 +161,7 @@ class Client implements ClientInterface
     {
         $payload['message'] = $message;
 
-        return $this->captureEvent($payload);
+        return $this->captureEvent($payload, $scope);
     }
 
     /**
@@ -174,7 +171,7 @@ class Client implements ClientInterface
     {
         $payload['exception'] = $exception;
 
-        return $this->captureEvent($payload);
+        return $this->captureEvent($payload, $scope);
     }
 
     /**
@@ -194,6 +191,10 @@ class Client implements ClientInterface
      */
     public function send(Event $event): ?string
     {
+        if (null === $this->transport && null !== $this->getOptions()->getTransport()) {
+            $this->transport = $this->getOptions()->getTransport();
+        }
+
         return $this->transport->send($event);
     }
 

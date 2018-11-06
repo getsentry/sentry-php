@@ -119,7 +119,7 @@ final class ScopeTest extends TestCase
             return $eventArg;
         });
 
-        $this->assertSame($event, $scope->applyToEvent($event));
+        $this->assertSame($event, $scope->applyToEvent($event, []));
         $this->assertTrue($callback1Called);
 
         $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called): ?Event {
@@ -137,7 +137,7 @@ final class ScopeTest extends TestCase
             return null;
         });
 
-        $this->assertNull($scope->applyToEvent($event));
+        $this->assertNull($scope->applyToEvent($event, []));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
     }
@@ -173,7 +173,7 @@ final class ScopeTest extends TestCase
         $scope->setExtra('bar', 'foo');
         $scope->setUser(['foo' => 'baz']);
 
-        $event = $scope->applyToEvent($event);
+        $event = $scope->applyToEvent($event, []);
 
         $this->assertNotNull($event);
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
@@ -190,7 +190,7 @@ final class ScopeTest extends TestCase
         $scope->setExtra('foo', 'bar');
         $scope->setUser(['baz' => 'foo']);
 
-        $event = $scope->applyToEvent($event);
+        $event = $scope->applyToEvent($event, []);
 
         $this->assertNotNull($event);
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
@@ -200,6 +200,6 @@ final class ScopeTest extends TestCase
         $this->assertEquals(['bar' => 'foo', 'foo' => 'bar'], $event->getExtraContext()->toArray());
         $this->assertEquals(['foo' => 'baz', 'baz' => 'foo'], $event->getUserContext()->toArray());
 
-        $this->assertSame($event, $scope->applyToEvent($event));
+        $this->assertSame($event, $scope->applyToEvent($event, []));
     }
 }

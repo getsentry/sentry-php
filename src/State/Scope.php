@@ -286,22 +286,19 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event $event          The event object
-     * @param int   $maxBreadcrumbs The maximum number of breadcrumbs to add to
-     *                              the event
+     * @param Event $event   The event object
+     * @param array $payload Payload
      *
      * @return Event|null
      */
-    public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
+    public function applyToEvent(Event $event, array $payload): ?Event
     {
         if (empty($event->getFingerprint())) {
             $event->setFingerprint($this->fingerprint);
         }
 
         if (empty($event->getBreadcrumbs())) {
-            $breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
-
-            foreach ($breadcrumbs as $breadcrumb) {
+            foreach ($this->breadcrumbs as $breadcrumb) {
                 $event->setBreadcrumb($breadcrumb);
             }
         }
@@ -315,7 +312,7 @@ final class Scope
         $event->getUserContext()->merge($this->user->toArray());
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = $processor($event);
+            $event = $processor($event, $payload);
 
             if (null === $event) {
                 return null;
