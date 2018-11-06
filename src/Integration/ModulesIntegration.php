@@ -58,13 +58,12 @@ final class ModulesIntegration implements Integration
     }
 
     /**
-     *
-     *
      * @param ModulesIntegration $self
-     * @param Event $event
+     * @param Event              $event
+     *
      * @return null|Event
      */
-    public static function applyToEvent(ModulesIntegration $self, Event $event): ?Event
+    public static function applyToEvent(self $self, Event $event): ?Event
     {
         $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
 

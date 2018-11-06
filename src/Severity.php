@@ -77,6 +77,40 @@ final class Severity
     }
 
     /**
+     * Translate a PHP Error constant into a Sentry log level group.
+     *
+     * @param int $severity PHP E_$x error constant
+     *
+     * @return Severity
+     */
+    public static function fromError(int $severity): self
+    {
+        switch ($severity) {
+             case E_DEPRECATED:
+             case E_USER_DEPRECATED:
+             case E_WARNING:
+             case E_USER_WARNING:
+             case E_RECOVERABLE_ERROR:
+                 return self::warning();
+             case E_ERROR:
+             case E_PARSE:
+             case E_CORE_ERROR:
+             case E_CORE_WARNING:
+             case E_COMPILE_ERROR:
+             case E_COMPILE_WARNING:
+                 return self::fatal();
+             case E_USER_ERROR:
+                 return self::error();
+             case E_NOTICE:
+             case E_USER_NOTICE:
+             case E_STRICT:
+                 return self::info();
+             default:
+                 return self::error();
+         }
+    }
+
+    /**
      * Creates a new instance of this enum for the "debug" value.
      *
      * @return self

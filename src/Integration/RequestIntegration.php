@@ -42,8 +42,9 @@ final class RequestIntegration implements Integration
     }
 
     /**
-     * @param Event $event
+     * @param Event                       $event
      * @param null|ServerRequestInterface $request
+     *
      * @return Event
      */
     public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): Event
@@ -74,13 +75,12 @@ final class RequestIntegration implements Integration
 
         $event->setRequest($requestData);
 
-//            TODO
-//            /** @var UserContext $userContext */
-//            $userContext = $event->getUserContext();
-//
-//            if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
-//                $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
-//            }
+        /** @var UserContext $userContext */
+        $userContext = $event->getUserContext();
+
+        if (!isset($userContext['ip_address']) && null !== $request && $request->hasHeader('REMOTE_ADDR')) {
+            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+        }
 
         return $event;
     }

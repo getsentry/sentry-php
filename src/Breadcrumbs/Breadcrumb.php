@@ -147,6 +147,41 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
+     * Maps the severity of the error to one of the levels supported by the
+     * breadcrumbs.
+     *
+     * @param \ErrorException $exception The exception
+     *
+     * @return string
+     */
+    public static function levelFromErrorException(\ErrorException $exception): string
+    {
+        switch ($exception->getSeverity()) {
+            case E_DEPRECATED:
+            case E_USER_DEPRECATED:
+            case E_WARNING:
+            case E_USER_WARNING:
+            case E_RECOVERABLE_ERROR:
+                return self::LEVEL_WARNING;
+            case E_ERROR:
+            case E_PARSE:
+            case E_CORE_ERROR:
+            case E_CORE_WARNING:
+            case E_COMPILE_ERROR:
+            case E_COMPILE_WARNING:
+                return self::LEVEL_CRITICAL;
+            case E_USER_ERROR:
+                return self::LEVEL_ERROR;
+            case E_NOTICE:
+            case E_USER_NOTICE:
+            case E_STRICT:
+                return self::LEVEL_INFO;
+            default:
+                return self::LEVEL_ERROR;
+        }
+    }
+
+    /**
      * Gets the breadcrumb type.
      *
      * @return string

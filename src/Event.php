@@ -140,7 +140,7 @@ final class Event implements \JsonSerializable
         try {
             $this->id = Uuid::uuid4();
         } catch (\Exception $e) {
-            // TODO: This happens when Uuid::uuid4 has issues, fallback to something else?
+            // This should never happen
         }
 
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
@@ -157,7 +157,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         return str_replace('-', '', $this->id->toString());
     }
@@ -167,7 +167,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getTimestamp()
+    public function getTimestamp(): string
     {
         return $this->timestamp;
     }
@@ -187,7 +187,7 @@ final class Event implements \JsonSerializable
      *
      * @param Severity $level The severity
      */
-    public function setLevel(Severity $level)
+    public function setLevel(Severity $level): void
     {
         $this->level = $level;
     }
@@ -197,7 +197,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getLogger()
+    public function getLogger(): string
     {
         return $this->logger;
     }
@@ -207,7 +207,7 @@ final class Event implements \JsonSerializable
      *
      * @param string $logger The logger name
      */
-    public function setLogger($logger)
+    public function setLogger($logger): void
     {
         $this->logger = $logger;
     }

@@ -11,16 +11,15 @@
 
 namespace Sentry\Tests\Integration;
 
+use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Integration\MessageInterfaceMiddleware;
-use Sentry\Options;
 
-class MessageInterfaceMiddlewareTest extends MiddlewareTestCase
+class MessageInterfaceIntegrationTest extends TestCase
 {
     public function testInvokeWithoutMessage()
     {
-        $configuration = new Options();
-        $event = new Event($configuration);
+        $event = new Event();
 
         $middleware = new MessageInterfaceMiddleware();
 
@@ -34,8 +33,7 @@ class MessageInterfaceMiddlewareTest extends MiddlewareTestCase
      */
     public function testInvoke(array $payload)
     {
-        $configuration = new Options();
-        $event = new Event($configuration);
+        $event = new Event();
 
         $middleware = new MessageInterfaceMiddleware();
 

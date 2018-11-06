@@ -11,15 +11,14 @@
 
 namespace Sentry\Tests\Integration;
 
-use Sentry\Client;
-use Sentry\ClientBuilder;
+use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Integration\ExceptionIntegration;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 
-class ExceptionIntegrationTest extends MiddlewareTestCase
+class ExceptionIntegrationTest extends TestCase
 {
     /**
      * @dataProvider invokeDataProvider
@@ -29,12 +28,12 @@ class ExceptionIntegrationTest extends MiddlewareTestCase
         $options = new Options($clientConfig);
         $assertHasStacktrace = $options->getAutoLogStacks();
 
-        $event = new Event($options);
+        $event = new Event();
         $integration = new ExceptionIntegration($options);
 
         $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, $exception);
 
-
+        $this->assertNotNull($returnedEvent);
         $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
 
         foreach ($returnedEvent->getException()['values'] as $exceptionData) {
@@ -129,13 +128,14 @@ class ExceptionIntegrationTest extends MiddlewareTestCase
     {
         $options = new Options(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]);
 
-        $event = new Event($options);
+        $event = new Event();
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
         $integration = new ExceptionIntegration($options);
 
         $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($latin1String));
+        $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
             'values' => [
@@ -152,12 +152,13 @@ class ExceptionIntegrationTest extends MiddlewareTestCase
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
     {
         $options = new Options();
-        $event = new Event($options);
+        $event = new Event();
 
         $integration = new ExceptionIntegration($options);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
         $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($malformedString));
+        $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
             'values' => [
@@ -178,11 +179,12 @@ class ExceptionIntegrationTest extends MiddlewareTestCase
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
         ]);
 
-        $event = new Event($options);
+        $event = new Event();
 
         $integration = new ExceptionIntegration($options);
 
         $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
+        $this->assertNotNull($returnedEvent);
 
         $result = $returnedEvent->getException();
         $expectedValue = [
@@ -213,11 +215,12 @@ class ExceptionIntegrationTest extends MiddlewareTestCase
     public function testInvokeWithAutoLogStacksDisabled()
     {
         $options = new Options(['auto_log_stacks' => false]);
-        $event = new Event($options);
+        $event = new Event();
 
         $integration = new ExceptionIntegration($options);
 
         $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception('foo'));
+        $this->assertNotNull($returnedEvent);
 
         $result = $returnedEvent->getException();
         $this->assertNotEmpty($result);

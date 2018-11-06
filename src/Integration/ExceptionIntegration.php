@@ -57,17 +57,18 @@ final class ExceptionIntegration implements Integration
     }
 
     /**
-     * Applies exception to the passed event
+     * Applies exception to the passed event.
      *
      * @param ExceptionIntegration $self
-     * @param Event $event
-     * @param null|$exception
+     * @param Event                $event
+     * @param null|\Throwable      $exception
+     *
      * @return null|Event
      */
-    public static function applyToEvent(ExceptionIntegration $self, Event $event, $exception = null): ?Event
+    public static function applyToEvent(self $self, Event $event, \Throwable $exception = null): ?Event
     {
         if ($exception instanceof \ErrorException) {
-            $event->setLevel($self->translateSeverity($exception->getSeverity()));
+            $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
 
         if (null !== $exception) {
@@ -99,39 +100,5 @@ final class ExceptionIntegration implements Integration
         }
 
         return $event;
-    }
-
-    /**
-     * Translate a PHP Error constant into a Sentry log level group.
-     *
-     * @param int $severity PHP E_$x error constant
-     *
-     * @return Severity
-     */
-    private function translateSeverity(int $severity): Severity
-    {
-        switch ($severity) {
-            case E_DEPRECATED:
-            case E_USER_DEPRECATED:
-            case E_WARNING:
-            case E_USER_WARNING:
-            case E_RECOVERABLE_ERROR:
-                return Severity::warning();
-            case E_ERROR:
-            case E_PARSE:
-            case E_CORE_ERROR:
-            case E_CORE_WARNING:
-            case E_COMPILE_ERROR:
-            case E_COMPILE_WARNING:
-                return Severity::fatal();
-            case E_USER_ERROR:
-                return Severity::error();
-            case E_NOTICE:
-            case E_USER_NOTICE:
-            case E_STRICT:
-                return Severity::info();
-            default:
-                return Severity::error();
-        }
     }
 }
