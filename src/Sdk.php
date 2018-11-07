@@ -3,9 +3,6 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\ExceptionIntegration;
-use Sentry\Integration\RequestIntegration;
 use Sentry\State\Hub;
 
 /**
@@ -15,13 +12,7 @@ use Sentry\State\Hub;
  */
 function init(array $options = []): void
 {
-    $options = new Options($options);
-    $client = new Client($options, [
-        new ErrorHandlerIntegration(),
-        new RequestIntegration(),
-        new ExceptionIntegration($options),
-    ]);
-    Hub::setCurrent(new Hub($client));
+    Hub::setCurrent(new Hub(ClientBuilder::create($options)->getClient()));
 }
 
 /**
