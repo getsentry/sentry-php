@@ -2,10 +2,10 @@
 
 namespace Sentry\Integration;
 
-interface Integration
+interface IntegrationInterface
 {
     /**
-     * Initializes the Integration once.
+     * Initializes the IntegrationInterface once.
      */
     public function setupOnce(): void;
 }

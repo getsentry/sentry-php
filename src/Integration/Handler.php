@@ -11,11 +11,11 @@ final class Handler
         $integrationIndex = [];
         foreach ($integrations as $integration) {
             $class = \get_class($integration);
-            if (!$integration instanceof Integration) {
-                throw new \InvalidArgumentException(sprintf('Integration must implement %s interface', Integration::class));
+            if (!$integration instanceof IntegrationInterface) {
+                throw new \InvalidArgumentException(sprintf('IntegrationInterface must implement %s interface', IntegrationInterface::class));
             }
             if (!\array_key_exists($class, self::$integrations)) {
-                /* @var Integration $integration */
+                /* @var IntegrationInterface $integration */
                 self::$integrations[$class] = true;
                 $integration->setupOnce();
             }

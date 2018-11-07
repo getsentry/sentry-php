@@ -16,7 +16,7 @@ use Sentry\State\Scope;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ModulesIntegration implements Integration
+final class ModulesIntegrationInterface implements IntegrationInterface
 {
     /**
      * @var Options The client option
@@ -58,8 +58,8 @@ final class ModulesIntegration implements Integration
     }
 
     /**
-     * @param ModulesIntegration $self
-     * @param Event              $event
+     * @param ModulesIntegrationInterface $self
+     * @param Event                       $event
      *
      * @return null|Event
      */

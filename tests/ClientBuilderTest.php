@@ -172,18 +172,18 @@ class ClientBuilderTest extends TestCase
      */
     public function testCallExistingMethodForwardsCallToConfiguration($setterMethod, $value)
     {
-        $configuration = $this->getMockBuilder(Options::class)
+        $options = $this->getMockBuilder(Options::class)
             ->getMock();
 
-        $configuration->expects($this->once())
+        $options->expects($this->once())
             ->method($setterMethod)
             ->with($this->equalTo($value));
 
         $clientBuilder = new ClientBuilder();
 
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'configuration');
+        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'options');
         $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($clientBuilder, $configuration);
+        $reflectionProperty->setValue($clientBuilder, $options);
         $reflectionProperty->setAccessible(false);
 
         $clientBuilder->$setterMethod($value);

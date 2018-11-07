@@ -25,9 +25,11 @@ use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\ExceptionIntegration;
-use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\ErrorHandlerIntegrationInterface;
+use Sentry\Integration\ExceptionIntegrationInterface;
+use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\ModulesIntegrationInterface;
+use Sentry\Integration\RequestIntegrationInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -106,6 +108,11 @@ final class ClientBuilder implements ClientBuilderInterface
     private $httpClientPlugins = [];
 
     /**
+     * @var IntegrationInterface[] List of default integrations
+     */
+    private $integrations;
+
+    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -113,6 +120,12 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(array $options = [])
     {
         $this->options = new Options($options);
+        $this->integrations = [
+            new ErrorHandlerIntegrationInterface(),
+            new RequestIntegrationInterface(),
+            new ModulesIntegrationInterface($this->options),
+            new ExceptionIntegrationInterface($this->options),
+        ];
     }
 
     /**
@@ -204,11 +217,7 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->transport = $this->options->getTransport();
         }
 
-        $client = new Client($this->options, [
-            new ErrorHandlerIntegration(),
-            new RequestIntegration(),
-            new ExceptionIntegration($this->options),
-        ]);
+        $client = new Client($this->options, $this->transport, $this->integrations);
 
         return $client;
     }

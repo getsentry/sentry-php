@@ -13,7 +13,7 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Sentry\Integration\ExceptionIntegration;
+use Sentry\Integration\ExceptionIntegrationInterface;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Stacktrace;
@@ -29,9 +29,9 @@ class ExceptionIntegrationTest extends TestCase
         $assertHasStacktrace = $options->getAutoLogStacks();
 
         $event = new Event();
-        $integration = new ExceptionIntegration($options);
+        $integration = new ExceptionIntegrationInterface($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, $exception);
+        $returnedEvent = ExceptionIntegrationInterface::applyToEvent($integration, $event, $exception);
 
         $this->assertNotNull($returnedEvent);
         $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
@@ -132,9 +132,9 @@ class ExceptionIntegrationTest extends TestCase
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
-        $integration = new ExceptionIntegration($options);
+        $integration = new ExceptionIntegrationInterface($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($latin1String));
+        $returnedEvent = ExceptionIntegrationInterface::applyToEvent($integration, $event, new \Exception($latin1String));
         $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
@@ -154,10 +154,10 @@ class ExceptionIntegrationTest extends TestCase
         $options = new Options();
         $event = new Event();
 
-        $integration = new ExceptionIntegration($options);
+        $integration = new ExceptionIntegrationInterface($options);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($malformedString));
+        $returnedEvent = ExceptionIntegrationInterface::applyToEvent($integration, $event, new \Exception($malformedString));
         $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
@@ -181,9 +181,9 @@ class ExceptionIntegrationTest extends TestCase
 
         $event = new Event();
 
-        $integration = new ExceptionIntegration($options);
+        $integration = new ExceptionIntegrationInterface($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
+        $returnedEvent = ExceptionIntegrationInterface::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
         $this->assertNotNull($returnedEvent);
 
         $result = $returnedEvent->getException();
@@ -217,9 +217,9 @@ class ExceptionIntegrationTest extends TestCase
         $options = new Options(['auto_log_stacks' => false]);
         $event = new Event();
 
-        $integration = new ExceptionIntegration($options);
+        $integration = new ExceptionIntegrationInterface($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception('foo'));
+        $returnedEvent = ExceptionIntegrationInterface::applyToEvent($integration, $event, new \Exception('foo'));
         $this->assertNotNull($returnedEvent);
 
         $result = $returnedEvent->getException();

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -660,6 +661,22 @@ class Options
     }
 
     /**
+     * @param null|IntegrationInterface[] $integrations
+     */
+    public function setIntegrations(?array $integrations): void
+    {
+        $this->options['integrations'] = $integrations;
+    }
+
+    /**
+     * @return null|IntegrationInterface[]
+     */
+    public function getIntegrations(): ?array
+    {
+        return $this->options['integrations'];
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -670,6 +687,8 @@ class Options
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
+            'transport' => null,
+            'integrations' => null,
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
@@ -690,7 +709,6 @@ class Options
             'server_name' => gethostname(),
             'should_capture' => null,
             'tags' => [],
-            'transport' => null,
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
@@ -722,6 +740,7 @@ class Options
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('transport', ['null', 'Sentry\Transport\TransportInterface']);
+        $resolver->setAllowedTypes('integrations', ['null', 'Sentry\Integration\IntegrationInterface']);
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {

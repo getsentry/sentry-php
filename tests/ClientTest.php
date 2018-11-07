@@ -16,7 +16,7 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Integration\ExceptionIntegration;
+use Sentry\Integration\ExceptionIntegrationInterface;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -31,10 +31,13 @@ class ClientTest extends TestCase
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
         /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options()])
-            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent'])
+            ->setConstructorArgs([new Options(), $transport])
+            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent', 'getOptions'])
             ->getMock();
 
         $client->expects($this->once())
@@ -48,14 +51,20 @@ class ClientTest extends TestCase
             }));
 
         $client->captureMessage('test');
+
+        unset($_SERVER['PATH_INFO']);
+        unset($_SERVER['REQUEST_METHOD']);
     }
 
     public function testConstructorInitializesTransactionStackInCli()
     {
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
         /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options()])
-            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent'])
+            ->setConstructorArgs([new Options(), $transport])
+            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent', 'getOptions'])
             ->getMock();
 
         $client->expects($this->once())
@@ -113,7 +122,8 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send');
+            ->method('send')
+        ->willReturn('id');
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransport($transport)
@@ -313,10 +323,13 @@ class ClientTest extends TestCase
 
     public function testHandlingExceptionThrowingAnException()
     {
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
         /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options(), [new ExceptionIntegration(new Options())]])
-            ->setMethodsExcept(['captureException', 'prepareEvent', 'captureEvent', 'getIntegration'])
+            ->setConstructorArgs([new Options(), $transport, [new ExceptionIntegrationInterface(new Options())]])
+            ->setMethodsExcept(['captureException', 'prepareEvent', 'captureEvent', 'getIntegration', 'getOptions'])
             ->getMock();
 
         Hub::getCurrent()->bindClient($client);

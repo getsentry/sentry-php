@@ -8,7 +8,6 @@ parameters:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
         - '/Method Sentry\\ClientBuilder::\w+\(\) should return \$this\(Sentry\\ClientBuilderInterface\) but returns \$this\(Sentry\\ClientBuilder\)\./'
-        - '/Parameter #1 \$values of class Sentry\\TransactionStack constructor expects array<string>, array<int, stdClass\|string> given\./'
     excludes_analyse:
         - tests/resources
 includes:

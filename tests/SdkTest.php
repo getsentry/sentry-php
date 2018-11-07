@@ -36,7 +36,6 @@ class SdkTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', [], ['level' => null])
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
         Hub::getCurrent()->bindClient($client);
@@ -80,16 +79,15 @@ class SdkTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureException')
-            ->with(
-                $this->logicalAnd(
-                    $this->isInstanceOf(\ErrorException::class),
-                    $this->attributeEqualTo('message', 'foo'),
-                    $this->attributeEqualTo('code', 0),
-                    $this->attributeEqualTo('severity', E_USER_NOTICE),
-                    $this->attributeEqualTo('file', __FILE__),
-                    $this->attributeEqualTo('line', __LINE__ + 5)
-                )
-            );
+            ->with($this->callback(function (\Throwable $exception) {
+                $this->assertInstanceOf(\ErrorException::class, $exception);
+                $this->assertAttributeEquals('foo', 'message', $exception);
+                $this->assertAttributeEquals(0, 'code', $exception);
+                $this->assertAttributeEquals(E_USER_NOTICE, 'severity', $exception);
+                $this->assertAttributeEquals(__FILE__, 'file', $exception);
+
+                return true;
+            }));
 
         Hub::getCurrent()->bindClient($client);
 

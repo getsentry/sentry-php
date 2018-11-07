@@ -24,7 +24,7 @@ use Sentry\State\Scope;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ExceptionIntegration implements Integration
+final class ExceptionIntegrationInterface implements IntegrationInterface
 {
     /**
      * @var Options The client option
@@ -49,7 +49,7 @@ final class ExceptionIntegration implements Integration
         Scope::addGlobalEventProcessor(function (Event $event, array $payload) {
             $self = Hub::getCurrent()->getIntegration($this);
             if ($self instanceof self) {
-                self::applyToEvent($self, $event, $payload['exception']);
+                self::applyToEvent($self, $event, isset($payload['exception']) ? $payload['exception'] : null);
             }
 
             return $event;
@@ -59,9 +59,9 @@ final class ExceptionIntegration implements Integration
     /**
      * Applies exception to the passed event.
      *
-     * @param ExceptionIntegration $self
-     * @param Event                $event
-     * @param null|\Throwable      $exception
+     * @param ExceptionIntegrationInterface $self
+     * @param Event                         $event
+     * @param null|\Throwable               $exception
      *
      * @return null|Event
      */

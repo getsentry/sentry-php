@@ -13,7 +13,7 @@ namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\Handler;
-use Sentry\Integration\Integration;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
@@ -62,19 +62,21 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var Integration[] The stack of installed integrations
+     * @var IntegrationInterface[] The stack of installed integrations
      */
     private $installedIntegrations;
 
     /**
      * Constructor.
      *
-     * @param Options       $options      The client configuration
-     * @param Integration[] $integrations The integrations used by the client
+     * @param Options                $options      The client configuration
+     * @param TransportInterface     $transport    The transport
+     * @param IntegrationInterface[] $integrations The integrations used by the client
      */
-    public function __construct(Options $options, array $integrations = [])
+    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
     {
         $this->options = $options;
+        $this->transport = $transport;
 
         $this->installedIntegrations = Handler::setupIntegrations($integrations);
     }
@@ -116,7 +118,7 @@ class Client implements ClientInterface
      */
     protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
-        if (mt_rand(1, 100) / 100.0 > $this->options->getSampleRate()) {
+        if (mt_rand(1, 100) / 100.0 > $this->getOptions()->getSampleRate()) {
             return null;
         }
 
@@ -160,6 +162,7 @@ class Client implements ClientInterface
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
         $payload['message'] = $message;
+        $payload['level'] = $level;
 
         return $this->captureEvent($payload, $scope);
     }
@@ -191,14 +194,13 @@ class Client implements ClientInterface
      */
     public function send(Event $event): ?string
     {
-        if (null === $this->transport && null !== $this->getOptions()->getTransport()) {
-            $this->transport = $this->getOptions()->getTransport();
-        }
-
         return $this->transport->send($event);
     }
 
-    public function getIntegration(Integration $integration): ?Integration
+    /**
+     * {@inheritdoc}
+     */
+    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface
     {
         $class = \get_class($integration);
         if (\array_key_exists($class, $this->installedIntegrations)) {

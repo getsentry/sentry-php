@@ -13,8 +13,7 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Options;
+use Sentry\Integration\RequestIntegrationInterface;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
@@ -25,7 +24,6 @@ class RequestIntegrationTest extends TestCase
      */
     public function testInvoke(array $requestData, array $expectedValue)
     {
-        $options = new Options();
         $event = new Event();
 
         $request = new ServerRequest();
@@ -37,7 +35,7 @@ class RequestIntegrationTest extends TestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $returnedEvent = RequestIntegration::applyToEvent($event, $request);
+        $returnedEvent = RequestIntegrationInterface::applyToEvent($event, $request);
 
         $this->assertEquals($expectedValue, $returnedEvent->getRequest());
     }
@@ -50,7 +48,7 @@ class RequestIntegrationTest extends TestCase
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $returnedEvent = RequestIntegration::applyToEvent($event, $request);
+        $returnedEvent = RequestIntegrationInterface::applyToEvent($event, $request);
 
         $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $returnedEvent->getUserContext()->toArray());
     }

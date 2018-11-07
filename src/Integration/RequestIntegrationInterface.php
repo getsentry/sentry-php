@@ -24,7 +24,7 @@ use Zend\Diactoros\ServerRequestFactory;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RequestIntegration implements Integration
+final class RequestIntegrationInterface implements IntegrationInterface
 {
     /**
      * {@inheritdoc}
@@ -78,8 +78,8 @@ final class RequestIntegration implements Integration
         /** @var UserContext $userContext */
         $userContext = $event->getUserContext();
 
-        if (null !== $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
-            $userContext['ip_address'] = $request->getHeaderLine('REMOTE_ADDR');
+        if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
+            $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
         }
 
         return $event;

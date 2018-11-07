@@ -12,7 +12,7 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Integration\Integration;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 
 /**
@@ -77,5 +77,5 @@ interface ClientInterface
      */
     public function send(Event $event): ?string;
 
-    public function getIntegration(Integration $integration): ?Integration;
+    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface;
 }

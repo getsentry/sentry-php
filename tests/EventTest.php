@@ -39,7 +39,7 @@ class EventTest extends TestCase
     /**
      * @var Options
      */
-    protected $configuration;
+    protected $options;
 
     /**
      * @var ClientInterface
@@ -51,7 +51,7 @@ class EventTest extends TestCase
         $this->uuidGeneratorInvokationCount = 0;
         $this->originalUuidFactory = new UuidFactory();
         $this->client = ClientBuilder::create()->getClient();
-        $this->configuration = $this->client->getOptions();
+        $this->options = $this->client->getOptions();
 
         /** @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
         $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
@@ -84,7 +84,7 @@ class EventTest extends TestCase
 
     public function testToArray()
     {
-        $this->configuration->setRelease('1.2.3-dev');
+        $this->options->setRelease('1.2.3-dev');
 
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
@@ -95,9 +95,6 @@ class EventTest extends TestCase
                 'name' => 'sentry-php',
                 'version' => Client::VERSION,
             ],
-            'server_name' => $this->configuration->getServerName(),
-            'release' => $this->configuration->getRelease(),
-            'environment' => $this->configuration->getCurrentEnvironment(),
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),
