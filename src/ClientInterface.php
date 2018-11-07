@@ -77,5 +77,12 @@ interface ClientInterface
      */
     public function send(Event $event): ?string;
 
+    /**
+     * Returns the integration instance if it is installed on the Client.
+     *
+     * @param IntegrationInterface $integration
+     *
+     * @return null|IntegrationInterface
+     */
     public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface;
 }

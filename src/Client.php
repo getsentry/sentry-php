@@ -127,6 +127,7 @@ class Client implements ClientInterface
         $event->setServerName($this->getOptions()->getServerName());
         $event->setRelease($this->getOptions()->getRelease());
         $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
+        $event->getTagsContext()->merge($this->getOptions()->getTags());
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);

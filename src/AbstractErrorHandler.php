@@ -82,6 +82,8 @@ abstract class AbstractErrorHandler
      *
      * @param callable $callback           The callback that will be invoked in case of an exception
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     *
+     * @throws \Exception|\Throwable|\ErrorException
      */
     protected function __construct(callable $callback, $reservedMemorySize = 10240)
     {
@@ -152,6 +154,8 @@ abstract class AbstractErrorHandler
      *
      * @return bool If the function returns FALSE then the normal error handler continues
      *
+     * @throws \Exception|\Throwable|\ErrorException
+     *
      * @internal
      */
     public function handleError($level, $message, $file, $line)
@@ -185,6 +189,8 @@ abstract class AbstractErrorHandler
      * method is used as callback of a shutdown function.
      *
      * @param array|null $error The error details as returned by error_get_last()
+     *
+     * @throws \Exception|\Throwable|\ErrorException
      *
      * @internal
      */
@@ -222,7 +228,7 @@ abstract class AbstractErrorHandler
      *
      * @param \Exception|\Throwable $exception The exception to handle
      *
-     * @throws \Exception|\Throwable
+     * @throws \Exception|\Throwable|\ErrorException
      *
      * @internal
      */

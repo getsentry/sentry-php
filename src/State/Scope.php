@@ -298,9 +298,7 @@ final class Scope
         }
 
         if (empty($event->getBreadcrumbs())) {
-            foreach ($this->breadcrumbs as $breadcrumb) {
-                $event->setBreadcrumb($breadcrumb);
-            }
+            $event->setBreadcrumb($this->breadcrumbs);
         }
 
         if (null !== $this->level) {

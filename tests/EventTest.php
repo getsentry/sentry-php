@@ -150,10 +150,7 @@ class EventTest extends TestCase
         ];
 
         $event = new Event();
-
-        foreach ($breadcrumbs as $breadcrumb) {
-            $event->setBreadcrumb($breadcrumb);
-        }
+        $event->setBreadcrumb($breadcrumbs);
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
 

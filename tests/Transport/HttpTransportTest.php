@@ -135,7 +135,7 @@ class HttpTransportTest extends TestCase
                 $this->assertNotFalse($compressedPayload);
 
                 return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
-                    && base64_encode($compressedPayload) === $request->getBody()->getContents();
+                    && $compressedPayload === $request->getBody()->getContents();
             }))
             ->willReturn($promise);
 

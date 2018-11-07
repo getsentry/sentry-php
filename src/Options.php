@@ -637,7 +637,9 @@ class Options
      */
     public function setTransport(?TransportInterface $transport): void
     {
-        $this->options['transport'] = $transport;
+        $options = array_merge($this->options, ['transport' => $transport]);
+
+        $this->options = $this->resolver->resolve($options);
     }
 
     /**
@@ -653,7 +655,9 @@ class Options
      */
     public function setIntegrations(?array $integrations): void
     {
-        $this->options['integrations'] = $integrations;
+        $options = array_merge($this->options, ['integrations' => $integrations]);
+
+        $this->options = $this->resolver->resolve($options);
     }
 
     /**

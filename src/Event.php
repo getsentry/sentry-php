@@ -449,14 +449,13 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Adds a new breadcrumb to the event.
-     * TODO: set all breadcrumbs.
+     * Set new breadcrumbs to the event.
      *
-     * @param Breadcrumb $breadcrumb The breadcrumb
+     * @param Breadcrumb[] $breadcrumbs The breadcrumb array
      */
-    public function setBreadcrumb(Breadcrumb $breadcrumb)
+    public function setBreadcrumb(array $breadcrumbs)
     {
-        $this->breadcrumbs[] = $breadcrumb;
+        $this->breadcrumbs = $breadcrumbs;
     }
 
     /**
