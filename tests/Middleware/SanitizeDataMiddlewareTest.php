@@ -234,6 +234,50 @@ class SanitizeDataMiddlewareTest extends MiddlewareTestCase
                     ],
                 ],
             ],
+            [
+                [
+                    'request' => [
+                        'data' => [
+                            'array' => [
+                                'foo' => 'bar',
+                            ],
+                            'password' => 'hello',
+                        ],
+                    ],
+                ],
+                [
+                    'request' => [
+                        'data' => [
+                            'array' => [
+                                'foo' => 'bar',
+                            ],
+                            'password' => SanitizeDataMiddleware::STRING_MASK,
+                        ],
+                    ],
+                ],
+            ],
+            [
+                [
+                    'request' => [
+                        'data' => [
+                            'password' => [
+                                'foo' => 'bar',
+                            ],
+                            'the_secret' => 'hello',
+                        ],
+                    ],
+                ],
+                [
+                    'request' => [
+                        'data' => [
+                            'password' => [
+                                'foo' => SanitizeDataMiddleware::STRING_MASK,
+                            ],
+                            'the_secret' => SanitizeDataMiddleware::STRING_MASK,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
