@@ -16,7 +16,7 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Integration\ExceptionIntegrationInterface;
+use Sentry\Integration\ExceptionIntegration;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -328,7 +328,7 @@ class ClientTest extends TestCase
 
         /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options(), $transport, [new ExceptionIntegrationInterface(new Options())]])
+            ->setConstructorArgs([new Options(), $transport, [new ExceptionIntegration(new Options())]])
             ->setMethodsExcept(['captureException', 'prepareEvent', 'captureEvent', 'getIntegration', 'getOptions'])
             ->getMock();
 

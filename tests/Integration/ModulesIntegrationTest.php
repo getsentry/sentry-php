@@ -13,7 +13,7 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Sentry\Integration\ModulesIntegrationInterface;
+use Sentry\Integration\ModulesIntegration;
 use Sentry\Options;
 
 class ModulesIntegrationTest extends TestCase
@@ -23,9 +23,9 @@ class ModulesIntegrationTest extends TestCase
         $options = new Options(['project_root' => __DIR__ . '/../Fixtures']);
         $event = new Event();
 
-        $integration = new ModulesIntegrationInterface($options);
+        $integration = new ModulesIntegration($options);
 
-        $returnedEvent = ModulesIntegrationInterface::applyToEvent($integration, $event);
+        $returnedEvent = ModulesIntegration::applyToEvent($integration, $event);
         $this->assertNotNull($returnedEvent);
 
         $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $returnedEvent->getModules());

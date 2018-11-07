@@ -24,7 +24,7 @@ use Sentry\State\Scope;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ExceptionIntegrationInterface implements IntegrationInterface
+final class ExceptionIntegration implements IntegrationInterface
 {
     /**
      * @var Options The client option
@@ -59,9 +59,9 @@ final class ExceptionIntegrationInterface implements IntegrationInterface
     /**
      * Applies exception to the passed event.
      *
-     * @param ExceptionIntegrationInterface $self
-     * @param Event                         $event
-     * @param null|\Throwable               $exception
+     * @param self            $self
+     * @param Event           $event
+     * @param null|\Throwable $exception
      *
      * @return null|Event
      */

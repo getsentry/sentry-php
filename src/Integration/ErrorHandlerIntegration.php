@@ -6,7 +6,7 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\ErrorHandler;
 use Sentry\State\Hub;
 
-final class ErrorHandlerIntegrationInterface implements IntegrationInterface
+final class ErrorHandlerIntegration implements IntegrationInterface
 {
     public function setupOnce(): void
     {

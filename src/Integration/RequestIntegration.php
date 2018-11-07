@@ -24,7 +24,7 @@ use Zend\Diactoros\ServerRequestFactory;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RequestIntegrationInterface implements IntegrationInterface
+final class RequestIntegration implements IntegrationInterface
 {
     /**
      * {@inheritdoc}

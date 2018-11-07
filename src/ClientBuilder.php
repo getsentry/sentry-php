@@ -25,11 +25,11 @@ use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Integration\ErrorHandlerIntegrationInterface;
-use Sentry\Integration\ExceptionIntegrationInterface;
+use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\ExceptionIntegration;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\ModulesIntegrationInterface;
-use Sentry\Integration\RequestIntegrationInterface;
+use Sentry\Integration\ModulesIntegration;
+use Sentry\Integration\RequestIntegration;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -121,10 +121,10 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = new Options($options);
         $this->integrations = [
-            new ErrorHandlerIntegrationInterface(),
-            new RequestIntegrationInterface(),
-            new ModulesIntegrationInterface($this->options),
-            new ExceptionIntegrationInterface($this->options),
+            new ErrorHandlerIntegration(),
+            new RequestIntegration(),
+            new ModulesIntegration($this->options),
+            new ExceptionIntegration($this->options),
         ];
     }
 

@@ -28,6 +28,8 @@ class ErrorHandler extends AbstractErrorHandler
      * @param callable $callback           callback that will be called when exception is caught
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
+     * @throws \Exception|\Throwable|\ErrorException
+     *
      * @return ErrorHandler
      */
     public static function register(callable $callback, $reservedMemorySize = 10240)
