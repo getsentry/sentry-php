@@ -153,7 +153,9 @@ class Client implements ClientInterface
             $event = $scope->applyToEvent($event, $payload);
         }
 
-        return $event;
+        $beforeSendCallback = $this->options->getBeforeSendCallback();
+
+        return $beforeSendCallback($event);
     }
 
     /**

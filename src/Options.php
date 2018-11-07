@@ -518,36 +518,24 @@ class Options
 
     /**
      * Checks whether all events or a specific event (if provided) are allowed
-     * to be captured.
+     * to be captured. If null is returned, event will not be sent.
      *
-     * @param Event|null $event The event object
-     *
-     * @return bool
+     * @return callable
      */
-    public function shouldCapture(Event $event = null)
+    public function getBeforeSendCallback(): callable
     {
-        $result = true;
-
-        if (!empty($this->options['environments']) && !\in_array($this->options['current_environment'], $this->options['environments'])) {
-            $result = false;
-        }
-
-        if (null !== $this->options['should_capture'] && null !== $event) {
-            $result = $result && $this->options['should_capture']($event);
-        }
-
-        return $result;
+        return $this->options['before_send'];
     }
 
     /**
-     * Sets an optional callable to be called to decide whether an event should
+     * Sets a callable to be called to decide whether an event should
      * be captured or not.
      *
-     * @param callable|null $callable The callable
+     * @param callable $callback The callable
      */
-    public function setShouldCapture(callable $callable = null)
+    public function setBeforeSendCallback(callable $callback): void
     {
-        $options = array_merge($this->options, ['should_capture' => $callable]);
+        $options = array_merge($this->options, ['before_send' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -707,7 +695,9 @@ class Options
             'release' => null,
             'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
-            'should_capture' => null,
+            'before_send' => function (Event $event): ?Event {
+                return $event;
+            },
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -734,7 +724,7 @@ class Options
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'boolean', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
-        $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
+        $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');

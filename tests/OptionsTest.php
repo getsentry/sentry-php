@@ -12,7 +12,6 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Event;
 use Sentry\Options;
 
 class OptionsTest extends TestCase
@@ -66,6 +65,7 @@ class OptionsTest extends TestCase
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
             ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
+            ['before_send', function () {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
             ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
         ];
     }
@@ -197,35 +197,6 @@ class OptionsTest extends TestCase
             [''],
             ['empty'],
         ];
-    }
-
-    public function testShouldCapture()
-    {
-        $configuration = new Options();
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setCurrentEnvironment('foo');
-        $configuration->setEnvironments(['bar']);
-
-        $this->assertFalse($configuration->shouldCapture());
-
-        $configuration->setCurrentEnvironment('foo');
-        $configuration->setEnvironments(['foo']);
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setEnvironments([]);
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setShouldCapture(function ($value) {
-            return false;
-        });
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $this->assertFalse($configuration->shouldCapture(new Event()));
     }
 
     /**

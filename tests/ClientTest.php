@@ -185,22 +185,22 @@ class ClientTest extends TestCase
         }
     }
 
-    public function testSendChecksShouldCaptureOption()
+    public function testSendChecksBeforeSendOption()
     {
-        $shouldCaptureCalled = false;
+        $beforeSendCalled = false;
 
         $client = ClientBuilder::create([
             'dsn' => 'http://public:secret@example.com/1',
-            'should_capture' => function () use (&$shouldCaptureCalled) {
-                $shouldCaptureCalled = true;
+            'before_send' => function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
 
-                return false;
+                return null;
             },
         ])->getClient();
 
         $client->captureEvent([]);
 
-        $this->assertTrue($shouldCaptureCalled);
+        $this->assertTrue($beforeSendCalled);
     }
 
     /**
