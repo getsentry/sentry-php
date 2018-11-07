@@ -99,16 +99,17 @@ final class SanitizeDataMiddleware implements ProcessorMiddlewareInterface
                         $value = self::STRING_MASK;
                     });
 
-                    break;
+                    continue;
                 }
 
                 $item = self::STRING_MASK;
+                continue;
             }
 
             if (\is_array($item)) {
                 $this->sanitize($item);
 
-                break;
+                continue;
             }
 
             if (preg_match($this->options['values_re'], $item)) {
