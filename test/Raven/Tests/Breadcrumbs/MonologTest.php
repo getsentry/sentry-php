@@ -42,11 +42,14 @@ EOF;
 
         $logger = new Monolog\Logger('sentry');
         $logger->pushHandler($handler);
-        $logger->addWarning('Foo');
+        $logger->addWarning('Foo {error}', array(
+            'error' => 'Bar',
+        ));
 
         $crumbs = $client->breadcrumbs->fetch();
         $this->assertEquals(count($crumbs), 1);
-        $this->assertEquals($crumbs[0]['message'], 'Foo');
+        $this->assertEquals($crumbs[0]['message'], 'Foo {error}');
+        $this->assertEquals($crumbs[0]['data'], array('error' => 'Bar'));
         $this->assertEquals($crumbs[0]['category'], 'sentry');
         $this->assertEquals($crumbs[0]['level'], 'warning');
     }
