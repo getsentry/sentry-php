@@ -123,7 +123,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->integrations = [
             new ErrorHandlerIntegration(),
             new RequestIntegration(),
-            new ModulesIntegration($this->options),
             new ExceptionIntegration($this->options),
         ];
     }
