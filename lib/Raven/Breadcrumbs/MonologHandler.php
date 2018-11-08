@@ -92,6 +92,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
                     'level' => $this->logLevels[$record['level']],
                     'category' => $record['channel'],
                     'message' => $record['message'],
+                    'data' => $record['context'],
                 );
             }
         }

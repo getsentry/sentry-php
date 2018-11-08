@@ -51,6 +51,27 @@ EOF;
         $this->assertEquals($crumbs[0]['level'], 'warning');
     }
 
+    public function testContext()
+    {
+        $client = new \Raven_Client(array(
+            'install_default_breadcrumb_handlers' => false,
+        ));
+        $handler = new \Raven_Breadcrumbs_MonologHandler($client);
+        
+        $context = array('Foo' => 'Bar');
+
+        $logger = new Monolog\Logger('sentry');
+        $logger->pushHandler($handler);
+        $logger->addWarning('Foo', $context);
+
+        $crumbs = $client->breadcrumbs->fetch();
+        $this->assertEquals(count($crumbs), 1);
+        $this->assertEquals($crumbs[0]['message'], 'Foo');
+        $this->assertEquals($crumbs[0]['category'], 'sentry');
+        $this->assertEquals($crumbs[0]['level'], 'warning');
+        $this->assertEquals($crumbs[0]['data'], $context);
+    }
+
     public function testErrorInMessage()
     {
         $client = new \Raven_Client(array(
