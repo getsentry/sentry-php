@@ -503,7 +503,7 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $data = [
             'event_id' => str_replace('-', '', $this->id->toString()),
@@ -511,7 +511,7 @@ final class Event implements \JsonSerializable
             'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
-                'name' => 'sentry-php',
+                'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
             ],
         ];
@@ -565,7 +565,7 @@ final class Event implements \JsonSerializable
         }
 
         if (!empty($this->breadcrumbs)) {
-            $data['breadcrumbs'] = $this->breadcrumbs;
+            $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
         if (null !== $this->exception) {
@@ -615,7 +615,7 @@ final class Event implements \JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

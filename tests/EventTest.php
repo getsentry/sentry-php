@@ -92,7 +92,7 @@ class EventTest extends TestCase
             'level' => 'error',
             'platform' => 'php',
             'sdk' => [
-                'name' => 'sentry-php',
+                'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
             ],
             'contexts' => [
@@ -157,7 +157,7 @@ class EventTest extends TestCase
         $data = $event->toArray();
 
         $this->assertArrayHasKey('breadcrumbs', $data);
-        $this->assertSame($breadcrumbs, $data['breadcrumbs']);
+        $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
     public function testGetServerOsContext()

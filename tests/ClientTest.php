@@ -351,3 +351,8 @@ class ClientTest extends TestCase
         }
     }
 }
+
+function my_callback_function()
+{
+    echo 'hello world!';
+}
