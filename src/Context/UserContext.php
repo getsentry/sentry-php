@@ -86,7 +86,7 @@ final class UserContext extends Context
      */
     public function getIpAddress(): ?string
     {
-        return $this->data['email'] ?? null;
+        return $this->data['ip_address'] ?? null;
     }
 
     /**

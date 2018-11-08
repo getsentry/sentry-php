@@ -568,8 +568,10 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs'] = $this->breadcrumbs;
         }
 
-        if (null !== $this->exception && isset($this->exception['values'])) {
-            foreach ($this->exception['values'] as $exception) {
+        if (null !== $this->exception) {
+            $reversedException = array_reverse($this->exception);
+
+            foreach ($reversedException as $exception) {
                 $exceptionData = [
                     'type' => $exception['type'],
                     'value' => $exception['value'],

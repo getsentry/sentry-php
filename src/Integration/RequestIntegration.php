@@ -65,7 +65,7 @@ final class RequestIntegration implements IntegrationInterface
             'cookies' => $request->getCookieParams(),
         ];
 
-        if ('' !== $request->getUri()->getQuery()) {
+        if ($request->getUri()->getQuery()) {
             $requestData['query_string'] = $request->getUri()->getQuery();
         }
 

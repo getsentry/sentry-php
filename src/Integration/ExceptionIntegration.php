@@ -20,7 +20,7 @@ use Sentry\State\Hub;
 use Sentry\State\Scope;
 
 /**
- * This middleware collects information about the thrown exceptions.
+ * This integration converts an exception into a Sentry processable format.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
@@ -49,7 +49,7 @@ final class ExceptionIntegration implements IntegrationInterface
         Scope::addGlobalEventProcessor(function (Event $event, array $payload) {
             $self = Hub::getCurrent()->getIntegration($this);
             if ($self instanceof self) {
-                self::applyToEvent($self, $event, isset($payload['exception']) ? $payload['exception'] : null);
+                self::applyToEvent($self, $event, $payload['exception'] ?? null);
             }
 
             return $event;
@@ -71,33 +71,32 @@ final class ExceptionIntegration implements IntegrationInterface
             $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
 
-        if (null !== $exception) {
-            $exceptions = [];
-            $currentException = $exception;
+        if (null === $exception) {
+            return $event;
+        }
 
-            do {
-                if ($self->options->isExcludedException($currentException)) {
-                    continue;
-                }
+        $exceptions = [];
+        $currentException = $exception;
+        $serializer = new Serializer($self->options->getMbDetectOrder());
 
-                $data = [
-                    'type' => \get_class($currentException),
-                    'value' => (new Serializer($self->options->getMbDetectOrder()))->serialize($currentException->getMessage()),
-                ];
+        do {
+            if ($self->options->isExcludedException($currentException)) {
+                continue;
+            }
 
-                if ($self->options->getAutoLogStacks()) {
-                    $data['stacktrace'] = Stacktrace::createFromBacktrace($self->options, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
-                }
-
-                $exceptions[] = $data;
-            } while ($currentException = $currentException->getPrevious());
-
-            $exceptions = [
-                'values' => array_reverse($exceptions),
+            $data = [
+                'type' => \get_class($currentException),
+                'value' => $serializer->serialize($currentException->getMessage()),
             ];
 
-            $event->setException($exceptions);
-        }
+            if ($self->options->getAutoLogStacks()) {
+                $data['stacktrace'] = Stacktrace::createFromBacktrace($self->options, $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+            }
+
+            $exceptions[] = $data;
+        } while ($currentException = $currentException->getPrevious());
+
+        $event->setException($exceptions);
 
         return $event;
     }

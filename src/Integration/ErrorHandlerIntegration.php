@@ -22,9 +22,9 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Captures the exception and sends it to Sentry.
      *
-     * @param \ErrorException|\Throwable $exception
+     * @param \Throwable $exception
      */
-    private function captureException($exception): void
+    private function captureException(\Throwable $exception): void
     {
         Hub::getCurrent()->captureException($exception);
     }
@@ -32,9 +32,9 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Adds a breadcrumb of the error.
      *
-     * @param \ErrorException|\Throwable $exception
+     * @param \Throwable $exception
      */
-    private function addBreadcrumb($exception): void
+    private function addBreadcrumb(\Throwable $exception): void
     {
         if ($exception instanceof \ErrorException) {
             /* @var \ErrorException $exception */

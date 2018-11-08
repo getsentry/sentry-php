@@ -34,13 +34,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options(), $transport])
-            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent', 'getOptions'])
-            ->getMock();
+        $client = new Client(new Options(), $transport);
 
-        $client->expects($this->once())
+        $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function ($event) {
                 /* @var Event $event*/
@@ -61,13 +57,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options(), $transport])
-            ->setMethodsExcept(['captureMessage', 'prepareEvent', 'captureEvent', 'getOptions'])
-            ->getMock();
+        $client = new Client(new Options(), $transport);
 
-        $client->expects($this->once())
+        $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function ($event) {
                 /* @var Event $event*/
@@ -123,7 +115,7 @@ class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-        ->willReturn('id');
+            ->willReturn('id');
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransport($transport)
@@ -326,21 +318,17 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([new Options(), $transport, [new ExceptionIntegration(new Options())]])
-            ->setMethodsExcept(['captureException', 'prepareEvent', 'captureEvent', 'getIntegration', 'getOptions'])
-            ->getMock();
+        $client = new Client(new Options(), $transport, [new ExceptionIntegration(new Options())]);
 
         Hub::getCurrent()->bindClient($client);
 
-        $client->expects($this->once())
+        $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function ($event) {
                 /* @var Event $event*/
                 // Make sure the exception is of the careless exception and not the exception thrown inside
                 // the __set method of that exception caused by setting the event_id on the exception instance
-                $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
+                $this->assertSame(CarelessException::class, $event->getException()[0]['type']);
 
                 return true;
             }));

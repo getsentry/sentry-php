@@ -210,12 +210,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-        if (null === $this->options->getTransport()) {
-            $this->options->setTransport($this->createTransportInstance());
-        }
-        if (null !== $this->options->getTransport()) {
-            $this->transport = $this->options->getTransport();
-        }
+        $this->transport = $this->options->getTransport() ?? $this->createTransportInstance();
 
         $client = new Client($this->options, $this->transport, $this->integrations);
 

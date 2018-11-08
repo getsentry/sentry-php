@@ -12,7 +12,7 @@ final class Handler
         foreach ($integrations as $integration) {
             $class = \get_class($integration);
             if (!$integration instanceof IntegrationInterface) {
-                throw new \InvalidArgumentException(sprintf('IntegrationInterface must implement %s interface', IntegrationInterface::class));
+                throw new \InvalidArgumentException(sprintf('Expecting integration implementing %s interface, got %s', IntegrationInterface::class, $class));
             }
             if (!\array_key_exists($class, self::$integrations)) {
                 /* @var IntegrationInterface $integration */

@@ -143,8 +143,8 @@ class Client implements ClientInterface
             $event->setLogger($payload['logger']);
         }
 
-        $message = isset($payload['message']) ? $payload['message'] : null;
-        $messageParams = isset($payload['message_params']) ? $payload['message_params'] : [];
+        $message = $payload['message'] ?? null;
+        $messageParams = $payload['message_params'] ?? [];
 
         if (null !== $message) {
             $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
@@ -189,7 +189,7 @@ class Client implements ClientInterface
             return $this->send($event);
         }
 
-        return $event;
+        return null;
     }
 
     /**

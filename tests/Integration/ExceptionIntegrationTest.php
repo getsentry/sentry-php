@@ -35,8 +35,10 @@ class ExceptionIntegrationTest extends TestCase
 
         $this->assertNotNull($returnedEvent);
         $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
+        $this->assertArrayNotHasKey('values', $returnedEvent->getException());
+        $this->assertArrayHasKey('values', $returnedEvent->toArray()['exception']);
 
-        foreach ($returnedEvent->getException()['values'] as $exceptionData) {
+        foreach ($returnedEvent->getException() as $exceptionData) {
             if ($assertHasStacktrace) {
                 $this->assertArrayHasKey('stacktrace', $exceptionData);
                 $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
@@ -138,12 +140,10 @@ class ExceptionIntegrationTest extends TestCase
         $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
-            'values' => [
                 [
                     'type' => \Exception::class,
                     'value' => $utf8String,
                 ],
-            ],
         ];
 
         $this->assertArraySubset($expectedValue, $returnedEvent->getException());
@@ -161,12 +161,10 @@ class ExceptionIntegrationTest extends TestCase
         $this->assertNotNull($returnedEvent);
 
         $expectedValue = [
-            'values' => [
                 [
                     'type' => \Exception::class,
                     'value' => "\xC2\xA2\x3F",
                 ],
-            ],
         ];
 
         $this->assertArraySubset($expectedValue, $returnedEvent->getException());
@@ -188,12 +186,10 @@ class ExceptionIntegrationTest extends TestCase
 
         $result = $returnedEvent->getException();
         $expectedValue = [
-            'values' => [
                 [
                     'type' => \Exception::class,
                     'value' => 'foo',
                 ],
-            ],
         ];
 
         $this->assertArraySubset($expectedValue, $result);
@@ -201,7 +197,7 @@ class ExceptionIntegrationTest extends TestCase
         $latin1StringFound = false;
 
         /** @var \Sentry\Frame $frame */
-        foreach ($result['values'][0]['stacktrace']->getFrames() as $frame) {
+        foreach ($result[0]['stacktrace']->getFrames() as $frame) {
             if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
                 $latin1StringFound = true;
 
@@ -224,9 +220,9 @@ class ExceptionIntegrationTest extends TestCase
 
         $result = $returnedEvent->getException();
         $this->assertNotEmpty($result);
-        $this->assertInternalType('array', $result['values'][0]);
-        $this->assertEquals(\Exception::class, $result['values'][0]['type']);
-        $this->assertEquals('foo', $result['values'][0]['value']);
-        $this->assertArrayNotHasKey('stacktrace', $result['values'][0]);
+        $this->assertInternalType('array', $result[0]);
+        $this->assertEquals(\Exception::class, $result[0]['type']);
+        $this->assertEquals('foo', $result[0]['value']);
+        $this->assertArrayNotHasKey('stacktrace', $result[0]);
     }
 }
