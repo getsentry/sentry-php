@@ -456,6 +456,9 @@ abstract class AbstractSerializerTest extends TestCase
                 ], [
                     'callable' => [self::class, 'setUpBeforeClass'],
                     'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                ], [
+                    'callable' => [SerializerTestObject::class, 'testy'],
+                    'expected' => 'Callable array Sentry\Tests\SerializerTestObject::testy []',
                 ],
             ];
             require_once 'resources/php70_serializing.inc';
@@ -501,6 +504,9 @@ abstract class AbstractSerializerTest extends TestCase
             ], [
                 'callable' => [self::class, 'setUpBeforeClass'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+            ], [
+                'callable' => [SerializerTestObject::class, 'testy'],
+                'expected' => 'Callable array Sentry\Tests\SerializerTestObject::testy []',
             ],
         ];
     }
@@ -539,4 +545,9 @@ class SerializerTestObject
     private $foo = 'bar';
 
     public $key = 'value';
+
+    public static function testy(): array
+    {
+        return [];
+    }
 }

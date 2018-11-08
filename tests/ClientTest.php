@@ -181,6 +181,9 @@ class ClientTest extends TestCase
     {
         $beforeSendCalled = false;
 
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
         $client = ClientBuilder::create([
             'dsn' => 'http://public:secret@example.com/1',
             'before_send' => function () use (&$beforeSendCalled) {
@@ -188,9 +191,12 @@ class ClientTest extends TestCase
 
                 return null;
             },
-        ])->getClient();
+        ])->setTransport($transport)->getClient();
 
         $client->captureEvent([]);
+
+        $transport->expects($this->never())
+            ->method('send');
 
         $this->assertTrue($beforeSendCalled);
     }
