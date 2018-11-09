@@ -4,6 +4,12 @@
 
 - ...
 
+## 1.10.0 (2018-11-09)
+
+- Added passing data from context in monolog breadcrumb handler (#683)
+- Do not return error id if we know we did not send the error (#667)
+- Do not force IPv4 protocol by default (#654)
+
 ## 1.9.2 (2018-08-17)
 
 - Remove secret_key from required keys for CLI test command. (#645)
