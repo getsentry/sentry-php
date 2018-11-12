@@ -968,6 +968,14 @@ class Raven_Client
         if (!empty($data['contexts'])) {
             $data['contexts'] = $this->serializer->serialize($data['contexts'], 5);
         }
+        if (!empty($data['extra']['contexts'])) {
+            if (!empty($data['contexts'])) {
+                $data['contexts'] = array_merge($data['contexts'], $data['extra']['contexts']);
+            } else {
+                $data['contexts'] = $data['extra']['contexts'];
+            }
+            unset($data['extra']['contexts']);
+        }
         if (!empty($data['breadcrumbs'])) {
             $data['breadcrumbs'] = $this->serializer->serialize($data['breadcrumbs'], 5);
         }
