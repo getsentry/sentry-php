@@ -975,6 +975,9 @@ class Raven_Client
                 $data['contexts'] = $data['extra']['contexts'];
             }
             unset($data['extra']['contexts']);
+            if (empty($data['extra'])) {
+                unset($data['extra']);
+            }
         }
         if (!empty($data['breadcrumbs'])) {
             $data['breadcrumbs'] = $this->serializer->serialize($data['breadcrumbs'], 5);
