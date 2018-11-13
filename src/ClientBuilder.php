@@ -119,11 +119,16 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(array $options = [])
     {
         $this->options = new Options($options);
-        $this->integrations = [
-            new ErrorHandlerIntegration(),
-            new RequestIntegration(),
-            new ExceptionIntegration($this->options),
-        ];
+
+        if (null === $this->options->getIntegrations()) {
+            $this->integrations = [];
+        } else {
+            $this->integrations = \array_merge([
+                new ErrorHandlerIntegration(),
+                new RequestIntegration(),
+                new ExceptionIntegration($this->options),
+            ], $this->options->getIntegrations());
+        }
     }
 
     /**
@@ -208,7 +213,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-        $this->transport = $this->options->getTransport() ?? $this->createTransportInstance();
+        $this->transport = $this->transport ?? $this->createTransportInstance();
 
         $client = new Client($this->options, $this->transport, $this->integrations);
 

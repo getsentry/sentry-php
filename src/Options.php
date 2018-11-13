@@ -15,7 +15,6 @@ namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -633,24 +632,6 @@ class Options
     }
 
     /**
-     * @param null|TransportInterface $transport
-     */
-    public function setTransport(?TransportInterface $transport): void
-    {
-        $options = array_merge($this->options, ['transport' => $transport]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * @return null|TransportInterface
-     */
-    public function getTransport(): ?TransportInterface
-    {
-        return $this->options['transport'];
-    }
-
-    /**
      * Set integrations that will be used by the created client.
      *
      * @param null|IntegrationInterface[] $integrations
@@ -683,8 +664,7 @@ class Options
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'transport' => null,
-            'integrations' => null,
+            'integrations' => [],
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
@@ -737,8 +717,7 @@ class Options
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('transport', ['null', 'Sentry\Transport\TransportInterface']);
-        $resolver->setAllowedTypes('integrations', ['null', 'Sentry\Integration\IntegrationInterface']);
+        $resolver->setAllowedTypes('integrations', ['null', 'array']);
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
