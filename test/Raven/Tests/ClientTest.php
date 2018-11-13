@@ -1173,6 +1173,66 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'biz' => 'baz',
         ), $event['extra']);
     }
+    
+    /**
+     * @covers Raven_Client::captureMessage
+     * @covers Raven_Client::extra_context
+     */
+    public function testCaptureMessageWithOsExtraContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->extra_context(array('contexts' => array(
+          'os' => array(
+            'version' => '10.14',
+            'name' => 'Mac'
+          )
+        ))
+      );
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(1, count($events));
+        $event = array_pop($events);
+        $this->assertEquals(array(
+            'contexts' => array(
+                'os' => array(
+                  'version' => '10.14',
+                  'name' => 'Mac'
+                )
+            )
+        ), $event['extra']);
+    }
+
+    /**
+     * @covers Raven_Client::captureMessage
+     * @covers Raven_Client::extra_context
+     */
+    public function testCaptureMessageWithBrowserExtraContext()
+    {
+        $client = new Dummy_Raven_Client();
+
+        $client->extra_context(array('contexts' => array(
+          'browser' => array(
+            'version' => '52.0',
+            'name' => 'Firefox'
+          )
+        ))
+      );
+
+        $client->captureMessage('test');
+        $events = $client->getSentEvents();
+        $this->assertEquals(1, count($events));
+        $event = array_pop($events);
+        $this->assertEquals(array(
+            'contexts' => array(
+                'browser' => array(
+                  'version' => '52.0',
+                  'name' => 'Firefox'
+                )
+            )
+        ), $event['extra']);
+    }
 
     /**
      * @covers Raven_Client::captureException
