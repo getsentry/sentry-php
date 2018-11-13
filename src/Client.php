@@ -28,28 +28,28 @@ class Client implements ClientInterface
     /**
      * The version of the library.
      */
-    const VERSION = '2.0.x-dev';
+    public const VERSION = '2.0.x-dev';
 
     /**
      * The version of the protocol to communicate with the Sentry server.
      */
-    const PROTOCOL_VERSION = '7';
+    public const PROTOCOL_VERSION = '7';
 
     /**
      * The identifier of the SDK.
      */
-    const SDK_IDENTIFIER = 'sentry.php';
+    public const SDK_IDENTIFIER = 'sentry.php';
 
     /**
      * This constant defines the client's user-agent string.
      */
-    const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
+    public const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
      * message SDK interface.
      */
-    const MESSAGE_MAX_LENGTH_LIMIT = 1024;
+    public const MESSAGE_MAX_LENGTH_LIMIT = 1024;
 
     /**
      * @var Options The client options
@@ -62,9 +62,9 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var IntegrationInterface[] The stack of installed integrations
+     * @var IntegrationInterface[] The stack of integrations
      */
-    private $installedIntegrations;
+    private $integrations;
 
     /**
      * Constructor.
@@ -78,7 +78,7 @@ class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
 
-        $this->installedIntegrations = Handler::setupIntegrations($integrations);
+        $this->integrations = Handler::setupIntegrations($integrations);
     }
 
     /**
@@ -106,57 +106,6 @@ class Client implements ClientInterface
         if (null !== $breadcrumb && null !== $scope) {
             $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
         }
-    }
-
-    /**
-     * Assembles an event and prepares it to be sent of to Sentry.
-     *
-     * @param array      $payload
-     * @param null|Scope $scope
-     *
-     * @return null|Event
-     */
-    protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
-    {
-        if (mt_rand(1, 100) / 100.0 > $this->getOptions()->getSampleRate()) {
-            return null;
-        }
-
-        $event = new Event();
-
-        $event->setServerName($this->getOptions()->getServerName());
-        $event->setRelease($this->getOptions()->getRelease());
-        $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
-        $event->getTagsContext()->merge($this->getOptions()->getTags());
-
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
-        } else {
-            $request = ServerRequestFactory::fromGlobals();
-            $serverParams = $request->getServerParams();
-            if (isset($serverParams['PATH_INFO'])) {
-                $event->setTransaction($serverParams['PATH_INFO']);
-            }
-        }
-
-        if (isset($payload['logger'])) {
-            $event->setLogger($payload['logger']);
-        }
-
-        $message = $payload['message'] ?? null;
-        $messageParams = $payload['message_params'] ?? [];
-
-        if (null !== $message) {
-            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
-        }
-
-        if (null !== $scope) {
-            $event = $scope->applyToEvent($event, $payload);
-        }
-
-        $beforeSendCallback = $this->options->getBeforeSendCallback();
-
-        return $beforeSendCallback($event);
     }
 
     /**
@@ -195,21 +144,74 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event): ?string
+    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface
+    {
+        $class = \get_class($integration);
+
+        return $this->integrations[$class] ?? null;
+    }
+
+    /**
+     * Sends the given event to the Sentry server.
+     *
+     * @param Event $event The event to send
+     *
+     * @return null|string
+     */
+    protected function send(Event $event): ?string
     {
         return $this->transport->send($event);
     }
 
     /**
-     * {@inheritdoc}
+     * Assembles an event and prepares it to be sent of to Sentry.
+     *
+     * @param array      $payload
+     * @param null|Scope $scope
+     *
+     * @return null|Event
      */
-    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface
+    protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
-        $class = \get_class($integration);
-        if (\array_key_exists($class, $this->installedIntegrations)) {
-            return $this->installedIntegrations[$class];
+        $sampleRate = $this->getOptions()->getSampleRate();
+        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            return null;
         }
 
-        return null;
+        $event = new Event();
+        $event->setServerName($this->getOptions()->getServerName());
+        $event->setRelease($this->getOptions()->getRelease());
+        $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
+        $event->getTagsContext()->merge($this->getOptions()->getTags());
+
+        if (isset($payload['transaction'])) {
+            $event->setTransaction($payload['transaction']);
+        } else {
+            $request = ServerRequestFactory::fromGlobals();
+            $serverParams = $request->getServerParams();
+
+            if (isset($serverParams['PATH_INFO'])) {
+                $event->setTransaction($serverParams['PATH_INFO']);
+            }
+        }
+
+        if (isset($payload['logger'])) {
+            $event->setLogger($payload['logger']);
+        }
+
+        $message = $payload['message'] ?? null;
+        $messageParams = $payload['message_params'] ?? [];
+
+        if (null !== $message) {
+            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
+        }
+
+        if (null !== $scope) {
+            $event = $scope->applyToEvent($event, $payload);
+        }
+
+        $beforeSendCallback = $this->options->getBeforeSendCallback();
+
+        return $beforeSendCallback($event);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Integration;
 
 use Composer\Composer;
@@ -11,7 +13,7 @@ use Sentry\State\Hub;
 use Sentry\State\Scope;
 
 /**
- * This middleware logs with the event details all the versions of the packages
+ * This integration logs with the event details all the versions of the packages
  * installed with Composer, if any.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
@@ -24,19 +26,19 @@ final class ModulesIntegration implements IntegrationInterface
     private $options;
 
     /**
-     * @var array
+     * @var array The list of installed vendors
      */
     private static $loadedModules = [];
 
     /**
      * Constructor.
      *
-     * @param Options $options The Raven client configuration
+     * @param Options $options The Client options
      */
     public function __construct(Options $options)
     {
         if (!class_exists(Composer::class)) {
-            throw new \LogicException('You need the "composer/composer" package in order to use this middleware.');
+            throw new \LogicException('You need the "composer/composer" package in order to use this integration.');
         }
 
         $this->options = $options;
@@ -49,6 +51,7 @@ final class ModulesIntegration implements IntegrationInterface
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
             $self = Hub::getCurrent()->getIntegration($this);
+
             if ($self instanceof self) {
                 self::applyToEvent($self, $event);
             }
@@ -58,12 +61,10 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
-     * @param ModulesIntegration $self
-     * @param Event              $event
-     *
-     * @return null|Event
+     * @param ModulesIntegration $self  the instance of this integration
+     * @param Event              $event the event that will be enriched with the modules
      */
-    public static function applyToEvent(self $self, Event $event): ?Event
+    public static function applyToEvent(self $self, Event $event): void
     {
         $composerFilePath = $self->options->getProjectRoot() . \DIRECTORY_SEPARATOR . 'composer.json';
 
@@ -79,7 +80,5 @@ final class ModulesIntegration implements IntegrationInterface
         }
 
         $event->setModules(self::$loadedModules);
-
-        return $event;
     }
 }

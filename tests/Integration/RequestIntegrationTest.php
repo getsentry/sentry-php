@@ -35,12 +35,12 @@ class RequestIntegrationTest extends TestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $returnedEvent = RequestIntegration::applyToEvent($event, $request);
+        RequestIntegration::applyToEvent($event, $request);
 
-        $this->assertEquals($expectedValue, $returnedEvent->getRequest());
+        $this->assertEquals($expectedValue, $event->getRequest());
     }
 
-    public function testUserIp()
+    public function testInvokeWithRequestHavingIpAddress()
     {
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
@@ -48,9 +48,9 @@ class RequestIntegrationTest extends TestCase
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
 
-        $returnedEvent = RequestIntegration::applyToEvent($event, $request);
+        RequestIntegration::applyToEvent($event, $request);
 
-        $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $returnedEvent->getUserContext()->toArray());
+        $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $event->getUserContext()->toArray());
     }
 
     public function invokeDataProvider()

@@ -92,10 +92,10 @@ final class UserContext extends Context
     /**
      * Sets the ip address of the user.
      *
-     * @param null|string $ip The ip address
+     * @param null|string $ipAddress The ip address
      */
-    public function setIpAddress(?string $ip): void
+    public function setIpAddress(?string $ipAddress): void
     {
-        $this->data['ip_address'] = $ip;
+        $this->data['ip_address'] = $ipAddress;
     }
 }

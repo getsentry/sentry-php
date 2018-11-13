@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Integration;
 
@@ -25,9 +18,9 @@ class ModulesIntegrationTest extends TestCase
 
         $integration = new ModulesIntegration($options);
 
-        $returnedEvent = ModulesIntegration::applyToEvent($integration, $event);
-        $this->assertNotNull($returnedEvent);
+        ModulesIntegration::applyToEvent($integration, $event);
 
-        $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $returnedEvent->getModules());
+        $this->assertNotNull($event);
+        $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $event->getModules());
     }
 }

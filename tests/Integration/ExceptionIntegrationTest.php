@@ -31,14 +31,14 @@ class ExceptionIntegrationTest extends TestCase
         $event = new Event();
         $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, $exception);
+        ExceptionIntegration::applyToEvent($integration, $event, $exception);
 
-        $this->assertNotNull($returnedEvent);
-        $this->assertArraySubset($expectedResult, $returnedEvent->toArray());
-        $this->assertArrayNotHasKey('values', $returnedEvent->getException());
-        $this->assertArrayHasKey('values', $returnedEvent->toArray()['exception']);
+        $this->assertNotNull($event);
+        $this->assertArraySubset($expectedResult, $event->toArray());
+        $this->assertArrayNotHasKey('values', $event->getException());
+        $this->assertArrayHasKey('values', $event->toArray()['exception']);
 
-        foreach ($returnedEvent->getException() as $exceptionData) {
+        foreach ($event->getException() as $exceptionData) {
             if ($assertHasStacktrace) {
                 $this->assertArrayHasKey('stacktrace', $exceptionData);
                 $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
@@ -136,8 +136,9 @@ class ExceptionIntegrationTest extends TestCase
 
         $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($latin1String));
-        $this->assertNotNull($returnedEvent);
+        ExceptionIntegration::applyToEvent($integration, $event, new \Exception($latin1String));
+
+        $this->assertNotNull($event);
 
         $expectedValue = [
                 [
@@ -146,7 +147,7 @@ class ExceptionIntegrationTest extends TestCase
                 ],
         ];
 
-        $this->assertArraySubset($expectedValue, $returnedEvent->getException());
+        $this->assertArraySubset($expectedValue, $event->getException());
     }
 
     public function testInvokeWithExceptionContainingInvalidUtf8Characters()
@@ -157,8 +158,9 @@ class ExceptionIntegrationTest extends TestCase
         $integration = new ExceptionIntegration($options);
 
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception($malformedString));
-        $this->assertNotNull($returnedEvent);
+        ExceptionIntegration::applyToEvent($integration, $event, new \Exception($malformedString));
+
+        $this->assertNotNull($event);
 
         $expectedValue = [
                 [
@@ -167,7 +169,7 @@ class ExceptionIntegrationTest extends TestCase
                 ],
         ];
 
-        $this->assertArraySubset($expectedValue, $returnedEvent->getException());
+        $this->assertArraySubset($expectedValue, $event->getException());
     }
 
     public function testInvokeWithExceptionThrownInLatin1File()
@@ -181,10 +183,11 @@ class ExceptionIntegrationTest extends TestCase
 
         $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
-        $this->assertNotNull($returnedEvent);
+        ExceptionIntegration::applyToEvent($integration, $event, require_once __DIR__ . '/../Fixtures/code/Latin1File.php');
 
-        $result = $returnedEvent->getException();
+        $this->assertNotNull($event);
+
+        $result = $event->getException();
         $expectedValue = [
                 [
                     'type' => \Exception::class,
@@ -215,10 +218,12 @@ class ExceptionIntegrationTest extends TestCase
 
         $integration = new ExceptionIntegration($options);
 
-        $returnedEvent = ExceptionIntegration::applyToEvent($integration, $event, new \Exception('foo'));
-        $this->assertNotNull($returnedEvent);
+        ExceptionIntegration::applyToEvent($integration, $event, new \Exception('foo'));
 
-        $result = $returnedEvent->getException();
+        $this->assertNotNull($event);
+
+        $result = $event->getException();
+
         $this->assertNotEmpty($result);
         $this->assertInternalType('array', $result[0]);
         $this->assertEquals(\Exception::class, $result[0]['type']);

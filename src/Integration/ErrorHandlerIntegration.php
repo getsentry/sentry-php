@@ -1,17 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Integration;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\ErrorHandler;
 use Sentry\State\Hub;
 
+/**
+ * This integration hooks into the global error handlers and emits events to Sentry.
+ *
+ * Class ErrorHandlerIntegration
+ */
 final class ErrorHandlerIntegration implements IntegrationInterface
 {
     public function setupOnce(): void
     {
         ErrorHandler::register(function ($exception) {
             $self = Hub::getCurrent()->getIntegration($this);
+
             if ($self instanceof self) {
                 $self->addBreadcrumb($exception);
                 $self->captureException($exception);
@@ -22,7 +30,7 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Captures the exception and sends it to Sentry.
      *
-     * @param \Throwable $exception
+     * @param \Throwable $exception the exception that will be captured by the current client
      */
     private function captureException(\Throwable $exception): void
     {
@@ -32,7 +40,7 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Adds a breadcrumb of the error.
      *
-     * @param \Throwable $exception
+     * @param \Throwable $exception the exception used to create a breadcrumb
      */
     private function addBreadcrumb(\Throwable $exception): void
     {

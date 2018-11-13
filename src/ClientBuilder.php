@@ -28,7 +28,6 @@ use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\ExceptionIntegration;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\ModulesIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;

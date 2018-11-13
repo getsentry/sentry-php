@@ -286,8 +286,8 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event $event   The event object
-     * @param array $payload Payload
+     * @param Event $event   the event object that will be enriched with scope data
+     * @param array $payload the raw payload of the event that will be propagated to the event processors
      *
      * @return Event|null
      */

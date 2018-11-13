@@ -69,15 +69,6 @@ interface ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
     /**
-     * Sends the given event to the Sentry server.
-     *
-     * @param Event $event The event to send
-     *
-     * @return null|string
-     */
-    public function send(Event $event): ?string;
-
-    /**
      * Returns the integration instance if it is installed on the Client.
      *
      * @param IntegrationInterface $integration

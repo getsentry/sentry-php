@@ -98,7 +98,7 @@ final class Event implements \JsonSerializable
     private $runtimeContext;
 
     /**
-     * @var Context The user context data
+     * @var UserContext The user context data
      */
     private $userContext;
 
@@ -369,7 +369,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the user context.
      *
-     * @return Context
+     * @return UserContext
      */
     public function getUserContext()
     {

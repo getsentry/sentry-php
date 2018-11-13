@@ -79,7 +79,7 @@ final class Severity
     /**
      * Translate a PHP Error constant into a Sentry log level group.
      *
-     * @param int $severity PHP E_$x error constant
+     * @param int $severity PHP E_* error constant
      *
      * @return Severity
      */

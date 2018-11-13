@@ -26,6 +26,7 @@ init([
 
 register_shutdown_function('register_shutdown_function', function () {
     $client = Hub::getCurrent()->getClient();
+
     /** @var \Sentry\Transport\HttpTransport $transport */
     $transport = Assert::getObjectAttribute($client, 'transport');
 

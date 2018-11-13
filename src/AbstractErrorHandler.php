@@ -19,7 +19,7 @@ namespace Sentry;
 abstract class AbstractErrorHandler
 {
     /**
-     * @var callable Callback that will be invoked when exception is caught
+     * @var callable Callback that will be invoked when an error is caught
      */
     protected $callback;
 
@@ -80,10 +80,10 @@ abstract class AbstractErrorHandler
     /**
      * Constructor.
      *
-     * @param callable $callback           The callback that will be invoked in case of an exception
+     * @param callable $callback           The callback that will be invoked in case an error is caught
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
-     * @throws \Exception|\Throwable|\ErrorException
+     * @throws \Throwable
      */
     protected function __construct(callable $callback, $reservedMemorySize = 10240)
     {
@@ -154,7 +154,7 @@ abstract class AbstractErrorHandler
      *
      * @return bool If the function returns FALSE then the normal error handler continues
      *
-     * @throws \Exception|\Throwable|\ErrorException
+     * @throws \Throwable
      *
      * @internal
      */
@@ -173,7 +173,7 @@ abstract class AbstractErrorHandler
 
         try {
             $this->handleException($errorAsException);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             // Do nothing as this error handler should be as transparent as possible
         }
 
@@ -190,7 +190,7 @@ abstract class AbstractErrorHandler
      *
      * @param array|null $error The error details as returned by error_get_last()
      *
-     * @throws \Exception|\Throwable|\ErrorException
+     * @throws \Throwable
      *
      * @internal
      */
@@ -217,7 +217,7 @@ abstract class AbstractErrorHandler
             if (null !== $errorAsException) {
                 $this->handleException($errorAsException);
             }
-        } catch (\ErrorException $errorAsException) {
+        } catch (\Throwable $errorAsException) {
             // Ignore this re-throw
         }
     }
@@ -226,9 +226,9 @@ abstract class AbstractErrorHandler
      * Handles the given exception by capturing it through the Raven client and
      * then forwarding it to another handler.
      *
-     * @param \Exception|\Throwable $exception The exception to handle
+     * @param \Throwable $exception The exception to handle
      *
-     * @throws \Exception|\Throwable|\ErrorException
+     * @throws \Throwable
      *
      * @internal
      */
@@ -326,9 +326,9 @@ abstract class AbstractErrorHandler
      * Handles the given exception. This method can be overridden to customize
      * the logging of an exception.
      *
-     * @param \Exception|\Throwable $exception The exception to handle
+     * @param \Throwable $exception The exception to handle
      *
-     * @throws \Exception|\Throwable
+     * @throws \Throwable
      */
     abstract protected function doHandleException($exception);
 }

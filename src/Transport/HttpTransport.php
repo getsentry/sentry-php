@@ -91,9 +91,7 @@ final class HttpTransport implements TransportInterface
         );
 
         if ($this->isEncodingCompressed()) {
-            $request = $request->withBody(
-                new CompressStream($request->getBody())
-            );
+            $request = $request->withBody(new CompressStream($request->getBody()));
         }
 
         $promise = $this->httpClient->sendAsyncRequest($request);

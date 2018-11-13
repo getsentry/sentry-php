@@ -26,7 +26,7 @@ use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
-    public function testConstructorInitializesTransactionStack()
+    public function testTransactionEventAttributeIsPopulated()
     {
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -34,41 +34,37 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $client = new Client(new Options(), $transport);
-
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function ($event) {
-                /* @var Event $event*/
+            ->with($this->callback(function (Event $event) {
                 $this->assertInstanceOf(Event::class, $event);
                 $this->assertEquals('/foo', $event->getTransaction());
 
                 return true;
             }));
 
+        $client = new Client(new Options(), $transport);
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
         unset($_SERVER['REQUEST_METHOD']);
     }
 
-    public function testConstructorInitializesTransactionStackInCli()
+    public function testTransactionEventAttributeIsNotPopulatedInCli()
     {
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $client = new Client(new Options(), $transport);
-
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function ($event) {
-                /* @var Event $event*/
+            ->with($this->callback(function (Event $event) {
                 $this->assertInstanceOf(Event::class, $event);
                 $this->assertNull($event->getTransaction());
 
                 return true;
             }));
 
+        $client = new Client(new Options(), $transport);
         $client->captureMessage('test');
     }
 
@@ -130,9 +126,7 @@ class ClientTest extends TestCase
             'user_context' => ['bar' => 'foo'],
         ];
 
-        $eventId = $client->captureEvent($inputData);
-
-        $this->assertNotNull($eventId);
+        $this->assertEquals('id', $client->captureEvent($inputData));
     }
 
     public function testAppPathLinux()
@@ -350,9 +344,4 @@ class ClientTest extends TestCase
             return $ex;
         }
     }
-}
-
-function my_callback_function()
-{
-    echo 'hello world!';
 }

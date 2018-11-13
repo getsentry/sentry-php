@@ -26,7 +26,7 @@ interface TransportInterface
      *
      * @param Event $event The event
      *
-     * @return null|string returns eventId or null if failed to sent
+     * @return null|string Returns the ID of the event or `null` if it failed to be sent
      */
     public function send(Event $event): ?string;
 }

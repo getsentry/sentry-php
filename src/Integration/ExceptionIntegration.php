@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Integration;
 
@@ -20,7 +13,7 @@ use Sentry\State\Hub;
 use Sentry\State\Scope;
 
 /**
- * This integration converts an exception into a Sentry processable format.
+ * This integration converts an exception into a format processable by Sentry.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
@@ -48,6 +41,7 @@ final class ExceptionIntegration implements IntegrationInterface
     {
         Scope::addGlobalEventProcessor(function (Event $event, array $payload) {
             $self = Hub::getCurrent()->getIntegration($this);
+
             if ($self instanceof self) {
                 self::applyToEvent($self, $event, $payload['exception'] ?? null);
             }
@@ -57,22 +51,20 @@ final class ExceptionIntegration implements IntegrationInterface
     }
 
     /**
-     * Applies exception to the passed event.
+     * Stores the given exception in the passed event.
      *
-     * @param self            $self
-     * @param Event           $event
-     * @param null|\Throwable $exception
-     *
-     * @return null|Event
+     * @param self            $self      the instance of this integration
+     * @param Event           $event     the event that will be enriched with the exception
+     * @param null|\Throwable $exception the exception that will be processed and added to the event
      */
-    public static function applyToEvent(self $self, Event $event, \Throwable $exception = null): ?Event
+    public static function applyToEvent(self $self, Event $event, \Throwable $exception = null): void
     {
-        if ($exception instanceof \ErrorException) {
-            $event->setLevel(Severity::fromError($exception->getSeverity()));
+        if (null === $exception) {
+            return;
         }
 
-        if (null === $exception) {
-            return $event;
+        if ($exception instanceof \ErrorException) {
+            $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
 
         $exceptions = [];
@@ -97,7 +89,5 @@ final class ExceptionIntegration implements IntegrationInterface
         } while ($currentException = $currentException->getPrevious());
 
         $event->setException($exceptions);
-
-        return $event;
     }
 }

@@ -1,25 +1,17 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * This middleware collects information from the request and attaches them to
+ * This integration collects information from the request and attaches them to
  * the event.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
@@ -33,29 +25,30 @@ final class RequestIntegration implements IntegrationInterface
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
             $self = Hub::getCurrent()->getIntegration($this);
+
             if (!$self instanceof self) {
                 return $event;
             }
 
-            return self::applyToEvent($event);
+            self::applyToEvent($event);
+
+            return $event;
         });
     }
 
     /**
-     * @param Event                       $event
-     * @param null|ServerRequestInterface $request
-     *
-     * @return Event
+     * @param Event                       $event   the event that will be enriched with a request
+     * @param null|ServerRequestInterface $request the Request that will be processed and added to the event
      */
-    public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): Event
+    public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): void
     {
-        if (null == $request) {
+        if (null === $request) {
             /** @var ServerRequestInterface $request */
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
         }
 
-        if (null == $request) {
-            return $event;
+        if (null === $request) {
+            return;
         }
 
         $requestData = [
@@ -75,13 +68,10 @@ final class RequestIntegration implements IntegrationInterface
 
         $event->setRequest($requestData);
 
-        /** @var UserContext $userContext */
         $userContext = $event->getUserContext();
 
         if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
             $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
         }
-
-        return $event;
     }
 }
