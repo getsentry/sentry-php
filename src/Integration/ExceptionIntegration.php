@@ -53,9 +53,9 @@ final class ExceptionIntegration implements IntegrationInterface
     /**
      * Stores the given exception in the passed event.
      *
-     * @param self            $self      the instance of this integration
-     * @param Event           $event     the event that will be enriched with the exception
-     * @param null|\Throwable $exception the exception that will be processed and added to the event
+     * @param self            $self      The instance of this integration
+     * @param Event           $event     The event that will be enriched with the exception
+     * @param null|\Throwable $exception The exception that will be processed and added to the event
      */
     public static function applyToEvent(self $self, Event $event, \Throwable $exception = null): void
     {

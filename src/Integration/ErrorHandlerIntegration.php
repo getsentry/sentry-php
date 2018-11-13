@@ -30,7 +30,7 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Captures the exception and sends it to Sentry.
      *
-     * @param \Throwable $exception the exception that will be captured by the current client
+     * @param \Throwable $exception The exception that will be captured by the current client
      */
     private function captureException(\Throwable $exception): void
     {
@@ -40,7 +40,7 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     /**
      * Adds a breadcrumb of the error.
      *
-     * @param \Throwable $exception the exception used to create a breadcrumb
+     * @param \Throwable $exception The exception used to create a breadcrumb
      */
     private function addBreadcrumb(\Throwable $exception): void
     {

@@ -14,6 +14,12 @@ final class Handler
 {
     private static $integrations = [];
 
+    /**
+     * Calls {@link IntegrationInterface::setupOnce} for all passed integrations if it hasen't been called yet.
+     *
+     * @param array $integrations
+     * @return array
+     */
     public static function setupIntegrations(array $integrations): array
     {
         $integrationIndex = [];

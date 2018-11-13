@@ -61,8 +61,8 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
-     * @param ModulesIntegration $self  the instance of this integration
-     * @param Event              $event the event that will be enriched with the modules
+     * @param ModulesIntegration $self  The instance of this integration
+     * @param Event              $event The event that will be enriched with the modules
      */
     public static function applyToEvent(self $self, Event $event): void
     {
