@@ -87,7 +87,7 @@ class Raven_Serializer
     {
         $className = is_object($value) ? get_class($value) : null;
         if (is_null($max_depth)) {
-            $max_depth = $this->default_max_depth;
+            $max_depth = $this->getDefaultMaxDepth();
         }
         $toArray = is_array($value) || $className === 'stdClass';
         if ($toArray && $_depth < $max_depth) {
