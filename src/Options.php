@@ -517,8 +517,8 @@ class Options
     }
 
     /**
-     * Checks whether all events or a specific event (if provided) are allowed
-     * to be captured. If null is returned, event will not be sent.
+     * Gets a callback that will be invoked before an event is sent to the server.
+     * If `null` is returned it won't be sent.
      *
      * @return callable
      */
@@ -651,6 +651,8 @@ class Options
     }
 
     /**
+     * Set integrations that will be used by the created client.
+     *
      * @param null|IntegrationInterface[] $integrations
      */
     public function setIntegrations(?array $integrations): void
@@ -661,6 +663,8 @@ class Options
     }
 
     /**
+     * Returns all configured integrations that will be used by the Client.
+     *
      * @return null|IntegrationInterface[]
      */
     public function getIntegrations(): ?array

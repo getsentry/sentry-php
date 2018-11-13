@@ -111,7 +111,7 @@ class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturn('id');
+            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransport($transport)
@@ -126,7 +126,7 @@ class ClientTest extends TestCase
             'user_context' => ['bar' => 'foo'],
         ];
 
-        $this->assertEquals('id', $client->captureEvent($inputData));
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
     }
 
     public function testAppPathLinux()
@@ -178,6 +178,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
+        $transport->expects($this->never())
+            ->method('send');
+
         $client = ClientBuilder::create([
             'dsn' => 'http://public:secret@example.com/1',
             'before_send' => function () use (&$beforeSendCalled) {
@@ -188,9 +191,6 @@ class ClientTest extends TestCase
         ])->setTransport($transport)->getClient();
 
         $client->captureEvent([]);
-
-        $transport->expects($this->never())
-            ->method('send');
 
         $this->assertTrue($beforeSendCalled);
     }

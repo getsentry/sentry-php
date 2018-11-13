@@ -24,7 +24,7 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
-            $self = Hub::getCurrent()->getIntegration($this);
+            $self = Hub::getCurrent()->getIntegration(\get_class($this));
 
             if (!$self instanceof self) {
                 return $event;

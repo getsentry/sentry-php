@@ -71,9 +71,9 @@ interface ClientInterface
     /**
      * Returns the integration instance if it is installed on the Client.
      *
-     * @param IntegrationInterface $integration
+     * @param string $integrationClassName the classname of the integration
      *
      * @return null|IntegrationInterface
      */
-    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface;
+    public function getIntegration(string $integrationClassName): ?IntegrationInterface;
 }

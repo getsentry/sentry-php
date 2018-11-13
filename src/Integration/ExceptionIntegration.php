@@ -40,7 +40,7 @@ final class ExceptionIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event, array $payload) {
-            $self = Hub::getCurrent()->getIntegration($this);
+            $self = Hub::getCurrent()->getIntegration(\get_class($this));
 
             if ($self instanceof self) {
                 self::applyToEvent($self, $event, $payload['exception'] ?? null);

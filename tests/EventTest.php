@@ -25,8 +25,8 @@ use Sentry\Util\PHPVersion;
 class EventTest extends TestCase
 {
     const GENERATED_UUID = [
-        '500a339f3ab2450b96dee542adf36ba7',
-        '4c981dd6ad4946be9f16c3b80fd25f05',
+        '4d310518-9e9d-463c-8161-bd46416f7817',
+        '431a2537-d1de-49da-80b6-b7861954c9cf',
     ];
 
     protected $uuidGeneratorInvokationCount;
@@ -78,8 +78,8 @@ class EventTest extends TestCase
         $event1 = new Event();
         $event2 = new Event();
 
-        $this->assertEquals(static::GENERATED_UUID[0], $event1->getId());
-        $this->assertEquals(static::GENERATED_UUID[1], $event2->getId());
+        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[0]), $event1->getId());
+        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[1]), $event2->getId());
     }
 
     public function testToArray()

@@ -83,7 +83,7 @@ abstract class AbstractErrorHandler
      * @param callable $callback           The callback that will be invoked in case an error is caught
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
-     * @throws \Throwable
+     * @throws \ReflectionException
      */
     protected function __construct(callable $callback, $reservedMemorySize = 10240)
     {

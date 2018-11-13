@@ -143,11 +143,9 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface
+    public function getIntegration(string $integrationClassName): ?IntegrationInterface
     {
-        $class = \get_class($integration);
-
-        return $this->integrations[$class] ?? null;
+        return $this->integrations[$integrationClassName] ?? null;
     }
 
     /**
@@ -165,10 +163,10 @@ class Client implements ClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload The payload that will be converted to an Event.
-     * @param null|Scope $scope Optional scope which enriches the Event.
+     * @param array      $payload the payload that will be converted to an Event
+     * @param null|Scope $scope   optional scope which enriches the Event
      *
-     * @return null|Event Returns ready to send Event, however depending on options it can be discarded.
+     * @return null|Event returns ready to send Event, however depending on options it can be discarded
      */
     protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {

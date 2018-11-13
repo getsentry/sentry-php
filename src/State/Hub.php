@@ -279,14 +279,14 @@ final class Hub
     /**
      * This function looks up if the passed integration is installed on the current client.
      *
-     * @param IntegrationInterface $integration the integration to look up
+     * @param string $integrationClassName the classname integration to look up
      *
      * @return null|IntegrationInterface the installed integration on the current client or `null`
      */
-    public function getIntegration(IntegrationInterface $integration): ?IntegrationInterface
+    public function getIntegration(string $integrationClassName): ?IntegrationInterface
     {
         if ($client = $this->getClient()) {
-            return $client->getIntegration($integration);
+            return $client->getIntegration($integrationClassName);
         }
 
         return null;
