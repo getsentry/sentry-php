@@ -719,6 +719,24 @@ class Options
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['null', 'array']);
 
+        $resolver->setAllowedValues('integrations', function ($value) {
+            if (null === $value) {
+                return true;
+            }
+
+            if (empty($value)) {
+                return true;
+            }
+
+            foreach ($value as $integration) {
+                if (!$integration instanceof IntegrationInterface) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
             if (empty($value)) {
