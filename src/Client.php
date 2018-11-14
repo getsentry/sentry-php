@@ -256,7 +256,7 @@ class Client implements ClientInterface
      */
     private function addThrowableToEvent(Event $event, \Throwable $exception = null): void
     {
-        if (null === $exception) {
+        if (null === $exception || !$exception instanceof \Throwable) {
             return;
         }
 

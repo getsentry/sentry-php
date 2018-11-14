@@ -548,6 +548,8 @@ class SerializerTestObject
 
     public static function testy(): array
     {
+        throw new \Exception('We should not reach this');
+
         return [];
     }
 }

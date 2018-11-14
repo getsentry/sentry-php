@@ -56,7 +56,6 @@ abstract class AbstractErrorHandlerTest extends TestCase
         return [
             [-1],
             [0],
-            ['foo'],
         ];
     }
 
@@ -86,7 +85,7 @@ abstract class AbstractErrorHandlerTest extends TestCase
     {
         return [
             [false, E_ERROR, E_ERROR],
-//            [false, E_ALL, E_ERROR], This tests breaks
+//            [false, E_ALL, E_ERROR], // This tests breaks
             [true, E_ERROR, E_ALL],
             [true, E_ALL, E_ALL],
         ];

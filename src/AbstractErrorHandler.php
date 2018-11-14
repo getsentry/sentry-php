@@ -85,7 +85,7 @@ abstract class AbstractErrorHandler
      *
      * @throws \ReflectionException
      */
-    protected function __construct(callable $callback, $reservedMemorySize = 10240)
+    protected function __construct(callable $callback, int $reservedMemorySize = 10240)
     {
         if (!\is_int($reservedMemorySize) || $reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The value of the $reservedMemorySize argument must be an integer greater than 0.');
@@ -189,8 +189,6 @@ abstract class AbstractErrorHandler
      * method is used as callback of a shutdown function.
      *
      * @param array|null $error The error details as returned by error_get_last()
-     *
-     * @throws \Throwable
      *
      * @internal
      */
