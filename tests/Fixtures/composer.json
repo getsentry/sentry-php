@@ -1,8 +1,0 @@
-{
-    "name": "vendor-name/project-name",
-    "type": "library",
-    "require": {
-        "foo/bar": "1.2.3",
-        "foo/baz": "4.5.6"
-    }
-}
