@@ -134,15 +134,14 @@ final class Event implements \JsonSerializable
 
     /**
      * Event constructor.
+     *
+     * @throws \Ramsey\Uuid\Exception\UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
+     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function __construct()
     {
-        try {
-            $this->id = Uuid::uuid4();
-        } catch (\Exception $e) {
-            // This should never happen
-        }
-
+        $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
         $this->serverOsContext = new ServerOsContext();
