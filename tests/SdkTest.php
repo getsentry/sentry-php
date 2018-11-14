@@ -78,37 +78,11 @@ class SdkTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('captureException')
-            ->with($this->callback(function (\Throwable $exception) {
-                $this->assertInstanceOf(\ErrorException::class, $exception);
-                $this->assertAttributeEquals('foo', 'message', $exception);
-                $this->assertAttributeEquals(0, 'code', $exception);
-                $this->assertAttributeEquals(E_USER_NOTICE, 'severity', $exception);
-                $this->assertAttributeEquals(__FILE__, 'file', $exception);
-
-                return true;
-            }));
+            ->method('captureLastError');
 
         Hub::getCurrent()->bindClient($client);
 
         @trigger_error('foo', E_USER_NOTICE);
-
-        captureLastError();
-
-        $this->clearLastError();
-    }
-
-    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
-    {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-
-        Hub::getCurrent()->bindClient($client);
-
-        $client->expects($this->never())
-            ->method('captureException');
-
-        $this->clearLastError();
 
         captureLastError();
     }
@@ -147,19 +121,5 @@ class SdkTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
-    }
-
-    /**
-     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
-     */
-    private function clearLastError()
-    {
-        $handler = function () {
-            return false;
-        };
-
-        set_error_handler($handler);
-        @trigger_error('');
-        restore_error_handler();
     }
 }

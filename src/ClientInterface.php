@@ -69,6 +69,15 @@ interface ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
     /**
+     * Logs the most recent error (obtained with {@link error_get_last}).
+     *
+     * @param Scope|null $scope An optional scope keeping the state
+     *
+     * @return null|string
+     */
+    public function captureLastError(?Scope $scope = null): ?string;
+
+    /**
      * Returns the integration instance if it is installed on the Client.
      *
      * @param string $integrationClassName the classname of the integration

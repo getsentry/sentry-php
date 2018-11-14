@@ -26,7 +26,6 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\ExceptionIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Transport\HttpTransport;
@@ -126,7 +125,6 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->integrations = \array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration(),
-                new ExceptionIntegration($this->options),
             ], $this->options->getIntegrations());
         }
     }
@@ -221,7 +219,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * This method forwards all methods calls to the configuration object.
+     * This method forwards all methods calls to the options object.
      *
      * @param string $name      The name of the method being called
      * @param array  $arguments Parameters passed to the $name'ed method

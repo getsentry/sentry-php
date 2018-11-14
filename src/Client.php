@@ -143,6 +143,22 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function captureLastError(?Scope $scope = null): ?string
+    {
+        $error = error_get_last();
+
+        if (null === $error || !isset($error['message'][0])) {
+            return null;
+        }
+
+        $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
+
+        return $this->captureException($exception, $scope);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getIntegration(string $integrationClassName): ?IntegrationInterface
     {
         return $this->integrations[$integrationClassName] ?? null;
@@ -203,6 +219,10 @@ class Client implements ClientInterface
             $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
         }
 
+        if (isset($payload['exception'])) {
+            $this->addThrowableToEvent($event, $payload['exception']);
+        }
+
         if (null !== $scope) {
             $event = $scope->applyToEvent($event, $payload);
         }
@@ -210,5 +230,45 @@ class Client implements ClientInterface
         $beforeSendCallback = $this->options->getBeforeSendCallback();
 
         return $beforeSendCallback($event);
+    }
+
+    /**
+     * Stores the given exception in the passed event.
+     *
+     * @param Event           $event     The event that will be enriched with the exception
+     * @param null|\Throwable $exception The exception that will be processed and added to the event
+     */
+    private function addThrowableToEvent(Event $event, \Throwable $exception = null): void
+    {
+        if (null === $exception) {
+            return;
+        }
+
+        if ($exception instanceof \ErrorException) {
+            $event->setLevel(Severity::fromError($exception->getSeverity()));
+        }
+
+        $exceptions = [];
+        $currentException = $exception;
+        $serializer = new Serializer($this->getOptions()->getMbDetectOrder());
+
+        do {
+            if ($this->getOptions()->isExcludedException($currentException)) {
+                continue;
+            }
+
+            $data = [
+                'type' => \get_class($currentException),
+                'value' => $serializer->serialize($currentException->getMessage()),
+            ];
+
+            if ($this->getOptions()->getAutoLogStacks()) {
+                $data['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+            }
+
+            $exceptions[] = $data;
+        } while ($currentException = $currentException->getPrevious());
+
+        $event->setException($exceptions);
     }
 }

@@ -61,15 +61,7 @@ function captureEvent(array $payload): ?string
  */
 function captureLastError(): ?string
 {
-    $error = error_get_last();
-
-    if (null === $error || !isset($error['message'][0])) {
-        return null;
-    }
-
-    $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
-
-    return captureException($exception);
+    return Hub::getCurrent()->captureLastError();
 }
 
 /**

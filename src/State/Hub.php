@@ -233,6 +233,22 @@ final class Hub
     }
 
     /**
+     * Captures a new event using the provided data.
+     *
+     * @return null|string
+     */
+    public function captureLastError(): ?string
+    {
+        $client = $this->getClient();
+
+        if (null !== $client) {
+            return $this->lastEventId = $client->captureLastError($this->getScope());
+        }
+
+        return null;
+    }
+
+    /**
      * Records a new breadcrumb which will be attached to future events. They
      * will be added to subsequent events to provide more context on user's
      * actions prior to an error or crash.

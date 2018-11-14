@@ -16,9 +16,9 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Integration\ExceptionIntegration;
 use Sentry\Options;
 use Sentry\Severity;
+use Sentry\Stacktrace;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\classes\CarelessException;
@@ -127,6 +127,50 @@ class ClientTest extends TestCase
         ];
 
         $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
+    }
+
+    public function testCaptureLastError()
+    {
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) {
+                $exception = $event->getException()[0];
+
+                $this->assertEquals('ErrorException', $exception['type']);
+                $this->assertEquals('foo', $exception['value']);
+
+                return true;
+            }));
+
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+            ->setTransport($transport)
+            ->getClient();
+
+        @trigger_error('foo', E_USER_NOTICE);
+
+        $client->captureLastError();
+
+        $this->clearLastError();
+    }
+
+    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
+    {
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->never())
+            ->method('send');
+
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+            ->setTransport($transport)
+            ->getClient();
+
+        $this->clearLastError();
+
+        $client->captureLastError();
     }
 
     public function testAppPathLinux()
@@ -318,7 +362,7 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $client = new Client(new Options(), $transport, [new ExceptionIntegration(new Options())]);
+        $client = new Client(new Options(), $transport, []);
 
         Hub::getCurrent()->bindClient($client);
 
@@ -334,6 +378,261 @@ class ClientTest extends TestCase
             }));
 
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
+    }
+
+    /**
+     * @dataProvider convertExceptionDataProvider
+     */
+    public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult)
+    {
+        $options = new Options($clientConfig);
+
+        $assertHasStacktrace = $options->getAutoLogStacks();
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace) {
+                $this->assertNotNull($event);
+                $this->assertArraySubset($expectedResult, $event->toArray());
+                $this->assertArrayNotHasKey('values', $event->getException());
+                $this->assertArrayHasKey('values', $event->toArray()['exception']);
+
+                foreach ($event->getException() as $exceptionData) {
+                    if ($assertHasStacktrace) {
+                        $this->assertArrayHasKey('stacktrace', $exceptionData);
+                        $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
+                    } else {
+                        $this->assertArrayNotHasKey('stacktrace', $exceptionData);
+                    }
+                }
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException($exception);
+    }
+
+    public function convertExceptionDataProvider()
+    {
+        return [
+            [
+                new \RuntimeException('foo'),
+                [],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \RuntimeException('foo'),
+                [
+                    'auto_log_stacks' => false,
+                ],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \ErrorException('foo', 0, E_USER_WARNING),
+                [],
+                [
+                    'level' => Severity::WARNING,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \ErrorException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \BadMethodCallException('baz', 0, new \BadFunctionCallException('bar', 0, new \LogicException('foo', 0))),
+                [
+                    'excluded_exceptions' => [\BadMethodCallException::class],
+                ],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \LogicException::class,
+                                'value' => 'foo',
+                            ],
+                            [
+                                'type' => \BadFunctionCallException::class,
+                                'value' => 'bar',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public function testConvertExceptionContainingLatin1Characters()
+    {
+        $options = new Options(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]);
+
+        $utf8String = 'äöü';
+        $latin1String = utf8_decode($utf8String);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($utf8String) {
+                $this->assertNotNull($event);
+
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => $utf8String,
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $event->getException());
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(new \Exception($latin1String));
+    }
+
+    public function testConvertExceptionContainingInvalidUtf8Characters()
+    {
+        $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) {
+                $this->assertNotNull($event);
+
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => "\xC2\xA2\x3F",
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $event->getException());
+
+                return true;
+            }));
+
+        $client = new Client(new Options(), $transport, []);
+        $client->captureException(new \Exception($malformedString));
+    }
+
+    public function testConvertExceptionThrownInLatin1File()
+    {
+        $options = new Options([
+            'auto_log_stacks' => true,
+            'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
+        ]);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) {
+                $this->assertNotNull($event);
+
+                $result = $event->getException();
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => 'foo',
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $result);
+
+                $latin1StringFound = false;
+
+                /** @var \Sentry\Frame $frame */
+                foreach ($result[0]['stacktrace']->getFrames() as $frame) {
+                    if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
+                        $latin1StringFound = true;
+
+                        break;
+                    }
+                }
+
+                $this->assertTrue($latin1StringFound);
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
+    }
+
+    public function testConvertExceptionWithAutoLogStacksDisabled()
+    {
+        $options = new Options(['auto_log_stacks' => false]);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) {
+                $this->assertNotNull($event);
+
+                $result = $event->getException();
+
+                $this->assertNotEmpty($result);
+                $this->assertInternalType('array', $result[0]);
+                $this->assertEquals(\Exception::class, $result[0]['type']);
+                $this->assertEquals('foo', $result[0]['value']);
+                $this->assertArrayNotHasKey('stacktrace', $result[0]);
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(new \Exception('foo'));
+    }
+
+    /**
+     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
+     */
+    private function clearLastError()
+    {
+        $handler = function () {
+            return false;
+        };
+
+        set_error_handler($handler);
+        @trigger_error('');
+        restore_error_handler();
     }
 
     private function createCarelessExceptionWithStacktrace()
