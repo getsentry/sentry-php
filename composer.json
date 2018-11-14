@@ -37,6 +37,7 @@
         "symfony/phpunit-bridge": "^4.1.6"
     },
     "suggest": {
+        "jean85/pretty-package-versions": "To use the ModulesIntegration, that lists all installed dependencies in every sent event",
         "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
