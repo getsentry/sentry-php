@@ -67,6 +67,16 @@ class Client implements ClientInterface
     private $integrations;
 
     /**
+     * @var Serializer The serializer
+     */
+    private $serializer;
+
+    /**
+     * @var ReprSerializer The representation serializer
+     */
+    private $representationSerializer;
+
+    /**
      * Constructor.
      *
      * @param Options                $options      The client configuration
@@ -78,6 +88,12 @@ class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
         $this->integrations = Handler::setupIntegrations($integrations);
+        $this->serializer = new Serializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+        if ($this->options->getSerializeAllObjects()) {
+            $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+            $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+        }
     }
 
     /**
@@ -171,7 +187,7 @@ class Client implements ClientInterface
      *
      * @return null|string
      */
-    protected function send(Event $event): ?string
+    private function send(Event $event): ?string
     {
         return $this->transport->send($event);
     }
@@ -184,7 +200,7 @@ class Client implements ClientInterface
      *
      * @return null|Event returns ready to send Event, however depending on options it can be discarded
      */
-    protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
@@ -250,7 +266,6 @@ class Client implements ClientInterface
 
         $exceptions = [];
         $currentException = $exception;
-        $serializer = new Serializer($this->getOptions()->getMbDetectOrder());
 
         do {
             if ($this->getOptions()->isExcludedException($currentException)) {
@@ -259,11 +274,18 @@ class Client implements ClientInterface
 
             $data = [
                 'type' => \get_class($currentException),
-                'value' => $serializer->serialize($currentException->getMessage()),
+                'value' => $this->serializer->serialize($currentException->getMessage()),
             ];
 
             if ($this->getOptions()->getAutoLogStacks()) {
-                $data['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $currentException->getTrace(), $currentException->getFile(), $currentException->getLine());
+                $data['stacktrace'] = Stacktrace::createFromBacktrace(
+                    $this->getOptions(),
+                    $this->serializer,
+                    $this->representationSerializer,
+                    $currentException->getTrace(),
+                    $currentException->getFile(),
+                    $currentException->getLine()
+                );
             }
 
             $exceptions[] = $data;

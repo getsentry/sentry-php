@@ -14,6 +14,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Frame;
 use Sentry\Options;
+use Sentry\ReprSerializer;
+use Sentry\Serializer;
 use Sentry\Stacktrace;
 
 class StacktraceTest extends TestCase
@@ -23,14 +25,26 @@ class StacktraceTest extends TestCase
      */
     protected $options;
 
+    /**
+     * @var Serializer
+     */
+    protected $serializer;
+
+    /**
+     * @var ReprSerializer
+     */
+    protected $representationSerializer;
+
     protected function setUp()
     {
         $this->options = new Options();
+        $this->serializer = new Serializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
     }
 
     public function testGetFramesAndToArray()
     {
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
@@ -45,7 +59,7 @@ class StacktraceTest extends TestCase
 
     public function testStacktraceJsonSerialization()
     {
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
@@ -60,7 +74,7 @@ class StacktraceTest extends TestCase
 
     public function testAddFrame()
     {
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
         $frames = [
             $this->getJsonFixture('frames/eval.json'),
             $this->getJsonFixture('frames/runtime_created.json'),
@@ -81,7 +95,7 @@ class StacktraceTest extends TestCase
 
     public function testAddFrameSerializesMethodArguments()
     {
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
         $stacktrace->addFrame('path/to/file', 12, [
             'file' => 'path/to/file',
             'line' => 12,
@@ -100,7 +114,7 @@ class StacktraceTest extends TestCase
     {
         $this->options->setPrefixes(['path/to/', 'path/to/app']);
 
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame('path/to/app/file', 12, ['function' => 'test_function_parent_parent_parent']);
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function_parent_parent']);
@@ -120,7 +134,7 @@ class StacktraceTest extends TestCase
         $this->options->setProjectRoot('path/to');
         $this->options->setExcludedProjectPaths(['path/to/excluded/path']);
 
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function']);
         $stacktrace->addFrame('path/to/excluded/path/to/file', 12, ['function' => 'test_function']);
@@ -134,7 +148,7 @@ class StacktraceTest extends TestCase
     public function testAddFrameReadsCodeFromShortFile()
     {
         $fileContent = explode("\n", $this->getFixture('code/ShortFile.php'));
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame($this->getFixturePath('code/ShortFile.php'), 3, ['function' => '[unknown]']);
 
@@ -158,7 +172,7 @@ class StacktraceTest extends TestCase
     public function testAddFrameReadsCodeFromLongFile()
     {
         $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
             'function' => '[unknown]',
@@ -191,7 +205,7 @@ class StacktraceTest extends TestCase
             $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
         $stacktrace->addFrame('path/to/file', 12, [
             'function' => 'test_function_parent',
@@ -223,7 +237,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktrace()
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
-        $frames = Stacktrace::createFromBacktrace($this->options, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
@@ -233,7 +247,7 @@ class StacktraceTest extends TestCase
     public function testFromBacktraceWithAnonymousFrame()
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
-        $frames = Stacktrace::createFromBacktrace($this->options, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
@@ -249,7 +263,7 @@ class StacktraceTest extends TestCase
             null,
         ];
 
-        $stacktrace = new Stacktrace($this->options);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
         $stacktrace->addFrame('/some/file', 123, $stack);
         $frames = $stacktrace->getFrames();
 

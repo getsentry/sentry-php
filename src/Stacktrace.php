@@ -34,7 +34,7 @@ class Stacktrace implements \JsonSerializable
     protected $serializer;
 
     /**
-     * @var Serializer The representation serializer
+     * @var ReprSerializer The representation serializer
      */
     protected $representationSerializer;
 
@@ -54,49 +54,34 @@ class Stacktrace implements \JsonSerializable
     ];
 
     /**
-     * Constructor.
+     * Stacktrace constructor.
      *
-     * @param Options $options The client options
+     * @param Options        $options                  The Client options
+     * @param Serializer     $serializer               The Serializer to use
+     * @param ReprSerializer $representationSerializer The representation Serializer to use
      */
-    public function __construct(Options $options)
+    public function __construct(Options $options, Serializer $serializer, ReprSerializer $representationSerializer)
     {
         $this->options = $options;
-        $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
-
-        if ($this->options->getSerializeAllObjects()) {
-            $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
-            $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
-        }
-    }
-
-    /**
-     * Creates a new instance of this class using the current backtrace data.
-     *
-     * @param Options $options The client options
-     *
-     * @return static
-     */
-    public static function create(Options $options)
-    {
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-
-        return static::createFromBacktrace($options, $backtrace, __FILE__, __LINE__);
+        $this->serializer = $serializer;
+        $this->representationSerializer = $representationSerializer;
     }
 
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param Options $options   The client options
-     * @param array   $backtrace The backtrace
-     * @param string  $file      The file that originated the backtrace
-     * @param int     $line      The line at which the backtrace originated
+     * @param Options        $options                  The client options
+     * @param Serializer     $serializer               The Serializer to use
+     * @param ReprSerializer $representationSerializer The representation Serializer to use
+     * @param array          $backtrace                The backtrace
+     * @param string         $file                     The file that originated the backtrace
+     * @param int            $line                     The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(Options $options, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Options $options, Serializer $serializer, ReprSerializer $representationSerializer, array $backtrace, $file, $line)
     {
-        $stacktrace = new static($options);
+        $stacktrace = new static($options, $serializer, $representationSerializer);
 
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
