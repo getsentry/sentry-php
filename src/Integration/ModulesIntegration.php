@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use Composer\Composer;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
@@ -38,7 +37,7 @@ final class ModulesIntegration implements IntegrationInterface
             $self = Hub::getCurrent()->getIntegration(self::class);
 
             if ($self instanceof self) {
-                self::applyToEvent($self, $event);
+                self::applyToEvent($event);
             }
 
             return $event;
@@ -46,6 +45,8 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
+     * Applies the information gathered by the this integration to the event.
+     *
      * @param self  $self  The instance of this integration
      * @param Event $event The event that will be enriched with the modules
      */

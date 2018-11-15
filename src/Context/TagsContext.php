@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Context;
 
@@ -22,7 +15,7 @@ class TagsContext extends Context
     /**
      * {@inheritdoc}
      */
-    public function merge(array $data, $recursive = false)
+    public function merge(array $data, bool $recursive = false): void
     {
         if ($recursive) {
             throw new \InvalidArgumentException('The tags context does not allow recursive merging of its data.');
@@ -40,7 +33,7 @@ class TagsContext extends Context
     /**
      * {@inheritdoc}
      */
-    public function setData(array $data)
+    public function setData(array $data): void
     {
         foreach ($data as $value) {
             if (!\is_string($value)) {
@@ -54,7 +47,7 @@ class TagsContext extends Context
     /**
      * {@inheritdoc}
      */
-    public function replaceData(array $data)
+    public function replaceData(array $data): void
     {
         foreach ($data as $value) {
             if (!\is_string($value)) {
@@ -68,7 +61,7 @@ class TagsContext extends Context
     /**
      * {@inheritdoc}
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (!\is_string($value)) {
             throw new \InvalidArgumentException('The $value argument must be a string.');

@@ -1,19 +1,9 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -79,7 +69,7 @@ class Options
      *
      * @return int
      */
-    public function getSendAttempts()
+    public function getSendAttempts(): int
     {
         return $this->options['send_attempts'];
     }
@@ -89,7 +79,7 @@ class Options
      *
      * @param int $attemptsCount The number of attempts
      */
-    public function setSendAttempts($attemptsCount)
+    public function setSendAttempts(int $attemptsCount): void
     {
         $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
 
@@ -102,7 +92,7 @@ class Options
      *
      * @return string[]
      */
-    public function getPrefixes()
+    public function getPrefixes(): array
     {
         return $this->options['prefixes'];
     }
@@ -113,7 +103,7 @@ class Options
      *
      * @param array $prefixes The prefixes
      */
-    public function setPrefixes(array $prefixes)
+    public function setPrefixes(array $prefixes): void
     {
         $options = array_merge($this->options, ['prefixes' => $prefixes]);
 
@@ -125,7 +115,7 @@ class Options
      *
      * @return bool
      */
-    public function getSerializeAllObjects()
+    public function getSerializeAllObjects(): bool
     {
         return $this->options['serialize_all_object'];
     }
@@ -135,7 +125,7 @@ class Options
      *
      * @param bool $serializeAllObjects Flag indicating if all objects should be serialized
      */
-    public function setSerializeAllObjects($serializeAllObjects)
+    public function setSerializeAllObjects(bool $serializeAllObjects): void
     {
         $options = array_merge($this->options, ['serialize_all_object' => $serializeAllObjects]);
 
@@ -148,7 +138,7 @@ class Options
      *
      * @return float
      */
-    public function getSampleRate()
+    public function getSampleRate(): float
     {
         return $this->options['sample_rate'];
     }
@@ -159,7 +149,7 @@ class Options
      *
      * @param float $sampleRate The sampling factor
      */
-    public function setSampleRate($sampleRate)
+    public function setSampleRate(float $sampleRate): void
     {
         $options = array_merge($this->options, ['sample_rate' => $sampleRate]);
 
@@ -181,7 +171,7 @@ class Options
      *
      * @param string|string[]|null $detectOrder The detection order
      */
-    public function setMbDetectOrder($detectOrder)
+    public function setMbDetectOrder($detectOrder): void
     {
         $options = array_merge($this->options, ['mb_detect_order' => $detectOrder]);
 
@@ -193,7 +183,7 @@ class Options
      *
      * @return bool
      */
-    public function getAutoLogStacks()
+    public function getAutoLogStacks(): bool
     {
         return $this->options['auto_log_stacks'];
     }
@@ -203,7 +193,7 @@ class Options
      *
      * @param bool $enable Flag indicating if the stacktrace must be auto-filled
      */
-    public function setAutoLogStacks($enable)
+    public function setAutoLogStacks(bool $enable): void
     {
         $options = array_merge($this->options, ['auto_log_stacks' => $enable]);
 
@@ -215,7 +205,7 @@ class Options
      *
      * @return int|null
      */
-    public function getContextLines()
+    public function getContextLines(): ?int
     {
         return $this->options['context_lines'];
     }
@@ -225,7 +215,7 @@ class Options
      *
      * @param int|null $contextLines The number of lines of code
      */
-    public function setContextLines($contextLines)
+    public function setContextLines(?int $contextLines): void
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
 
@@ -259,7 +249,7 @@ class Options
      *
      * @return string
      */
-    public function getCurrentEnvironment()
+    public function getCurrentEnvironment(): string
     {
         return $this->options['current_environment'];
     }
@@ -269,7 +259,7 @@ class Options
      *
      * @param string $environment The environment
      */
-    public function setCurrentEnvironment($environment)
+    public function setCurrentEnvironment(string $environment): void
     {
         $options = array_merge($this->options, ['current_environment' => $environment]);
 
@@ -282,7 +272,7 @@ class Options
      *
      * @return string[]
      */
-    public function getEnvironments()
+    public function getEnvironments(): array
     {
         return $this->options['environments'];
     }
@@ -293,7 +283,7 @@ class Options
      *
      * @param string[] $environments The environments
      */
-    public function setEnvironments(array $environments)
+    public function setEnvironments(array $environments): void
     {
         $options = array_merge($this->options, ['environments' => $environments]);
 
@@ -305,7 +295,7 @@ class Options
      *
      * @return string[]
      */
-    public function getExcludedLoggers()
+    public function getExcludedLoggers(): array
     {
         return $this->options['excluded_loggers'];
     }
@@ -315,7 +305,7 @@ class Options
      *
      * @param string[] $loggers The list of logger 'progname's
      */
-    public function setExcludedLoggers(array $loggers)
+    public function setExcludedLoggers(array $loggers): void
     {
         $options = array_merge($this->options, ['excluded_loggers' => $loggers]);
 
@@ -328,7 +318,7 @@ class Options
      *
      * @return string[]
      */
-    public function getExcludedExceptions()
+    public function getExcludedExceptions(): array
     {
         return $this->options['excluded_exceptions'];
     }
@@ -339,7 +329,7 @@ class Options
      *
      * @param string[] $exceptions The list of exception classes
      */
-    public function setExcludedExceptions(array $exceptions)
+    public function setExcludedExceptions(array $exceptions): void
     {
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -350,11 +340,11 @@ class Options
      * Checks whether the given exception should be ignored when sending events
      * to Sentry.
      *
-     * @param \Throwable|\Exception $exception The exception
+     * @param \Throwable $exception The exception
      *
      * @return bool
      */
-    public function isExcludedException($exception)
+    public function isExcludedException(\Throwable $exception): bool
     {
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
             if ($exception instanceof $exceptionClass) {
@@ -370,7 +360,7 @@ class Options
      *
      * @return string[]
      */
-    public function getExcludedProjectPaths()
+    public function getExcludedProjectPaths(): array
     {
         return $this->options['excluded_app_paths'];
     }
@@ -380,7 +370,7 @@ class Options
      *
      * @param array $paths The list of paths
      */
-    public function setExcludedProjectPaths(array $paths)
+    public function setExcludedProjectPaths(array $paths): void
     {
         $options = array_merge($this->options, ['excluded_app_paths' => $paths]);
 
@@ -392,7 +382,7 @@ class Options
      *
      * @return string|null
      */
-    public function getProjectId()
+    public function getProjectId(): ?string
     {
         return $this->projectId;
     }
@@ -402,7 +392,7 @@ class Options
      *
      * @return string|null
      */
-    public function getProjectRoot()
+    public function getProjectRoot(): ?string
     {
         return $this->options['project_root'];
     }
@@ -412,7 +402,7 @@ class Options
      *
      * @param string|null $path The path to the project root
      */
-    public function setProjectRoot($path)
+    public function setProjectRoot(?string $path): void
     {
         $options = array_merge($this->options, ['project_root' => $path]);
 
@@ -424,7 +414,7 @@ class Options
      *
      * @return string|null
      */
-    public function getPublicKey()
+    public function getPublicKey(): ?string
     {
         return $this->publicKey;
     }
@@ -434,7 +424,7 @@ class Options
      *
      * @return string|null
      */
-    public function getSecretKey()
+    public function getSecretKey(): ?string
     {
         return $this->secretKey;
     }
@@ -444,7 +434,7 @@ class Options
      *
      * @return string
      */
-    public function getLogger()
+    public function getLogger(): string
     {
         return $this->options['logger'];
     }
@@ -454,7 +444,7 @@ class Options
      *
      * @param string $logger The logger
      */
-    public function setLogger($logger)
+    public function setLogger(string $logger): void
     {
         $options = array_merge($this->options, ['logger' => $logger]);
 
@@ -466,7 +456,7 @@ class Options
      *
      * @return string
      */
-    public function getRelease()
+    public function getRelease(): ?string
     {
         return $this->options['release'];
     }
@@ -476,7 +466,7 @@ class Options
      *
      * @param string $release The release
      */
-    public function setRelease($release)
+    public function setRelease(?string $release): void
     {
         $options = array_merge($this->options, ['release' => $release]);
 
@@ -488,7 +478,7 @@ class Options
      *
      * @return string|null
      */
-    public function getDsn()
+    public function getDsn(): ?string
     {
         return $this->dsn;
     }
@@ -498,7 +488,7 @@ class Options
      *
      * @return string
      */
-    public function getServerName()
+    public function getServerName(): string
     {
         return $this->options['server_name'];
     }
@@ -508,7 +498,7 @@ class Options
      *
      * @param string $serverName The server name
      */
-    public function setServerName($serverName)
+    public function setServerName(string $serverName): void
     {
         $options = array_merge($this->options, ['server_name' => $serverName]);
 
@@ -544,7 +534,7 @@ class Options
      *
      * @return string[]
      */
-    public function getTags()
+    public function getTags(): array
     {
         return $this->options['tags'];
     }
@@ -554,7 +544,7 @@ class Options
      *
      * @param string[] $tags A list of tags
      */
-    public function setTags(array $tags)
+    public function setTags(array $tags): void
     {
         $options = array_merge($this->options, ['tags' => $tags]);
 
@@ -566,7 +556,7 @@ class Options
      *
      * @return int
      */
-    public function getErrorTypes()
+    public function getErrorTypes(): int
     {
         return $this->options['error_types'];
     }
@@ -576,7 +566,7 @@ class Options
      *
      * @param int $errorTypes The bit mask
      */
-    public function setErrorTypes($errorTypes)
+    public function setErrorTypes(int $errorTypes): void
     {
         $options = array_merge($this->options, ['error_types' => $errorTypes]);
 
@@ -687,7 +677,7 @@ class Options
                 return $event;
             },
             'tags' => [],
-            'error_types' => null,
+            'error_types' => E_ALL,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
                 return $breadcrumb;
@@ -714,112 +704,18 @@ class Options
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
-        $resolver->setAllowedTypes('error_types', ['null', 'int']);
+        $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['null', 'array']);
 
-        $resolver->setAllowedValues('integrations', function ($value) {
-            if (null === $value) {
-                return true;
-            }
-
-            foreach ($value as $integration) {
-                if (!$integration instanceof IntegrationInterface) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        $resolver->setAllowedValues('dsn', function ($value) {
-            if (empty($value)) {
-                return true;
-            }
-
-            switch (strtolower($value)) {
-                case '':
-                case 'false':
-                case '(false)':
-                case 'empty':
-                case '(empty)':
-                case 'null':
-                case '(null)':
-                    return true;
-            }
-
-            $parsed = @parse_url($value);
-
-            if (false === $parsed) {
-                return false;
-            }
-
-            if (!isset($parsed['scheme'], $parsed['user'], $parsed['host'], $parsed['path'])) {
-                return false;
-            }
-
-            if (empty($parsed['user']) || (isset($parsed['pass']) && empty($parsed['pass']))) {
-                return false;
-            }
-
-            if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
-                return false;
-            }
-
-            return true;
-        });
-
+        $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
+        $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', function ($value) {
             return $value <= self::DEFAULT_MAX_BREADCRUMBS;
         });
 
-        $resolver->setNormalizer('dsn', function (SymfonyOptions $options, $value) {
-            if (empty($value)) {
-                $this->dsn = null;
-
-                return null;
-            }
-
-            switch (strtolower($value)) {
-                case '':
-                case 'false':
-                case '(false)':
-                case 'empty':
-                case '(empty)':
-                case 'null':
-                case '(null)':
-                    $this->dsn = null;
-
-                    return null;
-            }
-
-            $parsed = @parse_url($value);
-
-            $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
-
-            if (isset($parsed['port']) && ((80 !== $parsed['port'] && 'http' === $parsed['scheme']) || (443 !== $parsed['port'] && 'https' === $parsed['scheme']))) {
-                $this->dsn .= ':' . $parsed['port'];
-            }
-
-            $lastSlashPosition = strrpos($parsed['path'], '/');
-
-            if (false !== $lastSlashPosition) {
-                $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
-            } else {
-                $this->dsn .= $parsed['path'];
-            }
-
-            $this->publicKey = $parsed['user'];
-            $this->secretKey = $parsed['pass'] ?? null;
-
-            $parts = explode('/', $parsed['path']);
-
-            $this->projectId = array_pop($parts);
-
-            return $value;
-        });
-
+        $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
             if (null === $value) {
                 return null;
@@ -861,5 +757,126 @@ class Options
         }
 
         return $path;
+    }
+
+    /**
+     * Normalizes the DSN option by parsing the host, public and secret keys and
+     * an optional path.
+     *
+     * @param SymfonyOptions $options The configuration options
+     * @param mixed          $dsn     The actual value of the option to normalize
+     *
+     * @return null|string
+     */
+    private function normalizeDsnOption(SymfonyOptions $options, $dsn): ?string
+    {
+        if (empty($dsn)) {
+            return null;
+        }
+
+        switch (strtolower($dsn)) {
+            case '':
+            case 'false':
+            case '(false)':
+            case 'empty':
+            case '(empty)':
+            case 'null':
+            case '(null)':
+                return null;
+        }
+
+        $parsed = @parse_url($dsn);
+
+        $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
+
+        if (isset($parsed['port']) && ((80 !== $parsed['port'] && 'http' === $parsed['scheme']) || (443 !== $parsed['port'] && 'https' === $parsed['scheme']))) {
+            $this->dsn .= ':' . $parsed['port'];
+        }
+
+        $lastSlashPosition = strrpos($parsed['path'], '/');
+
+        if (false !== $lastSlashPosition) {
+            $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
+        } else {
+            $this->dsn .= $parsed['path'];
+        }
+
+        $this->publicKey = $parsed['user'];
+        $this->secretKey = $parsed['pass'] ?? null;
+
+        $parts = explode('/', $parsed['path']);
+
+        $this->projectId = array_pop($parts);
+
+        return $dsn;
+    }
+
+    /**
+     * Validates the DSN option ensuring that all required pieces are set and
+     * that the URL is valid.
+     *
+     * @param string|null $dsn The value of the option
+     *
+     * @return bool
+     */
+    private function validateDsnOption(?string $dsn): bool
+    {
+        if (null === $dsn) {
+            return true;
+        }
+
+        switch (strtolower($dsn)) {
+            case '':
+            case 'false':
+            case '(false)':
+            case 'empty':
+            case '(empty)':
+            case 'null':
+            case '(null)':
+                return true;
+        }
+
+        $parsed = @parse_url($dsn);
+
+        if (false === $parsed) {
+            return false;
+        }
+
+        if (!isset($parsed['scheme'], $parsed['user'], $parsed['host'], $parsed['path'])) {
+            return false;
+        }
+
+        if (empty($parsed['user']) || (isset($parsed['pass']) && empty($parsed['pass']))) {
+            return false;
+        }
+
+        if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates that the elements of this option are all class instances that
+     * implements the {@see IntegrationInterface} interface.
+     *
+     * @param array|null $integrations The value to validate
+     *
+     * @return bool
+     */
+    private function validateIntegrationsOption(?array $integrations): bool
+    {
+        if (null === $integrations) {
+            return true;
+        }
+
+        foreach ($integrations as $integration) {
+            if (!$integration instanceof IntegrationInterface) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

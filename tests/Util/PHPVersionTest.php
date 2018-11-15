@@ -1,41 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests\Util;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Util\PHPVersion;
 
-class PHPVersionTest extends TestCase
+final class PHPVersionTest extends TestCase
 {
     /**
      * @dataProvider versionProvider
      */
-    public function testGetParsed($expected, $rawVersion)
+    public function testGetParsed(string $rawVersion, string $expectedVersion): void
     {
-        $this->assertSame($expected, PHPVersion::parseVersion($rawVersion));
+        $this->assertEquals($expectedVersion, PHPVersion::parseVersion($rawVersion));
     }
 
-    public function versionProvider()
+    public function versionProvider(): array
     {
-        $baseVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '.' . PHP_RELEASE_VERSION;
-        $phpExtraVersions = [
-            '' => $baseVersion,
-            '-1+ubuntu17.04.1+deb.sury.org+1' => $baseVersion,
-            '-beta3-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-beta3",
-            '-beta5-dev-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-beta5-dev",
-            '-rc-9-1+ubuntu17.04.1+deb.sury.org+1' => "{$baseVersion}-rc-9",
-            '-2~ubuntu16.04.1+deb.sury.org+1' => $baseVersion,
-            '-beta1-dev' => "{$baseVersion}-beta1-dev",
-            '-rc10' => "{$baseVersion}-rc10",
-            '-RC10' => "{$baseVersion}-RC10",
-            '-rc2-dev' => "{$baseVersion}-rc2-dev",
-            '-beta-2-dev' => "{$baseVersion}-beta-2-dev",
-            '-beta2' => "{$baseVersion}-beta2",
-            '-beta-9' => "{$baseVersion}-beta-9",
+        return [
+            ['1.2.3', '1.2.3'],
+            ['1.2.3-1+ubuntu17.04.1+deb.sury.org+1', '1.2.3'],
+            ['1.2.3-beta3-1+ubuntu17.04.1+deb.sury.org+1', '1.2.3-beta3'],
+            ['1.2.3-beta5-dev-1+ubuntu17.04.1+deb.sury.org+1', '1.2.3-beta5-dev'],
+            ['1.2.3-rc-9-1+ubuntu17.04.1+deb.sury.org+1', '1.2.3-rc-9'],
+            ['1.2.3-2~ubuntu16.04.1+deb.sury.org+1', '1.2.3'],
+            ['1.2.3-beta1-dev', '1.2.3-beta1-dev'],
+            ['1.2.3-rc10', '1.2.3-rc10'],
+            ['1.2.3-RC10', '1.2.3-RC10'],
+            ['1.2.3-rc2-dev', '1.2.3-rc2-dev'],
+            ['1.2.3-beta-2-dev', '1.2.3-beta-2-dev'],
+            ['1.2.3-beta2', '1.2.3-beta2'],
+            ['1.2.3-beta-9', '1.2.3-beta-9'],
         ];
-
-        foreach ($phpExtraVersions as $fullVersion => $parsedVersion) {
-            yield [$parsedVersion, $baseVersion . $fullVersion];
-        }
     }
 }

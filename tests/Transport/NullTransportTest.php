@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
@@ -15,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Transport\NullTransport;
 
-class NullTransportTest extends TestCase
+final class NullTransportTest extends TestCase
 {
-    public function testSend()
+    public function testSend(): void
     {
         $transport = new NullTransport();
         $event = new Event();

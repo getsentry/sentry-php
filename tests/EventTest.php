@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidFactoryInterface;
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
@@ -22,13 +25,16 @@ use Sentry\Util\PHPVersion;
 /**
  * @group time-sensitive
  */
-class EventTest extends TestCase
+final class EventTest extends TestCase
 {
-    const GENERATED_UUID = [
+    private const GENERATED_UUID = [
         '4d310518-9e9d-463c-8161-bd46416f7817',
         '431a2537-d1de-49da-80b6-b7861954c9cf',
     ];
 
+    /**
+     * @var int
+     */
     protected $uuidGeneratorInvokationCount;
 
     /**
@@ -46,14 +52,14 @@ class EventTest extends TestCase
      */
     protected $client;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->uuidGeneratorInvokationCount = 0;
         $this->originalUuidFactory = new UuidFactory();
         $this->client = ClientBuilder::create()->getClient();
         $this->options = $this->client->getOptions();
 
-        /** @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
+        /** @var UuidFactoryInterface|MockObject $uuidFactory */
         $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
             ->getMock();
 
@@ -68,12 +74,12 @@ class EventTest extends TestCase
         Uuid::setFactory($uuidFactory);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         Uuid::setFactory($this->originalUuidFactory);
     }
 
-    public function testEventIsGeneratedWithUniqueIdentifier()
+    public function testEventIsGeneratedWithUniqueIdentifier(): void
     {
         $event1 = new Event();
         $event2 = new Event();
@@ -82,7 +88,7 @@ class EventTest extends TestCase
         $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[1]), $event2->getId());
     }
 
-    public function testToArray()
+    public function testToArray(): void
     {
         $this->options->setRelease('1.2.3-dev');
 
@@ -114,7 +120,7 @@ class EventTest extends TestCase
         $this->assertEquals($expected, $event->toArray());
     }
 
-    public function testToArrayWithMessage()
+    public function testToArrayWithMessage(): void
     {
         $event = new Event();
         $event->setMessage('foo bar');
@@ -125,7 +131,7 @@ class EventTest extends TestCase
         $this->assertEquals('foo bar', $data['message']);
     }
 
-    public function testToArrayWithMessageWithParams()
+    public function testToArrayWithMessageWithParams(): void
     {
         $expected = [
             'message' => 'foo %s',
@@ -142,7 +148,7 @@ class EventTest extends TestCase
         $this->assertEquals($expected, $data['message']);
     }
 
-    public function testToArrayWithBreadcrumbs()
+    public function testToArrayWithBreadcrumbs(): void
     {
         $breadcrumbs = [
             new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'foo'),
@@ -160,35 +166,35 @@ class EventTest extends TestCase
         $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
-    public function testGetServerOsContext()
+    public function testGetServerOsContext(): void
     {
         $event = new Event();
 
         $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
     }
 
-    public function testGetRuntimeContext()
+    public function testGetRuntimeContext(): void
     {
         $event = new Event();
 
         $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
     }
 
-    public function testGetUserContext()
+    public function testGetUserContext(): void
     {
         $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getUserContext());
     }
 
-    public function testGetExtraContext()
+    public function testGetExtraContext(): void
     {
         $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getExtraContext());
     }
 
-    public function getTagsContext()
+    public function getTagsContext(): void
     {
         $event = new Event();
 
@@ -198,7 +204,7 @@ class EventTest extends TestCase
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
-    public function testGettersAndSetters($propertyName, $propertyValue, $expectedValue)
+    public function testGettersAndSetters(string $propertyName, $propertyValue, $expectedValue): void
     {
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'set' . ucfirst($propertyName);
@@ -210,7 +216,7 @@ class EventTest extends TestCase
         $this->assertArraySubset($expectedValue, $event->toArray());
     }
 
-    public function gettersAndSettersDataProvider()
+    public function gettersAndSettersDataProvider(): array
     {
         return [
             ['level', Severity::info(), ['level' => Severity::info()]],
@@ -224,7 +230,7 @@ class EventTest extends TestCase
         ];
     }
 
-    public function testEventJsonSerialization()
+    public function testEventJsonSerialization(): void
     {
         $event = new Event();
 

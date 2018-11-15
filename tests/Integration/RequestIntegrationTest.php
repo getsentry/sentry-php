@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Integration;
 
@@ -18,12 +11,12 @@ use Sentry\Integration\RequestIntegration;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestIntegrationTest extends TestCase
+final class RequestIntegrationTest extends TestCase
 {
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $requestData, array $expectedValue)
+    public function testInvoke(array $requestData, array $expectedValue): void
     {
         $event = new Event();
 
@@ -43,7 +36,7 @@ class RequestIntegrationTest extends TestCase
         $this->assertEquals($expectedValue, $event->getRequest());
     }
 
-    public function testInvokeWithRequestHavingIpAddress()
+    public function testInvokeWithRequestHavingIpAddress(): void
     {
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
@@ -57,7 +50,7 @@ class RequestIntegrationTest extends TestCase
         $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $event->getUserContext()->toArray());
     }
 
-    public function invokeDataProvider()
+    public function invokeDataProvider(): array
     {
         return [
             [

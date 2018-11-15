@@ -1,17 +1,9 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
@@ -90,6 +82,7 @@ class Client implements ClientInterface
         $this->integrations = Handler::setupIntegrations($integrations);
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
         $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+
         if ($this->options->getSerializeAllObjects()) {
             $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
             $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());

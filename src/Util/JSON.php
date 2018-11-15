@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Util;
 
@@ -24,8 +17,10 @@ final class JSON
      * @param mixed $data The data to encode
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException If the encoding failed
      */
-    public static function encode($data)
+    public static function encode($data): string
     {
         $encodedData = json_encode($data, JSON_UNESCAPED_UNICODE);
 
