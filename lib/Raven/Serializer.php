@@ -188,7 +188,6 @@ class Raven_Serializer
 
     /**
      * @return int
-     * @codeCoverageIgnore
      */
     public function getDefaultMaxDepth()
     {
@@ -197,7 +196,6 @@ class Raven_Serializer
 
     /**
      * @param int $max_depth
-     * @codeCoverageIgnore
      */
     public function setDefaultMaxDepth($max_depth)
     {
