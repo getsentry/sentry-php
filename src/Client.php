@@ -287,6 +287,6 @@ class Client implements ClientInterface
             $exceptions[] = $data;
         } while ($currentException = $currentException->getPrevious());
 
-        $event->setException($exceptions);
+        $event->setExceptions($exceptions);
     }
 }

@@ -124,9 +124,9 @@ final class Event implements \JsonSerializable
     private $breadcrumbs = [];
 
     /**
-     * @var array The exception
+     * @var array The exceptions
      */
-    private $exception;
+    private $exceptions;
 
     /**
      * @var Stacktrace|null The stacktrace that generated this event
@@ -463,19 +463,19 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function getException()
+    public function getExceptions()
     {
-        return $this->exception;
+        return $this->exceptions;
     }
 
     /**
      * Sets the exception.
      *
-     * @param array $exception The exception
+     * @param array $exceptions The exception
      */
-    public function setException(array $exception)
+    public function setExceptions(array $exceptions)
     {
-        $this->exception = $exception;
+        $this->exceptions = $exceptions;
     }
 
     /**
@@ -568,8 +568,8 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
-        if (null !== $this->exception) {
-            $reversedException = array_reverse($this->exception);
+        if (null !== $this->exceptions) {
+            $reversedException = array_reverse($this->exceptions);
 
             foreach ($reversedException as $exception) {
                 $exceptionData = [

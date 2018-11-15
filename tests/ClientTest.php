@@ -135,7 +135,7 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $exception = $event->getException()[0];
+                $exception = $event->getExceptions()[0];
 
                 $this->assertEquals('ErrorException', $exception['type']);
                 $this->assertEquals('foo', $exception['value']);
@@ -370,7 +370,7 @@ class ClientTest extends TestCase
                 /* @var Event $event*/
                 // Make sure the exception is of the careless exception and not the exception thrown inside
                 // the __set method of that exception caused by setting the event_id on the exception instance
-                $this->assertSame(CarelessException::class, $event->getException()[0]['type']);
+                $this->assertSame(CarelessException::class, $event->getExceptions()[0]['type']);
 
                 return true;
             }));
@@ -394,10 +394,10 @@ class ClientTest extends TestCase
             ->method('send')
             ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
                 $this->assertArraySubset($expectedResult, $event->toArray());
-                $this->assertArrayNotHasKey('values', $event->getException());
+                $this->assertArrayNotHasKey('values', $event->getExceptions());
                 $this->assertArrayHasKey('values', $event->toArray()['exception']);
 
-                foreach ($event->getException() as $exceptionData) {
+                foreach ($event->getExceptions() as $exceptionData) {
                     if ($assertHasStacktrace) {
                         $this->assertArrayHasKey('stacktrace', $exceptionData);
                         $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
@@ -507,7 +507,7 @@ class ClientTest extends TestCase
                     ],
                 ];
 
-                $this->assertArraySubset($expectedValue, $event->getException());
+                $this->assertArraySubset($expectedValue, $event->getExceptions());
 
                 return true;
             }));
@@ -533,7 +533,7 @@ class ClientTest extends TestCase
                     ],
                 ];
 
-                $this->assertArraySubset($expectedValue, $event->getException());
+                $this->assertArraySubset($expectedValue, $event->getExceptions());
 
                 return true;
             }));
@@ -555,7 +555,7 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $result = $event->getException();
+                $result = $event->getExceptions();
                 $expectedValue = [
                     [
                         'type' => \Exception::class,
@@ -595,7 +595,7 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $result = $event->getException();
+                $result = $event->getExceptions();
 
                 $this->assertNotEmpty($result);
                 $this->assertInternalType('array', $result[0]);

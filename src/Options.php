@@ -634,7 +634,7 @@ class Options
     /**
      * Set integrations that will be used by the created client.
      *
-     * @param null|IntegrationInterface[] $integrations
+     * @param null|IntegrationInterface[] $integrations The integrations
      */
     public function setIntegrations(?array $integrations): void
     {
