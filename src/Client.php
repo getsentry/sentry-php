@@ -116,7 +116,7 @@ class Client implements ClientInterface
             return;
         }
 
-        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+        $breadcrumb = \call_user_func($beforeBreadcrumbCallback, $breadcrumb);
 
         if (null !== $breadcrumb && null !== $scope) {
             $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
@@ -243,9 +243,7 @@ class Client implements ClientInterface
             $event = $scope->applyToEvent($event, $payload);
         }
 
-        $beforeSendCallback = $this->options->getBeforeSendCallback();
-
-        return $beforeSendCallback($event);
+        return \call_user_func($this->options->getBeforeSendCallback(), $event);
     }
 
     /**
