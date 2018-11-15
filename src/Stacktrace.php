@@ -56,9 +56,9 @@ class Stacktrace implements \JsonSerializable
     /**
      * Stacktrace constructor.
      *
-     * @param Options        $options                  The Client options
-     * @param Serializer     $serializer               The Serializer to use
-     * @param ReprSerializer $representationSerializer The representation Serializer to use
+     * @param Options        $options                  The client options
+     * @param Serializer     $serializer               The serializer
+     * @param ReprSerializer $representationSerializer The representation serializer
      */
     public function __construct(Options $options, Serializer $serializer, ReprSerializer $representationSerializer)
     {
@@ -71,8 +71,8 @@ class Stacktrace implements \JsonSerializable
      * Creates a new instance of this class from the given backtrace.
      *
      * @param Options        $options                  The client options
-     * @param Serializer     $serializer               The Serializer to use
-     * @param ReprSerializer $representationSerializer The representation Serializer to use
+     * @param Serializer     $serializer               The serializer
+     * @param ReprSerializer $representationSerializer The representation serializer
      * @param array          $backtrace                The backtrace
      * @param string         $file                     The file that originated the backtrace
      * @param int            $line                     The line at which the backtrace originated

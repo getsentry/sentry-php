@@ -233,7 +233,7 @@ final class Hub
     }
 
     /**
-     * Captures a new event using the provided data.
+     * Captures an event that logs the last occurred error.
      *
      * @return null|string
      */
@@ -293,16 +293,16 @@ final class Hub
     }
 
     /**
-     * This function looks up if the passed integration is installed on the current client.
+     * Gets the integration whose FQCN matches the given one if it's available on the current client.
      *
-     * @param string $integrationClassName the classname integration to look up
+     * @param string $className The FQCN of the integration
      *
-     * @return null|IntegrationInterface the installed integration on the current client or `null`
+     * @return null|IntegrationInterface
      */
-    public function getIntegration(string $integrationClassName): ?IntegrationInterface
+    public function getIntegration(string $className): ?IntegrationInterface
     {
         if ($client = $this->getClient()) {
-            return $client->getIntegration($integrationClassName);
+            return $client->getIntegration($className);
         }
 
         return null;

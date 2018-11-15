@@ -42,7 +42,6 @@ class ErrorHandler extends AbstractErrorHandler
      */
     protected function doHandleException($exception)
     {
-        $callback = $this->callback;
-        $callback($exception);
+        \call_user_func($this->callback, $exception);
     }
 }

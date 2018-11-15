@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 /**
- * This interface describes an Integration.
- *
- * Interface IntegrationInterface
+ * This interface defines a contract that must be implemented by integrations,
+ * bindings or hooks that integrate certain frameworks or environments with the SDK.
  */
 interface IntegrationInterface
 {
     /**
-     * Initializes the current integration once.
-     * This function is also expected to be called once, {@link Handler} takes care of calling this.
+     * Initializes the current integration by registering it once.
      */
     public function setupOnce(): void;
 }

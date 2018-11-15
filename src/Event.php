@@ -11,6 +11,7 @@
 
 namespace Sentry;
 
+use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Sentry\Breadcrumbs\Breadcrumb;
@@ -135,7 +136,7 @@ final class Event implements \JsonSerializable
     /**
      * Event constructor.
      *
-     * @throws \Ramsey\Uuid\Exception\UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
+     * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception
      */

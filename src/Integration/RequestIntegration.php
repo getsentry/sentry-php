@@ -43,7 +43,7 @@ final class RequestIntegration implements IntegrationInterface
     public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
-            /** @var ?ServerRequestInterface $request */
+            /** @var null|ServerRequestInterface $request */
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
         }
 

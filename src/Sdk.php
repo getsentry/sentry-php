@@ -8,12 +8,13 @@ use Sentry\State\Hub;
 /**
  * Creates a new Client and Hub which will be set as current.
  *
- * @param array              $options       the Client options
- * @param null|ClientBuilder $clientBuilder Use this instance of ClientBuilder instead of creating a new one
+ * @param array              $options       The client options
+ * @param null|ClientBuilder $clientBuilder An optional client builder instance
  */
 function init(array $options = [], ?ClientBuilder $clientBuilder = null): void
 {
     $builder = $clientBuilder ?? ClientBuilder::create($options);
+
     Hub::setCurrent(new Hub($builder->getClient()));
 }
 

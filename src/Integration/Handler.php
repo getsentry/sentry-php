@@ -7,8 +7,6 @@ namespace Sentry\Integration;
 /**
  * This class handles the state of already installed integrations.
  * It makes sure to call {@link IntegrationInterface::setupOnce} only once per integration.
- *
- * Class Handler
  */
 final class Handler
 {
@@ -17,9 +15,9 @@ final class Handler
     /**
      * Calls {@link IntegrationInterface::setupOnce} for all passed integrations if it hasn't been called yet.
      *
-     * @param array $integrations
+     * @param array $integrations The integrations
      *
-     * @return array
+     * @return array<string, IntegrationInterface>
      */
     public static function setupIntegrations(array $integrations): array
     {

@@ -20,7 +20,6 @@ class ModulesIntegrationTest extends TestCase
 
         ModulesIntegration::applyToEvent($integration, $event);
 
-        $this->assertNotNull($event);
         $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $event->getModules());
     }
 }

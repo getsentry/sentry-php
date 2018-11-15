@@ -36,8 +36,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
-                $this->assertInstanceOf(Event::class, $event);
+            ->with($this->callback(function (Event $event): bool {
                 $this->assertEquals('/foo', $event->getTransaction());
 
                 return true;
@@ -57,8 +56,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
-                $this->assertInstanceOf(Event::class, $event);
+            ->with($this->callback(function (Event $event): bool {
                 $this->assertNull($event->getTransaction());
 
                 return true;
@@ -136,7 +134,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
+            ->with($this->callback(function (Event $event): bool {
                 $exception = $event->getException()[0];
 
                 $this->assertEquals('ErrorException', $exception['type']);
@@ -394,8 +392,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace) {
-                $this->assertNotNull($event);
+            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
                 $this->assertArraySubset($expectedResult, $event->toArray());
                 $this->assertArrayNotHasKey('values', $event->getException());
                 $this->assertArrayHasKey('values', $event->toArray()['exception']);
@@ -502,9 +499,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) use ($utf8String) {
-                $this->assertNotNull($event);
-
+            ->with($this->callback(function (Event $event) use ($utf8String): bool {
                 $expectedValue = [
                     [
                         'type' => \Exception::class,
@@ -530,9 +525,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
-                $this->assertNotNull($event);
-
+            ->with($this->callback(function (Event $event): bool {
                 $expectedValue = [
                     [
                         'type' => \Exception::class,
@@ -561,9 +554,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
-                $this->assertNotNull($event);
-
+            ->with($this->callback(function (Event $event): bool {
                 $result = $event->getException();
                 $expectedValue = [
                     [
@@ -603,9 +594,7 @@ class ClientTest extends TestCase
 
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) {
-                $this->assertNotNull($event);
-
+            ->with($this->callback(function (Event $event): bool {
                 $result = $event->getException();
 
                 $this->assertNotEmpty($result);

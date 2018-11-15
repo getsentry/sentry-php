@@ -10,8 +10,6 @@ use Sentry\State\Hub;
 
 /**
  * This integration hooks into the global error handlers and emits events to Sentry.
- *
- * Class ErrorHandlerIntegration
  */
 final class ErrorHandlerIntegration implements IntegrationInterface
 {

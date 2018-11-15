@@ -175,9 +175,9 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getIntegration(string $integrationClassName): ?IntegrationInterface
+    public function getIntegration(string $className): ?IntegrationInterface
     {
-        return $this->integrations[$integrationClassName] ?? null;
+        return $this->integrations[$className] ?? null;
     }
 
     /**
@@ -235,7 +235,7 @@ class Client implements ClientInterface
             $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
         }
 
-        if (isset($payload['exception'])) {
+        if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
             $this->addThrowableToEvent($event, $payload['exception']);
         }
 
@@ -251,15 +251,11 @@ class Client implements ClientInterface
     /**
      * Stores the given exception in the passed event.
      *
-     * @param Event           $event     The event that will be enriched with the exception
-     * @param null|\Throwable $exception The exception that will be processed and added to the event
+     * @param Event      $event     The event that will be enriched with the exception
+     * @param \Throwable $exception The exception that will be processed and added to the event
      */
-    private function addThrowableToEvent(Event $event, \Throwable $exception = null): void
+    private function addThrowableToEvent(Event $event, \Throwable $exception): void
     {
-        if (null === $exception || !$exception instanceof \Throwable) {
-            return;
-        }
-
         if ($exception instanceof \ErrorException) {
             $event->setLevel(Severity::fromError($exception->getSeverity()));
         }

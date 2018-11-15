@@ -47,7 +47,7 @@ class BreadcrumbTest extends TestCase
         $this->assertEquals('foo bar', $breadcrumb->getMessage());
         $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
         $this->assertEquals(['baz'], $breadcrumb->getMetadata());
-        $this->assertNotNull($breadcrumb->getTimestamp());
+        $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
     }
 
     public function testCreate()
@@ -59,7 +59,7 @@ class BreadcrumbTest extends TestCase
         $this->assertEquals('foo bar', $breadcrumb->getMessage());
         $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
         $this->assertEquals(['baz'], $breadcrumb->getMetadata());
-        $this->assertNotNull($breadcrumb->getTimestamp());
+        $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
     }
 
     public function testWithCategory()

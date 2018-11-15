@@ -724,10 +724,6 @@ class Options
                 return true;
             }
 
-            if (empty($value)) {
-                return true;
-            }
-
             foreach ($value as $integration) {
                 if (!$integration instanceof IntegrationInterface) {
                     return false;
