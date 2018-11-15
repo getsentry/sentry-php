@@ -31,5 +31,5 @@ echo 'End'
 --EXPECTREGEX--
 Triggering error
 
-Notice: Triggered error[\w\s]+
+Notice: Triggered error which will be captured by PHP error handler .+
 End
