@@ -120,6 +120,7 @@ abstract class AbstractErrorHandlerTest extends TestCase
 
     /**
      * @param mixed ...$arguments
+     *
      * @return AbstractErrorHandler
      */
     abstract protected function createErrorHandler(...$arguments);
