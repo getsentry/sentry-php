@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Integration;
 
+use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
-use Sentry\Options;
 
 class ModulesIntegrationTest extends TestCase
 {
     public function testInvoke()
     {
-        $options = new Options(['project_root' => __DIR__ . '/../Fixtures']);
         $event = new Event();
-
-        $integration = new ModulesIntegration($options);
+        $integration = new ModulesIntegration();
 
         ModulesIntegration::applyToEvent($integration, $event);
 
-        $this->assertEquals(['foo/bar' => '1.2.3.0', 'foo/baz' => '4.5.6.0'], $event->getModules());
+        $modules = $event->getModules();
+
+        $this->assertArrayHasKey('sentry/sentry', $modules, 'Root project missing');
+        $this->assertArrayHasKey('ocramius/package-versions', $modules, 'Indirect dependency missing');
+        $this->assertEquals(PrettyVersions::getVersion('sentry/sentry'), $modules['sentry/sentry']);
     }
 }
