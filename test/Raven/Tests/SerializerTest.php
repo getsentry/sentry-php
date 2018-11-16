@@ -38,7 +38,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $serializer = new Raven_Serializer();
         $input = new Raven_SerializerTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven_SerializerTestObject', $result);
+        $this->assertEquals('Object Raven_SerializerTestObject array ( )', $result);
     }
 
     public function testIntsAreInts()
@@ -85,7 +85,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $input = array();
         $input[] = &$input;
         $result = $serializer->serialize($input, 3);
-        $this->assertEquals(array(array(array('Array of length 1'))), $result);
+        $this->assertEquals(array(array(array('Array array ( 0 => NULL, )'))), $result);
     }
 
     public function testObjectInArray()
@@ -93,7 +93,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $serializer = new Raven_Serializer();
         $input = array('foo' => new Raven_Serializer());
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
+        $this->assertEquals(array('foo' => "Object Raven_Serializer array ( 'mb_detect_order' => 'auto', 'message_limit' => 1024, )"), $result);
     }
 
     /**

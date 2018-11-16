@@ -1403,7 +1403,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             'context' => array(
                 'line' => 1216,
                 'stack' => array(
-                    1, 'Array of length 1', 3
+                    1, 'Array array ( 0 => 2, )', 3
                 ),
             ),
         )), $data);
@@ -1528,7 +1528,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 'data' => array(
                     'Level 1' => array(
                         'Level 2' => array(
-                            'Level 3' => 'Array of length 1',
+                            'Level 3' => "Array array ( 'Level 4' => 'something', )",
                         ),
                     ),
                 ),
@@ -1561,7 +1561,7 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
                 'stack' => array(
                     1, array(
                         'foo' => 'bar',
-                        'level4' => array('Array of length 2', 2),
+                        'level4' => array("Array array ( 0 => 'level5', 1 => 'level5 a', )", 2),
                     ), 3
                 ),
             ),

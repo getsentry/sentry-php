@@ -116,6 +116,21 @@ class Raven_Serializer
         return $value;
     }
 
+    protected function serializeArray(array $array)
+    {
+        return $this->cleanupWhitespace(@var_export($array, true));
+    }
+
+    protected function serializeObject($object)
+    {
+        return get_class($object) . ' ' . $this->serializeArray(get_object_vars($object));
+    }
+
+    private function cleanupWhitespace($string)
+    {
+        return preg_replace('/\s+/', ' ', $string);
+    }
+
     /**
      * @param mixed $value
      * @return string|bool|double|int|null
@@ -125,11 +140,11 @@ class Raven_Serializer
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
             return $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
-            return 'Object '.get_class($value);
+            return 'Object '.$this->serializeObject($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return 'Array of length ' . count($value);
+            return 'Array '.$this->serializeArray($value);
         } else {
             return $this->serializeString($value);
         }
