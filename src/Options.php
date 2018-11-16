@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Symfony\Component\OptionsResolver\Options;
+use Sentry\Integration\IntegrationInterface;
+use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -22,7 +23,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class Configuration
+class Options
 {
     /**
      * The default maximum number of breadcrumbs that will be sent with an event.
@@ -515,37 +516,25 @@ class Configuration
     }
 
     /**
-     * Checks whether all events or a specific event (if provided) are allowed
-     * to be captured.
+     * Gets a callback that will be invoked before an event is sent to the server.
+     * If `null` is returned it won't be sent.
      *
-     * @param Event|null $event The event object
-     *
-     * @return bool
+     * @return callable
      */
-    public function shouldCapture(Event $event = null)
+    public function getBeforeSendCallback(): callable
     {
-        $result = true;
-
-        if (!empty($this->options['environments']) && !\in_array($this->options['current_environment'], $this->options['environments'])) {
-            $result = false;
-        }
-
-        if (null !== $this->options['should_capture'] && null !== $event) {
-            $result = $result && $this->options['should_capture']($event);
-        }
-
-        return $result;
+        return $this->options['before_send'];
     }
 
     /**
-     * Sets an optional callable to be called to decide whether an event should
+     * Sets a callable to be called to decide whether an event should
      * be captured or not.
      *
-     * @param callable|null $callable The callable
+     * @param callable $callback The callable
      */
-    public function setShouldCapture(callable $callable = null)
+    public function setBeforeSendCallback(callable $callback): void
     {
-        $options = array_merge($this->options, ['should_capture' => $callable]);
+        $options = array_merge($this->options, ['before_send' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -643,6 +632,28 @@ class Configuration
     }
 
     /**
+     * Set integrations that will be used by the created client.
+     *
+     * @param null|IntegrationInterface[] $integrations The integrations
+     */
+    public function setIntegrations(?array $integrations): void
+    {
+        $options = array_merge($this->options, ['integrations' => $integrations]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Returns all configured integrations that will be used by the Client.
+     *
+     * @return null|IntegrationInterface[]
+     */
+    public function getIntegrations(): ?array
+    {
+        return $this->options['integrations'];
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -653,6 +664,7 @@ class Configuration
     private function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
+            'integrations' => [],
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
@@ -671,7 +683,9 @@ class Configuration
             'release' => null,
             'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
             'server_name' => gethostname(),
-            'should_capture' => null,
+            'before_send' => function (Event $event): ?Event {
+                return $event;
+            },
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -698,11 +712,26 @@ class Configuration
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'boolean', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
-        $resolver->setAllowedTypes('should_capture', ['null', 'callable']);
+        $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
+        $resolver->setAllowedTypes('integrations', ['null', 'array']);
+
+        $resolver->setAllowedValues('integrations', function ($value) {
+            if (null === $value) {
+                return true;
+            }
+
+            foreach ($value as $integration) {
+                if (!$integration instanceof IntegrationInterface) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
@@ -746,7 +775,7 @@ class Configuration
             return $value <= self::DEFAULT_MAX_BREADCRUMBS;
         });
 
-        $resolver->setNormalizer('dsn', function (Options $options, $value) {
+        $resolver->setNormalizer('dsn', function (SymfonyOptions $options, $value) {
             if (empty($value)) {
                 $this->dsn = null;
 
@@ -792,7 +821,7 @@ class Configuration
             return $value;
         });
 
-        $resolver->setNormalizer('project_root', function (Options $options, $value) {
+        $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
             if (null === $value) {
                 return null;
             }
@@ -800,11 +829,11 @@ class Configuration
             return $this->normalizeAbsolutePath($value);
         });
 
-        $resolver->setNormalizer('prefixes', function (Options $options, $value) {
+        $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
-        $resolver->setNormalizer('excluded_app_paths', function (Options $options, $value) {
+        $resolver->setNormalizer('excluded_app_paths', function (SymfonyOptions $options, $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }

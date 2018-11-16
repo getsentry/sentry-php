@@ -18,8 +18,8 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
 {
     public function testHandleError()
     {
-        $this->client->expects($this->exactly(1))
-            ->method('captureException')
+        $this->callbackMock->expects($this->exactly(1))
+            ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
                 $this->assertInstanceOf(\ErrorException::class, $exception);
@@ -44,7 +44,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             }));
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
             $errorHandler->captureAt(0, true);
 
             $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
@@ -66,8 +66,8 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
 
     public function testHandleErrorWithPreviousErrorHandler()
     {
-        $this->client->expects($this->once())
-            ->method('captureException')
+        $this->callbackMock->expects($this->once())
+            ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
                 $this->assertInstanceOf(\ErrorException::class, $exception);
@@ -98,7 +98,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             ->willReturn(false);
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
 
             $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -114,8 +114,8 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
 
     public function testHandleFatalError()
     {
-        $this->client->expects($this->exactly(1))
-            ->method('captureException')
+        $this->callbackMock->expects($this->exactly(1))
+            ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
                 $this->assertInstanceOf(\ErrorException::class, $exception);
@@ -128,7 +128,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             }));
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
             $errorHandler->handleFatalError([
                 'type' => E_PARSE,
                 'message' => 'foo bar',
@@ -143,11 +143,11 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
 
     public function testHandleFatalErrorWithNonFatalErrorDoesNothing()
     {
-        $this->client->expects($this->never())
-            ->method('captureException');
+        $this->callbackMock->expects($this->never())
+            ->method('__invoke');
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
             $errorHandler->handleFatalError([
                 'type' => E_USER_NOTICE,
                 'message' => 'foo bar',
@@ -164,12 +164,12 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
     {
         $exception = new \Exception('foo bar');
 
-        $this->client->expects($this->once())
-            ->method('captureException')
+        $this->callbackMock->expects($this->once())
+            ->method('__invoke')
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
 
             try {
                 $errorHandler->handleException($exception);
@@ -188,8 +188,8 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
     {
         $exception = new \Exception('foo bar');
 
-        $this->client->expects($this->once())
-            ->method('captureException')
+        $this->callbackMock->expects($this->once())
+            ->method('__invoke')
             ->with($this->identicalTo($exception));
 
         $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
@@ -198,7 +198,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
 
             $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
@@ -223,8 +223,8 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
         $exception1 = new \Exception('foo bar');
         $exception2 = new \Exception('bar foo');
 
-        $this->client->expects($this->exactly(2))
-            ->method('captureException')
+        $this->callbackMock->expects($this->exactly(2))
+            ->method('__invoke')
             ->withConsecutive($this->identicalTo($exception1), $this->identicalTo($exception2));
 
         $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
@@ -234,7 +234,7 @@ class ErrorHandlerTest extends AbstractErrorHandlerTest
             ->will($this->throwException($exception2));
 
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
 
             $reflectionProperty = new \ReflectionProperty(AbstractErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);

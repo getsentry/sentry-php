@@ -14,8 +14,8 @@ namespace Sentry\Tests\HttpClient\Authentication;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
-use Sentry\Configuration;
 use Sentry\HttpClient\Authentication\SentryAuth;
+use Sentry\Options;
 
 /**
  * @group time-sensitive
@@ -24,7 +24,7 @@ class SentryAuthTest extends TestCase
 {
     public function testAuthenticate()
     {
-        $configuration = new Configuration(['dsn' => 'http://public:secret@example.com/']);
+        $configuration = new Options(['dsn' => 'http://public:secret@example.com/']);
         $authentication = new SentryAuth($configuration);
 
         /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */
@@ -52,7 +52,7 @@ class SentryAuthTest extends TestCase
 
     public function testAuthenticateWithNoSecretKey()
     {
-        $configuration = new Configuration(['dsn' => 'http://public@example.com/']);
+        $configuration = new Options(['dsn' => 'http://public@example.com/']);
         $authentication = new SentryAuth($configuration);
 
         /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */

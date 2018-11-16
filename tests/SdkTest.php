@@ -12,6 +12,7 @@ use Sentry\State\Hub;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
+use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\init;
@@ -35,7 +36,6 @@ class SdkTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', [], ['level' => null])
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
         Hub::getCurrent()->bindClient($client);
@@ -64,13 +64,27 @@ class SdkTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with(['message' => 'test'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
         Hub::getCurrent()->bindClient($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'test']));
+    }
+
+    public function testCaptureLastError()
+    {
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureLastError');
+
+        Hub::getCurrent()->bindClient($client);
+
+        @trigger_error('foo', E_USER_NOTICE);
+
+        captureLastError();
     }
 
     public function testAddBreadcrumb(): void

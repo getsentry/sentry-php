@@ -13,7 +13,6 @@ namespace Sentry\Tests\Breadcrumbs;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Client;
 
 /**
  * @group time-sensitive
@@ -35,16 +34,16 @@ class BreadcrumbTest extends TestCase
      */
     public function testSetLevelThrowsOnInvalidLevel()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $breadcrumb->withLevel('bar');
     }
 
     public function testConstructor()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
 
         $this->assertEquals('foo', $breadcrumb->getCategory());
-        $this->assertEquals(Client::LEVEL_INFO, $breadcrumb->getLevel());
+        $this->assertEquals(Breadcrumb::LEVEL_INFO, $breadcrumb->getLevel());
         $this->assertEquals('foo bar', $breadcrumb->getMessage());
         $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
         $this->assertEquals(['baz'], $breadcrumb->getMetadata());
@@ -53,10 +52,10 @@ class BreadcrumbTest extends TestCase
 
     public function testCreate()
     {
-        $breadcrumb = Breadcrumb::create(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
+        $breadcrumb = Breadcrumb::create(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
 
         $this->assertEquals('foo', $breadcrumb->getCategory());
-        $this->assertEquals(Client::LEVEL_INFO, $breadcrumb->getLevel());
+        $this->assertEquals(Breadcrumb::LEVEL_INFO, $breadcrumb->getLevel());
         $this->assertEquals('foo bar', $breadcrumb->getMessage());
         $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
         $this->assertEquals(['baz'], $breadcrumb->getMetadata());
@@ -65,7 +64,7 @@ class BreadcrumbTest extends TestCase
 
     public function testWithCategory()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $newBreadcrumb = $breadcrumb->withCategory('bar');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
@@ -75,17 +74,17 @@ class BreadcrumbTest extends TestCase
 
     public function testWithLevel()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
-        $newBreadcrumb = $breadcrumb->withLevel(Client::LEVEL_WARNING);
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $newBreadcrumb = $breadcrumb->withLevel(Breadcrumb::LEVEL_WARNING);
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
-        $this->assertEquals(Client::LEVEL_WARNING, $newBreadcrumb->getLevel());
-        $this->assertSame($newBreadcrumb, $newBreadcrumb->withLevel(Client::LEVEL_WARNING));
+        $this->assertEquals(Breadcrumb::LEVEL_WARNING, $newBreadcrumb->getLevel());
+        $this->assertSame($newBreadcrumb, $newBreadcrumb->withLevel(Breadcrumb::LEVEL_WARNING));
     }
 
     public function testWithType()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $newBreadcrumb = $breadcrumb->withType(Breadcrumb::TYPE_ERROR);
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
@@ -95,7 +94,7 @@ class BreadcrumbTest extends TestCase
 
     public function testWithMessage()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $newBreadcrumb = $breadcrumb->withMessage('foo bar');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
@@ -105,7 +104,7 @@ class BreadcrumbTest extends TestCase
 
     public function testWithTimestamp()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $newBreadcrumb = $breadcrumb->withTimestamp(123);
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
@@ -115,7 +114,7 @@ class BreadcrumbTest extends TestCase
 
     public function testWithMetadata()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $newBreadcrumb = $breadcrumb->withMetadata('foo', 'bar');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
@@ -125,7 +124,7 @@ class BreadcrumbTest extends TestCase
 
     public function testWithoutMetadata()
     {
-        $breadcrumb = new Breadcrumb(Client::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar']);
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar']);
         $newBreadcrumb = $breadcrumb->withoutMetadata('foo');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);

@@ -12,12 +12,8 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\Context;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
-use Sentry\Context\UserContext;
-use Sentry\Middleware\MiddlewareStack;
+use Sentry\Integration\Handler;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
@@ -32,37 +28,43 @@ class Client implements ClientInterface
     /**
      * The version of the library.
      */
-    const VERSION = '2.0.x-dev';
+    public const VERSION = '2.0.x-dev';
 
     /**
      * The version of the protocol to communicate with the Sentry server.
      */
-    const PROTOCOL_VERSION = '6';
+    public const PROTOCOL_VERSION = '7';
+
+    /**
+     * The identifier of the SDK.
+     */
+    public const SDK_IDENTIFIER = 'sentry.php';
 
     /**
      * This constant defines the client's user-agent string.
      */
-    const USER_AGENT = 'sentry-php/' . self::VERSION;
+    public const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
      * message SDK interface.
      */
-    const MESSAGE_MAX_LENGTH_LIMIT = 1024;
+    public const MESSAGE_MAX_LENGTH_LIMIT = 1024;
 
     /**
-     * Debug log levels.
+     * @var Options The client options
      */
-    const LEVEL_DEBUG = 'debug';
-    const LEVEL_INFO = 'info';
-    const LEVEL_WARNING = 'warning';
-    const LEVEL_ERROR = 'error';
-    const LEVEL_FATAL = 'fatal';
+    private $options;
 
     /**
-     * @var string[]|null
+     * @var TransportInterface The transport
      */
-    public $severityMap;
+    private $transport;
+
+    /**
+     * @var IntegrationInterface[] The stack of integrations
+     */
+    private $integrations;
 
     /**
      * @var Serializer The serializer
@@ -75,102 +77,46 @@ class Client implements ClientInterface
     private $representationSerializer;
 
     /**
-     * @var Configuration The client configuration
-     */
-    private $config;
-
-    /**
-     * @var TransactionStack The transaction stack
-     */
-    private $transactionStack;
-
-    /**
-     * @var TransportInterface The transport
-     */
-    private $transport;
-
-    /**
-     * @var TagsContext The tags context
-     */
-    private $tagsContext;
-
-    /**
-     * @var UserContext The user context
-     */
-    private $userContext;
-
-    /**
-     * @var Context The extra context
-     */
-    private $extraContext;
-
-    /**
-     * @var RuntimeContext The runtime context
-     */
-    private $runtimeContext;
-
-    /**
-     * @var ServerOsContext The server OS context
-     */
-    private $serverOsContext;
-
-    /**
-     * @var MiddlewareStack The stack of middlewares to compose an event to send
-     */
-    private $middlewareStack;
-
-    /**
-     * @var Event The last event that was captured
-     */
-    private $lastEvent;
-
-    /**
      * Constructor.
      *
-     * @param Configuration      $config    The client configuration
-     * @param TransportInterface $transport The transport
+     * @param Options                $options      The client configuration
+     * @param TransportInterface     $transport    The transport
+     * @param IntegrationInterface[] $integrations The integrations used by the client
      */
-    public function __construct(Configuration $config, TransportInterface $transport)
+    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
     {
-        $this->config = $config;
+        $this->options = $options;
         $this->transport = $transport;
-        $this->tagsContext = new TagsContext();
-        $this->userContext = new UserContext();
-        $this->extraContext = new Context();
-        $this->runtimeContext = new RuntimeContext();
-        $this->serverOsContext = new ServerOsContext();
-        $this->transactionStack = new TransactionStack();
-        $this->serializer = new Serializer($this->config->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->config->getMbDetectOrder());
-        $this->middlewareStack = new MiddlewareStack(function (Event $event) {
-            return $event;
-        });
-
-        $request = ServerRequestFactory::fromGlobals();
-        $serverParams = $request->getServerParams();
-
-        if (isset($serverParams['PATH_INFO'])) {
-            $this->transactionStack->push($serverParams['PATH_INFO']);
-        }
-
-        if ($this->config->getSerializeAllObjects()) {
-            $this->setAllObjectSerialize(true);
+        $this->integrations = Handler::setupIntegrations($integrations);
+        $this->serializer = new Serializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+        if ($this->options->getSerializeAllObjects()) {
+            $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+            $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
         }
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null)
+    public function getOptions(): Options
     {
-        $beforeBreadcrumbCallback = $this->config->getBeforeBreadcrumbCallback();
-        $maxBreadcrumbs = $this->config->getMaxBreadcrumbs();
+        return $this->options;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void
+    {
+        $beforeBreadcrumbCallback = $this->options->getBeforeBreadcrumbCallback();
+        $maxBreadcrumbs = $this->options->getMaxBreadcrumbs();
 
         if ($maxBreadcrumbs <= 0) {
             return;
         }
 
-        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+        $breadcrumb = \call_user_func($beforeBreadcrumbCallback, $breadcrumb);
 
         if (null !== $breadcrumb && null !== $scope) {
             $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
@@ -180,101 +126,40 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTransactionStack()
-    {
-        return $this->transactionStack;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addMiddleware(callable $middleware, $priority = 0)
-    {
-        $this->middlewareStack->addMiddleware($middleware, $priority);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeMiddleware(callable $middleware)
-    {
-        $this->middlewareStack->removeMiddleware($middleware);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setAllObjectSerialize($value)
-    {
-        $this->serializer->setAllObjectSerialize($value);
-        $this->representationSerializer->setAllObjectSerialize($value);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRepresentationSerializer()
-    {
-        return $this->representationSerializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setRepresentationSerializer(ReprSerializer $representationSerializer)
-    {
-        $this->representationSerializer = $representationSerializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSerializer()
-    {
-        return $this->serializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setSerializer(Serializer $serializer)
-    {
-        $this->serializer = $serializer;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function captureMessage(string $message, array $params = [], array $payload = [])
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
         $payload['message'] = $message;
-        $payload['message_params'] = $params;
+        $payload['level'] = $level;
 
-        return $this->capture($payload);
+        return $this->captureEvent($payload, $scope);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception, array $payload = [])
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
     {
         $payload['exception'] = $exception;
 
-        return $this->capture($payload);
+        return $this->captureEvent($payload, $scope);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(array $payload = [])
+    public function captureEvent(array $payload, ?Scope $scope = null): ?string
+    {
+        if ($event = $this->prepareEvent($payload, $scope)) {
+            return $this->send($event);
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function captureLastError(?Scope $scope = null): ?string
     {
         $error = error_get_last();
 
@@ -284,158 +169,122 @@ class Client implements ClientInterface
 
         $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
-        return $this->captureException($exception, $payload);
+        return $this->captureException($exception, $scope);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getLastEvent()
+    public function getIntegration(string $className): ?IntegrationInterface
     {
-        return $this->lastEvent;
+        return $this->integrations[$className] ?? null;
     }
 
     /**
-     * {@inheritdoc}
+     * Sends the given event to the Sentry server.
+     *
+     * @param Event $event The event to send
+     *
+     * @return null|string
      */
-    public function getLastEventId()
+    private function send(Event $event): ?string
     {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.0. Use getLastEvent() instead.', __METHOD__), E_USER_DEPRECATED);
+        return $this->transport->send($event);
+    }
 
-        if (null === $this->lastEvent) {
+    /**
+     * Assembles an event and prepares it to be sent of to Sentry.
+     *
+     * @param array      $payload the payload that will be converted to an Event
+     * @param null|Scope $scope   optional scope which enriches the Event
+     *
+     * @return null|Event returns ready to send Event, however depending on options it can be discarded
+     */
+    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    {
+        $sampleRate = $this->getOptions()->getSampleRate();
+        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             return null;
         }
 
-        return str_replace('-', '', $this->lastEvent->getId()->toString());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function capture(array $payload)
-    {
-        $event = new Event($this->config);
+        $event = new Event();
+        $event->setServerName($this->getOptions()->getServerName());
+        $event->setRelease($this->getOptions()->getRelease());
+        $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
+        $event->getTagsContext()->merge($this->getOptions()->getTags());
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
         } else {
-            $event->setTransaction($this->transactionStack->peek());
+            $request = ServerRequestFactory::fromGlobals();
+            $serverParams = $request->getServerParams();
+
+            if (isset($serverParams['PATH_INFO'])) {
+                $event->setTransaction($serverParams['PATH_INFO']);
+            }
         }
 
         if (isset($payload['logger'])) {
             $event->setLogger($payload['logger']);
         }
 
-        $event = $this->middlewareStack->executeStack(
-            $event,
-            isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null,
-            isset($payload['exception']) ? $payload['exception'] : null,
-            $payload
-        );
+        $message = $payload['message'] ?? null;
+        $messageParams = $payload['message_params'] ?? [];
 
-        $this->send($event);
-
-        $this->lastEvent = $event;
-
-        return str_replace('-', '', $event->getId()->toString());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Event $event)
-    {
-        if (!$this->config->shouldCapture($event)) {
-            return;
+        if (null !== $message) {
+            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
         }
 
-        // should this event be sampled?
-        if (mt_rand(1, 100) / 100.0 > $this->config->getSampleRate()) {
-            return;
+        if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
+            $this->addThrowableToEvent($event, $payload['exception']);
         }
 
-        $this->transport->send($event);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function translateSeverity(int $severity)
-    {
-        if (\is_array($this->severityMap) && isset($this->severityMap[$severity])) {
-            return $this->severityMap[$severity];
+        if (null !== $scope) {
+            $event = $scope->applyToEvent($event, $payload);
         }
 
-        switch ($severity) {
-            case E_DEPRECATED:
-            case E_USER_DEPRECATED:
-            case E_WARNING:
-            case E_USER_WARNING:
-            case E_RECOVERABLE_ERROR:
-                return self::LEVEL_WARNING;
-            case E_ERROR:
-            case E_PARSE:
-            case E_CORE_ERROR:
-            case E_CORE_WARNING:
-            case E_COMPILE_ERROR:
-            case E_COMPILE_WARNING:
-                return self::LEVEL_FATAL;
-            case E_USER_ERROR:
-                return self::LEVEL_ERROR;
-            case E_NOTICE:
-            case E_USER_NOTICE:
-            case E_STRICT:
-                return self::LEVEL_INFO;
-            default:
-                return self::LEVEL_ERROR;
+        return \call_user_func($this->options->getBeforeSendCallback(), $event);
+    }
+
+    /**
+     * Stores the given exception in the passed event.
+     *
+     * @param Event      $event     The event that will be enriched with the exception
+     * @param \Throwable $exception The exception that will be processed and added to the event
+     */
+    private function addThrowableToEvent(Event $event, \Throwable $exception): void
+    {
+        if ($exception instanceof \ErrorException) {
+            $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
-    }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function registerSeverityMap($map)
-    {
-        $this->severityMap = $map;
-    }
+        $exceptions = [];
+        $currentException = $exception;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getUserContext()
-    {
-        return $this->userContext;
-    }
+        do {
+            if ($this->getOptions()->isExcludedException($currentException)) {
+                continue;
+            }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getTagsContext()
-    {
-        return $this->tagsContext;
-    }
+            $data = [
+                'type' => \get_class($currentException),
+                'value' => $this->serializer->serialize($currentException->getMessage()),
+            ];
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtraContext()
-    {
-        return $this->extraContext;
-    }
+            if ($this->getOptions()->getAutoLogStacks()) {
+                $data['stacktrace'] = Stacktrace::createFromBacktrace(
+                    $this->getOptions(),
+                    $this->serializer,
+                    $this->representationSerializer,
+                    $currentException->getTrace(),
+                    $currentException->getFile(),
+                    $currentException->getLine()
+                );
+            }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getRuntimeContext()
-    {
-        return $this->runtimeContext;
-    }
+            $exceptions[] = $data;
+        } while ($currentException = $currentException->getPrevious());
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getServerOsContext()
-    {
-        return $this->serverOsContext;
+        $event->setExceptions($exceptions);
     }
 }

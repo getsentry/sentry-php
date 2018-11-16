@@ -12,91 +12,58 @@ namespace Sentry\Tests;
 
 use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidFactory;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Context\Context;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
 use Sentry\Event;
-use Sentry\Middleware\MiddlewareStack;
-use Sentry\ReprSerializer;
-use Sentry\Serializer;
+use Sentry\Options;
 use Sentry\Severity;
+use Sentry\Stacktrace;
+use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\classes\CarelessException;
-use Sentry\TransactionStack;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
-    public function testConstructorInitializesTransactionStack()
+    public function testTransactionEventAttributeIsPopulated()
     {
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        $client = ClientBuilder::create()->getClient();
-        $transactionStack = $client->getTransactionStack();
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
 
-        $this->assertNotEmpty($transactionStack);
-        $this->assertEquals('/foo', $transactionStack->peek());
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertEquals('/foo', $event->getTransaction());
+
+                return true;
+            }));
+
+        $client = new Client(new Options(), $transport);
+        $client->captureMessage('test');
+
+        unset($_SERVER['PATH_INFO']);
+        unset($_SERVER['REQUEST_METHOD']);
     }
 
-    public function testConstructorInitializesTransactionStackInCli()
+    public function testTransactionEventAttributeIsNotPopulatedInCli()
     {
-        $client = ClientBuilder::create()->getClient();
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
 
-        $this->assertEmpty($client->getTransactionStack());
-    }
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNull($event->getTransaction());
 
-    public function testGetTransactionStack()
-    {
-        $client = ClientBuilder::create()->getClient();
+                return true;
+            }));
 
-        $this->assertInstanceOf(TransactionStack::class, $client->getTransactionStack());
-    }
-
-    public function testAddMiddleware()
-    {
-        $middleware = function () {};
-
-        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(MiddlewareStack::class);
-        $middlewareStack->expects($this->once())
-            ->method('addMiddleware')
-            ->with($middleware, -10);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $middlewareStack);
-        $reflectionProperty->setAccessible(false);
-
-        $client->addMiddleware($middleware, -10);
-    }
-
-    public function testRemoveMiddleware()
-    {
-        $middleware = function () {};
-
-        /** @var MiddlewareStack|\PHPUnit_Framework_MockObject_MockObject $middlewareStack */
-        $middlewareStack = $this->createMock(MiddlewareStack::class);
-        $middlewareStack->expects($this->once())
-            ->method('removeMiddleware')
-            ->with($middleware);
-
-        $client = ClientBuilder::create()->getClient();
-
-        $reflectionProperty = new \ReflectionProperty($client, 'middlewareStack');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $middlewareStack);
-        $reflectionProperty->setAccessible(false);
-
-        $client->removeMiddleware($middleware);
+        $client = new Client(new Options(), $transport);
+        $client->captureMessage('test');
     }
 
     public function testCaptureMessage()
@@ -108,14 +75,13 @@ class ClientTest extends TestCase
             ->getMock();
 
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with([
                 'message' => 'foo',
-                'message_params' => ['bar'],
-                'foo' => 'bar',
+                'level' => Severity::fatal(),
             ]);
 
-        $client->captureMessage('foo', ['bar'], ['foo' => 'bar']);
+        $client->captureMessage('foo', Severity::fatal());
     }
 
     public function testCaptureException()
@@ -129,58 +95,12 @@ class ClientTest extends TestCase
             ->getMock();
 
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with([
                 'exception' => $exception,
-                'foo' => 'bar',
             ]);
 
-        $client->captureException(new \Exception(), ['foo' => 'bar']);
-    }
-
-    public function testCaptureLastError()
-    {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureLastError'])
-            ->getMock();
-
-        $client->expects($this->once())
-            ->method('captureException')
-            ->with(
-                $this->logicalAnd(
-                    $this->isInstanceOf(\ErrorException::class),
-                    $this->attributeEqualTo('message', 'foo'),
-                    $this->attributeEqualTo('code', 0),
-                    $this->attributeEqualTo('severity', E_USER_NOTICE),
-                    $this->attributeEqualTo('file', __FILE__),
-                    $this->attributeEqualTo('line', __LINE__ + 5)
-                ),
-                ['foo' => 'bar']
-            );
-
-        @trigger_error('foo', E_USER_NOTICE);
-
-        $client->captureLastError(['foo' => 'bar']);
-
-        $this->clearLastError();
-    }
-
-    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
-    {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureLastError'])
-            ->getMock();
-
-        $client->expects($this->never())
-            ->method('captureException');
-
-        $this->clearLastError();
-
-        $client->captureLastError();
+        $client->captureException(new \Exception());
     }
 
     public function testCapture()
@@ -188,9 +108,10 @@ class ClientTest extends TestCase
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send');
+            ->method('send')
+            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
-        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+        $client = ClientBuilder::create()
             ->setTransport($transport)
             ->getClient();
 
@@ -203,202 +124,90 @@ class ClientTest extends TestCase
             'user_context' => ['bar' => 'foo'],
         ];
 
-        $eventId = $client->capture($inputData);
-
-        $event = $client->getLastEvent();
-
-        $this->assertEquals(str_replace('-', '', $event->getId()->toString()), $eventId);
-        $this->assertEquals($inputData['transaction'], $event->getTransaction());
-        $this->assertEquals($inputData['level'], $event->getLevel());
-        $this->assertEquals($inputData['logger'], $event->getLogger());
-        $this->assertEquals($inputData['tags_context'], $event->getTagsContext()->toArray());
-        $this->assertEquals($inputData['extra_context'], $event->getExtraContext()->toArray());
-        $this->assertEquals($inputData['user_context'], $event->getUserContext()->toArray());
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
     }
 
-    public function testGetLastEvent()
+    public function testCaptureLastError()
     {
-        $lastEvent = null;
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $exception = $event->getExceptions()[0];
 
-        $client = ClientBuilder::create()->getClient();
-        $client->addMiddleware(function (Event $event) use (&$lastEvent) {
-            $lastEvent = $event;
+                $this->assertEquals('ErrorException', $exception['type']);
+                $this->assertEquals('foo', $exception['value']);
 
-            return $event;
-        });
+                return true;
+            }));
 
-        $client->capture(['message' => 'foo']);
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+            ->setTransport($transport)
+            ->getClient();
 
-        $this->assertSame($lastEvent, $client->getLastEvent());
+        @trigger_error('foo', E_USER_NOTICE);
+
+        $client->captureLastError();
+
+        $this->clearLastError();
     }
 
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation The Sentry\Client::getLastEventId() method is deprecated since version 2.0. Use getLastEvent() instead.
-     */
-    public function testGetLastEventId()
+    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
     {
-        /** @var UuidFactory|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
-        $uuidFactory = $this->createMock(UuidFactory::class);
-        $uuidFactory->expects($this->once())
-            ->method('uuid4')
-            ->willReturn(Uuid::fromString('ddbd643a-5190-4cce-a6ce-3098506f9d33'));
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->never())
+            ->method('send');
 
-        Uuid::setFactory($uuidFactory);
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+            ->setTransport($transport)
+            ->getClient();
 
-        $client = ClientBuilder::create()->getClient();
+        $this->clearLastError();
 
-        $client->capture(['message' => 'test']);
-
-        Uuid::setFactory(new UuidFactory());
-
-        $this->assertEquals('ddbd643a51904ccea6ce3098506f9d33', $client->getLastEventId());
-    }
-
-    public function testGetUserContext()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(Context::class, $client->getUserContext());
-    }
-
-    public function testGetTagsContext()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(TagsContext::class, $client->getTagsContext());
-    }
-
-    public function testGetExtraContext()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(Context::class, $client->getExtraContext());
-    }
-
-    public function testGetRuntimeContext()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(RuntimeContext::class, $client->getRuntimeContext());
-    }
-
-    public function testGetServerOsContext()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $this->assertInstanceOf(ServerOsContext::class, $client->getServerOsContext());
+        $client->captureLastError();
     }
 
     public function testAppPathLinux()
     {
         $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
 
-        $this->assertEquals('/foo/bar/', $client->getConfig()->getProjectRoot());
+        $this->assertEquals('/foo/bar/', $client->getOptions()->getProjectRoot());
 
-        $client->getConfig()->setProjectRoot('/foo/baz/');
+        $client->getOptions()->setProjectRoot('/foo/baz/');
 
-        $this->assertEquals('/foo/baz/', $client->getConfig()->getProjectRoot());
+        $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
     }
 
     public function testAppPathWindows()
     {
         $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
 
-        $this->assertEquals('C:\\foo\\bar\\', $client->getConfig()->getProjectRoot());
+        $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
 
-    private function assertMixedValueAndArray($expected_value, $actual_value)
+    public function testSendChecksBeforeSendOption()
     {
-        if (null === $expected_value) {
-            $this->assertNull($actual_value);
-        } elseif (true === $expected_value) {
-            $this->assertTrue($actual_value);
-        } elseif (false === $expected_value) {
-            $this->assertFalse($actual_value);
-        } elseif (\is_string($expected_value) || \is_numeric($expected_value)) {
-            $this->assertEquals($expected_value, $actual_value);
-        } elseif (\is_array($expected_value)) {
-            $this->assertInternalType('array', $actual_value);
-            $this->assertEquals(\count($expected_value), \count($actual_value));
-            foreach ($expected_value as $key => $value) {
-                $this->assertArrayHasKey($key, $actual_value);
-                $this->assertMixedValueAndArray($value, $actual_value[$key]);
-            }
-        } elseif (\is_callable($expected_value)) {
-            $this->assertEquals($expected_value, $actual_value);
-        } elseif (\is_object($expected_value)) {
-            $this->assertEquals(spl_object_hash($expected_value), spl_object_hash($actual_value));
-        }
-    }
+        $beforeSendCalled = false;
 
-    /**
-     * @covers \Sentry\Client::translateSeverity
-     * @covers \Sentry\Client::registerSeverityMap
-     */
-    public function testTranslateSeverity()
-    {
-        $reflection = new \ReflectionProperty(Client::class, 'severityMap');
-        $reflection->setAccessible(true);
-        $client = ClientBuilder::create()->getClient();
-
-        $predefined = [E_ERROR, E_WARNING, E_PARSE, E_NOTICE, E_CORE_ERROR, E_CORE_WARNING,
-                       E_COMPILE_ERROR, E_COMPILE_WARNING, E_USER_ERROR, E_USER_WARNING,
-                       E_USER_NOTICE, E_STRICT, E_RECOVERABLE_ERROR, ];
-        $predefined[] = E_DEPRECATED;
-        $predefined[] = E_USER_DEPRECATED;
-        $predefined_values = ['debug', 'info', 'warning', 'warning', 'error', 'fatal'];
-
-        // step 1
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        // step 2
-        $client->registerSeverityMap([]);
-        $this->assertMixedValueAndArray([], $reflection->getValue($client));
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        // step 3
-        $client->registerSeverityMap([123456 => 'foo']);
-        $this->assertMixedValueAndArray([123456 => 'foo'], $reflection->getValue($client));
-        foreach ($predefined as &$key) {
-            $this->assertContains($client->translateSeverity($key), $predefined_values);
-        }
-        $this->assertEquals('foo', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-        // step 4
-        $client->registerSeverityMap([E_USER_ERROR => 'bar']);
-        $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
-        $this->assertEquals('error', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-        // step 5
-        $client->registerSeverityMap([E_USER_ERROR => 'bar', 123456 => 'foo']);
-        $this->assertEquals('bar', $client->translateSeverity(E_USER_ERROR));
-        $this->assertEquals('foo', $client->translateSeverity(123456));
-        $this->assertEquals('error', $client->translateSeverity(123457));
-    }
-
-    public function testSendChecksShouldCaptureOption()
-    {
-        $shouldCaptureCalled = false;
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->never())
+            ->method('send');
 
         $client = ClientBuilder::create([
             'dsn' => 'http://public:secret@example.com/1',
-            'should_capture' => function () use (&$shouldCaptureCalled) {
-                $shouldCaptureCalled = true;
+            'before_send' => function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
 
-                return false;
+                return null;
             },
-        ])->getClient();
+        ])->setTransport($transport)->getClient();
 
-        $client->capture([]);
+        $client->captureEvent([]);
 
-        $this->assertTrue($shouldCaptureCalled);
+        $this->assertTrue($beforeSendCalled);
     }
 
     /**
@@ -442,21 +251,6 @@ class ClientTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testSetAllObjectSerialize()
-    {
-        $client = ClientBuilder::create()->getClient();
-
-        $client->setAllObjectSerialize(true);
-
-        $this->assertTrue($client->getSerializer()->getAllObjectSerialize());
-        $this->assertTrue($client->getRepresentationSerializer()->getAllObjectSerialize());
-
-        $client->setAllObjectSerialize(false);
-
-        $this->assertFalse($client->getSerializer()->getAllObjectSerialize());
-        $this->assertFalse($client->getRepresentationSerializer()->getAllObjectSerialize());
     }
 
     /**
@@ -534,43 +328,251 @@ class ClientTest extends TestCase
         $this->assertSame([$breadcrumb2], $scope->getBreadcrumbs());
     }
 
-    public function testSetSerializer()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $serializer = $this->createMock(Serializer::class);
-
-        $client->setSerializer($serializer);
-
-        $this->assertSame($serializer, $client->getSerializer());
-    }
-
-    public function testSetReprSerializer()
-    {
-        $client = ClientBuilder::create()->getClient();
-        $serializer = $this->createMock(ReprSerializer::class);
-
-        $client->setRepresentationSerializer($serializer);
-
-        $this->assertSame($serializer, $client->getRepresentationSerializer());
-    }
-
     public function testHandlingExceptionThrowingAnException()
     {
-        $client = ClientBuilder::create()->getClient();
-        $client->captureException($this->createCarelessExceptionWithStacktrace());
-        $event = $client->getLastEvent();
-        // Make sure the exception is of the careless exception and not the exception thrown inside
-        // the __set method of that exception caused by setting the event_id on the exception instance
-        $this->assertSame(CarelessException::class, $event->getException()['values'][0]['type']);
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function ($event) {
+                /* @var Event $event*/
+                // Make sure the exception is of the careless exception and not the exception thrown inside
+                // the __set method of that exception caused by setting the event_id on the exception instance
+                $this->assertSame(CarelessException::class, $event->getExceptions()[0]['type']);
+
+                return true;
+            }));
+
+        $client = new Client(new Options(), $transport, []);
+        Hub::getCurrent()->bindClient($client);
+        $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
 
-    private function createCarelessExceptionWithStacktrace()
+    /**
+     * @dataProvider convertExceptionDataProvider
+     */
+    public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult)
     {
-        try {
-            throw new CarelessException('Foo bar');
-        } catch (\Exception $ex) {
-            return $ex;
-        }
+        $options = new Options($clientConfig);
+
+        $assertHasStacktrace = $options->getAutoLogStacks();
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
+                $this->assertArraySubset($expectedResult, $event->toArray());
+                $this->assertArrayNotHasKey('values', $event->getExceptions());
+                $this->assertArrayHasKey('values', $event->toArray()['exception']);
+
+                foreach ($event->getExceptions() as $exceptionData) {
+                    if ($assertHasStacktrace) {
+                        $this->assertArrayHasKey('stacktrace', $exceptionData);
+                        $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
+                    } else {
+                        $this->assertArrayNotHasKey('stacktrace', $exceptionData);
+                    }
+                }
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException($exception);
+    }
+
+    public function convertExceptionDataProvider()
+    {
+        return [
+            [
+                new \RuntimeException('foo'),
+                [],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \RuntimeException('foo'),
+                [
+                    'auto_log_stacks' => false,
+                ],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \RuntimeException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \ErrorException('foo', 0, E_USER_WARNING),
+                [],
+                [
+                    'level' => Severity::WARNING,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \ErrorException::class,
+                                'value' => 'foo',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            [
+                new \BadMethodCallException('baz', 0, new \BadFunctionCallException('bar', 0, new \LogicException('foo', 0))),
+                [
+                    'excluded_exceptions' => [\BadMethodCallException::class],
+                ],
+                [
+                    'level' => Severity::ERROR,
+                    'exception' => [
+                        'values' => [
+                            [
+                                'type' => \LogicException::class,
+                                'value' => 'foo',
+                            ],
+                            [
+                                'type' => \BadFunctionCallException::class,
+                                'value' => 'bar',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public function testConvertExceptionContainingLatin1Characters()
+    {
+        $options = new Options(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]);
+
+        $utf8String = 'äöü';
+        $latin1String = utf8_decode($utf8String);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($utf8String): bool {
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => $utf8String,
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $event->getExceptions());
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(new \Exception($latin1String));
+    }
+
+    public function testConvertExceptionContainingInvalidUtf8Characters()
+    {
+        $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => "\xC2\xA2\x3F",
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $event->getExceptions());
+
+                return true;
+            }));
+
+        $client = new Client(new Options(), $transport, []);
+        $client->captureException(new \Exception($malformedString));
+    }
+
+    public function testConvertExceptionThrownInLatin1File()
+    {
+        $options = new Options([
+            'auto_log_stacks' => true,
+            'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
+        ]);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $result = $event->getExceptions();
+                $expectedValue = [
+                    [
+                        'type' => \Exception::class,
+                        'value' => 'foo',
+                    ],
+                ];
+
+                $this->assertArraySubset($expectedValue, $result);
+
+                $latin1StringFound = false;
+
+                /** @var \Sentry\Frame $frame */
+                foreach ($result[0]['stacktrace']->getFrames() as $frame) {
+                    if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
+                        $latin1StringFound = true;
+
+                        break;
+                    }
+                }
+
+                $this->assertTrue($latin1StringFound);
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
+    }
+
+    public function testConvertExceptionWithAutoLogStacksDisabled()
+    {
+        $options = new Options(['auto_log_stacks' => false]);
+
+        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $result = $event->getExceptions();
+
+                $this->assertNotEmpty($result);
+                $this->assertInternalType('array', $result[0]);
+                $this->assertEquals(\Exception::class, $result[0]['type']);
+                $this->assertEquals('foo', $result[0]['value']);
+                $this->assertArrayNotHasKey('stacktrace', $result[0]);
+
+                return true;
+            }));
+
+        $client = new Client($options, $transport, []);
+        $client->captureException(new \Exception('foo'));
     }
 
     /**
@@ -585,5 +587,14 @@ class ClientTest extends TestCase
         set_error_handler($handler);
         @trigger_error('');
         restore_error_handler();
+    }
+
+    private function createCarelessExceptionWithStacktrace()
+    {
+        try {
+            throw new CarelessException('Foo bar');
+        } catch (\Exception $ex) {
+            return $ex;
+        }
     }
 }

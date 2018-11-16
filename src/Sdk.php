@@ -8,11 +8,14 @@ use Sentry\State\Hub;
 /**
  * Creates a new Client and Hub which will be set as current.
  *
- * @param array $options
+ * @param array              $options       The client options
+ * @param null|ClientBuilder $clientBuilder An optional client builder instance
  */
-function init(array $options = []): void
+function init(array $options = [], ?ClientBuilder $clientBuilder = null): void
 {
-    Hub::setCurrent(new Hub(ClientBuilder::create($options)->getClient()));
+    $builder = $clientBuilder ?? ClientBuilder::create($options);
+
+    Hub::setCurrent(new Hub($builder->getClient()));
 }
 
 /**
@@ -50,6 +53,16 @@ function captureException(\Throwable $exception): ?string
 function captureEvent(array $payload): ?string
 {
     return Hub::getCurrent()->captureEvent($payload);
+}
+
+/**
+ * Logs the most recent error (obtained with {@link error_get_last}).
+ *
+ * @return null|string
+ */
+function captureLastError(): ?string
+{
+    return Hub::getCurrent()->captureLastError();
 }
 
 /**

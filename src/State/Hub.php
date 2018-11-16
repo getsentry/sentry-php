@@ -13,6 +13,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
@@ -189,7 +190,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureMessage($message, [], ['level' => $level]);
+            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope());
         }
 
         return null;
@@ -207,7 +208,7 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureException($exception);
+            return $this->lastEventId = $client->captureException($exception, $this->getScope());
         }
 
         return null;
@@ -225,7 +226,23 @@ final class Hub
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->capture($payload);
+            return $this->lastEventId = $client->captureEvent($payload, $this->getScope());
+        }
+
+        return null;
+    }
+
+    /**
+     * Captures an event that logs the last occurred error.
+     *
+     * @return null|string
+     */
+    public function captureLastError(): ?string
+    {
+        $client = $this->getClient();
+
+        if (null !== $client) {
+            return $this->lastEventId = $client->captureLastError($this->getScope());
         }
 
         return null;
@@ -273,5 +290,22 @@ final class Hub
         self::$currentHub = $hub;
 
         return $hub;
+    }
+
+    /**
+     * Gets the integration whose FQCN matches the given one if it's available on the current client.
+     *
+     * @param string $className The FQCN of the integration
+     *
+     * @return null|IntegrationInterface
+     */
+    public function getIntegration(string $className): ?IntegrationInterface
+    {
+        $client = $this->getClient();
+        if (null !== $client) {
+            return $client->getIntegration($className);
+        }
+
+        return null;
     }
 }

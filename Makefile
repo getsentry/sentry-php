@@ -1,4 +1,4 @@
-.PHONY: test
+gc -am .PHONY: test
 
 develop: update-submodules
 	composer install --dev

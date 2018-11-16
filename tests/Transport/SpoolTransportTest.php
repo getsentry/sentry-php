@@ -12,7 +12,6 @@
 namespace Sentry\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Configuration;
 use Sentry\Event;
 use Sentry\Spool\SpoolInterface;
 use Sentry\Transport\SpoolTransport;
@@ -42,7 +41,7 @@ class SpoolTransportTest extends TestCase
 
     public function testSend()
     {
-        $event = new Event(new Configuration());
+        $event = new Event();
 
         $this->spool->expects($this->once())
             ->method('queueEvent')

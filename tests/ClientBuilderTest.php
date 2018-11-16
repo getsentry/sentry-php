@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
-use Sentry\Configuration;
+use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -139,32 +139,6 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
-    public function testAddMiddlewares()
-    {
-        $middleware = function () {};
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addMiddleware($middleware, -10);
-
-        $this->assertEquals([[$middleware, -10]], $clientBuilder->getMiddlewares());
-    }
-
-    public function testRemoveMiddleware()
-    {
-        $middleware1 = function () {};
-        $middleware2 = function () {};
-
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addMiddleware($middleware1, -10);
-        $clientBuilder->addMiddleware($middleware2, 10);
-
-        $this->assertEquals([[$middleware1, -10], [$middleware2, 10]], $clientBuilder->getMiddlewares());
-
-        $clientBuilder->removeMiddleware($middleware2);
-
-        $this->assertEquals([[$middleware1, -10]], $clientBuilder->getMiddlewares());
-    }
-
     public function testGetClient()
     {
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -198,18 +172,16 @@ class ClientBuilderTest extends TestCase
      */
     public function testCallExistingMethodForwardsCallToConfiguration($setterMethod, $value)
     {
-        $configuration = $this->getMockBuilder(Configuration::class)
-            ->getMock();
-
-        $configuration->expects($this->once())
+        $options = $this->createMock(Options::class);
+        $options->expects($this->once())
             ->method($setterMethod)
             ->with($this->equalTo($value));
 
         $clientBuilder = new ClientBuilder();
 
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'configuration');
+        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'options');
         $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($clientBuilder, $configuration);
+        $reflectionProperty->setValue($clientBuilder, $options);
         $reflectionProperty->setAccessible(false);
 
         $clientBuilder->$setterMethod($value);

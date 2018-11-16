@@ -24,18 +24,10 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
-use Sentry\Context\Context;
 use Sentry\HttpClient\Authentication\SentryAuth;
-use Sentry\Middleware\ContextInterfaceMiddleware;
-use Sentry\Middleware\ExceptionInterfaceMiddleware;
-use Sentry\Middleware\MessageInterfaceMiddleware;
-use Sentry\Middleware\RemoveHttpBodyMiddleware;
-use Sentry\Middleware\RequestInterfaceMiddleware;
-use Sentry\Middleware\SanitizeCookiesMiddleware;
-use Sentry\Middleware\SanitizeDataMiddleware;
-use Sentry\Middleware\SanitizeHttpHeadersMiddleware;
-use Sentry\Middleware\SanitizerMiddleware;
-use Sentry\Middleware\UserInterfaceMiddleware;
+use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -84,9 +76,9 @@ use Sentry\Transport\TransportInterface;
 final class ClientBuilder implements ClientBuilderInterface
 {
     /**
-     * @var Configuration The client configuration
+     * @var Options The client options
      */
-    private $configuration;
+    private $options;
 
     /**
      * @var UriFactory|null The PSR-7 URI factory
@@ -114,9 +106,9 @@ final class ClientBuilder implements ClientBuilderInterface
     private $httpClientPlugins = [];
 
     /**
-     * @var array List of middlewares and their priorities
+     * @var IntegrationInterface[] List of default integrations
      */
-    private $middlewares = [];
+    private $integrations = [];
 
     /**
      * Class constructor.
@@ -125,7 +117,16 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __construct(array $options = [])
     {
-        $this->configuration = new Configuration($options);
+        $this->options = new Options($options);
+
+        if (null === $this->options->getIntegrations()) {
+            $this->integrations = [];
+        } else {
+            $this->integrations = \array_merge([
+                new ErrorHandlerIntegration(),
+                new RequestIntegration(),
+            ], $this->options->getIntegrations());
+        }
     }
 
     /**
@@ -205,72 +206,20 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addMiddleware(callable $middleware, $priority = 0)
-    {
-        $this->middlewares[] = [$middleware, $priority];
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeMiddleware(callable $middleware)
-    {
-        foreach ($this->middlewares as $key => $value) {
-            if ($value[0] !== $middleware) {
-                continue;
-            }
-
-            unset($this->middlewares[$key]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMiddlewares()
-    {
-        return $this->middlewares;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getClient(): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-        $this->transport = $this->createTransportInstance();
+        $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        $client = new Client($this->configuration, $this->transport);
-        $client->addMiddleware(new SanitizerMiddleware($client->getSerializer()), -255);
-        $client->addMiddleware(new SanitizeDataMiddleware(), -200);
-        $client->addMiddleware(new SanitizeCookiesMiddleware(), -200);
-        $client->addMiddleware(new RemoveHttpBodyMiddleware(), -200);
-        $client->addMiddleware(new SanitizeHttpHeadersMiddleware(), -200);
-        $client->addMiddleware(new MessageInterfaceMiddleware());
-        $client->addMiddleware(new RequestInterfaceMiddleware());
-        $client->addMiddleware(new UserInterfaceMiddleware());
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getTagsContext(), Context::CONTEXT_TAGS));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getUserContext(), Context::CONTEXT_USER));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getExtraContext(), Context::CONTEXT_EXTRA));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getRuntimeContext(), Context::CONTEXT_RUNTIME));
-        $client->addMiddleware(new ContextInterfaceMiddleware($client->getServerOsContext(), Context::CONTEXT_SERVER_OS));
-        $client->addMiddleware(new ExceptionInterfaceMiddleware($client));
-
-        foreach ($this->middlewares as $middleware) {
-            $client->addMiddleware($middleware[0], $middleware[1]);
-        }
+        $client = new Client($this->options, $this->transport, $this->integrations);
 
         return $client;
     }
 
     /**
-     * This method forwards all methods calls to the configuration object.
+     * This method forwards all methods calls to the options object.
      *
      * @param string $name      The name of the method being called
      * @param array  $arguments Parameters passed to the $name'ed method
@@ -281,11 +230,11 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function __call($name, $arguments)
     {
-        if (!method_exists($this->configuration, $name)) {
+        if (!method_exists($this->options, $name)) {
             throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
         }
 
-        $this->configuration->$name(...$arguments);
+        $this->options->$name(...$arguments);
 
         return $this;
     }
@@ -305,13 +254,13 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-18 HTTP client must be set.');
         }
 
-        if (null !== $this->configuration->getDsn()) {
-            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->configuration->getDsn())));
+        if (null !== $this->options->getDsn()) {
+            $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->configuration)));
-        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->configuration->getSendAttempts()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
@@ -328,7 +277,7 @@ final class ClientBuilder implements ClientBuilderInterface
             return $this->transport;
         }
 
-        if (null === $this->configuration->getDsn()) {
+        if (null === $this->options->getDsn()) {
             return new NullTransport();
         }
 
@@ -336,6 +285,6 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-7 message factory must be set.');
         }
 
-        return new HttpTransport($this->configuration, $this->createHttpClientInstance(), $this->messageFactory);
+        return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
     }
 }

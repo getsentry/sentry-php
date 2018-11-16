@@ -11,6 +11,7 @@
 
 namespace Sentry;
 
+use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Sentry\Breadcrumbs\Breadcrumb;
@@ -18,6 +19,7 @@ use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
+use Sentry\Context\UserContext;
 
 /**
  * This is the base class for classes containing event data.
@@ -97,7 +99,7 @@ final class Event implements \JsonSerializable
     private $runtimeContext;
 
     /**
-     * @var Context The user context data
+     * @var UserContext The user context data
      */
     private $userContext;
 
@@ -122,9 +124,9 @@ final class Event implements \JsonSerializable
     private $breadcrumbs = [];
 
     /**
-     * @var array The exception
+     * @var array The exceptions
      */
-    private $exception;
+    private $exceptions;
 
     /**
      * @var Stacktrace|null The stacktrace that generated this event
@@ -132,21 +134,20 @@ final class Event implements \JsonSerializable
     private $stacktrace;
 
     /**
-     * Class constructor.
+     * Event constructor.
      *
-     * @param Configuration $config The client configuration
+     * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
+     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
-    public function __construct(Configuration $config)
+    public function __construct()
     {
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
-        $this->serverName = $config->getServerName();
-        $this->release = $config->getRelease();
-        $this->environment = $config->getCurrentEnvironment();
         $this->serverOsContext = new ServerOsContext();
         $this->runtimeContext = new RuntimeContext();
-        $this->userContext = new Context();
+        $this->userContext = new UserContext();
         $this->extraContext = new Context();
         $this->tagsContext = new TagsContext();
     }
@@ -154,11 +155,11 @@ final class Event implements \JsonSerializable
     /**
      * Gets the UUID of this event.
      *
-     * @return UuidInterface
+     * @return string
      */
-    public function getId()
+    public function getId(): string
     {
-        return $this->id;
+        return str_replace('-', '', $this->id->toString());
     }
 
     /**
@@ -166,7 +167,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getTimestamp()
+    public function getTimestamp(): string
     {
         return $this->timestamp;
     }
@@ -186,7 +187,7 @@ final class Event implements \JsonSerializable
      *
      * @param Severity $level The severity
      */
-    public function setLevel(Severity $level)
+    public function setLevel(Severity $level): void
     {
         $this->level = $level;
     }
@@ -196,7 +197,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getLogger()
+    public function getLogger(): string
     {
         return $this->logger;
     }
@@ -206,7 +207,7 @@ final class Event implements \JsonSerializable
      *
      * @param string $logger The logger name
      */
-    public function setLogger($logger)
+    public function setLogger($logger): void
     {
         $this->logger = $logger;
     }
@@ -368,7 +369,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the user context.
      *
-     * @return Context
+     * @return UserContext
      */
     public function getUserContext()
     {
@@ -448,13 +449,13 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Adds a new breadcrumb to the event.
+     * Set new breadcrumbs to the event.
      *
-     * @param Breadcrumb $breadcrumb The breadcrumb
+     * @param Breadcrumb[] $breadcrumbs The breadcrumb array
      */
-    public function setBreadcrumb(Breadcrumb $breadcrumb)
+    public function setBreadcrumb(array $breadcrumbs)
     {
-        $this->breadcrumbs[] = $breadcrumb;
+        $this->breadcrumbs = $breadcrumbs;
     }
 
     /**
@@ -462,19 +463,19 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function getException()
+    public function getExceptions()
     {
-        return $this->exception;
+        return $this->exceptions;
     }
 
     /**
      * Sets the exception.
      *
-     * @param array $exception The exception
+     * @param array $exceptions The exception
      */
-    public function setException(array $exception)
+    public function setExceptions(array $exceptions)
     {
-        $this->exception = $exception;
+        $this->exceptions = $exceptions;
     }
 
     /**
@@ -502,7 +503,7 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $data = [
             'event_id' => str_replace('-', '', $this->id->toString()),
@@ -510,7 +511,7 @@ final class Event implements \JsonSerializable
             'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
-                'name' => 'sentry-php',
+                'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
             ],
         ];
@@ -564,11 +565,13 @@ final class Event implements \JsonSerializable
         }
 
         if (!empty($this->breadcrumbs)) {
-            $data['breadcrumbs'] = $this->breadcrumbs;
+            $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
-        if (null !== $this->exception && isset($this->exception['values'])) {
-            foreach ($this->exception['values'] as $exception) {
+        if (null !== $this->exceptions) {
+            $reversedException = array_reverse($this->exceptions);
+
+            foreach ($reversedException as $exception) {
                 $exceptionData = [
                     'type' => $exception['type'],
                     'value' => $exception['value'],
@@ -612,7 +615,7 @@ final class Event implements \JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

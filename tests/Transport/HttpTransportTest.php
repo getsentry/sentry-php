@@ -17,8 +17,8 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Promise\Promise;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use Sentry\Configuration;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Util\JSON;
 
@@ -37,10 +37,10 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event($config));
+        $transport->send(new Event());
 
         // In PHP calling the destructor manually does not destroy the object,
         // but for testing we will do it anyway because otherwise we could not
@@ -68,13 +68,13 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturnOnConsecutiveCalls($promise1, $promise2);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
 
-        $transport->send(new Event($config));
-        $transport->send(new Event($config));
+        $transport->send(new Event());
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
@@ -86,8 +86,8 @@ class HttpTransportTest extends TestCase
 
     public function testSendWithoutCompressedEncoding()
     {
-        $config = new Configuration(['encoding' => 'json']);
-        $event = new Event($config);
+        $config = new Options(['encoding' => 'json']);
+        $event = new Event();
 
         $promise = $this->createMock(Promise::class);
         $promise->expects($this->once())
@@ -116,8 +116,8 @@ class HttpTransportTest extends TestCase
 
     public function testSendWithCompressedEncoding()
     {
-        $config = new Configuration(['encoding' => 'gzip']);
-        $event = new Event($config);
+        $config = new Options(['encoding' => 'gzip']);
+        $event = new Event();
 
         $promise = $this->createMock(Promise::class);
         $promise->expects($this->once())
@@ -135,7 +135,7 @@ class HttpTransportTest extends TestCase
                 $this->assertNotFalse($compressedPayload);
 
                 return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
-                    && base64_encode($compressedPayload) === $request->getBody()->getContents();
+                    && $compressedPayload === $request->getBody()->getContents();
             }))
             ->willReturn($promise);
 
@@ -161,10 +161,10 @@ class HttpTransportTest extends TestCase
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Configuration();
+        $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event($config));
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
         $this->assertSame($exception, $promise->wait(true));

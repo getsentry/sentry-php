@@ -19,9 +19,9 @@ namespace Sentry;
 abstract class AbstractErrorHandler
 {
     /**
-     * @var ClientInterface The Raven client
+     * @var callable Callback that will be invoked when an error is caught
      */
-    protected $client;
+    protected $callback;
 
     /**
      * @var \ReflectionProperty A reflection cached instance that points to the
@@ -80,16 +80,18 @@ abstract class AbstractErrorHandler
     /**
      * Constructor.
      *
-     * @param ClientInterface $client             The Raven client
-     * @param int             $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param callable $callback           The callback that will be invoked in case an error is caught
+     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     *
+     * @throws \ReflectionException
      */
-    protected function __construct(ClientInterface $client, $reservedMemorySize = 10240)
+    protected function __construct(callable $callback, int $reservedMemorySize = 10240)
     {
         if (!\is_int($reservedMemorySize) || $reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The value of the $reservedMemorySize argument must be an integer greater than 0.');
         }
 
-        $this->client = $client;
+        $this->callback = $callback;
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
 
@@ -104,7 +106,7 @@ abstract class AbstractErrorHandler
         if (null === $this->previousErrorHandler) {
             restore_error_handler();
 
-            // Specifying the error types catched by the error handler with the
+            // Specifying the error types caught by the error handler with the
             // first call to the set_error_handler method would cause the PHP
             // bug https://bugs.php.net/63206 if the handler is not the first
             // one
@@ -152,6 +154,8 @@ abstract class AbstractErrorHandler
      *
      * @return bool If the function returns FALSE then the normal error handler continues
      *
+     * @throws \Throwable
+     *
      * @internal
      */
     public function handleError($level, $message, $file, $line)
@@ -169,8 +173,8 @@ abstract class AbstractErrorHandler
 
         try {
             $this->handleException($errorAsException);
-        } catch (\Exception $exception) {
-            // Do nothing as this error handler should be as trasparent as possible
+        } catch (\Throwable $exception) {
+            // Do nothing as this error handler should be as transparent as possible
         }
 
         if (null !== $this->previousErrorHandler) {
@@ -211,7 +215,7 @@ abstract class AbstractErrorHandler
             if (null !== $errorAsException) {
                 $this->handleException($errorAsException);
             }
-        } catch (\ErrorException $errorAsException) {
+        } catch (\Throwable $errorAsException) {
             // Ignore this re-throw
         }
     }
@@ -220,9 +224,9 @@ abstract class AbstractErrorHandler
      * Handles the given exception by capturing it through the Raven client and
      * then forwarding it to another handler.
      *
-     * @param \Exception|\Throwable $exception The exception to handle
+     * @param \Throwable $exception The exception to handle
      *
-     * @throws \Exception|\Throwable
+     * @throws \Throwable
      *
      * @internal
      */
@@ -320,9 +324,9 @@ abstract class AbstractErrorHandler
      * Handles the given exception. This method can be overridden to customize
      * the logging of an exception.
      *
-     * @param \Exception|\Throwable $exception The exception to handle
+     * @param \Throwable $exception The exception to handle
      *
-     * @throws \Exception|\Throwable
+     * @throws \Throwable
      */
     abstract protected function doHandleException($exception);
 }

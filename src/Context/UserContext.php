@@ -78,4 +78,24 @@ final class UserContext extends Context
     {
         $this->data['email'] = $email;
     }
+
+    /**
+     * Gets the ip address of the user.
+     *
+     * @return null|string
+     */
+    public function getIpAddress(): ?string
+    {
+        return $this->data['ip_address'] ?? null;
+    }
+
+    /**
+     * Sets the ip address of the user.
+     *
+     * @param null|string $ipAddress The ip address
+     */
+    public function setIpAddress(?string $ipAddress): void
+    {
+        $this->data['ip_address'] = $ipAddress;
+    }
 }

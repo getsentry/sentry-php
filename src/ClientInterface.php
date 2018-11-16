@@ -12,10 +12,7 @@
 namespace Sentry;
 
 use Sentry\Breadcrumbs\Breadcrumb;
-use Sentry\Context\Context;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 
 /**
@@ -26,192 +23,66 @@ use Sentry\State\Scope;
 interface ClientInterface
 {
     /**
-     * Gets the configuration of the client.
+     * Returns the options of the client.
      *
-     * @return Configuration
+     * @return Options
      */
-    public function getConfig();
-
-    /**
-     * Gets the transaction stack.
-     *
-     * @return TransactionStack
-     */
-    public function getTransactionStack();
-
-    /**
-     * Adds a new middleware with the given priority to the stack.
-     *
-     * @param callable $middleware The middleware instance
-     * @param int      $priority   The priority. The higher this value, the
-     *                             earlier a processor will be executed in
-     *                             the chain (defaults to 0)
-     */
-    public function addMiddleware(callable $middleware, $priority = 0);
-
-    /**
-     * Removes the given middleware from the stack.
-     *
-     * @param callable $middleware The middleware instance
-     */
-    public function removeMiddleware(callable $middleware);
+    public function getOptions(): Options;
 
     /**
      * Records the given breadcrumb.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb instance
-     * @param Scope|null $scope      an optional scope to store this breadcrumb in
+     * @param Scope|null $scope      An optional scope to store this breadcrumb in
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null);
+    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void;
 
     /**
      * Logs a message.
      *
-     * @param string $message The message (primary description) for the event
-     * @param array  $params  Params to use when formatting the message
-     * @param array  $payload Additional attributes to pass with this event
+     * @param string     $message The message (primary description) for the event
+     * @param Severity   $level   The level of the message to be sent
+     * @param Scope|null $scope   An optional scope keeping the state
      *
-     * @return string
+     * @return null|string
      */
-    public function captureMessage(string $message, array $params = [], array $payload = []);
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string;
 
     /**
      * Logs an exception.
      *
      * @param \Throwable $exception The exception object
-     * @param array      $payload   Additional attributes to pass with this event
+     * @param Scope|null $scope     An optional scope keeping the state
      *
-     * @return string
+     * @return null|string
      */
-    public function captureException(\Throwable $exception, array $payload = []);
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string;
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
-     * @param array $payload Additional attributes to pass with this event
+     * @param Scope|null $scope An optional scope keeping the state
      *
-     * @return string|null
+     * @return null|string
      */
-    public function captureLastError(array $payload = []);
-
-    /**
-     * Gets the last event that was captured by the client. However, it could
-     * have been sent or still sit in the queue of pending events.
-     *
-     * @return Event
-     */
-    public function getLastEvent();
-
-    /**
-     * Return the last captured event's ID or null if none available.
-     *
-     * @return string|null
-     *
-     * @deprecated since version 2.0, to be removed in 3.0. Use getLastEvent() instead.
-     */
-    public function getLastEventId();
+    public function captureLastError(?Scope $scope = null): ?string;
 
     /**
      * Captures a new event using the provided data.
      *
-     * @param array $payload The data of the event being captured
+     * @param array      $payload The data of the event being captured
+     * @param Scope|null $scope   An optional scope keeping the state
      *
-     * @return string
+     * @return null|string
      */
-    public function capture(array $payload);
+    public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
     /**
-     * Sends the given event to the Sentry server.
+     * Returns the integration instance if it is installed on the Client.
      *
-     * @param Event $event The event to send
+     * @param string $className the classname of the integration
+     *
+     * @return null|IntegrationInterface
      */
-    public function send(Event $event);
-
-    /**
-     * Translate a PHP Error constant into a Sentry log level group.
-     *
-     * @param int $severity PHP E_$x error constant
-     *
-     * @return string Sentry log level group
-     */
-    public function translateSeverity(int $severity);
-
-    /**
-     * Provide a map of PHP Error constants to Sentry logging groups to use instead
-     * of the defaults in translateSeverity().
-     *
-     * @param string[] $map
-     */
-    public function registerSeverityMap($map);
-
-    /**
-     * Gets the user context.
-     *
-     * @return Context
-     */
-    public function getUserContext();
-
-    /**
-     * Gets the tags context.
-     *
-     * @return TagsContext
-     */
-    public function getTagsContext();
-
-    /**
-     * Gets the extra context.
-     *
-     * @return Context
-     */
-    public function getExtraContext();
-
-    /**
-     * Gets the runtime context.
-     *
-     * @return RuntimeContext
-     */
-    public function getRuntimeContext();
-
-    /**
-     * Gets the server OS context.
-     *
-     * @return ServerOsContext
-     */
-    public function getServerOsContext();
-
-    /**
-     * Sets whether all the objects should be serialized by the representation
-     * serializer.
-     *
-     * @param bool $value Whether the serialization of all objects is enabled or not
-     */
-    public function setAllObjectSerialize($value);
-
-    /**
-     * Gets the representation serialier.
-     *
-     * @return ReprSerializer
-     */
-    public function getRepresentationSerializer();
-
-    /**
-     * Sets the representation serializer.
-     *
-     * @param ReprSerializer $representationSerializer The serializer instance
-     */
-    public function setRepresentationSerializer(ReprSerializer $representationSerializer);
-
-    /**
-     * Gets the serializer.
-     *
-     * @return Serializer
-     */
-    public function getSerializer();
-
-    /**
-     * Sets the serializer.
-     *
-     * @param Serializer $serializer The serializer instance
-     */
-    public function setSerializer(Serializer $serializer);
+    public function getIntegration(string $className): ?IntegrationInterface;
 }

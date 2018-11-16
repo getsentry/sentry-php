@@ -49,8 +49,12 @@ final class SpoolTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event)
+    public function send(Event $event): ?string
     {
-        return $this->spool->queueEvent($event);
+        if ($this->spool->queueEvent($event)) {
+            return $event->getId();
+        }
+
+        return null;
     }
 }

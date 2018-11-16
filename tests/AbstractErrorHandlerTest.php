@@ -12,27 +12,23 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 
 abstract class AbstractErrorHandlerTest extends TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|Client
+     * @var \PHPUnit_Framework_MockObject_MockObject
      */
-    protected $client;
+    protected $callbackMock;
 
     protected function setUp()
     {
-        $this->client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['translateSeverity'])
-            ->getMock();
+        $this->callbackMock = $this->createPartialMock(\stdClass::class, ['__invoke']);
     }
 
     public function testConstructor()
     {
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
             $previousErrorHandler = set_error_handler('var_dump');
 
             restore_error_handler();
@@ -52,7 +48,7 @@ abstract class AbstractErrorHandlerTest extends TestCase
      */
     public function testConstructorThrowsWhenReservedMemorySizeIsWrong($reservedMemorySize)
     {
-        $this->createErrorHandler($this->client, $reservedMemorySize);
+        $this->createErrorHandler($this->callbackMock, $reservedMemorySize);
     }
 
     public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider()
@@ -60,39 +56,39 @@ abstract class AbstractErrorHandlerTest extends TestCase
         return [
             [-1],
             [0],
-            ['foo'],
         ];
     }
 
     /**
      * @dataProvider handleErrorShouldNotCaptureDataProvider
      */
-    public function testHandleErrorShouldNotCapture(bool $expectedToCapture, int $captureAt, int $errorReporting)
+    public function testHandleErrorShouldNotCapture(bool $expectedToCapture, int $captureAt)
     {
         if (!$expectedToCapture) {
-            $this->client->expects($this->never())
-                ->method('capture');
+            $this->callbackMock->expects($this->never())
+                ->method('__invoke');
         }
 
-        $errorHandler = $this->createErrorHandler($this->client);
+        $errorHandler = $this->createErrorHandler($this->callbackMock);
         $errorHandler->captureAt($captureAt, true);
 
-        $prevErrorReporting = error_reporting($errorReporting);
+        // to avoid making the test error bubble up and make the test fail
+        $prevErrorReporting = error_reporting(E_ERROR);
 
         try {
             $this->assertFalse($errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
         } finally {
             error_reporting($prevErrorReporting);
+            restore_error_handler();
+            restore_exception_handler();
         }
     }
 
-    public function handleErrorShouldNotCaptureDataProvider()
+    public function handleErrorShouldNotCaptureDataProvider(): array
     {
         return [
-            [false, E_ERROR, E_ERROR],
-            [false, E_ALL, E_ERROR],
-            [true, E_ERROR, E_ALL],
-            [true, E_ALL, E_ALL],
+            [false, E_ERROR],
+            [true, E_ALL],
         ];
     }
 
@@ -102,7 +98,7 @@ abstract class AbstractErrorHandlerTest extends TestCase
     public function testCaptureAt($levels, $replace, $expectedCapturedErrors)
     {
         try {
-            $errorHandler = $this->createErrorHandler($this->client);
+            $errorHandler = $this->createErrorHandler($this->callbackMock);
             $previousCapturedErrors = $this->getObjectAttribute($errorHandler, 'capturedErrors');
 
             $this->assertEquals($previousCapturedErrors, $errorHandler->captureAt($levels, $replace));

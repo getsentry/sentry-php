@@ -64,6 +64,11 @@ final class Scope
     private $eventProcessors = [];
 
     /**
+     * @var callable[] List of event processors
+     */
+    private static $globalEventProcessors = [];
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -249,6 +254,17 @@ final class Scope
     }
 
     /**
+     * Adds a new event processor that will be called after {@see Scope::applyToEvent}
+     * finished its work.
+     *
+     * @param callable $eventProcessor The event processor
+     */
+    public static function addGlobalEventProcessor(callable $eventProcessor): void
+    {
+        self::$globalEventProcessors[] = $eventProcessor;
+    }
+
+    /**
      * Clears the scope and resets any data it contains.
      *
      * @return $this
@@ -270,24 +286,19 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event $event          The event object
-     * @param int   $maxBreadcrumbs The maximum number of breadcrumbs to add to
-     *                              the event
+     * @param Event $event   The event object that will be enriched with scope data
+     * @param array $payload The raw payload of the event that will be propagated to the event processors
      *
      * @return Event|null
      */
-    public function applyToEvent(Event $event, int $maxBreadcrumbs = 100): ?Event
+    public function applyToEvent(Event $event, array $payload): ?Event
     {
         if (empty($event->getFingerprint())) {
             $event->setFingerprint($this->fingerprint);
         }
 
         if (empty($event->getBreadcrumbs())) {
-            $breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
-
-            foreach ($breadcrumbs as $breadcrumb) {
-                $event->setBreadcrumb($breadcrumb);
-            }
+            $event->setBreadcrumb($this->breadcrumbs);
         }
 
         if (null !== $this->level) {
@@ -298,8 +309,8 @@ final class Scope
         $event->getExtraContext()->merge($this->extra->toArray());
         $event->getUserContext()->merge($this->user->toArray());
 
-        foreach ($this->eventProcessors as $processor) {
-            $event = $processor($event);
+        foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
+            $event = \call_user_func($processor, $event, $payload);
 
             if (null === $event) {
                 return null;

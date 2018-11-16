@@ -84,6 +84,11 @@ class UserContextTest extends AbstractContextTest
                 'setEmail',
                 'foo@bar.baz',
             ],
+            [
+                'getIpAddress',
+                'setIpAddress',
+                '127.0.0.1',
+            ],
         ];
     }
 

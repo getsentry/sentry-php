@@ -25,14 +25,16 @@ class ErrorHandler extends AbstractErrorHandler
      * Registers this error handler by associating its instance with the given
      * Raven client.
      *
-     * @param ClientInterface $client             The Raven client
-     * @param int             $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param callable $callback           callback that will be called when exception is caught
+     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     *
+     * @throws \Exception|\Throwable|\ErrorException
      *
      * @return ErrorHandler
      */
-    public static function register(ClientInterface $client, $reservedMemorySize = 10240)
+    public static function register(callable $callback, $reservedMemorySize = 10240)
     {
-        return new self($client, $reservedMemorySize);
+        return new self($callback, $reservedMemorySize);
     }
 
     /**
@@ -40,6 +42,6 @@ class ErrorHandler extends AbstractErrorHandler
      */
     protected function doHandleException($exception)
     {
-        $this->client->captureException($exception);
+        \call_user_func($this->callback, $exception);
     }
 }

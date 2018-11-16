@@ -87,7 +87,6 @@ final class HubTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', [], ['level' => null])
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
         $hub = new Hub($client);
@@ -206,7 +205,7 @@ final class HubTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', [], ['level' => Severity::debug()])
+            ->with('foo', Severity::debug())
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
         $hub = new Hub($client);
@@ -268,7 +267,7 @@ final class HubTest extends TestCase
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('capture')
+            ->method('captureEvent')
             ->with(['message' => 'test'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 

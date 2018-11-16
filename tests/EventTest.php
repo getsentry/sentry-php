@@ -10,12 +10,12 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
-use Sentry\Configuration;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Util\PHPVersion;
 
@@ -25,8 +25,8 @@ use Sentry\Util\PHPVersion;
 class EventTest extends TestCase
 {
     const GENERATED_UUID = [
-        '500a339f-3ab2-450b-96de-e542adf36ba7',
-        '4c981dd6-ad49-46be-9f16-c3b80fd25f05',
+        '4d310518-9e9d-463c-8161-bd46416f7817',
+        '431a2537-d1de-49da-80b6-b7861954c9cf',
     ];
 
     protected $uuidGeneratorInvokationCount;
@@ -37,9 +37,9 @@ class EventTest extends TestCase
     protected $originalUuidFactory;
 
     /**
-     * @var Configuration
+     * @var Options
      */
-    protected $configuration;
+    protected $options;
 
     /**
      * @var ClientInterface
@@ -51,7 +51,7 @@ class EventTest extends TestCase
         $this->uuidGeneratorInvokationCount = 0;
         $this->originalUuidFactory = new UuidFactory();
         $this->client = ClientBuilder::create()->getClient();
-        $this->configuration = $this->client->getConfig();
+        $this->options = $this->client->getOptions();
 
         /** @var UuidFactoryInterface|\PHPUnit_Framework_MockObject_MockObject $uuidFactory */
         $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
@@ -75,16 +75,16 @@ class EventTest extends TestCase
 
     public function testEventIsGeneratedWithUniqueIdentifier()
     {
-        $event1 = new Event($this->configuration);
-        $event2 = new Event($this->configuration);
+        $event1 = new Event();
+        $event2 = new Event();
 
-        $this->assertEquals(static::GENERATED_UUID[0], $event1->getId()->toString());
-        $this->assertEquals(static::GENERATED_UUID[1], $event2->getId()->toString());
+        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[0]), $event1->getId());
+        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[1]), $event2->getId());
     }
 
     public function testToArray()
     {
-        $this->configuration->setRelease('1.2.3-dev');
+        $this->options->setRelease('1.2.3-dev');
 
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
@@ -92,12 +92,9 @@ class EventTest extends TestCase
             'level' => 'error',
             'platform' => 'php',
             'sdk' => [
-                'name' => 'sentry-php',
+                'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
             ],
-            'server_name' => $this->configuration->getServerName(),
-            'release' => $this->configuration->getRelease(),
-            'environment' => $this->configuration->getCurrentEnvironment(),
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),
@@ -112,14 +109,14 @@ class EventTest extends TestCase
             ],
         ];
 
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertEquals($expected, $event->toArray());
     }
 
     public function testToArrayWithMessage()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
         $event->setMessage('foo bar');
 
         $data = $event->toArray();
@@ -136,7 +133,7 @@ class EventTest extends TestCase
             'formatted' => 'foo bar',
         ];
 
-        $event = new Event($this->configuration);
+        $event = new Event();
         $event->setMessage('foo %s', ['bar']);
 
         $data = $event->toArray();
@@ -152,51 +149,48 @@ class EventTest extends TestCase
             new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
         ];
 
-        $event = new Event($this->configuration);
-
-        foreach ($breadcrumbs as $breadcrumb) {
-            $event->setBreadcrumb($breadcrumb);
-        }
+        $event = new Event();
+        $event->setBreadcrumb($breadcrumbs);
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
 
         $data = $event->toArray();
 
         $this->assertArrayHasKey('breadcrumbs', $data);
-        $this->assertSame($breadcrumbs, $data['breadcrumbs']);
+        $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
     public function testGetServerOsContext()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
     }
 
     public function testGetRuntimeContext()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
     }
 
     public function testGetUserContext()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getUserContext());
     }
 
     public function testGetExtraContext()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getExtraContext());
     }
 
     public function getTagsContext()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $this->assertInstanceOf(TagsContext::class, $event->getTagsContext());
     }
@@ -209,7 +203,7 @@ class EventTest extends TestCase
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'set' . ucfirst($propertyName);
 
-        $event = new Event($this->configuration);
+        $event = new Event();
         $event->$setterMethod($propertyValue);
 
         $this->assertEquals($event->$getterMethod(), $propertyValue);
@@ -232,7 +226,7 @@ class EventTest extends TestCase
 
     public function testEventJsonSerialization()
     {
-        $event = new Event($this->configuration);
+        $event = new Event();
 
         $encodingOfToArray = json_encode($event->toArray());
         $serializedEvent = json_encode($event);

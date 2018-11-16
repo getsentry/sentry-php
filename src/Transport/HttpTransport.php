@@ -15,9 +15,8 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
-use Sentry\Configuration;
 use Sentry\Event;
-use Sentry\HttpClient\Encoding\Base64EncodingStream;
+use Sentry\Options;
 use Sentry\Util\JSON;
 
 /**
@@ -28,7 +27,7 @@ use Sentry\Util\JSON;
 final class HttpTransport implements TransportInterface
 {
     /**
-     * @var Configuration The Raven client configuration
+     * @var Options The Raven client configuration
      */
     private $config;
 
@@ -50,11 +49,11 @@ final class HttpTransport implements TransportInterface
     /**
      * Constructor.
      *
-     * @param Configuration   $config         The Raven client configuration
+     * @param Options         $config         The Raven client configuration
      * @param HttpAsyncClient $httpClient     The HTTP client
      * @param RequestFactory  $requestFactory The PSR-7 request factory
      */
-    public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
+    public function __construct(Options $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
     {
         $this->config = $config;
         $this->httpClient = $httpClient;
@@ -82,7 +81,7 @@ final class HttpTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event)
+    public function send(Event $event): ?string
     {
         $request = $this->requestFactory->createRequest(
             'POST',
@@ -92,11 +91,7 @@ final class HttpTransport implements TransportInterface
         );
 
         if ($this->isEncodingCompressed()) {
-            $request = $request->withBody(
-                new Base64EncodingStream(
-                    new CompressStream($request->getBody())
-                )
-            );
+            $request = $request->withBody(new CompressStream($request->getBody()));
         }
 
         $promise = $this->httpClient->sendAsyncRequest($request);
@@ -116,7 +111,7 @@ final class HttpTransport implements TransportInterface
 
         $this->pendingRequests[] = $promise;
 
-        return true;
+        return $event->getId();
     }
 
     /**

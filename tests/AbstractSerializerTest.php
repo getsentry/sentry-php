@@ -50,8 +50,8 @@ abstract class AbstractSerializerTest extends TestCase
         $result = $serializer->serialize($input);
         $this->assertEquals(['1', '2', '3'], $result);
 
-        $result = $serializer->serialize([Client::class, 'getConfig']);
-        $this->assertEquals([Client::class, 'getConfig'], $result);
+        $result = $serializer->serialize([Client::class, 'getOptions']);
+        $this->assertEquals([Client::class, 'getOptions'], $result);
     }
 
     /**
@@ -448,9 +448,6 @@ abstract class AbstractSerializerTest extends TestCase
                     'callable' => [$this, 'serializableCallableProvider'],
                     'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
                 ], [
-                    'callable' => [Client::class, 'getConfig'],
-                    'expected' => 'Callable Sentry\Client::getConfig []',
-                ], [
                     'callable' => [TestCase::class, 'setUpBeforeClass'],
                     'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
                 ], [
@@ -459,6 +456,9 @@ abstract class AbstractSerializerTest extends TestCase
                 ], [
                     'callable' => [self::class, 'setUpBeforeClass'],
                     'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                ], [
+                    'callable' => [SerializerTestObject::class, 'testy'],
+                    'expected' => 'Callable void Sentry\Tests\SerializerTestObject::testy []',
                 ],
             ];
             require_once 'resources/php70_serializing.inc';
@@ -496,9 +496,6 @@ abstract class AbstractSerializerTest extends TestCase
                 'callable' => [$this, 'serializableCallableProvider'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
             ], [
-                'callable' => [Client::class, 'getConfig'],
-                'expected' => 'Callable Sentry\Client::getConfig []',
-            ], [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
                 'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
             ], [
@@ -507,6 +504,9 @@ abstract class AbstractSerializerTest extends TestCase
             ], [
                 'callable' => [self::class, 'setUpBeforeClass'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+            ], [
+                'callable' => [SerializerTestObject::class, 'testy'],
+                'expected' => 'Callable void Sentry\Tests\SerializerTestObject::testy []',
             ],
         ];
     }
@@ -545,4 +545,9 @@ class SerializerTestObject
     private $foo = 'bar';
 
     public $key = 'value';
+
+    public static function testy(): void
+    {
+        throw new \Exception('We should not reach this');
+    }
 }

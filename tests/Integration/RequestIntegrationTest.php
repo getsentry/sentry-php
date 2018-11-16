@@ -9,41 +9,22 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Tests\Middleware;
+namespace Sentry\Tests\Integration;
 
-use Sentry\Configuration;
+use PHPUnit\Framework\TestCase;
 use Sentry\Event;
-use Sentry\Middleware\RequestInterfaceMiddleware;
+use Sentry\Integration\RequestIntegration;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 
-class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
+class RequestIntegrationTest extends TestCase
 {
-    public function testInvokeWithNoRequest()
-    {
-        $configuration = new Configuration();
-        $event = new Event($configuration);
-
-        $callbackInvoked = false;
-        $callback = function (Event $eventArg) use ($event, &$callbackInvoked) {
-            $this->assertSame($event, $eventArg);
-
-            $callbackInvoked = true;
-        };
-
-        $middleware = new RequestInterfaceMiddleware();
-        $middleware($event, $callback);
-
-        $this->assertTrue($callbackInvoked, 'Next middleware NOT invoked');
-    }
-
     /**
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(array $requestData, array $expectedValue)
     {
-        $configuration = new Configuration();
-        $event = new Event($configuration);
+        $event = new Event();
 
         $request = new ServerRequest();
         $request = $request->withUri(new Uri($requestData['uri']));
@@ -54,11 +35,22 @@ class RequestInterfaceMiddlewareTest extends MiddlewareTestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $middleware = new RequestInterfaceMiddleware();
+        RequestIntegration::applyToEvent($event, $request);
 
-        $returnedEvent = $this->assertMiddlewareInvokesNext($middleware, $event, $request);
+        $this->assertEquals($expectedValue, $event->getRequest());
+    }
 
-        $this->assertEquals($expectedValue, $returnedEvent->getRequest());
+    public function testInvokeWithRequestHavingIpAddress()
+    {
+        $event = new Event();
+        $event->getUserContext()->setData(['foo' => 'bar']);
+
+        $request = new ServerRequest();
+        $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
+
+        RequestIntegration::applyToEvent($event, $request);
+
+        $this->assertEquals(['ip_address' => '127.0.0.1', 'foo' => 'bar'], $event->getUserContext()->toArray());
     }
 
     public function invokeDataProvider()

@@ -12,17 +12,16 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Configuration;
-use Sentry\Event;
+use Sentry\Options;
 
-class ConfigurationTest extends TestCase
+class OptionsTest extends TestCase
 {
     /**
      * @dataProvider optionsDataProvider
      */
     public function testConstructor($option, $value, $getterMethod)
     {
-        $configuration = new Configuration([$option => $value]);
+        $configuration = new Options([$option => $value]);
 
         $this->assertEquals($value, $configuration->$getterMethod());
     }
@@ -32,7 +31,7 @@ class ConfigurationTest extends TestCase
      */
     public function testGettersAndSetters($option, $value, $getterMethod, $setterMethod = null)
     {
-        $configuration = new Configuration();
+        $configuration = new Options();
 
         if (null !== $setterMethod) {
             $configuration->$setterMethod($value);
@@ -66,6 +65,7 @@ class ConfigurationTest extends TestCase
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
             ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
+            ['before_send', function () {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
             ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
         ];
     }
@@ -75,7 +75,7 @@ class ConfigurationTest extends TestCase
      */
     public function testServerOption($dsn, $options)
     {
-        $configuration = new Configuration(['dsn' => $dsn]);
+        $configuration = new Options(['dsn' => $dsn]);
 
         $this->assertEquals($options['project_id'], $configuration->getProjectId());
         $this->assertEquals($options['public_key'], $configuration->getPublicKey());
@@ -160,7 +160,7 @@ class ConfigurationTest extends TestCase
      */
     public function testServerOptionsWithInvalidServer($dsn)
     {
-        new Configuration(['dsn' => $dsn]);
+        new Options(['dsn' => $dsn]);
     }
 
     public function invalidServerOptionDataProvider()
@@ -179,7 +179,7 @@ class ConfigurationTest extends TestCase
      */
     public function testParseDSNWithDisabledValue($dsn)
     {
-        $configuration = new Configuration(['dsn' => $dsn]);
+        $configuration = new Options(['dsn' => $dsn]);
 
         $this->assertNull($configuration->getProjectId());
         $this->assertNull($configuration->getPublicKey());
@@ -199,41 +199,12 @@ class ConfigurationTest extends TestCase
         ];
     }
 
-    public function testShouldCapture()
-    {
-        $configuration = new Configuration();
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setCurrentEnvironment('foo');
-        $configuration->setEnvironments(['bar']);
-
-        $this->assertFalse($configuration->shouldCapture());
-
-        $configuration->setCurrentEnvironment('foo');
-        $configuration->setEnvironments(['foo']);
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setEnvironments([]);
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $configuration->setShouldCapture(function ($value) {
-            return false;
-        });
-
-        $this->assertTrue($configuration->shouldCapture());
-
-        $this->assertFalse($configuration->shouldCapture(new Event($configuration)));
-    }
-
     /**
      * @dataProvider excludedExceptionsDataProvider
      */
     public function testIsExcludedException($excludedExceptions, $exception, $result)
     {
-        $configuration = new Configuration(['excluded_exceptions' => $excludedExceptions]);
+        $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
 
         $this->assertSame($result, $configuration->isExcludedException($exception));
     }
@@ -267,7 +238,7 @@ class ConfigurationTest extends TestCase
      */
     public function testExcludedAppPathsPathRegressionWithFileName($value, $expected)
     {
-        $configuration = new Configuration(['excluded_app_paths' => [$value]]);
+        $configuration = new Options(['excluded_app_paths' => [$value]]);
 
         $this->assertSame([$expected], $configuration->getExcludedProjectPaths());
     }
