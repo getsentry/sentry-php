@@ -12,6 +12,7 @@
 namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Event;
 use Sentry\Integration\RequestIntegration;
 use Zend\Diactoros\ServerRequest;
@@ -27,13 +28,15 @@ class RequestIntegrationTest extends TestCase
         $event = new Event();
 
         $request = new ServerRequest();
+        $request = $request->withCookieParams($requestData['cookies']);
         $request = $request->withUri(new Uri($requestData['uri']));
         $request = $request->withMethod($requestData['method']);
-        $request = $request->withCookieParams($requestData['cookies']);
 
         foreach ($requestData['headers'] as $name => $value) {
             $request = $request->withHeader($name, $value);
         }
+
+        $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
         RequestIntegration::applyToEvent($event, $request);
 
@@ -47,6 +50,7 @@ class RequestIntegrationTest extends TestCase
 
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
+        $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
         RequestIntegration::applyToEvent($event, $request);
 
