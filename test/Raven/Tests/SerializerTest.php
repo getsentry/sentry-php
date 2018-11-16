@@ -93,7 +93,7 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
         $serializer = new Raven_Serializer();
         $input = array('foo' => new Raven_Serializer());
         $result = $serializer->serialize($input);
-        $this->assertEquals(array('foo' => "Object Raven_Serializer"), $result);
+        $this->assertEquals(array('foo' => 'Object Raven_Serializer'), $result);
     }
 
     /**
