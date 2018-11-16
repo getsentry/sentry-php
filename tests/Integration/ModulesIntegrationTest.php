@@ -18,9 +18,8 @@ class ModulesIntegrationTest extends TestCase
 
         ModulesIntegration::applyToEvent($integration, $event);
 
-        $this->assertNotNull($event);
         $modules = $event->getModules();
-        $this->assertNotEmpty($modules);
+
         $this->assertArrayHasKey('sentry/sentry', $modules, 'Root project missing');
         $this->assertArrayHasKey('ocramius/package-versions', $modules, 'Indirect dependency missing');
         $this->assertEquals(PrettyVersions::getVersion('sentry/sentry'), $modules['sentry/sentry']);
