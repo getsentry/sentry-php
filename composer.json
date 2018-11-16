@@ -22,7 +22,7 @@
         "psr/http-message-implementation": "^1.0",
         "ramsey/uuid": "^3.3",
         "symfony/options-resolver": "^2.7|^3.0|^4.0",
-        "zendframework/zend-diactoros": "^1.4"
+        "zendframework/zend-diactoros": "^1.4|^2.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.13",
