@@ -118,12 +118,7 @@ class Raven_Serializer
 
     protected function serializeArray(array $array)
     {
-        return $this->cleanupWhitespace(@var_export($array, true));
-    }
-
-    protected function serializeObject($object)
-    {
-        return get_class($object) . ' ' . $this->serializeArray(get_object_vars($object));
+        return $this->cleanupWhitespace(print_r($array, true));
     }
 
     private function cleanupWhitespace($string)
@@ -140,11 +135,11 @@ class Raven_Serializer
         if (is_null($value) || is_bool($value) || is_float($value) || is_integer($value)) {
             return $value;
         } elseif (is_object($value) || gettype($value) == 'object') {
-            return 'Object '.$this->serializeObject($value);
+	        return 'Object '.get_class($value);
         } elseif (is_resource($value)) {
             return 'Resource '.get_resource_type($value);
         } elseif (is_array($value)) {
-            return 'Array '.$this->serializeArray($value);
+            return $this->serializeArray($value);
         } else {
             return $this->serializeString($value);
         }

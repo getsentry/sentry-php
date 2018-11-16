@@ -24,7 +24,7 @@ class Raven_Tests_ReprSerializerTest extends \PHPUnit\Framework\TestCase
         $serializer = new Raven_ReprSerializer();
         $input = new Raven_StacktraceTestObject();
         $result = $serializer->serialize($input);
-        $this->assertEquals('Object Raven_StacktraceTestObject array ( )', $result);
+        $this->assertEquals('Object Raven_StacktraceTestObject', $result);
     }
 
     public function testIntsAreInts()
@@ -73,7 +73,7 @@ class Raven_Tests_ReprSerializerTest extends \PHPUnit\Framework\TestCase
         $input = array();
         $input[] = &$input;
         $result = $serializer->serialize($input, 3);
-        $this->assertEquals(array(array(array('Array array ( 0 => NULL, )'))), $result);
+        $this->assertEquals(array(array(array('Array ( [0] => Array *RECURSION* ) '))), $result);
     }
 
     /**
