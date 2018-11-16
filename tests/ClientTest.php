@@ -111,7 +111,7 @@ class ClientTest extends TestCase
             ->method('send')
             ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
-        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+        $client = ClientBuilder::create()
             ->setTransport($transport)
             ->getClient();
 
@@ -131,7 +131,6 @@ class ClientTest extends TestCase
     {
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
@@ -158,7 +157,6 @@ class ClientTest extends TestCase
     {
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->never())
             ->method('send');
 
@@ -189,37 +187,12 @@ class ClientTest extends TestCase
         $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
 
-    private function assertMixedValueAndArray($expected_value, $actual_value)
-    {
-        if (null === $expected_value) {
-            $this->assertNull($actual_value);
-        } elseif (true === $expected_value) {
-            $this->assertTrue($actual_value);
-        } elseif (false === $expected_value) {
-            $this->assertFalse($actual_value);
-        } elseif (\is_string($expected_value) || \is_numeric($expected_value)) {
-            $this->assertEquals($expected_value, $actual_value);
-        } elseif (\is_array($expected_value)) {
-            $this->assertInternalType('array', $actual_value);
-            $this->assertEquals(\count($expected_value), \count($actual_value));
-            foreach ($expected_value as $key => $value) {
-                $this->assertArrayHasKey($key, $actual_value);
-                $this->assertMixedValueAndArray($value, $actual_value[$key]);
-            }
-        } elseif (\is_callable($expected_value)) {
-            $this->assertEquals($expected_value, $actual_value);
-        } elseif (\is_object($expected_value)) {
-            $this->assertEquals(spl_object_hash($expected_value), spl_object_hash($actual_value));
-        }
-    }
-
     public function testSendChecksBeforeSendOption()
     {
         $beforeSendCalled = false;
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->never())
             ->method('send');
 
@@ -359,11 +332,6 @@ class ClientTest extends TestCase
     {
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
-        $client = new Client(new Options(), $transport, []);
-
-        Hub::getCurrent()->bindClient($client);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function ($event) {
@@ -375,6 +343,8 @@ class ClientTest extends TestCase
                 return true;
             }));
 
+        $client = new Client(new Options(), $transport, []);
+        Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
 
@@ -389,7 +359,6 @@ class ClientTest extends TestCase
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
@@ -496,7 +465,6 @@ class ClientTest extends TestCase
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event) use ($utf8String): bool {
@@ -522,7 +490,6 @@ class ClientTest extends TestCase
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
@@ -551,7 +518,6 @@ class ClientTest extends TestCase
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
@@ -591,7 +557,6 @@ class ClientTest extends TestCase
 
         /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {

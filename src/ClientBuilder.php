@@ -108,7 +108,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * @var IntegrationInterface[] List of default integrations
      */
-    private $integrations;
+    private $integrations = [];
 
     /**
      * Class constructor.

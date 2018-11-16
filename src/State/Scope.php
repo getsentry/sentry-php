@@ -310,7 +310,7 @@ final class Scope
         $event->getUserContext()->merge($this->user->toArray());
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = $processor($event, $payload);
+            $event = \call_user_func($processor, $event, $payload);
 
             if (null === $event) {
                 return null;

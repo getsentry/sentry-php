@@ -17,6 +17,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 
@@ -204,11 +205,12 @@ final class HubTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
+            ->with('foo', Severity::debug())
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
         $hub = new Hub($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureMessage('foo'));
+        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureMessage('foo', Severity::debug()));
     }
 
     public function testCaptureExceptionDoesNothingIfClientIsNotBinded()

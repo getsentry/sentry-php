@@ -172,9 +172,7 @@ class ClientBuilderTest extends TestCase
      */
     public function testCallExistingMethodForwardsCallToConfiguration($setterMethod, $value)
     {
-        $options = $this->getMockBuilder(Options::class)
-            ->getMock();
-
+        $options = $this->createMock(Options::class);
         $options->expects($this->once())
             ->method($setterMethod)
             ->with($this->equalTo($value));

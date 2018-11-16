@@ -12,7 +12,6 @@
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\AbstractErrorHandler;
 
 abstract class AbstractErrorHandlerTest extends TestCase
 {
@@ -73,7 +72,8 @@ abstract class AbstractErrorHandlerTest extends TestCase
         $errorHandler = $this->createErrorHandler($this->callbackMock);
         $errorHandler->captureAt($captureAt, true);
 
-        $prevErrorReporting = error_reporting(E_ERROR); // to avoid making the test error bubble up and make the test fail
+        // to avoid making the test error bubble up and make the test fail
+        $prevErrorReporting = error_reporting(E_ERROR);
 
         try {
             $this->assertFalse($errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
@@ -81,7 +81,6 @@ abstract class AbstractErrorHandlerTest extends TestCase
             error_reporting($prevErrorReporting);
             restore_error_handler();
             restore_exception_handler();
-            $this->addToAssertionCount(1);
         }
     }
 
@@ -118,10 +117,5 @@ abstract class AbstractErrorHandlerTest extends TestCase
         ];
     }
 
-    /**
-     * @param mixed ...$arguments
-     *
-     * @return AbstractErrorHandler
-     */
     abstract protected function createErrorHandler(...$arguments);
 }

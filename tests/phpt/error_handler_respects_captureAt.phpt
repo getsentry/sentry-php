@@ -7,7 +7,6 @@ level, and it should NOT be invoked in this case
 namespace Sentry\Tests;
 
 use Sentry\ErrorHandler;
-use function Sentry\init;
 
 $vendor = __DIR__;
 
@@ -21,15 +20,13 @@ error_reporting(E_ALL);
 
 $errorHandler = ErrorHandler::register(function () {
     echo 'Callback invoked' . PHP_EOL;
-});
-$errorHandler->captureAt(E_ERROR, true);
+})->captureAt(E_ERROR, true);
 
-echo 'Triggering error' . PHP_EOL;
+echo 'Triggering error';
 trigger_error('Triggered error which will be captured by PHP error handler');
-echo 'End'
+echo 'End';
 ?>
 --EXPECTREGEX--
 Triggering error
-
 Notice: Triggered error which will be captured by PHP error handler .+
 End

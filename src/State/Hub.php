@@ -301,7 +301,8 @@ final class Hub
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        if ($client = $this->getClient()) {
+        $client = $this->getClient();
+        if (null !== $client) {
             return $client->getIntegration($className);
         }
 

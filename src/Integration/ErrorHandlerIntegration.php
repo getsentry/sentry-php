@@ -16,7 +16,7 @@ final class ErrorHandlerIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         ErrorHandler::register(function ($exception) {
-            $self = Hub::getCurrent()->getIntegration(\get_class($this));
+            $self = Hub::getCurrent()->getIntegration(self::class);
 
             if ($self instanceof self) {
                 $self->addBreadcrumb($exception);
