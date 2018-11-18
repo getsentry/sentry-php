@@ -37,7 +37,7 @@ final class ModulesIntegration implements IntegrationInterface
             $self = Hub::getCurrent()->getIntegration(self::class);
 
             if ($self instanceof self) {
-                self::applyToEvent($event);
+                self::applyToEvent($self, $event);
             }
 
             return $event;

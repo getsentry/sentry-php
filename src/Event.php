@@ -51,12 +51,12 @@ final class Event implements \JsonSerializable
     private $serverName;
 
     /**
-     * @var string The release of the program
+     * @var string|null The release of the program
      */
     private $release;
 
     /**
-     * @var string The error message
+     * @var string|null The error message
      */
     private $message;
 
@@ -66,7 +66,7 @@ final class Event implements \JsonSerializable
     private $messageParams = [];
 
     /**
-     * @var string The environment where this event generated (e.g. production)
+     * @var string|null The environment where this event generated (e.g. production)
      */
     private $environment;
 

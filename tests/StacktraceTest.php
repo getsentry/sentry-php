@@ -298,12 +298,24 @@ final class StacktraceTest extends TestCase
 
     private function getFixturePath(string $file): string
     {
-        return realpath(__DIR__ . \DIRECTORY_SEPARATOR . 'Fixtures' . \DIRECTORY_SEPARATOR . $file);
+        $filePath = realpath(__DIR__ . \DIRECTORY_SEPARATOR . 'Fixtures' . \DIRECTORY_SEPARATOR . $file);
+
+        if (false === $filePath) {
+            throw new \RuntimeException(sprintf('The fixture file at path "%s" could not be found.', $file));
+        }
+
+        return $filePath;
     }
 
     private function getFixture(string $file): string
     {
-        return file_get_contents($this->getFixturePath($file));
+        $fileContent = file_get_contents($this->getFixturePath($file));
+
+        if (false === $fileContent) {
+            throw new \RuntimeException(sprintf('The fixture file at path "%s" could not be read.', $file));
+        }
+
+        return $fileContent;
     }
 
     private function getJsonFixture(string $file): array

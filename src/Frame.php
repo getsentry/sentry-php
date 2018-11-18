@@ -12,7 +12,7 @@ namespace Sentry;
 final class Frame implements \JsonSerializable
 {
     /**
-     * @var string The name of the function being called
+     * @var string|null The name of the function being called
      */
     private $functionName;
 
