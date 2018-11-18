@@ -15,7 +15,7 @@ namespace Sentry;
 final class ErrorHandler
 {
     /**
-     * The default amount of bytes of memory to reserve for the fatal error handler
+     * The default amount of bytes of memory to reserve for the fatal error handler.
      */
     private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
@@ -196,7 +196,7 @@ final class ErrorHandler
         }
 
         if (null !== $this->previousErrorHandler) {
-            return \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
+            return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
         }
 
         return false;
