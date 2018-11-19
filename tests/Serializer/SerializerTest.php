@@ -16,6 +16,21 @@ class SerializerTest extends AbstractSerializerTest
      * @param bool $serializeAllObjects
      * @dataProvider serializeAllObjectsProvider
      */
+    public function testArraysAreArrays($serializeAllObjects)
+    {
+        $serializer = $this->getSerializerUnderTest();
+        if ($serializeAllObjects) {
+            $serializer->setAllObjectSerialize(true);
+        }
+        $input = [1, 2, 3];
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame([1, 2, 3], $result);
+    }
+
+    /**
+     * @param bool $serializeAllObjects
+     * @dataProvider serializeAllObjectsProvider
+     */
     public function testIntsAreInts($serializeAllObjects)
     {
         $serializer = $this->getSerializerUnderTest();

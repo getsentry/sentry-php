@@ -12,7 +12,6 @@
 namespace Sentry\Tests\Serializer;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
@@ -34,24 +33,6 @@ abstract class AbstractSerializerTest extends TestCase
             ['serializeAllObjects' => false],
             ['serializeAllObjects' => true],
         ];
-    }
-
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testArraysAreArrays($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
-        }
-        $input = [1, 2, 3];
-        $result = $this->invokeSerialization($serializer, $input);
-        $this->assertSame(['1', '2', '3'], $result);
-
-        $result = $this->invokeSerialization($serializer, [Client::class, 'getOptions']);
-        $this->assertSame([Client::class, 'getOptions'], $result);
     }
 
     /**
@@ -399,7 +380,7 @@ abstract class AbstractSerializerTest extends TestCase
             ],
             [
                 'callable' => [$this, 'serializableCallableProvider'],
-                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
+                'expected' => 'Callable ' . __CLASS__ . '::serializableCallableProvider []',
             ],
             [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
@@ -407,15 +388,15 @@ abstract class AbstractSerializerTest extends TestCase
             ],
             [
                 'callable' => [$this, 'setUpBeforeClass'],
-                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                'expected' => 'Callable ' . __CLASS__ . '::setUpBeforeClass []',
             ],
             [
                 'callable' => [self::class, 'setUpBeforeClass'],
-                'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
+                'expected' => 'Callable ' . __CLASS__ . '::setUpBeforeClass []',
             ],
             [
                 'callable' => [SerializerTestObject::class, 'testy'],
-                'expected' => 'Callable void Sentry\Tests\Serializer\SerializerTestObject::testy []',
+                'expected' => 'Callable void ' . SerializerTestObject::class . '::testy []',
             ],
             [
                 'callable' => function (int $param1_70a) {

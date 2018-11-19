@@ -85,6 +85,10 @@ abstract class AbstractSerializer
     protected function serializeRecursively($value, $max_depth = 3, $_depth = 0)
     {
         if ($_depth < $max_depth) {
+            if (\is_callable($value)) {
+                return $this->serializeCallable($value);
+            }
+
             if (\is_array($value)) {
                 $new = [];
                 foreach ($value as $k => $v) {
@@ -95,14 +99,6 @@ abstract class AbstractSerializer
             }
 
             if (\is_object($value)) {
-                if (\is_callable($value)) {
-                    try {
-                        return $this->serializeCallable($value);
-                    } catch (\Throwable $exception) {
-                        return '{unserializable callable}';
-                    }
-                }
-
                 if ($this->_all_object_serialize || ('stdClass' === \get_class($value))) {
                     return $this->serializeObject($value, $max_depth, $_depth, []);
                 }
@@ -176,6 +172,8 @@ abstract class AbstractSerializer
             return 'Object ' . \get_class($value);
         } elseif (\is_resource($value)) {
             return 'Resource ' . get_resource_type($value);
+        } elseif (\is_callable($value)) {
+            return $this->serializeCallable($value);
         } elseif (\is_array($value)) {
             return 'Array of length ' . \count($value);
         } else {
@@ -187,19 +185,21 @@ abstract class AbstractSerializer
      * @param callable $callable
      *
      * @return string
-     *
-     * @throws \ReflectionException
      */
     protected function serializeCallable(callable $callable): string
     {
-        if (\is_array($callable)) {
-            $reflection = new \ReflectionMethod($callable[0], $callable[1]);
-            $class = $reflection->getDeclaringClass();
-        } elseif ($callable instanceof \Closure || \is_string($callable)) {
-            $reflection = new \ReflectionFunction($callable);
-            $class = null;
-        } else {
-            throw new \InvalidArgumentException('Unrecognized type of callable');
+        try {
+            if (\is_array($callable)) {
+                $reflection = new \ReflectionMethod($callable[0], $callable[1]);
+                $class = $reflection->getDeclaringClass();
+            } elseif ($callable instanceof \Closure || \is_string($callable)) {
+                $reflection = new \ReflectionFunction($callable);
+                $class = null;
+            } else {
+                throw new \InvalidArgumentException('Unrecognized type of callable');
+            }
+        } catch (\ReflectionException $exception) {
+            return '{unserializable callable}';
         }
 
         $value = $reflection->isClosure() ? 'Lambda ' : 'Callable ';

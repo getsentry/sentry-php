@@ -32,16 +32,10 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
             return 'true';
         } elseif (\is_float($value) && (int) $value == $value) {
             return $value . '.0';
-        } elseif (\is_int($value) || \is_float($value)) {
+        } elseif (\is_numeric($value)) {
             return (string) $value;
-        } elseif (\is_object($value) || 'object' == \gettype($value)) {
-            return 'Object ' . \get_class($value);
-        } elseif (\is_resource($value)) {
-            return 'Resource ' . get_resource_type($value);
-        } elseif (\is_array($value)) {
-            return 'Array of length ' . \count($value);
-        } else {
-            return $this->serializeString($value);
         }
+
+        return parent::serializeValue($value);
     }
 }
