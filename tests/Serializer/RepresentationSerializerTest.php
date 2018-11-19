@@ -32,7 +32,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = [1, 2, 3];
         $result = $this->invokeSerialization($serializer, $input);
@@ -47,7 +47,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = 1;
         $result = $serializer->representationSerialize($input);
@@ -63,7 +63,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = 1.5;
         $result = $serializer->representationSerialize($input);
@@ -79,7 +79,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = true;
         $result = $serializer->representationSerialize($input);
@@ -99,7 +99,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = null;
         $result = $serializer->representationSerialize($input);
@@ -115,7 +115,7 @@ class RepresentationSerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
 
         $result = $serializer->representationSerialize((float) 1);

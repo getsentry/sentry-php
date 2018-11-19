@@ -43,7 +43,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = new \stdClass();
         $input->foo = 'BAR';
@@ -62,7 +62,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testObjectsAreNotStrings()
     {
         $serializer = $this->getSerializerUnderTest();
-        $serializer->setAllObjectSerialize(true);
+        $serializer->setSerializeAllObjects(true);
         $input = new SerializerTestObject();
         $result = $this->invokeSerialization($serializer, $input);
         $this->assertSame(['key' => 'value'], $result);
@@ -76,7 +76,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = [];
         $input[] = &$input;
@@ -174,7 +174,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testRecursionInObjects($object, $expectedResult)
     {
         $serializer = $this->getSerializerUnderTest();
-        $serializer->setAllObjectSerialize(true);
+        $serializer->setSerializeAllObjects(true);
 
         $result = $this->invokeSerialization($serializer, $object);
 
@@ -188,7 +188,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testRecursionMaxDepthForObject($value, $expectedResult)
     {
         $serializer = $this->getSerializerUnderTest();
-        $serializer->setAllObjectSerialize(true);
+        $serializer->setSerializeAllObjects(true);
 
         $result = $this->invokeSerialization($serializer, $value);
         $this->assertEquals($expectedResult, $result);
@@ -225,7 +225,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testObjectInArraySerializeAll()
     {
         $serializer = $this->getSerializerUnderTest();
-        $serializer->setAllObjectSerialize(true);
+        $serializer->setSerializeAllObjects(true);
         $input = ['foo' => new SerializerTestObject()];
         $result = $this->invokeSerialization($serializer, $input);
         $this->assertSame(['foo' => ['key' => 'value']], $result);
@@ -239,7 +239,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
             $input = pack('H*', $key);
@@ -259,7 +259,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
 
         foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
@@ -291,7 +291,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
         $this->assertNotFalse($filename, 'Temp file creation failed');
@@ -305,10 +305,10 @@ abstract class AbstractSerializerTest extends TestCase
     public function testSetAllObjectSerialize()
     {
         $serializer = $this->getSerializerUnderTest();
-        $serializer->setAllObjectSerialize(true);
-        $this->assertTrue($serializer->getAllObjectSerialize());
-        $serializer->setAllObjectSerialize(false);
-        $this->assertFalse($serializer->getAllObjectSerialize());
+        $serializer->setSerializeAllObjects(true);
+        $this->assertTrue($serializer->getSerializeAllObjects());
+        $serializer->setSerializeAllObjects(false);
+        $this->assertFalse($serializer->getSerializeAllObjects());
     }
 
     public function testClippingUTF8Characters()

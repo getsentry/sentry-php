@@ -20,7 +20,7 @@ class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = [1, 2, 3];
         $result = $this->invokeSerialization($serializer, $input);
@@ -35,7 +35,7 @@ class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = 1;
         $result = $this->invokeSerialization($serializer, $input);
@@ -51,7 +51,7 @@ class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = 1.5;
         $result = $this->invokeSerialization($serializer, $input);
@@ -67,7 +67,7 @@ class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = true;
         $result = $this->invokeSerialization($serializer, $input);
@@ -86,7 +86,7 @@ class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
+            $serializer->setSerializeAllObjects(true);
         }
         $input = null;
         $result = $this->invokeSerialization($serializer, $input);

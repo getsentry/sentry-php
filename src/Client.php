@@ -93,8 +93,8 @@ class Client implements ClientInterface
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
         $this->representationSerializer = new RepresentationSerializer($this->options->getMbDetectOrder());
         if ($this->options->getSerializeAllObjects()) {
-            $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
-            $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
+            $this->serializer->setSerializeAllObjects($this->options->getSerializeAllObjects());
+            $this->representationSerializer->setSerializeAllObjects($this->options->getSerializeAllObjects());
         }
     }
 
