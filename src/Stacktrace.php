@@ -34,7 +34,7 @@ class Stacktrace implements \JsonSerializable
     protected $serializer;
 
     /**
-     * @var ReprSerializer The representation serializer
+     * @var RepresentationSerializer The representation serializer
      */
     protected $representationSerializer;
 
@@ -58,9 +58,9 @@ class Stacktrace implements \JsonSerializable
      *
      * @param Options        $options                  The client options
      * @param Serializer     $serializer               The serializer
-     * @param ReprSerializer $representationSerializer The representation serializer
+     * @param RepresentationSerializer $representationSerializer The representation serializer
      */
-    public function __construct(Options $options, Serializer $serializer, ReprSerializer $representationSerializer)
+    public function __construct(Options $options, Serializer $serializer, RepresentationSerializer $representationSerializer)
     {
         $this->options = $options;
         $this->serializer = $serializer;
@@ -72,14 +72,14 @@ class Stacktrace implements \JsonSerializable
      *
      * @param Options        $options                  The client options
      * @param Serializer     $serializer               The serializer
-     * @param ReprSerializer $representationSerializer The representation serializer
+     * @param RepresentationSerializer $representationSerializer The representation serializer
      * @param array          $backtrace                The backtrace
      * @param string         $file                     The file that originated the backtrace
      * @param int            $line                     The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(Options $options, Serializer $serializer, ReprSerializer $representationSerializer, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Options $options, Serializer $serializer, RepresentationSerializer $representationSerializer, array $backtrace, $file, $line)
     {
         $stacktrace = new static($options, $serializer, $representationSerializer);
 

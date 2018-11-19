@@ -72,7 +72,7 @@ class Client implements ClientInterface
     private $serializer;
 
     /**
-     * @var ReprSerializer The representation serializer
+     * @var RepresentationSerializer The representation serializer
      */
     private $representationSerializer;
 
@@ -89,7 +89,7 @@ class Client implements ClientInterface
         $this->transport = $transport;
         $this->integrations = Handler::setupIntegrations($integrations);
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new RepresentationSerializer($this->options->getMbDetectOrder());
         if ($this->options->getSerializeAllObjects()) {
             $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
             $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());

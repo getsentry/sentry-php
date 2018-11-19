@@ -14,7 +14,7 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Frame;
 use Sentry\Options;
-use Sentry\ReprSerializer;
+use Sentry\RepresentationSerializer;
 use Sentry\Serializer;
 use Sentry\Stacktrace;
 
@@ -31,7 +31,7 @@ class StacktraceTest extends TestCase
     protected $serializer;
 
     /**
-     * @var ReprSerializer
+     * @var RepresentationSerializer
      */
     protected $representationSerializer;
 
@@ -39,7 +39,7 @@ class StacktraceTest extends TestCase
     {
         $this->options = new Options();
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+        $this->representationSerializer = new RepresentationSerializer($this->options->getMbDetectOrder());
     }
 
     public function testGetFramesAndToArray()
