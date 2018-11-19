@@ -9,13 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Serializer;
 
+use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\RepresentationSerializer;
 
-class ReprSerializerTest extends AbstractSerializerTest
+class RepresentationSerializerTest extends AbstractSerializerTest
 {
-    protected function getSerializerUnderTest()
+    /**
+     * @return RepresentationSerializer
+     */
+    protected function getSerializerUnderTest(): AbstractSerializer
     {
         return new RepresentationSerializer();
     }
@@ -24,72 +28,71 @@ class ReprSerializerTest extends AbstractSerializerTest
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
      */
-    public function testIntsAreInts($serialize_all_objects)
+    public function testIntsBecomeStrings($serialize_all_objects)
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = 1;
-        $result = $serializer->serialize($input);
+        $result = $serializer->representationSerialize($input);
         $this->assertInternalType('string', $result);
-        $this->assertEquals(1, $result);
+        $this->assertSame('1', $result);
     }
 
     /**
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
      */
-    public function testFloats($serialize_all_objects)
+    public function testFloatsBecomeStrings($serialize_all_objects)
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = 1.5;
-        $result = $serializer->serialize($input);
+        $result = $serializer->representationSerialize($input);
         $this->assertInternalType('string', $result);
-        $this->assertEquals('1.5', $result);
+        $this->assertSame('1.5', $result);
     }
 
     /**
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
      */
-    public function testBooleans($serialize_all_objects)
+    public function testBooleansBecomeStrings($serialize_all_objects)
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = true;
-        $result = $serializer->serialize($input);
-        $this->assertEquals('true', $result);
+        $result = $serializer->representationSerialize($input);
+        $this->assertSame('true', $result);
 
         $input = false;
-        $result = $serializer->serialize($input);
+        $result = $serializer->representationSerialize($input);
         $this->assertInternalType('string', $result);
-        $this->assertEquals('false', $result);
+        $this->assertSame('false', $result);
     }
 
     /**
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
      */
-    public function testNull($serialize_all_objects)
+    public function testNullsBecomeString($serialize_all_objects)
     {
         $serializer = $this->getSerializerUnderTest();
         if ($serialize_all_objects) {
             $serializer->setAllObjectSerialize(true);
         }
         $input = null;
-        $result = $serializer->serialize($input);
+        $result = $serializer->representationSerialize($input);
         $this->assertInternalType('string', $result);
-        $this->assertEquals('null', $result);
+        $this->assertSame('null', $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
      * @covers \Sentry\Serializer\RepresentationSerializer::serializeValue
      */
@@ -100,16 +103,16 @@ class ReprSerializerTest extends AbstractSerializerTest
             $serializer->setAllObjectSerialize(true);
         }
 
-        $result = $serializer->serialize((float) 1);
+        $result = $serializer->representationSerialize((float) 1);
         $this->assertInternalType('string', $result);
-        $this->assertEquals('1.0', $result);
+        $this->assertSame('1.0', $result);
 
-        $result = $serializer->serialize(floor(5 / 2));
+        $result = $serializer->representationSerialize(floor(5 / 2));
         $this->assertInternalType('string', $result);
-        $this->assertEquals('2.0', $result);
+        $this->assertSame('2.0', $result);
 
-        $result = $serializer->serialize(floor(12345.678901234));
+        $result = $serializer->representationSerialize(floor(12345.678901234));
         $this->assertInternalType('string', $result);
-        $this->assertEquals('12345.0', $result);
+        $this->assertSame('12345.0', $result);
     }
 }

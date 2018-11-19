@@ -9,17 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Serializer;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
+use Sentry\Serializer\AbstractSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\SerializerInterface;
 
 abstract class AbstractSerializerTest extends TestCase
 {
-    /**
-     * @return \Sentry\Serializer\Serializer
-     */
-    abstract protected function getSerializerUnderTest();
+    abstract protected function getSerializerUnderTest(): AbstractSerializer;
 
     /**
      * This method is only existed because of testSerializeCallable.
@@ -28,7 +28,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
     }
 
-    public function serializeAllObjectsProvider()
+    public function serializeAllObjectsProvider(): array
     {
         return [
             ['serializeAllObjects' => false],
@@ -47,11 +47,11 @@ abstract class AbstractSerializerTest extends TestCase
             $serializer->setAllObjectSerialize(true);
         }
         $input = [1, 2, 3];
-        $result = $serializer->serialize($input);
-        $this->assertEquals(['1', '2', '3'], $result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame(['1', '2', '3'], $result);
 
-        $result = $serializer->serialize([Client::class, 'getOptions']);
-        $this->assertEquals([Client::class, 'getOptions'], $result);
+        $result = $this->invokeSerialization($serializer, [Client::class, 'getOptions']);
+        $this->assertSame([Client::class, 'getOptions'], $result);
     }
 
     /**
@@ -66,16 +66,16 @@ abstract class AbstractSerializerTest extends TestCase
         }
         $input = new \stdClass();
         $input->foo = 'BAR';
-        $result = $serializer->serialize($input);
-        $this->assertEquals(['foo' => 'BAR'], $result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame(['foo' => 'BAR'], $result);
     }
 
     public function testObjectsAreStrings()
     {
         $serializer = $this->getSerializerUnderTest();
         $input = new SerializerTestObject();
-        $result = $serializer->serialize($input);
-        $this->assertEquals('Object Sentry\Tests\SerializerTestObject', $result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame('Object Sentry\Tests\SerializerTestObject', $result);
     }
 
     public function testObjectsAreNotStrings()
@@ -83,74 +83,8 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
         $input = new SerializerTestObject();
-        $result = $serializer->serialize($input);
-        $this->assertEquals(['key' => 'value'], $result);
-    }
-
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testIntsAreInts($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
-        }
-        $input = 1;
-        $result = $serializer->serialize($input);
-        $this->assertInternalType('integer', $result);
-        $this->assertEquals(1, $result);
-    }
-
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testFloats($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
-        }
-        $input = 1.5;
-        $result = $serializer->serialize($input);
-        $this->assertInternalType('double', $result);
-        $this->assertEquals(1.5, $result);
-    }
-
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testBooleans($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
-        }
-        $input = true;
-        $result = $serializer->serialize($input);
-        $this->assertTrue($result);
-
-        $input = false;
-        $result = $serializer->serialize($input);
-        $this->assertFalse($result);
-    }
-
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testNull($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serializeAllObjects) {
-            $serializer->setAllObjectSerialize(true);
-        }
-        $input = null;
-        $result = $serializer->serialize($input);
-        $this->assertNull($result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame(['key' => 'value'], $result);
     }
 
     /**
@@ -165,20 +99,20 @@ abstract class AbstractSerializerTest extends TestCase
         }
         $input = [];
         $input[] = &$input;
-        $result = $serializer->serialize($input, 3);
-        $this->assertEquals([[['Array of length 1']]], $result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame([[['Array of length 1']]], $result);
 
-        $result = $serializer->serialize([], 3);
-        $this->assertEquals([], $result);
+        $result = $this->invokeSerialization($serializer, []);
+        $this->assertSame([], $result);
 
-        $result = $serializer->serialize([[]], 3);
-        $this->assertEquals([[]], $result);
+        $result = $this->invokeSerialization($serializer, [[]]);
+        $this->assertSame([[]], $result);
 
-        $result = $serializer->serialize([[[]]], 3);
-        $this->assertEquals([[[]]], $result);
+        $result = $this->invokeSerialization($serializer, [[[]]]);
+        $this->assertSame([[[]]], $result);
 
-        $result = $serializer->serialize([[[[]]]], 3);
-        $this->assertEquals([[['Array of length 0']]], $result);
+        $result = $this->invokeSerialization($serializer, [[[[]]]]);
+        $this->assertSame([[['Array of length 0']]], $result);
     }
 
     public function dataRecursionInObjectsDataProvider()
@@ -256,38 +190,50 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
 
-        $result1 = $serializer->serialize($object, 3);
-        $result2 = $serializer->serializeObject($object, 3);
-        $this->assertEquals($expectedResult, $result1);
-        $this->assertContains(\gettype($result1), ['array', 'string', 'null', 'float', 'integer', 'object']);
-        $this->assertEquals($expectedResult, $result2);
-        $this->assertContains(\gettype($result2), ['array', 'string']);
+        $result = $this->invokeSerialization($serializer, $object);
+
+        $this->assertSame($expectedResult, $result);
+        $this->assertArraySubset(['array', 'string', 'null', 'float', 'integer', 'object'], [\gettype($result)]);
     }
 
-    public function testRecursionMaxDepthForObject()
+    /**
+     * @dataProvider recursionMaxDepthForObjectDataProvider
+     */
+    public function testRecursionMaxDepthForObject($value, $expectedResult)
     {
         $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
 
-        $result = $serializer->serialize((object) ['key' => (object) ['key' => 12345]], 3);
-        $this->assertEquals(['key' => ['key' => 12345]], $result);
+        $result = $this->invokeSerialization($serializer, $value);
+        $this->assertSame($expectedResult, $result);
+    }
 
-        $result = $serializer->serialize((object) ['key' => (object) ['key' => (object) ['key' => 12345]]], 3);
-        $this->assertEquals(['key' => ['key' => ['key' => 12345]]], $result);
-
-        $result = $serializer->serialize(
-            (object) ['key' => (object) ['key' => (object) ['key' => (object) ['key' => 12345]]]],
-            3
-        );
-        $this->assertEquals(['key' => ['key' => ['key' => 'Object stdClass']]], $result);
+    public function recursionMaxDepthForObjectDataProvider()
+    {
+        return [
+            [
+                (object) ['key' => (object) ['key' => 12345]],
+                ['key' => ['key' => 12345]],
+            ],
+            [
+                (object) ['key' => (object) ['key' => (object) ['key' => 12345]]],
+                ['key' => ['key' => ['key' => 12345]]],
+            ],
+            [
+                (object) ['key' => (object) ['key' => (object) ['key' => (object) ['key' => 12345]]]],
+                ['key' => ['key' => ['key' => 'Object stdClass']]],
+            ],
+        ];
     }
 
     public function testObjectInArray()
     {
         $serializer = $this->getSerializerUnderTest();
         $input = ['foo' => new SerializerTestObject()];
-        $result = $serializer->serialize($input);
-        $this->assertEquals(['foo' => 'Object Sentry\\Tests\\SerializerTestObject'], $result);
+
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame(['foo' => 'Object Sentry\\Tests\\SerializerTestObject'], $result);
     }
 
     public function testObjectInArraySerializeAll()
@@ -295,8 +241,8 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $serializer->setAllObjectSerialize(true);
         $input = ['foo' => new SerializerTestObject()];
-        $result = $serializer->serialize($input);
-        $this->assertEquals(['foo' => ['key' => 'value']], $result);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame(['foo' => ['key' => 'value']], $result);
     }
 
     /**
@@ -311,7 +257,7 @@ abstract class AbstractSerializerTest extends TestCase
         }
         foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
             $input = pack('H*', $key);
-            $result = $serializer->serialize($input);
+            $result = $this->invokeSerialization($serializer, $input);
             $this->assertInternalType('string', $result);
             if (\function_exists('mb_detect_encoding')) {
                 $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
@@ -332,7 +278,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
             $input = str_repeat('x', $length);
-            $result = $serializer->serialize($input);
+            $result = $this->invokeSerialization($serializer, $input);
             $this->assertInternalType('string', $result);
             $this->assertLessThanOrEqual(1024, \strlen($result));
         }
@@ -345,7 +291,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
             $input = str_repeat('x', $length);
-            $result = $serializer->serialize($input);
+            $result = $this->invokeSerialization($serializer, $input);
             $this->assertInternalType('string', $result);
             $this->assertLessThanOrEqual(500, \strlen($result));
         }
@@ -363,11 +309,11 @@ abstract class AbstractSerializerTest extends TestCase
         }
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
         $this->assertNotFalse($filename, 'Temp file creation failed');
-        $fo = fopen($filename, 'wb');
+        $resource = fopen($filename, 'wb');
 
-        $result = $serializer->serialize($fo);
+        $result = $this->invokeSerialization($serializer, $resource);
         $this->assertInternalType('string', $result);
-        $this->assertEquals('Resource stream', $result);
+        $this->assertSame('Resource stream', $result);
     }
 
     public function testSetAllObjectSerialize()
@@ -392,7 +338,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $clipped = $serializer->serialize($testString);
 
-        $this->assertEquals('Прекратит {clipped}', $clipped);
+        $this->assertSame('Прекратит {clipped}', $clipped);
         $this->assertNotNull(json_encode($clipped));
         $this->assertSame(JSON_ERROR_NONE, json_last_error());
     }
@@ -461,10 +407,10 @@ abstract class AbstractSerializerTest extends TestCase
                     'expected' => 'Callable void Sentry\Tests\SerializerTestObject::testy []',
                 ],
             ];
-            require_once 'resources/php70_serializing.inc';
+            require_once '../resources/php70_serializing.inc';
 
             if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
-                require_once 'resources/php71_serializing.inc';
+                require_once '../resources/php71_serializing.inc';
             }
 
             return $data;
@@ -520,18 +466,32 @@ abstract class AbstractSerializerTest extends TestCase
     public function testSerializeCallable($callable, $expected)
     {
         $serializer = $this->getSerializerUnderTest();
-        $actual = $serializer->serializeCallable($callable);
-        $this->assertEquals($expected, $actual);
+        $actual = $this->invokeSerialization($serializer, $callable);
 
-        $actual2 = $serializer->serialize($callable);
-        $actual3 = $serializer->serialize([$callable]);
-        if (\is_array($callable)) {
-            $this->assertInternalType('array', $actual2);
-            $this->assertInternalType('array', $actual3);
-        } else {
-            $this->assertEquals($expected, $actual2);
-            $this->assertEquals([$expected], $actual3);
+        $this->assertSame($expected, $actual);
+
+        $actual = $this->invokeSerialization($serializer, [$callable]);
+
+        $this->assertSame([$expected], $actual);
+    }
+
+    /**
+     * @param AbstractSerializer $serializer
+     * @param mixed              $input
+     *
+     * @return string|bool|float|int|null|array|object
+     */
+    protected function invokeSerialization(AbstractSerializer $serializer, $input)
+    {
+        if ($serializer instanceof SerializerInterface) {
+            return $serializer->serialize($input);
         }
+
+        if ($serializer instanceof RepresentationSerializerInterface) {
+            return $serializer->representationSerialize($input);
+        }
+
+        throw new \InvalidArgumentException('Unrecognized AbstractSerializer: ' . \get_class($serializer));
     }
 }
 
