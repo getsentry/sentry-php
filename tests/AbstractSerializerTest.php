@@ -17,7 +17,7 @@ use Sentry\Client;
 abstract class AbstractSerializerTest extends TestCase
 {
     /**
-     * @return \Sentry\Serializer
+     * @return \Sentry\Serializer\Serializer
      */
     abstract protected function getSerializerUnderTest();
 
@@ -387,7 +387,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
         $class_name = static::getSerializerUnderTest();
-        /** @var \Sentry\Serializer $serializer */
+        /** @var \Sentry\Serializer\Serializer $serializer */
         $serializer = new $class_name(null, 19);
 
         $clipped = $serializer->serialize($testString);

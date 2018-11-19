@@ -11,7 +11,7 @@
 
 namespace Sentry\Tests;
 
-use Sentry\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializer;
 
 class ReprSerializerTest extends AbstractSerializerTest
 {
@@ -91,7 +91,7 @@ class ReprSerializerTest extends AbstractSerializerTest
     /**
      * @param bool $serialize_all_objects
      * @dataProvider serializeAllObjectsProvider
-     * @covers \Sentry\RepresentationSerializer::serializeValue
+     * @covers \Sentry\Serializer\RepresentationSerializer::serializeValue
      */
     public function testSerializeRoundedFloat($serialize_all_objects)
     {

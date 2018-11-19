@@ -15,7 +15,9 @@
  * limitations under the License.
 */
 
-namespace Sentry;
+namespace Sentry\Serializer;
+
+use Sentry\Client;
 
 /**
  * This helper is based on code from Facebook's Phabricator project.

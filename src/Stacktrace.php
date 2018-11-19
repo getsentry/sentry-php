@@ -11,6 +11,9 @@
 
 namespace Sentry;
 
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\Serializer;
+
 /**
  * This class contains all the information about an error stacktrace.
  *

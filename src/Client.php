@@ -14,6 +14,8 @@ namespace Sentry;
 use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\Serializer;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;

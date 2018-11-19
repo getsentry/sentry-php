@@ -2,7 +2,7 @@
 
 namespace Sentry\Tests;
 
-use Sentry\Serializer;
+use Sentry\Serializer\Serializer;
 
 class SerializerTest extends AbstractSerializerTest
 {

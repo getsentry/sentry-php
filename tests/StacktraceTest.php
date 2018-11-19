@@ -14,8 +14,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Frame;
 use Sentry\Options;
-use Sentry\RepresentationSerializer;
-use Sentry\Serializer;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\Serializer;
 use Sentry\Stacktrace;
 
 class StacktraceTest extends TestCase

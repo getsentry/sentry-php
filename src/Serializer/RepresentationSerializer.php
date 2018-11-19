@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Sentry;
+namespace Sentry\Serializer;
 
 /**
  * Serializes a value into a representation that should reasonably suggest
  * both the type and value, and be serializable into JSON.
  */
-class RepresentationSerializer extends \Sentry\Serializer implements RepresentationSerializerInterface
+class RepresentationSerializer extends \Sentry\Serializer\Serializer implements RepresentationSerializerInterface
 {
     protected function serializeValue($value)
     {
