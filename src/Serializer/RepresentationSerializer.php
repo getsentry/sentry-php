@@ -15,8 +15,13 @@ namespace Sentry\Serializer;
  * Serializes a value into a representation that should reasonably suggest
  * both the type and value, and be serializable into JSON.
  */
-class RepresentationSerializer extends \Sentry\Serializer\Serializer implements RepresentationSerializerInterface
+class RepresentationSerializer extends AbstractSerializer implements RepresentationSerializerInterface
 {
+    public function representationSerialize($value)
+    {
+        return $this->serializeRecursively($value);
+    }
+
     protected function serializeValue($value)
     {
         if (null === $value) {
