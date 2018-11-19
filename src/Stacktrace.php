@@ -12,7 +12,9 @@
 namespace Sentry;
 
 use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 
 /**
  * This class contains all the information about an error stacktrace.
@@ -32,12 +34,12 @@ class Stacktrace implements \JsonSerializable
     protected $options;
 
     /**
-     * @var Serializer The serializer
+     * @var SerializerInterface The serializer
      */
     protected $serializer;
 
     /**
-     * @var RepresentationSerializer The representation serializer
+     * @var RepresentationSerializerInterface The representation serializer
      */
     protected $representationSerializer;
 
@@ -59,11 +61,11 @@ class Stacktrace implements \JsonSerializable
     /**
      * Stacktrace constructor.
      *
-     * @param Options                  $options                  The client options
-     * @param Serializer               $serializer               The serializer
-     * @param RepresentationSerializer $representationSerializer The representation serializer
+     * @param Options                           $options                  The client options
+     * @param SerializerInterface               $serializer               The serializer
+     * @param RepresentationSerializerInterface $representationSerializer The representation serializer
      */
-    public function __construct(Options $options, Serializer $serializer, RepresentationSerializer $representationSerializer)
+    public function __construct(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer)
     {
         $this->options = $options;
         $this->serializer = $serializer;

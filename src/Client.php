@@ -15,7 +15,9 @@ use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 use Zend\Diactoros\ServerRequestFactory;
@@ -69,33 +71,36 @@ class Client implements ClientInterface
     private $integrations;
 
     /**
-     * @var Serializer The serializer
+     * @var SerializerInterface The serializer
      */
     private $serializer;
 
     /**
-     * @var RepresentationSerializer The representation serializer
+     * @var RepresentationSerializerInterface The representation serializer
      */
     private $representationSerializer;
 
     /**
      * Constructor.
      *
-     * @param Options                $options      The client configuration
-     * @param TransportInterface     $transport    The transport
-     * @param IntegrationInterface[] $integrations The integrations used by the client
+     * @param Options                           $options                  The client configuration
+     * @param TransportInterface                $transport                The transport
+     * @param SerializerInterface               $serializer               The serializer used for events
+     * @param RepresentationSerializerInterface $representationSerializer The representation serializer to be used with stacktrace frames
+     * @param IntegrationInterface[]            $integrations             The integrations used by the client
      */
-    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
-    {
+    public function __construct(
+        Options $options,
+        TransportInterface $transport,
+        SerializerInterface $serializer,
+        RepresentationSerializerInterface $representationSerializer,
+        array $integrations = []
+    ) {
         $this->options = $options;
         $this->transport = $transport;
         $this->integrations = Handler::setupIntegrations($integrations);
-        $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new RepresentationSerializer($this->options->getMbDetectOrder());
-        if ($this->options->getSerializeAllObjects()) {
-            $this->serializer->setSerializeAllObjects($this->options->getSerializeAllObjects());
-            $this->representationSerializer->setSerializeAllObjects($this->options->getSerializeAllObjects());
-        }
+        $this->serializer = $serializer;
+        $this->representationSerializer = $representationSerializer;
     }
 
     /**
@@ -205,7 +210,7 @@ class Client implements ClientInterface
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
-        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+        if ($sampleRate < 1 && random_int(1, 100) / 100.0 > $sampleRate) {
             return null;
         }
 
