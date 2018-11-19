@@ -75,7 +75,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->getSerializerUnderTest();
         $input = new SerializerTestObject();
         $result = $this->invokeSerialization($serializer, $input);
-        $this->assertSame('Object Sentry\Tests\SerializerTestObject', $result);
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
     public function testObjectsAreNotStrings()
@@ -121,7 +121,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => 'Object Sentry\Tests\SerializerTestObject'],
+            'expectedResult' => ['key' => 'Object ' . SerializerTestObject::class],
         ];
 
         $object = new SerializerTestObject();
@@ -130,7 +130,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => 'Object Sentry\Tests\SerializerTestObject']],
+            'expectedResult' => ['key' => ['key' => 'Object ' . SerializerTestObject::class]],
         ];
 
         $object = new SerializerTestObject();
@@ -163,7 +163,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => ['key' => 'Object Sentry\\Tests\\SerializerTestObject']]],
+            'expectedResult' => ['key' => ['key' => ['key' => 'Object ' . SerializerTestObject::class]]],
         ];
 
         $object3 = new SerializerTestObject();
@@ -175,7 +175,12 @@ abstract class AbstractSerializerTest extends TestCase
         $object3->key = $object2;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => ['key' => ['key' => 'Object Sentry\\Tests\\SerializerTestObject'], 'keys' => 'keys']],
+            'expectedResult' => [
+                'key' => [
+                    'key' => ['key' => 'Object ' . SerializerTestObject::class],
+                    'keys' => 'keys',
+                ],
+            ],
         ];
     }
 
@@ -193,7 +198,7 @@ abstract class AbstractSerializerTest extends TestCase
         $result = $this->invokeSerialization($serializer, $object);
 
         $this->assertSame($expectedResult, $result);
-        $this->assertArraySubset(['array', 'string', 'null', 'float', 'integer', 'object'], [\gettype($result)]);
+        $this->assertContains(\gettype($result), ['array', 'string', 'null', 'float', 'integer', 'object']);
     }
 
     /**
@@ -205,7 +210,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer->setAllObjectSerialize(true);
 
         $result = $this->invokeSerialization($serializer, $value);
-        $this->assertSame($expectedResult, $result);
+        $this->assertEquals($expectedResult, $result);
     }
 
     public function recursionMaxDepthForObjectDataProvider()
@@ -233,7 +238,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $result = $this->invokeSerialization($serializer, $input);
 
-        $this->assertSame(['foo' => 'Object Sentry\\Tests\\SerializerTestObject'], $result);
+        $this->assertSame(['foo' => 'Object ' . SerializerTestObject::class], $result);
     }
 
     public function testObjectInArraySerializeAll()
@@ -336,7 +341,7 @@ abstract class AbstractSerializerTest extends TestCase
         /** @var \Sentry\Serializer\Serializer $serializer */
         $serializer = new $class_name(null, 19);
 
-        $clipped = $serializer->serialize($testString);
+        $clipped = $this->invokeSerialization($serializer, $testString);
 
         $this->assertSame('Прекратит {clipped}', $clipped);
         $this->assertNotNull(json_encode($clipped));
@@ -345,114 +350,106 @@ abstract class AbstractSerializerTest extends TestCase
 
     public function serializableCallableProvider()
     {
-        $closure1 = function (array $param1) {
-            return $param1 * 2;
-        };
-        $closure2 = function ($param1a) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-        $closure4 = function (callable $param1c) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-        $closure5 = function (\stdClass $param1d) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-        $closure6 = function (\stdClass $param1e = null) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-        $closure7 = function (array &$param1f) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-        $closure8 = function (array &$param1g = null) {
-            throw new \Exception('Don\'t even think about invoke me');
-        };
-
-        if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
-            $data = [
-                [
-                    'callable' => $closure1,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array param1]',
-                ], [
-                    'callable' => $closure2,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [mixed|null param1a]',
-                ], [
-                    'callable' => $closure4,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [callable param1c]',
-                ], [
-                    'callable' => $closure5,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [stdClass param1d]',
-                ], [
-                    'callable' => $closure6,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [stdClass|null [param1e]]',
-                ], [
-                    'callable' => $closure7,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array &param1f]',
-                ], [
-                    'callable' => $closure8,
-                    'expected' => 'Lambda Sentry\\Tests\\{closure} [array|null [&param1g]]',
-                ], [
-                    'callable' => [$this, 'serializableCallableProvider'],
-                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
-                ], [
-                    'callable' => [TestCase::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
-                ], [
-                    'callable' => [$this, 'setUpBeforeClass'],
-                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
-                ], [
-                    'callable' => [self::class, 'setUpBeforeClass'],
-                    'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
-                ], [
-                    'callable' => [SerializerTestObject::class, 'testy'],
-                    'expected' => 'Callable void Sentry\Tests\SerializerTestObject::testy []',
-                ],
-            ];
-            require_once '../resources/php70_serializing.inc';
-
-            if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
-                require_once '../resources/php71_serializing.inc';
-            }
-
-            return $data;
-        }
+        $filename = \dirname(__DIR__) . '/resources/callable_without_namespace.inc';
+        $this->assertFileExists($filename);
+        $callableWithoutNamespaces = require $filename;
 
         return [
             [
-                'callable' => $closure1,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [array param1]',
-            ], [
-                'callable' => $closure2,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [param1a]',
-            ], [
-                'callable' => $closure4,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [callable param1c]',
-            ], [
-                'callable' => $closure5,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [param1d]',
-            ], [
-                'callable' => $closure6,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [[param1e]]',
-            ], [
-                'callable' => $closure7,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [array &param1f]',
-            ], [
-                'callable' => $closure8,
-                'expected' => 'Lambda Sentry\\Tests\\{closure} [array|null [&param1g]]',
-            ], [
+                'callable' => function (array $param1) {
+                    return $param1 * 2;
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array param1]',
+            ],
+            [
+                'callable' => function ($param1a) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [mixed|null param1a]',
+            ],
+            [
+                'callable' => function (callable $param1c) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [callable param1c]',
+            ],
+            [
+                'callable' => function (\stdClass $param1d) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass param1d]',
+            ],
+            [
+                'callable' => function (\stdClass $param1e = null) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass|null [param1e]]',
+            ],
+            [
+                'callable' => function (array &$param1f) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array &param1f]',
+            ],
+            [
+                'callable' => function (array &$param1g = null) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array|null [&param1g]]',
+            ],
+            [
                 'callable' => [$this, 'serializableCallableProvider'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::serializableCallableProvider []',
-            ], [
+            ],
+            [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
-                'expected' => 'Callable PHPUnit_Framework_TestCase::setUpBeforeClass []',
-            ], [
+                'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
+            ],
+            [
                 'callable' => [$this, 'setUpBeforeClass'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
-            ], [
+            ],
+            [
                 'callable' => [self::class, 'setUpBeforeClass'],
                 'expected' => 'Callable Sentry\Tests\AbstractSerializerTest::setUpBeforeClass []',
-            ], [
+            ],
+            [
                 'callable' => [SerializerTestObject::class, 'testy'],
-                'expected' => 'Callable void Sentry\Tests\SerializerTestObject::testy []',
+                'expected' => 'Callable void Sentry\Tests\Serializer\SerializerTestObject::testy []',
+            ],
+            [
+                'callable' => function (int $param1_70a) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [int param1_70a]',
+            ],
+            [
+                'callable' => function (&$param): int {
+                    return (int) $param;
+                },
+                'expected' => 'Lambda int ' . __NAMESPACE__ . '\\{closure} [mixed|null &param]',
+            ],
+            [
+                'callable' => function (int $param): ?int {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda int ' . __NAMESPACE__ . '\\{closure} [int param]',
+            ],
+            [
+                'callable' => function (?int $param1_70b) {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [int|null param1_70b]',
+            ],
+            [
+                'callable' => function (?int $param1_70c): void {
+                    throw new \Exception('Don\'t even think about invoke me');
+                },
+                'expected' => 'Lambda void ' . __NAMESPACE__ . '\\{closure} [int|null param1_70c]',
+            ],
+            [
+                'callable' => $callableWithoutNamespaces,
+                'expected' => 'Lambda void {closure} [int|null param1_70ns]',
             ],
         ];
     }
