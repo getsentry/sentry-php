@@ -24,7 +24,7 @@ namespace Sentry;
  *
  * Specifically, it is an adaptation of the PhutilReadableSerializer class.
  */
-class Serializer
+class Serializer implements SerializerInterface
 {
     /*
      * The default mb detect order
