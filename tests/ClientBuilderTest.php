@@ -191,9 +191,7 @@ class ClientBuilderTest extends TestCase
     {
         return [
             ['setPrefixes', ['foo', 'bar']],
-            ['setSerializeAllObjects', false],
             ['setSampleRate', 0.5],
-            ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
             ['setEncoding', 'gzip'],

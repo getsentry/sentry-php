@@ -45,11 +45,7 @@ class OptionsTest extends TestCase
         return [
             ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
-            ['serialize_all_object', false, 'getSerializeAllObjects', 'setSerializeAllObjects'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
-            ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
-            ['mb_detect_order', 'UTF-8', 'getMbDetectOrder', 'setMbDetectOrder'],
-            ['mb_detect_order', ['UTF-8'], 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['encoding', 'json', 'getEncoding', 'setEncoding'],

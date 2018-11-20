@@ -38,8 +38,8 @@ class StacktraceTest extends TestCase
     protected function setUp()
     {
         $this->options = new Options();
-        $this->serializer = new Serializer($this->options->getMbDetectOrder());
-        $this->representationSerializer = new RepresentationSerializer($this->options->getMbDetectOrder());
+        $this->serializer = new Serializer();
+        $this->representationSerializer = new RepresentationSerializer();
     }
 
     public function testGetFramesAndToArray()

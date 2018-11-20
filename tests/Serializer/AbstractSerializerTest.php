@@ -318,9 +318,8 @@ abstract class AbstractSerializerTest extends TestCase
         }
 
         $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
-        $class_name = static::getSerializerUnderTest();
-        /** @var \Sentry\Serializer\Serializer $serializer */
-        $serializer = new $class_name(null, 19);
+        $serializer = static::getSerializerUnderTest();
+        $serializer->setMessageLimit(19);
 
         $clipped = $this->invokeSerialization($serializer, $testString);
 
@@ -451,6 +450,27 @@ abstract class AbstractSerializerTest extends TestCase
         $actual = $this->invokeSerialization($serializer, [$callable]);
 
         $this->assertSame([$expected], $actual);
+    }
+
+    /**
+     * @dataProvider serializationForBadStringsDataProvider
+     */
+    public function testSerializationForBadStrings(string $string, string $expected, string $mbDetectOrder = null): void
+    {
+        $serializer = $this->getSerializerUnderTest();
+        if ($mbDetectOrder) {
+            $serializer->setMbDetectOrder($mbDetectOrder);
+        }
+
+        $this->assertSame($expected, $this->invokeSerialization($serializer, $string));
+    }
+
+    public function serializationForBadStringsDataProvider()
+    {
+        $utf8String = 'äöü';
+        yield [utf8_decode($utf8String), $utf8String, 'ISO-8859-1, ASCII, UTF-8'];
+        // ill-formed 2-byte character U+00A2 (CENT SIGN)
+        yield ["\xC2\xA2\xC2", "\xC2\xA2\x3F"];
     }
 
     /**
