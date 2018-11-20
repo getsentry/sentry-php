@@ -28,6 +28,10 @@ use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -100,6 +104,16 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var Plugin[] The list of Httplug plugins
      */
     private $httpClientPlugins = [];
+
+    /**
+     * @var SerializerInterface The serializer to be injected in the client
+     */
+    private $serializer;
+
+    /**
+     * @var RepresentationSerializerInterface The representation serializer to be injected in the client
+     */
+    private $representationSerializer;
 
     /**
      * @var IntegrationInterface[] List of default integrations
@@ -200,6 +214,30 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
+     * @param SerializerInterface $serializer
+     *
+     * @return $this
+     */
+    public function setSerializer(SerializerInterface $serializer): self
+    {
+        $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    /**
+     * @param RepresentationSerializerInterface $representationSerializer
+     *
+     * @return $this
+     */
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
+    {
+        $this->representationSerializer = $representationSerializer;
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getClient(): ClientInterface
@@ -208,10 +246,10 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
+        $this->serializer = $this->serializer ?? new Serializer();
+        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        $client = new Client($this->options, $this->transport, $this->integrations);
-
-        return $client;
+        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer, $this->integrations);
     }
 
     /**
