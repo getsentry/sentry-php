@@ -12,7 +12,6 @@
 namespace Sentry\Transport;
 
 use Http\Client\HttpAsyncClient;
-use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Sentry\Event;
@@ -86,13 +85,9 @@ final class HttpTransport implements TransportInterface
         $request = $this->requestFactory->createRequest(
             'POST',
             sprintf('api/%d/store/', $this->config->getProjectId()),
-            ['Content-Type' => $this->isEncodingCompressed() ? 'application/octet-stream' : 'application/json'],
+            ['Content-Type' => 'application/json'],
             JSON::encode($event)
         );
-
-        if ($this->isEncodingCompressed()) {
-            $request = $request->withBody(new CompressStream($request->getBody()));
-        }
 
         $promise = $this->httpClient->sendAsyncRequest($request);
 
@@ -112,16 +107,6 @@ final class HttpTransport implements TransportInterface
         $this->pendingRequests[] = $promise;
 
         return $event->getId();
-    }
-
-    /**
-     * Checks whether the encoding is compressed.
-     *
-     * @return bool
-     */
-    private function isEncodingCompressed()
-    {
-        return 'gzip' === $this->config->getEncoding();
     }
 
     /**

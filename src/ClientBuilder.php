@@ -14,6 +14,7 @@ namespace Sentry;
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
+use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
@@ -262,6 +263,10 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
+
+        if ('gzip' === $this->options->getEncoding()) {
+            $this->addHttpClientPlugin(new DecoderPlugin());
+        }
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
     }

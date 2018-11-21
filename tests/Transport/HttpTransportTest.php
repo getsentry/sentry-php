@@ -114,40 +114,6 @@ class HttpTransportTest extends TestCase
         $reflectionMethod->setAccessible(false);
     }
 
-    public function testSendWithCompressedEncoding()
-    {
-        $config = new Options(['encoding' => 'gzip']);
-        $event = new Event();
-
-        $promise = $this->createMock(Promise::class);
-        $promise->expects($this->once())
-            ->method('wait');
-
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->with($this->callback(function (RequestInterface $request) use ($event) {
-                $request->getBody()->rewind();
-
-                $compressedPayload = gzcompress(JSON::encode($event));
-
-                $this->assertNotFalse($compressedPayload);
-
-                return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
-                    && $compressedPayload === $request->getBody()->getContents();
-            }))
-            ->willReturn($promise);
-
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
-        $transport->send($event);
-
-        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
-        $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($transport);
-        $reflectionMethod->setAccessible(false);
-    }
-
     public function testSendFailureCleanupPendingRequests()
     {
         /** @var HttpException|\PHPUnit_Framework_MockObject_MockObject $exception */
