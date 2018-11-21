@@ -157,7 +157,7 @@ final class ErrorHandlerTest extends TestCase
     }
 
     /**
-     * @dataProvider testHandleErrorWithPreviousErrorHandlerDataProvider
+     * @dataProvider handleErrorWithPreviousErrorHandlerDataProvider
      */
     public function testHandleErrorWithPreviousErrorHandler($previousErrorHandlerErrorReturnValue, bool $expectedHandleErrorReturnValue): void
     {
@@ -207,7 +207,7 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
-    public function testHandleErrorWithPreviousErrorHandlerDataProvider(): array
+    public function handleErrorWithPreviousErrorHandlerDataProvider(): array
     {
         return [
             [false, false],

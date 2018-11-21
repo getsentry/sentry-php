@@ -45,7 +45,7 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
-     * Applies the information gathered by the this integration to the event.
+     * Applies the information gathered by this integration to the event.
      *
      * @param self  $self  The instance of this integration
      * @param Event $event The event that will be enriched with the modules
