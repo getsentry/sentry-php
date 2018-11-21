@@ -156,7 +156,10 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
-    public function testHandleErrorWithPreviousErrorHandler(): void
+    /**
+     * @dataProvider testHandleErrorWithPreviousErrorHandlerDataProvider
+     */
+    public function testHandleErrorWithPreviousErrorHandler($previousErrorHandlerErrorReturnValue, bool $expectedHandleErrorReturnValue): void
     {
         $this->callbackMock->expects($this->once())
             ->method('__invoke')
@@ -187,7 +190,7 @@ final class ErrorHandlerTest extends TestCase
         $previousErrorHandler->expects($this->once())
             ->method('__invoke')
             ->with(E_USER_NOTICE, 'foo bar', __FILE__, 123)
-            ->willReturn(false);
+            ->willReturn($previousErrorHandlerErrorReturnValue);
 
         try {
             $errorHandler = ErrorHandler::register($this->callbackMock);
@@ -197,11 +200,23 @@ final class ErrorHandlerTest extends TestCase
             $reflectionProperty->setValue($errorHandler, $previousErrorHandler);
             $reflectionProperty->setAccessible(false);
 
-            $errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123);
+            $this->assertEquals($expectedHandleErrorReturnValue, $errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123));
         } finally {
             restore_error_handler();
             restore_exception_handler();
         }
+    }
+
+    public function testHandleErrorWithPreviousErrorHandlerDataProvider(): array
+    {
+        return [
+            [false, false],
+            [true, true],
+            [0, true], // check that we're using strict comparison instead of shallow
+            [1, true], // check that we're using strict comparison instead of shallow
+            ['0', true], // check that we're using strict comparison instead of shallow
+            ['1', true], // check that we're using strict comparison instead of shallow
+        ];
     }
 
     public function testHandleFatalError(): void

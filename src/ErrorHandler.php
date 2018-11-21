@@ -169,8 +169,8 @@ final class ErrorHandler
      * @param string $file    The filename the error was raised in
      * @param int    $line    The line number the error was raised at
      *
-     * @return bool If the function returns `false` then the next error handler
-     *              in the chain will be called
+     * @return bool If the function returns `false` then the PHP native error
+     *              handler will be called
      *
      * @throws \Throwable
      *
