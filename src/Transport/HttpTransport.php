@@ -84,7 +84,7 @@ final class HttpTransport implements TransportInterface
     {
         $request = $this->requestFactory->createRequest(
             'POST',
-            sprintf('api/%d/store/', $this->config->getProjectId()),
+            sprintf('/api/%d/store/', $this->config->getProjectId()),
             ['Content-Type' => 'application/json'],
             JSON::encode($event)
         );
