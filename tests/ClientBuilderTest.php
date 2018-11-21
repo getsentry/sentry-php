@@ -210,6 +210,38 @@ class ClientBuilderTest extends TestCase
             ['setErrorTypes', 0],
         ];
     }
+
+    public function testCompressionPluginAdded()
+    {
+        $builder = ClientBuilder::create(['encoding' => 'gzip', 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
+        $builder->getClient();
+        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
+        $reflectionProperty->setAccessible(true);
+        $foundDecoderPlugin = false;
+        foreach ($reflectionProperty->getValue($builder) as $plugin) {
+            if ($plugin instanceof Plugin\DecoderPlugin) {
+                $foundDecoderPlugin = true;
+            }
+        }
+        $this->assertTrue($foundDecoderPlugin);
+        $reflectionProperty->setAccessible(false);
+    }
+
+    public function testCompressionPluginNotAdded()
+    {
+        $builder = ClientBuilder::create(['encoding' => 'json', 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
+        $builder->getClient();
+        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
+        $reflectionProperty->setAccessible(true);
+        $foundDecoderPlugin = false;
+        foreach ($reflectionProperty->getValue($builder) as $plugin) {
+            if ($plugin instanceof Plugin\DecoderPlugin) {
+                $foundDecoderPlugin = true;
+            }
+        }
+        $this->assertFalse($foundDecoderPlugin);
+        $reflectionProperty->setAccessible(false);
+    }
 }
 
 class PluginStub1 implements Plugin
