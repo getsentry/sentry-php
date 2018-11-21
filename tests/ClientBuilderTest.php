@@ -196,7 +196,7 @@ class ClientBuilderTest extends TestCase
             ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
-            ['setEncoding', 'gzip'],
+            ['setEnableCompression', false],
             ['setCurrentEnvironment', 'test'],
             ['setEnvironments', ['default']],
             ['setExcludedLoggers', ['foo', 'bar']],
@@ -213,7 +213,7 @@ class ClientBuilderTest extends TestCase
 
     public function testCompressionPluginAdded()
     {
-        $builder = ClientBuilder::create(['encoding' => 'gzip', 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
+        $builder = ClientBuilder::create(['enableCompression' => true, 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
         $builder->getClient();
         $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
         $reflectionProperty->setAccessible(true);
@@ -229,7 +229,7 @@ class ClientBuilderTest extends TestCase
 
     public function testCompressionPluginNotAdded()
     {
-        $builder = ClientBuilder::create(['encoding' => 'json', 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
+        $builder = ClientBuilder::create(['enableCompression' => false, 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
         $builder->getClient();
         $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
         $reflectionProperty->setAccessible(true);

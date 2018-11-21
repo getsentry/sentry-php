@@ -264,7 +264,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
-        if ('gzip' === $this->options->getEncoding()) {
+        if ($this->options->isCompressionEnabled()) {
             $this->addHttpClientPlugin(new DecoderPlugin());
         }
 
