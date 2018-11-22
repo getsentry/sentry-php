@@ -245,69 +245,23 @@ class Options
     }
 
     /**
-     * Gets the current environment.
+     * Gets the environment.
      *
-     * @return string
+     * @return null|string
      */
-    public function getCurrentEnvironment(): string
+    public function getEnvironment(): ?string
     {
-        return $this->options['current_environment'];
+        return $this->options['environment'];
     }
 
     /**
-     * Sets the current environment.
+     * Sets the environment.
      *
      * @param string $environment The environment
      */
-    public function setCurrentEnvironment(string $environment): void
+    public function setEnvironment(string $environment): void
     {
-        $options = array_merge($this->options, ['current_environment' => $environment]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the whitelist of environments that will send notifications to
-     * Sentry.
-     *
-     * @return string[]
-     */
-    public function getEnvironments(): array
-    {
-        return $this->options['environments'];
-    }
-
-    /**
-     * Sets the whitelist of environments that will send notifications to
-     * Sentry.
-     *
-     * @param string[] $environments The environments
-     */
-    public function setEnvironments(array $environments): void
-    {
-        $options = array_merge($this->options, ['environments' => $environments]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the list of logger 'progname's to exclude from breadcrumbs.
-     *
-     * @return string[]
-     */
-    public function getExcludedLoggers(): array
-    {
-        return $this->options['excluded_loggers'];
-    }
-
-    /**
-     * Sets the list of logger 'progname's to exclude from breadcrumbs.
-     *
-     * @param string[] $loggers The list of logger 'progname's
-     */
-    public function setExcludedLoggers(array $loggers): void
-    {
-        $options = array_merge($this->options, ['excluded_loggers' => $loggers]);
+        $options = array_merge($this->options, ['environment' => $environment]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -663,9 +617,7 @@ class Options
             'auto_log_stacks' => true,
             'context_lines' => 3,
             'enable_compression' => true,
-            'current_environment' => 'default',
-            'environments' => [],
-            'excluded_loggers' => [],
+            'environment' => null,
             'excluded_exceptions' => [],
             'excluded_app_paths' => [],
             'project_root' => null,
@@ -692,9 +644,7 @@ class Options
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('enable_compression', 'bool');
-        $resolver->setAllowedTypes('current_environment', 'string');
-        $resolver->setAllowedTypes('environments', 'array');
-        $resolver->setAllowedTypes('excluded_loggers', 'array');
+        $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('excluded_app_paths', 'array');
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
