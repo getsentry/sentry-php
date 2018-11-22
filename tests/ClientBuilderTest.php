@@ -214,7 +214,7 @@ class ClientBuilderTest extends TestCase
     /**
      * @dataProvider getClientTogglesCompressionPluginInHttpClientDataProvider
      */
-    public function testGetClientTogglesCompressionPluginInHttpClient($enabled): void
+    public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
     {
         $builder = ClientBuilder::create(['enable_compression' => $enabled, 'dsn' => 'http://public:secret@example.com/sentry/1']);
         $builder->getClient();
