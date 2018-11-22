@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Serializer;
 
 class Serializer extends AbstractSerializer implements SerializerInterface

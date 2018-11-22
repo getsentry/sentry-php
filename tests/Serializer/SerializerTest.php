@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests\Serializer;
 
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\Serializer;
 
-class SerializerTest extends AbstractSerializerTest
+final class SerializerTest extends AbstractSerializerTest
 {
     protected function getSerializerUnderTest(): AbstractSerializer
     {
