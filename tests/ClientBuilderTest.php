@@ -212,17 +212,19 @@ class ClientBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider compressionOptionDataProvider
+     * @dataProvider getClientTogglesCompressionPluginInHttpClientDataProvider
      */
-    public function testCompressionPlugin($enabled)
+    public function testGetClientTogglesCompressionPluginInHttpClient($enabled): void
     {
         $builder = ClientBuilder::create(['enable_compression' => $enabled, 'dsn' => 'http://public:secret@example.com/sentry/1']);
         $builder->getClient();
 
         $decoderPluginFound = false;
+
         foreach ($this->getObjectAttribute($builder, 'httpClientPlugins') as $plugin) {
             if ($plugin instanceof Plugin\DecoderPlugin) {
                 $decoderPluginFound = true;
+
                 break;
             }
         }
@@ -230,7 +232,7 @@ class ClientBuilderTest extends TestCase
         $this->assertEquals($enabled, $decoderPluginFound);
     }
 
-    public function compressionOptionDataProvider()
+    public function getClientTogglesCompressionPluginInHttpClientDataProvider(): array
     {
         return [
             [true],
