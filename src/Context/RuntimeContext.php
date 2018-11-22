@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Context;
 
@@ -54,7 +47,7 @@ class RuntimeContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function merge(array $data, $recursive = false)
+    public function merge(array $data, bool $recursive = false): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -69,7 +62,7 @@ class RuntimeContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function setData(array $data)
+    public function setData(array $data): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -84,7 +77,7 @@ class RuntimeContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function replaceData(array $data)
+    public function replaceData(array $data): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -99,7 +92,7 @@ class RuntimeContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $data = $this->resolver->resolve([$offset => $value]);
 
@@ -111,7 +104,7 @@ class RuntimeContext extends Context
      *
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->data['name'];
     }
@@ -121,7 +114,7 @@ class RuntimeContext extends Context
      *
      * @param string $name The name
      */
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->offsetSet('name', $name);
     }
@@ -131,7 +124,7 @@ class RuntimeContext extends Context
      *
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         return $this->data['version'];
     }
@@ -141,7 +134,7 @@ class RuntimeContext extends Context
      *
      * @param string $version The version
      */
-    public function setVersion($version)
+    public function setVersion(string $version): void
     {
         $this->offsetSet('version', $version);
     }
@@ -151,7 +144,7 @@ class RuntimeContext extends Context
      *
      * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(OptionsResolver $resolver)
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'name' => 'php',

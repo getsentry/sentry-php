@@ -1,25 +1,19 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Spool\SpoolInterface;
 use Sentry\Transport\SpoolTransport;
 
-class SpoolTransportTest extends TestCase
+final class SpoolTransportTest extends TestCase
 {
     /**
-     * @var SpoolInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var SpoolInterface|MockObject
      */
     protected $spool;
 
@@ -28,18 +22,18 @@ class SpoolTransportTest extends TestCase
      */
     protected $transport;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->spool = $this->createMock(SpoolInterface::class);
         $this->transport = new SpoolTransport($this->spool);
     }
 
-    public function testGetSpool()
+    public function testGetSpool(): void
     {
         $this->assertSame($this->spool, $this->transport->getSpool());
     }
 
-    public function testSend()
+    public function testSend(): void
     {
         $event = new Event();
 

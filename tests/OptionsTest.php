@@ -1,25 +1,18 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Options;
 
-class OptionsTest extends TestCase
+final class OptionsTest extends TestCase
 {
     /**
      * @dataProvider optionsDataProvider
      */
-    public function testConstructor($option, $value, $getterMethod)
+    public function testConstructor($option, $value, $getterMethod): void
     {
         $configuration = new Options([$option => $value]);
 
@@ -29,7 +22,7 @@ class OptionsTest extends TestCase
     /**
      * @dataProvider optionsDataProvider
      */
-    public function testGettersAndSetters($option, $value, $getterMethod, $setterMethod = null)
+    public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
     {
         $configuration = new Options();
 
@@ -40,7 +33,7 @@ class OptionsTest extends TestCase
         $this->assertEquals($value, $configuration->$getterMethod());
     }
 
-    public function optionsDataProvider()
+    public function optionsDataProvider(): array
     {
         return [
             ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
@@ -48,7 +41,7 @@ class OptionsTest extends TestCase
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
-            ['encoding', 'json', 'getEncoding', 'setEncoding'],
+            ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['current_environment', 'foo', 'getCurrentEnvironment', 'setCurrentEnvironment'],
             ['environments', ['foo', 'bar'], 'getEnvironments', 'setEnvironments'],
             ['excluded_loggers', ['bar', 'foo'], 'getExcludedLoggers', 'setExcludedLoggers'],
@@ -69,7 +62,7 @@ class OptionsTest extends TestCase
     /**
      * @dataProvider serverOptionDataProvider
      */
-    public function testServerOption($dsn, $options)
+    public function testServerOption(string $dsn, array $options): void
     {
         $configuration = new Options(['dsn' => $dsn]);
 
@@ -79,7 +72,7 @@ class OptionsTest extends TestCase
         $this->assertEquals($options['server'], $configuration->getDsn());
     }
 
-    public function serverOptionDataProvider()
+    public function serverOptionDataProvider(): array
     {
         return [
             [
@@ -154,12 +147,12 @@ class OptionsTest extends TestCase
      * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
      * @expectedExceptionMessageRegExp /^The option "dsn" with value "(.*)" is invalid.$/
      */
-    public function testServerOptionsWithInvalidServer($dsn)
+    public function testServerOptionsWithInvalidServer(string $dsn): void
     {
         new Options(['dsn' => $dsn]);
     }
 
-    public function invalidServerOptionDataProvider()
+    public function invalidServerOptionDataProvider(): array
     {
         return [
             ['http://public:secret@/1'],

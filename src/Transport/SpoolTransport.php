@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Transport;
 
@@ -41,7 +34,7 @@ final class SpoolTransport implements TransportInterface
      *
      * @return SpoolInterface
      */
-    public function getSpool()
+    public function getSpool(): SpoolInterface
     {
         return $this->spool;
     }

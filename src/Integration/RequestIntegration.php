@@ -23,7 +23,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(function (Event $event) {
+        Scope::addGlobalEventProcessor(function (Event $event): Event {
             $self = Hub::getCurrent()->getIntegration(self::class);
 
             if (!$self instanceof self) {
@@ -37,13 +37,14 @@ final class RequestIntegration implements IntegrationInterface
     }
 
     /**
+     * Applies the information gathered by the this integration to the event.
+     *
      * @param Event                       $event   The event that will be enriched with a request
      * @param null|ServerRequestInterface $request The Request that will be processed and added to the event
      */
     public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
-            /** @var null|ServerRequestInterface $request */
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
         }
 

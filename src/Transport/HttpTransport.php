@@ -1,18 +1,10 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Transport;
 
 use Http\Client\HttpAsyncClient;
-use Http\Message\Encoding\CompressStream;
 use Http\Message\RequestFactory;
 use Http\Promise\Promise;
 use Sentry\Event;
@@ -62,11 +54,7 @@ final class HttpTransport implements TransportInterface
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
         // will be executed last
-        register_shutdown_function('register_shutdown_function', function () {
-            // When the library will support PHP 7.1+ only this closure can be
-            // replaced with a simple call to \Closure::fromCallable
-            $this->cleanupPendingRequests();
-        });
+        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'cleanupPendingRequests']));
     }
 
     /**
@@ -85,14 +73,10 @@ final class HttpTransport implements TransportInterface
     {
         $request = $this->requestFactory->createRequest(
             'POST',
-            sprintf('api/%d/store/', $this->config->getProjectId()),
-            ['Content-Type' => $this->isEncodingCompressed() ? 'application/octet-stream' : 'application/json'],
+            sprintf('/api/%d/store/', $this->config->getProjectId()),
+            ['Content-Type' => 'application/json'],
             JSON::encode($event)
         );
-
-        if ($this->isEncodingCompressed()) {
-            $request = $request->withBody(new CompressStream($request->getBody()));
-        }
 
         $promise = $this->httpClient->sendAsyncRequest($request);
 
@@ -115,25 +99,15 @@ final class HttpTransport implements TransportInterface
     }
 
     /**
-     * Checks whether the encoding is compressed.
-     *
-     * @return bool
-     */
-    private function isEncodingCompressed()
-    {
-        return 'gzip' === $this->config->getEncoding();
-    }
-
-    /**
      * Cleanups the pending requests by forcing them to be sent. Any error that
      * occurs will be ignored.
      */
-    private function cleanupPendingRequests()
+    private function cleanupPendingRequests(): void
     {
         foreach ($this->pendingRequests as $pendingRequest) {
             try {
                 $pendingRequest->wait();
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 // Do nothing because an exception thrown from a destructor
                 // can't be catched in PHP (see http://php.net/manual/en/language.oop5.decon.php#language.oop5.decon.destructor)
             }

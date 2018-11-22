@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
@@ -15,23 +8,22 @@ use Http\Client\Exception\HttpException;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Promise\Promise;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
-use Sentry\Util\JSON;
 
-class HttpTransportTest extends TestCase
+final class HttpTransportTest extends TestCase
 {
-    public function testDestructor()
+    public function testDestructor(): void
     {
-        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise1 */
+        /** @var Promise|MockObject $promise1 */
         $promise = $this->createMock(Promise::class);
         $promise->expects($this->once())
             ->method('wait');
 
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
@@ -49,20 +41,20 @@ class HttpTransportTest extends TestCase
         $transport->__destruct();
     }
 
-    public function testCleanupPendingRequests()
+    public function testCleanupPendingRequests(): void
     {
-        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise1 */
+        /** @var Promise|MockObject $promise1 */
         $promise1 = $this->createMock(Promise::class);
         $promise1->expects($this->once())
             ->method('wait')
             ->willThrowException(new \Exception());
 
-        /** @var Promise|\PHPUnit_Framework_MockObject_MockObject $promise2 */
+        /** @var Promise|MockObject $promise2 */
         $promise2 = $this->createMock(Promise::class);
         $promise2->expects($this->once())
             ->method('wait');
 
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
         $httpClient->expects($this->exactly(2))
             ->method('sendAsyncRequest')
@@ -84,78 +76,14 @@ class HttpTransportTest extends TestCase
         $reflectionMethod->setAccessible(false);
     }
 
-    public function testSendWithoutCompressedEncoding()
+    public function testSendFailureCleanupPendingRequests(): void
     {
-        $config = new Options(['encoding' => 'json']);
-        $event = new Event();
-
-        $promise = $this->createMock(Promise::class);
-        $promise->expects($this->once())
-            ->method('wait');
-
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->with($this->callback(function (RequestInterface $request) use ($event) {
-                $request->getBody()->rewind();
-
-                return 'application/json' === $request->getHeaderLine('Content-Type')
-                    && JSON::encode($event) === $request->getBody()->getContents();
-            }))
-            ->willReturn($promise);
-
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
-        $transport->send($event);
-
-        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
-        $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($transport);
-        $reflectionMethod->setAccessible(false);
-    }
-
-    public function testSendWithCompressedEncoding()
-    {
-        $config = new Options(['encoding' => 'gzip']);
-        $event = new Event();
-
-        $promise = $this->createMock(Promise::class);
-        $promise->expects($this->once())
-            ->method('wait');
-
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->with($this->callback(function (RequestInterface $request) use ($event) {
-                $request->getBody()->rewind();
-
-                $compressedPayload = gzcompress(JSON::encode($event));
-
-                $this->assertNotFalse($compressedPayload);
-
-                return 'application/octet-stream' === $request->getHeaderLine('Content-Type')
-                    && $compressedPayload === $request->getBody()->getContents();
-            }))
-            ->willReturn($promise);
-
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
-        $transport->send($event);
-
-        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
-        $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($transport);
-        $reflectionMethod->setAccessible(false);
-    }
-
-    public function testSendFailureCleanupPendingRequests()
-    {
-        /** @var HttpException|\PHPUnit_Framework_MockObject_MockObject $exception */
+        /** @var HttpException|MockObject $exception */
         $exception = $this->createMock(HttpException::class);
 
         $promise = new PromiseMock($exception, PromiseMock::REJECTED);
 
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
@@ -172,7 +100,7 @@ class HttpTransportTest extends TestCase
     }
 }
 
-class PromiseMock implements Promise
+final class PromiseMock implements Promise
 {
     private $result;
 

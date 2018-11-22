@@ -23,21 +23,21 @@ final class Handler
     {
         $integrationIndex = [];
 
+        /* @var IntegrationInterface $integration */
         foreach ($integrations as $integration) {
-            /* @var IntegrationInterface $integration */
-            $class = \get_class($integration);
+            $className = \get_class($integration);
 
             if (!$integration instanceof IntegrationInterface) {
-                throw new \InvalidArgumentException(sprintf('Expecting integration implementing %s interface, got %s', IntegrationInterface::class, $class));
+                throw new \InvalidArgumentException(sprintf('Expecting integration implementing %s interface, got %s', IntegrationInterface::class, $className));
             }
 
-            if (!isset(self::$integrations[$class])) {
-                self::$integrations[$class] = true;
+            if (!isset(self::$integrations[$className])) {
+                self::$integrations[$className] = true;
 
                 $integration->setupOnce();
             }
 
-            $integrationIndex[$class] = $integration;
+            $integrationIndex[$className] = $integration;
         }
 
         return $integrationIndex;

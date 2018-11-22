@@ -8,6 +8,7 @@ return PhpCsFixer\Config::create()
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
         'ordered_imports' => true,
+        'declare_strict_types' => true,
         'psr0' => true,
         'psr4' => true,
         'random_api_migration' => true,
@@ -23,7 +24,8 @@ return PhpCsFixer\Config::create()
             ->in(__DIR__)
             ->exclude([
                 'tests/resources',
-                'tests/phpt'
+                'tests/phpt',
+                'tests/Fixtures',
             ])
     )
 ;

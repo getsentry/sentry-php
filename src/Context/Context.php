@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Context;
 
@@ -22,27 +15,27 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * This constant defines the alias used for the user context.
      */
-    const CONTEXT_USER = 'user';
+    public const CONTEXT_USER = 'user';
 
     /**
      * This constant defines the alias used for the runtime context.
      */
-    const CONTEXT_RUNTIME = 'runtime';
+    public const CONTEXT_RUNTIME = 'runtime';
 
     /**
      * This constant defines the alias used for the tags context.
      */
-    const CONTEXT_TAGS = 'tags';
+    public const CONTEXT_TAGS = 'tags';
 
     /**
      * This constant defines the alias used for the extra context.
      */
-    const CONTEXT_EXTRA = 'extra';
+    public const CONTEXT_EXTRA = 'extra';
 
     /**
      * This constant defines the alias used for the server OS context.
      */
-    const CONTEXT_SERVER_OS = 'server_os';
+    public const CONTEXT_SERVER_OS = 'server_os';
 
     /**
      * @var array The data stored in this object
@@ -66,15 +59,17 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
      * @param array $data      The data to merge
      * @param bool  $recursive Whether to merge the data recursively or not
      */
-    public function merge(array $data, $recursive = false)
+    public function merge(array $data, bool $recursive = false): void
     {
         $this->data = $recursive ? array_merge_recursive($this->data, $data) : array_merge($this->data, $data);
     }
 
     /**
+     * Sets the given data into this object.
+     *
      * @param array $data
      */
-    public function setData(array $data)
+    public function setData(array $data): void
     {
         foreach ($data as $index => $value) {
             $this->data[$index] = $value;
@@ -86,7 +81,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
      *
      * @param array $data The data to set
      */
-    public function replaceData(array $data)
+    public function replaceData(array $data): void
     {
         $this->data = $data;
     }
@@ -94,7 +89,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * Clears the entire data contained in this object.
      */
-    public function clear()
+    public function clear(): void
     {
         $this->data = [];
     }
@@ -104,7 +99,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
      *
      * @return bool
      */
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return empty($this->data);
     }
@@ -114,7 +109,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->data;
     }
@@ -122,7 +117,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->data[$offset]) || array_key_exists($offset, $this->data);
     }
@@ -138,7 +133,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->data[$offset] = $value;
     }
@@ -146,7 +141,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->data[$offset]);
     }
@@ -154,7 +149,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
@@ -162,7 +157,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->data);
     }

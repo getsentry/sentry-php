@@ -6,7 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\State\Hub;
 use function Sentry\addBreadcrumb;
@@ -39,6 +39,7 @@ class SdkTest extends TestCase
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
         Hub::getCurrent()->bindClient($client);
+
         $this->assertEquals($client, Hub::getCurrent()->getClient());
         $this->assertEquals('92db40a886c0458288c7c83935a350ef', captureMessage('foo'));
     }
@@ -98,6 +99,7 @@ class SdkTest extends TestCase
             ->with($breadcrumb, Hub::getCurrent()->getScope());
 
         Hub::getCurrent()->bindClient($client);
+
         addBreadcrumb($breadcrumb);
     }
 

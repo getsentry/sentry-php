@@ -1,19 +1,13 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
+use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
@@ -129,9 +123,7 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = new Options($options);
 
-        if (null === $this->options->getIntegrations()) {
-            $this->integrations = [];
-        } else {
+        if (null !== $this->options->getIntegrations()) {
             $this->integrations = \array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration(),
@@ -150,7 +142,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setUriFactory(UriFactory $uriFactory)
+    public function setUriFactory(UriFactory $uriFactory): self
     {
         $this->uriFactory = $uriFactory;
 
@@ -160,7 +152,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setMessageFactory(MessageFactory $messageFactory)
+    public function setMessageFactory(MessageFactory $messageFactory): self
     {
         $this->messageFactory = $messageFactory;
 
@@ -170,7 +162,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setTransport(TransportInterface $transport)
+    public function setTransport(TransportInterface $transport): self
     {
         $this->transport = $transport;
 
@@ -180,7 +172,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setHttpClient(HttpAsyncClient $httpClient)
+    public function setHttpClient(HttpAsyncClient $httpClient): self
     {
         $this->httpClient = $httpClient;
 
@@ -190,7 +182,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addHttpClientPlugin(Plugin $plugin)
+    public function addHttpClientPlugin(Plugin $plugin): self
     {
         $this->httpClientPlugins[] = $plugin;
 
@@ -200,7 +192,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function removeHttpClientPlugin($className)
+    public function removeHttpClientPlugin(string $className): self
     {
         foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
             if (!$httpClientPlugin instanceof $className) {
@@ -268,17 +260,15 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
         }
 
-        $this->options->$name(...$arguments);
-
-        return $this;
+        return $this->options->$name(...$arguments);
     }
 
     /**
      * Creates a new instance of the HTTP client.
      *
-     * @return HttpAsyncClient
+     * @return PluginClient
      */
-    private function createHttpClientInstance()
+    private function createHttpClientInstance(): PluginClient
     {
         if (null === $this->uriFactory) {
             throw new \RuntimeException('The PSR-7 URI factory must be set.');
@@ -297,6 +287,10 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
+        if ($this->options->isCompressionEnabled()) {
+            $this->addHttpClientPlugin(new DecoderPlugin());
+        }
+
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
     }
 
@@ -305,7 +299,7 @@ final class ClientBuilder implements ClientBuilderInterface
      *
      * @return TransportInterface
      */
-    private function createTransportInstance()
+    private function createTransportInstance(): TransportInterface
     {
         if (null !== $this->transport) {
             return $this->transport;

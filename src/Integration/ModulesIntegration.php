@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use Composer\Composer;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
@@ -46,6 +45,8 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
+     * Applies the information gathered by this integration to the event.
+     *
      * @param self  $self  The instance of this integration
      * @param Event $event The event that will be enriched with the modules
      */
