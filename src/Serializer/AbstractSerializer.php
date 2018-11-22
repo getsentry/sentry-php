@@ -68,8 +68,18 @@ abstract class AbstractSerializer
      */
     protected $messageLimit;
 
-    public function __construct(int $maxDepth = 3, ?string $mbDetectOrder = null, int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
-    {
+    /**
+     * Whether the ext-mbstring PHP extension is enabled or not.
+     *
+     * @var bool
+     */
+    private $mbStringEnabled;
+
+    public function __construct(
+        int $maxDepth = 3,
+        ?string $mbDetectOrder = null,
+        int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT
+    ) {
         $this->maxDepth = $maxDepth;
         if (null != $mbDetectOrder) {
             $this->mbDetectOrder = $mbDetectOrder;
@@ -88,24 +98,26 @@ abstract class AbstractSerializer
      */
     protected function serializeRecursively($value, int $_depth = 0)
     {
-        if ($_depth < $this->maxDepth) {
-            if (\is_callable($value)) {
-                return $this->serializeCallable($value);
+        if ($_depth >= $this->maxDepth) {
+            return $this->serializeValue($value);
+        }
+
+        if (\is_callable($value)) {
+            return $this->serializeCallable($value);
+        }
+
+        if (\is_array($value)) {
+            $serializedArray = [];
+            foreach ($value as $k => $v) {
+                $serializedArray[$k] = $this->serializeRecursively($v, $_depth + 1);
             }
 
-            if (\is_array($value)) {
-                $new = [];
-                foreach ($value as $k => $v) {
-                    $new[$this->serializeValue($k)] = $this->serializeRecursively($v, $_depth + 1);
-                }
+            return $serializedArray;
+        }
 
-                return $new;
-            }
-
-            if (\is_object($value)) {
-                if ($this->serializeAllObjects || ('stdClass' === \get_class($value))) {
-                    return $this->serializeObject($value, $_depth, []);
-                }
+        if (\is_object($value)) {
+            if ($this->serializeAllObjects || ('stdClass' === \get_class($value))) {
+                return $this->serializeObject($value, $_depth, []);
             }
         }
 
@@ -126,24 +138,23 @@ abstract class AbstractSerializer
         }
 
         $hashes[] = spl_object_hash($object);
-        $return = [];
+        $serializedObject = [];
         foreach ($object as $key => &$value) {
             if (\is_object($value)) {
-                $new_value = $this->serializeObject($value, $_depth + 1, $hashes);
+                $serializedObject[$key] = $this->serializeObject($value, $_depth + 1, $hashes);
             } else {
-                $new_value = $this->serializeRecursively($value, $_depth + 1);
+                $serializedObject[$key] = $this->serializeRecursively($value, $_depth + 1);
             }
-            $return[$key] = $new_value;
         }
 
-        return $return;
+        return $serializedObject;
     }
 
     protected function serializeString($value)
     {
         $value = (string) $value;
 
-        if (\extension_loaded('mbstring')) {
+        if ($this->isMbStringEnabled()) {
             // we always guarantee this is coerced, even if we can't detect encoding
             if ($currentEncoding = \mb_detect_encoding($value, $this->mbDetectOrder)) {
                 $value = \mb_convert_encoding($value, 'UTF-8', $currentEncoding);
@@ -170,11 +181,11 @@ abstract class AbstractSerializer
      */
     protected function serializeValue($value)
     {
-        if ((null === $value) || \is_bool($value) || \is_float($value) || \is_int($value)) {
+        if ((null === $value) || \is_bool($value) || \is_numeric($value)) {
             return $value;
         }
 
-        if (\is_object($value) || 'object' == \gettype($value)) {
+        if (\is_object($value)) {
             return 'Object ' . \get_class($value);
         }
 
@@ -307,5 +318,14 @@ abstract class AbstractSerializer
         $this->messageLimit = $messageLimit;
 
         return $this;
+    }
+
+    private function isMbStringEnabled(): bool
+    {
+        if (null === $this->mbStringEnabled) {
+            $this->mbStringEnabled = \extension_loaded('mbstring');
+        }
+
+        return $this->mbStringEnabled;
     }
 }

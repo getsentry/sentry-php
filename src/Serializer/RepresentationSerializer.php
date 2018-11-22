@@ -19,13 +19,21 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
     {
         if (null === $value) {
             return 'null';
-        } elseif (false === $value) {
+        }
+
+        if (false === $value) {
             return 'false';
-        } elseif (true === $value) {
+        }
+
+        if (true === $value) {
             return 'true';
-        } elseif (\is_float($value) && (int) $value == $value) {
+        }
+
+        if (\is_float($value) && (int) $value == $value) {
             return $value . '.0';
-        } elseif (\is_numeric($value)) {
+        }
+
+        if (\is_numeric($value)) {
             return (string) $value;
         }
 
