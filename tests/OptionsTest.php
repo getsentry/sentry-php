@@ -52,7 +52,7 @@ class OptionsTest extends TestCase
             ['mb_detect_order', ['UTF-8'], 'getMbDetectOrder', 'setMbDetectOrder'],
             ['auto_log_stacks', false, 'getAutoLogStacks', 'setAutoLogStacks'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
-            ['enableCompression', false, 'isCompressionEnabled', 'setEnableCompression'],
+            ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['current_environment', 'foo', 'getCurrentEnvironment', 'setCurrentEnvironment'],
             ['environments', ['foo', 'bar'], 'getEnvironments', 'setEnvironments'],
             ['excluded_loggers', ['bar', 'foo'], 'getExcludedLoggers', 'setExcludedLoggers'],

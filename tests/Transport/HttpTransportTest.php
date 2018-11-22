@@ -86,7 +86,7 @@ class HttpTransportTest extends TestCase
 
     public function testSendWithoutCompressedEncoding()
     {
-        $config = new Options(['enableCompression' => false]);
+        $config = new Options(['enable_compression' => false]);
         $event = new Event();
 
         $promise = $this->createMock(Promise::class);

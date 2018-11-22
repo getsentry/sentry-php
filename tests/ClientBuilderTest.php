@@ -211,36 +211,31 @@ class ClientBuilderTest extends TestCase
         ];
     }
 
-    public function testCompressionPluginAdded()
+    /**
+     * @dataProvider compressionOptionDataProvider
+     */
+    public function testCompressionPlugin($enabled)
     {
-        $builder = ClientBuilder::create(['enableCompression' => true, 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
+        $builder = ClientBuilder::create(['enable_compression' => $enabled, 'dsn' => 'http://public:secret@example.com/sentry/1']);
         $builder->getClient();
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
-        $reflectionProperty->setAccessible(true);
-        $foundDecoderPlugin = false;
-        foreach ($reflectionProperty->getValue($builder) as $plugin) {
+
+        $decoderPluginFound = false;
+        foreach ($this->getObjectAttribute($builder, 'httpClientPlugins') as $plugin) {
             if ($plugin instanceof Plugin\DecoderPlugin) {
-                $foundDecoderPlugin = true;
+                $decoderPluginFound = true;
+                break;
             }
         }
-        $this->assertTrue($foundDecoderPlugin);
-        $reflectionProperty->setAccessible(false);
+
+        $this->assertEquals($enabled, $decoderPluginFound);
     }
 
-    public function testCompressionPluginNotAdded()
+    public function compressionOptionDataProvider()
     {
-        $builder = ClientBuilder::create(['enableCompression' => false, 'dsn' => 'https://completelyrandom@dsn.asdf/42']);
-        $builder->getClient();
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'httpClientPlugins');
-        $reflectionProperty->setAccessible(true);
-        $foundDecoderPlugin = false;
-        foreach ($reflectionProperty->getValue($builder) as $plugin) {
-            if ($plugin instanceof Plugin\DecoderPlugin) {
-                $foundDecoderPlugin = true;
-            }
-        }
-        $this->assertFalse($foundDecoderPlugin);
-        $reflectionProperty->setAccessible(false);
+        return [
+            [true],
+            [false],
+        ];
     }
 }
 

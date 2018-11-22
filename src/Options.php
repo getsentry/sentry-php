@@ -233,23 +233,23 @@ class Options
     }
 
     /**
-     * Returns is compression is enabled.
+     * Returns whether the requests should be compressed using GZIP or not.
      *
      * @return bool
      */
     public function isCompressionEnabled(): bool
     {
-        return $this->options['enableCompression'];
+        return $this->options['enable_compression'];
     }
 
     /**
-     * Sets if the request should be compressed or not.
+     * Sets whether the request should be compressed using JSON or not.
      *
-     * @param bool $enabled Should compression be enabled
+     * @param bool $enabled Flag indicating whether the request should be compressed
      */
     public function setEnableCompression(bool $enabled): void
     {
-        $options = array_merge($this->options, ['enableCompression' => $enabled]);
+        $options = array_merge($this->options, ['enable_compression' => $enabled]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -672,7 +672,7 @@ class Options
             'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
-            'enableCompression' => true,
+            'enable_compression' => true,
             'current_environment' => 'default',
             'environments' => [],
             'excluded_loggers' => [],
@@ -701,7 +701,7 @@ class Options
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
-        $resolver->setAllowedTypes('enableCompression', 'bool');
+        $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('current_environment', 'string');
         $resolver->setAllowedTypes('environments', 'array');
         $resolver->setAllowedTypes('excluded_loggers', 'array');
