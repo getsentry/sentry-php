@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests;
 
@@ -16,6 +9,7 @@ use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
@@ -25,16 +19,16 @@ use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
 
-class ClientBuilderTest extends TestCase
+final class ClientBuilderTest extends TestCase
 {
-    public function testCreate()
+    public function testCreate(): void
     {
         $clientBuilder = ClientBuilder::create();
 
         $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
     }
 
-    public function testHttpTransportIsUsedWhenServeIsConfigured()
+    public function testHttpTransportIsUsedWhenServeIsConfigured(): void
     {
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
 
@@ -43,7 +37,7 @@ class ClientBuilderTest extends TestCase
         $this->assertInstanceOf(HttpTransport::class, $transport);
     }
 
-    public function testNullTransportIsUsedWhenNoServerIsConfigured()
+    public function testNullTransportIsUsedWhenNoServerIsConfigured(): void
     {
         $clientBuilder = new ClientBuilder();
 
@@ -52,9 +46,9 @@ class ClientBuilderTest extends TestCase
         $this->assertInstanceOf(NullTransport::class, $transport);
     }
 
-    public function testSetUriFactory()
+    public function testSetUriFactory(): void
     {
-        /** @var UriFactory|\PHPUnit_Framework_MockObject_MockObject $uriFactory */
+        /** @var UriFactory|MockObject $uriFactory */
         $uriFactory = $this->createMock(UriFactory::class);
 
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -63,9 +57,9 @@ class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
     }
 
-    public function testSetMessageFactory()
+    public function testSetMessageFactory(): void
     {
-        /** @var MessageFactory|\PHPUnit_Framework_MockObject_MockObject $messageFactory */
+        /** @var MessageFactory|MockObject $messageFactory */
         $messageFactory = $this->createMock(MessageFactory::class);
 
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -78,9 +72,9 @@ class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($messageFactory, 'requestFactory', $transport);
     }
 
-    public function testSetTransport()
+    public function testSetTransport(): void
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -90,9 +84,9 @@ class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($transport, 'transport', $clientBuilder->getClient());
     }
 
-    public function testSetHttpClient()
+    public function testSetHttpClient(): void
     {
-        /** @var HttpAsyncClient|\PHPUnit_Framework_MockObject_MockObject $httpClient */
+        /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
 
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -105,9 +99,9 @@ class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($httpClient, 'client', $this->getObjectAttribute($transport, 'httpClient'));
     }
 
-    public function testAddHttpClientPlugin()
+    public function testAddHttpClientPlugin(): void
     {
-        /** @var Plugin|\PHPUnit_Framework_MockObject_MockObject $plugin */
+        /** @var Plugin|MockObject $plugin */
         $plugin = $this->createMock(Plugin::class);
 
         $clientBuilder = new ClientBuilder();
@@ -119,7 +113,7 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin, $plugins[0]);
     }
 
-    public function testRemoveHttpClientPlugin()
+    public function testRemoveHttpClientPlugin(): void
     {
         $plugin = new PluginStub1();
         $plugin2 = new PluginStub2();
@@ -139,7 +133,7 @@ class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
-    public function testGetClient()
+    public function testGetClient(): void
     {
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $client = $clientBuilder->getClient();
@@ -161,7 +155,7 @@ class ClientBuilderTest extends TestCase
      * @expectedException \BadMethodCallException
      * @expectedExceptionMessage The method named "methodThatDoesNotExists" does not exists.
      */
-    public function testCallInvalidMethodThrowsException()
+    public function testCallInvalidMethodThrowsException(): void
     {
         $clientBuilder = new ClientBuilder();
         $clientBuilder->methodThatDoesNotExists();
@@ -170,7 +164,7 @@ class ClientBuilderTest extends TestCase
     /**
      * @dataProvider optionsDataProvider
      */
-    public function testCallExistingMethodForwardsCallToConfiguration($setterMethod, $value)
+    public function testCallExistingMethodForwardsCallToConfiguration(string $setterMethod, $value): void
     {
         $options = $this->createMock(Options::class);
         $options->expects($this->once())
@@ -187,7 +181,7 @@ class ClientBuilderTest extends TestCase
         $clientBuilder->$setterMethod($value);
     }
 
-    public function optionsDataProvider()
+    public function optionsDataProvider(): array
     {
         return [
             ['setPrefixes', ['foo', 'bar']],
@@ -241,14 +235,14 @@ class ClientBuilderTest extends TestCase
     }
 }
 
-class PluginStub1 implements Plugin
+final class PluginStub1 implements Plugin
 {
     public function handleRequest(RequestInterface $request, callable $next, callable $first)
     {
     }
 }
 
-class PluginStub2 implements Plugin
+final class PluginStub2 implements Plugin
 {
     public function handleRequest(RequestInterface $request, callable $next, callable $first)
     {

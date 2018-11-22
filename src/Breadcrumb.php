@@ -1,15 +1,8 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
-namespace Sentry\Breadcrumbs;
+namespace Sentry;
 
 use Sentry\Exception\InvalidArgumentException;
 
@@ -116,7 +109,7 @@ final class Breadcrumb implements \JsonSerializable
      * @param string|null $message  Optional text message
      * @param array       $metadata Additional information about the breadcrumb
      */
-    public function __construct($level, $type, $category, $message = null, array $metadata = [])
+    public function __construct(string $level, string $type, string $category, ?string $message = null, array $metadata = [])
     {
         if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
@@ -128,22 +121,6 @@ final class Breadcrumb implements \JsonSerializable
         $this->message = $message;
         $this->metadata = $metadata;
         $this->timestamp = microtime(true);
-    }
-
-    /**
-     * Creates a new instance of this class configured with the given params.
-     *
-     * @param string      $level    The error level of the breadcrumb
-     * @param string      $type     The type of the breadcrumb
-     * @param string      $category The category of the breadcrumb
-     * @param string|null $message  Optional text message
-     * @param array       $metadata Additional information about the breadcrumb
-     *
-     * @return static
-     */
-    public static function create($level, $type, $category, $message = null, array $metadata = [])
-    {
-        return new static($level, $type, $category, $message, $metadata);
     }
 
     /**
@@ -186,7 +163,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -198,7 +175,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public function withType($type)
+    public function withType(string $type): self
     {
         if ($type === $this->type) {
             return $this;
@@ -215,7 +192,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return string
      */
-    public function getLevel()
+    public function getLevel(): string
     {
         return $this->level;
     }
@@ -227,7 +204,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public function withLevel($level)
+    public function withLevel(string $level): self
     {
         if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
             throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
@@ -248,7 +225,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return string
      */
-    public function getCategory()
+    public function getCategory(): string
     {
         return $this->category;
     }
@@ -260,7 +237,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public function withCategory($category)
+    public function withCategory(string $category): self
     {
         if ($category === $this->category) {
             return $this;
@@ -277,7 +254,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return string|null
      */
-    public function getMessage()
+    public function getMessage(): ?string
     {
         return $this->message;
     }
@@ -289,7 +266,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public function withMessage($message)
+    public function withMessage(string $message): self
     {
         if ($message === $this->message) {
             return $this;
@@ -306,7 +283,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return array
      */
-    public function getMetadata()
+    public function getMetadata(): array
     {
         return $this->metadata;
     }
@@ -320,7 +297,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static
      */
-    public function withMetadata($name, $value)
+    public function withMetadata(string $name, $value): self
     {
         if (isset($this->metadata[$name]) && $value === $this->metadata[$name]) {
             return $this;
@@ -340,7 +317,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return static|Breadcrumb
      */
-    public function withoutMetadata($name)
+    public function withoutMetadata(string $name): self
     {
         if (!isset($this->metadata[$name])) {
             return $this;
@@ -358,28 +335,9 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return float
      */
-    public function getTimestamp()
+    public function getTimestamp(): float
     {
         return $this->timestamp;
-    }
-
-    /**
-     * Sets the breadcrumb timestamp.
-     *
-     * @param float $timestamp the timestamp
-     *
-     * @return static
-     */
-    public function withTimestamp($timestamp)
-    {
-        if ($timestamp === $this->timestamp) {
-            return $this;
-        }
-
-        $new = clone $this;
-        $new->timestamp = $timestamp;
-
-        return $new;
     }
 
     /**
@@ -387,7 +345,7 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'type' => $this->type,
@@ -402,7 +360,7 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

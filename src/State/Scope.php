@@ -1,19 +1,10 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Sentry\State;
 
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\Context\Context;
 use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;

@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Context;
 
@@ -53,7 +46,7 @@ class ServerOsContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function merge(array $data, $recursive = false)
+    public function merge(array $data, bool $recursive = false): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -68,7 +61,7 @@ class ServerOsContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function setData(array $data)
+    public function setData(array $data): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -83,7 +76,7 @@ class ServerOsContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function replaceData(array $data)
+    public function replaceData(array $data): void
     {
         $data = $this->resolver->resolve($data);
 
@@ -98,7 +91,7 @@ class ServerOsContext extends Context
      * @throws InvalidOptionsException   If any of the options don't fulfill the
      *                                   specified validation rules
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $data = $this->resolver->resolve([$offset => $value]);
 
@@ -110,7 +103,7 @@ class ServerOsContext extends Context
      *
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->data['name'];
     }
@@ -120,7 +113,7 @@ class ServerOsContext extends Context
      *
      * @param string $name The name
      */
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->offsetSet('name', $name);
     }
@@ -130,7 +123,7 @@ class ServerOsContext extends Context
      *
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         return $this->data['version'];
     }
@@ -140,7 +133,7 @@ class ServerOsContext extends Context
      *
      * @param string $version The version
      */
-    public function setVersion($version)
+    public function setVersion(string $version): void
     {
         $this->offsetSet('version', $version);
     }
@@ -150,7 +143,7 @@ class ServerOsContext extends Context
      *
      * @return string
      */
-    public function getBuild()
+    public function getBuild(): string
     {
         return $this->data['build'];
     }
@@ -160,7 +153,7 @@ class ServerOsContext extends Context
      *
      * @param string $build The build
      */
-    public function setBuild($build)
+    public function setBuild(string $build): void
     {
         $this->offsetSet('build', $build);
     }
@@ -170,7 +163,7 @@ class ServerOsContext extends Context
      *
      * @return string
      */
-    public function getKernelVersion()
+    public function getKernelVersion(): string
     {
         return $this->data['kernel_version'];
     }
@@ -180,7 +173,7 @@ class ServerOsContext extends Context
      *
      * @param string $kernelVersion The kernel version
      */
-    public function setKernelVersion($kernelVersion)
+    public function setKernelVersion(string $kernelVersion): void
     {
         $this->offsetSet('kernel_version', $kernelVersion);
     }
@@ -190,7 +183,7 @@ class ServerOsContext extends Context
      *
      * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(OptionsResolver $resolver)
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'name' => php_uname('s'),

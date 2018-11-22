@@ -1,20 +1,11 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\Severity;
 use Sentry\State\Scope;
@@ -122,7 +113,7 @@ final class ScopeTest extends TestCase
         $this->assertSame($event, $scope->applyToEvent($event, []));
         $this->assertTrue($callback1Called);
 
-        $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called): ?Event {
+        $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called) {
             $this->assertTrue($callback1Called);
             $this->assertFalse($callback3Called);
 
@@ -131,7 +122,7 @@ final class ScopeTest extends TestCase
             return null;
         });
 
-        $scope->addEventProcessor(function () use (&$callback3Called): ?Event {
+        $scope->addEventProcessor(function () use (&$callback3Called) {
             $callback3Called = true;
 
             return null;

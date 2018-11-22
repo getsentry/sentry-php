@@ -1,48 +1,40 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\Spool;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Spool\MemorySpool;
 use Sentry\Transport\TransportInterface;
 
-class MemorySpoolTest extends TestCase
+final class MemorySpoolTest extends TestCase
 {
     /**
      * @var MemorySpool
      */
     protected $spool;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->spool = new MemorySpool();
     }
 
-    public function testQueueEvent()
+    public function testQueueEvent(): void
     {
         $this->assertAttributeEmpty('events', $this->spool);
-
-        $this->spool->queueEvent(new Event());
-
+        $this->assertTrue($this->spool->queueEvent(new Event()));
         $this->assertAttributeNotEmpty('events', $this->spool);
     }
 
-    public function testFlushQueue()
+    public function testFlushQueue(): void
     {
         $event1 = new Event();
         $event2 = new Event();
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->exactly(2))
             ->method('send')
@@ -56,9 +48,9 @@ class MemorySpoolTest extends TestCase
         $this->assertAttributeEmpty('events', $this->spool);
     }
 
-    public function testFlushQueueWithEmptyQueue()
+    public function testFlushQueueWithEmptyQueue(): void
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
             ->method('send');

@@ -1,16 +1,10 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests\HttpClient\Authentication;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
@@ -20,18 +14,18 @@ use Sentry\Options;
 /**
  * @group time-sensitive
  */
-class SentryAuthTest extends TestCase
+final class SentryAuthTest extends TestCase
 {
-    public function testAuthenticate()
+    public function testAuthenticate(): void
     {
         $configuration = new Options(['dsn' => 'http://public:secret@example.com/']);
         $authentication = new SentryAuth($configuration);
 
-        /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */
+        /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)
             ->getMock();
 
-        /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $newRequest */
+        /** @var RequestInterface|MockObject $newRequest */
         $newRequest = $this->getMockBuilder(RequestInterface::class)
             ->getMock();
 
@@ -50,16 +44,16 @@ class SentryAuthTest extends TestCase
         $this->assertSame($newRequest, $authentication->authenticate($request));
     }
 
-    public function testAuthenticateWithNoSecretKey()
+    public function testAuthenticateWithNoSecretKey(): void
     {
         $configuration = new Options(['dsn' => 'http://public@example.com/']);
         $authentication = new SentryAuth($configuration);
 
-        /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $request */
+        /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)
             ->getMock();
 
-        /** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject $newRequest */
+        /** @var RequestInterface|MockObject $newRequest */
         $newRequest = $this->getMockBuilder(RequestInterface::class)
             ->getMock();
 

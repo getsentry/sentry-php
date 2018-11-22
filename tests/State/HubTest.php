@@ -1,21 +1,12 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
 namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Severity;
 use Sentry\State\Hub;

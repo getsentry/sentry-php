@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Spool;
 
@@ -29,15 +22,17 @@ final class MemorySpool implements SpoolInterface
     /**
      * {@inheritdoc}
      */
-    public function queueEvent(Event $event)
+    public function queueEvent(Event $event): bool
     {
         $this->events[] = $event;
+
+        return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function flushQueue(TransportInterface $transport)
+    public function flushQueue(TransportInterface $transport): void
     {
         if (empty($this->events)) {
             return;

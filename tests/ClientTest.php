@@ -1,18 +1,13 @@
 <?php
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
+declare(strict_types=1);
 
 namespace Sentry\Tests;
 
 use Http\Mock\Client as MockClient;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumbs\Breadcrumb;
+use Sentry\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
@@ -31,7 +26,7 @@ class ClientTest extends TestCase
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
         $transport->expects($this->once())
@@ -51,7 +46,7 @@ class ClientTest extends TestCase
 
     public function testTransactionEventAttributeIsNotPopulatedInCli()
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
         $transport->expects($this->once())
@@ -68,7 +63,7 @@ class ClientTest extends TestCase
 
     public function testCaptureMessage()
     {
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        /** @var Client|MockObject $client */
         $client = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
             ->setMethodsExcept(['captureMessage'])
@@ -88,7 +83,7 @@ class ClientTest extends TestCase
     {
         $exception = new \Exception();
 
-        /** @var Client|\PHPUnit_Framework_MockObject_MockObject $client */
+        /** @var Client|MockObject $client */
         $client = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
             ->setMethodsExcept(['captureException'])
@@ -105,7 +100,7 @@ class ClientTest extends TestCase
 
     public function testCapture()
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -129,7 +124,7 @@ class ClientTest extends TestCase
 
     public function testCaptureLastError()
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -155,7 +150,7 @@ class ClientTest extends TestCase
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
             ->method('send');
@@ -191,7 +186,7 @@ class ClientTest extends TestCase
     {
         $beforeSendCalled = false;
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
             ->method('send');
@@ -330,7 +325,7 @@ class ClientTest extends TestCase
 
     public function testHandlingExceptionThrowingAnException()
     {
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -357,7 +352,7 @@ class ClientTest extends TestCase
 
         $assertHasStacktrace = $options->getAutoLogStacks();
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -463,7 +458,7 @@ class ClientTest extends TestCase
         $utf8String = 'äöü';
         $latin1String = utf8_decode($utf8String);
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -488,7 +483,7 @@ class ClientTest extends TestCase
     {
         $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -516,7 +511,7 @@ class ClientTest extends TestCase
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
         ]);
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -555,7 +550,7 @@ class ClientTest extends TestCase
     {
         $options = new Options(['auto_log_stacks' => false]);
 
-        /** @var TransportInterface|\PHPUnit_Framework_MockObject_MockObject $transport */
+        /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')

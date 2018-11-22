@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 
-class ModulesIntegrationTest extends TestCase
+final class ModulesIntegrationTest extends TestCase
 {
-    public function testInvoke()
+    public function testInvoke(): void
     {
         $event = new Event();
         $integration = new ModulesIntegration();

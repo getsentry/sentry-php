@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry;
 
@@ -79,7 +72,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return static
      */
-    public static function createFromBacktrace(Options $options, Serializer $serializer, ReprSerializer $representationSerializer, array $backtrace, $file, $line)
+    public static function createFromBacktrace(Options $options, Serializer $serializer, ReprSerializer $representationSerializer, array $backtrace, string $file, int $line): self
     {
         $stacktrace = new static($options, $serializer, $representationSerializer);
 
@@ -101,7 +94,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return Frame[]
      */
-    public function getFrames()
+    public function getFrames(): array
     {
         return $this->frames;
     }
@@ -113,7 +106,7 @@ class Stacktrace implements \JsonSerializable
      * @param int    $line           The line at which the frame originated
      * @param array  $backtraceFrame The data of the frame to add
      */
-    public function addFrame($file, $line, array $backtraceFrame)
+    public function addFrame(string $file, int $line, array $backtraceFrame): void
     {
         // The $file argument can be any of these formats:
         // </path/to/filename>
@@ -121,7 +114,7 @@ class Stacktrace implements \JsonSerializable
         // </path/to/filename>(<line number>) : runtime-created function
         if (preg_match('/^(.*)\((\d+)\) : (?:eval\(\)\'d code|runtime-created function)$/', $file, $matches)) {
             $file = $matches[1];
-            $line = $matches[2];
+            $line = (int) $matches[2];
         }
 
         if (isset($backtraceFrame['class'])) {
@@ -132,7 +125,7 @@ class Stacktrace implements \JsonSerializable
             $functionName = null;
         }
 
-        $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), (int) $line);
+        $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), $line);
         $sourceCodeExcerpt = self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES);
 
         if (isset($sourceCodeExcerpt['pre_context'])) {
@@ -189,7 +182,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @throws \OutOfBoundsException If the index is out of range
      */
-    public function removeFrame($index)
+    public function removeFrame(int $index): void
     {
         if (!isset($this->frames[$index])) {
             throw new \OutOfBoundsException('Invalid frame index to remove.');
@@ -204,7 +197,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return Frame[]
      */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->frames;
     }
@@ -220,13 +213,13 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets an excerpt of the source code around a given line.
      *
-     * @param string $path       The file path
-     * @param int    $lineNumber The line to centre about
-     * @param int    $linesNum   The number of lines to fetch
+     * @param string $path            The file path
+     * @param int    $lineNumber      The line to centre about
+     * @param int    $maxLinesToFetch The maximum number of lines to fetch
      *
      * @return array
      */
-    protected function getSourceCodeExcerpt($path, $lineNumber, $linesNum)
+    protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
         if (!is_file($path) || !is_readable($path)) {
             return [];
@@ -238,7 +231,7 @@ class Stacktrace implements \JsonSerializable
             'post_context' => [],
         ];
 
-        $target = max(0, ($lineNumber - ($linesNum + 1)));
+        $target = max(0, ($lineNumber - ($maxLinesToFetch + 1)));
         $currentLineNumber = $target + 1;
 
         try {
@@ -246,9 +239,9 @@ class Stacktrace implements \JsonSerializable
             $file->seek($target);
 
             while (!$file->eof()) {
-                /** @var string $row */
-                $row = $file->current();
-                $line = rtrim($row, "\r\n");
+                /** @var string $line */
+                $line = $file->current();
+                $line = rtrim($line, "\r\n");
 
                 if ($currentLineNumber == $lineNumber) {
                     $frame['context_line'] = $line;
@@ -260,16 +253,16 @@ class Stacktrace implements \JsonSerializable
 
                 ++$currentLineNumber;
 
-                if ($currentLineNumber > $lineNumber + $linesNum) {
+                if ($currentLineNumber > $lineNumber + $maxLinesToFetch) {
                     break;
                 }
 
                 $file->next();
             }
-            // @codeCoverageIgnoreStart
-        } catch (\Exception $ex) {
+        } catch (\Exception $exception) {
+            // Do nothing, if any error occurs while trying to get the excerpts
+            // it's not a drama
         }
-        // @codeCoverageIgnoreEnd
 
         $frame['pre_context'] = $this->serializer->serialize($frame['pre_context']);
         $frame['context_line'] = $this->serializer->serialize($frame['context_line']);
@@ -285,7 +278,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return string
      */
-    protected function stripPrefixFromFilePath($filePath)
+    protected function stripPrefixFromFilePath(string $filePath): string
     {
         foreach ($this->options->getPrefixes() as $prefix) {
             if (0 === strpos($filePath, $prefix)) {
@@ -304,7 +297,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    protected static function getFrameArgumentsValues($frame, $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    protected static function getFrameArgumentsValues(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT): array
     {
         if (!isset($frame['args'])) {
             return [];
@@ -327,7 +320,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    public static function getFrameArguments($frame, $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    public static function getFrameArguments(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
     {
         if (!isset($frame['args'])) {
             return [];
@@ -396,7 +389,7 @@ class Stacktrace implements \JsonSerializable
         return $args;
     }
 
-    protected static function serializeArgument($arg, $maxValueLength)
+    protected static function serializeArgument($arg, int $maxValueLength)
     {
         if (\is_array($arg)) {
             $result = [];

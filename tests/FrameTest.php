@@ -1,22 +1,15 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Frame;
 
-class FrameTest extends TestCase
+final class FrameTest extends TestCase
 {
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $frame = new Frame('foo', 'bar', 10);
 
@@ -28,7 +21,7 @@ class FrameTest extends TestCase
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
-    public function testGettersAndSetters($getterMethod, $setterMethod, $expectedData)
+    public function testGettersAndSetters(string $getterMethod, string $setterMethod, $expectedData): void
     {
         $frame = new Frame('foo', 'bar', 10);
         $frame->$setterMethod($expectedData);
@@ -36,7 +29,7 @@ class FrameTest extends TestCase
         $this->assertEquals($expectedData, $frame->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider()
+    public function gettersAndSettersDataProvider(): array
     {
         return [
             ['getPreContext', 'setPreContext', ['foo' => 'bar', 'bar' => 'baz']],
@@ -50,7 +43,7 @@ class FrameTest extends TestCase
     /**
      * @dataProvider toArrayAndJsonSerializeDataProvider
      */
-    public function testToArrayAndJsonSerialize($setterMethod, $expectedDataKey, $expectedData)
+    public function testToArrayAndJsonSerialize(string $setterMethod, string $expectedDataKey, $expectedData): void
     {
         $frame = new Frame('foo', 'bar', 10);
         $frame->$setterMethod($expectedData);
@@ -66,7 +59,7 @@ class FrameTest extends TestCase
         $this->assertArraySubset($expectedResult, $frame->jsonSerialize());
     }
 
-    public function toArrayAndJsonSerializeDataProvider()
+    public function toArrayAndJsonSerializeDataProvider(): array
     {
         return [
             ['setPreContext', 'pre_context', ['foo' => 'bar']],

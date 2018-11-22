@@ -1,13 +1,6 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry;
 
@@ -19,7 +12,7 @@ namespace Sentry;
 final class Frame implements \JsonSerializable
 {
     /**
-     * @var string The name of the function being called
+     * @var string|null The name of the function being called
      */
     private $functionName;
 
@@ -66,11 +59,11 @@ final class Frame implements \JsonSerializable
     /**
      * Initializes a new instance of this class using the provided information.
      *
-     * @param string $functionName The name of the function being called
-     * @param string $file         The file where the frame originated
-     * @param int    $line         The line at which the frame originated
+     * @param string|null $functionName The name of the function being called
+     * @param string      $file         The file where the frame originated
+     * @param int         $line         The line at which the frame originated
      */
-    public function __construct($functionName, $file, $line)
+    public function __construct(?string $functionName, string $file, int $line)
     {
         $this->functionName = $functionName;
         $this->file = $file;
@@ -80,9 +73,9 @@ final class Frame implements \JsonSerializable
     /**
      * Gets the name of the function being called.
      *
-     * @return string
+     * @return string|null
      */
-    public function getFunctionName()
+    public function getFunctionName(): ?string
     {
         return $this->functionName;
     }
@@ -92,7 +85,7 @@ final class Frame implements \JsonSerializable
      *
      * @return string
      */
-    public function getFile()
+    public function getFile(): string
     {
         return $this->file;
     }
@@ -102,7 +95,7 @@ final class Frame implements \JsonSerializable
      *
      * @return int
      */
-    public function getLine()
+    public function getLine(): int
     {
         return $this->line;
     }
@@ -112,7 +105,7 @@ final class Frame implements \JsonSerializable
      *
      * @return string[]
      */
-    public function getPreContext()
+    public function getPreContext(): array
     {
         return $this->preContext;
     }
@@ -122,7 +115,7 @@ final class Frame implements \JsonSerializable
      *
      * @param string[] $preContext The source code lines
      */
-    public function setPreContext(array $preContext)
+    public function setPreContext(array $preContext): void
     {
         $this->preContext = $preContext;
     }
@@ -133,7 +126,7 @@ final class Frame implements \JsonSerializable
      *
      * @return string|null
      */
-    public function getContextLine()
+    public function getContextLine(): ?string
     {
         return $this->contextLine;
     }
@@ -144,7 +137,7 @@ final class Frame implements \JsonSerializable
      *
      * @param string|null $contextLine The source code line
      */
-    public function setContextLine($contextLine)
+    public function setContextLine(?string $contextLine): void
     {
         $this->contextLine = $contextLine;
     }
@@ -154,7 +147,7 @@ final class Frame implements \JsonSerializable
      *
      * @return string[]
      */
-    public function getPostContext()
+    public function getPostContext(): array
     {
         return $this->postContext;
     }
@@ -164,7 +157,7 @@ final class Frame implements \JsonSerializable
      *
      * @param string[] $postContext The source code lines
      */
-    public function setPostContext(array $postContext)
+    public function setPostContext(array $postContext): void
     {
         $this->postContext = $postContext;
     }
@@ -175,7 +168,7 @@ final class Frame implements \JsonSerializable
      *
      * @return bool
      */
-    public function isInApp()
+    public function isInApp(): bool
     {
         return $this->inApp;
     }
@@ -186,7 +179,7 @@ final class Frame implements \JsonSerializable
      *
      * @param bool $inApp flag indicating whether the frame is application-related
      */
-    public function setIsInApp(bool $inApp)
+    public function setIsInApp(bool $inApp): void
     {
         $this->inApp = $inApp;
     }
@@ -197,7 +190,7 @@ final class Frame implements \JsonSerializable
      *
      * @return array
      */
-    public function getVars()
+    public function getVars(): array
     {
         return $this->vars;
     }
@@ -208,7 +201,7 @@ final class Frame implements \JsonSerializable
      *
      * @param array $vars The variables
      */
-    public function setVars(array $vars)
+    public function setVars(array $vars): void
     {
         $this->vars = $vars;
     }
@@ -219,7 +212,7 @@ final class Frame implements \JsonSerializable
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $result = [
             'function' => $this->functionName,
@@ -250,7 +243,7 @@ final class Frame implements \JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

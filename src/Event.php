@@ -1,20 +1,12 @@
 <?php
 
-/*
- * This file is part of Raven.
- *
- * (c) Sentry Team
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Sentry;
 
 use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
@@ -59,12 +51,12 @@ final class Event implements \JsonSerializable
     private $serverName;
 
     /**
-     * @var string The release of the program
+     * @var string|null The release of the program
      */
     private $release;
 
     /**
-     * @var string The error message
+     * @var string|null The error message
      */
     private $message;
 
@@ -74,7 +66,7 @@ final class Event implements \JsonSerializable
     private $messageParams = [];
 
     /**
-     * @var string The environment where this event generated (e.g. production)
+     * @var string|null The environment where this event generated (e.g. production)
      */
     private $environment;
 
@@ -207,7 +199,7 @@ final class Event implements \JsonSerializable
      *
      * @param string $logger The logger name
      */
-    public function setLogger($logger): void
+    public function setLogger(string $logger): void
     {
         $this->logger = $logger;
     }
@@ -218,7 +210,7 @@ final class Event implements \JsonSerializable
      *
      * @return string|null
      */
-    public function getTransaction()
+    public function getTransaction(): ?string
     {
         return $this->transaction;
     }
@@ -229,7 +221,7 @@ final class Event implements \JsonSerializable
      *
      * @param string|null $transaction The transaction name
      */
-    public function setTransaction($transaction)
+    public function setTransaction(?string $transaction): void
     {
         $this->transaction = $transaction;
     }
@@ -239,7 +231,7 @@ final class Event implements \JsonSerializable
      *
      * @return string
      */
-    public function getServerName()
+    public function getServerName(): string
     {
         return $this->serverName;
     }
@@ -249,7 +241,7 @@ final class Event implements \JsonSerializable
      *
      * @param string $serverName The server name
      */
-    public function setServerName($serverName)
+    public function setServerName(string $serverName): void
     {
         $this->serverName = $serverName;
     }
@@ -257,9 +249,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the release of the program.
      *
-     * @return string
+     * @return string|null
      */
-    public function getRelease()
+    public function getRelease(): ?string
     {
         return $this->release;
     }
@@ -267,9 +259,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the release of the program.
      *
-     * @param string $release The release
+     * @param string|null $release The release
      */
-    public function setRelease($release)
+    public function setRelease(?string $release): void
     {
         $this->release = $release;
     }
@@ -277,9 +269,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the error message.
      *
-     * @return string
+     * @return string|null
      */
-    public function getMessage()
+    public function getMessage(): ?string
     {
         return $this->message;
     }
@@ -289,7 +281,7 @@ final class Event implements \JsonSerializable
      *
      * @return string[]
      */
-    public function getMessageParams()
+    public function getMessageParams(): array
     {
         return $this->messageParams;
     }
@@ -300,7 +292,7 @@ final class Event implements \JsonSerializable
      * @param string $message The message
      * @param array  $params  The parameters to use to format the message
      */
-    public function setMessage($message, array $params = [])
+    public function setMessage(string $message, array $params = []): void
     {
         $this->message = $message;
         $this->messageParams = $params;
@@ -311,7 +303,7 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function getModules()
+    public function getModules(): array
     {
         return $this->modules;
     }
@@ -321,7 +313,7 @@ final class Event implements \JsonSerializable
      *
      * @param array $modules
      */
-    public function setModules(array $modules)
+    public function setModules(array $modules): void
     {
         $this->modules = $modules;
     }
@@ -331,7 +323,7 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function getRequest()
+    public function getRequest(): array
     {
         return $this->request;
     }
@@ -341,7 +333,7 @@ final class Event implements \JsonSerializable
      *
      * @param array $request The request data
      */
-    public function setRequest(array $request)
+    public function setRequest(array $request): void
     {
         $this->request = $request;
     }
@@ -351,7 +343,7 @@ final class Event implements \JsonSerializable
      *
      * @return Context
      */
-    public function getExtraContext()
+    public function getExtraContext(): Context
     {
         return $this->extraContext;
     }
@@ -361,7 +353,7 @@ final class Event implements \JsonSerializable
      *
      * @return TagsContext
      */
-    public function getTagsContext()
+    public function getTagsContext(): TagsContext
     {
         return $this->tagsContext;
     }
@@ -371,7 +363,7 @@ final class Event implements \JsonSerializable
      *
      * @return UserContext
      */
-    public function getUserContext()
+    public function getUserContext(): UserContext
     {
         return $this->userContext;
     }
@@ -381,7 +373,7 @@ final class Event implements \JsonSerializable
      *
      * @return ServerOsContext
      */
-    public function getServerOsContext()
+    public function getServerOsContext(): ServerOsContext
     {
         return $this->serverOsContext;
     }
@@ -391,7 +383,7 @@ final class Event implements \JsonSerializable
      *
      * @return RuntimeContext
      */
-    public function getRuntimeContext()
+    public function getRuntimeContext(): RuntimeContext
     {
         return $this->runtimeContext;
     }
@@ -402,7 +394,7 @@ final class Event implements \JsonSerializable
      *
      * @return string[]
      */
-    public function getFingerprint()
+    public function getFingerprint(): array
     {
         return $this->fingerprint;
     }
@@ -413,7 +405,7 @@ final class Event implements \JsonSerializable
      *
      * @param string[] $fingerprint The strings
      */
-    public function setFingerprint(array $fingerprint)
+    public function setFingerprint(array $fingerprint): void
     {
         $this->fingerprint = $fingerprint;
     }
@@ -421,9 +413,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the environment in which this event was generated.
      *
-     * @return string
+     * @return string|null
      */
-    public function getEnvironment()
+    public function getEnvironment(): ?string
     {
         return $this->environment;
     }
@@ -431,9 +423,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the environment in which this event was generated.
      *
-     * @param string $environment The name of the environment
+     * @param string|null $environment The name of the environment
      */
-    public function setEnvironment($environment)
+    public function setEnvironment(?string $environment): void
     {
         $this->environment = $environment;
     }
@@ -443,7 +435,7 @@ final class Event implements \JsonSerializable
      *
      * @return Breadcrumb[]
      */
-    public function getBreadcrumbs()
+    public function getBreadcrumbs(): array
     {
         return $this->breadcrumbs;
     }
@@ -453,7 +445,7 @@ final class Event implements \JsonSerializable
      *
      * @param Breadcrumb[] $breadcrumbs The breadcrumb array
      */
-    public function setBreadcrumb(array $breadcrumbs)
+    public function setBreadcrumb(array $breadcrumbs): void
     {
         $this->breadcrumbs = $breadcrumbs;
     }
@@ -463,7 +455,7 @@ final class Event implements \JsonSerializable
      *
      * @return array
      */
-    public function getExceptions()
+    public function getExceptions(): array
     {
         return $this->exceptions;
     }
@@ -473,7 +465,7 @@ final class Event implements \JsonSerializable
      *
      * @param array $exceptions The exception
      */
-    public function setExceptions(array $exceptions)
+    public function setExceptions(array $exceptions): void
     {
         $this->exceptions = $exceptions;
     }
@@ -483,7 +475,7 @@ final class Event implements \JsonSerializable
      *
      * @return Stacktrace|null
      */
-    public function getStacktrace()
+    public function getStacktrace(): ?Stacktrace
     {
         return $this->stacktrace;
     }
@@ -493,7 +485,7 @@ final class Event implements \JsonSerializable
      *
      * @param Stacktrace $stacktrace The stacktrace instance
      */
-    public function setStacktrace(Stacktrace $stacktrace)
+    public function setStacktrace(Stacktrace $stacktrace): void
     {
         $this->stacktrace = $stacktrace;
     }

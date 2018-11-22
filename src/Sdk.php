@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry;
 
-use Sentry\Breadcrumbs\Breadcrumb;
 use Sentry\State\Hub;
 
 /**
