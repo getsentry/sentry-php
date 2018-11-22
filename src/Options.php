@@ -179,23 +179,23 @@ class Options
     }
 
     /**
-     * Gets whether the stacktrace must be auto-filled.
+     * Gets whether the stacktrace will be attached on captureMessage.
      *
      * @return bool
      */
-    public function getAutoLogStacks(): bool
+    public function getAttachStacktrace(): bool
     {
-        return $this->options['auto_log_stacks'];
+        return $this->options['attach_stacktrace'];
     }
 
     /**
-     * Sets whether the stacktrace must be auto-filled.
+     * Sets whether the stacktrace will be attached on captureMessage.
      *
-     * @param bool $enable Flag indicating if the stacktrace must be auto-filled
+     * @param bool $enable flag indicating if the stacktrace will be attached to captureMessage calls
      */
-    public function setAutoLogStacks(bool $enable): void
+    public function setAttachStacktrace(bool $enable): void
     {
-        $options = array_merge($this->options, ['auto_log_stacks' => $enable]);
+        $options = array_merge($this->options, ['attach_stacktrace' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -614,12 +614,10 @@ class Options
             'serialize_all_object' => false,
             'sample_rate' => 1,
             'mb_detect_order' => null,
-            'auto_log_stacks' => true,
+            'attach_stacktrace' => false,
             'context_lines' => 3,
             'enable_compression' => true,
             'environment' => null,
-            'excluded_exceptions' => [],
-            'excluded_app_paths' => [],
             'project_root' => null,
             'logger' => 'php',
             'release' => null,
@@ -634,6 +632,8 @@ class Options
             'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
                 return $breadcrumb;
             },
+            'excluded_exceptions' => [],
+            'excluded_app_paths' => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -641,7 +641,7 @@ class Options
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
-        $resolver->setAllowedTypes('auto_log_stacks', 'bool');
+        $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);

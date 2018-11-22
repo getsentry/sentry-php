@@ -350,24 +350,18 @@ class ClientTest extends TestCase
     {
         $options = new Options($clientConfig);
 
-        $assertHasStacktrace = $options->getAutoLogStacks();
-
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
+            ->with($this->callback(function (Event $event) use ($expectedResult): bool {
                 $this->assertArraySubset($expectedResult, $event->toArray());
                 $this->assertArrayNotHasKey('values', $event->getExceptions());
                 $this->assertArrayHasKey('values', $event->toArray()['exception']);
 
                 foreach ($event->getExceptions() as $exceptionData) {
-                    if ($assertHasStacktrace) {
-                        $this->assertArrayHasKey('stacktrace', $exceptionData);
-                        $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
-                    } else {
-                        $this->assertArrayNotHasKey('stacktrace', $exceptionData);
-                    }
+                    $this->assertArrayHasKey('stacktrace', $exceptionData);
+                    $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
                 }
 
                 return true;
@@ -383,23 +377,6 @@ class ClientTest extends TestCase
             [
                 new \RuntimeException('foo'),
                 [],
-                [
-                    'level' => Severity::ERROR,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \RuntimeException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                new \RuntimeException('foo'),
-                [
-                    'auto_log_stacks' => false,
-                ],
                 [
                     'level' => Severity::ERROR,
                     'exception' => [
@@ -507,7 +484,7 @@ class ClientTest extends TestCase
     public function testConvertExceptionThrownInLatin1File()
     {
         $options = new Options([
-            'auto_log_stacks' => true,
+            'attach_stacktrace' => true,
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
         ]);
 
@@ -546,9 +523,9 @@ class ClientTest extends TestCase
         $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
-    public function testConvertExceptionWithAutoLogStacksDisabled()
+    public function testAttachStacktrace()
     {
-        $options = new Options(['auto_log_stacks' => false]);
+        $options = new Options(['attach_stacktrace' => true]);
 
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -560,14 +537,14 @@ class ClientTest extends TestCase
                 $this->assertNotEmpty($result);
                 $this->assertInternalType('array', $result[0]);
                 $this->assertEquals(\Exception::class, $result[0]['type']);
-                $this->assertEquals('foo', $result[0]['value']);
-                $this->assertArrayNotHasKey('stacktrace', $result[0]);
+                $this->assertEquals('Sentry Synthetic Exception', $result[0]['value']);
+                $this->assertArrayHasKey('stacktrace', $result[0]);
 
                 return true;
             }));
 
         $client = new Client($options, $transport, []);
-        $client->captureException(new \Exception('foo'));
+        $client->captureMessage('test');
     }
 
     /**
