@@ -233,23 +233,23 @@ class Options
     }
 
     /**
-     * Gets the encoding type for event bodies (GZIP or JSON).
+     * Returns whether the requests should be compressed using GZIP or not.
      *
-     * @return string
+     * @return bool
      */
-    public function getEncoding()
+    public function isCompressionEnabled(): bool
     {
-        return $this->options['encoding'];
+        return $this->options['enable_compression'];
     }
 
     /**
-     * Sets the encoding type for event bodies (GZIP or JSON).
+     * Sets whether the request should be compressed using JSON or not.
      *
-     * @param string $encoding The encoding type
+     * @param bool $enabled Flag indicating whether the request should be compressed
      */
-    public function setEncoding($encoding)
+    public function setEnableCompression(bool $enabled): void
     {
-        $options = array_merge($this->options, ['encoding' => $encoding]);
+        $options = array_merge($this->options, ['enable_compression' => $enabled]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -672,7 +672,7 @@ class Options
             'mb_detect_order' => null,
             'auto_log_stacks' => true,
             'context_lines' => 3,
-            'encoding' => 'gzip',
+            'enable_compression' => true,
             'current_environment' => 'default',
             'environments' => [],
             'excluded_loggers' => [],
@@ -701,7 +701,7 @@ class Options
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('auto_log_stacks', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
-        $resolver->setAllowedTypes('encoding', 'string');
+        $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('current_environment', 'string');
         $resolver->setAllowedTypes('environments', 'array');
         $resolver->setAllowedTypes('excluded_loggers', 'array');
@@ -733,7 +733,6 @@ class Options
             return true;
         });
 
-        $resolver->setAllowedValues('encoding', ['gzip', 'json']);
         $resolver->setAllowedValues('dsn', function ($value) {
             if (empty($value)) {
                 return true;

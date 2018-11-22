@@ -196,7 +196,7 @@ class ClientBuilderTest extends TestCase
             ['setMbDetectOrder', ['foo', 'bar']],
             ['setAutoLogStacks', false],
             ['setContextLines', 0],
-            ['setEncoding', 'gzip'],
+            ['setEnableCompression', false],
             ['setCurrentEnvironment', 'test'],
             ['setEnvironments', ['default']],
             ['setExcludedLoggers', ['foo', 'bar']],
@@ -208,6 +208,35 @@ class ClientBuilderTest extends TestCase
             ['setServerName', 'example.com'],
             ['setTags', ['foo', 'bar']],
             ['setErrorTypes', 0],
+        ];
+    }
+
+    /**
+     * @dataProvider getClientTogglesCompressionPluginInHttpClientDataProvider
+     */
+    public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
+    {
+        $builder = ClientBuilder::create(['enable_compression' => $enabled, 'dsn' => 'http://public:secret@example.com/sentry/1']);
+        $builder->getClient();
+
+        $decoderPluginFound = false;
+
+        foreach ($this->getObjectAttribute($builder, 'httpClientPlugins') as $plugin) {
+            if ($plugin instanceof Plugin\DecoderPlugin) {
+                $decoderPluginFound = true;
+
+                break;
+            }
+        }
+
+        $this->assertEquals($enabled, $decoderPluginFound);
+    }
+
+    public function getClientTogglesCompressionPluginInHttpClientDataProvider(): array
+    {
+        return [
+            [true],
+            [false],
         ];
     }
 }
