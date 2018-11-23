@@ -9,7 +9,7 @@ use PHPUnit\Framework\Assert;
 use Sentry\Spool\MemorySpool;
 use Sentry\Transport\SpoolTransport;
 use Sentry\ClientBuilder;
-use function Sentry\init;
+use Sentry\State\Hub;
 
 $vendor = __DIR__;
 
@@ -22,7 +22,9 @@ require $vendor . '/vendor/autoload.php';
 $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
 
-init([], ClientBuilder::create()->setTransport($transport));
+$builder = ClientBuilder::create()->setTransport($transport);
+
+Hub::getCurrent()->bindClient($builder->getClient());
 
 register_shutdown_function('register_shutdown_function', function () use ($spool) {
     Assert::assertAttributeCount(1, 'events', $spool);
