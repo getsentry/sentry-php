@@ -124,7 +124,7 @@ class Client implements ClientInterface
         $payload['message'] = $message;
         $payload['level'] = $level;
 
-        if ($this->getOptions()->getAttachStacktrace()) {
+        if ($this->getOptions()->shouldAttachStacktrace()) {
             $payload['exception'] = new \Exception('Sentry Synthetic Exception');
         }
 

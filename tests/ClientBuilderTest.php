@@ -193,6 +193,7 @@ final class ClientBuilderTest extends TestCase
             ['setEnableCompression', false],
             ['setEnvironment', 'test'],
             ['setExcludedProjectPaths', ['foo', 'bar']],
+            ['setExcludedExceptions', ['foo', 'bar']],
             ['setProjectRoot', 'foo'],
             ['setLogger', 'bar'],
             ['setRelease', 'dev'],

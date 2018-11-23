@@ -43,7 +43,7 @@ final class OptionsTest extends TestCase
             ['mb_detect_order', null, 'getMbDetectOrder', 'setMbDetectOrder'],
             ['mb_detect_order', 'UTF-8', 'getMbDetectOrder', 'setMbDetectOrder'],
             ['mb_detect_order', ['UTF-8'], 'getMbDetectOrder', 'setMbDetectOrder'],
-            ['attach_stacktrace', false, 'getAttachStacktrace', 'setAttachStacktrace'],
+            ['attach_stacktrace', false, 'shouldAttachStacktrace', 'setAttachStacktrace'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],

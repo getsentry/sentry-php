@@ -183,7 +183,7 @@ class Options
      *
      * @return bool
      */
-    public function getAttachStacktrace(): bool
+    public function shouldAttachStacktrace(): bool
     {
         return $this->options['attach_stacktrace'];
     }
@@ -191,7 +191,7 @@ class Options
     /**
      * Sets whether the stacktrace will be attached on captureMessage.
      *
-     * @param bool $enable flag indicating if the stacktrace will be attached to captureMessage calls
+     * @param bool $enable Flag indicating if the stacktrace will be attached to captureMessage calls
      */
     public function setAttachStacktrace(bool $enable): void
     {
