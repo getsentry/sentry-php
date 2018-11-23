@@ -10,7 +10,6 @@ use Sentry\Spool\MemorySpool;
 use Sentry\Transport\SpoolTransport;
 use Sentry\ClientBuilder;
 use Sentry\State\Hub;
-use function Sentry\init;
 
 $vendor = __DIR__;
 
@@ -23,9 +22,8 @@ require $vendor . '/vendor/autoload.php';
 $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
 
-init([]);
-
 $builder = ClientBuilder::create()->setTransport($transport);
+
 Hub::getCurrent()->bindClient($builder->getClient());
 
 register_shutdown_function('register_shutdown_function', function () use ($spool) {
