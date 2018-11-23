@@ -466,6 +466,12 @@ abstract class AbstractSerializerTest extends TestCase
         yield ["\xC2\xA2\xC2", "\xC2\xA2\x3F"];
     }
 
+    public function testSerializationOfInvokable()
+    {
+        $serializer = $this->getSerializerUnderTest();
+        $this->assertSame('Callable bool Sentry\Tests\Serializer\Invokable::__invoke []', $this->invokeSerialization($serializer, new Invokable()));
+    }
+
     /**
      * @param AbstractSerializer $serializer
      * @param mixed              $input
@@ -500,5 +506,13 @@ class SerializerTestObject
     public static function testy(): void
     {
         throw new \Exception('We should not reach this');
+    }
+}
+
+class Invokable
+{
+    public function __invoke(): bool
+    {
+        return true;
     }
 }

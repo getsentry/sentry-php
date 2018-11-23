@@ -218,6 +218,9 @@ abstract class AbstractSerializer
             } elseif ($callable instanceof \Closure || \is_string($callable)) {
                 $reflection = new \ReflectionFunction($callable);
                 $class = null;
+            } elseif (\is_object($callable) && \method_exists($callable, '__invoke')) {
+                $reflection = new \ReflectionMethod($callable, '__invoke');
+                $class = $reflection->getDeclaringClass();
             } else {
                 throw new \InvalidArgumentException('Unrecognized type of callable');
             }
