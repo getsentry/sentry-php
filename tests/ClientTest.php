@@ -484,7 +484,6 @@ class ClientTest extends TestCase
     public function testConvertExceptionThrownInLatin1File()
     {
         $options = new Options([
-            'attach_stacktrace' => true,
             'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
         ]);
 
