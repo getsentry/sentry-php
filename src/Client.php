@@ -125,14 +125,7 @@ class Client implements ClientInterface
         $payload['level'] = $level;
 
         if ($this->getOptions()->shouldAttachStacktrace()) {
-            $payload['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->getOptions(),
-                $this->serializer,
-                $this->representationSerializer,
-                \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
-                __FILE__,
-                __LINE__
-            );
+            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
         }
 
         return $this->captureEvent($payload, $scope);
