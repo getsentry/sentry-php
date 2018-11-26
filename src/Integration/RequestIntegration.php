@@ -100,14 +100,9 @@ final class RequestIntegration implements IntegrationInterface
     private function removePiiFromHeaders(array $headers): array
     {
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
-        $sanitizedHeaders = [];
 
-        foreach ($headers as $key => $value) {
-            if (!\in_array(\strtolower($key), $keysToRemove)) {
-                $sanitizedHeaders[$key] = $value;
-            }
-        }
-
-        return $sanitizedHeaders;
+        return array_filter($headers, function ($key) use ($keysToRemove) {
+            return !\in_array(\strtolower($key), $keysToRemove);
+        }, ARRAY_FILTER_USE_KEY);
     }
 }
