@@ -351,26 +351,18 @@ class ClientTest extends TestCase
      */
     public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult)
     {
-        $options = new Options($clientConfig);
-
-        $assertHasStacktrace = $options->getAutoLogStacks();
-
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedResult, $assertHasStacktrace): bool {
+            ->with($this->callback(function (Event $event) use ($expectedResult): bool {
                 $this->assertArraySubset($expectedResult, $event->toArray());
                 $this->assertArrayNotHasKey('values', $event->getExceptions());
                 $this->assertArrayHasKey('values', $event->toArray()['exception']);
 
                 foreach ($event->getExceptions() as $exceptionData) {
-                    if ($assertHasStacktrace) {
-                        $this->assertArrayHasKey('stacktrace', $exceptionData);
-                        $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
-                    } else {
-                        $this->assertArrayNotHasKey('stacktrace', $exceptionData);
-                    }
+                    $this->assertArrayHasKey('stacktrace', $exceptionData);
+                    $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
                 }
 
                 return true;
@@ -389,23 +381,6 @@ class ClientTest extends TestCase
             [
                 new \RuntimeException('foo'),
                 [],
-                [
-                    'level' => Severity::ERROR,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \RuntimeException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                new \RuntimeException('foo'),
-                [
-                    'auto_log_stacks' => false,
-                ],
                 [
                     'level' => Severity::ERROR,
                     'exception' => [
@@ -492,7 +467,7 @@ class ClientTest extends TestCase
 
         $serializer = new Serializer();
         $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
-        $client = ClientBuilder::create(['auto_log_stacks' => true])
+        $client = ClientBuilder::create()
             ->setTransport($transport)
             ->setSerializer($serializer)
             ->getClient();
@@ -500,29 +475,26 @@ class ClientTest extends TestCase
         $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
-    public function testConvertExceptionWithAutoLogStacksDisabled()
+    public function testAttachStacktrace()
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $result = $event->getExceptions();
+                $result = $event->getStacktrace();
 
-                $this->assertNotEmpty($result);
-                $this->assertInternalType('array', $result[0]);
-                $this->assertEquals(\Exception::class, $result[0]['type']);
-                $this->assertEquals('foo', $result[0]['value']);
-                $this->assertArrayNotHasKey('stacktrace', $result[0]);
+                $this->assertNotNull($result);
+                $this->assertNotEmpty($result->getFrames());
 
                 return true;
             }));
 
-        $client = ClientBuilder::create(['auto_log_stacks' => false])
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
             ->setTransport($transport)
             ->getClient();
 
-        $client->captureException(new \Exception('foo'));
+        $client->captureMessage('test');
     }
 
     /**

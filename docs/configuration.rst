@@ -173,7 +173,7 @@ automatically captured or not.
 
 .. code-block:: php
 
-    $configuration = new Configuration(['auto_log_stacks' => true]);
+    $configuration = new Configuration(['attach_stacktrace' => true]);
     $configuration->setAutoLogStacks(true);
 
 By default this option is set to ``true``.

@@ -135,23 +135,23 @@ class Options
     }
 
     /**
-     * Gets whether the stacktrace must be auto-filled.
+     * Gets whether the stacktrace will be attached on captureMessage.
      *
      * @return bool
      */
-    public function getAutoLogStacks(): bool
+    public function shouldAttachStacktrace(): bool
     {
-        return $this->options['auto_log_stacks'];
+        return $this->options['attach_stacktrace'];
     }
 
     /**
-     * Sets whether the stacktrace must be auto-filled.
+     * Sets whether the stacktrace will be attached on captureMessage.
      *
-     * @param bool $enable Flag indicating if the stacktrace must be auto-filled
+     * @param bool $enable Flag indicating if the stacktrace will be attached to captureMessage calls
      */
-    public function setAutoLogStacks(bool $enable): void
+    public function setAttachStacktrace(bool $enable): void
     {
-        $options = array_merge($this->options, ['auto_log_stacks' => $enable]);
+        $options = array_merge($this->options, ['attach_stacktrace' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -201,69 +201,23 @@ class Options
     }
 
     /**
-     * Gets the current environment.
+     * Gets the environment.
      *
-     * @return string
+     * @return null|string
      */
-    public function getCurrentEnvironment(): string
+    public function getEnvironment(): ?string
     {
-        return $this->options['current_environment'];
+        return $this->options['environment'];
     }
 
     /**
-     * Sets the current environment.
+     * Sets the environment.
      *
      * @param string $environment The environment
      */
-    public function setCurrentEnvironment(string $environment): void
+    public function setEnvironment(string $environment): void
     {
-        $options = array_merge($this->options, ['current_environment' => $environment]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the whitelist of environments that will send notifications to
-     * Sentry.
-     *
-     * @return string[]
-     */
-    public function getEnvironments(): array
-    {
-        return $this->options['environments'];
-    }
-
-    /**
-     * Sets the whitelist of environments that will send notifications to
-     * Sentry.
-     *
-     * @param string[] $environments The environments
-     */
-    public function setEnvironments(array $environments): void
-    {
-        $options = array_merge($this->options, ['environments' => $environments]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the list of logger 'progname's to exclude from breadcrumbs.
-     *
-     * @return string[]
-     */
-    public function getExcludedLoggers(): array
-    {
-        return $this->options['excluded_loggers'];
-    }
-
-    /**
-     * Sets the list of logger 'progname's to exclude from breadcrumbs.
-     *
-     * @param string[] $loggers The list of logger 'progname's
-     */
-    public function setExcludedLoggers(array $loggers): void
-    {
-        $options = array_merge($this->options, ['excluded_loggers' => $loggers]);
+        $options = array_merge($this->options, ['environment' => $environment]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -607,7 +561,7 @@ class Options
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
-    private function configureOptions(OptionsResolver $resolver)
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'integrations' => [],
@@ -616,18 +570,14 @@ class Options
             'serialize_all_object' => false,
             'sample_rate' => 1,
             'mb_detect_order' => null,
-            'auto_log_stacks' => true,
+            'attach_stacktrace' => false,
             'context_lines' => 3,
             'enable_compression' => true,
-            'current_environment' => 'default',
-            'environments' => [],
-            'excluded_loggers' => [],
-            'excluded_exceptions' => [],
-            'excluded_app_paths' => [],
+            'environment' => null,
             'project_root' => null,
             'logger' => 'php',
             'release' => null,
-            'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
+            'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'before_send' => function (Event $event): ?Event {
                 return $event;
@@ -638,6 +588,8 @@ class Options
             'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
                 return $breadcrumb;
             },
+            'excluded_exceptions' => [],
+            'excluded_app_paths' => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -645,12 +597,10 @@ class Options
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
-        $resolver->setAllowedTypes('auto_log_stacks', 'bool');
+        $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('enable_compression', 'bool');
-        $resolver->setAllowedTypes('current_environment', 'string');
-        $resolver->setAllowedTypes('environments', 'array');
-        $resolver->setAllowedTypes('excluded_loggers', 'array');
+        $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('excluded_app_paths', 'array');
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
