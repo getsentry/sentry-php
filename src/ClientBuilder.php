@@ -206,9 +206,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * @param SerializerInterface $serializer
-     *
-     * @return $this
+     * {@inheritdoc}
      */
     public function setSerializer(SerializerInterface $serializer): self
     {
@@ -218,9 +216,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * @param RepresentationSerializerInterface $representationSerializer
-     *
-     * @return $this
+     * {@inheritdoc}
      */
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
     {

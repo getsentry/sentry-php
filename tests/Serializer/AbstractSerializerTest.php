@@ -215,7 +215,9 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->createSerializer();
         $serializer->setSerializeAllObjects(true);
         $input = ['foo' => new SerializerTestObject()];
+
         $result = $this->invokeSerialization($serializer, $input);
+
         $this->assertSame(['foo' => ['key' => 'value']], $result);
     }
 
@@ -225,13 +227,17 @@ abstract class AbstractSerializerTest extends TestCase
     public function testBrokenEncoding(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
+
         foreach (['7efbce4384', 'b782b5d8e5', '9dde8d1427', '8fd4c373ca', '9b8e84cb90'] as $key) {
             $input = pack('H*', $key);
             $result = $this->invokeSerialization($serializer, $input);
+
             $this->assertInternalType('string', $result);
+
             if (\function_exists('mb_detect_encoding')) {
                 $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
             }
@@ -244,6 +250,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testLongString(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
@@ -251,6 +258,7 @@ abstract class AbstractSerializerTest extends TestCase
         foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
             $input = str_repeat('x', $length);
             $result = $this->invokeSerialization($serializer, $input);
+
             $this->assertInternalType('string', $result);
             $this->assertLessThanOrEqual(1024, \strlen($result));
         }
@@ -264,6 +272,7 @@ abstract class AbstractSerializerTest extends TestCase
         foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
             $input = str_repeat('x', $length);
             $result = $this->invokeSerialization($serializer, $input);
+
             $this->assertInternalType('string', $result);
             $this->assertLessThanOrEqual(500, \strlen($result));
         }
@@ -275,14 +284,19 @@ abstract class AbstractSerializerTest extends TestCase
     public function testSerializeValueResource(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
+
         $filename = tempnam(sys_get_temp_dir(), 'sentry_test_');
+
         $this->assertNotFalse($filename, 'Temp file creation failed');
+
         $resource = fopen($filename, 'wb');
 
         $result = $this->invokeSerialization($serializer, $resource);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('Resource stream', $result);
     }
@@ -291,8 +305,11 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->createSerializer();
         $serializer->setSerializeAllObjects(true);
+
         $this->assertTrue($serializer->getSerializeAllObjects());
+
         $serializer->setSerializeAllObjects(false);
+
         $this->assertFalse($serializer->getSerializeAllObjects());
     }
 
@@ -302,11 +319,10 @@ abstract class AbstractSerializerTest extends TestCase
             $this->markTestSkipped('mbstring extension is not enabled.');
         }
 
-        $testString = 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках';
         $serializer = static::createSerializer();
         $serializer->setMessageLimit(19);
 
-        $clipped = $this->invokeSerialization($serializer, $testString);
+        $clipped = $this->invokeSerialization($serializer, 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках');
 
         $this->assertSame('Прекратит {clipped}', $clipped);
         $this->assertNotNull(json_encode($clipped));
@@ -440,6 +456,7 @@ abstract class AbstractSerializerTest extends TestCase
     public function testSerializationForBadStrings(string $string, string $expected, string $mbDetectOrder = null): void
     {
         $serializer = $this->createSerializer();
+
         if ($mbDetectOrder) {
             $serializer->setMbDetectOrder($mbDetectOrder);
         }
@@ -463,12 +480,6 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Callable bool Sentry\Tests\Serializer\Invokable::__invoke []', $this->invokeSerialization($serializer, new Invokable()));
     }
 
-    /**
-     * @param AbstractSerializer $serializer
-     * @param mixed              $input
-     *
-     * @return string|bool|float|int|null|array|object
-     */
     protected function invokeSerialization(AbstractSerializer $serializer, $input)
     {
         if ($serializer instanceof SerializerInterface) {
