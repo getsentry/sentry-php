@@ -202,7 +202,7 @@ class Client implements ClientInterface
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
-        if ($sampleRate < 1 && random_int(1, 100) / 100.0 > $sampleRate) {
+        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             return null;
         }
 

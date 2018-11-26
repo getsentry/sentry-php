@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * Copyright 2012 Facebook, Inc.
  *
@@ -75,15 +76,14 @@ abstract class AbstractSerializer
      */
     private $mbStringEnabled;
 
-    public function __construct(
-        int $maxDepth = 3,
-        ?string $mbDetectOrder = null,
-        int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT
-    ) {
+    public function __construct(int $maxDepth = 3, ?string $mbDetectOrder = null, int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    {
         $this->maxDepth = $maxDepth;
+
         if (null != $mbDetectOrder) {
             $this->mbDetectOrder = $mbDetectOrder;
         }
+
         $this->messageLimit = $messageLimit;
     }
 
@@ -108,6 +108,7 @@ abstract class AbstractSerializer
 
         if (\is_array($value)) {
             $serializedArray = [];
+
             foreach ($value as $k => $v) {
                 $serializedArray[$k] = $this->serializeRecursively($v, $_depth + 1);
             }
@@ -133,12 +134,13 @@ abstract class AbstractSerializer
      */
     protected function serializeObject($object, int $_depth = 0, array $hashes = [])
     {
-        if (($_depth >= $this->maxDepth) || \in_array(spl_object_hash($object), $hashes, true)) {
+        if ($_depth >= $this->maxDepth || \in_array(spl_object_hash($object), $hashes, true)) {
             return $this->serializeValue($object);
         }
 
         $hashes[] = spl_object_hash($object);
         $serializedObject = [];
+
         foreach ($object as $key => &$value) {
             if (\is_object($value)) {
                 $serializedObject[$key] = $this->serializeObject($value, $_depth + 1, $hashes);
@@ -251,11 +253,13 @@ abstract class AbstractSerializer
         $params = [];
         foreach ($reflection->getParameters() as &$param) {
             $paramType = $param->hasType() ? $param->getType() : 'mixed';
+
             if ($param->allowsNull()) {
                 $paramType .= '|null';
             }
 
             $paramName = ($param->isPassedByReference() ? '&' : '') . $param->getName();
+
             if ($param->isOptional()) {
                 $paramName = '[' . $paramName . ']';
             }

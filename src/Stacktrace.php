@@ -58,11 +58,8 @@ class Stacktrace implements \JsonSerializable
      * @param SerializerInterface               $serializer               The serializer
      * @param RepresentationSerializerInterface $representationSerializer The representation serializer
      */
-    public function __construct(
-        Options $options,
-        SerializerInterface $serializer,
-        RepresentationSerializerInterface $representationSerializer
-    ) {
+    public function __construct(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer)
+    {
         $this->options = $options;
         $this->serializer = $serializer;
         $this->representationSerializer = $representationSerializer;
@@ -80,14 +77,8 @@ class Stacktrace implements \JsonSerializable
      *
      * @return static
      */
-    public static function createFromBacktrace(
-        Options $options,
-        SerializerInterface $serializer,
-        RepresentationSerializerInterface $representationSerializer,
-        array $backtrace,
-        string $file,
-        int $line
-    ) {
+    public static function createFromBacktrace(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $backtrace, string $file, int $line)
+    {
         $stacktrace = new static($options, $serializer, $representationSerializer);
 
         foreach ($backtrace as $frame) {

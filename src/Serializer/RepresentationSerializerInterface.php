@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
+/**
+ * Serializes a value into a representation that should reasonably suggest
+ * both the type and value, and be serializable into JSON.
+ */
 interface RepresentationSerializerInterface
 {
     /**

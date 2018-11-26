@@ -40,7 +40,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockSerializer(), $this->mockRepresentationSerializer());
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
@@ -60,7 +60,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockSerializer(), $this->mockRepresentationSerializer());
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
         $client->captureMessage('test');
     }
 
@@ -341,7 +341,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockSerializer(), $this->mockRepresentationSerializer(), []);
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class), []);
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
@@ -546,15 +546,5 @@ class ClientTest extends TestCase
         } catch (\Exception $ex) {
             return $ex;
         }
-    }
-
-    private function mockSerializer(): SerializerInterface
-    {
-        return $this->createMock(SerializerInterface::class);
-    }
-
-    private function mockRepresentationSerializer(): RepresentationSerializerInterface
-    {
-        return $this->createMock(RepresentationSerializerInterface::class);
     }
 }

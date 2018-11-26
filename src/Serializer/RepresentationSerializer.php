@@ -10,11 +10,21 @@ namespace Sentry\Serializer;
  */
 class RepresentationSerializer extends AbstractSerializer implements RepresentationSerializerInterface
 {
+    /**
+     * {@inheritdoc}
+     */
     public function representationSerialize($value)
     {
         return $this->serializeRecursively($value);
     }
 
+    /**
+     * This method is overridden to return even basic types as strings.
+     *
+     * @param mixed $value The value that needs to be serialized
+     *
+     * @return string
+     */
     protected function serializeValue($value)
     {
         if (null === $value) {

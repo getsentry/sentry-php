@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
+/**
+ * Basic serializer for the event data.
+ */
 class Serializer extends AbstractSerializer implements SerializerInterface
 {
     /**

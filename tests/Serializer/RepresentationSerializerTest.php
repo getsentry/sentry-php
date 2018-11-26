@@ -10,104 +10,95 @@ use Sentry\Serializer\RepresentationSerializer;
 final class RepresentationSerializerTest extends AbstractSerializerTest
 {
     /**
-     * @return RepresentationSerializer
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    protected function getSerializerUnderTest(): AbstractSerializer
+    public function testArraysAreArrays(bool $serializeAllObjects): void
     {
-        return new RepresentationSerializer();
-    }
+        $serializer = $this->createSerializer();
 
-    /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
-     */
-    public function testArraysAreArrays($serializeAllObjects)
-    {
-        $serializer = $this->getSerializerUnderTest();
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = [1, 2, 3];
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, [1, 2, 3]);
         $this->assertSame(['1', '2', '3'], $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testIntsBecomeStrings($serialize_all_objects)
+    public function testIntsBecomeStrings(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serialize_all_objects) {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = 1;
-        $result = $serializer->representationSerialize($input);
+
+        $result = $serializer->representationSerialize(1);
         $this->assertInternalType('string', $result);
         $this->assertSame('1', $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testFloatsBecomeStrings($serialize_all_objects)
+    public function testFloatsBecomeStrings(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serialize_all_objects) {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = 1.5;
-        $result = $serializer->representationSerialize($input);
+
+        $result = $serializer->representationSerialize(1.5);
         $this->assertInternalType('string', $result);
         $this->assertSame('1.5', $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testBooleansBecomeStrings($serialize_all_objects)
+    public function testBooleansBecomeStrings(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serialize_all_objects) {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = true;
-        $result = $serializer->representationSerialize($input);
+
+        $result = $serializer->representationSerialize(true);
         $this->assertSame('true', $result);
 
-        $input = false;
-        $result = $serializer->representationSerialize($input);
+        $result = $serializer->representationSerialize(false);
         $this->assertInternalType('string', $result);
         $this->assertSame('false', $result);
     }
 
     /**
-     * @param bool $serialize_all_objects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testNullsBecomeString($serialize_all_objects)
+    public function testNullsBecomeString(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serialize_all_objects) {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = null;
-        $result = $serializer->representationSerialize($input);
+
+        $result = $serializer->representationSerialize(null);
         $this->assertInternalType('string', $result);
         $this->assertSame('null', $result);
     }
 
     /**
-     * @dataProvider serializeAllObjectsProvider
-     * @covers \Sentry\Serializer\RepresentationSerializer::serializeValue
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testSerializeRoundedFloat($serialize_all_objects)
+    public function testSerializeRoundedFloat(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
-        if ($serialize_all_objects) {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
 
@@ -122,5 +113,13 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         $result = $serializer->representationSerialize(floor(12345.678901234));
         $this->assertInternalType('string', $result);
         $this->assertSame('12345.0', $result);
+    }
+
+    /**
+     * @return RepresentationSerializer
+     */
+    protected function createSerializer(): AbstractSerializer
+    {
+        return new RepresentationSerializer();
     }
 }

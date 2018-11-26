@@ -9,89 +9,91 @@ use Sentry\Serializer\Serializer;
 
 final class SerializerTest extends AbstractSerializerTest
 {
-    protected function getSerializerUnderTest(): AbstractSerializer
-    {
-        return new Serializer();
-    }
-
     /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testArraysAreArrays($serializeAllObjects)
+    public function testArraysAreArrays(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
+        $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = [1, 2, 3];
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, [1, 2, 3]);
         $this->assertSame([1, 2, 3], $result);
     }
 
     /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testIntsAreInts($serializeAllObjects)
+    public function testIntsAreInts(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
+        $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = 1;
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, 1);
         $this->assertInternalType('integer', $result);
         $this->assertSame(1, $result);
     }
 
     /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testFloats($serializeAllObjects)
+    public function testFloats(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
+        $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = 1.5;
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, 1.5);
         $this->assertInternalType('double', $result);
         $this->assertSame(1.5, $result);
     }
 
     /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testBooleans($serializeAllObjects)
+    public function testBooleans(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
+        $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = true;
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, true);
         $this->assertTrue($result);
 
-        $input = false;
-        $result = $this->invokeSerialization($serializer, $input);
+        $result = $this->invokeSerialization($serializer, false);
         $this->assertFalse($result);
     }
 
     /**
-     * @param bool $serializeAllObjects
-     * @dataProvider serializeAllObjectsProvider
+     * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testNull($serializeAllObjects)
+    public function testNull(bool $serializeAllObjects): void
     {
-        $serializer = $this->getSerializerUnderTest();
+        $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = null;
-        $result = $this->invokeSerialization($serializer, $input);
+
+        $result = $this->invokeSerialization($serializer, null);
         $this->assertNull($result);
+    }
+
+    /**
+     * @return Serializer
+     */
+    protected function createSerializer(): AbstractSerializer
+    {
+        return new Serializer();
     }
 }
