@@ -14,7 +14,7 @@ class Stacktrace implements \JsonSerializable
     /**
      * This constant defines the default number of lines of code to include.
      */
-    const CONTEXT_NUM_LINES = 5;
+    private const CONTEXT_NUM_LINES = 5;
 
     /**
      * @var Options The client options

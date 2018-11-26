@@ -60,7 +60,7 @@ final class ErrorHandler
     /**
      * @var array List of error levels and their description
      */
-    const ERROR_LEVELS_DESCRIPTION = [
+    private const ERROR_LEVELS_DESCRIPTION = [
         E_DEPRECATED => 'Deprecated',
         E_USER_DEPRECATED => 'User Deprecated',
         E_NOTICE => 'Notice',
