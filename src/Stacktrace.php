@@ -79,8 +79,8 @@ class Stacktrace implements \JsonSerializable
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
 
-            $file = isset($frame['file']) ? $frame['file'] : '[internal]';
-            $line = isset($frame['line']) ? $frame['line'] : 0;
+            $file = $frame['file'] ?? '[internal]';
+            $line = $frame['line'] ?? 0;
         }
 
         // Add a final stackframe for the first method ever of this stacktrace
@@ -305,8 +305,8 @@ class Stacktrace implements \JsonSerializable
 
         $result = [];
 
-        for ($i = 0; $i < \count($frame['args']); ++$i) {
-            $result['param' . ($i + 1)] = self::serializeArgument($frame['args'][$i], $maxValueLength);
+        foreach ($frame['args'] as $i => $argument) {
+            $result['param' . ($i + 1)] = self::serializeArgument($argument, $maxValueLength);
         }
 
         return $result;

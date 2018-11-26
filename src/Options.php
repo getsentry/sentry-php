@@ -605,7 +605,7 @@ class Options
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
-    private function configureOptions(OptionsResolver $resolver)
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'integrations' => [],
@@ -621,7 +621,7 @@ class Options
             'project_root' => null,
             'logger' => 'php',
             'release' => null,
-            'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
+            'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'before_send' => function (Event $event): ?Event {
                 return $event;
