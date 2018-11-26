@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Zend\Diactoros\ServerRequestFactory;
@@ -19,6 +20,21 @@ use Zend\Diactoros\ServerRequestFactory;
 final class RequestIntegration implements IntegrationInterface
 {
     /**
+     * @var Options The client options
+     */
+    private $options;
+
+    /**
+     * RequestIntegration constructor.
+     *
+     * @param Options $options The Client Options
+     */
+    public function __construct(Options $options)
+    {
+        $this->options = $options;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setupOnce(): void
@@ -30,7 +46,7 @@ final class RequestIntegration implements IntegrationInterface
                 return $event;
             }
 
-            self::applyToEvent($event);
+            self::applyToEvent($self, $event);
 
             return $event;
         });
@@ -39,10 +55,11 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Applies the information gathered by the this integration to the event.
      *
+     * @param self                        $self    The current instance of RequestIntegration
      * @param Event                       $event   The event that will be enriched with a request
      * @param null|ServerRequestInterface $request The Request that will be processed and added to the event
      */
-    public static function applyToEvent(Event $event, ?ServerRequestInterface $request = null): void
+    public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
@@ -55,24 +72,42 @@ final class RequestIntegration implements IntegrationInterface
         $requestData = [
             'url' => (string) $request->getUri(),
             'method' => $request->getMethod(),
-            'headers' => $request->getHeaders(),
-            'cookies' => $request->getCookieParams(),
         ];
 
         if ($request->getUri()->getQuery()) {
             $requestData['query_string'] = $request->getUri()->getQuery();
         }
 
-        if ($request->hasHeader('REMOTE_ADDR')) {
-            $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+        if ($self->options->shouldSendDefaultPii()) {
+            if ($request->hasHeader('REMOTE_ADDR')) {
+                $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+            }
+
+            $requestData['cookies'] = $request->getCookieParams();
+            $requestData['headers'] = $request->getHeaders();
+
+            $userContext = $event->getUserContext();
+            if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
+                $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
+            }
+        } else {
+            $requestData['headers'] = $self->removePiiFromHeaders($request->getHeaders());
         }
 
         $event->setRequest($requestData);
+    }
 
-        $userContext = $event->getUserContext();
+    private function removePiiFromHeaders(array $headers): array
+    {
+        $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
+        $sanitizedHeaders = [];
 
-        if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
-            $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
+        foreach ($headers as $key => $value) {
+            if (!\in_array(\strtolower($key), $keysToRemove)) {
+                $sanitizedHeaders[$key] = $value;
+            }
         }
+
+        return $sanitizedHeaders;
     }
 }
