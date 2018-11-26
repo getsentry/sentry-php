@@ -531,13 +531,10 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $result = $event->getExceptions();
+                $result = $event->getStacktrace();
 
-                $this->assertNotEmpty($result);
-                $this->assertInternalType('array', $result[0]);
-                $this->assertEquals(\Exception::class, $result[0]['type']);
-                $this->assertEquals('Sentry Synthetic Exception', $result[0]['value']);
-                $this->assertArrayHasKey('stacktrace', $result[0]);
+                $this->assertNotNull($result);
+                $this->assertNotEmpty($result->getFrames());
 
                 return true;
             }));

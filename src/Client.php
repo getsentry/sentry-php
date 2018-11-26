@@ -125,7 +125,14 @@ class Client implements ClientInterface
         $payload['level'] = $level;
 
         if ($this->getOptions()->shouldAttachStacktrace()) {
-            $payload['exception'] = new \Exception('Sentry Synthetic Exception');
+            $payload['stacktrace'] = Stacktrace::createFromBacktrace(
+                $this->getOptions(),
+                $this->serializer,
+                $this->representationSerializer,
+                \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+                __FILE__,
+                __LINE__
+            );
         }
 
         return $this->captureEvent($payload, $scope);
@@ -237,6 +244,10 @@ class Client implements ClientInterface
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
             $this->addThrowableToEvent($event, $payload['exception']);
+        }
+
+        if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
+            $event->setStacktrace($payload['stacktrace']);
         }
 
         if (null !== $scope) {
