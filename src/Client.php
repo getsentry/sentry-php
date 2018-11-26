@@ -124,6 +124,10 @@ class Client implements ClientInterface
         $payload['message'] = $message;
         $payload['level'] = $level;
 
+        if ($this->getOptions()->shouldAttachStacktrace()) {
+            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
+        }
+
         return $this->captureEvent($payload, $scope);
     }
 
@@ -203,8 +207,8 @@ class Client implements ClientInterface
         $event = new Event();
         $event->setServerName($this->getOptions()->getServerName());
         $event->setRelease($this->getOptions()->getRelease());
-        $event->setEnvironment($this->getOptions()->getCurrentEnvironment());
         $event->getTagsContext()->merge($this->getOptions()->getTags());
+        $event->setEnvironment($this->getOptions()->getEnvironment());
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
@@ -230,6 +234,10 @@ class Client implements ClientInterface
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
             $this->addThrowableToEvent($event, $payload['exception']);
+        }
+
+        if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
+            $event->setStacktrace($payload['stacktrace']);
         }
 
         if (null !== $scope) {
@@ -264,16 +272,14 @@ class Client implements ClientInterface
                 'value' => $this->serializer->serialize($currentException->getMessage()),
             ];
 
-            if ($this->getOptions()->getAutoLogStacks()) {
-                $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                    $this->getOptions(),
-                    $this->serializer,
-                    $this->representationSerializer,
-                    $currentException->getTrace(),
-                    $currentException->getFile(),
-                    $currentException->getLine()
-                );
-            }
+            $data['stacktrace'] = Stacktrace::createFromBacktrace(
+                $this->getOptions(),
+                $this->serializer,
+                $this->representationSerializer,
+                $currentException->getTrace(),
+                $currentException->getFile(),
+                $currentException->getLine()
+            );
 
             $exceptions[] = $data;
         } while ($currentException = $currentException->getPrevious());
