@@ -305,8 +305,8 @@ class Stacktrace implements \JsonSerializable
 
         $result = [];
 
-        foreach ($frame['args'] as $i => $argument) {
-            $result['param' . ($i + 1)] = self::serializeArgument($argument, $maxValueLength);
+        foreach ($frame['args'] as $index => $argument) {
+            $result['param' . ($index + 1)] = self::serializeArgument($argument, $maxValueLength);
         }
 
         return $result;
