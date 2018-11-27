@@ -100,25 +100,6 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void
-    {
-        $beforeBreadcrumbCallback = $this->options->getBeforeBreadcrumbCallback();
-        $maxBreadcrumbs = $this->options->getMaxBreadcrumbs();
-
-        if ($maxBreadcrumbs <= 0) {
-            return;
-        }
-
-        $breadcrumb = \call_user_func($beforeBreadcrumbCallback, $breadcrumb);
-
-        if (null !== $breadcrumb && null !== $scope) {
-            $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
         $payload['message'] = $message;
