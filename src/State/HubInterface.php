@@ -1,7 +1,8 @@
 <?php
 
-namespace Sentry\State;
+declare(strict_types=1);
 
+namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
@@ -9,7 +10,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
- * This interface represent the class which is responsible for maintaining a stack of pairs of clients and scopes. 
+ * This interface represent the class which is responsible for maintaining a stack of pairs of clients and scopes.
  * It is the main entry point to talk with the Sentry client.
  */
 interface HubInterface
@@ -95,8 +96,8 @@ interface HubInterface
     /**
      * Captures a message event and sends it to Sentry.
      *
-     * @param string $message The message
-     * @param Severity $level The severity level of the message
+     * @param string   $message The message
+     * @param Severity $level   The severity level of the message
      *
      * @return null|string
      */
@@ -141,7 +142,7 @@ interface HubInterface
     /**
      * Returns the current global Hub.
      *
-     * @return Hub
+     * @return self
      */
     public static function getCurrent(): self;
 
@@ -150,7 +151,7 @@ interface HubInterface
      *
      * @param self $hub
      *
-     * @return Hub
+     * @return self
      */
     public static function setCurrent(self $hub): self;
 

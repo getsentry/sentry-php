@@ -24,7 +24,7 @@ final class Hub implements HubInterface
     /**
      * Constructor.
      *
-     * @var Hub
+     * @var HubInterface
      */
     private static $currentHub;
 
@@ -177,7 +177,7 @@ final class Hub implements HubInterface
         return null !== $breadcrumb;
     }
 
-    public static function getCurrent(): self
+    public static function getCurrent(): HubInterface
     {
         if (null === self::$currentHub) {
             self::$currentHub = new self();
@@ -186,7 +186,7 @@ final class Hub implements HubInterface
         return self::$currentHub;
     }
 
-    public static function setCurrent(self $hub): self
+    public static function setCurrent(HubInterface $hub): HubInterface
     {
         self::$currentHub = $hub;
 
