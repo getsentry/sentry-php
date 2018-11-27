@@ -126,6 +126,16 @@ final class Event implements \JsonSerializable
     private $stacktrace;
 
     /**
+     * @var string The platform of the event
+     */
+    private $platform = 'php';
+
+    /**
+     * @var null|array The SDK identifier
+     */
+    private $sdk;
+
+    /**
      * Event constructor.
      *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
@@ -491,6 +501,38 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * @return string Returns the platform
+     */
+    public function getPlatform(): string
+    {
+        return $this->platform;
+    }
+
+    /**
+     * @param string $platform The platfrom to set
+     */
+    public function setPlatform(string $platform): void
+    {
+        $this->platform = $platform;
+    }
+
+    /**
+     * @return null|array Returns the SDK identifier
+     */
+    public function getSdk(): ?array
+    {
+        return $this->sdk;
+    }
+
+    /**
+     * @param array $sdk Sets the SDK identifier
+     */
+    public function setSdk(array $sdk): void
+    {
+        $this->sdk = $sdk;
+    }
+
+    /**
      * Gets the event as an array.
      *
      * @return array
@@ -501,12 +543,12 @@ final class Event implements \JsonSerializable
             'event_id' => str_replace('-', '', $this->id->toString()),
             'timestamp' => $this->timestamp,
             'level' => (string) $this->level,
-            'platform' => 'php',
-            'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
-                'version' => Client::VERSION,
-            ],
+            'platform' => $this->platform,
         ];
+
+        if (null !== $this->sdk) {
+            $data['sdk'] = $this->sdk;
+        }
 
         if (null !== $this->logger) {
             $data['logger'] = $this->logger;

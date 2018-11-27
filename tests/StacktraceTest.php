@@ -134,8 +134,9 @@ final class StacktraceTest extends TestCase
 
         $frames = $stacktrace->getFrames();
 
-        $this->assertTrue($frames[0]->isInApp());
-        $this->assertFalse($frames[1]->isInApp());
+        // Since the order of frames is inverted, this is correct
+        $this->assertFalse($frames[0]->isInApp());
+        $this->assertTrue($frames[1]->isInApp());
     }
 
     public function testAddFrameReadsCodeFromShortFile(): void
@@ -262,7 +263,7 @@ final class StacktraceTest extends TestCase
 
         $this->assertCount(1, $frames);
         $this->assertContainsOnlyInstancesOf(Frame::class, $frames);
-        $this->assertFalse($frames[0]->isInApp());
+        $this->assertTrue($frames[0]->isInApp());
     }
 
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs(): void

@@ -30,7 +30,7 @@ final class ClientBuilderTest extends TestCase
 
     public function testHttpTransportIsUsedWhenServeIsConfigured(): void
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
 
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
@@ -39,7 +39,7 @@ final class ClientBuilderTest extends TestCase
 
     public function testNullTransportIsUsedWhenNoServerIsConfigured(): void
     {
-        $clientBuilder = new ClientBuilder();
+        $clientBuilder = new ClientBuilder(Client::class, new Options());
 
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
@@ -51,7 +51,7 @@ final class ClientBuilderTest extends TestCase
         /** @var UriFactory|MockObject $uriFactory */
         $uriFactory = $this->createMock(UriFactory::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
         $clientBuilder->setUriFactory($uriFactory);
 
         $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
@@ -62,7 +62,7 @@ final class ClientBuilderTest extends TestCase
         /** @var MessageFactory|MockObject $messageFactory */
         $messageFactory = $this->createMock(MessageFactory::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
         $clientBuilder->setMessageFactory($messageFactory);
 
         $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
@@ -77,7 +77,7 @@ final class ClientBuilderTest extends TestCase
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
         $clientBuilder->setTransport($transport);
 
         $this->assertAttributeSame($transport, 'transport', $clientBuilder);
@@ -89,7 +89,7 @@ final class ClientBuilderTest extends TestCase
         /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
         $clientBuilder->setHttpClient($httpClient);
 
         $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
@@ -104,7 +104,7 @@ final class ClientBuilderTest extends TestCase
         /** @var Plugin|MockObject $plugin */
         $plugin = $this->createMock(Plugin::class);
 
-        $clientBuilder = new ClientBuilder();
+        $clientBuilder = new ClientBuilder(Client::class, new Options());
         $clientBuilder->addHttpClientPlugin($plugin);
 
         $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
@@ -118,7 +118,7 @@ final class ClientBuilderTest extends TestCase
         $plugin = new PluginStub1();
         $plugin2 = new PluginStub2();
 
-        $clientBuilder = new ClientBuilder();
+        $clientBuilder = new ClientBuilder(Client::class, new Options());
         $clientBuilder->addHttpClientPlugin($plugin);
         $clientBuilder->addHttpClientPlugin($plugin);
         $clientBuilder->addHttpClientPlugin($plugin2);
@@ -135,7 +135,7 @@ final class ClientBuilderTest extends TestCase
 
     public function testGetClient(): void
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder(Client::class, new Options(['dsn' => 'http://public:secret@example.com/sentry/1']));
         $client = $clientBuilder->getClient();
 
         $this->assertInstanceOf(Client::class, $client);
@@ -157,7 +157,7 @@ final class ClientBuilderTest extends TestCase
      */
     public function testCallInvalidMethodThrowsException(): void
     {
-        $clientBuilder = new ClientBuilder();
+        $clientBuilder = new ClientBuilder(Client::class, new Options());
         $clientBuilder->methodThatDoesNotExists();
     }
 
@@ -171,7 +171,7 @@ final class ClientBuilderTest extends TestCase
             ->method($setterMethod)
             ->with($this->equalTo($value));
 
-        $clientBuilder = new ClientBuilder();
+        $clientBuilder = new ClientBuilder(Client::class, new Options());
 
         $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'options');
         $reflectionProperty->setAccessible(true);

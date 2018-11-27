@@ -18,18 +18,29 @@ use Sentry\Options;
 final class SentryAuth implements Authentication
 {
     /**
-     * @var Options The Raven client configuration
+     * The version of the protocol to communicate with the Sentry server.
      */
-    private $configuration;
+    public const PROTOCOL_VERSION = '7';
+
+    /**
+     * @var Options The Sentry client options
+     */
+    private $options;
+
+    /**
+     * @var string The user agent of the client
+     */
+    private $userAgent;
 
     /**
      * Constructor.
      *
      * @param Options $configuration The Raven client configuration
      */
-    public function __construct(Options $configuration)
+    public function __construct(string $userAgent, Options $configuration)
     {
-        $this->configuration = $configuration;
+        $this->userAgent = $userAgent;
+        $this->options = $configuration;
     }
 
     /**
@@ -38,11 +49,11 @@ final class SentryAuth implements Authentication
     public function authenticate(RequestInterface $request): RequestInterface
     {
         $headerKeys = array_filter([
-            'sentry_version' => Client::PROTOCOL_VERSION,
-            'sentry_client' => Client::USER_AGENT,
+            'sentry_version' => self::PROTOCOL_VERSION,
+            'sentry_client' => $this->userAgent,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
-            'sentry_key' => $this->configuration->getPublicKey(),
-            'sentry_secret' => $this->configuration->getSecretKey(),
+            'sentry_key' => $this->options->getPublicKey(),
+            'sentry_secret' => $this->options->getSecretKey(),
         ]);
 
         $isFirstItem = true;

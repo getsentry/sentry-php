@@ -103,13 +103,20 @@ final class ClientBuilder implements ClientBuilderInterface
     private $integrations = [];
 
     /**
+     * @var string Class of the client to create
+     */
+    private $clientClass;
+
+    /**
      * Class constructor.
      *
-     * @param array $options The client options
+     * @param string  $clientClass The client class to initiate
+     * @param Options $options     The client options
      */
-    public function __construct(array $options = [])
+    public function __construct(string $clientClass, Options $options)
     {
-        $this->options = new Options($options);
+        $this->options = $options;
+        $this->clientClass = $clientClass;
 
         if (null !== $this->options->getIntegrations()) {
             $this->integrations = \array_merge([
@@ -124,7 +131,12 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public static function create(array $options = []): self
     {
-        return new static($options);
+        return self::createClient(Client::class, new Options($options));
+    }
+
+    public static function createClient(string $clientClass, Options $options): self
+    {
+        return new static($clientClass, $options);
     }
 
     /**
@@ -203,7 +215,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        $client = new Client($this->options, $this->transport, $this->integrations);
+        $client = new $this->clientClass($this->options, $this->transport, $this->integrations);
 
         return $client;
     }
@@ -246,8 +258,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->clientClass::getUserAgent()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->clientClass::getUserAgent(), $this->options)));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
