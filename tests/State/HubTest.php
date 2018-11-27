@@ -7,6 +7,7 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -251,6 +252,76 @@ final class HubTest extends TestCase
 
         $hub = new Hub($client, $scope);
         $hub->addBreadcrumb($breadcrumb);
+    }
+
+    /**
+     * @dataProvider addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider
+     */
+    public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLow(int $maxBreadcrumbs): void
+    {
+        $client = ClientBuilder::create(['max_breadcrumbs' => $maxBreadcrumbs])->getClient();
+        $hub = new Hub($client);
+
+        $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+
+        $this->assertEmpty($hub->getScope()->getBreadcrumbs());
+    }
+
+    public function addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider(): array
+    {
+        return [
+            [0],
+            [-1],
+        ];
+    }
+
+    public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void
+    {
+        $client = ClientBuilder::create(['max_breadcrumbs' => 2])->getClient();
+        $hub = new Hub($client);
+        $scope = $hub->getScope();
+
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'foo');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'bar');
+        $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'baz');
+
+        $hub->addBreadcrumb($breadcrumb1);
+        $hub->addBreadcrumb($breadcrumb2);
+
+        $this->assertSame([$breadcrumb1, $breadcrumb2], $scope->getBreadcrumbs());
+
+        $hub->addBreadcrumb($breadcrumb3);
+
+        $this->assertSame([$breadcrumb2, $breadcrumb3], $scope->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumbDoesNothingWhenBeforeBreadcrumbCallbackReturnsNull(): void
+    {
+        $callback = function (): ?Breadcrumb {
+            return null;
+        };
+        $client = ClientBuilder::create(['before_breadcrumb' => $callback])->getClient();
+        $hub = new Hub($client);
+
+        $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+
+        $this->assertEmpty($hub->getScope()->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumbStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void
+    {
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        $callback = function () use ($breadcrumb2): ?Breadcrumb {
+            return $breadcrumb2;
+        };
+        $client = ClientBuilder::create(['before_breadcrumb' => $callback])->getClient();
+        $hub = new Hub($client);
+
+        $hub->addBreadcrumb($breadcrumb1);
+
+        $this->assertSame([$breadcrumb2], $hub->getScope()->getBreadcrumbs());
     }
 
     public function testCaptureEvent(): void
