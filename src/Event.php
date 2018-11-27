@@ -41,6 +41,11 @@ final class Event implements \JsonSerializable
     private $logger;
 
     /**
+     * @var string The identification string for the Sentry client in use
+     */
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
+
+    /**
      * @var string|null the name of the transaction (or culprit) which caused this exception
      */
     private $transaction;
@@ -202,6 +207,16 @@ final class Event implements \JsonSerializable
     public function setLogger(string $logger): void
     {
         $this->logger = $logger;
+    }
+
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    public function setSdkIdentifier(string $sdkIdentifier): void
+    {
+        $this->sdkIdentifier = $sdkIdentifier;
     }
 
     /**
@@ -503,7 +518,7 @@ final class Event implements \JsonSerializable
             'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
+                'name' => $this->sdkIdentifier,
                 'version' => Client::VERSION,
             ],
         ];

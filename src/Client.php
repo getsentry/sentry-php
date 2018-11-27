@@ -69,19 +69,26 @@ class Client implements ClientInterface
     private $representationSerializer;
 
     /**
+     * @var string|null The suffix to be appended to the SDK_IDENTIFIER in events for official integrations
+     */
+    private $sdkIntegrationIdentifier;
+
+    /**
      * Constructor.
      *
-     * @param Options                $options      The client configuration
-     * @param TransportInterface     $transport    The transport
-     * @param IntegrationInterface[] $integrations The integrations used by the client
+     * @param Options                $options                  The client configuration
+     * @param TransportInterface     $transport                The transport
+     * @param IntegrationInterface[] $integrations             The integrations used by the client
+     * @param string|null            $sdkIntegrationIdentifier
      */
-    public function __construct(Options $options, TransportInterface $transport, array $integrations = [])
+    public function __construct(Options $options, TransportInterface $transport, array $integrations = [], string $sdkIntegrationIdentifier = null)
     {
         $this->options = $options;
         $this->transport = $transport;
         $this->integrations = Handler::setupIntegrations($integrations);
         $this->serializer = new Serializer($this->options->getMbDetectOrder());
         $this->representationSerializer = new ReprSerializer($this->options->getMbDetectOrder());
+        $this->sdkIntegrationIdentifier = $sdkIntegrationIdentifier;
 
         if ($this->options->getSerializeAllObjects()) {
             $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
@@ -205,6 +212,9 @@ class Client implements ClientInterface
         }
 
         $event = new Event();
+        if ($this->sdkIntegrationIdentifier) {
+            $event->setSdkIdentifier(self::SDK_IDENTIFIER . '.' . $this->sdkIntegrationIdentifier);
+        }
         $event->setServerName($this->getOptions()->getServerName());
         $event->setRelease($this->getOptions()->getRelease());
         $event->getTagsContext()->merge($this->getOptions()->getTags());
