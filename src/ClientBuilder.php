@@ -105,11 +105,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Class constructor.
      *
-     * @param array $options The client options
+     * @param Options $options The client options
      */
-    public function __construct(array $options = [])
+    public function __construct(Options $options)
     {
-        $this->options = new Options($options);
+        $this->options = $options;
 
         if (null !== $this->options->getIntegrations()) {
             $this->integrations = \array_merge([
@@ -124,7 +124,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public static function create(array $options = []): self
     {
-        return new static($options);
+        return new static(new Options($options));
     }
 
     /**
@@ -196,14 +196,23 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function getClient(): ClientInterface
+    public function getClient(?string $className = null): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-        $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        $client = new Client($this->options, $this->transport, $this->integrations);
+        $clientClass = Client::class;
+        if (null !== $className) {
+            $clientClass = $className;
+        }
+
+        if (!\array_key_exists(ClientInterface::class, \class_implements($clientClass))) {
+            throw new \Exception("$className has to implement ClientInterface.");
+        }
+
+        $this->transport = $this->transport ?? $this->createTransportInstance($clientClass::getUserAgent());
+        $client = new $clientClass($this->options, $this->transport, $this->integrations);
 
         return $client;
     }
@@ -230,9 +239,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Creates a new instance of the HTTP client.
      *
+     * @param string $userAgent The userAgent used in the Transport
+     *
      * @return PluginClient
      */
-    private function createHttpClientInstance(): PluginClient
+    private function createHttpClientInstance(string $userAgent): PluginClient
     {
         if (null === $this->uriFactory) {
             throw new \RuntimeException('The PSR-7 URI factory must be set.');
@@ -246,8 +257,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $userAgent]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($userAgent, $this->options)));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
@@ -261,9 +272,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Creates a new instance of the transport mechanism.
      *
+     * @param string $userAgent The userAgent used in the Transport
+     *
      * @return TransportInterface
      */
-    private function createTransportInstance(): TransportInterface
+    private function createTransportInstance(string $userAgent): TransportInterface
     {
         if (null !== $this->transport) {
             return $this->transport;
@@ -277,6 +290,6 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-7 message factory must be set.');
         }
 
-        return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
+        return new HttpTransport($this->options, $this->createHttpClientInstance($userAgent), $this->messageFactory);
     }
 }

@@ -77,4 +77,11 @@ interface ClientInterface
      * @return null|IntegrationInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface;
+
+    /**
+     * Returs the user agent header field for the client.
+     *
+     * @return string
+     */
+    public static function getUserAgent(): string;
 }

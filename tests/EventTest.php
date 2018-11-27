@@ -10,7 +10,6 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidFactoryInterface;
 use Sentry\Breadcrumb;
-use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Context\Context;
@@ -97,10 +96,6 @@ final class EventTest extends TestCase
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
-            'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
-                'version' => Client::VERSION,
-            ],
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),

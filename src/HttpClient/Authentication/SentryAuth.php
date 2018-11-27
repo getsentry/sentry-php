@@ -18,17 +18,28 @@ use Sentry\Options;
 final class SentryAuth implements Authentication
 {
     /**
+     * The version of the protocol to communicate with the Sentry server.
+     */
+    public const PROTOCOL_VERSION = '7';
+
+    /**
      * @var Options The Sentry client configuration
      */
     private $options;
+
+    /**
+     * @var string The user agent of the client
+     */
+    private $userAgent;
 
     /**
      * Constructor.
      *
      * @param Options $options The Sentry client configuration
      */
-    public function __construct(Options $options)
+    public function __construct(string $userAgent, Options $options)
     {
+        $this->userAgent = $userAgent;
         $this->options = $options;
     }
 
@@ -38,8 +49,8 @@ final class SentryAuth implements Authentication
     public function authenticate(RequestInterface $request): RequestInterface
     {
         $data = [
-            'sentry_version' => Client::PROTOCOL_VERSION,
-            'sentry_client' => Client::USER_AGENT,
+            'sentry_version' => self::PROTOCOL_VERSION,
+            'sentry_client' => $this->userAgent,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
             'sentry_key' => $this->options->getPublicKey(),
         ];

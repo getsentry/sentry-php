@@ -48,7 +48,7 @@ final class Frame implements \JsonSerializable
      * @var bool Flag telling whether the frame is related to the execution of
      *           the relevant code in this stacktrace
      */
-    private $inApp = false;
+    private $inApp = true;
 
     /**
      * @var array A mapping of variables which were available within this

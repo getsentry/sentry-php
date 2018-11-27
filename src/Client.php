@@ -23,19 +23,9 @@ class Client implements ClientInterface
     public const VERSION = '2.0.x-dev';
 
     /**
-     * The version of the protocol to communicate with the Sentry server.
-     */
-    public const PROTOCOL_VERSION = '7';
-
-    /**
      * The identifier of the SDK.
      */
     public const SDK_IDENTIFIER = 'sentry.php';
-
-    /**
-     * This constant defines the client's user-agent string.
-     */
-    public const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
@@ -87,6 +77,14 @@ class Client implements ClientInterface
             $this->serializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
             $this->representationSerializer->setAllObjectSerialize($this->options->getSerializeAllObjects());
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function getUserAgent(): string
+    {
+        return static::SDK_IDENTIFIER . '/' . static::VERSION;
     }
 
     /**
@@ -197,7 +195,7 @@ class Client implements ClientInterface
      *
      * @return null|Event returns ready to send Event, however depending on options it can be discarded
      */
-    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    protected function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
@@ -205,10 +203,26 @@ class Client implements ClientInterface
         }
 
         $event = new Event();
+
         $event->setServerName($this->getOptions()->getServerName());
         $event->setRelease($this->getOptions()->getRelease());
         $event->getTagsContext()->merge($this->getOptions()->getTags());
         $event->setEnvironment($this->getOptions()->getEnvironment());
+
+        if (isset($payload['platform'])) {
+            $event->setPlatform($payload['platform']);
+        } else {
+            $event->setPlatform('php');
+        }
+
+        if (isset($payload['sdk'])) {
+            $event->setSdk($payload['sdk']);
+        } else {
+            $event->setSdk([
+                'name' => static::SDK_IDENTIFIER,
+                'version' => static::VERSION,
+            ]);
+        }
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);

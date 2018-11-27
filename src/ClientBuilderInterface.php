@@ -81,9 +81,11 @@ interface ClientBuilderInterface
     public function removeHttpClientPlugin(string $className);
 
     /**
-     * Gets the instance of the client built using the configured options.
+     * Gets the instance of the client or (FQCN) conforming ClientInterface using the configured options.
+     *
+     * @param null|string $className Optional $className of Client to create
      *
      * @return ClientInterface
      */
-    public function getClient(): ClientInterface;
+    public function getClient(?string $className): ClientInterface;
 }
