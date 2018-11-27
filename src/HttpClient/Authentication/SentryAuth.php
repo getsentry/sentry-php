@@ -18,18 +18,18 @@ use Sentry\Options;
 final class SentryAuth implements Authentication
 {
     /**
-     * @var Options The Raven client configuration
+     * @var Options The Sentry client configuration
      */
-    private $configuration;
+    private $options;
 
     /**
      * Constructor.
      *
-     * @param Options $configuration The Raven client configuration
+     * @param Options $options The Sentry client configuration
      */
-    public function __construct(Options $configuration)
+    public function __construct(Options $options)
     {
-        $this->configuration = $configuration;
+        $this->options = $options;
     }
 
     /**
@@ -37,27 +37,23 @@ final class SentryAuth implements Authentication
      */
     public function authenticate(RequestInterface $request): RequestInterface
     {
-        $headerKeys = [
+        $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,
             'sentry_client' => Client::USER_AGENT,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
-            'sentry_key' => $this->configuration->getPublicKey(),
-            'sentry_secret' => $this->configuration->getSecretKey(),
+            'sentry_key' => $this->options->getPublicKey(),
         ];
 
-        $isFirstItem = true;
-        $header = 'Sentry ';
-
-        foreach ($headerKeys as $headerKey => $headerValue) {
-            if (!$isFirstItem) {
-                $header .= ', ';
-            }
-
-            $header .= $headerKey . '=' . $headerValue;
-
-            $isFirstItem = false;
+        if ($this->options->getSecretKey()) {
+            $data['sentry_secret'] = $this->options->getSecretKey();
         }
 
-        return $request->withHeader('X-Sentry-Auth', $header);
+        $headers = [];
+
+        foreach ($data as $headerKey => $headerValue) {
+            $headers[] = $headerKey . '=' . $headerValue;
+        }
+
+        return $request->withHeader('X-Sentry-Auth', 'Sentry ' . implode(', ', $headers));
     }
 }
