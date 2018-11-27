@@ -92,15 +92,9 @@ class SdkTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('addBreadcrumb')
-            ->with($breadcrumb, Hub::getCurrent()->getScope());
-
-        Hub::getCurrent()->bindClient($client);
-
         addBreadcrumb($breadcrumb);
+
+        $this->assertSame([$breadcrumb], Hub::getCurrent()->getScope()->getBreadcrumbs());
     }
 
     public function testWithScope(): void

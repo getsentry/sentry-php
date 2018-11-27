@@ -241,17 +241,13 @@ final class HubTest extends TestCase
 
     public function testAddBreadcrumb(): void
     {
-        $scope = new Scope();
+        $client = ClientBuilder::create()->getClient();
+        $hub = new Hub($client);
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('addBreadcrumb')
-            ->with($breadcrumb, $scope);
-
-        $hub = new Hub($client, $scope);
         $hub->addBreadcrumb($breadcrumb);
+
+        $this->assertSame([$breadcrumb], $hub->getScope()->getBreadcrumbs());
     }
 
     /**
