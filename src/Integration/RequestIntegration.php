@@ -87,6 +87,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['headers'] = $request->getHeaders();
 
             $userContext = $event->getUserContext();
+
             if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
                 $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
             }
@@ -102,7 +103,7 @@ final class RequestIntegration implements IntegrationInterface
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
 
         return array_filter($headers, function ($key) use ($keysToRemove) {
-            return !\in_array(\strtolower($key), $keysToRemove);
+            return !\in_array(\strtolower($key), $keysToRemove, true);
         }, ARRAY_FILTER_USE_KEY);
     }
 }

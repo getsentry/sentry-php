@@ -24,9 +24,11 @@ final class RequestIntegrationTest extends TestCase
 
         $request = new ServerRequest();
         $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
+
         $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
         $integration = new RequestIntegration(new Options(['send_default_pii' => $pii]));
+
         RequestIntegration::applyToEvent($integration, $event, $request);
 
         $this->assertEquals($expectedValue, $event->getUserContext()->toArray());
@@ -49,33 +51,34 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $requestData, array $expectedValueWithPii, array $expectedValueWithoutPii): void
+    public function testInvoke(bool $pii, array $requestData, array $expectedResult): void
     {
-        foreach ([true, false] as $pii) {
-            $event = new Event();
+        $event = new Event();
 
-            $request = new ServerRequest();
-            $request = $request->withCookieParams($requestData['cookies']);
-            $request = $request->withUri(new Uri($requestData['uri']));
-            $request = $request->withMethod($requestData['method']);
+        $request = new ServerRequest();
+        $request = $request->withCookieParams($requestData['cookies']);
+        $request = $request->withUri(new Uri($requestData['uri']));
+        $request = $request->withMethod($requestData['method']);
 
-            foreach ($requestData['headers'] as $name => $value) {
-                $request = $request->withHeader($name, $value);
-            }
-
-            $this->assertInstanceOf(ServerRequestInterface::class, $request);
-
-            $integration = new RequestIntegration(new Options(['send_default_pii' => $pii]));
-            RequestIntegration::applyToEvent($integration, $event, $request);
-
-            $this->assertEquals($pii ? $expectedValueWithPii : $expectedValueWithoutPii, $event->getRequest());
+        foreach ($requestData['headers'] as $name => $value) {
+            $request = $request->withHeader($name, $value);
         }
+
+        $this->assertInstanceOf(ServerRequestInterface::class, $request);
+
+        $integration = new RequestIntegration(new Options(['send_default_pii' => $pii]));
+
+        RequestIntegration::applyToEvent($integration, $event, $request);
+
+        $this->assertEquals($expectedResult, $event->getRequest());
     }
 
     public function invokeDataProvider(): array
     {
         return [
             [
+                true, // send_default_pii
+                // Request
                 [
                     'uri' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -84,6 +87,7 @@ final class RequestIntegrationTest extends TestCase
                     ],
                     'headers' => [],
                 ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -94,6 +98,20 @@ final class RequestIntegrationTest extends TestCase
                         'Host' => ['www.example.com'],
                     ],
                 ],
+            ],
+
+            [
+                false, // send_default_pii
+                // Request
+                [
+                    'uri' => 'http://www.example.com/foo',
+                    'method' => 'GET',
+                    'cookies' => [
+                        'foo' => 'bar',
+                    ],
+                    'headers' => [],
+                ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -102,13 +120,17 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
+
             [
+                true, // send_default_pii
+                // Request
                 [
                     'uri' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
                     'cookies' => [],
                     'headers' => [],
                 ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
@@ -117,6 +139,18 @@ final class RequestIntegrationTest extends TestCase
                         'Host' => ['www.example.com:123'],
                     ],
                 ],
+            ],
+
+            [
+                false, // send_default_pii
+                // Request
+                [
+                    'uri' => 'http://www.example.com:123/foo',
+                    'method' => 'GET',
+                    'cookies' => [],
+                    'headers' => [],
+                ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
@@ -125,7 +159,10 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
+
             [
+                true, // send_default_pii
+                // Request
                 [
                     'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
@@ -138,6 +175,7 @@ final class RequestIntegrationTest extends TestCase
                         'Set-Cookie' => 'z',
                     ],
                 ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
@@ -154,6 +192,24 @@ final class RequestIntegrationTest extends TestCase
                         'REMOTE_ADDR' => '127.0.0.1',
                     ],
                 ],
+            ],
+
+            [
+                false, // send_default_pii
+                // Request
+                [
+                    'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
+                    'method' => 'GET',
+                    'cookies' => [],
+                    'headers' => [
+                        'Host' => ['www.example.com'],
+                        'REMOTE_ADDR' => ['127.0.0.1'],
+                        'Authorization' => 'x',
+                        'Cookie' => 'y',
+                        'Set-Cookie' => 'z',
+                    ],
+                ],
+                // Expected result
                 [
                     'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
