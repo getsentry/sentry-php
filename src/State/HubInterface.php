@@ -30,20 +30,6 @@ interface HubInterface
     public function getScope(): Scope;
 
     /**
-     * Gets the stack of clients and scopes.
-     *
-     * @return Layer[]
-     */
-    public function getStack(): array;
-
-    /**
-     * Gets the topmost client/layer pair in the stack.
-     *
-     * @return Layer
-     */
-    public function getStackTop(): Layer;
-
-    /**
      * Gets the ID of the last captured event.
      *
      * @return null|string

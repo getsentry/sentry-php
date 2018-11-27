@@ -53,16 +53,6 @@ final class Hub implements HubInterface
         return $this->getStackTop()->getScope();
     }
 
-    public function getStack(): array
-    {
-        return $this->stack;
-    }
-
-    public function getStackTop(): Layer
-    {
-        return $this->stack[\count($this->stack) - 1];
-    }
-
     public function getLastEventId(): ?string
     {
         return $this->lastEventId;
@@ -201,5 +191,10 @@ final class Hub implements HubInterface
         }
 
         return null;
+    }
+
+    private function getStackTop(): Layer
+    {
+        return $this->stack[\count($this->stack) - 1];
     }
 }

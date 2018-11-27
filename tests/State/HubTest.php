@@ -39,40 +39,6 @@ final class HubTest extends TestCase
         $this->assertSame($scope, $hub->getScope());
     }
 
-    public function testGetStack(): void
-    {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $scope = new Scope();
-        $hub = new Hub($client, $scope);
-
-        $stack = $hub->getStack();
-
-        $this->assertCount(1, $stack);
-        $this->assertSame($client, $stack[0]->getClient());
-        $this->assertSame($scope, $stack[0]->getScope());
-    }
-
-    public function testGetStackTop(): void
-    {
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $scope = new Scope();
-        $hub = new Hub($client, $scope);
-
-        $stackTop = $hub->getStackTop();
-
-        $this->assertSame($client, $stackTop->getClient());
-        $this->assertSame($scope, $stackTop->getScope());
-
-        $scope = $hub->pushScope();
-
-        $stackTop = $hub->getStackTop();
-
-        $this->assertSame($client, $stackTop->getClient());
-        $this->assertSame($scope, $stackTop->getScope());
-    }
-
     public function testGetLastEventId(): void
     {
         /** @var ClientInterface|MockObject $client */
@@ -91,35 +57,39 @@ final class HubTest extends TestCase
     {
         $hub = new Hub($this->createMock(ClientInterface::class));
 
-        $this->assertCount(1, $hub->getStack());
-
         $scope1 = $hub->getScope();
+        $client1 = $hub->getClient();
+
         $scope2 = $hub->pushScope();
+        $client2 = $hub->getClient();
 
-        $layers = $hub->getStack();
-
-        $this->assertCount(2, $layers);
         $this->assertNotSame($scope1, $scope2);
-        $this->assertSame($scope1, $layers[0]->getScope());
-        $this->assertSame($scope2, $layers[1]->getScope());
+        $this->assertSame($scope2, $hub->getScope());
+        $this->assertSame($client1, $client2);
+        $this->assertSame($client1, $hub->getClient());
     }
 
     public function testPopScope(): void
     {
         $hub = new Hub($this->createMock(ClientInterface::class));
 
-        $this->assertCount(1, $hub->getStack());
-
         $scope1 = $hub->getScope();
+        $client = $hub->getClient();
+
         $scope2 = $hub->pushScope();
 
         $this->assertSame($scope2, $hub->getScope());
+        $this->assertSame($client, $hub->getClient());
 
         $this->assertTrue($hub->popScope());
+
         $this->assertSame($scope1, $hub->getScope());
+        $this->assertSame($client, $hub->getClient());
 
         $this->assertFalse($hub->popScope());
+
         $this->assertSame($scope1, $hub->getScope());
+        $this->assertSame($client, $hub->getClient());
     }
 
     public function testWithScope(): void
