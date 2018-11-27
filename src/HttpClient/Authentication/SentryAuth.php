@@ -37,13 +37,13 @@ final class SentryAuth implements Authentication
      */
     public function authenticate(RequestInterface $request): RequestInterface
     {
-        $headerKeys = array_filter([
+        $headerKeys = [
             'sentry_version' => Client::PROTOCOL_VERSION,
             'sentry_client' => Client::USER_AGENT,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
             'sentry_key' => $this->configuration->getPublicKey(),
             'sentry_secret' => $this->configuration->getSecretKey(),
-        ]);
+        ];
 
         $isFirstItem = true;
         $header = 'Sentry ';
