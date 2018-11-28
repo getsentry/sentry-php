@@ -610,7 +610,7 @@ class Options
     /**
      * Sets if default PII should be sent with every event (if possible).
      *
-     * @param bool $enable flag indicating if default PII will be sent
+     * @param bool $enable Flag indicating if default PII will be sent
      */
     public function setSendDefaultPii(bool $enable): void
     {
@@ -643,7 +643,7 @@ class Options
             'project_root' => null,
             'logger' => 'php',
             'release' => null,
-            'dsn' => isset($_SERVER['SENTRY_DSN']) ? $_SERVER['SENTRY_DSN'] : null,
+            'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'before_send' => function (Event $event): ?Event {
                 return $event;
