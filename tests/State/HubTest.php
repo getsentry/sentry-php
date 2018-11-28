@@ -250,25 +250,14 @@ final class HubTest extends TestCase
         $this->assertSame([$breadcrumb], $hub->getScope()->getBreadcrumbs());
     }
 
-    /**
-     * @dataProvider addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider
-     */
-    public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLow(int $maxBreadcrumbs): void
+    public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsZero(): void
     {
-        $client = ClientBuilder::create(['max_breadcrumbs' => $maxBreadcrumbs])->getClient();
+        $client = ClientBuilder::create(['max_breadcrumbs' => 0])->getClient();
         $hub = new Hub($client);
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
         $this->assertEmpty($hub->getScope()->getBreadcrumbs());
-    }
-
-    public function addBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsTooLowDataProvider(): array
-    {
-        return [
-            [0],
-            [-1],
-        ];
     }
 
     public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void

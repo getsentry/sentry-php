@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Options;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
@@ -241,6 +242,26 @@ final class OptionsTest extends TestCase
             ['some/specific/file.php', 'some/specific/file.php'],
             [__DIR__, __DIR__ . '/'],
             [__FILE__, __FILE__],
+        ];
+    }
+
+    /**
+     * @dataProvider maxBreadCrumbsInvalidValuesDataProvider
+     */
+    public function testMaxBreadCrumbsInvalidValues($invalidValue): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+
+        new Options(['max_breadcrumbs' => [$invalidValue]]);
+    }
+
+    public function maxBreadCrumbsInvalidValuesDataProvider()
+    {
+        return [
+            [-1],
+            [Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            ['string'],
+            ['1'],
         ];
     }
 }

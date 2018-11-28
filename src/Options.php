@@ -662,7 +662,7 @@ class Options
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', function ($value) {
-            return $value <= self::DEFAULT_MAX_BREADCRUMBS;
+            return $value >= 0 && $value <= self::DEFAULT_MAX_BREADCRUMBS;
         });
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
