@@ -10,8 +10,9 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
- * This interface represent the class which is responsible for maintaining a stack of pairs of clients and scopes.
- * It is the main entry point to talk with the Sentry client.
+ * This interface represent the class which is responsible for maintaining a
+ * stack of pairs of clients and scopes. It is the main entry point to talk
+ * with the Sentry client.
  */
 interface HubInterface
 {
@@ -135,7 +136,7 @@ interface HubInterface
     /**
      * Sets the Hub as the current.
      *
-     * @param self $hub
+     * @param self $hub The Hub that will become the current one
      *
      * @return self
      */

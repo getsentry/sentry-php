@@ -43,21 +43,33 @@ final class Hub implements HubInterface
         $this->stack[] = new Layer($client, $scope);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getClient(): ?ClientInterface
     {
         return $this->getStackTop()->getClient();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getScope(): Scope
     {
         return $this->getStackTop()->getScope();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getLastEventId(): ?string
     {
         return $this->lastEventId;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function pushScope(): Scope
     {
         $clonedScope = clone $this->getScope();
@@ -67,6 +79,9 @@ final class Hub implements HubInterface
         return $clonedScope;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function popScope(): bool
     {
         if (1 === \count($this->stack)) {
@@ -76,6 +91,9 @@ final class Hub implements HubInterface
         return null !== \array_pop($this->stack);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function withScope(callable $callback): void
     {
         $scope = $this->pushScope();
@@ -87,17 +105,26 @@ final class Hub implements HubInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function configureScope(callable $callback): void
     {
         $callback($this->getScope());
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function bindClient(ClientInterface $client): void
     {
         $layer = $this->getStackTop();
         $layer->setClient($client);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
         $client = $this->getClient();
@@ -109,6 +136,9 @@ final class Hub implements HubInterface
         return null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function captureException(\Throwable $exception): ?string
     {
         $client = $this->getClient();
@@ -120,6 +150,9 @@ final class Hub implements HubInterface
         return null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function captureEvent(array $payload): ?string
     {
         $client = $this->getClient();
@@ -131,6 +164,9 @@ final class Hub implements HubInterface
         return null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function captureLastError(): ?string
     {
         $client = $this->getClient();
@@ -142,6 +178,9 @@ final class Hub implements HubInterface
         return null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
         $client = $this->getClient();
@@ -167,6 +206,9 @@ final class Hub implements HubInterface
         return null !== $breadcrumb;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function getCurrent(): HubInterface
     {
         if (null === self::$currentHub) {
@@ -176,6 +218,9 @@ final class Hub implements HubInterface
         return self::$currentHub;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function setCurrent(HubInterface $hub): HubInterface
     {
         self::$currentHub = $hub;
@@ -183,6 +228,9 @@ final class Hub implements HubInterface
         return $hub;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getIntegration(string $className): ?IntegrationInterface
     {
         $client = $this->getClient();
@@ -193,6 +241,11 @@ final class Hub implements HubInterface
         return null;
     }
 
+    /**
+     * Gets the topmost client/layer pair in the stack.
+     *
+     * @return Layer
+     */
     private function getStackTop(): Layer
     {
         return $this->stack[\count($this->stack) - 1];
