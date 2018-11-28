@@ -598,6 +598,28 @@ class Options
     }
 
     /**
+     * Should default PII be sent by default.
+     *
+     * @return bool
+     */
+    public function shouldSendDefaultPii(): bool
+    {
+        return $this->options['send_default_pii'];
+    }
+
+    /**
+     * Sets if default PII should be sent with every event (if possible).
+     *
+     * @param bool $enable Flag indicating if default PII will be sent
+     */
+    public function setSendDefaultPii(bool $enable): void
+    {
+        $options = array_merge($this->options, ['send_default_pii' => $enable]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -634,6 +656,7 @@ class Options
             },
             'excluded_exceptions' => [],
             'excluded_app_paths' => [],
+            'send_default_pii' => false,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -658,6 +681,7 @@ class Options
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['null', 'array']);
+        $resolver->setAllowedTypes('send_default_pii', 'bool');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
