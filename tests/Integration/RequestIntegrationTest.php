@@ -17,7 +17,7 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeUserContextPiiDataProvider
      */
-    public function testInvokeWithRequestHavingIpAddress(bool $pii, array $expectedValue): void
+    public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
     {
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
@@ -27,7 +27,7 @@ final class RequestIntegrationTest extends TestCase
 
         $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
-        $integration = new RequestIntegration(new Options(['send_default_pii' => $pii]));
+        $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
 
@@ -51,7 +51,7 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(bool $pii, array $requestData, array $expectedResult): void
+    public function testInvoke(bool $shouldSendPii, array $requestData, array $expectedResult): void
     {
         $event = new Event();
 
@@ -64,9 +64,7 @@ final class RequestIntegrationTest extends TestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $this->assertInstanceOf(ServerRequestInterface::class, $request);
-
-        $integration = new RequestIntegration(new Options(['send_default_pii' => $pii]));
+        $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
 
@@ -77,8 +75,7 @@ final class RequestIntegrationTest extends TestCase
     {
         return [
             [
-                true, // send_default_pii
-                // Request
+                true,
                 [
                     'uri' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -87,7 +84,6 @@ final class RequestIntegrationTest extends TestCase
                     ],
                     'headers' => [],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -99,10 +95,8 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
-
             [
-                false, // send_default_pii
-                // Request
+                false,
                 [
                     'uri' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -111,7 +105,6 @@ final class RequestIntegrationTest extends TestCase
                     ],
                     'headers' => [],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com/foo',
                     'method' => 'GET',
@@ -120,17 +113,14 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
-
             [
-                true, // send_default_pii
-                // Request
+                true,
                 [
                     'uri' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
                     'cookies' => [],
                     'headers' => [],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
@@ -142,15 +132,13 @@ final class RequestIntegrationTest extends TestCase
             ],
 
             [
-                false, // send_default_pii
-                // Request
+                false,
                 [
                     'uri' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
                     'cookies' => [],
                     'headers' => [],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com:123/foo',
                     'method' => 'GET',
@@ -161,8 +149,7 @@ final class RequestIntegrationTest extends TestCase
             ],
 
             [
-                true, // send_default_pii
-                // Request
+                true,
                 [
                     'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
@@ -175,7 +162,6 @@ final class RequestIntegrationTest extends TestCase
                         'Set-Cookie' => 'z',
                     ],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
@@ -195,8 +181,7 @@ final class RequestIntegrationTest extends TestCase
             ],
 
             [
-                false, // send_default_pii
-                // Request
+                false,
                 [
                     'uri' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',
@@ -209,7 +194,6 @@ final class RequestIntegrationTest extends TestCase
                         'Set-Cookie' => 'z',
                     ],
                 ],
-                // Expected result
                 [
                     'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                     'method' => 'GET',

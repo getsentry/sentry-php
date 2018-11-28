@@ -98,6 +98,13 @@ final class RequestIntegration implements IntegrationInterface
         $event->setRequest($requestData);
     }
 
+    /**
+     * Removes headers containing potential PII.
+     *
+     * @param array $headers Array containing request headers
+     *
+     * @return array
+     */
     private function removePiiFromHeaders(array $headers): array
     {
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];

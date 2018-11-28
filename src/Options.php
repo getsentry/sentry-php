@@ -610,7 +610,7 @@ class Options
     /**
      * Sets if default PII should be sent with every event (if possible).
      *
-     * @param bool $enable flag indicating if default PII will be sent
+     * @param bool $enable Flag indicating if default PII will be sent
      */
     public function setSendDefaultPii(bool $enable): void
     {
