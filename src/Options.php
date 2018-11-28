@@ -641,9 +641,7 @@ class Options
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
-        $resolver->setAllowedValues('max_breadcrumbs', function ($value) {
-            return $value <= self::DEFAULT_MAX_BREADCRUMBS;
-        });
+        $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
@@ -808,5 +806,17 @@ class Options
         }
 
         return true;
+    }
+
+    /**
+     * Validates if the value of the max_breadcrumbs option is in range.
+     *
+     * @param int $value The value to validate
+     *
+     * @return bool
+     */
+    private function validateMaxBreadcrumbsOptions(int $value): bool
+    {
+        return $value >= 0 && $value <= self::DEFAULT_MAX_BREADCRUMBS;
     }
 }

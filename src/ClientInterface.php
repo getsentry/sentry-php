@@ -22,14 +22,6 @@ interface ClientInterface
     public function getOptions(): Options;
 
     /**
-     * Records the given breadcrumb.
-     *
-     * @param Breadcrumb $breadcrumb The breadcrumb instance
-     * @param Scope|null $scope      An optional scope to store this breadcrumb in
-     */
-    public function addBreadcrumb(Breadcrumb $breadcrumb, ?Scope $scope = null): void;
-
-    /**
      * Logs a message.
      *
      * @param string     $message The message (primary description) for the event

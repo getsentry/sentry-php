@@ -247,14 +247,32 @@ final class Hub
      * actions prior to an error or crash.
      *
      * @param Breadcrumb $breadcrumb The breadcrumb to record
+     *
+     * @return bool Whether the breadcrumb was actually added to the current scope
      */
-    public function addBreadcrumb(Breadcrumb $breadcrumb): void
+    public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
-            $client->addBreadcrumb($breadcrumb, $this->getScope());
+        if (null === $client) {
+            return false;
         }
+
+        $options = $client->getOptions();
+        $beforeBreadcrumbCallback = $options->getBeforeBreadcrumbCallback();
+        $maxBreadcrumbs = $options->getMaxBreadcrumbs();
+
+        if ($maxBreadcrumbs <= 0) {
+            return false;
+        }
+
+        $breadcrumb = \call_user_func($beforeBreadcrumbCallback, $breadcrumb);
+
+        if (null !== $breadcrumb) {
+            $this->getScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
+        }
+
+        return null !== $breadcrumb;
     }
 
     /**
