@@ -111,28 +111,6 @@ class Options
     }
 
     /**
-     * Gets whether all the objects should be serialized.
-     *
-     * @return bool
-     */
-    public function getSerializeAllObjects(): bool
-    {
-        return $this->options['serialize_all_object'];
-    }
-
-    /**
-     * Sets whether all the objects should be serialized.
-     *
-     * @param bool $serializeAllObjects Flag indicating if all objects should be serialized
-     */
-    public function setSerializeAllObjects(bool $serializeAllObjects): void
-    {
-        $options = array_merge($this->options, ['serialize_all_object' => $serializeAllObjects]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Gets the sampling factor to apply to events. A value of 0 will deny
      * sending any events, and a value of 1 will send 100% of events.
      *
@@ -152,28 +130,6 @@ class Options
     public function setSampleRate(float $sampleRate): void
     {
         $options = array_merge($this->options, ['sample_rate' => $sampleRate]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the character encoding detection order.
-     *
-     * @return string|string[]|null
-     */
-    public function getMbDetectOrder()
-    {
-        return $this->options['mb_detect_order'];
-    }
-
-    /**
-     * Sets the character encoding detection order.
-     *
-     * @param string|string[]|null $detectOrder The detection order
-     */
-    public function setMbDetectOrder($detectOrder): void
-    {
-        $options = array_merge($this->options, ['mb_detect_order' => $detectOrder]);
 
         $this->options = $this->resolver->resolve($options);
     }

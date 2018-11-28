@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
+
 /**
  * This class contains all the information about an error stacktrace.
  *
@@ -22,12 +27,12 @@ class Stacktrace implements \JsonSerializable
     protected $options;
 
     /**
-     * @var Serializer The serializer
+     * @var SerializerInterface The serializer
      */
     protected $serializer;
 
     /**
-     * @var ReprSerializer The representation serializer
+     * @var RepresentationSerializerInterface The representation serializer
      */
     protected $representationSerializer;
 
@@ -49,11 +54,11 @@ class Stacktrace implements \JsonSerializable
     /**
      * Stacktrace constructor.
      *
-     * @param Options        $options                  The client options
-     * @param Serializer     $serializer               The serializer
-     * @param ReprSerializer $representationSerializer The representation serializer
+     * @param Options                           $options                  The client options
+     * @param SerializerInterface               $serializer               The serializer
+     * @param RepresentationSerializerInterface $representationSerializer The representation serializer
      */
-    public function __construct(Options $options, Serializer $serializer, ReprSerializer $representationSerializer)
+    public function __construct(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer)
     {
         $this->options = $options;
         $this->serializer = $serializer;
@@ -63,16 +68,16 @@ class Stacktrace implements \JsonSerializable
     /**
      * Creates a new instance of this class from the given backtrace.
      *
-     * @param Options        $options                  The client options
-     * @param Serializer     $serializer               The serializer
-     * @param ReprSerializer $representationSerializer The representation serializer
-     * @param array          $backtrace                The backtrace
-     * @param string         $file                     The file that originated the backtrace
-     * @param int            $line                     The line at which the backtrace originated
+     * @param Options                           $options                  The client options
+     * @param SerializerInterface               $serializer               The serializer
+     * @param RepresentationSerializerInterface $representationSerializer The representation serializer
+     * @param array                             $backtrace                The backtrace
+     * @param string                            $file                     The file that originated the backtrace
+     * @param int                               $line                     The line at which the backtrace originated
      *
      * @return static
      */
-    public static function createFromBacktrace(Options $options, Serializer $serializer, ReprSerializer $representationSerializer, array $backtrace, string $file, int $line): self
+    public static function createFromBacktrace(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $backtrace, string $file, int $line)
     {
         $stacktrace = new static($options, $serializer, $representationSerializer);
 
@@ -160,10 +165,10 @@ class Stacktrace implements \JsonSerializable
 
         if (!empty($frameArguments)) {
             foreach ($frameArguments as $argumentName => $argumentValue) {
-                $argumentValue = $this->representationSerializer->serialize($argumentValue);
+                $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr((string) $argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }

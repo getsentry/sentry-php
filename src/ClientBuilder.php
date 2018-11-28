@@ -22,6 +22,10 @@ use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -35,12 +39,8 @@ use Sentry\Transport\TransportInterface;
  * @method setSendAttempts(int $attemptsCount)
  * @method string[] getPrefixes()
  * @method setPrefixes(array $prefixes)
- * @method bool getSerializeAllObjects()
- * @method setSerializeAllObjects(bool $serializeAllObjects)
  * @method float getSampleRate()
  * @method setSampleRate(float $sampleRate)
- * @method string getMbDetectOrder()
- * @method setMbDetectOrder(string $detectOrder)
  * @method bool shouldAttachStacktrace()
  * @method setAttachStacktrace(bool $enable)
  * @method int getContextLines()
@@ -96,6 +96,16 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var Plugin[] The list of Httplug plugins
      */
     private $httpClientPlugins = [];
+
+    /**
+     * @var SerializerInterface The serializer to be injected in the client
+     */
+    private $serializer;
+
+    /**
+     * @var RepresentationSerializerInterface The representation serializer to be injected in the client
+     */
+    private $representationSerializer;
 
     /**
      * @var IntegrationInterface[] List of default integrations
@@ -196,16 +206,36 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
+    public function setSerializer(SerializerInterface $serializer): self
+    {
+        $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
+    {
+        $this->representationSerializer = $representationSerializer;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getClient(): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
+        $this->serializer = $this->serializer ?? new Serializer();
+        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        $client = new Client($this->options, $this->transport, $this->integrations);
-
-        return $client;
+        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer, $this->integrations);
     }
 
     /**

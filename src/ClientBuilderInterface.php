@@ -8,6 +8,8 @@ use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -86,4 +88,25 @@ interface ClientBuilderInterface
      * @return ClientInterface
      */
     public function getClient(): ClientInterface;
+
+    /**
+     * Sets a serializer instance to be injected as a dependency of the client.
+     *
+     * @param SerializerInterface $serializer The serializer to be used by the client to fill the events
+     *
+     * @return $this
+     */
+    public function setSerializer(SerializerInterface $serializer);
+
+    /**
+     * Sets a representation serializer instance to be injected as a dependency of the client.
+     *
+     * @param RepresentationSerializerInterface $representationSerializer
+     *                                                                    The representation serializer, used to serialize function
+     *                                                                    arguments in stack traces, to have string representation
+     *                                                                    of non-string values
+     *
+     * @return $this
+     */
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer);
 }

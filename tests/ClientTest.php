@@ -12,6 +12,9 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Hub;
@@ -37,7 +40,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport);
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
@@ -57,7 +60,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport);
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
         $client->captureMessage('test');
     }
 
@@ -338,7 +341,8 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, []);
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class), []);
+
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
@@ -348,8 +352,6 @@ class ClientTest extends TestCase
      */
     public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult)
     {
-        $options = new Options($clientConfig);
-
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -367,7 +369,10 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client($options, $transport, []);
+        $client = ClientBuilder::create($clientConfig)
+            ->setTransport($transport)
+            ->getClient();
+
         $client->captureException($exception);
     }
 
@@ -428,65 +433,8 @@ class ClientTest extends TestCase
         ];
     }
 
-    public function testConvertExceptionContainingLatin1Characters()
-    {
-        $options = new Options(['mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8']]);
-
-        $utf8String = 'äöü';
-        $latin1String = utf8_decode($utf8String);
-
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($utf8String): bool {
-                $expectedValue = [
-                    [
-                        'type' => \Exception::class,
-                        'value' => $utf8String,
-                    ],
-                ];
-
-                $this->assertArraySubset($expectedValue, $event->getExceptions());
-
-                return true;
-            }));
-
-        $client = new Client($options, $transport, []);
-        $client->captureException(new \Exception($latin1String));
-    }
-
-    public function testConvertExceptionContainingInvalidUtf8Characters()
-    {
-        $malformedString = "\xC2\xA2\xC2"; // ill-formed 2-byte character U+00A2 (CENT SIGN)
-
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $expectedValue = [
-                    [
-                        'type' => \Exception::class,
-                        'value' => "\xC2\xA2\x3F",
-                    ],
-                ];
-
-                $this->assertArraySubset($expectedValue, $event->getExceptions());
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, []);
-        $client->captureException(new \Exception($malformedString));
-    }
-
     public function testConvertExceptionThrownInLatin1File()
     {
-        $options = new Options([
-            'mb_detect_order' => ['ISO-8859-1', 'ASCII', 'UTF-8'],
-        ]);
-
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -518,14 +466,19 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client($options, $transport, []);
+        $serializer = new Serializer();
+        $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
+
+        $client = ClientBuilder::create()
+            ->setTransport($transport)
+            ->setSerializer($serializer)
+            ->getClient();
+
         $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
     public function testAttachStacktrace()
     {
-        $options = new Options(['attach_stacktrace' => true]);
-
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -539,7 +492,10 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client($options, $transport, []);
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+            ->setTransport($transport)
+            ->getClient();
+
         $client->captureMessage('test');
     }
 
