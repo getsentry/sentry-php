@@ -58,6 +58,11 @@ class Client implements ClientInterface
     private $transport;
 
     /**
+     * @var EventFactory The factory to create {@see Event} from raw data
+     */
+    private $eventFactory;
+
+    /**
      * @var IntegrationInterface[] The stack of integrations
      */
     private $integrations;
@@ -75,16 +80,18 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options                           $options                  The client configuration
-     * @param TransportInterface                $transport                The transport
-     * @param SerializerInterface               $serializer               The serializer used for events
+     * @param Options $options The client configuration
+     * @param TransportInterface $transport The transport
+     * @param EventFactory $eventFactory
+     * @param SerializerInterface $serializer The serializer used for events
      * @param RepresentationSerializerInterface $representationSerializer The representation serializer to be used with stacktrace frames
-     * @param IntegrationInterface[]            $integrations             The integrations used by the client
+     * @param IntegrationInterface[] $integrations The integrations used by the client
      */
-    public function __construct(Options $options, TransportInterface $transport, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $integrations = [])
+    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $integrations = [])
     {
         $this->options = $options;
         $this->transport = $transport;
+        $this->eventFactory = $eventFactory;
         $this->integrations = Handler::setupIntegrations($integrations);
         $this->serializer = $serializer;
         $this->representationSerializer = $representationSerializer;
@@ -186,86 +193,12 @@ class Client implements ClientInterface
             return null;
         }
 
-        $event = new Event();
-        $event->setServerName($this->getOptions()->getServerName());
-        $event->setRelease($this->getOptions()->getRelease());
-        $event->getTagsContext()->merge($this->getOptions()->getTags());
-        $event->setEnvironment($this->getOptions()->getEnvironment());
-
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
-        } else {
-            $request = ServerRequestFactory::fromGlobals();
-            $serverParams = $request->getServerParams();
-
-            if (isset($serverParams['PATH_INFO'])) {
-                $event->setTransaction($serverParams['PATH_INFO']);
-            }
-        }
-
-        if (isset($payload['logger'])) {
-            $event->setLogger($payload['logger']);
-        }
-
-        $message = $payload['message'] ?? null;
-        $messageParams = $payload['message_params'] ?? [];
-
-        if (null !== $message) {
-            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
-        }
-
-        if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-            $this->addThrowableToEvent($event, $payload['exception']);
-        }
-
-        if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
-            $event->setStacktrace($payload['stacktrace']);
-        }
+        $event = $this->eventFactory->create($payload);
 
         if (null !== $scope) {
             $event = $scope->applyToEvent($event, $payload);
         }
 
         return \call_user_func($this->options->getBeforeSendCallback(), $event);
-    }
-
-    /**
-     * Stores the given exception in the passed event.
-     *
-     * @param Event      $event     The event that will be enriched with the exception
-     * @param \Throwable $exception The exception that will be processed and added to the event
-     */
-    private function addThrowableToEvent(Event $event, \Throwable $exception): void
-    {
-        if ($exception instanceof \ErrorException) {
-            $event->setLevel(Severity::fromError($exception->getSeverity()));
-        }
-
-        $exceptions = [];
-        $currentException = $exception;
-
-        do {
-            if ($this->getOptions()->isExcludedException($currentException)) {
-                continue;
-            }
-
-            $data = [
-                'type' => \get_class($currentException),
-                'value' => $this->serializer->serialize($currentException->getMessage()),
-            ];
-
-            $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->getOptions(),
-                $this->serializer,
-                $this->representationSerializer,
-                $currentException->getTrace(),
-                $currentException->getFile(),
-                $currentException->getLine()
-            );
-
-            $exceptions[] = $data;
-        } while ($currentException = $currentException->getPrevious());
-
-        $event->setExceptions($exceptions);
     }
 }
