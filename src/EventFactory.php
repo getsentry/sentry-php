@@ -1,41 +1,64 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry;
 
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\SerializerInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
 final class EventFactory
 {
+    /**
+     * @var SerializerInterface The serializer
+     */
+    private $serializer;
+
+    /**
+     * @var RepresentationSerializerInterface The representation serializer
+     */
+    private $representationSerializer;
+
     /**
      * @var Options The Sentry options
      */
     private $options;
 
     /**
-     * @var string|null
+     * @var string
      */
     private $sdkIdentifier;
 
     /**
      * EventFactory constructor.
-     * @param Options $options
-     * @param string $sdkIdentifier
+     *
+     * @param SerializerInterface               $serializer
+     * @param RepresentationSerializerInterface $representationSerializer
+     * @param Options                           $options
+     * @param string|null                       $sdkIdentifier
      */
-    public function __construct(Options $options, string $sdkIdentifier = null)
+    public function __construct(SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, Options $options, string $sdkIdentifier)
     {
+        $this->serializer = $serializer;
+        $this->representationSerializer = $representationSerializer;
         $this->options = $options;
         $this->sdkIdentifier = $sdkIdentifier;
     }
 
     /**
      * @param array $payload The data to be attached to the Event
+     *
      * @return Event
-     * @throws \Exception
      */
     public function create(array $payload): Event
     {
-        $event = new Event($this->sdkIdentifier);
-        
+        try {
+            $event = new Event($this->sdkIdentifier);
+        } catch (\Throwable $error) {
+            throw new \RuntimeException('Unable to instantiate an event', null, $error);
+        }
+
         $event->setServerName($this->options->getServerName());
         $event->setRelease($this->options->getRelease());
         $event->getTagsContext()->merge($this->options->getTags());
@@ -65,6 +88,8 @@ final class EventFactory
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
             $this->addThrowableToEvent($event, $payload['exception']);
+        } elseif ($this->options->shouldAttachStacktrace()) {
+            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
         }
 
         if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
@@ -90,7 +115,7 @@ final class EventFactory
         $currentException = $exception;
 
         do {
-            if ($this->getOptions()->isExcludedException($currentException)) {
+            if ($this->options->isExcludedException($currentException)) {
                 continue;
             }
 
@@ -100,7 +125,7 @@ final class EventFactory
             ];
 
             $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->getOptions(),
+                $this->options,
                 $this->serializer,
                 $this->representationSerializer,
                 $currentException->getTrace(),

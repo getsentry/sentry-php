@@ -6,13 +6,8 @@ namespace Sentry;
 
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Serializer\RepresentationSerializer;
-use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
@@ -68,33 +63,19 @@ class Client implements ClientInterface
     private $integrations;
 
     /**
-     * @var SerializerInterface The serializer
-     */
-    private $serializer;
-
-    /**
-     * @var RepresentationSerializerInterface The representation serializer
-     */
-    private $representationSerializer;
-
-    /**
      * Constructor.
      *
-     * @param Options $options The client configuration
-     * @param TransportInterface $transport The transport
-     * @param EventFactory $eventFactory
-     * @param SerializerInterface $serializer The serializer used for events
-     * @param RepresentationSerializerInterface $representationSerializer The representation serializer to be used with stacktrace frames
+     * @param Options                $options      The client configuration
+     * @param TransportInterface     $transport    The transport
+     * @param EventFactory           $eventFactory The factory for events
      * @param IntegrationInterface[] $integrations The integrations used by the client
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $integrations = [])
+    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory, array $integrations = [])
     {
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
         $this->integrations = Handler::setupIntegrations($integrations);
-        $this->serializer = $serializer;
-        $this->representationSerializer = $representationSerializer;
     }
 
     /**
@@ -110,14 +91,10 @@ class Client implements ClientInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
-        $payload['message'] = $message;
-        $payload['level'] = $level;
-
-        if ($this->getOptions()->shouldAttachStacktrace()) {
-            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
-        }
-
-        return $this->captureEvent($payload, $scope);
+        return $this->captureEvent([
+            'message' => $message,
+            'level' => $level,
+        ], $scope);
     }
 
     /**
@@ -185,6 +162,8 @@ class Client implements ClientInterface
      * @param null|Scope $scope   optional scope which enriches the Event
      *
      * @return null|Event returns ready to send Event, however depending on options it can be discarded
+     *
+     * @throws \Exception
      */
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
