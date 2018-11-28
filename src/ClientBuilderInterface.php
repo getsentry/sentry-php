@@ -101,8 +101,7 @@ interface ClientBuilderInterface
     /**
      * Sets a representation serializer instance to be injected as a dependency of the client.
      *
-     * @param RepresentationSerializerInterface $representationSerializer
-     *                                                                    The representation serializer, used to serialize function
+     * @param RepresentationSerializerInterface $representationSerializer The representation serializer, used to serialize function
      *                                                                    arguments in stack traces, to have string representation
      *                                                                    of non-string values
      *

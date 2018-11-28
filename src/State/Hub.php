@@ -10,10 +10,9 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
- * This class is responsible for maintaining a stack of pairs of clients and
- * scopes. It is the main entry point to talk with the Sentry client.
+ * This class is a basic implementation of the {@see HubInterface} interface.
  */
-final class Hub
+final class Hub implements HubInterface
 {
     /**
      * @var Layer[] The stack of client/scope pairs
@@ -26,9 +25,7 @@ final class Hub
     private $lastEventId;
 
     /**
-     * Constructor.
-     *
-     * @var Hub
+     * @var HubInterface The hub that is set as the current one
      */
     private static $currentHub;
 
@@ -48,9 +45,7 @@ final class Hub
     }
 
     /**
-     * Gets the client binded to the top of the stack.
-     *
-     * @return ClientInterface|null
+     * {@inheritdoc}
      */
     public function getClient(): ?ClientInterface
     {
@@ -58,9 +53,7 @@ final class Hub
     }
 
     /**
-     * Gets the scope binded to the top of the stack.
-     *
-     * @return Scope
+     * {@inheritdoc}
      */
     public function getScope(): Scope
     {
@@ -68,29 +61,7 @@ final class Hub
     }
 
     /**
-     * Gets the stack of clients and scopes.
-     *
-     * @return Layer[]
-     */
-    public function getStack(): array
-    {
-        return $this->stack;
-    }
-
-    /**
-     * Gets the topmost client/layer pair in the stack.
-     *
-     * @return Layer
-     */
-    public function getStackTop(): Layer
-    {
-        return $this->stack[\count($this->stack) - 1];
-    }
-
-    /**
-     * Gets the ID of the last captured event.
-     *
-     * @return null|string
+     * {@inheritdoc}
      */
     public function getLastEventId(): ?string
     {
@@ -98,13 +69,7 @@ final class Hub
     }
 
     /**
-     * Creates a new scope to store context information that will be layered on
-     * top of the current one. It is isolated, i.e. all breadcrumbs and context
-     * information added to this scope will be removed once the scope ends. Be
-     * sure to always remove this scope with {@see Hub::popScope} when the
-     * operation finishes or throws.
-     *
-     * @return Scope
+     * {@inheritdoc}
      */
     public function pushScope(): Scope
     {
@@ -116,11 +81,7 @@ final class Hub
     }
 
     /**
-     * Removes a previously pushed scope from the stack. This restores the state
-     * before the scope was pushed. All breadcrumbs and context information added
-     * since the last call to {@see Hub::pushScope} are discarded.
-     *
-     * @return bool
+     * {@inheritdoc}
      */
     public function popScope(): bool
     {
@@ -132,10 +93,7 @@ final class Hub
     }
 
     /**
-     * Creates a new scope with and executes the given operation within. The scope
-     * is automatically removed once the operation finishes or throws.
-     *
-     * @param callable $callback The callback to be executed
+     * {@inheritdoc}
      */
     public function withScope(callable $callback): void
     {
@@ -149,10 +107,7 @@ final class Hub
     }
 
     /**
-     * Calls the given callback passing to it the current scope so that any
-     * operation can be run within its context.
-     *
-     * @param callable $callback The callback to be executed
+     * {@inheritdoc}
      */
     public function configureScope(callable $callback): void
     {
@@ -160,9 +115,7 @@ final class Hub
     }
 
     /**
-     * Binds the given client to the current scope.
-     *
-     * @param ClientInterface $client The client
+     * {@inheritdoc}
      */
     public function bindClient(ClientInterface $client): void
     {
@@ -171,12 +124,7 @@ final class Hub
     }
 
     /**
-     * Captures a message event and sends it to Sentry.
-     *
-     * @param string   $message The message
-     * @param Severity $level   The severity level of the message
-     *
-     * @return null|string
+     * {@inheritdoc}
      */
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
@@ -190,11 +138,7 @@ final class Hub
     }
 
     /**
-     * Captures an exception event and sends it to Sentry.
-     *
-     * @param \Throwable $exception The exception
-     *
-     * @return null|string
+     * {@inheritdoc}
      */
     public function captureException(\Throwable $exception): ?string
     {
@@ -208,11 +152,7 @@ final class Hub
     }
 
     /**
-     * Captures a new event using the provided data.
-     *
-     * @param array $payload The data of the event being captured
-     *
-     * @return null|string
+     * {@inheritdoc}
      */
     public function captureEvent(array $payload): ?string
     {
@@ -226,9 +166,7 @@ final class Hub
     }
 
     /**
-     * Captures an event that logs the last occurred error.
-     *
-     * @return null|string
+     * {@inheritdoc}
      */
     public function captureLastError(): ?string
     {
@@ -242,13 +180,7 @@ final class Hub
     }
 
     /**
-     * Records a new breadcrumb which will be attached to future events. They
-     * will be added to subsequent events to provide more context on user's
-     * actions prior to an error or crash.
-     *
-     * @param Breadcrumb $breadcrumb The breadcrumb to record
-     *
-     * @return bool Whether the breadcrumb was actually added to the current scope
+     * {@inheritdoc}
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
@@ -276,11 +208,9 @@ final class Hub
     }
 
     /**
-     * Returns the current global Hub.
-     *
-     * @return Hub
+     * {@inheritdoc}
      */
-    public static function getCurrent(): self
+    public static function getCurrent(): HubInterface
     {
         if (null === self::$currentHub) {
             self::$currentHub = new self();
@@ -290,13 +220,9 @@ final class Hub
     }
 
     /**
-     * Sets the Hub as the current.
-     *
-     * @param self $hub
-     *
-     * @return Hub
+     * {@inheritdoc}
      */
-    public static function setCurrent(self $hub): self
+    public static function setCurrent(HubInterface $hub): HubInterface
     {
         self::$currentHub = $hub;
 
@@ -304,11 +230,7 @@ final class Hub
     }
 
     /**
-     * Gets the integration whose FQCN matches the given one if it's available on the current client.
-     *
-     * @param string $className The FQCN of the integration
-     *
-     * @return null|IntegrationInterface
+     * {@inheritdoc}
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
@@ -318,5 +240,15 @@ final class Hub
         }
 
         return null;
+    }
+
+    /**
+     * Gets the topmost client/layer pair in the stack.
+     *
+     * @return Layer
+     */
+    private function getStackTop(): Layer
+    {
+        return $this->stack[\count($this->stack) - 1];
     }
 }
