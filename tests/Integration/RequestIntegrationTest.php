@@ -64,7 +64,9 @@ final class RequestIntegrationTest extends TestCase
             $request = $request->withHeader($name, $value);
         }
 
-        $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
+        $this->assertInstanceOf(ServerRequestInterface::class, $request);
+        
+        $integration = new RequestIntegration(new Options(['send_default_pai' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
 
