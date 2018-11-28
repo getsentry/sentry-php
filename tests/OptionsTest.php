@@ -246,22 +246,29 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @dataProvider maxBreadCrumbsInvalidValuesDataProvider
+     * @dataProvider maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider
      */
-    public function testMaxBreadCrumbsInvalidValues($invalidValue): void
+    public function testMaxBreadcrumbsOptionIsValidatedCorrectly(bool $isValid, $value): void
     {
-        $this->expectException(InvalidOptionsException::class);
+        if (!$isValid) {
+            $this->expectException(InvalidOptionsException::class);
+        }
 
-        new Options(['max_breadcrumbs' => [$invalidValue]]);
+        $options = new Options(['max_breadcrumbs' => $value]);
+
+        $this->assertSame($value, $options->getMaxBreadcrumbs());
     }
 
-    public function maxBreadCrumbsInvalidValuesDataProvider()
+    public function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
-            [-1],
-            [Options::DEFAULT_MAX_BREADCRUMBS + 1],
-            ['string'],
-            ['1'],
+            [false, -1],
+            [true, 0],
+            [true, 1],
+            [true, Options::DEFAULT_MAX_BREADCRUMBS],
+            [false, Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            [false, 'string'],
+            [false, '1'],
         ];
     }
 }
