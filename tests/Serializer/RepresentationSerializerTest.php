@@ -21,6 +21,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, [1, 2, 3]);
+
         $this->assertSame(['1', '2', '3'], $result);
     }
 
@@ -36,6 +37,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $serializer->representationSerialize(1);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('1', $result);
     }
@@ -52,6 +54,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $serializer->representationSerialize(1.5);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('1.5', $result);
     }
@@ -68,9 +71,11 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $serializer->representationSerialize(true);
+
         $this->assertSame('true', $result);
 
         $result = $serializer->representationSerialize(false);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('false', $result);
     }
@@ -87,6 +92,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $serializer->representationSerialize(null);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('null', $result);
     }
@@ -103,14 +109,17 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
         }
 
         $result = $serializer->representationSerialize((float) 1);
+
         $this->assertInternalType('string', $result);
         $this->assertSame('1.0', $result);
 
         $result = $serializer->representationSerialize(floor(5 / 2));
+
         $this->assertInternalType('string', $result);
         $this->assertSame('2.0', $result);
 
         $result = $serializer->representationSerialize(floor(12345.678901234));
+
         $this->assertInternalType('string', $result);
         $this->assertSame('12345.0', $result);
     }

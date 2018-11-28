@@ -81,13 +81,8 @@ class Client implements ClientInterface
      * @param RepresentationSerializerInterface $representationSerializer The representation serializer to be used with stacktrace frames
      * @param IntegrationInterface[]            $integrations             The integrations used by the client
      */
-    public function __construct(
-        Options $options,
-        TransportInterface $transport,
-        SerializerInterface $serializer,
-        RepresentationSerializerInterface $representationSerializer,
-        array $integrations = []
-    ) {
+    public function __construct(Options $options, TransportInterface $transport, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $integrations = [])
+    {
         $this->options = $options;
         $this->transport = $transport;
         $this->integrations = Handler::setupIntegrations($integrations);

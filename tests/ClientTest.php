@@ -342,6 +342,7 @@ class ClientTest extends TestCase
             }));
 
         $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class), []);
+
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
     }
@@ -467,6 +468,7 @@ class ClientTest extends TestCase
 
         $serializer = new Serializer();
         $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
+
         $client = ClientBuilder::create()
             ->setTransport($transport)
             ->setSerializer($serializer)

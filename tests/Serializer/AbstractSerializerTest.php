@@ -34,13 +34,15 @@ abstract class AbstractSerializerTest extends TestCase
     public function testStdClassAreArrays(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
-        $input = new \stdClass();
-        $input->foo = 'BAR';
-        $result = $this->invokeSerialization($serializer, $input);
-        $this->assertSame(['foo' => 'BAR'], $result);
+
+        $input = ['foo' => 'BAR'];
+        $result = $this->invokeSerialization($serializer, (object) $input);
+
+        $this->assertSame($input, $result);
     }
 
     public function testObjectsAreStrings(): void
@@ -48,6 +50,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer = $this->createSerializer();
         $input = new SerializerTestObject();
         $result = $this->invokeSerialization($serializer, $input);
+
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
@@ -55,8 +58,10 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $serializer = $this->createSerializer();
         $serializer->setSerializeAllObjects(true);
+
         $input = new SerializerTestObject();
         $result = $this->invokeSerialization($serializer, $input);
+
         $this->assertSame(['key' => 'value'], $result);
     }
 
@@ -66,24 +71,31 @@ abstract class AbstractSerializerTest extends TestCase
     public function testRecursionMaxDepth(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
+
         if ($serializeAllObjects) {
             $serializer->setSerializeAllObjects(true);
         }
+
         $input = [];
         $input[] = &$input;
         $result = $this->invokeSerialization($serializer, $input);
+
         $this->assertSame([[['Array of length 1']]], $result);
 
         $result = $this->invokeSerialization($serializer, []);
+
         $this->assertSame([], $result);
 
         $result = $this->invokeSerialization($serializer, [[]]);
+
         $this->assertSame([[]], $result);
 
         $result = $this->invokeSerialization($serializer, [[[]]]);
+
         $this->assertSame([[[]]], $result);
 
         $result = $this->invokeSerialization($serializer, [[[[]]]]);
+
         $this->assertSame([[['Array of length 0']]], $result);
     }
 
@@ -91,6 +103,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
         $object = new SerializerTestObject();
         $object->key = $object;
+
         yield [
             'object' => $object,
             'expectedResult' => ['key' => 'Object ' . SerializerTestObject::class],
@@ -100,6 +113,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object2 = new SerializerTestObject();
         $object2->key = $object;
         $object->key = $object2;
+
         yield [
             'object' => $object,
             'expectedResult' => ['key' => ['key' => 'Object ' . SerializerTestObject::class]],
@@ -109,6 +123,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object2 = new SerializerTestObject();
         $object2->key = 'foobar';
         $object->key = $object2;
+
         yield [
             'object' => $object,
             'expectedResult' => ['key' => ['key' => 'foobar']],
@@ -120,6 +135,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object2->key = $object3;
         $object = new SerializerTestObject();
         $object->key = $object2;
+
         yield [
             'object' => $object,
             'expectedResult' => ['key' => ['key' => ['key' => 'foobar']]],
@@ -133,6 +149,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object2->key = $object3;
         $object = new SerializerTestObject();
         $object->key = $object2;
+
         yield [
             'object' => $object,
             'expectedResult' => ['key' => ['key' => ['key' => 'Object ' . SerializerTestObject::class]]],
@@ -145,6 +162,7 @@ abstract class AbstractSerializerTest extends TestCase
         $object = new SerializerTestObject();
         $object->key = $object2;
         $object3->key = $object2;
+
         yield [
             'object' => $object,
             'expectedResult' => [
@@ -179,6 +197,7 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer->setSerializeAllObjects(true);
 
         $result = $this->invokeSerialization($serializer, $value);
+
         $this->assertEquals($expectedResult, $result);
     }
 
@@ -186,16 +205,50 @@ abstract class AbstractSerializerTest extends TestCase
     {
         return [
             [
-                (object) ['key' => (object) ['key' => 12345]],
-                ['key' => ['key' => 12345]],
+                (object) [
+                    'key' => (object) [
+                        'key' => 12345,
+                    ],
+                ],
+                [
+                    'key' => [
+                        'key' => 12345,
+                    ],
+                ],
             ],
             [
-                (object) ['key' => (object) ['key' => (object) ['key' => 12345]]],
-                ['key' => ['key' => ['key' => 12345]]],
+                (object) [
+                    'key' => (object) [
+                        'key' => (object) [
+                            'key' => 12345,
+                        ],
+                    ],
+                ],
+                [
+                    'key' => [
+                        'key' => [
+                            'key' => 12345,
+                        ],
+                    ],
+                ],
             ],
             [
-                (object) ['key' => (object) ['key' => (object) ['key' => (object) ['key' => 12345]]]],
-                ['key' => ['key' => ['key' => 'Object stdClass']]],
+                (object) [
+                    'key' => (object) [
+                        'key' => (object) [
+                            'key' => (object) [
+                                'key' => 12345,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'key' => [
+                        'key' => [
+                            'key' => 'Object stdClass',
+                        ],
+                    ],
+                ],
             ],
         ];
     }

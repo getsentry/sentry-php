@@ -21,6 +21,7 @@ final class SerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, [1, 2, 3]);
+
         $this->assertSame([1, 2, 3], $result);
     }
 
@@ -36,6 +37,7 @@ final class SerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, 1);
+
         $this->assertInternalType('integer', $result);
         $this->assertSame(1, $result);
     }
@@ -52,6 +54,7 @@ final class SerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, 1.5);
+
         $this->assertInternalType('double', $result);
         $this->assertSame(1.5, $result);
     }
@@ -68,9 +71,11 @@ final class SerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, true);
+
         $this->assertTrue($result);
 
         $result = $this->invokeSerialization($serializer, false);
+
         $this->assertFalse($result);
     }
 
@@ -86,6 +91,7 @@ final class SerializerTest extends AbstractSerializerTest
         }
 
         $result = $this->invokeSerialization($serializer, null);
+
         $this->assertNull($result);
     }
 
