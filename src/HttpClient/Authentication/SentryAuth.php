@@ -23,13 +23,20 @@ final class SentryAuth implements Authentication
     private $options;
 
     /**
+     * @var string The SDK identifier
+     */
+    private $sdkIdentifier;
+
+    /**
      * Constructor.
      *
      * @param Options $options The Sentry client configuration
+     * @param string $sdkIdentifier The Sentry SDK identifier to be used
      */
-    public function __construct(Options $options)
+    public function __construct(Options $options, string $sdkIdentifier)
     {
         $this->options = $options;
+        $this->sdkIdentifier = $sdkIdentifier;
     }
 
     /**
@@ -39,7 +46,7 @@ final class SentryAuth implements Authentication
     {
         $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,
-            'sentry_client' => Client::USER_AGENT,
+            'sentry_client' => $this->sdkIdentifier . '/' . Client::VERSION,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
             'sentry_key' => $this->options->getPublicKey(),
         ];

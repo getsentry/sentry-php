@@ -113,7 +113,7 @@ final class ClientBuilder implements ClientBuilderInterface
     private $integrations = [];
 
     /**
-     * @var string|null The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
+     * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
     private $sdkIdentifier = Client::SDK_IDENTIFIER;
     
@@ -291,8 +291,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . Client::VERSION]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier)));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 

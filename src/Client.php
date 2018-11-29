@@ -32,11 +32,6 @@ class Client implements ClientInterface
     public const SDK_IDENTIFIER = 'sentry.php';
 
     /**
-     * This constant defines the client's user-agent string.
-     */
-    public const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
-
-    /**
      * This constant defines the maximum length of the message captured by the
      * message SDK interface.
      */
