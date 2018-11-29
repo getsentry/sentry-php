@@ -113,6 +113,11 @@ final class ClientBuilder implements ClientBuilderInterface
     private $integrations = [];
 
     /**
+     * @var string|null The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
+     */
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
+    
+    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -226,16 +231,26 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
+    public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void
+    {
+        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
+        
+        if ($sdkIdentifierSuffix) {
+            $this->sdkIdentifier .= '.' . $sdkIdentifierSuffix;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getClient(): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
-        $this->serializer = $this->serializer ?? new Serializer();
-        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer, $this->integrations);
+        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->integrations);
     }
 
     /**
@@ -308,5 +323,13 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
+    }
+
+    private function createEventFactory(): EventFactory
+    {
+        $this->serializer = $this->serializer ?? new Serializer();
+        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
+
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier);
     }
 }

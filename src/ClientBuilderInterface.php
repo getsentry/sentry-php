@@ -108,4 +108,9 @@ interface ClientBuilderInterface
      * @return $this
      */
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer);
+
+    /**
+     * @param string|null $sdkIdentifierSuffix The suffix for the SDK identifier, to be used by official SDK integrations
+     */
+    public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void;
 }
