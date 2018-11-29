@@ -26,7 +26,7 @@ final class EventFactory
     private $options;
 
     /**
-     * @var string
+     * @var string The Sentry SDK identifier
      */
     private $sdkIdentifier;
 

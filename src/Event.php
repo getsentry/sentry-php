@@ -126,14 +126,21 @@ final class Event implements \JsonSerializable
     private $stacktrace;
 
     /**
+     * @var string The Sentry SDK identifier
+     */
+    private $sdkIdentifier;
+
+    /**
      * Event constructor.
      *
+     * @param string $sdkIdentifier The Sentry SDK identifier
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception
      */
-    public function __construct()
+    public function __construct(string $sdkIdentifier)
     {
+        $this->sdkIdentifier = $sdkIdentifier;
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
@@ -503,7 +510,7 @@ final class Event implements \JsonSerializable
             'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
+                'name' => $this->sdkIdentifier,
                 'version' => Client::VERSION,
             ],
         ];
