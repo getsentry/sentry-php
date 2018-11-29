@@ -116,7 +116,7 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
     private $sdkIdentifier = Client::SDK_IDENTIFIER;
-    
+
     /**
      * Class constructor.
      *
@@ -234,7 +234,7 @@ final class ClientBuilder implements ClientBuilderInterface
     public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void
     {
         $this->sdkIdentifier = Client::SDK_IDENTIFIER;
-        
+
         if ($sdkIdentifierSuffix) {
             $this->sdkIdentifier .= '.' . $sdkIdentifierSuffix;
         }

@@ -33,10 +33,10 @@ final class EventFactory
     /**
      * EventFactory constructor.
      *
-     * @param SerializerInterface               $serializer
-     * @param RepresentationSerializerInterface $representationSerializer
-     * @param Options                           $options
-     * @param string|null                       $sdkIdentifier
+     * @param SerializerInterface               $serializer               The serializer
+     * @param RepresentationSerializerInterface $representationSerializer The serializer for function arguments
+     * @param Options                           $options                  The SDK configuration options
+     * @param string                            $sdkIdentifier            The Sentry SDK identifier
      */
     public function __construct(SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, Options $options, string $sdkIdentifier)
     {
@@ -56,7 +56,7 @@ final class EventFactory
         try {
             $event = new Event($this->sdkIdentifier);
         } catch (\Throwable $error) {
-            throw new \RuntimeException('Unable to instantiate an event', null, $error);
+            throw new \RuntimeException('Unable to instantiate an event', 0, $error);
         }
 
         $event->setServerName($this->options->getServerName());

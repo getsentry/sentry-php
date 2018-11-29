@@ -30,8 +30,8 @@ final class SentryAuth implements Authentication
     /**
      * Constructor.
      *
-     * @param Options $options The Sentry client configuration
-     * @param string $sdkIdentifier The Sentry SDK identifier to be used
+     * @param Options $options       The Sentry client configuration
+     * @param string  $sdkIdentifier The Sentry SDK identifier to be used
      */
     public function __construct(Options $options, string $sdkIdentifier)
     {

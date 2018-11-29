@@ -134,6 +134,7 @@ final class Event implements \JsonSerializable
      * Event constructor.
      *
      * @param string $sdkIdentifier The Sentry SDK identifier
+     *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception

@@ -25,14 +25,14 @@ final class MemorySpoolTest extends TestCase
     public function testQueueEvent(): void
     {
         $this->assertAttributeEmpty('events', $this->spool);
-        $this->assertTrue($this->spool->queueEvent(new Event()));
+        $this->assertTrue($this->spool->queueEvent(new Event('sentry.sdk.identifier')));
         $this->assertAttributeNotEmpty('events', $this->spool);
     }
 
     public function testFlushQueue(): void
     {
-        $event1 = new Event();
-        $event2 = new Event();
+        $event1 = new Event('sentry.sdk.identifier');
+        $event2 = new Event('sentry.sdk.identifier');
 
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
