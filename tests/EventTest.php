@@ -98,7 +98,7 @@ final class EventTest extends TestCase
             'level' => 'error',
             'platform' => 'php',
             'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
+                'name' => 'sentry.sdk.identifier',
                 'version' => Client::VERSION,
             ],
             'contexts' => [

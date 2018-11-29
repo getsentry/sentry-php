@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventFactory;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -38,7 +39,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
+        $client = new Client(new Options(), $transport, $this->mockEventFactory());
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
@@ -58,7 +59,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
+        $client = new Client(new Options(), $transport, $this->mockEventFactory());
         $client->captureMessage('test');
     }
 
@@ -264,7 +265,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class), []);
+        $client = new Client(new Options(), $transport, $this->mockEventFactory(), []);
 
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
@@ -443,5 +444,15 @@ class ClientTest extends TestCase
         } catch (\Exception $ex) {
             return $ex;
         }
+    }
+
+    private function mockEventFactory()
+    {
+        return new EventFactory(
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(Options::class),
+            'sentry.sdk.identifier'
+        );
     }
 }
