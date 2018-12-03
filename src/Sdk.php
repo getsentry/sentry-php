@@ -9,10 +9,14 @@ use Sentry\State\Hub;
 /**
  * Creates a new Client and Hub which will be set as current.
  *
- * @param array $options The client options
+ * @param array|Options $options The client options
  */
-function init(array $options = []): void
+function init($options = []): void
 {
+    if (!$options instanceof Options) {
+        $options = new Options($options);
+    }
+
     Hub::setCurrent(new Hub(ClientBuilder::create($options)->getClient()));
 }
 

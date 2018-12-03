@@ -23,7 +23,7 @@ class Options
     /**
      * @var array The configuration options
      */
-    private $options = [];
+    protected $options = [];
 
     /**
      * @var string|null A simple server string, set to the DSN found on your Sentry settings
@@ -48,7 +48,7 @@ class Options
     /**
      * @var OptionsResolver The options resolver
      */
-    private $resolver;
+    protected $resolver;
 
     /**
      * Class constructor.
@@ -583,7 +583,7 @@ class Options
      * @throws \Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
-    private function configureOptions(OptionsResolver $resolver): void
+    protected function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'integrations' => [],
