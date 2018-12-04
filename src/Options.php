@@ -819,9 +819,6 @@ class Options
      */
     private function validateIntegrationsOption(?array $integrations): bool
     {
-        if (null === $integrations) {
-            return true;
-        }
         foreach ($integrations as $integration) {
             if (!$integration instanceof IntegrationInterface) {
                 return false;
