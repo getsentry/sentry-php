@@ -98,7 +98,7 @@ final class ScopeTest extends TestCase
         $callback2Called = false;
         $callback3Called = false;
 
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $scope = new Scope();
 
         $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called, $callback2Called, $callback3Called): ?Event {
@@ -153,7 +153,7 @@ final class ScopeTest extends TestCase
 
     public function testApplyToEvent(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope = new Scope();

@@ -19,7 +19,7 @@ final class RequestIntegrationTest extends TestCase
      */
     public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
 
         $request = new ServerRequest();
@@ -53,7 +53,7 @@ final class RequestIntegrationTest extends TestCase
      */
     public function testInvoke(bool $shouldSendPii, array $requestData, array $expectedResult): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $request = new ServerRequest();
         $request = $request->withCookieParams($requestData['cookies']);

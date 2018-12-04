@@ -13,7 +13,7 @@ final class ModulesIntegrationTest extends TestCase
 {
     public function testInvoke(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $integration = new ModulesIntegration();
 
         ModulesIntegration::applyToEvent($integration, $event);

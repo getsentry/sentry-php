@@ -54,11 +54,12 @@ final class EventFactory
     public function create(array $payload): Event
     {
         try {
-            $event = new Event($this->sdkIdentifier);
+            $event = new Event();
         } catch (\Throwable $error) {
             throw new \RuntimeException('Unable to instantiate an event', 0, $error);
         }
 
+        $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setServerName($this->options->getServerName());
         $event->setRelease($this->options->getRelease());
         $event->getTagsContext()->merge($this->options->getTags());

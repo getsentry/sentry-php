@@ -13,7 +13,7 @@ final class NullTransportTest extends TestCase
     public function testSend(): void
     {
         $transport = new NullTransport();
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertEquals($event->getId(), $transport->send($event));
     }

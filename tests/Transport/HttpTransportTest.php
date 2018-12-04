@@ -32,7 +32,7 @@ final class HttpTransportTest extends TestCase
         $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event('sentry.sdk.identifier'));
+        $transport->send(new Event());
 
         // In PHP calling the destructor manually does not destroy the object,
         // but for testing we will do it anyway because otherwise we could not
@@ -65,8 +65,8 @@ final class HttpTransportTest extends TestCase
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
 
-        $transport->send(new Event('sentry.sdk.identifier'));
-        $transport->send(new Event('sentry.sdk.identifier'));
+        $transport->send(new Event());
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
@@ -92,7 +92,7 @@ final class HttpTransportTest extends TestCase
         $config = new Options();
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $transport->send(new Event('sentry.sdk.identifier'));
+        $transport->send(new Event());
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
         $this->assertSame($exception, $promise->wait(true));

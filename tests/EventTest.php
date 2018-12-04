@@ -81,8 +81,8 @@ final class EventTest extends TestCase
 
     public function testEventIsGeneratedWithUniqueIdentifier(): void
     {
-        $event1 = new Event('sentry.sdk.identifier');
-        $event2 = new Event('sentry.sdk.identifier');
+        $event1 = new Event();
+        $event2 = new Event();
 
         $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[0]), $event1->getId());
         $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[1]), $event2->getId());
@@ -98,7 +98,7 @@ final class EventTest extends TestCase
             'level' => 'error',
             'platform' => 'php',
             'sdk' => [
-                'name' => 'sentry.sdk.identifier',
+                'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
             ],
             'contexts' => [
@@ -115,14 +115,14 @@ final class EventTest extends TestCase
             ],
         ];
 
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertEquals($expected, $event->toArray());
     }
 
     public function testToArrayWithMessage(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $event->setMessage('foo bar');
 
         $data = $event->toArray();
@@ -139,7 +139,7 @@ final class EventTest extends TestCase
             'formatted' => 'foo bar',
         ];
 
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $event->setMessage('foo %s', ['bar']);
 
         $data = $event->toArray();
@@ -155,7 +155,7 @@ final class EventTest extends TestCase
             new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
         ];
 
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $event->setBreadcrumb($breadcrumbs);
 
         $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
@@ -168,35 +168,35 @@ final class EventTest extends TestCase
 
     public function testGetServerOsContext(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
     }
 
     public function testGetRuntimeContext(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
     }
 
     public function testGetUserContext(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getUserContext());
     }
 
     public function testGetExtraContext(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertInstanceOf(Context::class, $event->getExtraContext());
     }
 
     public function getTagsContext(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->assertInstanceOf(TagsContext::class, $event->getTagsContext());
     }
@@ -209,7 +209,7 @@ final class EventTest extends TestCase
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'set' . ucfirst($propertyName);
 
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
         $event->$setterMethod($propertyValue);
 
         $this->assertEquals($event->$getterMethod(), $propertyValue);
@@ -219,6 +219,7 @@ final class EventTest extends TestCase
     public function gettersAndSettersDataProvider(): array
     {
         return [
+            ['sdkIdentifier', 'sentry.sdk.test-identifier', ['sdk' => ['name' => 'sentry.sdk.test-identifier']]],
             ['level', Severity::info(), ['level' => Severity::info()]],
             ['logger', 'ruby', ['logger' => 'ruby']],
             ['transaction', 'foo', ['transaction' => 'foo']],
@@ -232,7 +233,7 @@ final class EventTest extends TestCase
 
     public function testEventJsonSerialization(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $encodingOfToArray = json_encode($event->toArray());
         $serializedEvent = json_encode($event);

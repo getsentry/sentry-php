@@ -133,15 +133,13 @@ final class Event implements \JsonSerializable
     /**
      * Event constructor.
      *
-     * @param string $sdkIdentifier The Sentry SDK identifier
-     *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception
      */
-    public function __construct(string $sdkIdentifier)
+    public function __construct()
     {
-        $this->sdkIdentifier = $sdkIdentifier;
+        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
@@ -160,6 +158,24 @@ final class Event implements \JsonSerializable
     public function getId(): string
     {
         return str_replace('-', '', $this->id->toString());
+    }
+
+    /**
+     * @return string
+     */
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    /**
+     * @internal
+     *
+     * @param string $sdkIdentifier
+     */
+    public function setSdkIdentifier(string $sdkIdentifier): void
+    {
+        $this->sdkIdentifier = $sdkIdentifier;
     }
 
     /**

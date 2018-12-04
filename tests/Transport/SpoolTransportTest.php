@@ -35,7 +35,7 @@ final class SpoolTransportTest extends TestCase
 
     public function testSend(): void
     {
-        $event = new Event('sentry.sdk.identifier');
+        $event = new Event();
 
         $this->spool->expects($this->once())
             ->method('queueEvent')
