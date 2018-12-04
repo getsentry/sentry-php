@@ -156,8 +156,6 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $client = $clientBuilder->getClient();
 
-        $this->assertInstanceOf(Client::class, $client);
-
         $integrations = $this->getObjectAttribute($client, 'integrations');
 
         $this->assertNotEmpty($integrations);
@@ -167,8 +165,6 @@ final class ClientBuilderTest extends TestCase
     {
         $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1', 'default_integrations' => false]);
         $client = $clientBuilder->getClient();
-
-        $this->assertInstanceOf(Client::class, $client);
 
         $integrations = $this->getObjectAttribute($client, 'integrations');
 

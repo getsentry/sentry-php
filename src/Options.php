@@ -576,19 +576,19 @@ class Options
     }
 
     /**
-     * Returns if default integrations will be enabled.
+     * Returns whether the default integrations are enabled.
      *
      * @return bool
      */
-    public function getDefaultIntegrations(): bool
+    public function hasDefaultIntegrations(): bool
     {
         return $this->options['default_integrations'];
     }
 
     /**
-     * Sets if default integrations will be enabled.
+     * Sets whether the default integrations are enabled.
      *
-     * @param bool $enable flag indicating if default integration will be enabled
+     * @param bool $enable Flag indicating whether the default integrations should be enabled
      */
     public function setDefaultIntegrations(bool $enable): void
     {

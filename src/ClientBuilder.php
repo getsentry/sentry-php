@@ -64,7 +64,7 @@ use Sentry\Transport\TransportInterface;
  * @method setTags(string[] $tags)
  * @method bool shouldSendDefaultPii()
  * @method setSendDefaultPii(bool $enable)
- * @method bool getDefaultIntegrations()
+ * @method bool hasDefaultIntegrations()
  * @method setDefaultIntegrations(bool $enable)
  */
 final class ClientBuilder implements ClientBuilderInterface
@@ -123,13 +123,13 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = new Options($options);
 
-        if ($this->options->getDefaultIntegrations()) {
+        $this->integrations = $this->options->getIntegrations();
+
+        if ($this->options->hasDefaultIntegrations()) {
             $this->integrations = \array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations());
-        } else {
-            $this->integrations = $this->options->getIntegrations();
         }
     }
 
