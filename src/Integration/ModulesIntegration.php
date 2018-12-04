@@ -21,13 +21,6 @@ final class ModulesIntegration implements IntegrationInterface
      */
     private static $loadedModules = [];
 
-    public function __construct()
-    {
-        if (!class_exists(PrettyVersions::class)) {
-            throw new \LogicException('You need the "jean85/pretty-package-versions" package in order to use this integration.');
-        }
-    }
-
     /**
      * {@inheritdoc}
      */
