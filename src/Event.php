@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Jean85\PrettyVersions;
+use PackageVersions\Versions;
 use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -129,6 +131,11 @@ final class Event implements \JsonSerializable
      * @var string The Sentry SDK identifier
      */
     private $sdkIdentifier;
+
+    /**
+     * @var array The official SDK packages detected as installed
+     */
+    private static $sdkPackages;
 
     /**
      * Event constructor.
@@ -514,6 +521,24 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
+    private static function getSdkPackages(): array
+    {
+        if (null === self::$sdkPackages) {
+            self::$sdkPackages = [];
+
+            foreach (Versions::VERSIONS as $package => $version) {
+                if (0 === strpos($package, 'sentry/')) {
+                    self::$sdkPackages[] = [
+                        'name' => $package,
+                        'version' => PrettyVersions::getVersion($package)->getPrettyVersion(),
+                    ];
+                }
+            }
+        }
+
+        return self::$sdkPackages;
+    }
+
     /**
      * Gets the event as an array.
      *
@@ -529,6 +554,7 @@ final class Event implements \JsonSerializable
             'sdk' => [
                 'name' => $this->sdkIdentifier,
                 'version' => Client::VERSION,
+                'packages' => self::getSdkPackages(),
             ],
         ];
 

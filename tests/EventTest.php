@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use Jean85\PrettyVersions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
@@ -100,6 +101,12 @@ final class EventTest extends TestCase
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => Client::VERSION,
+                'packages' => [
+                    [
+                        'name' => 'sentry/sentry',
+                        'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
+                    ],
+                ],
             ],
             'contexts' => [
                 'os' => [
