@@ -20,7 +20,6 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -110,11 +109,6 @@ final class ClientBuilder implements ClientBuilderInterface
     private $representationSerializer;
 
     /**
-     * @var IntegrationInterface[] List of default integrations
-     */
-    private $integrations = [];
-
-    /**
      * Class constructor.
      *
      * @param array $options The client options
@@ -123,13 +117,11 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = new Options($options);
 
-        $this->integrations = $this->options->getIntegrations();
-
         if ($this->options->hasDefaultIntegrations()) {
-            $this->integrations = \array_merge([
+            $this->options->setIntegrations(\array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration($this->options),
-            ], $this->options->getIntegrations());
+            ], $this->options->getIntegrations()));
         }
     }
 
@@ -239,7 +231,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer();
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer, $this->integrations);
+        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer);
     }
 
     /**
