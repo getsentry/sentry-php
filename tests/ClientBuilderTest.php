@@ -151,6 +151,30 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($this->getObjectAttribute($clientBuilder, 'httpClient'), 'client', $httpClientPlugin);
     }
 
+    public function testClientHasDefaultIntegration(): void
+    {
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+
+        $integrations = $this->getObjectAttribute($client, 'integrations');
+
+        $this->assertNotEmpty($integrations);
+    }
+
+    public function testClientHasNoDefaultIntegration(): void
+    {
+        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1', 'default_integrations' => false]);
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+
+        $integrations = $this->getObjectAttribute($client, 'integrations');
+
+        $this->assertEmpty($integrations);
+    }
+
     /**
      * @expectedException \BadMethodCallException
      * @expectedExceptionMessage The method named "methodThatDoesNotExists" does not exists.
