@@ -813,11 +813,11 @@ class Options
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array|null $integrations The value to validate
+     * @param array $integrations The value to validate
      *
      * @return bool
      */
-    private function validateIntegrationsOption(?array $integrations): bool
+    private function validateIntegrationsOption(array $integrations): bool
     {
         foreach ($integrations as $integration) {
             if (!$integration instanceof IntegrationInterface) {
