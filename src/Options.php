@@ -659,11 +659,12 @@ class Options
         $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('integrations', 'IntegrationInterface[]');
+        $resolver->setAllowedTypes('integrations', 'array');
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
+        $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
@@ -803,6 +804,28 @@ class Options
 
         if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
             return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates that the elements of this option are all class instances that
+     * implements the {@see IntegrationInterface} interface.
+     *
+     * @param array|null $integrations The value to validate
+     *
+     * @return bool
+     */
+    private function validateIntegrationsOption(?array $integrations): bool
+    {
+        if (null === $integrations) {
+            return true;
+        }
+        foreach ($integrations as $integration) {
+            if (!$integration instanceof IntegrationInterface) {
+                return false;
+            }
         }
 
         return true;
