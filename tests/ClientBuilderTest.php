@@ -162,7 +162,7 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder = new ClientBuilder([
             'dsn' => 'http://public:secret@example.com/sentry/1',
             'default_integrations' => $defaultIntegrations,
-            'integrations' => $integrations
+            'integrations' => $integrations,
         ]);
 
         $client = $clientBuilder->getClient();
