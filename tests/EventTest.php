@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use Jean85\PrettyVersions;
+use PackageVersions\Versions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
@@ -92,6 +93,7 @@ final class EventTest extends TestCase
     public function testToArray(): void
     {
         $this->options->setRelease('1.2.3-dev');
+        $sentryPrettyVersion = PrettyVersions::getVersion(Versions::ROOT_PACKAGE_NAME)->getPrettyVersion();
 
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
@@ -100,11 +102,11 @@ final class EventTest extends TestCase
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
-                'version' => Client::VERSION,
+                'version' => $sentryPrettyVersion,
                 'packages' => [
                     [
                         'name' => 'sentry/sentry',
-                        'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
+                        'version' => $sentryPrettyVersion,
                     ],
                 ],
             ],
@@ -227,6 +229,7 @@ final class EventTest extends TestCase
     {
         return [
             ['sdkIdentifier', 'sentry.sdk.test-identifier', ['sdk' => ['name' => 'sentry.sdk.test-identifier']]],
+            ['sdkVersion', '1.2.3', ['sdk' => ['version' => '1.2.3']]],
             ['level', Severity::info(), ['level' => Severity::info()]],
             ['logger', 'ruby', ['logger' => 'ruby']],
             ['transaction', 'foo', ['transaction' => 'foo']],
@@ -236,6 +239,17 @@ final class EventTest extends TestCase
             ['fingerprint', ['foo', 'bar'], ['fingerprint' => ['foo', 'bar']]],
             ['environment', 'foo', ['environment' => 'foo']],
         ];
+    }
+
+    public function testSetSdkVersionByPackageName(): void
+    {
+        $packageName = 'phpunit/phpunit';
+        $prettyVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
+        $event = new Event();
+        $event->setSdkVersionByPackageName($packageName);
+
+        $this->assertSame($prettyVersion, $event->getSdkVersion());
+        $this->assertArraySubset(['sdk' => ['version' => $prettyVersion]], $event->toArray());
     }
 
     public function testEventJsonSerialization(): void
