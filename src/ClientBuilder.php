@@ -66,6 +66,8 @@ use Sentry\Transport\TransportInterface;
  * @method setSendDefaultPii(bool $enable)
  * @method bool hasDefaultIntegrations()
  * @method setDefaultIntegrations(bool $enable)
+ * @method callable getBeforeSendCallback()
+ * @method setBeforeSendCallback(callable $beforeSend)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {

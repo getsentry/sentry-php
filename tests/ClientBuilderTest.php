@@ -9,11 +9,14 @@ use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Jean85\PrettyVersions;
+use PackageVersions\Versions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\Event;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
@@ -244,6 +247,26 @@ final class ClientBuilderTest extends TestCase
             ['setTags', ['foo', 'bar']],
             ['setErrorTypes', 0],
         ];
+    }
+
+    public function testSdkIdentifierAndVersionDefaultValues(): void
+    {
+        $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $called = false;
+        $expectedVersion = PrettyVersions::getVersion(Versions::ROOT_PACKAGE_NAME)->getPrettyVersion();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$called) {
+            $called = true;
+
+            $this->assertSame(Client::SDK_IDENTIFIER, $event->getSdkIdentifier());
+            $this->assertSame($expectedVersion, $event->getSdkVersion());
+
+            return null;
+        });
+        $clientBuilder->getClient()->captureMessage('test');
+
+        $this->assertTrue($called, 'Callback not invoked, no assertions performed');
     }
 
     /**
