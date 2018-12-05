@@ -246,7 +246,7 @@ final class ClientBuilder implements ClientBuilderInterface
     private function getSdkVersion(): string
     {
         if (null === $this->sdkVersion) {
-            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+            $this->setSdkVersionByPackageName('sentry/sentry');
         }
 
         return $this->sdkVersion;
@@ -258,6 +258,16 @@ final class ClientBuilder implements ClientBuilderInterface
     public function setSdkVersion(string $sdkVersion): void
     {
         $this->sdkVersion = $sdkVersion;
+    }
+
+    /**
+     * Sets the version of the SDK package that generated this Event using the Packagist name.
+     *
+     * @param string $packageName
+     */
+    public function setSdkVersionByPackageName(string $packageName): void
+    {
+        $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
     }
 
     /**
@@ -350,6 +360,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer();
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier);
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->getSdkVersion());
     }
 }

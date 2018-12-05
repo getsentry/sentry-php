@@ -241,17 +241,6 @@ final class EventTest extends TestCase
         ];
     }
 
-    public function testSetSdkVersionByPackageName(): void
-    {
-        $packageName = 'phpunit/phpunit';
-        $prettyVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
-        $event = new Event();
-        $event->setSdkVersionByPackageName($packageName);
-
-        $this->assertSame($prettyVersion, $event->getSdkVersion());
-        $this->assertArraySubset(['sdk' => ['version' => $prettyVersion]], $event->toArray());
-    }
-
     public function testEventJsonSerialization(): void
     {
         $event = new Event();

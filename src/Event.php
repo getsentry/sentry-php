@@ -152,7 +152,6 @@ final class Event implements \JsonSerializable
     public function __construct()
     {
         $this->sdkIdentifier = Client::SDK_IDENTIFIER;
-        $this->setSdkVersionByPackageName('sentry/sentry');
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
@@ -200,6 +199,10 @@ final class Event implements \JsonSerializable
      */
     public function getSdkVersion(): string
     {
+        if (null === $this->sdkVersion) {
+            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+        }
+
         return $this->sdkVersion;
     }
 
@@ -211,16 +214,6 @@ final class Event implements \JsonSerializable
     public function setSdkVersion(string $sdkVersion): void
     {
         $this->sdkVersion = $sdkVersion;
-    }
-
-    /**
-     * Sets the version of the SDK package that generated this Event using the Packagist name.
-     *
-     * @param string $packageName
-     */
-    public function setSdkVersionByPackageName(string $packageName): void
-    {
-        $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
     }
 
     /**
@@ -591,7 +584,7 @@ final class Event implements \JsonSerializable
             'platform' => 'php',
             'sdk' => [
                 'name' => $this->sdkIdentifier,
-                'version' => $this->sdkVersion,
+                'version' => $this->getSdkVersion(),
                 'packages' => self::getSdkPackages(),
             ],
         ];

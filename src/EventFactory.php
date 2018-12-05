@@ -31,19 +31,26 @@ final class EventFactory
     private $sdkIdentifier;
 
     /**
+     * @var string the SDK version of the Client
+     */
+    private $sdkVersion;
+
+    /**
      * EventFactory constructor.
      *
      * @param SerializerInterface               $serializer               The serializer
      * @param RepresentationSerializerInterface $representationSerializer The serializer for function arguments
      * @param Options                           $options                  The SDK configuration options
      * @param string                            $sdkIdentifier            The Sentry SDK identifier
+     * @param string                            $sdkVersion               The Sentry SDK version
      */
-    public function __construct(SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, Options $options, string $sdkIdentifier)
+    public function __construct(SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, Options $options, string $sdkIdentifier, string $sdkVersion)
     {
         $this->serializer = $serializer;
         $this->representationSerializer = $representationSerializer;
         $this->options = $options;
         $this->sdkIdentifier = $sdkIdentifier;
+        $this->sdkVersion = $sdkVersion;
     }
 
     /**
@@ -77,6 +84,7 @@ final class EventFactory
         }
 
         $event->setSdkIdentifier($this->sdkIdentifier);
+        $event->setSdkVersion($this->sdkVersion);
         $event->setServerName($this->options->getServerName());
         $event->setRelease($this->options->getRelease());
         $event->getTagsContext()->merge($this->options->getTags());
