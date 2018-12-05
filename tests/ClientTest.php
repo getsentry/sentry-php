@@ -264,7 +264,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class), []);
+        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
 
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());

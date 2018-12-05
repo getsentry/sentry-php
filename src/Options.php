@@ -534,9 +534,9 @@ class Options
     /**
      * Set integrations that will be used by the created client.
      *
-     * @param null|IntegrationInterface[] $integrations The integrations
+     * @param IntegrationInterface[] $integrations The integrations
      */
-    public function setIntegrations(?array $integrations): void
+    public function setIntegrations(array $integrations): void
     {
         $options = array_merge($this->options, ['integrations' => $integrations]);
 
@@ -546,9 +546,9 @@ class Options
     /**
      * Returns all configured integrations that will be used by the Client.
      *
-     * @return null|IntegrationInterface[]
+     * @return IntegrationInterface[]
      */
-    public function getIntegrations(): ?array
+    public function getIntegrations(): array
     {
         return $this->options['integrations'];
     }
@@ -576,6 +576,28 @@ class Options
     }
 
     /**
+     * Returns whether the default integrations are enabled.
+     *
+     * @return bool
+     */
+    public function hasDefaultIntegrations(): bool
+    {
+        return $this->options['default_integrations'];
+    }
+
+    /**
+     * Sets whether the default integrations are enabled.
+     *
+     * @param bool $enable Flag indicating whether the default integrations should be enabled
+     */
+    public function setDefaultIntegrations(bool $enable): void
+    {
+        $options = array_merge($this->options, ['default_integrations' => $enable]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -587,6 +609,7 @@ class Options
     {
         $resolver->setDefaults([
             'integrations' => [],
+            'default_integrations' => true,
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
@@ -636,8 +659,9 @@ class Options
         $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('integrations', ['null', 'array']);
+        $resolver->setAllowedTypes('integrations', 'array');
         $resolver->setAllowedTypes('send_default_pii', 'bool');
+        $resolver->setAllowedTypes('default_integrations', 'bool');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
@@ -789,16 +813,12 @@ class Options
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array|null $integrations The value to validate
+     * @param array $integrations The value to validate
      *
      * @return bool
      */
-    private function validateIntegrationsOption(?array $integrations): bool
+    private function validateIntegrationsOption(array $integrations): bool
     {
-        if (null === $integrations) {
-            return true;
-        }
-
         foreach ($integrations as $integration) {
             if (!$integration instanceof IntegrationInterface) {
                 return false;
