@@ -110,7 +110,12 @@ interface ClientBuilderInterface
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer);
 
     /**
-     * @param string|null $sdkIdentifierSuffix The suffix for the SDK identifier, to be used by official SDK integrations
+     * @param string $sdkIdentifier The SDK identifier to be sent in {@see Event} and HTTP User-Agent headers
      */
-    public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void;
+    public function setSdkIdentifier(string $sdkIdentifier): void;
+
+    /**
+     * @param string $sdkVersion The version of the SDK in use, to be sent alongside the SDK identifier
+     */
+    public function setSdkVersion(string $sdkVersion): void;
 }

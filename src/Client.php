@@ -17,11 +17,6 @@ use Sentry\Transport\TransportInterface;
 class Client implements ClientInterface
 {
     /**
-     * The version of the library.
-     */
-    public const VERSION = '2.0.x-dev';
-
-    /**
      * The version of the protocol to communicate with the Sentry server.
      */
     public const PROTOCOL_VERSION = '7';

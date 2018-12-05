@@ -18,6 +18,7 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\RequestIntegration;
@@ -111,7 +112,12 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
-    private $sdkIdentifier = Client::SDK_IDENTIFIER;
+    private $sdkIdentifier;
+
+    /**
+     * @var string the SDK version of the Client
+     */
+    private $sdkVersion;
 
     /**
      * Class constructor.
@@ -128,6 +134,8 @@ final class ClientBuilder implements ClientBuilderInterface
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations()));
         }
+
+        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
     }
 
     /**
@@ -227,13 +235,29 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void
+    public function setSdkIdentifier(string $sdkIdentifier): void
     {
-        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
+        $this->sdkIdentifier = $sdkIdentifier;
+    }
 
-        if ($sdkIdentifierSuffix) {
-            $this->sdkIdentifier .= '.' . $sdkIdentifierSuffix;
+    /**
+     * @return string
+     */
+    private function getSdkVersion(): string
+    {
+        if (null === $this->sdkVersion) {
+            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
         }
+
+        return $this->sdkVersion;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSdkVersion(string $sdkVersion): void
+    {
+        $this->sdkVersion = $sdkVersion;
     }
 
     /**
@@ -287,8 +311,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . Client::VERSION]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
