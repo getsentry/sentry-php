@@ -160,14 +160,12 @@ final class ClientBuilderTest extends TestCase
     public function testIntegrationsAreAddedToClientCorrectly(bool $defaultIntegrations, array $integrations, array $expectedIntegrations): void
     {
         $clientBuilder = new ClientBuilder([
-            'dsn' => 'http://public:secret@example.com/sentry/1',
             'default_integrations' => $defaultIntegrations,
             'integrations' => $integrations,
         ]);
 
         $client = $clientBuilder->getClient();
-        $clientIntegrations = $client->getOptions()->getIntegrations();
-        $actualIntegrationsClassNames = array_map('get_class', $clientIntegrations);
+        $actualIntegrationsClassNames = array_map('get_class', $client->getOptions()->getIntegrations());
 
         $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
     }
@@ -175,10 +173,26 @@ final class ClientBuilderTest extends TestCase
     public function integrationsAreAddedToClientCorrectlyDataProvider(): array
     {
         return [
-            [false, [], []],
-            [false, [new StubIntegration()], [StubIntegration::class]],
-            [true, [], [RequestIntegration::class, ErrorHandlerIntegration::class]],
-            [true, [new StubIntegration()], [RequestIntegration::class, ErrorHandlerIntegration::class, StubIntegration::class]],
+            [
+                false,
+                [],
+                [],
+            ],
+            [
+                false,
+                [new StubIntegration()],
+                [StubIntegration::class],
+            ],
+            [
+                true,
+                [],
+                [RequestIntegration::class, ErrorHandlerIntegration::class],
+            ],
+            [
+                true,
+                [new StubIntegration()],
+                [RequestIntegration::class, ErrorHandlerIntegration::class, StubIntegration::class],
+            ],
         ];
     }
 
