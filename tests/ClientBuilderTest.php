@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
@@ -151,27 +154,32 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($this->getObjectAttribute($clientBuilder, 'httpClient'), 'client', $httpClientPlugin);
     }
 
-    public function testClientHasDefaultIntegration(): void
+    /**
+     * @dataProvider integrationsAreAddedToClientCorrectlyDataProvider
+     */
+    public function testIntegrationsAreAddedToClientCorrectly(bool $defaultIntegrations, array $integrations, array $expectedIntegrations): void
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = new ClientBuilder([
+            'dsn' => 'http://public:secret@example.com/sentry/1',
+            'default_integrations' => $defaultIntegrations,
+            'integrations' => $integrations
+        ]);
+
         $client = $clientBuilder->getClient();
+        $clientIntegrations = $client->getOptions()->getIntegrations();
+        $actualIntegrationsClassNames = array_map('get_class', $clientIntegrations);
 
-        $integrations = $this->getObjectAttribute($client, 'integrations');
-
-        $expectedIntegrationsClassNames = array_map('get_class', $client->getOptions()->getIntegrations());
-        $actualIntegrationsClassNames = array_map('get_class', $integrations);
-
-        $this->assertEquals($expectedIntegrationsClassNames, $actualIntegrationsClassNames, '', 0, 10, true);
+        $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
     }
 
-    public function testClientHasNoDefaultIntegration(): void
+    public function integrationsAreAddedToClientCorrectlyDataProvider(): array
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1', 'default_integrations' => false]);
-        $client = $clientBuilder->getClient();
-
-        $integrations = $this->getObjectAttribute($client, 'integrations');
-
-        $this->assertEmpty($integrations);
+        return [
+            [false, [], []],
+            [false, [new StubIntegration()], [StubIntegration::class]],
+            [true, [], [RequestIntegration::class, ErrorHandlerIntegration::class]],
+            [true, [new StubIntegration()], [RequestIntegration::class, ErrorHandlerIntegration::class, StubIntegration::class]],
+        ];
     }
 
     /**
@@ -251,6 +259,13 @@ final class ClientBuilderTest extends TestCase
             [true],
             [false],
         ];
+    }
+}
+
+final class StubIntegration implements IntegrationInterface
+{
+    public function setupOnce(): void
+    {
     }
 }
 
