@@ -158,7 +158,10 @@ final class ClientBuilderTest extends TestCase
 
         $integrations = $this->getObjectAttribute($client, 'integrations');
 
-        $this->assertNotEmpty($integrations);
+        $expectedIntegrationsClassNames = array_map('get_class', $client->getOptions()->getIntegrations());
+        $actualIntegrationsClassNames = array_map('get_class', $integrations);
+
+        $this->assertEquals($expectedIntegrationsClassNames, $actualIntegrationsClassNames, '', 0, 10, true);
     }
 
     public function testClientHasNoDefaultIntegration(): void
