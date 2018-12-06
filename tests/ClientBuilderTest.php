@@ -10,7 +10,6 @@ use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
-use PackageVersions\Versions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -253,7 +252,7 @@ final class ClientBuilderTest extends TestCase
     {
         $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $called = false;
-        $expectedVersion = PrettyVersions::getVersion(Versions::ROOT_PACKAGE_NAME)->getPrettyVersion();
+        $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         $clientBuilder = new ClientBuilder();
         $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$called) {

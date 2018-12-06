@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use Jean85\PrettyVersions;
-use PackageVersions\Versions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
@@ -93,7 +92,7 @@ final class EventTest extends TestCase
     public function testToArray(): void
     {
         $this->options->setRelease('1.2.3-dev');
-        $sentryPrettyVersion = PrettyVersions::getVersion(Versions::ROOT_PACKAGE_NAME)->getPrettyVersion();
+        $sentryPrettyVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
