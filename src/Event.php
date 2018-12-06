@@ -138,11 +138,6 @@ final class Event implements \JsonSerializable
     private $sdkVersion;
 
     /**
-     * @var array The official SDK packages detected as installed
-     */
-    private static $sdkPackages;
-
-    /**
      * Event constructor.
      *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
@@ -552,24 +547,6 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
-    private static function getSdkPackages(): array
-    {
-        if (null === self::$sdkPackages) {
-            self::$sdkPackages = [];
-
-            foreach (Versions::VERSIONS as $package => $version) {
-                if (0 === strpos($package, 'sentry/')) {
-                    self::$sdkPackages[] = [
-                        'name' => $package,
-                        'version' => PrettyVersions::getVersion($package)->getPrettyVersion(),
-                    ];
-                }
-            }
-        }
-
-        return self::$sdkPackages;
-    }
-
     /**
      * Gets the event as an array.
      *
@@ -585,7 +562,6 @@ final class Event implements \JsonSerializable
             'sdk' => [
                 'name' => $this->sdkIdentifier,
                 'version' => $this->getSdkVersion(),
-                'packages' => self::getSdkPackages(),
             ],
         ];
 

@@ -102,12 +102,6 @@ final class EventTest extends TestCase
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => $sentryPrettyVersion,
-                'packages' => [
-                    [
-                        'name' => 'sentry/sentry',
-                        'version' => $sentryPrettyVersion,
-                    ],
-                ],
             ],
             'contexts' => [
                 'os' => [
