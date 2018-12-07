@@ -152,7 +152,7 @@ class EventFactoryTest extends TestCase
         $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
     }
 
-    public function testCreateWithAutoStacktrace(): void
+    public function testCreateWithStacktrace(): void
     {
         $options = new Options();
         $options->setAttachStacktrace(true);
@@ -164,7 +164,7 @@ class EventFactoryTest extends TestCase
             'sentry.sdk.identifier'
         );
 
-        $event = $eventFactory->create([]);
+        $event = $eventFactory->createWithStacktrace([]);
 
         $stacktrace = $event->getStacktrace();
         $this->assertInstanceOf(Stacktrace::class, $stacktrace);

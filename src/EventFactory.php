@@ -51,6 +51,23 @@ final class EventFactory
      *
      * @return Event
      */
+    public function createWithStacktrace(array $payload): Event
+    {
+        $event = $this->create($payload);
+
+        if (!$event->getStacktrace()) {
+            $stacktrace = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
+            $event->setStacktrace($stacktrace);
+        }
+
+        return $event;
+    }
+
+    /**
+     * @param array $payload The data to be attached to the Event
+     *
+     * @return Event
+     */
     public function create(array $payload): Event
     {
         try {
@@ -89,8 +106,6 @@ final class EventFactory
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
             $this->addThrowableToEvent($event, $payload['exception']);
-        } elseif ($this->options->shouldAttachStacktrace()) {
-            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
         }
 
         if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
