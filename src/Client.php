@@ -85,10 +85,16 @@ class Client implements ClientInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
-        return $this->captureEvent([
+        $payload = [
             'message' => $message,
             'level' => $level,
-        ], $scope);
+        ];
+
+        if ($event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace())) {
+            return $this->send($event);
+        }
+    
+        return null;
     }
 
     /**
@@ -152,21 +158,24 @@ class Client implements ClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload the payload that will be converted to an Event
-     * @param null|Scope $scope   optional scope which enriches the Event
+     * @param array      $payload        the payload that will be converted to an Event
+     * @param null|Scope $scope          optional scope which enriches the Event
+     * @param bool       $withStacktrace True if the event should have and attached stacktrace
      *
      * @return null|Event returns ready to send Event, however depending on options it can be discarded
-     *
-     * @throws \Exception
      */
-    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    private function prepareEvent(array $payload, ?Scope $scope = null, bool $withStacktrace = false): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             return null;
         }
 
-        $event = $this->eventFactory->create($payload);
+        if ($withStacktrace) {
+            $event = $this->eventFactory->createWithStacktrace($payload);
+        } else {
+            $event = $this->eventFactory->create($payload);
+        }
 
         if (null !== $scope) {
             $event = $scope->applyToEvent($event, $payload);

@@ -410,7 +410,7 @@ class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $result = $event->getStacktrace();
 
-                $this->assertNotNull($result);
+                $this->assertInstanceOf(Stacktrace::class, $result);
                 $this->assertNotEmpty($result->getFrames());
 
                 return true;
@@ -421,6 +421,25 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureMessage('test');
+    }
+
+    public function testAttachStacktraceShouldNotWorkWithCaptureEvent(): void
+    {
+        /** @var TransportInterface|MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNull($event->getStacktrace());
+
+                return true;
+            }));
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+            ->setTransport($transport)
+            ->getClient();
+
+        $client->captureEvent([]);
     }
 
     /**
