@@ -93,7 +93,7 @@ class Client implements ClientInterface
         if ($event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace())) {
             return $this->send($event);
         }
-    
+
         return null;
     }
 

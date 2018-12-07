@@ -108,6 +108,10 @@ final class EventFactory
             $this->addThrowableToEvent($event, $payload['exception']);
         }
 
+        if (isset($payload['level']) && $payload['level'] instanceof Severity) {
+            $event->setLevel($payload['level']);
+        }
+
         if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
             $event->setStacktrace($payload['stacktrace']);
         }
