@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Jean85\PrettyVersions;
-use PackageVersions\Versions;
 use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -171,6 +170,8 @@ final class Event implements \JsonSerializable
      * Gets the SDK identifier for the SDK package that generated this Event.
      *
      * @return string
+     *
+     * @internal
      */
     public function getSdkIdentifier(): string
     {
@@ -181,6 +182,8 @@ final class Event implements \JsonSerializable
      * Sets the SDK identifier for the SDK package that generated this Event.
      *
      * @param string $sdkIdentifier
+     *
+     * @internal
      */
     public function setSdkIdentifier(string $sdkIdentifier): void
     {
@@ -191,6 +194,8 @@ final class Event implements \JsonSerializable
      * Gets the version of the SDK package that generated this Event.
      *
      * @return string
+     *
+     * @internal
      */
     public function getSdkVersion(): string
     {
@@ -205,6 +210,8 @@ final class Event implements \JsonSerializable
      * Sets the version of the SDK package that generated this Event.
      *
      * @param string $sdkVersion
+     *
+     * @internal
      */
     public function setSdkVersion(string $sdkVersion): void
     {

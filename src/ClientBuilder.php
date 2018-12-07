@@ -243,7 +243,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * @return string
+     * @return string Sets the SDK version to be passed onto {@see Event} and HTTP User-Agent header
      */
     private function getSdkVersion(): string
     {
