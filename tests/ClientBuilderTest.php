@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
@@ -152,6 +155,48 @@ final class ClientBuilderTest extends TestCase
     }
 
     /**
+     * @dataProvider integrationsAreAddedToClientCorrectlyDataProvider
+     */
+    public function testIntegrationsAreAddedToClientCorrectly(bool $defaultIntegrations, array $integrations, array $expectedIntegrations): void
+    {
+        $clientBuilder = new ClientBuilder([
+            'default_integrations' => $defaultIntegrations,
+            'integrations' => $integrations,
+        ]);
+
+        $client = $clientBuilder->getClient();
+        $actualIntegrationsClassNames = array_map('get_class', $client->getOptions()->getIntegrations());
+
+        $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
+    }
+
+    public function integrationsAreAddedToClientCorrectlyDataProvider(): array
+    {
+        return [
+            [
+                false,
+                [],
+                [],
+            ],
+            [
+                false,
+                [new StubIntegration()],
+                [StubIntegration::class],
+            ],
+            [
+                true,
+                [],
+                [RequestIntegration::class, ErrorHandlerIntegration::class],
+            ],
+            [
+                true,
+                [new StubIntegration()],
+                [RequestIntegration::class, ErrorHandlerIntegration::class, StubIntegration::class],
+            ],
+        ];
+    }
+
+    /**
      * @expectedException \BadMethodCallException
      * @expectedExceptionMessage The method named "methodThatDoesNotExists" does not exists.
      */
@@ -228,6 +273,13 @@ final class ClientBuilderTest extends TestCase
             [true],
             [false],
         ];
+    }
+}
+
+final class StubIntegration implements IntegrationInterface
+{
+    public function setupOnce(): void
+    {
     }
 }
 

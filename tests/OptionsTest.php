@@ -55,6 +55,8 @@ final class OptionsTest extends TestCase
             ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
             ['before_send', function () {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
             ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
+            ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
+            ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
         ];
     }
 

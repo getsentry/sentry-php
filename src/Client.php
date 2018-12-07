@@ -60,17 +60,16 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options                $options      The client configuration
-     * @param TransportInterface     $transport    The transport
-     * @param EventFactory           $eventFactory The factory for events
-     * @param IntegrationInterface[] $integrations The integrations used by the client
+     * @param Options            $options      The client configuration
+     * @param TransportInterface $transport    The transport
+     * @param EventFactory       $eventFactory The factory for events
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory, array $integrations = [])
+    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory)
     {
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
-        $this->integrations = Handler::setupIntegrations($integrations);
+        $this->integrations = Handler::setupIntegrations($options->getIntegrations());
     }
 
     /**

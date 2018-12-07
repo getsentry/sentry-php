@@ -265,7 +265,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockEventFactory(), []);
+        $client = new Client(new Options(), $transport, $this->mockEventFactory());
 
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());

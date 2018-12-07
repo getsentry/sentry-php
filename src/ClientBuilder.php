@@ -20,7 +20,6 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -64,6 +63,8 @@ use Sentry\Transport\TransportInterface;
  * @method setTags(string[] $tags)
  * @method bool shouldSendDefaultPii()
  * @method setSendDefaultPii(bool $enable)
+ * @method bool hasDefaultIntegrations()
+ * @method setDefaultIntegrations(bool $enable)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -108,11 +109,6 @@ final class ClientBuilder implements ClientBuilderInterface
     private $representationSerializer;
 
     /**
-     * @var IntegrationInterface[] List of default integrations
-     */
-    private $integrations = [];
-
-    /**
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
     private $sdkIdentifier = Client::SDK_IDENTIFIER;
@@ -126,11 +122,11 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = new Options($options);
 
-        if (null !== $this->options->getIntegrations()) {
-            $this->integrations = \array_merge([
+        if ($this->options->hasDefaultIntegrations()) {
+            $this->options->setIntegrations(\array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration($this->options),
-            ], $this->options->getIntegrations());
+            ], $this->options->getIntegrations()));
         }
     }
 
@@ -250,7 +246,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->integrations);
+        return new Client($this->options, $this->transport, $this->createEventFactory());
     }
 
     /**
