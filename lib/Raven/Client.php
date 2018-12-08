@@ -101,6 +101,7 @@ class Raven_Client
     public $curl_ssl_version;
     public $trust_x_forwarded_proto;
     public $mb_detect_order;
+    public $breadcrumb_size;
     /**
      * @var Raven_Processor[]
      */
@@ -192,6 +193,7 @@ class Raven_Client
         $this->transport = Raven_Util::get($options, 'transport', null);
         $this->mb_detect_order = Raven_Util::get($options, 'mb_detect_order', null);
         $this->error_types = Raven_Util::get($options, 'error_types', null);
+        $this->breadcrumb_size = Raven_Util::get($options, 'breadcrumb_size', 100);
 
         // app path is used to determine if code is part of your application
         $this->setAppPath(Raven_Util::get($options, 'app_path', null));
@@ -207,7 +209,7 @@ class Raven_Client
         $this->_user = null;
         $this->_pending_events = array();
         $this->context = new Raven_Context();
-        $this->breadcrumbs = new Raven_Breadcrumbs();
+        $this->breadcrumbs = new Raven_Breadcrumbs($this->breadcrumb_size);
         $this->_shutdown_function_has_been_set = false;
         $this->useCompression = function_exists('gzcompress');
 
