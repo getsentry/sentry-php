@@ -357,6 +357,11 @@ final class ClientBuilder implements ClientBuilderInterface
         return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
     }
 
+    /**
+     * Instantiate the {@see EventFactory} with the configured serializers
+     * 
+     * @return EventFactory
+     */
     private function createEventFactory(): EventFactory
     {
         $this->serializer = $this->serializer ?? new Serializer();

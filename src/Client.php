@@ -86,7 +86,7 @@ class Client implements ClientInterface
         ];
 
         if ($event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace())) {
-            return $this->send($event);
+            return $this->transport->send($event);
         }
 
         return null;
@@ -108,7 +108,7 @@ class Client implements ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string
     {
         if ($event = $this->prepareEvent($payload, $scope)) {
-            return $this->send($event);
+            return $this->transport->send($event);
         }
 
         return null;
@@ -136,18 +136,6 @@ class Client implements ClientInterface
     public function getIntegration(string $className): ?IntegrationInterface
     {
         return $this->integrations[$className] ?? null;
-    }
-
-    /**
-     * Sends the given event to the Sentry server.
-     *
-     * @param Event $event The event to send
-     *
-     * @return null|string
-     */
-    private function send(Event $event): ?string
-    {
-        return $this->transport->send($event);
     }
 
     /**

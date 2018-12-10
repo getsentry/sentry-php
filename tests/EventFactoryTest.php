@@ -135,6 +135,7 @@ class EventFactoryTest extends TestCase
                 'value' => 'testMessage2',
             ],
         ];
+        
         $this->assertArraySubset($expectedData, $event->getExceptions());
 
         foreach ($event->getExceptions() as $exceptionData) {
@@ -175,9 +176,12 @@ class EventFactoryTest extends TestCase
         $event = $eventFactory->createWithStacktrace([]);
 
         $stacktrace = $event->getStacktrace();
+        
         $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+        
         /** @var Frame $lastFrame */
         $lastFrame = array_reverse($stacktrace->getFrames())[0];
+        
         $this->assertSame('src/EventFactory.php', $lastFrame->getFile());
     }
 }
