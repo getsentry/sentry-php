@@ -478,7 +478,8 @@ class ClientTest extends TestCase
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
             $this->createMock(Options::class),
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
     }
 }

@@ -30,11 +30,14 @@ class EventFactoryTest extends TestCase
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
             $options,
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->create([]);
 
+        $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
+        $this->assertSame('1.2.3', $event->getSdkVersion());
         $this->assertSame($options->getServerName(), $event->getServerName());
         $this->assertSame($options->getRelease(), $event->getRelease());
         $this->assertSame($options->getTags(), $event->getTagsContext()->toArray());
@@ -52,7 +55,8 @@ class EventFactoryTest extends TestCase
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->create($payload);
@@ -97,7 +101,8 @@ class EventFactoryTest extends TestCase
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->create([]);
@@ -114,7 +119,8 @@ class EventFactoryTest extends TestCase
             new Serializer(),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->create(['exception' => $exception]);
@@ -144,7 +150,8 @@ class EventFactoryTest extends TestCase
             new Serializer(),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->create(['exception' => $exception]);
@@ -161,7 +168,8 @@ class EventFactoryTest extends TestCase
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
             $options,
-            'sentry.sdk.identifier'
+            'sentry.sdk.identifier',
+            '1.2.3'
         );
 
         $event = $eventFactory->createWithStacktrace([]);

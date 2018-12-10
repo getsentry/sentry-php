@@ -18,6 +18,7 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\RequestIntegration;
@@ -65,6 +66,8 @@ use Sentry\Transport\TransportInterface;
  * @method setSendDefaultPii(bool $enable)
  * @method bool hasDefaultIntegrations()
  * @method setDefaultIntegrations(bool $enable)
+ * @method callable getBeforeSendCallback()
+ * @method setBeforeSendCallback(callable $beforeSend)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -112,6 +115,11 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
     private $sdkIdentifier = Client::SDK_IDENTIFIER;
+
+    /**
+     * @var string The SDK version of the Client
+     */
+    private $sdkVersion;
 
     /**
      * Class constructor.
@@ -227,13 +235,41 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkIdentifierSuffix(?string $sdkIdentifierSuffix): void
+    public function setSdkIdentifier(string $sdkIdentifier): void
     {
-        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
+        $this->sdkIdentifier = $sdkIdentifier;
+    }
 
-        if ($sdkIdentifierSuffix) {
-            $this->sdkIdentifier .= '.' . $sdkIdentifierSuffix;
+    /**
+     * Gets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
+     *
+     * @return string
+     */
+    private function getSdkVersion(): string
+    {
+        if (null === $this->sdkVersion) {
+            $this->setSdkVersionByPackageName('sentry/sentry');
         }
+
+        return $this->sdkVersion;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSdkVersion(string $sdkVersion): void
+    {
+        $this->sdkVersion = $sdkVersion;
+    }
+
+    /**
+     * Sets the version of the SDK package that generated this Event using the Packagist name.
+     *
+     * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
+     */
+    public function setSdkVersionByPackageName(string $packageName): void
+    {
+        $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
     }
 
     /**
@@ -287,8 +323,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . Client::VERSION]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
@@ -326,6 +362,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer();
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier);
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->getSdkVersion());
     }
 }

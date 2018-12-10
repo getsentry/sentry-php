@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Jean85\PrettyVersions;
 use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -131,6 +132,11 @@ final class Event implements \JsonSerializable
     private $sdkIdentifier;
 
     /**
+     * @var string The Sentry SDK version
+     */
+    private $sdkVersion;
+
+    /**
      * Event constructor.
      *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
@@ -161,7 +167,11 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Gets the identifier of the SDK package that generated this event.
+     *
      * @return string
+     *
+     * @internal
      */
     public function getSdkIdentifier(): string
     {
@@ -169,13 +179,43 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * @internal
+     * Sets the identifier of the SDK package that generated this event.
      *
      * @param string $sdkIdentifier
+     *
+     * @internal
      */
     public function setSdkIdentifier(string $sdkIdentifier): void
     {
         $this->sdkIdentifier = $sdkIdentifier;
+    }
+
+    /**
+     * Gets the version of the SDK package that generated this Event.
+     *
+     * @return string
+     *
+     * @internal
+     */
+    public function getSdkVersion(): string
+    {
+        if (null === $this->sdkVersion) {
+            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+        }
+
+        return $this->sdkVersion;
+    }
+
+    /**
+     * Sets the version of the SDK package that generated this Event.
+     *
+     * @param string $sdkVersion
+     *
+     * @internal
+     */
+    public function setSdkVersion(string $sdkVersion): void
+    {
+        $this->sdkVersion = $sdkVersion;
     }
 
     /**
@@ -528,7 +568,7 @@ final class Event implements \JsonSerializable
             'platform' => 'php',
             'sdk' => [
                 'name' => $this->sdkIdentifier,
-                'version' => Client::VERSION,
+                'version' => $this->getSdkVersion(),
             ],
         ];
 
