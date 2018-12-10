@@ -114,10 +114,10 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
      */
-    private $sdkIdentifier;
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
 
     /**
-     * @var string the SDK version of the Client
+     * @var string The SDK version of the Client
      */
     private $sdkVersion;
 
@@ -136,8 +136,6 @@ final class ClientBuilder implements ClientBuilderInterface
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations()));
         }
-
-        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
     }
 
     /**
@@ -243,7 +241,9 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * @return string Sets the SDK version to be passed onto {@see Event} and HTTP User-Agent header
+     * Gets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
+     *
+     * @return string
      */
     private function getSdkVersion(): string
     {
@@ -265,7 +265,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Sets the version of the SDK package that generated this Event using the Packagist name.
      *
-     * @param string $packageName
+     * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
      */
     public function setSdkVersionByPackageName(string $packageName): void
     {

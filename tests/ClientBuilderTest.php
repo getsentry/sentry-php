@@ -250,22 +250,22 @@ final class ClientBuilderTest extends TestCase
 
     public function testSdkIdentifierAndVersionDefaultValues(): void
     {
-        $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $called = false;
+        $callbackCalled = false;
         $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         $clientBuilder = new ClientBuilder();
-        $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$called) {
-            $called = true;
+        $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
+            $callbackCalled = true;
 
             $this->assertSame(Client::SDK_IDENTIFIER, $event->getSdkIdentifier());
             $this->assertSame($expectedVersion, $event->getSdkVersion());
 
             return null;
         });
+
         $clientBuilder->getClient()->captureMessage('test');
 
-        $this->assertTrue($called, 'Callback not invoked, no assertions performed');
+        $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
 
     /**

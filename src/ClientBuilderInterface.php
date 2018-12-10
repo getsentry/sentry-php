@@ -110,6 +110,8 @@ interface ClientBuilderInterface
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer);
 
     /**
+     * Sets the SDK identifier to be passed onto {@see Event} and HTTP User-Agent header.
+     *
      * @param string $sdkIdentifier The SDK identifier to be sent in {@see Event} and HTTP User-Agent headers
      *
      * @internal
@@ -117,6 +119,8 @@ interface ClientBuilderInterface
     public function setSdkIdentifier(string $sdkIdentifier): void;
 
     /**
+     * Sets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
+     *
      * @param string $sdkVersion The version of the SDK in use, to be sent alongside the SDK identifier
      *
      * @internal

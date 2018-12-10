@@ -91,9 +91,6 @@ final class EventTest extends TestCase
 
     public function testToArray(): void
     {
-        $this->options->setRelease('1.2.3-dev');
-        $sentryPrettyVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
-
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -101,7 +98,7 @@ final class EventTest extends TestCase
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
-                'version' => $sentryPrettyVersion,
+                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
             'contexts' => [
                 'os' => [

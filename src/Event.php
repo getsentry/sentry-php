@@ -167,7 +167,7 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Gets the SDK identifier for the SDK package that generated this Event.
+     * Gets the identifier of the SDK package that generated this event.
      *
      * @return string
      *
@@ -179,7 +179,7 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets the SDK identifier for the SDK package that generated this Event.
+     * Sets the identifier of the SDK package that generated this event.
      *
      * @param string $sdkIdentifier
      *
