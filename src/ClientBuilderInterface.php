@@ -114,16 +114,20 @@ interface ClientBuilderInterface
      *
      * @param string $sdkIdentifier The SDK identifier to be sent in {@see Event} and HTTP User-Agent headers
      *
+     * @return $this
+     *
      * @internal
      */
-    public function setSdkIdentifier(string $sdkIdentifier): void;
+    public function setSdkIdentifier(string $sdkIdentifier);
 
     /**
      * Sets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
      *
      * @param string $sdkVersion The version of the SDK in use, to be sent alongside the SDK identifier
      *
+     * @return $this
+     *
      * @internal
      */
-    public function setSdkVersion(string $sdkVersion): void;
+    public function setSdkVersion(string $sdkVersion);
 }

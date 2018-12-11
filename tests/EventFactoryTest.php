@@ -114,7 +114,6 @@ class EventFactoryTest extends TestCase
     {
         $previousException = new \RuntimeException('testMessage2');
         $exception = new \Exception('testMessage', 0, $previousException);
-
         $eventFactory = new EventFactory(
             new Serializer(),
             $this->createMock(RepresentationSerializerInterface::class),
@@ -124,7 +123,6 @@ class EventFactoryTest extends TestCase
         );
 
         $event = $eventFactory->create(['exception' => $exception]);
-
         $expectedData = [
             [
                 'type' => \Exception::class,
@@ -146,7 +144,6 @@ class EventFactoryTest extends TestCase
     public function testCreateWithErrorException(): void
     {
         $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
-
         $eventFactory = new EventFactory(
             new Serializer(),
             $this->createMock(RepresentationSerializerInterface::class),
@@ -174,7 +171,6 @@ class EventFactoryTest extends TestCase
         );
 
         $event = $eventFactory->createWithStacktrace([]);
-
         $stacktrace = $event->getStacktrace();
 
         $this->assertInstanceOf(Stacktrace::class, $stacktrace);

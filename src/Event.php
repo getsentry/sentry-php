@@ -129,7 +129,7 @@ final class Event implements \JsonSerializable
     /**
      * @var string The Sentry SDK identifier
      */
-    private $sdkIdentifier;
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
 
     /**
      * @var string The Sentry SDK version
@@ -145,7 +145,6 @@ final class Event implements \JsonSerializable
      */
     public function __construct()
     {
-        $this->sdkIdentifier = Client::SDK_IDENTIFIER;
         $this->id = Uuid::uuid4();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();

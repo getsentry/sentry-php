@@ -235,9 +235,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkIdentifier(string $sdkIdentifier): void
+    public function setSdkIdentifier(string $sdkIdentifier): self
     {
         $this->sdkIdentifier = $sdkIdentifier;
+
+        return $this;
     }
 
     /**
@@ -257,19 +259,25 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkVersion(string $sdkVersion): void
+    public function setSdkVersion(string $sdkVersion): self
     {
         $this->sdkVersion = $sdkVersion;
+
+        return $this;
     }
 
     /**
      * Sets the version of the SDK package that generated this Event using the Packagist name.
      *
      * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
+     *
+     * @return $this
      */
-    public function setSdkVersionByPackageName(string $packageName): void
+    public function setSdkVersionByPackageName(string $packageName): self
     {
         $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
+
+        return $this;
     }
 
     /**

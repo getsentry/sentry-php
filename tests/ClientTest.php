@@ -93,7 +93,9 @@ class ClientTest extends TestCase
             ->method('send')
             ->with($this->callback(function (Event $event) use ($exception): bool {
                 $this->assertCount(1, $event->getExceptions());
+
                 $exceptionData = $event->getExceptions()[0];
+
                 $this->assertSame(\get_class($exception), $exceptionData['type']);
                 $this->assertSame($exception->getMessage(), $exceptionData['value']);
 

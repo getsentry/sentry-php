@@ -248,7 +248,7 @@ final class ClientBuilderTest extends TestCase
         ];
     }
 
-    public function testSdkIdentifierAndVersionDefaultValues(): void
+    public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
     {
         $callbackCalled = false;
         $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
@@ -264,6 +264,28 @@ final class ClientBuilderTest extends TestCase
         });
 
         $clientBuilder->getClient()->captureMessage('test');
+
+        $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
+    }
+
+    public function testClientBuilderSetsSdkIdentifierAndVersion(): void
+    {
+        $callbackCalled = false;
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
+            $callbackCalled = true;
+
+            $this->assertSame('sentry.test', $event->getSdkIdentifier());
+            $this->assertSame('1.2.3-test', $event->getSdkVersion());
+
+            return null;
+        });
+
+        $clientBuilder->setSdkIdentifier('sentry.test')
+            ->setSdkVersion('1.2.3-test')
+            ->getClient()
+            ->captureMessage('test');
 
         $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
