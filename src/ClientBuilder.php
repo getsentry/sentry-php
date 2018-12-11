@@ -368,9 +368,9 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Instantiate the {@see EventFactory} with the configured serializers.
      *
-     * @return EventFactory
+     * @return EventFactoryInterface
      */
-    private function createEventFactory(): EventFactory
+    private function createEventFactory(): EventFactoryInterface
     {
         $this->serializer = $this->serializer ?? new Serializer();
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();

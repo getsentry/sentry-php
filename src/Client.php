@@ -43,7 +43,7 @@ class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var EventFactory The factory to create {@see Event} from raw data
+     * @var EventFactoryInterface The factory to create {@see Event} from raw data
      */
     private $eventFactory;
 
@@ -55,11 +55,11 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options            $options      The client configuration
-     * @param TransportInterface $transport    The transport
-     * @param EventFactory       $eventFactory The factory for events
+     * @param Options               $options      The client configuration
+     * @param TransportInterface    $transport    The transport
+     * @param EventFactoryInterface $eventFactory The factory for events
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactory $eventFactory)
+    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory)
     {
         $this->options = $options;
         $this->transport = $transport;

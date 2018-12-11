@@ -39,7 +39,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockEventFactory());
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
@@ -59,7 +59,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockEventFactory());
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
         $client->captureMessage('test');
     }
 
@@ -274,7 +274,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->mockEventFactory());
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
 
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
@@ -474,7 +474,7 @@ class ClientTest extends TestCase
         }
     }
 
-    private function mockEventFactory(): EventFactory
+    private function createEventFactory(): EventFactory
     {
         return new EventFactory(
             $this->createMock(SerializerInterface::class),

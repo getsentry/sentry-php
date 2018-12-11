@@ -12,7 +12,7 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * Factory for the {@see Event} class.
  */
-final class EventFactory
+final class EventFactory implements EventFactoryInterface
 {
     /**
      * @var SerializerInterface The serializer
@@ -58,11 +58,7 @@ final class EventFactory
     }
 
     /**
-     * Create an {@see Event} with a stacktrace attached to it.
-     *
-     * @param array $payload The data to be attached to the Event
-     *
-     * @return Event
+     * {@inheritdoc}
      */
     public function createWithStacktrace(array $payload): Event
     {
@@ -78,11 +74,7 @@ final class EventFactory
     }
 
     /**
-     * Create an {@see Event} from a data payload.
-     *
-     * @param array $payload The data to be attached to the Event
-     *
-     * @return Event
+     * {@inheritdoc}
      */
     public function create(array $payload): Event
     {
