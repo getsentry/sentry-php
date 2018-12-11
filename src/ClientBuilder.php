@@ -358,8 +358,8 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Instantiate the {@see EventFactory} with the configured serializers
-     * 
+     * Instantiate the {@see EventFactory} with the configured serializers.
+     *
      * @return EventFactory
      */
     private function createEventFactory(): EventFactory

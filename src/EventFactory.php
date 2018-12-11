@@ -10,9 +10,7 @@ use Sentry\Serializer\SerializerInterface;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * Factory for the {@see Event} class
- * 
- * @package Sentry
+ * Factory for the {@see Event} class.
  */
 final class EventFactory
 {
@@ -60,8 +58,8 @@ final class EventFactory
     }
 
     /**
-     * Create an {@see Event} with a stacktrace attached to it
-     * 
+     * Create an {@see Event} with a stacktrace attached to it.
+     *
      * @param array $payload The data to be attached to the Event
      *
      * @return Event
@@ -72,7 +70,7 @@ final class EventFactory
 
         if (!$event->getStacktrace()) {
             $stacktrace = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
-            
+
             $event->setStacktrace($stacktrace);
         }
 
@@ -80,8 +78,8 @@ final class EventFactory
     }
 
     /**
-     * Create an {@see Event} from a data payload
-     * 
+     * Create an {@see Event} from a data payload.
+     *
      * @param array $payload The data to be attached to the Event
      *
      * @return Event
