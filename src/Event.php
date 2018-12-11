@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Jean85\PrettyVersions;
 use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -126,6 +127,16 @@ final class Event implements \JsonSerializable
     private $stacktrace;
 
     /**
+     * @var string The Sentry SDK identifier
+     */
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
+
+    /**
+     * @var string The Sentry SDK version
+     */
+    private $sdkVersion;
+
+    /**
      * Event constructor.
      *
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
@@ -152,6 +163,58 @@ final class Event implements \JsonSerializable
     public function getId(): string
     {
         return str_replace('-', '', $this->id->toString());
+    }
+
+    /**
+     * Gets the identifier of the SDK package that generated this event.
+     *
+     * @return string
+     *
+     * @internal
+     */
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    /**
+     * Sets the identifier of the SDK package that generated this event.
+     *
+     * @param string $sdkIdentifier
+     *
+     * @internal
+     */
+    public function setSdkIdentifier(string $sdkIdentifier): void
+    {
+        $this->sdkIdentifier = $sdkIdentifier;
+    }
+
+    /**
+     * Gets the version of the SDK package that generated this Event.
+     *
+     * @return string
+     *
+     * @internal
+     */
+    public function getSdkVersion(): string
+    {
+        if (null === $this->sdkVersion) {
+            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+        }
+
+        return $this->sdkVersion;
+    }
+
+    /**
+     * Sets the version of the SDK package that generated this Event.
+     *
+     * @param string $sdkVersion
+     *
+     * @internal
+     */
+    public function setSdkVersion(string $sdkVersion): void
+    {
+        $this->sdkVersion = $sdkVersion;
     }
 
     /**
@@ -503,8 +566,8 @@ final class Event implements \JsonSerializable
             'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
-                'version' => Client::VERSION,
+                'name' => $this->sdkIdentifier,
+                'version' => $this->getSdkVersion(),
             ],
         ];
 

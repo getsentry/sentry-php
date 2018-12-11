@@ -19,7 +19,7 @@ final class SentryAuthTest extends TestCase
     public function testAuthenticate(): void
     {
         $configuration = new Options(['dsn' => 'http://public:secret@example.com/']);
-        $authentication = new SentryAuth($configuration);
+        $authentication = new SentryAuth($configuration, 'sentry.php.test', '1.2.3');
 
         /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)
@@ -32,7 +32,7 @@ final class SentryAuthTest extends TestCase
         $headerValue = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public, sentry_secret=secret',
             Client::PROTOCOL_VERSION,
-            Client::USER_AGENT,
+            'sentry.php.test/1.2.3',
             microtime(true)
         );
 
@@ -47,7 +47,7 @@ final class SentryAuthTest extends TestCase
     public function testAuthenticateWithNoSecretKey(): void
     {
         $configuration = new Options(['dsn' => 'http://public@example.com/']);
-        $authentication = new SentryAuth($configuration);
+        $authentication = new SentryAuth($configuration, 'sentry.php.test', '2.0.0');
 
         /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)
@@ -60,7 +60,7 @@ final class SentryAuthTest extends TestCase
         $headerValue = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public',
             Client::PROTOCOL_VERSION,
-            Client::USER_AGENT,
+            'sentry.php.test/2.0.0',
             microtime(true)
         );
 

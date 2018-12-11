@@ -18,6 +18,7 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuth;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\RequestIntegration;
@@ -65,6 +66,8 @@ use Sentry\Transport\TransportInterface;
  * @method setSendDefaultPii(bool $enable)
  * @method bool hasDefaultIntegrations()
  * @method setDefaultIntegrations(bool $enable)
+ * @method callable getBeforeSendCallback()
+ * @method setBeforeSendCallback(callable $beforeSend)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -107,6 +110,16 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var RepresentationSerializerInterface The representation serializer to be injected in the client
      */
     private $representationSerializer;
+
+    /**
+     * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
+     */
+    private $sdkIdentifier = Client::SDK_IDENTIFIER;
+
+    /**
+     * @var string The SDK version of the Client
+     */
+    private $sdkVersion;
 
     /**
      * Class constructor.
@@ -222,16 +235,62 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
+    public function setSdkIdentifier(string $sdkIdentifier): self
+    {
+        $this->sdkIdentifier = $sdkIdentifier;
+
+        return $this;
+    }
+
+    /**
+     * Gets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
+     *
+     * @return string
+     */
+    private function getSdkVersion(): string
+    {
+        if (null === $this->sdkVersion) {
+            $this->setSdkVersionByPackageName('sentry/sentry');
+        }
+
+        return $this->sdkVersion;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSdkVersion(string $sdkVersion): self
+    {
+        $this->sdkVersion = $sdkVersion;
+
+        return $this;
+    }
+
+    /**
+     * Sets the version of the SDK package that generated this Event using the Packagist name.
+     *
+     * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
+     *
+     * @return $this
+     */
+    public function setSdkVersionByPackageName(string $packageName): self
+    {
+        $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getClient(): ClientInterface
     {
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
-        $this->serializer = $this->serializer ?? new Serializer();
-        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
 
-        return new Client($this->options, $this->transport, $this->serializer, $this->representationSerializer);
+        return new Client($this->options, $this->transport, $this->createEventFactory());
     }
 
     /**
@@ -272,8 +331,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => Client::USER_AGENT]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options)));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 
@@ -304,5 +363,18 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
+    }
+
+    /**
+     * Instantiate the {@see EventFactory} with the configured serializers.
+     *
+     * @return EventFactoryInterface
+     */
+    private function createEventFactory(): EventFactoryInterface
+    {
+        $this->serializer = $this->serializer ?? new Serializer();
+        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
+
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->getSdkVersion());
     }
 }

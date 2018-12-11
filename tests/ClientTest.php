@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventFactory;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -22,7 +23,7 @@ use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
-    public function testTransactionEventAttributeIsPopulated()
+    public function testTransactionEventAttributeIsPopulated(): void
     {
         $_SERVER['PATH_INFO'] = '/foo';
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -38,14 +39,14 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
         $client->captureMessage('test');
 
         unset($_SERVER['PATH_INFO']);
         unset($_SERVER['REQUEST_METHOD']);
     }
 
-    public function testTransactionEventAttributeIsNotPopulatedInCli()
+    public function testTransactionEventAttributeIsNotPopulatedInCli(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -58,48 +59,57 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
         $client->captureMessage('test');
     }
 
-    public function testCaptureMessage()
+    public function testCaptureMessage(): void
     {
-        /** @var Client|MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureMessage'])
-            ->getMock();
+        /** @var TransportInterface|MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertSame('foo', $event->getMessage());
+                $this->assertEquals(Severity::fatal(), $event->getLevel());
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with([
-                'message' => 'foo',
-                'level' => Severity::fatal(),
-            ]);
+                return true;
+            }));
+
+        $client = ClientBuilder::create()
+            ->setTransport($transport)
+            ->getClient();
 
         $client->captureMessage('foo', Severity::fatal());
     }
 
-    public function testCaptureException()
+    public function testCaptureException(): void
     {
-        $exception = new \Exception();
+        $exception = new \Exception('Some foo error');
 
-        /** @var Client|MockObject $client */
-        $client = $this->getMockBuilder(Client::class)
-            ->disableOriginalConstructor()
-            ->setMethodsExcept(['captureException'])
-            ->getMock();
+        /** @var TransportInterface|MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($exception): bool {
+                $this->assertCount(1, $event->getExceptions());
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with([
-                'exception' => $exception,
-            ]);
+                $exceptionData = $event->getExceptions()[0];
 
-        $client->captureException(new \Exception());
+                $this->assertSame(\get_class($exception), $exceptionData['type']);
+                $this->assertSame($exception->getMessage(), $exceptionData['value']);
+
+                return true;
+            }));
+
+        $client = ClientBuilder::create()
+            ->setTransport($transport)
+            ->getClient();
+
+        $client->captureException($exception);
     }
 
-    public function testCapture()
+    public function testCapture(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -123,7 +133,7 @@ class ClientTest extends TestCase
         $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
     }
 
-    public function testCaptureLastError()
+    public function testCaptureLastError(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -149,7 +159,7 @@ class ClientTest extends TestCase
         $this->clearLastError();
     }
 
-    public function testCaptureLastErrorDoesNothingWhenThereIsNoError()
+    public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -165,7 +175,7 @@ class ClientTest extends TestCase
         $client->captureLastError();
     }
 
-    public function testAppPathLinux()
+    public function testAppPathLinux(): void
     {
         $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
 
@@ -176,14 +186,14 @@ class ClientTest extends TestCase
         $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
     }
 
-    public function testAppPathWindows()
+    public function testAppPathWindows(): void
     {
         $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
 
         $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
 
-    public function testSendChecksBeforeSendOption()
+    public function testSendChecksBeforeSendOption(): void
     {
         $beforeSendCalled = false;
 
@@ -209,7 +219,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider sampleRateAbsoluteDataProvider
      */
-    public function testSampleRateAbsolute($options)
+    public function testSampleRateAbsolute($options): void
     {
         $httpClient = new MockClient();
 
@@ -231,7 +241,7 @@ class ClientTest extends TestCase
         }
     }
 
-    public function sampleRateAbsoluteDataProvider()
+    public function sampleRateAbsoluteDataProvider(): array
     {
         return [
             [
@@ -249,7 +259,7 @@ class ClientTest extends TestCase
         ];
     }
 
-    public function testHandlingExceptionThrowingAnException()
+    public function testHandlingExceptionThrowingAnException(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -264,7 +274,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = new Client(new Options(), $transport, $this->createMock(SerializerInterface::class), $this->createMock(RepresentationSerializerInterface::class));
+        $client = new Client(new Options(), $transport, $this->createEventFactory());
 
         Hub::getCurrent()->bindClient($client);
         $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
@@ -273,7 +283,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider convertExceptionDataProvider
      */
-    public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult)
+    public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -299,7 +309,7 @@ class ClientTest extends TestCase
         $client->captureException($exception);
     }
 
-    public function convertExceptionDataProvider()
+    public function convertExceptionDataProvider(): array
     {
         return [
             [
@@ -356,7 +366,7 @@ class ClientTest extends TestCase
         ];
     }
 
-    public function testConvertExceptionThrownInLatin1File()
+    public function testConvertExceptionThrownInLatin1File(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -400,7 +410,7 @@ class ClientTest extends TestCase
         $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
-    public function testAttachStacktrace()
+    public function testAttachStacktrace(): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -409,7 +419,7 @@ class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $result = $event->getStacktrace();
 
-                $this->assertNotNull($result);
+                $this->assertInstanceOf(Stacktrace::class, $result);
                 $this->assertNotEmpty($result->getFrames());
 
                 return true;
@@ -422,10 +432,29 @@ class ClientTest extends TestCase
         $client->captureMessage('test');
     }
 
+    public function testAttachStacktraceShouldNotWorkWithCaptureEvent(): void
+    {
+        /** @var TransportInterface|MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNull($event->getStacktrace());
+
+                return true;
+            }));
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+            ->setTransport($transport)
+            ->getClient();
+
+        $client->captureEvent([]);
+    }
+
     /**
      * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
      */
-    private function clearLastError()
+    private function clearLastError(): void
     {
         $handler = function () {
             return false;
@@ -436,12 +465,23 @@ class ClientTest extends TestCase
         restore_error_handler();
     }
 
-    private function createCarelessExceptionWithStacktrace()
+    private function createCarelessExceptionWithStacktrace(): CarelessException
     {
         try {
             throw new CarelessException('Foo bar');
-        } catch (\Exception $ex) {
+        } catch (CarelessException $ex) {
             return $ex;
         }
+    }
+
+    private function createEventFactory(): EventFactory
+    {
+        return new EventFactory(
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(Options::class),
+            'sentry.sdk.identifier',
+            '1.2.3'
+        );
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use Jean85\PrettyVersions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
@@ -90,8 +91,6 @@ final class EventTest extends TestCase
 
     public function testToArray(): void
     {
-        $this->options->setRelease('1.2.3-dev');
-
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -99,7 +98,7 @@ final class EventTest extends TestCase
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
-                'version' => Client::VERSION,
+                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
             'contexts' => [
                 'os' => [
@@ -219,6 +218,8 @@ final class EventTest extends TestCase
     public function gettersAndSettersDataProvider(): array
     {
         return [
+            ['sdkIdentifier', 'sentry.sdk.test-identifier', ['sdk' => ['name' => 'sentry.sdk.test-identifier']]],
+            ['sdkVersion', '1.2.3', ['sdk' => ['version' => '1.2.3']]],
             ['level', Severity::info(), ['level' => Severity::info()]],
             ['logger', 'ruby', ['logger' => 'ruby']],
             ['transaction', 'foo', ['transaction' => 'foo']],

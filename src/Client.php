@@ -6,13 +6,8 @@ namespace Sentry;
 
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Serializer\RepresentationSerializer;
-use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
@@ -22,11 +17,6 @@ use Zend\Diactoros\ServerRequestFactory;
 class Client implements ClientInterface
 {
     /**
-     * The version of the library.
-     */
-    public const VERSION = '2.0.x-dev';
-
-    /**
      * The version of the protocol to communicate with the Sentry server.
      */
     public const PROTOCOL_VERSION = '7';
@@ -35,11 +25,6 @@ class Client implements ClientInterface
      * The identifier of the SDK.
      */
     public const SDK_IDENTIFIER = 'sentry.php';
-
-    /**
-     * This constant defines the client's user-agent string.
-     */
-    public const USER_AGENT = self:: SDK_IDENTIFIER . '/' . self::VERSION;
 
     /**
      * This constant defines the maximum length of the message captured by the
@@ -58,35 +43,28 @@ class Client implements ClientInterface
     private $transport;
 
     /**
+     * @var EventFactoryInterface The factory to create {@see Event} from raw data
+     */
+    private $eventFactory;
+
+    /**
      * @var IntegrationInterface[] The stack of integrations
      */
     private $integrations;
 
     /**
-     * @var SerializerInterface The serializer
-     */
-    private $serializer;
-
-    /**
-     * @var RepresentationSerializerInterface The representation serializer
-     */
-    private $representationSerializer;
-
-    /**
      * Constructor.
      *
-     * @param Options                           $options                  The client configuration
-     * @param TransportInterface                $transport                The transport
-     * @param SerializerInterface               $serializer               The serializer used for events
-     * @param RepresentationSerializerInterface $representationSerializer The representation serializer to be used with stacktrace frames
+     * @param Options               $options      The client configuration
+     * @param TransportInterface    $transport    The transport
+     * @param EventFactoryInterface $eventFactory The factory for events
      */
-    public function __construct(Options $options, TransportInterface $transport, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer)
+    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory)
     {
         $this->options = $options;
         $this->transport = $transport;
+        $this->eventFactory = $eventFactory;
         $this->integrations = Handler::setupIntegrations($options->getIntegrations());
-        $this->serializer = $serializer;
-        $this->representationSerializer = $representationSerializer;
     }
 
     /**
@@ -102,14 +80,16 @@ class Client implements ClientInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
-        $payload['message'] = $message;
-        $payload['level'] = $level;
+        $payload = [
+            'message' => $message,
+            'level' => $level,
+        ];
 
-        if ($this->getOptions()->shouldAttachStacktrace()) {
-            $payload['stacktrace'] = Stacktrace::createFromBacktrace($this->getOptions(), $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
+        if ($event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace())) {
+            return $this->transport->send($event);
         }
 
-        return $this->captureEvent($payload, $scope);
+        return null;
     }
 
     /**
@@ -128,7 +108,7 @@ class Client implements ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string
     {
         if ($event = $this->prepareEvent($payload, $scope)) {
-            return $this->send($event);
+            return $this->transport->send($event);
         }
 
         return null;
@@ -159,66 +139,25 @@ class Client implements ClientInterface
     }
 
     /**
-     * Sends the given event to the Sentry server.
-     *
-     * @param Event $event The event to send
-     *
-     * @return null|string
-     */
-    private function send(Event $event): ?string
-    {
-        return $this->transport->send($event);
-    }
-
-    /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload the payload that will be converted to an Event
-     * @param null|Scope $scope   optional scope which enriches the Event
+     * @param array      $payload        the payload that will be converted to an Event
+     * @param null|Scope $scope          optional scope which enriches the Event
+     * @param bool       $withStacktrace True if the event should have and attached stacktrace
      *
      * @return null|Event returns ready to send Event, however depending on options it can be discarded
      */
-    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
+    private function prepareEvent(array $payload, ?Scope $scope = null, bool $withStacktrace = false): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             return null;
         }
 
-        $event = new Event();
-        $event->setServerName($this->getOptions()->getServerName());
-        $event->setRelease($this->getOptions()->getRelease());
-        $event->getTagsContext()->merge($this->getOptions()->getTags());
-        $event->setEnvironment($this->getOptions()->getEnvironment());
-
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
+        if ($withStacktrace) {
+            $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
-            $request = ServerRequestFactory::fromGlobals();
-            $serverParams = $request->getServerParams();
-
-            if (isset($serverParams['PATH_INFO'])) {
-                $event->setTransaction($serverParams['PATH_INFO']);
-            }
-        }
-
-        if (isset($payload['logger'])) {
-            $event->setLogger($payload['logger']);
-        }
-
-        $message = $payload['message'] ?? null;
-        $messageParams = $payload['message_params'] ?? [];
-
-        if (null !== $message) {
-            $event->setMessage(substr($message, 0, self::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
-        }
-
-        if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-            $this->addThrowableToEvent($event, $payload['exception']);
-        }
-
-        if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
-            $event->setStacktrace($payload['stacktrace']);
+            $event = $this->eventFactory->create($payload);
         }
 
         if (null !== $scope) {
@@ -226,45 +165,5 @@ class Client implements ClientInterface
         }
 
         return \call_user_func($this->options->getBeforeSendCallback(), $event);
-    }
-
-    /**
-     * Stores the given exception in the passed event.
-     *
-     * @param Event      $event     The event that will be enriched with the exception
-     * @param \Throwable $exception The exception that will be processed and added to the event
-     */
-    private function addThrowableToEvent(Event $event, \Throwable $exception): void
-    {
-        if ($exception instanceof \ErrorException) {
-            $event->setLevel(Severity::fromError($exception->getSeverity()));
-        }
-
-        $exceptions = [];
-        $currentException = $exception;
-
-        do {
-            if ($this->getOptions()->isExcludedException($currentException)) {
-                continue;
-            }
-
-            $data = [
-                'type' => \get_class($currentException),
-                'value' => $this->serializer->serialize($currentException->getMessage()),
-            ];
-
-            $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->getOptions(),
-                $this->serializer,
-                $this->representationSerializer,
-                $currentException->getTrace(),
-                $currentException->getFile(),
-                $currentException->getLine()
-            );
-
-            $exceptions[] = $data;
-        } while ($currentException = $currentException->getPrevious());
-
-        $event->setExceptions($exceptions);
     }
 }
