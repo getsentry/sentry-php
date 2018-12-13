@@ -4,6 +4,7 @@ parameters:
         - src
         - tests
     ignoreErrors:
+        - '/Method Sentry\\ClientBuilder::\w+\(\) should return \$this\(Sentry\\ClientBuilderInterface\) but returns \$this\(Sentry\\ClientBuilder\)/'
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
         - '/Method Sentry\\Serializer\\RepresentationSerializer::(representationSerialize|serializeValue)\(\) should return [\w|]+ but returns [\w|]+/'

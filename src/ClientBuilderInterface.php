@@ -26,7 +26,7 @@ interface ClientBuilderInterface
      *
      * @return static
      */
-    public static function create(Options $options = null);
+    public static function create(Options $options = null): self;
 
     /**
      * The options that will be used to create the {@see Client}.
@@ -42,7 +42,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setUriFactory(UriFactory $uriFactory);
+    public function setUriFactory(UriFactory $uriFactory): self;
 
     /**
      * Sets the factory to use to create PSR-7 messages.
@@ -51,7 +51,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setMessageFactory(MessageFactory $messageFactory);
+    public function setMessageFactory(MessageFactory $messageFactory): self;
 
     /**
      * Sets the transport that will be used to send events.
@@ -60,7 +60,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setTransport(TransportInterface $transport);
+    public function setTransport(TransportInterface $transport): self;
 
     /**
      * Sets the HTTP client.
@@ -69,7 +69,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setHttpClient(HttpAsyncClient $httpClient);
+    public function setHttpClient(HttpAsyncClient $httpClient): self;
 
     /**
      * Adds a new HTTP client plugin to the end of the plugins chain.
@@ -78,7 +78,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function addHttpClientPlugin(Plugin $plugin);
+    public function addHttpClientPlugin(Plugin $plugin): self;
 
     /**
      * Removes a HTTP client plugin by its fully qualified class name (FQCN).
@@ -87,7 +87,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function removeHttpClientPlugin(string $className);
+    public function removeHttpClientPlugin(string $className): self;
 
     /**
      * Gets the instance of the client built using the configured options.
@@ -103,7 +103,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setSerializer(SerializerInterface $serializer);
+    public function setSerializer(SerializerInterface $serializer): self;
 
     /**
      * Sets a representation serializer instance to be injected as a dependency of the client.
@@ -114,7 +114,7 @@ interface ClientBuilderInterface
      *
      * @return $this
      */
-    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer);
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self;
 
     /**
      * Sets the SDK identifier to be passed onto {@see Event} and HTTP User-Agent header.
@@ -125,7 +125,7 @@ interface ClientBuilderInterface
      *
      * @internal
      */
-    public function setSdkIdentifier(string $sdkIdentifier);
+    public function setSdkIdentifier(string $sdkIdentifier): self;
 
     /**
      * Sets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
@@ -136,5 +136,5 @@ interface ClientBuilderInterface
      *
      * @internal
      */
-    public function setSdkVersion(string $sdkVersion);
+    public function setSdkVersion(string $sdkVersion): self;
 }

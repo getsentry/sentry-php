@@ -107,7 +107,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public static function create(Options $options = null): self
+    public static function create(Options $options = null): ClientBuilderInterface
     {
         return new static($options);
     }
@@ -123,7 +123,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setUriFactory(UriFactory $uriFactory): self
+    public function setUriFactory(UriFactory $uriFactory): ClientBuilderInterface
     {
         $this->uriFactory = $uriFactory;
 
@@ -133,7 +133,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setMessageFactory(MessageFactory $messageFactory): self
+    public function setMessageFactory(MessageFactory $messageFactory): ClientBuilderInterface
     {
         $this->messageFactory = $messageFactory;
 
@@ -143,7 +143,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setTransport(TransportInterface $transport): self
+    public function setTransport(TransportInterface $transport): ClientBuilderInterface
     {
         $this->transport = $transport;
 
@@ -153,7 +153,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setHttpClient(HttpAsyncClient $httpClient): self
+    public function setHttpClient(HttpAsyncClient $httpClient): ClientBuilderInterface
     {
         $this->httpClient = $httpClient;
 
@@ -163,7 +163,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addHttpClientPlugin(Plugin $plugin): self
+    public function addHttpClientPlugin(Plugin $plugin): ClientBuilderInterface
     {
         $this->httpClientPlugins[] = $plugin;
 
@@ -173,7 +173,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function removeHttpClientPlugin(string $className): self
+    public function removeHttpClientPlugin(string $className): ClientBuilderInterface
     {
         foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
             if (!$httpClientPlugin instanceof $className) {
@@ -189,7 +189,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSerializer(SerializerInterface $serializer): self
+    public function setSerializer(SerializerInterface $serializer): ClientBuilderInterface
     {
         $this->serializer = $serializer;
 
@@ -199,7 +199,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilderInterface
     {
         $this->representationSerializer = $representationSerializer;
 
@@ -209,7 +209,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkIdentifier(string $sdkIdentifier): self
+    public function setSdkIdentifier(string $sdkIdentifier): ClientBuilderInterface
     {
         $this->sdkIdentifier = $sdkIdentifier;
 
@@ -233,7 +233,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkVersion(string $sdkVersion): self
+    public function setSdkVersion(string $sdkVersion): ClientBuilderInterface
     {
         $this->sdkVersion = $sdkVersion;
 
@@ -247,7 +247,7 @@ final class ClientBuilder implements ClientBuilderInterface
      *
      * @return $this
      */
-    public function setSdkVersionByPackageName(string $packageName): self
+    public function setSdkVersionByPackageName(string $packageName): ClientBuilderInterface
     {
         $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
 
