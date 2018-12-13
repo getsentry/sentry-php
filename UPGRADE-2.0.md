@@ -456,7 +456,7 @@
 
   // or
 
-  $client = ClientBuilder::create([...])->getClient();
+  $client = ClientBuilder::create(new Options([...]))->getClient();
   ```
 
 ### Processors

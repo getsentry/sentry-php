@@ -148,7 +148,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+        $client = ClientBuilder::create(new Options(['dsn' => 'http://public:secret@example.com/1']))
             ->setTransport($transport)
             ->getClient();
 
@@ -166,7 +166,7 @@ class ClientTest extends TestCase
         $transport->expects($this->never())
             ->method('send');
 
-        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
+        $client = ClientBuilder::create(new Options(['dsn' => 'http://public:secret@example.com/1']))
             ->setTransport($transport)
             ->getClient();
 
@@ -177,7 +177,7 @@ class ClientTest extends TestCase
 
     public function testAppPathLinux(): void
     {
-        $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
+        $client = ClientBuilder::create(new Options(['project_root' => '/foo/bar']))->getClient();
 
         $this->assertEquals('/foo/bar/', $client->getOptions()->getProjectRoot());
 
@@ -188,7 +188,7 @@ class ClientTest extends TestCase
 
     public function testAppPathWindows(): void
     {
-        $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
+        $client = ClientBuilder::create(new Options(['project_root' => 'C:\\foo\\bar\\']))->getClient();
 
         $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
@@ -202,14 +202,16 @@ class ClientTest extends TestCase
         $transport->expects($this->never())
             ->method('send');
 
-        $client = ClientBuilder::create([
-            'dsn' => 'http://public:secret@example.com/1',
-            'before_send' => function () use (&$beforeSendCalled) {
-                $beforeSendCalled = true;
+        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
+        $options->setBeforeSendCallback(function () use (&$beforeSendCalled) {
+            $beforeSendCalled = true;
 
-                return null;
-            },
-        ])->setTransport($transport)->getClient();
+            return null;
+        });
+
+        $client = ClientBuilder::create($options)
+            ->setTransport($transport)
+            ->getClient();
 
         $client->captureEvent([]);
 
@@ -219,9 +221,12 @@ class ClientTest extends TestCase
     /**
      * @dataProvider sampleRateAbsoluteDataProvider
      */
-    public function testSampleRateAbsolute($options): void
+    public function testSampleRateAbsolute(float $sampleRate): void
     {
         $httpClient = new MockClient();
+
+        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
+        $options->setSampleRate($sampleRate);
 
         $client = ClientBuilder::create($options)
             ->setHttpClient($httpClient)
@@ -231,7 +236,7 @@ class ClientTest extends TestCase
             $client->captureMessage('foobar');
         }
 
-        switch ($options['sample_rate']) {
+        switch ($sampleRate) {
             case 0:
                 $this->assertEmpty($httpClient->getRequests());
                 break;
@@ -244,18 +249,8 @@ class ClientTest extends TestCase
     public function sampleRateAbsoluteDataProvider(): array
     {
         return [
-            [
-                [
-                    'dsn' => 'http://public:secret@example.com/1',
-                    'sample_rate' => 0,
-                ],
-            ],
-            [
-                [
-                    'dsn' => 'http://public:secret@example.com/1',
-                    'sample_rate' => 1,
-                ],
-            ],
+            'sample rate 0' => [0],
+            'sample rate 1' => [1],
         ];
     }
 
@@ -302,7 +297,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = ClientBuilder::create($clientConfig)
+        $client = ClientBuilder::create(new Options($clientConfig))
             ->setTransport($transport)
             ->getClient();
 
@@ -425,7 +420,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = ClientBuilder::create(['attach_stacktrace' => true])
+        $client = ClientBuilder::create(new Options(['attach_stacktrace' => true]))
             ->setTransport($transport)
             ->getClient();
 
@@ -444,7 +439,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = ClientBuilder::create(['attach_stacktrace' => true])
+        $client = ClientBuilder::create(new Options(['attach_stacktrace' => true]))
             ->setTransport($transport)
             ->getClient();
 

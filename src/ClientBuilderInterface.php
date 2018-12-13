@@ -22,11 +22,18 @@ interface ClientBuilderInterface
     /**
      * Creates a new instance of this builder.
      *
-     * @param array $options The client options
+     * @param Options $options The client options; of nothing is passed, the default values are assumed
      *
      * @return static
      */
-    public static function create(array $options = []);
+    public static function create(Options $options = null);
+
+    /**
+     * The options that will be used to create the {@see Client}.
+     *
+     * @return Options
+     */
+    public function getOptions(): Options;
 
     /**
      * Sets the factory to use to create URIs.

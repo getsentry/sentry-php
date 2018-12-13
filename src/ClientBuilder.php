@@ -124,11 +124,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Class constructor.
      *
-     * @param array $options The client options
+     * @param Options $options The client options
      */
-    public function __construct(array $options = [])
+    public function __construct(Options $options = null)
     {
-        $this->options = new Options($options);
+        $this->options = $options ?? new Options();
 
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(\array_merge([
@@ -141,9 +141,17 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public static function create(array $options = []): self
+    public static function create(Options $options = null): self
     {
         return new static($options);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOptions(): Options
+    {
+        return $this->options;
     }
 
     /**
