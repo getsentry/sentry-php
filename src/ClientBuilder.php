@@ -34,40 +34,6 @@ use Sentry\Transport\TransportInterface;
  * The default implementation of {@link ClientBuilderInterface}.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
- *
- * @method int getSendAttempts()
- * @method setSendAttempts(int $attemptsCount)
- * @method string[] getPrefixes()
- * @method setPrefixes(array $prefixes)
- * @method float getSampleRate()
- * @method setSampleRate(float $sampleRate)
- * @method bool shouldAttachStacktrace()
- * @method setAttachStacktrace(bool $enable)
- * @method int getContextLines()
- * @method setContextLines(int $contextLines)
- * @method null|string getEnvironment()
- * @method setEnvironment(null|string $environment)
- * @method string[] getExcludedProjectPaths()
- * @method setExcludedProjectPaths(string[] $paths)
- * @method setExcludedLoggers(string[] $loggers)
- * @method string[] getExcludedExceptions()
- * @method string getProjectRoot()
- * @method setProjectRoot(string $path)
- * @method string getLogger()
- * @method setLogger(string $logger)
- * @method string getRelease()
- * @method setRelease(string $release)
- * @method string getDsn()
- * @method string getServerName()
- * @method setServerName(string $serverName)
- * @method string[] getTags()
- * @method setTags(string[] $tags)
- * @method bool shouldSendDefaultPii()
- * @method setSendDefaultPii(bool $enable)
- * @method bool hasDefaultIntegrations()
- * @method setDefaultIntegrations(bool $enable)
- * @method callable getBeforeSendCallback()
- * @method setBeforeSendCallback(callable $beforeSend)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -299,25 +265,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
         return new Client($this->options, $this->transport, $this->createEventFactory());
-    }
-
-    /**
-     * This method forwards all methods calls to the options object.
-     *
-     * @param string $name      The name of the method being called
-     * @param array  $arguments Parameters passed to the $name'ed method
-     *
-     * @return $this
-     *
-     * @throws \BadMethodCallException If the called method does not exists
-     */
-    public function __call($name, $arguments)
-    {
-        if (!method_exists($this->options, $name)) {
-            throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
-        }
-
-        return $this->options->$name(...$arguments);
     }
 
     /**

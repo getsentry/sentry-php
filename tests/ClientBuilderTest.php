@@ -199,63 +199,13 @@ final class ClientBuilderTest extends TestCase
         ];
     }
 
-    /**
-     * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage The method named "methodThatDoesNotExists" does not exists.
-     */
-    public function testCallInvalidMethodThrowsException(): void
-    {
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->methodThatDoesNotExists();
-    }
-
-    /**
-     * @dataProvider optionsDataProvider
-     */
-    public function testCallExistingMethodForwardsCallToConfiguration(string $setterMethod, $value): void
-    {
-        $options = $this->createMock(Options::class);
-        $options->expects($this->once())
-            ->method($setterMethod)
-            ->with($this->equalTo($value));
-
-        $clientBuilder = new ClientBuilder();
-
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'options');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($clientBuilder, $options);
-        $reflectionProperty->setAccessible(false);
-
-        $clientBuilder->$setterMethod($value);
-    }
-
-    public function optionsDataProvider(): array
-    {
-        return [
-            ['setPrefixes', ['foo', 'bar']],
-            ['setSampleRate', 0.5],
-            ['setAttachStacktrace', true],
-            ['setContextLines', 0],
-            ['setEnableCompression', false],
-            ['setEnvironment', 'test'],
-            ['setExcludedProjectPaths', ['foo', 'bar']],
-            ['setExcludedExceptions', ['foo', 'bar']],
-            ['setProjectRoot', 'foo'],
-            ['setLogger', 'bar'],
-            ['setRelease', 'dev'],
-            ['setServerName', 'example.com'],
-            ['setTags', ['foo', 'bar']],
-            ['setErrorTypes', 0],
-        ];
-    }
-
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
     {
         $callbackCalled = false;
         $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
+        $options = new Options();
+        $options->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
             $callbackCalled = true;
 
             $this->assertSame(Client::SDK_IDENTIFIER, $event->getSdkIdentifier());
@@ -264,7 +214,7 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        $clientBuilder->getClient()->captureMessage('test');
+        ClientBuilder::create($options)->getClient()->captureMessage('test');
 
         $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
@@ -273,8 +223,8 @@ final class ClientBuilderTest extends TestCase
     {
         $callbackCalled = false;
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
+        $options = new Options();
+        $options->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
             $callbackCalled = true;
 
             $this->assertSame('sentry.test', $event->getSdkIdentifier());
@@ -283,7 +233,8 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        $clientBuilder->setSdkIdentifier('sentry.test')
+        ClientBuilder::create($options)
+            ->setSdkIdentifier('sentry.test')
             ->setSdkVersion('1.2.3-test')
             ->getClient()
             ->captureMessage('test');
