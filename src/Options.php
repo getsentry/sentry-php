@@ -23,7 +23,7 @@ class Options
     /**
      * @var array The configuration options
      */
-    private $options = [];
+    private $options;
 
     /**
      * @var string|null A simple server string, set to the DSN found on your Sentry settings
@@ -391,6 +391,18 @@ class Options
     public function getDsn(): ?string
     {
         return $this->dsn;
+    }
+
+    /**
+     * Sets the DSN of the Sentry server the authenticated user is bound to.
+     *
+     * @param string $dsn
+     */
+    public function setDsn(string $dsn): void
+    {
+        $options = array_merge($this->options, ['dsn' => $dsn]);
+
+        $this->options = $this->resolver->resolve($options);
     }
 
     /**

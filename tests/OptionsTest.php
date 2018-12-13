@@ -13,7 +13,7 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider optionsDataProvider
      */
-    public function testConstructor($option, $value, $getterMethod): void
+    public function testConstructor(string $option, $value, string $getterMethod): void
     {
         $configuration = new Options([$option => $value]);
 
@@ -66,6 +66,20 @@ final class OptionsTest extends TestCase
     public function testServerOption(string $dsn, array $options): void
     {
         $configuration = new Options(['dsn' => $dsn]);
+
+        $this->assertEquals($options['project_id'], $configuration->getProjectId());
+        $this->assertEquals($options['public_key'], $configuration->getPublicKey());
+        $this->assertEquals($options['secret_key'], $configuration->getSecretKey());
+        $this->assertEquals($options['server'], $configuration->getDsn());
+    }
+
+    /**
+     * @dataProvider serverOptionDataProvider
+     */
+    public function testServerOptionUsingTheSetter(string $dsn, array $options): void
+    {
+        $configuration = new Options();
+        $configuration->setDsn($dsn);
 
         $this->assertEquals($options['project_id'], $configuration->getProjectId());
         $this->assertEquals($options['public_key'], $configuration->getPublicKey());
