@@ -22,11 +22,11 @@ interface ClientBuilderInterface
     /**
      * Creates a new instance of this builder.
      *
-     * @param Options $options The client options; of nothing is passed, the default values are assumed
+     * @param array $options The client options, in naked array form; it will be used to construct {@see Options}
      *
      * @return static
      */
-    public static function create(Options $options = null): self;
+    public static function create(array $options = []): self;
 
     /**
      * The options that will be used to create the {@see Client}.

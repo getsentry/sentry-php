@@ -107,9 +107,9 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public static function create(Options $options = null): ClientBuilderInterface
+    public static function create(array $options = []): ClientBuilderInterface
     {
-        return new static($options);
+        return new static(new Options($options));
     }
 
     /**

@@ -214,7 +214,7 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        ClientBuilder::create($options)->getClient()->captureMessage('test');
+        (new ClientBuilder($options))->getClient()->captureMessage('test');
 
         $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
@@ -233,7 +233,7 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        ClientBuilder::create($options)
+        (new ClientBuilder($options))
             ->setSdkIdentifier('sentry.test')
             ->setSdkVersion('1.2.3-test')
             ->getClient()
@@ -249,7 +249,7 @@ final class ClientBuilderTest extends TestCase
     {
         $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $options->setEnableCompression($enabled);
-        $builder = ClientBuilder::create($options);
+        $builder = new ClientBuilder($options);
         $builder->getClient();
 
         $decoderPluginFound = false;

@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
-use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -223,7 +222,7 @@ final class HubTest extends TestCase
 
     public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsZero(): void
     {
-        $client = ClientBuilder::create(new Options(['max_breadcrumbs' => 0]))->getClient();
+        $client = ClientBuilder::create(['max_breadcrumbs' => 0])->getClient();
         $hub = new Hub($client);
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
@@ -233,7 +232,7 @@ final class HubTest extends TestCase
 
     public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void
     {
-        $client = ClientBuilder::create(new Options(['max_breadcrumbs' => 2]))->getClient();
+        $client = ClientBuilder::create(['max_breadcrumbs' => 2])->getClient();
         $hub = new Hub($client);
         $scope = $hub->getScope();
 
@@ -256,7 +255,7 @@ final class HubTest extends TestCase
         $callback = function (): ?Breadcrumb {
             return null;
         };
-        $client = ClientBuilder::create(new Options(['before_breadcrumb' => $callback]))->getClient();
+        $client = ClientBuilder::create(['before_breadcrumb' => $callback])->getClient();
         $hub = new Hub($client);
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
@@ -272,7 +271,7 @@ final class HubTest extends TestCase
         $callback = function () use ($breadcrumb2): ?Breadcrumb {
             return $breadcrumb2;
         };
-        $client = ClientBuilder::create(new Options(['before_breadcrumb' => $callback]))->getClient();
+        $client = ClientBuilder::create(['before_breadcrumb' => $callback])->getClient();
         $hub = new Hub($client);
 
         $hub->addBreadcrumb($breadcrumb1);
