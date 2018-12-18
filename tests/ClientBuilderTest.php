@@ -272,6 +272,14 @@ final class ClientBuilderTest extends TestCase
             [false],
         ];
     }
+
+    public function testCreateWithNoOptionsIsTheSameAsDefaultOptions(): void
+    {
+        $this->assertEquals(
+            new ClientBuilder(new Options()),
+            ClientBuilder::create([])
+        );
+    }
 }
 
 final class StubIntegration implements IntegrationInterface
