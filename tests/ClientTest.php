@@ -474,7 +474,7 @@ class ClientTest extends TestCase
         return new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            $this->createMock(Options::class),
+            new Options(),
             'sentry.sdk.identifier',
             '1.2.3'
         );
