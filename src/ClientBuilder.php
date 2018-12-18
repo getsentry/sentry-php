@@ -90,7 +90,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Class constructor.
      *
-     * @param Options $options The client options
+     * @param Options|null $options The client options
      */
     public function __construct(Options $options = null)
     {

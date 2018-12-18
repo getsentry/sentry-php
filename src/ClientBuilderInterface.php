@@ -22,7 +22,7 @@ interface ClientBuilderInterface
     /**
      * Creates a new instance of this builder.
      *
-     * @param array $options The client options, in naked array form; it will be used to construct {@see Options}
+     * @param array $options The client options, in naked array form
      *
      * @return static
      */
