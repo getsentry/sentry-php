@@ -35,7 +35,7 @@ final class ClientBuilderTest extends TestCase
 
     public function testHttpTransportIsUsedWhenServeIsConfigured(): void
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
 
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
@@ -56,7 +56,7 @@ final class ClientBuilderTest extends TestCase
         /** @var UriFactory|MockObject $uriFactory */
         $uriFactory = $this->createMock(UriFactory::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setUriFactory($uriFactory);
 
         $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
@@ -67,7 +67,7 @@ final class ClientBuilderTest extends TestCase
         /** @var MessageFactory|MockObject $messageFactory */
         $messageFactory = $this->createMock(MessageFactory::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setMessageFactory($messageFactory);
 
         $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
@@ -82,7 +82,7 @@ final class ClientBuilderTest extends TestCase
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setTransport($transport);
 
         $this->assertAttributeSame($transport, 'transport', $clientBuilder);
@@ -94,7 +94,7 @@ final class ClientBuilderTest extends TestCase
         /** @var HttpAsyncClient|MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
 
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $clientBuilder->setHttpClient($httpClient);
 
         $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
@@ -140,7 +140,7 @@ final class ClientBuilderTest extends TestCase
 
     public function testGetClient(): void
     {
-        $clientBuilder = new ClientBuilder(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $client = $clientBuilder->getClient();
 
         $this->assertInstanceOf(Client::class, $client);
@@ -161,13 +161,14 @@ final class ClientBuilderTest extends TestCase
      */
     public function testIntegrationsAreAddedToClientCorrectly(bool $defaultIntegrations, array $integrations, array $expectedIntegrations): void
     {
-        $clientBuilder = new ClientBuilder([
-            'default_integrations' => $defaultIntegrations,
-            'integrations' => $integrations,
-        ]);
+        $options = new Options();
+        $options->setDefaultIntegrations($defaultIntegrations);
+        $options->setIntegrations($integrations);
 
+        $clientBuilder = new ClientBuilder($options);
         $client = $clientBuilder->getClient();
-        $actualIntegrationsClassNames = array_map('get_class', $client->getOptions()->getIntegrations());
+
+        $actualIntegrationsClassNames = array_map('\get_class', $client->getOptions()->getIntegrations());
 
         $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
     }
@@ -198,63 +199,13 @@ final class ClientBuilderTest extends TestCase
         ];
     }
 
-    /**
-     * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage The method named "methodThatDoesNotExists" does not exists.
-     */
-    public function testCallInvalidMethodThrowsException(): void
-    {
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->methodThatDoesNotExists();
-    }
-
-    /**
-     * @dataProvider optionsDataProvider
-     */
-    public function testCallExistingMethodForwardsCallToConfiguration(string $setterMethod, $value): void
-    {
-        $options = $this->createMock(Options::class);
-        $options->expects($this->once())
-            ->method($setterMethod)
-            ->with($this->equalTo($value));
-
-        $clientBuilder = new ClientBuilder();
-
-        $reflectionProperty = new \ReflectionProperty(ClientBuilder::class, 'options');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($clientBuilder, $options);
-        $reflectionProperty->setAccessible(false);
-
-        $clientBuilder->$setterMethod($value);
-    }
-
-    public function optionsDataProvider(): array
-    {
-        return [
-            ['setPrefixes', ['foo', 'bar']],
-            ['setSampleRate', 0.5],
-            ['setAttachStacktrace', true],
-            ['setContextLines', 0],
-            ['setEnableCompression', false],
-            ['setEnvironment', 'test'],
-            ['setExcludedProjectPaths', ['foo', 'bar']],
-            ['setExcludedExceptions', ['foo', 'bar']],
-            ['setProjectRoot', 'foo'],
-            ['setLogger', 'bar'],
-            ['setRelease', 'dev'],
-            ['setServerName', 'example.com'],
-            ['setTags', ['foo', 'bar']],
-            ['setErrorTypes', 0],
-        ];
-    }
-
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
     {
         $callbackCalled = false;
         $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
+        $options = new Options();
+        $options->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
             $callbackCalled = true;
 
             $this->assertSame(Client::SDK_IDENTIFIER, $event->getSdkIdentifier());
@@ -263,7 +214,7 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        $clientBuilder->getClient()->captureMessage('test');
+        (new ClientBuilder($options))->getClient()->captureMessage('test');
 
         $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
@@ -272,8 +223,8 @@ final class ClientBuilderTest extends TestCase
     {
         $callbackCalled = false;
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
+        $options = new Options();
+        $options->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
             $callbackCalled = true;
 
             $this->assertSame('sentry.test', $event->getSdkIdentifier());
@@ -282,7 +233,8 @@ final class ClientBuilderTest extends TestCase
             return null;
         });
 
-        $clientBuilder->setSdkIdentifier('sentry.test')
+        (new ClientBuilder($options))
+            ->setSdkIdentifier('sentry.test')
             ->setSdkVersion('1.2.3-test')
             ->getClient()
             ->captureMessage('test');
@@ -295,7 +247,9 @@ final class ClientBuilderTest extends TestCase
      */
     public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
     {
-        $builder = ClientBuilder::create(['enable_compression' => $enabled, 'dsn' => 'http://public:secret@example.com/sentry/1']);
+        $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
+        $options->setEnableCompression($enabled);
+        $builder = new ClientBuilder($options);
         $builder->getClient();
 
         $decoderPluginFound = false;
@@ -317,6 +271,14 @@ final class ClientBuilderTest extends TestCase
             [true],
             [false],
         ];
+    }
+
+    public function testCreateWithNoOptionsIsTheSameAsDefaultOptions(): void
+    {
+        $this->assertEquals(
+            new ClientBuilder(new Options()),
+            ClientBuilder::create([])
+        );
     }
 }
 

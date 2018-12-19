@@ -13,7 +13,8 @@ use Sentry\State\Hub;
  */
 function init(array $options = []): void
 {
-    Hub::setCurrent(new Hub(ClientBuilder::create($options)->getClient()));
+    $client = ClientBuilder::create($options)->getClient();
+    Hub::setCurrent(new Hub($client));
 }
 
 /**

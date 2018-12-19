@@ -202,14 +202,16 @@ class ClientTest extends TestCase
         $transport->expects($this->never())
             ->method('send');
 
-        $client = ClientBuilder::create([
-            'dsn' => 'http://public:secret@example.com/1',
-            'before_send' => function () use (&$beforeSendCalled) {
-                $beforeSendCalled = true;
+        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
+        $options->setBeforeSendCallback(function () use (&$beforeSendCalled) {
+            $beforeSendCalled = true;
 
-                return null;
-            },
-        ])->setTransport($transport)->getClient();
+            return null;
+        });
+
+        $client = (new ClientBuilder($options))
+            ->setTransport($transport)
+            ->getClient();
 
         $client->captureEvent([]);
 
@@ -219,11 +221,14 @@ class ClientTest extends TestCase
     /**
      * @dataProvider sampleRateAbsoluteDataProvider
      */
-    public function testSampleRateAbsolute($options): void
+    public function testSampleRateAbsolute(float $sampleRate): void
     {
         $httpClient = new MockClient();
 
-        $client = ClientBuilder::create($options)
+        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
+        $options->setSampleRate($sampleRate);
+
+        $client = (new ClientBuilder($options))
             ->setHttpClient($httpClient)
             ->getClient();
 
@@ -231,7 +236,7 @@ class ClientTest extends TestCase
             $client->captureMessage('foobar');
         }
 
-        switch ($options['sample_rate']) {
+        switch ($sampleRate) {
             case 0:
                 $this->assertEmpty($httpClient->getRequests());
                 break;
@@ -244,18 +249,8 @@ class ClientTest extends TestCase
     public function sampleRateAbsoluteDataProvider(): array
     {
         return [
-            [
-                [
-                    'dsn' => 'http://public:secret@example.com/1',
-                    'sample_rate' => 0,
-                ],
-            ],
-            [
-                [
-                    'dsn' => 'http://public:secret@example.com/1',
-                    'sample_rate' => 1,
-                ],
-            ],
+            'sample rate 0' => [0],
+            'sample rate 1' => [1],
         ];
     }
 
@@ -479,7 +474,7 @@ class ClientTest extends TestCase
         return new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            $this->createMock(Options::class),
+            new Options(),
             'sentry.sdk.identifier',
             '1.2.3'
         );

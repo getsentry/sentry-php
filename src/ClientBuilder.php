@@ -34,40 +34,6 @@ use Sentry\Transport\TransportInterface;
  * The default implementation of {@link ClientBuilderInterface}.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
- *
- * @method int getSendAttempts()
- * @method setSendAttempts(int $attemptsCount)
- * @method string[] getPrefixes()
- * @method setPrefixes(array $prefixes)
- * @method float getSampleRate()
- * @method setSampleRate(float $sampleRate)
- * @method bool shouldAttachStacktrace()
- * @method setAttachStacktrace(bool $enable)
- * @method int getContextLines()
- * @method setContextLines(int $contextLines)
- * @method null|string getEnvironment()
- * @method setEnvironment(null|string $environment)
- * @method string[] getExcludedProjectPaths()
- * @method setExcludedProjectPaths(string[] $paths)
- * @method setExcludedLoggers(string[] $loggers)
- * @method string[] getExcludedExceptions()
- * @method string getProjectRoot()
- * @method setProjectRoot(string $path)
- * @method string getLogger()
- * @method setLogger(string $logger)
- * @method string getRelease()
- * @method setRelease(string $release)
- * @method string getDsn()
- * @method string getServerName()
- * @method setServerName(string $serverName)
- * @method string[] getTags()
- * @method setTags(string[] $tags)
- * @method bool shouldSendDefaultPii()
- * @method setSendDefaultPii(bool $enable)
- * @method bool hasDefaultIntegrations()
- * @method setDefaultIntegrations(bool $enable)
- * @method callable getBeforeSendCallback()
- * @method setBeforeSendCallback(callable $beforeSend)
  */
 final class ClientBuilder implements ClientBuilderInterface
 {
@@ -124,11 +90,11 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * Class constructor.
      *
-     * @param array $options The client options
+     * @param Options|null $options The client options
      */
-    public function __construct(array $options = [])
+    public function __construct(Options $options = null)
     {
-        $this->options = new Options($options);
+        $this->options = $options ?? new Options();
 
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(\array_merge([
@@ -141,15 +107,23 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public static function create(array $options = []): self
+    public static function create(array $options = []): ClientBuilderInterface
     {
-        return new static($options);
+        return new static(new Options($options));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setUriFactory(UriFactory $uriFactory): self
+    public function getOptions(): Options
+    {
+        return $this->options;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setUriFactory(UriFactory $uriFactory): ClientBuilderInterface
     {
         $this->uriFactory = $uriFactory;
 
@@ -159,7 +133,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setMessageFactory(MessageFactory $messageFactory): self
+    public function setMessageFactory(MessageFactory $messageFactory): ClientBuilderInterface
     {
         $this->messageFactory = $messageFactory;
 
@@ -169,7 +143,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setTransport(TransportInterface $transport): self
+    public function setTransport(TransportInterface $transport): ClientBuilderInterface
     {
         $this->transport = $transport;
 
@@ -179,7 +153,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setHttpClient(HttpAsyncClient $httpClient): self
+    public function setHttpClient(HttpAsyncClient $httpClient): ClientBuilderInterface
     {
         $this->httpClient = $httpClient;
 
@@ -189,7 +163,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addHttpClientPlugin(Plugin $plugin): self
+    public function addHttpClientPlugin(Plugin $plugin): ClientBuilderInterface
     {
         $this->httpClientPlugins[] = $plugin;
 
@@ -199,7 +173,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function removeHttpClientPlugin(string $className): self
+    public function removeHttpClientPlugin(string $className): ClientBuilderInterface
     {
         foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
             if (!$httpClientPlugin instanceof $className) {
@@ -215,7 +189,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSerializer(SerializerInterface $serializer): self
+    public function setSerializer(SerializerInterface $serializer): ClientBuilderInterface
     {
         $this->serializer = $serializer;
 
@@ -225,7 +199,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilderInterface
     {
         $this->representationSerializer = $representationSerializer;
 
@@ -235,7 +209,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkIdentifier(string $sdkIdentifier): self
+    public function setSdkIdentifier(string $sdkIdentifier): ClientBuilderInterface
     {
         $this->sdkIdentifier = $sdkIdentifier;
 
@@ -259,7 +233,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSdkVersion(string $sdkVersion): self
+    public function setSdkVersion(string $sdkVersion): ClientBuilderInterface
     {
         $this->sdkVersion = $sdkVersion;
 
@@ -273,7 +247,7 @@ final class ClientBuilder implements ClientBuilderInterface
      *
      * @return $this
      */
-    public function setSdkVersionByPackageName(string $packageName): self
+    public function setSdkVersionByPackageName(string $packageName): ClientBuilderInterface
     {
         $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
 
@@ -291,25 +265,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
         return new Client($this->options, $this->transport, $this->createEventFactory());
-    }
-
-    /**
-     * This method forwards all methods calls to the options object.
-     *
-     * @param string $name      The name of the method being called
-     * @param array  $arguments Parameters passed to the $name'ed method
-     *
-     * @return $this
-     *
-     * @throws \BadMethodCallException If the called method does not exists
-     */
-    public function __call($name, $arguments)
-    {
-        if (!method_exists($this->options, $name)) {
-            throw new \BadMethodCallException(sprintf('The method named "%s" does not exists.', $name));
-        }
-
-        return $this->options->$name(...$arguments);
     }
 
     /**
