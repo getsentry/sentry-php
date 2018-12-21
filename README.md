@@ -64,6 +64,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Drupal](https://www.drupal.org/project/raven)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
 - [Magento2](https://github.com/justbetter/magento2-sentry)
+- [October CMS](https://github.com/OFFLINE-GmbH/oc-sentry-plugin/)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## Community
