@@ -346,7 +346,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $this->assertNotFalse($filename, 'Temp file creation failed');
 
-        $resource = fopen($filename, 'wb');
+        $resource = fopen($filename, 'w');
 
         $result = $this->invokeSerialization($serializer, $resource);
 
