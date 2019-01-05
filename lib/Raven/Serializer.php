@@ -103,14 +103,10 @@ class Raven_Serializer
             } else {
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
+        }
 
-            if ($this->message_limit !== 0 && mb_strlen($value) > $this->message_limit) {
-                $value = mb_substr($value, 0, $this->message_limit - 10, 'UTF-8') . ' {clipped}';
-            }
-        } else {
-            if ($this->message_limit !== 0 && strlen($value) > $this->message_limit) {
-                $value = substr($value, 0, $this->message_limit - 10) . ' {clipped}';
-            }
+        if ($this->message_limit !== 0 && Raven_Compat::strlen($value) > $this->message_limit) {
+            $value = Raven_Compat::substr($value, 0, $this->message_limit - 10) . ' {clipped}';
         }
 
         return $value;
