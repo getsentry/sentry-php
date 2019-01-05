@@ -862,7 +862,7 @@ class Raven_Client
         }
 
         if (isset($data['message'])) {
-            $data['message'] = substr($data['message'], 0, $this->message_limit);
+            $data['message'] = Raven_Compat::substr($data['message'], 0, $this->message_limit);
         }
 
         $data = array_merge($this->get_default_data(), $data);
