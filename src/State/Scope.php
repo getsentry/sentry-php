@@ -178,7 +178,7 @@ final class Scope
     /**
      * Sets the severity to apply to all events captured in this scope.
      *
-     * @param null|Severity $level The severity
+     * @param Severity|null $level The severity
      *
      * @return $this
      */
@@ -192,7 +192,7 @@ final class Scope
     /**
      * Gets the severity to apply to all events captured in this scope.
      *
-     * @return null|Severity
+     * @return Severity|null
      *
      * @internal
      */

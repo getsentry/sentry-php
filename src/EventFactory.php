@@ -65,7 +65,7 @@ final class EventFactory implements EventFactoryInterface
         $event = $this->create($payload);
 
         if (!$event->getStacktrace()) {
-            $stacktrace = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
+            $stacktrace = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
 
             $event->setStacktrace($stacktrace);
         }

@@ -203,7 +203,7 @@ final class Options
     /**
      * Gets the environment.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getEnvironment(): ?string
     {
@@ -718,7 +718,7 @@ final class Options
      * @param SymfonyOptions $options The configuration options
      * @param mixed          $dsn     The actual value of the option to normalize
      *
-     * @return null|string
+     * @return string|null
      */
     private function normalizeDsnOption(SymfonyOptions $options, $dsn): ?string
     {

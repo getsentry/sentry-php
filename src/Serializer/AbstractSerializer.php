@@ -94,7 +94,7 @@ abstract class AbstractSerializer
      * @param mixed $value
      * @param int   $_depth
      *
-     * @return string|bool|float|int|null|object|array
+     * @return string|bool|float|int|object|array|null
      */
     protected function serializeRecursively($value, int $_depth = 0)
     {
@@ -158,18 +158,18 @@ abstract class AbstractSerializer
 
         if ($this->isMbStringEnabled()) {
             // we always guarantee this is coerced, even if we can't detect encoding
-            if ($currentEncoding = \mb_detect_encoding($value, $this->mbDetectOrder)) {
-                $value = \mb_convert_encoding($value, 'UTF-8', $currentEncoding);
+            if ($currentEncoding = mb_detect_encoding($value, $this->mbDetectOrder)) {
+                $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
             } else {
-                $value = \mb_convert_encoding($value, 'UTF-8');
+                $value = mb_convert_encoding($value, 'UTF-8');
             }
 
-            if (\mb_strlen($value) > $this->messageLimit) {
-                $value = \mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
+            if (mb_strlen($value) > $this->messageLimit) {
+                $value = mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
             if (\strlen($value) > $this->messageLimit) {
-                $value = \substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
+                $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
             }
         }
 
@@ -183,7 +183,7 @@ abstract class AbstractSerializer
      */
     protected function serializeValue($value)
     {
-        if ((null === $value) || \is_bool($value) || \is_numeric($value)) {
+        if ((null === $value) || \is_bool($value) || is_numeric($value)) {
             return $value;
         }
 
@@ -220,7 +220,7 @@ abstract class AbstractSerializer
             } elseif ($callable instanceof \Closure || \is_string($callable)) {
                 $reflection = new \ReflectionFunction($callable);
                 $class = null;
-            } elseif (\is_object($callable) && \method_exists($callable, '__invoke')) {
+            } elseif (\is_object($callable) && method_exists($callable, '__invoke')) {
                 $reflection = new \ReflectionMethod($callable, '__invoke');
                 $class = $reflection->getDeclaringClass();
             } else {

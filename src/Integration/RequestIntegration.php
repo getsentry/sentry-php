@@ -57,7 +57,7 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param self                        $self    The current instance of RequestIntegration
      * @param Event                       $event   The event that will be enriched with a request
-     * @param null|ServerRequestInterface $request The Request that will be processed and added to the event
+     * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
@@ -110,7 +110,7 @@ final class RequestIntegration implements IntegrationInterface
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
 
         return array_filter($headers, function ($key) use ($keysToRemove) {
-            return !\in_array(\strtolower($key), $keysToRemove, true);
+            return !\in_array(strtolower($key), $keysToRemove, true);
         }, ARRAY_FILTER_USE_KEY);
     }
 }
