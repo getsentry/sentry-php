@@ -282,8 +282,8 @@ final class ErrorHandlerTest extends TestCase
                 $errorHandler->handleException($exception);
 
                 $this->fail('Exception expected');
-            } catch (\Exception $catchedException) {
-                $this->assertSame($exception, $catchedException);
+            } catch (\Exception $ex) {
+                $this->assertSame($exception, $ex);
             }
         } finally {
             restore_error_handler();
@@ -316,8 +316,8 @@ final class ErrorHandlerTest extends TestCase
                 $errorHandler->handleException($exception);
 
                 $this->fail('Exception expected');
-            } catch (\Exception $catchedException) {
-                $this->assertSame($exception, $catchedException);
+            } catch (\Exception $ex) {
+                $this->assertSame($exception, $ex);
             }
         } finally {
             restore_error_handler();
@@ -352,8 +352,8 @@ final class ErrorHandlerTest extends TestCase
                 $errorHandler->handleException($exception1);
 
                 $this->fail('Exception expected');
-            } catch (\Exception $catchedException) {
-                $this->assertSame($exception2, $catchedException);
+            } catch (\Exception $ex) {
+                $this->assertSame($exception2, $ex);
             }
         } finally {
             restore_error_handler();
