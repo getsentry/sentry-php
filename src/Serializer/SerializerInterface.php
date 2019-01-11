@@ -14,7 +14,7 @@ interface SerializerInterface
      *
      * @param mixed $value
      *
-     * @return string|bool|float|int|null|object|array
+     * @return string|bool|float|int|object|array|null
      */
     public function serialize($value);
 }

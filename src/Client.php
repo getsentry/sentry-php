@@ -142,10 +142,10 @@ class Client implements ClientInterface
      * Assembles an event and prepares it to be sent of to Sentry.
      *
      * @param array      $payload        the payload that will be converted to an Event
-     * @param null|Scope $scope          optional scope which enriches the Event
+     * @param Scope|null $scope          optional scope which enriches the Event
      * @param bool       $withStacktrace True if the event should have and attached stacktrace
      *
-     * @return null|Event returns ready to send Event, however depending on options it can be discarded
+     * @return Event|null returns ready to send Event, however depending on options it can be discarded
      */
     private function prepareEvent(array $payload, ?Scope $scope = null, bool $withStacktrace = false): ?Event
     {

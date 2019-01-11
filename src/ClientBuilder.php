@@ -97,7 +97,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->options = $options ?? new Options();
 
         if ($this->options->hasDefaultIntegrations()) {
-            $this->options->setIntegrations(\array_merge([
+            $this->options->setIntegrations(array_merge([
                 new ErrorHandlerIntegration(),
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations()));

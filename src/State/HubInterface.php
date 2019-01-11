@@ -33,7 +33,7 @@ interface HubInterface
     /**
      * Gets the ID of the last captured event.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getLastEventId(): ?string;
 
@@ -86,7 +86,7 @@ interface HubInterface
      * @param string   $message The message
      * @param Severity $level   The severity level of the message
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureMessage(string $message, ?Severity $level = null): ?string;
 
@@ -95,7 +95,7 @@ interface HubInterface
      *
      * @param \Throwable $exception The exception
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureException(\Throwable $exception): ?string;
 
@@ -104,14 +104,14 @@ interface HubInterface
      *
      * @param array $payload The data of the event being captured
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureEvent(array $payload): ?string;
 
     /**
      * Captures an event that logs the last occurred error.
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureLastError(): ?string;
 
@@ -147,7 +147,7 @@ interface HubInterface
      *
      * @param string $className The FQCN of the integration
      *
-     * @return null|IntegrationInterface
+     * @return IntegrationInterface|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 }

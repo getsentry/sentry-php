@@ -23,7 +23,7 @@ function init(array $options = []): void
  * @param string   $message The message
  * @param Severity $level   The severity level of the message
  *
- * @return null|string
+ * @return string|null
  */
 function captureMessage(string $message, ?Severity $level = null): ?string
 {
@@ -35,7 +35,7 @@ function captureMessage(string $message, ?Severity $level = null): ?string
  *
  * @param \Throwable $exception The exception
  *
- * @return null|string
+ * @return string|null
  */
 function captureException(\Throwable $exception): ?string
 {
@@ -47,7 +47,7 @@ function captureException(\Throwable $exception): ?string
  *
  * @param array $payload The data of the event being captured
  *
- * @return null|string
+ * @return string|null
  */
 function captureEvent(array $payload): ?string
 {
@@ -57,7 +57,7 @@ function captureEvent(array $payload): ?string
 /**
  * Logs the most recent error (obtained with {@link error_get_last}).
  *
- * @return null|string
+ * @return string|null
  */
 function captureLastError(): ?string
 {

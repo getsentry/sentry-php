@@ -89,7 +89,7 @@ final class Hub implements HubInterface
             return false;
         }
 
-        return null !== \array_pop($this->stack);
+        return null !== array_pop($this->stack);
     }
 
     /**

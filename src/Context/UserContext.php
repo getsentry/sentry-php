@@ -13,7 +13,7 @@ final class UserContext extends Context
     /**
      * Gets the ID of the user.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getId(): ?string
     {
@@ -23,7 +23,7 @@ final class UserContext extends Context
     /**
      * Sets the ID of the user.
      *
-     * @param null|string $id The ID
+     * @param string|null $id The ID
      */
     public function setId(?string $id): void
     {
@@ -33,7 +33,7 @@ final class UserContext extends Context
     /**
      * Gets the username of the user.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getUsername(): ?string
     {
@@ -43,7 +43,7 @@ final class UserContext extends Context
     /**
      * Sets the username of the user.
      *
-     * @param null|string $username The username
+     * @param string|null $username The username
      */
     public function setUsername(?string $username): void
     {
@@ -53,7 +53,7 @@ final class UserContext extends Context
     /**
      * Gets the email of the user.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getEmail(): ?string
     {
@@ -63,7 +63,7 @@ final class UserContext extends Context
     /**
      * Sets the email of the user.
      *
-     * @param null|string $email The email
+     * @param string|null $email The email
      */
     public function setEmail(?string $email): void
     {
@@ -73,7 +73,7 @@ final class UserContext extends Context
     /**
      * Gets the ip address of the user.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getIpAddress(): ?string
     {
@@ -83,7 +83,7 @@ final class UserContext extends Context
     /**
      * Sets the ip address of the user.
      *
-     * @param null|string $ipAddress The ip address
+     * @param string|null $ipAddress The ip address
      */
     public function setIpAddress(?string $ipAddress): void
     {

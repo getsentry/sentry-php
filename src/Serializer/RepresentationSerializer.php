@@ -43,7 +43,7 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
             return $value . '.0';
         }
 
-        if (\is_numeric($value)) {
+        if (is_numeric($value)) {
             return (string) $value;
         }
 

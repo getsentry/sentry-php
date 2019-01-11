@@ -28,7 +28,7 @@ interface ClientInterface
      * @param Severity   $level   The level of the message to be sent
      * @param Scope|null $scope   An optional scope keeping the state
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string;
 
@@ -38,7 +38,7 @@ interface ClientInterface
      * @param \Throwable $exception The exception object
      * @param Scope|null $scope     An optional scope keeping the state
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?string;
 
@@ -47,7 +47,7 @@ interface ClientInterface
      *
      * @param Scope|null $scope An optional scope keeping the state
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureLastError(?Scope $scope = null): ?string;
 
@@ -57,7 +57,7 @@ interface ClientInterface
      * @param array      $payload The data of the event being captured
      * @param Scope|null $scope   An optional scope keeping the state
      *
-     * @return null|string
+     * @return string|null
      */
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
@@ -66,7 +66,7 @@ interface ClientInterface
      *
      * @param string $className the classname of the integration
      *
-     * @return null|IntegrationInterface
+     * @return IntegrationInterface|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 }
