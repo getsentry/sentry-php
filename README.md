@@ -16,7 +16,7 @@
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
-informations needed to prioritize, identify, reproduce and fix each issue.
+information needed to prioritize, identify, reproduce and fix each issue.
 
 ## Install
 
@@ -51,8 +51,8 @@ init(['dsn' => '___PUBLIC_DSN___' ]);
 
 try {
     thisFunctionThrows(); // -> throw new \Exception('foo bar');
-} catch (\Exception $ex) {
-    captureException($ex);
+} catch (\Exception $exception) {
+    captureException($exception);
 }
 ```
 
