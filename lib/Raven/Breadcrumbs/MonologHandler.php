@@ -54,7 +54,7 @@ class Raven_Breadcrumbs_MonologHandler extends AbstractProcessingHandler
     /**
      * {@inheritdoc}
      */
-    protected function write(array $record)
+    protected function write(array $record) : void
     {
         // sentry uses the 'nobreadcrumb' attribute to skip reporting
         if (!empty($record['context']['nobreadcrumb'])) {
