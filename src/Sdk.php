@@ -14,6 +14,7 @@ use Sentry\State\Hub;
 function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
+
     Hub::setCurrent(new Hub($client));
 }
 
