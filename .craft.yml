@@ -8,4 +8,4 @@ targets:
     - name: registry
       type: sdk
       config:
-          canonical: 'composer:sentry/sentry'
+          canonical: 'composer:@sentry/sentry'
