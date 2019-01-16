@@ -58,3 +58,13 @@ jobs:
         REMOVE_XDEBUG: "1"
       script: 
         - composer phpstan
+
+notifications:
+  webhooks:
+    urls:
+    - https://zeus.ci/hooks/cf8597c4-ffba-11e7-89c9-0a580a281308/public/provider/travis/webhook
+    on_success: always
+    on_failure: always
+    on_start: always
+    on_cancel: always
+    on_error: always
