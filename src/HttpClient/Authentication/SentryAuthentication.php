@@ -15,7 +15,7 @@ use Sentry\Options;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SentryAuth implements Authentication
+final class SentryAuthentication implements Authentication
 {
     /**
      * @var Options The Sentry client configuration
@@ -68,6 +68,9 @@ final class SentryAuth implements Authentication
             $headers[] = $headerKey . '=' . $headerValue;
         }
 
-        return $request->withHeader('X-Sentry-Auth', 'Sentry ' . implode(', ', $headers));
+        /** @var RequestInterface $request */
+        $request = $request->withHeader('X-Sentry-Auth', 'Sentry ' . implode(', ', $headers));
+
+        return $request;
     }
 }
