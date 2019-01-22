@@ -19,7 +19,7 @@ use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
-use Sentry\HttpClient\Authentication\SentryAuth;
+use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
@@ -287,7 +287,7 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuth($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuthentication($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
         $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
         $this->addHttpClientPlugin(new ErrorPlugin());
 

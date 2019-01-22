@@ -8,18 +8,18 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
-use Sentry\HttpClient\Authentication\SentryAuth;
+use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Options;
 
 /**
  * @group time-sensitive
  */
-final class SentryAuthTest extends TestCase
+final class SentryAuthenticationTest extends TestCase
 {
     public function testAuthenticate(): void
     {
         $configuration = new Options(['dsn' => 'http://public:secret@example.com/']);
-        $authentication = new SentryAuth($configuration, 'sentry.php.test', '1.2.3');
+        $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '1.2.3');
 
         /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)
@@ -47,7 +47,7 @@ final class SentryAuthTest extends TestCase
     public function testAuthenticateWithNoSecretKey(): void
     {
         $configuration = new Options(['dsn' => 'http://public@example.com/']);
-        $authentication = new SentryAuth($configuration, 'sentry.php.test', '2.0.0');
+        $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '2.0.0');
 
         /** @var RequestInterface|MockObject $request */
         $request = $this->getMockBuilder(RequestInterface::class)

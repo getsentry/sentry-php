@@ -1,70 +1,56 @@
 language: php
 
 php:
-  - 7.1
-  - 7.2
-
-matrix:
-  fast_finish: true
-  allow_failures:
-    - php: nightly
+    - 7.1
+    - 7.2
+    - 7.3
+    - nightly
 
 env:
-  - REMOVE_XDEBUG="0"
-  - REMOVE_XDEBUG="1"
+    - dependencies=lowest
+    - dependencies=highest
+
+matrix:
+    fast_finish: true
+    allow_failures:
+        - php: nightly
 
 cache:
-  directories:
-    - $HOME/.composer/cache
+    directories:
+        - $HOME/.composer/cache
 
-before_install:
-  - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
-
-install: travis_retry composer install --no-interaction
-
-script:
-  - composer tests
+stages:
+    - Code style & static analysis
+    - Test
+    - Code coverage
 
 jobs:
-  include:
-    - stage: Test
-      php: 7.2
-      env:
-        REMOVE_XDEBUG: "0"
-        COVERAGE: true
-      script:
-      - vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-clover tests/clover.xml
-      - wget https://scrutinizer-ci.com/ocular.phar
-      - php ocular.phar code-coverage:upload --format=php-clover tests/clover.xml --revision=$TRAVIS_COMMIT
-    - php: 7.1
-      env: 
-        COMPOSER_OPTIONS: "--prefer-lowest"
-        REMOVE_XDEBUG: "1"
-      install: travis_retry composer update --no-interaction --prefer-lowest
-    - php: nightly
-      allow_failure: true
-      before_install:
-        - composer remove --dev friendsofphp/php-cs-fixer
-      env: 
-        REMOVE_XDEBUG: "0"
-    - stage: Code style & static analysis
-      env: 
-        CS-FIXER: true
-        REMOVE_XDEBUG: "1"
-      script: 
-        - composer phpcs
-    - env: 
-        PHPSTAN: true
-        REMOVE_XDEBUG: "1"
-      script: 
-        - composer phpstan
+    include:
+        - stage: Code style & static analysis
+          name: PHP CS Fixer
+          script: composer phpcs
+        - script: composer phpstan
+          name: PHPStan
+        - stage: Code coverage
+          php: 7.3
+          env: dependencies=highest
+          script:
+              - vendor/bin/phpunit --verbose --coverage-clover=build/logs/clover.xml
+              - wget https://scrutinizer-ci.com/ocular.phar
+              - php ocular.phar code-coverage:upload --format=php-clover build/logs/clover.xml --revision=$TRAVIS_COMMIT
+          after_success:
+              - travis_retry php vendor/bin/php-coveralls --verbose
+
+install:
+    - if [ "$dependencies" = "lowest" ]; then composer update --no-interaction --prefer-lowest --prefer-dist; fi;
+    - if [ "$dependencies" = "highest" ]; then composer update --no-interaction --prefer-dist; fi;
 
 notifications:
-  webhooks:
-    urls:
-    - https://zeus.ci/hooks/cf8597c4-ffba-11e7-89c9-0a580a281308/public/provider/travis/webhook
-    on_success: always
-    on_failure: always
-    on_start: always
-    on_cancel: always
-    on_error: always
+    webhooks:
+        urls:
+            - https://zeus.ci/hooks/cf8597c4-ffba-11e7-89c9-0a580a281308/public/provider/travis/webhook
+        on_success: always
+        on_failure: always
+        on_start: always
+        on_cancel: always
+        on_error: always
