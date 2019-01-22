@@ -15,11 +15,6 @@ use Sentry\Serializer\SerializerInterface;
 class Stacktrace implements \JsonSerializable
 {
     /**
-     * This constant defines the default number of lines of code to include.
-     */
-    private const CONTEXT_NUM_LINES = 5;
-
-    /**
      * @var Options The client options
      */
     protected $options;
@@ -129,7 +124,7 @@ class Stacktrace implements \JsonSerializable
         }
 
         $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), $line);
-        $sourceCodeExcerpt = self::getSourceCodeExcerpt($file, $line, self::CONTEXT_NUM_LINES);
+        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines());
 
         if (isset($sourceCodeExcerpt['pre_context'])) {
             $frame->setPreContext($sourceCodeExcerpt['pre_context']);

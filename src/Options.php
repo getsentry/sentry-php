@@ -159,9 +159,9 @@ final class Options
     /**
      * Gets the number of lines of code context to capture, or null if none.
      *
-     * @return int|null
+     * @return int
      */
-    public function getContextLines(): ?int
+    public function getContextLines(): int
     {
         return $this->options['context_lines'];
     }
@@ -169,9 +169,9 @@ final class Options
     /**
      * Sets the number of lines of code context to capture, or null if none.
      *
-     * @param int|null $contextLines The number of lines of code
+     * @param int $contextLines The number of lines of code
      */
-    public function setContextLines(?int $contextLines): void
+    public function setContextLines(int $contextLines): void
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
 
@@ -636,7 +636,7 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
             'attach_stacktrace' => false,
-            'context_lines' => 3,
+            'context_lines' => 5,
             'enable_compression' => true,
             'environment' => null,
             'project_root' => null,

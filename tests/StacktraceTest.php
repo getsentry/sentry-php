@@ -188,6 +188,34 @@ final class StacktraceTest extends TestCase
         }
     }
 
+    public function testAddFrameUsesOptionsContext(): void
+    {
+        $this->options->setContextLines(2);
+
+        $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+
+        $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
+            'function' => '[unknown]',
+        ]);
+
+        $frames = $stacktrace->getFrames();
+
+        $this->assertCount(1, $frames);
+        $this->assertCount(2, $frames[0]->getPreContext());
+        $this->assertCount(2, $frames[0]->getPostContext());
+
+        for ($i = 0; $i < 2; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + 5]), $frames[0]->getPreContext()[$i]);
+        }
+
+        $this->assertEquals(rtrim($fileContent[7]), $frames[0]->getContextLine());
+
+        for ($i = 0; $i < 2; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]->getPostContext()[$i]);
+        }
+    }
+
     /**
      * @dataProvider removeFrameDataProvider
      */
