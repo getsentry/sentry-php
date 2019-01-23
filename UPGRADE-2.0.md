@@ -1,57 +1,97 @@
-# Upgrade from 1.7 to 2.0
+# Upgrade from 1.10 to 2.0
 
 ### Client options
 
-- The `environment` option has been renamed to `current_environment`.
-- The `http_proxy` option has been renamed to `proxy`.
-- The `processorOptions` option has been renamed to `processors_options`.
-- The `exclude` option has been renamed to `excluded_exceptions`. Unlike `exclude`,
-   `excluded_exceptions` will also exclude all subclasses. 
-- The `send_callback` option has been renamed to `should_capture`.
+- The `http_proxy` option has been removed.
+
+- The `exclude` option has been removed. 
+
+- The `send_callback` option has been renamed to `before_send`.
+
 - The `name` option has been renamed to `server_name`.
+
+- The `secret_key` option has been removed.
+
+- The `public_key` option has been removed.
+
+- The `message_limit` option has been removed.
+
 - The `project` option has been removed.
+
+- The `severity_map` option has been removed.
+
+- The `ignore_server_port` option has been removed.
+
+- The `error_types` option has been removed.
+
+- The `trust_x_forwarded_proto` option has been removed.
+
+- The `mb_detect_order` option has been removed.
+
+- The `trace` option has been removed.
+
+- The `tags` option has been removed in favour of setting them in the scope.
+
+- The `site` option has been removed.
+
 - The `extra_data` option has been removed in favour of setting additional data
-  directly in the context.
-- The `curl_method` option has been removed in favour of leaving to the user the
-  choice of setting an HTTP client supporting syncronous, asyncronous or both
-  transport methods.
+  in the scope.
+
+- The `curl_method` option has been removed.
+
 - The `curl_path` option has been removed.
+
 - The `curl_ipv4` option has been removed.
+
 - The `curl_ssl_version` option has been removed.
+
 - The `verify_ssl` option has been removed.
+
 - The `ca_cert` option has been removed.
+
 - The `proxy` option has been removed in favour of leaving to the user the burden
   of configuring the HTTP client options using a custom client.
-- The `processors` option has been removed in favour of leaving to the user the
-  choice of which processors add or remove using the appropriate methods of the
-  `Client` and `ClientBuilder` classes.
-- The `processors_options` option has been removed in favour of leaving to the
-  user the burden of adding an already configured processor instance to the client.
+
+- The `processors` option has been removed.
+
+- The `processors_options` option has been removed.
+
 - The `transport` option has been removed in favour of setting it using the
   client builder.
+
 - The `install_default_breadcrumb_handlers` option has been removed.
-- The `http_client_options` has been added to set the options that applies to the
-  HTTP client chosen by the user as underlying transport method.
-- The `open_timeout` option has been added to set the maximum number of seconds
-  to wait for the server connection to open.
-- The `excluded_loggers` option has been added to set the list of logger 'progname's
-  to exclude from breadcrumbs.
-- The `environments` option has been added to set the whitelist of environments
-  that will send notifications to Sentry.
+
 - The `serialize_all_object` option has been added to configure whether all the
   object instances should be serialized.
+
 - The `context_lines` option has been added to configure the number of lines of
   code context to capture.
+
 - The `server` option has been renamed to `dsn`.
+
+### Misc
+
+- All the classes have been renamed and moved around to follow the PSR-4
+  convention and `final` have been added where appropriate.
+
+- The `Raven_Autoloader` class has been removed. To install and use the
+  library you are required to use [Composer](https://getcomposer.org/).
+
+- The `Raven_Compat` class has been removed.
+
+- The `Raven_Util` class has been removed.
+
+- The `Raven_CurlHandler` class has been removed.
+
+- The `Raven_TransactionStack` class has been removed.
+
+- The `Raven_Exception` class has been removed.
 
 ### Client
 
-- The `Raven_Client` class has been renamed to `Client` to follow the PSR-4
-  convention.
-
-- The constructor of the `Raven_Client` class has changed its signature. The only way
-  to set the DSN is now to set it in the options passed to the `Configuration`
-  class.
+- The constructor of the `Raven_Client` class has changed its signature and
+  now requires to be passed a configuration object, an instance of a transport
+  and an event factory.
 
   Before:
 
@@ -65,14 +105,16 @@
   After:
 
   ```php
-  public function __construct(Configuration $config, HttpAsyncClient $httpClient, RequestFactory $requestFactory)
+  public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory)
   {
       // ...
   }
   ```
 
+- The method `Raven_Client::close_all_children_link` has been removed and there
+
 - The methods `Raven_Client::getRelease` and `Raven_Client::setRelease` have
-  been removed. You should use `Configuration::getRelease()` and `Configuration::setRelease`
+  been removed. You should use `Options::getRelease` and `Options::setRelease`
   instead.
 
   Before:
@@ -85,13 +127,17 @@
   After:
 
   ```php
-  $client->getConfig()->getRelease();
-  $client->getConfig()->setRelease(...);
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getRelease();
+  $options->setRelease(...);
   ```
 
 - The methods `Raven_Client::getEnvironment` and `Raven_Client::setEnvironment`
-  have been removed. You should use `Configuration::getCurrentEnvironment` and
-  `Configuration::setCurrentEnvironment` instead.
+  have been removed. You should use `Options::getEnvironment` and `Options::setEnvironment`
+  instead.
 
   Before:
 
@@ -103,13 +149,19 @@
   After:
 
   ```php
-  $client->getConfig()->getCurrentEnvironment();
-  $client->getConfig()->setCurrentEnvironment(...);
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getEnvironment();
+  $options->setEnvironment(...);
   ```
 
+- The method `Raven_Client::getInputStream` has been removed.
+
 - The methods `Raven_Client::getDefaultPrefixes` and `Raven_Client::setPrefixes`
-  have been removed. You should use `Configuration::getPrefixes` and
-  `Configuration::setPrefixes` instead.
+  have been removed. You should use `Options::getPrefixes` and
+  `Options::setPrefixes` instead.
 
   Before:
 
@@ -121,12 +173,16 @@
   After:
 
   ```php
-  $client->getConfig()->getPrefixes();
-  $client->getConfig()->setPrefixes(...);
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getPrefixes();
+  $options->setPrefixes(...);
   ```
 
 - The methods `Raven_Client::getAppPath` and `Raven_Client::setAppPath` have been
-  removed. You should use `Configuration::getProjectRoot` and `Configuration::setProjectRoot`
+  removed. You should use `Options::getProjectRoot` and `Options::setProjectRoot`
   instead.
 
   Before:
@@ -139,12 +195,17 @@
   After:
 
   ```php
-  $client->getConfig()->getProjectRoot();
-  $client->getConfig()->setProjectRoot(...);
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getProjectRoot();
+  $options->setProjectRoot(...);
+  ```
 
 - The methods `Raven_Client::getExcludedAppPaths` and `Raven_Client::setExcludedAppPaths`
-  have been removed. You should use `Configuration::getExcludedProjectPaths`
-  and `Configuration::setExcludedProjectPaths` instead.
+  have been removed. You should use `Options::getExcludedProjectPaths`
+  and `Options::setExcludedProjectPaths` instead.
 
   Before:
 
@@ -156,12 +217,17 @@
   After:
 
   ```php
-  $client->getConfig()->getExcludedProjectPaths();
-  $client->getConfig()->setExcludedProjectPaths(...);
+  use Sentry\Hub;
 
-- The methods `Raven_Client::getSendCallback` and `Raven_Client::setSendCallback` have been
-  removed. You should use `Configuration::shouldCapture` and `Configuration::setShouldCapture`
-  instead.
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getExcludedAppPaths();
+  $options->setExcludedAppPaths(...);
+  ```
+
+- The methods `Raven_Client::getSendCallback` and `Raven_Client::setSendCallback`
+  have been removed. You should use `Options::getBeforeSendCallback` and
+  `Options::setBeforeSendCallback` instead.
 
   Before:
 
@@ -173,11 +239,15 @@
   After:
 
   ```php
-  $client->getConfig()->shouldCapture();
-  $client->getConfig()->setShouldCapture(...);
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getBeforeSendCallback();
+  $options->setBeforeSendCallback(...);
 
 - The method `Raven_Client::getServerEndpoint` has been removed. You should use
-  `Configuration::getDsn` instead.
+  `Options::getDsn` instead.
 
   Before:
 
@@ -188,23 +258,18 @@
   After:
 
   ```php
-  $client->getConfig()->getServer();
+  use Sentry\Hub;
+
+  $options = Hub::getCurrent()->getClient()->getOptions();
+
+  $options->getDsn();
   ```
 
-- The method `Raven_Client::getTransport` has been removed. You should use
-  `Configuration::getTransport` instead.
+- The methods `Raven_Client::getTransport` and `Raven_Client::setTransport` have
+  been removed. The transport is now a required dependency of the client and must
+  be passed as required constructor argument.
 
-  Before:
-
-  ```php
-  $client->getTransport();
-  ```
-
-  After:
-
-  ```php
-  $client->getConfig()->getTransport();
-  ```
+- The method `Raven_Client::getUserAgent` has been removed.
 
 - The method `Raven_Client::getErrorTypes` has been removed. You should use
   `Configuration::getErrorTypes` instead.
@@ -223,12 +288,37 @@
 
 - The `Raven_Client::getDefaultProcessors` method has been removed.
 
+- The `Raven_Client::setProcessorsFromOptions` method has been removed.
+
+- The `Raven_Client::getLastEventID` method has been removed. The ID of the
+  last event that was captured is now returned by each of the `Client::capture*`
+  methods.
+
+- The `Raven_Client::parseDSN` method has been removed.
+
+- The `Raven_Client::getLastError` method has been removed.
+
+- The `Raven_Client::getIdent` method has been removed.
+
+- The `Raven_Client::registerShutdownFunction` method has been removed.
+
+- The `Raven_Client::is_http_request` method has been removed.
+
+- The `Raven_Client::get_http_data` method has been removed.
+
+- The `Raven_Client::get_user_data` method has been removed.
+
+- The `Raven_Client::get_extra_data` method has been removed.
+
+- The `Raven_Client::get_default_data` method has been removed.
+
 - The `Raven_Client::message` method has been removed.
+
+- The `Raven_Client::exception` method has been removed.
 
 - The `Raven_Client::captureQuery` method has been removed.
 
-- The `Raven_Client::captureMessage` method has changed its signature by removing the
-  `$stack` and `$vars` arguments.
+- The `Raven_Client::captureMessage` method has changed its signature.
 
   Before:
 
@@ -242,14 +332,13 @@
   After:
 
   ```php
-  public function captureMessage($message, array $params = [], array $payload = [])
+  public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
   {
       // ...
   }
   ```
 
-- The `Raven_Client::captureException` method has changed its signature by removing
-  the `$logger` and `$vars` arguments.
+- The `Raven_Client::captureException` method has changed its signature.
 
   Before:
 
@@ -263,99 +352,150 @@
   After:
 
   ```php
-  public function captureException($exception, array $payload = [])
+  public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
   {
       // ...
   }
   ```
 
-- The `$vars` argument of the `Raven_Client::captureException`, `Raven_Client::captureMessage`
-  and `Raven_Client::captureQuery` methods accepted some values that were
-  setting additional data in the event like the tags or the user data.
-  Some of them have changed name.
+- The `Raven_Client::captureLastError` method has changed its signature.
 
   Before:
 
   ```php
-  $vars = array(
-      'tags' => array(...),
-      'extra' => array(...),
-      'user' => array(...),
-  );
-
-  $client->captureException(new Exception(), null, null, $vars);
+  public function captureLastError()
+  {
+      // ...
+  }
   ```
 
   After:
 
   ```php
-  $payload = array(
-      'tags_context' => array(...),
-      'extra_context' => array(...),
-      'user_context' => array(...),
-  );
-
-  $client->captureException(new Exception(), $payload);
+  public function captureLastError(?Scope $scope = null): ?string
+  {
+      // ...
+  }
   ```
 
-- If an exception implemented the `getSeverity()` method its value was used as error
-  level of the event. This has been changed so that only the `ErrorException` or its
-  derivated classes are considered for this behavior.
+- The method `Raven_Client::capture` has been removed.
 
-- The method `Raven_Client::createProcessors` has been removed as there is no
-  need to create instances of the processors from outside the `Client` class.
+- The method `Raven_Client::sanitize` has been removed.
 
-- The method `Raven_Client::setProcessors` has been removed. You should use
-  `Client::addProcessor` and `Client::removeProcessor` instead to manage the
-  processors that will be executed.
+- The method `Raven_Client::process` has been removed.
+
+- The method `Raven_Client::sendUnsentErrors` has been removed.
+
+- The method `Raven_Client::encode` has been removed.
+
+- The method `Raven_Client::send` has been removed.
+
+- The method `Raven_Client::send_remote` has been removed.
+
+- The method `Raven_Client::get_default_ca_cert` has been removed.
+
+- The method `Raven_Client::get_curl_options` has been removed.
+
+- The method `Raven_Client::send_http` has been removed.
+
+- The method `Raven_Client::buildCurlCommand` has been removed.
+
+- The method `Raven_Client::send_http_asynchronous_curl_exec` has been removed.
+
+- The method `Raven_Client::send_http_synchronous` has been removed.
+
+- The method `Raven_Client::get_auth_header` has been removed.
+
+- The method `Raven_Client::getAuthHeader` has been removed.
+
+- The method `Raven_Client::uuid4` has been removed.
+
+- The method `Raven_Client::get_current_url` has been removed.
+
+- The method `Raven_Client::isHttps` has been removed.
+
+- The method `Raven_Client::translateSeverity` has been removed.
+
+- The method `Raven_Client::registerSeverityMap` has been removed.
+
+- The method `Raven_Client::set_user_data` has been removed.
+
+- The method `Raven_Client::onShutdown` has been removed.
+
+- The method `Raven_Client::createProcessors` has been removed.
+
+- The method `Raven_Client::setProcessors` has been removed.
+
+- The method `Raven_Client::getLastSentryError` has been removed.
+
+- The method `Raven_Client::getShutdownFunctionHasBeenSet` has been removed.
+
+- The method `Raven_Client::close_curl_resource` has been removed.
+
+- The method `Raven_Client::setSerializer` has been removed. You can set it
+  using the client builder.
 
   Before:
 
   ```php
-  $processor1 = new Processor();
-  $processor2 = new Processor();
-
-  $client->setProcessors(array($processor2, $processor1));
+  $client = new Raven_Client();
+  $client->setSerializer(...);
   ```
 
   After:
 
   ```php
-  $processor1 = new Processor();
-  $processor2 = new Processor();
+  use Sentry\ClientBuilder;
 
-  $client->addProcessor($processor2);
-  $client->addProcessor($processor1);
-
-  // or
-
-  $client->addProcessor($processor1);
-  $client->addProcessor($processor2, 255); // Note the priority: higher the priority earlier a processor will be executed. This is equivalent to adding first $processor2 and then $processor1
+  $clientBuilder = ClientBuilder::create();
+  $clientBuilder->setSerializer(...);
   ```
 
-- The method `Raven_Client::process` has been removed as there is no need to process event data
-  from outside the `Client` class.
-
-- The method `Raven_Client::sanitize` has been removed and the sanitization
-  happens now inside the `SanitizerMiddleware` middleware.
-
-- The `Raven_Client::user_context` method has been removed. You should use
-  `Client::getUserContext` instead.
+- The method `Raven_Client::setReprSerializer` has been removed. You can set it
+  using the client builder.
 
   Before:
 
   ```php
-  $client->user_context(array('foo' => 'bar'));
+  $client = new Raven_Client();
+  $client->setSerializer(...);
   ```
 
   After:
 
   ```php
-  $client->getUserContext()->setData(array('foo' => 'bar'));
+  use Sentry\ClientBuilder;
+
+  $clientBuilder = ClientBuilder::create();
+  $clientBuilder->setRepresentationSerializer(...);
   ```
 
-- The `Raven_Client::tags_context` method has been removed. You should use
-  `Client::getTagsContext` instead.
+- The method `Raven_Client::cleanup_php_version` has been removed.
+
+- The method `Raven_Client::registerDefaultBreadcrumbHandlers` has been removed.
+
+- The `Raven_Client::user_context` method has been removed. You can set this
+  data in the current active scope.
+
+  Before:
+
+  ```php
+  $client->user_context(array('foo', 'bar'));
+  ```
+
+  After:
+
+  ```php
+  use Sentry\Hub;
+  use Sentry\Scope;
+
+  Hub::getCurrent()->configureScope(function (Scope $scope): void {
+      $scope->setUser(['email' => 'foo@example.com']);
+  })
+  ```
+
+- The `Raven_Client::tags_context` method has been removed. You can set this
+  data in the current active scope.
 
   Before:
 
@@ -366,11 +506,16 @@
   After:
 
   ```php
-  $client->getTagsContext()->setData(array('foo', 'bar'));
+  use Sentry\Hub;
+  use Sentry\Scope;
+
+  Hub::getCurrent()->configureScope(function (Scope $scope): void {
+      $scope->setTag('tag_name', 'tag_value');
+  })
   ```
 
-- The `Raven_Client::extra_context` method has been removed. You should use
-  `Client::getExtraContext` instead.
+- The `Raven_Client::extra_context` method has been removed. You can set this
+  data in the current active scope.
 
   Before:
 
@@ -381,221 +526,51 @@
   After:
 
   ```php
-  $client->getExtraContext()->setData(array('foo' => 'bar'));
+  use Sentry\Hub;
+  use Sentry\Scope;
+
+  Hub::getCurrent()->configureScope(function (Scope $scope): void {
+      $scope->setExtra('extra_key', 'extra_value');
+  })
   ```
 
-- The `transaction` property has been made private. You should use `Client::getTransactionStack`
-  instead to access the instance of the object.
-
-  Before:
-
-  ```php
-  $client->transaction->push('foo');
-  ```
-
-  After:
-
-  ```php
-  $client->getTransactionStack()->push('foo');
-  ```
-
-- The method `Raven_Client::install` has been removed. You should use `ErrorHandler::register`
-  instead to register an error handler and associate it with the client.
-
-  Before:
-
-  ```php
-  $client->install();
-  ```
-
-  After:
-
-  ```php
-  use Sentry\ErrorHandler;
-
-  ErrorHandler::register($client);
-  ```
-
-- The method `Raven_Client::registerDefaultBreadcrumbHandlers` has been removed.
-  You should use `BreadcrumbErrorHandler::register` instead to register an error
-  handler and associate it with the client.
-
-  Before:
-
-  ```php
-  $client = new Raven_Client(array('install_default_breadcrumb_handlers' => true));
-  ```
-
-  After:
-
-  ```php
-  use Sentry\BreadcrumbErrorHandler;
-
-  $client = new Client([...]);
-
-  BreadcrumbErrorHandler::register($client);
-  ```
-
-### Client builder
-
-- To simplify the creation of a `Client` object instance, a new builder class
-  has been added.
-
-  Before:
-
-  ```php
-  $client = new Raven_Client([...]);
-  ```
-
-  After:
-
-  ```php
-  $httpClient = new HttpClient(); // This can be any Httplug client adapter
-  $requestFactory = new RequestFactory(); // This can be any Httplug PSR-7 request factory
-  $client = new Client(new Configuration([...], $httpClient, $requestFactory));
-
-  // or
-
-  $client = ClientBuilder::create([...])->getClient();
-  ```
+- The method `Raven_Client::install` has been removed. The error handler is
+  registered automatically when using the `ErrorHandlerIntegration` integration
+  (which is enabled by default).
 
 ### Processors
 
-All processor have been refactored into middlewares, and have changed names
-to follow PSR-4 convention.
+- The `Raven_Processor_RemoveCookiesProcessor` class has been removed.
 
-- The `Raven_Processor_RemoveCookiesProcessor` class has been renamed to 
-  `SanitizeCookiesMiddleware` to better reflect its purpose. The constructor 
-  accepts an array of options to make the behaviour of which cookies to 
-  sanitize configurable.
+- The `Raven_Processor_SanitizeStacktraceProcessor` class has been removed.
 
-- The `Raven_Processor_SanitizeStacktraceProcessor` class has been renamed to
-  `RemoveStacktraceContextMiddleware` to follow the PSR-4 convention and better
-  reflect its purpose.
+- The `Raven_Processor_SanitizeHttpHeadersProcessor` class has been removed.
 
-- The `Raven_Processor_SanitizeHttpHeadersProcessor` class has been renamed to
-  `SanitizeHttpHeadersMiddleware` to follow the PSR-4 convention.
+- The `Raven_Processor_RemoveHttpBodyProcessor` class has been removed.
 
-- The `Raven_Processor_RemoveHttpBodyProcessor` class has been renamed to
-  `RemoveHttpBodyMiddleware` to follow the PSR-4 convention.
+- The `Raven_Processor_SanitizeDataProcessor` class has been removed.
 
-- The `Raven_Processor_SanitizeDataProcessor` class has been renamed to
-  `SanitizeDataMiddleware` to follow the PSR-4 convention.
-
-- The `Raven_Processor` class has been removed. There is not anymore a base
-  abstract class for the processors, but a `ProcessorMiddlewareInterface` interface has
-  been introduced.
+- The `Raven_Processor` class has been removed.
 
 ### Context
 
-- The `Raven_Context` class has been renamed to `Context` and added to the `Raven`
-  namespace to follow the PSR-4 convention.
+- The `Raven_Context` class has been renamed to `Context`.
 
 - The `tags`, `extra` and `user` properties of the `Raven_Context` class have
   been removed. Each instance of the new class represents now a single context
-  type only and provides some useful methods to interact with the data.
-
-### Transactions
-
-- The method `TransactionStack::push` has changed its signature. It used to accept
-  a single value only, but now more values can be passed in a single call.
-
-  Before:
-
-  ```php
-  $client->transaction->push('foo');
-  $client->transaction->push('bar');
-  ```
-
-  After:
-
-  ```php
-  $client->getTransactionStack()->push('foo');
-  $client->getTransactionStack()->push('bar');
-
-  // or
-
-  $client->getTransactionStack()->push('foo', 'bar');
-  ```
-
-- The method `TransactionStack::pop` has changed its signature by removing the
-  `$context` argument. Consequently the behaviour of the method in regards to
-  the returned value changed as well: it's not possible anymore to pop all values
-  up to one that equals the value of `$context`.
-
-  Before:
-
-  ```php
-  $client->transaction->push('foo', 'bar', 'baz');
-
-  $value = $client->transaction->pop(); // $value is 'baz'
-  $value = $client->transaction->pop('foo'); // $value is 'foo'
-  $value = $client->transaction->pop(); // $value is null
-  ```
-
-  After:
-
-  ```php
-  $client->getTransactionStack()->push('foo', 'bar', 'baz');
-
-  while (!$client->getTransactionStack()->isEmpty()) {
-      $value = $client->getTransactionStack()->pop(); // $value is 'baz', then 'bar', then 'foo'
-  }
-
-  $value = $client->getTransactionStack()->pop(); // $value is null
-  ```
+  type at once.
 
 ## Error handlers
 
-- The `Raven_Breadcrumbs_ErrorHandler` class has been renamed to `BreadcrumbErrorHandler`
-  to better reflect its purpose and to follow the PSR-4 convention.
+- The `Raven_Breadcrumbs_ErrorHandler` class has been removed.
 
-- The constructor of the `Raven_Breadcrumbs_ErrorHandler` class has changed its
-  visibility to `protected`. To create a new instance of the class use the new
-  method `BreadcrumbErrorHandler::register`.
+- The `Raven_Breadcrumbs_MonologHandler` class has been removed.
 
-- The method `Raven_Breadcrumbs_ErrorHandler::install` has been renamed to
-  `register` and changed its signature to accept the instance of the Raven
-  client to associate with the handler itself.
-
-  Before:
-
-  ```php
-  $errorHandler = new Raven_Breadcrumbs_ErrorHandler($client);
-  $errorHandler->install();
-  ```
-
-  After:
-
-  ```php
-  use Sentry\BreadcrumbErrorHandler;
-
-  $errorHandler = BreadcrumbErrorHandler::register($client);
-  ```
-
-- The `Raven_ErrorHandler` class has been renamed to `ErrorHandler` to follow
-  the PSR-4 convention.
-
-- The constructor of the `Raven_ErrorHandler` class has changed its visibility
-  to `protected`. To create a new instance of the class use the new method
-  `ErrorHandler::register`.
-
-  Before:
-
-  ```php
-  $errorHandler = new Raven_ErrorHandler($client);
-  ```
-
-  After:
-
-  ```php
-  use Sentry\ErrorHandler;
-
-  $errorHandler = ErrorHandler::register($client);
-  ```
+- The `Raven_ErrorHandler` class has been renamed to `ErrorHandler` and has
+  been made `final`.
 
 - The method `Raven_ErrorHandler::handleError` has changed its signature by removing
-  the `$context` argument and it has been marked as internal to make it clear that
+  the `$context` argument and it has been marked as `internal` to make it clear that
   it should not be called publicly and its method visibility is subject to changes
   without any notice.
 
@@ -619,21 +594,23 @@ to follow PSR-4 convention.
   ```php
   use Sentry\ErrorHandler;
 
-  $errorHandler = ErrorHandler::register($client);
+  ErrorHandler::register(function (\Throwable $exception): void {
+      // ...
+  });
   ```
 
 - The method `Raven_ErrorHandler::handleError` has changed its signature by
-  removing the `$context` argument and it has been marked as internal to
+  removing the `$context` argument and it has been marked as `internal` to
   make it clear that it should not be called publicly and its method visibility
   is subject to changes without any notice.
 
 - The method `Raven_ErrorHandler::handleFatalError` has changed its signature
-  by adding an optional argument named `$error` and it has been marked as internal
+  by adding an optional argument named `$error` and it has been marked as `internal`
   to make it clear that it should not be called publicly and its method visibility
   is subject to changes without any notice.
 
 - The method `Raven_ErrorHandler::handleException` has changed its signature by
-  removing the `$isError` and `$vars` arguments and it has been marked as internal
+  removing the `$isError` and `$vars` arguments and it has been marked as `internal`
   to make it clear that it should not be called publicly and its method visibility
   is subject to changes without any notice.
 
@@ -642,3 +619,47 @@ to follow PSR-4 convention.
 
 - The method `Raven_ErrorHandler::shouldCaptureFatalError` has been removed and
   there is no replacement for it.
+
+### Serializers
+
+- The `Raven_Serializer` class has been renamed to `Serializer` and its constructor
+  changed signature.
+
+  Before:
+
+  ```php
+  public function __construct($mb_detect_order = null, $message_limit = null)
+  {
+      // ...
+  }
+  ```
+
+  After:
+
+  ```php
+  public function __construct(int $maxDepth = 3, ?string $mbDetectOrder = null, int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
+  {
+      // ...
+  }
+  ```
+
+- The `Raven_ReprSerializer` class has been renamed to `RepresentationSerializer`
+  and its constructor changed signature.
+
+  Before:
+
+  ```php
+  public function __construct($mb_detect_order = null, $message_limit = null)
+  {
+      // ...
+  }
+  ```
+
+  After:
+
+  ```php
+  public function __construct(int $maxDepth = 3, ?string $mbDetectOrder = null, int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
+  {
+      // ...
+  }
+  ```
