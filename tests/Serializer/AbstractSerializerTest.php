@@ -317,20 +317,6 @@ abstract class AbstractSerializerTest extends TestCase
         }
     }
 
-    public function testLongStringWithOverwrittenMessageLength(): void
-    {
-        $serializer = $this->createSerializer();
-        $serializer->setMessageLimit(500);
-
-        foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
-            $input = str_repeat('x', $length);
-            $result = $this->invokeSerialization($serializer, $input);
-
-            $this->assertInternalType('string', $result);
-            $this->assertLessThanOrEqual(500, \strlen($result));
-        }
-    }
-
     /**
      * @dataProvider serializeAllObjectsDataProvider
      */
@@ -364,22 +350,6 @@ abstract class AbstractSerializerTest extends TestCase
         $serializer->setSerializeAllObjects(false);
 
         $this->assertFalse($serializer->getSerializeAllObjects());
-    }
-
-    public function testClippingUTF8Characters(): void
-    {
-        if (!\extension_loaded('mbstring')) {
-            $this->markTestSkipped('mbstring extension is not enabled.');
-        }
-
-        $serializer = static::createSerializer();
-        $serializer->setMessageLimit(19);
-
-        $clipped = $this->invokeSerialization($serializer, 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках');
-
-        $this->assertSame('Прекратит {clipped}', $clipped);
-        $this->assertNotNull(json_encode($clipped));
-        $this->assertSame(JSON_ERROR_NONE, json_last_error());
     }
 
     public function serializableCallableProvider(): array

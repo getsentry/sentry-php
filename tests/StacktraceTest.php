@@ -31,8 +31,8 @@ final class StacktraceTest extends TestCase
     protected function setUp(): void
     {
         $this->options = new Options();
-        $this->serializer = new Serializer();
-        $this->representationSerializer = new RepresentationSerializer();
+        $this->serializer = new Serializer($this->options);
+        $this->representationSerializer = new RepresentationSerializer($this->options);
     }
 
     public function testGetFramesAndToArray(): void

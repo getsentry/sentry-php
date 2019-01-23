@@ -115,7 +115,7 @@ class EventFactoryTest extends TestCase
         $previousException = new \RuntimeException('testMessage2');
         $exception = new \Exception('testMessage', 0, $previousException);
         $eventFactory = new EventFactory(
-            new Serializer(),
+            new Serializer(new Options()),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
             'sentry.sdk.identifier',
@@ -145,7 +145,7 @@ class EventFactoryTest extends TestCase
     {
         $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
         $eventFactory = new EventFactory(
-            new Serializer(),
+            new Serializer(new Options()),
             $this->createMock(RepresentationSerializerInterface::class),
             new Options(),
             'sentry.sdk.identifier',

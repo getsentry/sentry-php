@@ -57,6 +57,7 @@ final class OptionsTest extends TestCase
             ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
             ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
             ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
+            ['truncation_length', 50, 'getTruncationLength', 'setTruncationLength'],
         ];
     }
 

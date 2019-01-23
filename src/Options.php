@@ -598,6 +598,28 @@ final class Options
     }
 
     /**
+     * Gets the truncation length for values in the event payload.
+     *
+     * @return int
+     */
+    public function getTruncationLength(): int
+    {
+        return $this->options['truncation_length'];
+    }
+
+    /**
+     * Sets the truncation length for specific values in the event payload.
+     *
+     * @param int $truncationLength The number of characters after specific values will be truncated
+     */
+    public function setTruncationLength(int $truncationLength): void
+    {
+        $options = array_merge($this->options, ['truncation_length' => $truncationLength]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -636,6 +658,7 @@ final class Options
             'excluded_exceptions' => [],
             'excluded_app_paths' => [],
             'send_default_pii' => false,
+            'truncation_length' => 1024,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -662,6 +685,7 @@ final class Options
         $resolver->setAllowedTypes('integrations', 'array');
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
+        $resolver->setAllowedTypes('truncation_length', 'int');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));

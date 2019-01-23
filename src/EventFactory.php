@@ -110,7 +110,7 @@ final class EventFactory implements EventFactoryInterface
         $messageParams = $payload['message_params'] ?? [];
 
         if (null !== $message) {
-            $event->setMessage(substr($message, 0, Client::MESSAGE_MAX_LENGTH_LIMIT), $messageParams);
+            $event->setMessage(substr($message, 0, $this->options->getTruncationLength()), $messageParams);
         }
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {

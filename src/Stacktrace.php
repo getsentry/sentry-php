@@ -161,14 +161,14 @@ class Stacktrace implements \JsonSerializable
             }
         }
 
-        $frameArguments = self::getFrameArguments($backtraceFrame);
+        $frameArguments = self::getFrameArguments($backtraceFrame, $this->options->getTruncationLength());
 
         if (!empty($frameArguments)) {
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, $this->options->getTruncationLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -302,7 +302,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    protected static function getFrameArgumentsValues(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT): array
+    protected static function getFrameArgumentsValues(array $frame, int $maxValueLength): array
     {
         if (!isset($frame['args'])) {
             return [];
@@ -325,7 +325,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return array
      */
-    public static function getFrameArguments(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    public static function getFrameArguments(array $frame, int $maxValueLength)
     {
         if (!isset($frame['args'])) {
             return [];
