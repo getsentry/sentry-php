@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
@@ -64,7 +63,7 @@ class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
-        $this->integrations = Handler::setupIntegrations($options->getIntegrations());
+        $this->integrations = $this->setupIntegrations($options);
     }
 
     /**
@@ -165,5 +164,25 @@ class Client implements ClientInterface
         }
 
         return \call_user_func($this->options->getBeforeSendCallback(), $event);
+    }
+
+    /**
+     * @param Options $options
+     *
+     * @return IntegrationInterface[]
+     */
+    private function setupIntegrations(Options $options): array
+    {
+        $integrationIndex = [];
+
+        foreach ($options->getIntegrations() as $className) {
+            if (!class_implements($className, IntegrationInterface::class)) {
+                throw new \InvalidArgumentException('Bad FQCN for an integration: ' . $className);
+            }
+
+            $integrationIndex[$className] = $className::setup();
+        }
+
+        return $integrationIndex;
     }
 }

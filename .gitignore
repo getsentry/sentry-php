@@ -5,3 +5,4 @@ package.xml
 .php_cs.cache
 docs/_build
 tests/clover.xml
+!/composer.json

@@ -532,9 +532,9 @@ final class Options
     }
 
     /**
-     * Set integrations that will be used by the created client.
+     * Set the full qualified class names of integrations that will be used by the created client.
      *
-     * @param IntegrationInterface[] $integrations The integrations
+     * @param string[] $integrations The integrations
      */
     public function setIntegrations(array $integrations): void
     {
@@ -544,9 +544,9 @@ final class Options
     }
 
     /**
-     * Returns all configured integrations that will be used by the Client.
+     * Returns the full qualified class names of all integrations that will be used by the Client.
      *
-     * @return IntegrationInterface[]
+     * @return string[]
      */
     public function getIntegrations(): array
     {
@@ -810,7 +810,7 @@ final class Options
     }
 
     /**
-     * Validates that the elements of this option are all class instances that
+     * Validates that the elements of this option are all full qualified class names that
      * implements the {@see IntegrationInterface} interface.
      *
      * @param array $integrations The value to validate
@@ -820,7 +820,15 @@ final class Options
     private function validateIntegrationsOption(array $integrations): bool
     {
         foreach ($integrations as $integration) {
-            if (!$integration instanceof IntegrationInterface) {
+            if (!\is_string($integration)) {
+                return false;
+            }
+
+            if (!class_exists($integration)) {
+                return false;
+            }
+
+            if (!class_implements($integration, IntegrationInterface::class)) {
                 return false;
             }
         }
