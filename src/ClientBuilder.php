@@ -259,9 +259,6 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient(): ClientInterface
     {
-        $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
-        $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
-        $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
         return new Client($this->options, $this->transport, $this->createEventFactory());
@@ -312,6 +309,10 @@ final class ClientBuilder implements ClientBuilderInterface
         if (null === $this->options->getDsn()) {
             return new NullTransport();
         }
+
+        $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
+        $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
+        $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
 
         if (null === $this->messageFactory) {
             throw new \RuntimeException('The PSR-7 message factory must be set.');
