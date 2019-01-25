@@ -13,11 +13,13 @@ use Sentry\ClientInterface;
 interface IntegrationInterface
 {
     /**
-     * Creates and initializes the current integration by registering and binding it to the passed client.
+     * The constructor of the integration accepts as the first argument the client
+     * to which it will be bound. 
+     * Passing other dependencies in further arguments is allowed. 
      *
      * @param ClientInterface $client
      *
      * @return IntegrationInterface
      */
-    public static function setup(ClientInterface $client): self;
+    public function __construct(ClientInterface $client);
 }
