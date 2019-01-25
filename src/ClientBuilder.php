@@ -20,8 +20,6 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
-use Sentry\Integration\ErrorHandlerIntegration;
-use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -95,13 +93,6 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(Options $options = null)
     {
         $this->options = $options ?? new Options();
-
-        if ($this->options->hasDefaultIntegrations()) {
-            $this->options->setIntegrations(array_merge([
-                new ErrorHandlerIntegration(),
-                new RequestIntegration($this->options),
-            ], $this->options->getIntegrations()));
-        }
     }
 
     /**

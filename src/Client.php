@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Integration\Handler;
-use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 
@@ -48,11 +46,6 @@ final class Client implements ClientInterface
     private $eventFactory;
 
     /**
-     * @var IntegrationInterface[] The stack of integrations
-     */
-    private $integrations;
-
-    /**
      * Constructor.
      *
      * @param Options               $options      The client configuration
@@ -64,7 +57,6 @@ final class Client implements ClientInterface
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
-        $this->integrations = Handler::setupIntegrations($options->getIntegrations());
     }
 
     /**
@@ -128,14 +120,6 @@ final class Client implements ClientInterface
         $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
         return $this->captureException($exception, $scope);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIntegration(string $className): ?IntegrationInterface
-    {
-        return $this->integrations[$className] ?? null;
     }
 
     /**

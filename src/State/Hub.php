@@ -239,19 +239,6 @@ final class Hub implements HubInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function getIntegration(string $className): ?IntegrationInterface
-    {
-        $client = $this->getClient();
-        if (null !== $client) {
-            return $client->getIntegration($className);
-        }
-
-        return null;
-    }
-
-    /**
      * Gets the topmost client/layer pair in the stack.
      *
      * @return Layer

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 
 /**
@@ -60,13 +59,4 @@ interface ClientInterface
      * @return string|null
      */
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
-
-    /**
-     * Returns the integration instance if it is installed on the Client.
-     *
-     * @param string $className the classname of the integration
-     *
-     * @return IntegrationInterface|null
-     */
-    public function getIntegration(string $className): ?IntegrationInterface;
 }
