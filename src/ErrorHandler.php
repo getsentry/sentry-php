@@ -83,8 +83,6 @@ final class ErrorHandler
      *
      * @param callable $callback           The callback that will be invoked in case an error is caught
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
-     *
-     * @throws \ReflectionException
      */
     private function __construct(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE)
     {
@@ -127,8 +125,6 @@ final class ErrorHandler
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
      *
      * @return self
-     *
-     * @throws \ReflectionException
      */
     public static function register(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
     {
