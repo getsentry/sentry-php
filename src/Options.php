@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -544,13 +546,26 @@ final class Options
     }
 
     /**
-     * Returns all configured integrations that will be used by the Client.
+     * Returns all configured integrations that will be used by the Hub.
      *
      * @return IntegrationInterface[]
      */
     public function getIntegrations(): array
     {
         return $this->options['integrations'];
+    }
+
+    /**
+     * Get fresh instances of the default integrations.
+     *
+     * @return IntegrationInterface[]
+     */
+    public function getDefaultIntegrations(): array
+    {
+        return [
+            new ErrorHandlerIntegration(),
+            new RequestIntegration($this),
+        ];
     }
 
     /**

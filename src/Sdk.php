@@ -9,13 +9,23 @@ use Sentry\State\Hub;
 /**
  * Creates a new Client and Hub which will be set as current.
  *
- * @param array $options The client options
+ * @param array $arrayOptions The client options
  */
-function init(array $options = []): void
+function init(array $arrayOptions = []): void
 {
-    $client = ClientBuilder::create($options)->getClient();
+    $options = new Options($arrayOptions);
+    $client = (new ClientBuilder($options))->getClient();
 
-    Hub::setCurrent(new Hub($client));
+    $hub = new Hub($client);
+    Hub::setCurrent($hub);
+
+    foreach ($options->getDefaultIntegrations() as $integration) {
+        $hub->addIntegration($integration);
+    }
+
+    foreach ($options->getIntegrations() as $integration) {
+        $hub->addIntegration($integration);
+    }
 }
 
 /**

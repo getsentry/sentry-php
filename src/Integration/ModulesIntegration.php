@@ -8,6 +8,7 @@ use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
 /**
@@ -24,7 +25,7 @@ final class ModulesIntegration implements IntegrationInterface
     /**
      * {@inheritdoc}
      */
-    public function setupOnce(): void
+    public function bindToHub(HubInterface $hub): IntegrationInterface
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
             $self = Hub::getCurrent()->getIntegration(self::class);
@@ -35,6 +36,8 @@ final class ModulesIntegration implements IntegrationInterface
 
             return $event;
         });
+
+        return $this;
     }
 
     /**

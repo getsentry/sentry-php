@@ -18,7 +18,6 @@ final class Hub implements HubInterface
      * @var Layer[] The stack of client/scope pairs
      */
     private $stack = [];
-
     /**
      * @var string|null The ID of the last captured event
      */
@@ -28,6 +27,11 @@ final class Hub implements HubInterface
      * @var HubInterface The hub that is set as the current one
      */
     private static $currentHub;
+
+    /**
+     * @var IntegrationInterface[] The integrations bound to this Hub
+     */
+    private $integrations = [];
 
     /**
      * Hub constructor.
@@ -227,6 +231,11 @@ final class Hub implements HubInterface
         self::$currentHub = $hub;
 
         return $hub;
+    }
+
+    public function addIntegration(IntegrationInterface $integration): void
+    {
+        $this->integrations[] = $integration->bindToHub($this);
     }
 
     /**

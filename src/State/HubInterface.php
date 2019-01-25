@@ -143,11 +143,9 @@ interface HubInterface
     public static function setCurrent(self $hub): self;
 
     /**
-     * Gets the integration whose FQCN matches the given one if it's available on the current client.
+     * Adds a new integration to the hub.
      *
-     * @param string $className The FQCN of the integration
-     *
-     * @return IntegrationInterface|null
+     * @param IntegrationInterface $integration The integration instance to be added
      */
-    public function getIntegration(string $className): ?IntegrationInterface;
+    public function addIntegration(IntegrationInterface $integration): void;
 }

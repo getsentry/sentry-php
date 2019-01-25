@@ -20,6 +20,7 @@ use Sentry\Integration\ErrorHandlerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
+use Sentry\State\HubInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
@@ -284,8 +285,9 @@ final class ClientBuilderTest extends TestCase
 
 final class StubIntegration implements IntegrationInterface
 {
-    public function setupOnce(): void
+    public function bindToHub(HubInterface $hub): IntegrationInterface
     {
+        return $this;
     }
 }
 

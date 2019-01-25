@@ -7,6 +7,7 @@ namespace Sentry\Integration;
 use Sentry\Breadcrumb;
 use Sentry\ErrorHandler;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 
 /**
  * This integration hooks into the global error handlers and emits events to
@@ -14,7 +15,7 @@ use Sentry\State\Hub;
  */
 final class ErrorHandlerIntegration implements IntegrationInterface
 {
-    public function setupOnce(): void
+    public function bindToHub(HubInterface $hub): IntegrationInterface
     {
         ErrorHandler::register(function (\Throwable $exception): void {
             $self = Hub::getCurrent()->getIntegration(self::class);
@@ -24,6 +25,8 @@ final class ErrorHandlerIntegration implements IntegrationInterface
                 $self->captureException($exception);
             }
         });
+
+        return $this;
     }
 
     /**

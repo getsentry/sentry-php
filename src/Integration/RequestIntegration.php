@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -37,7 +38,7 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * {@inheritdoc}
      */
-    public function setupOnce(): void
+    public function bindToHub(HubInterface $hub): IntegrationInterface
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
             $self = Hub::getCurrent()->getIntegration(self::class);
@@ -50,6 +51,8 @@ final class RequestIntegration implements IntegrationInterface
 
             return $event;
         });
+
+        return $this;
     }
 
     /**
