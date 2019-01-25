@@ -62,11 +62,10 @@ interface ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
     /**
-     * Returns the integration instance if it is installed on the Client.
+     * Returns the {@see IntegrationInterface} instances that are bound to the
+     * client.
      *
-     * @param string $className the classname of the integration
-     *
-     * @return IntegrationInterface|null
+     * @return IntegrationInterface[]
      */
-    public function getIntegration(string $className): ?IntegrationInterface;
+    public function getIntegrations(): array;
 }

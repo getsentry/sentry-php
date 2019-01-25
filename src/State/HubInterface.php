@@ -6,7 +6,6 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
-use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
@@ -141,13 +140,4 @@ interface HubInterface
      * @return self
      */
     public static function setCurrent(self $hub): self;
-
-    /**
-     * Gets the integration whose FQCN matches the given one if it's available on the current client.
-     *
-     * @param string $className The FQCN of the integration
-     *
-     * @return IntegrationInterface|null
-     */
-    public function getIntegration(string $className): ?IntegrationInterface;
 }

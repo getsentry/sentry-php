@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Integration\IntegrationFactoryInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
@@ -54,16 +55,20 @@ class Client implements ClientInterface
     /**
      * Constructor.
      *
-     * @param Options               $options      The client configuration
-     * @param TransportInterface    $transport    The transport
-     * @param EventFactoryInterface $eventFactory The factory for events
+     * @param Options                     $options            The client configuration
+     * @param TransportInterface          $transport          The transport
+     * @param EventFactoryInterface       $eventFactory       The factory for events
+     * @param IntegrationFactoryInterface $integrationFactory The factory for integrations
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory)
+    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory, IntegrationFactoryInterface $integrationFactory)
     {
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
-        $this->integrations = $this->setupIntegrations($options);
+
+        foreach ($options->getIntegrations() as $integration) {
+            $this->integrations[] = $integrationFactory->create($this, $integration);
+        }
     }
 
     /**
@@ -132,9 +137,9 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function getIntegration(string $className): ?IntegrationInterface
+    public function getIntegrations(): array
     {
-        return $this->integrations[$className] ?? null;
+        return $this->integrations;
     }
 
     /**

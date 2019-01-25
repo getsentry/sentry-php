@@ -6,7 +6,6 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
-use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 
 /**
@@ -227,19 +226,6 @@ final class Hub implements HubInterface
         self::$currentHub = $hub;
 
         return $hub;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIntegration(string $className): ?IntegrationInterface
-    {
-        $client = $this->getClient();
-        if (null !== $client) {
-            return $client->getIntegration($className);
-        }
-
-        return null;
     }
 
     /**
