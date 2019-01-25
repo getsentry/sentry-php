@@ -21,6 +21,8 @@ use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\IntegrationFactory;
+use Sentry\Integration\IntegrationFactoryInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -41,6 +43,11 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var Options The client options
      */
     private $options;
+
+    /**
+     * @var IntegrationFactoryInterface The factory for the {@see IntegrationInterface} instances
+     */
+    private $integrationFactory;
 
     /**
      * @var UriFactory|null The PSR-7 URI factory
@@ -118,6 +125,16 @@ final class ClientBuilder implements ClientBuilderInterface
     public function getOptions(): Options
     {
         return $this->options;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setIntegrationFactory(IntegrationFactoryInterface $integrationFactory): ClientBuilderInterface
+    {
+        $this->integrationFactory = $integrationFactory;
+
+        return $this;
     }
 
     /**
@@ -260,8 +277,9 @@ final class ClientBuilder implements ClientBuilderInterface
     public function getClient(): ClientInterface
     {
         $this->transport = $this->transport ?? $this->createTransportInstance();
+        $this->integrationFactory = $this->integrationFactory ?? new IntegrationFactory();
 
-        return new Client($this->options, $this->transport, $this->createEventFactory());
+        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->integrationFactory);
     }
 
     /**

@@ -8,6 +8,7 @@ use Http\Client\Common\Plugin;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Sentry\Integration\IntegrationFactoryInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\TransportInterface;
@@ -34,6 +35,16 @@ interface ClientBuilderInterface
      * @return Options
      */
     public function getOptions(): Options;
+
+    /**
+     * Sets the factory to use to create instances of {@see IntegrationInterface}
+     * to be bound to each client.
+     *
+     * @param IntegrationFactoryInterface $integrationFactory
+     *
+     * @return $this
+     */
+    public function setIntegrationFactory(IntegrationFactoryInterface $integrationFactory): self;
 
     /**
      * Sets the factory to use to create URIs.
