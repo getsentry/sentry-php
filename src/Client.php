@@ -14,7 +14,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class Client implements ClientInterface
+final class Client implements ClientInterface
 {
     /**
      * The version of the protocol to communicate with the Sentry server.
@@ -154,6 +154,7 @@ class Client implements ClientInterface
     private function prepareEvent(array $payload, ?Scope $scope = null, bool $withStacktrace = false): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
+
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             return null;
         }

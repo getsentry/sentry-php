@@ -77,6 +77,7 @@ The following integrations are available and maintained by members of the Sentry
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [Drupal](https://www.drupal.org/project/raven)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
+- [TYPO3](https://github.com/networkteam/sentry_client)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## Community
