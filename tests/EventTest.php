@@ -165,6 +165,38 @@ final class EventTest extends TestCase
         $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
+    public function testToArrayWithMessageWithFormatted(): void
+    {
+        $expected = [
+            'message' => 'foo @bar',
+            'params' => ['@bar' => 'bar'],
+            'formatted' => 'foo bar',
+        ];
+
+        $event = new Event();
+        $event->setMessage('foo @bar', ['@bar' => 'bar'], 'foo bar');
+
+        $data = $event->toArray();
+
+        $this->assertArrayHasKey('message', $data);
+        $this->assertSame($expected, $data['message']);
+    }
+
+    public function testGetMessage(): void
+    {
+        $event = new Event();
+        $event->setMessage('foo @bar', ['@bar' => 'bar'], 'foo bar');
+        $this->assertSame('foo @bar', $event->getMessage());
+        $this->assertSame(['@bar' => 'bar'], $event->getMessageParams());
+        $this->assertSame('foo bar', $event->getMessageFormatted());
+
+        $event = new Event();
+        $event->setMessage('foo %s', ['bar']);
+        $this->assertSame('foo %s', $event->getMessage());
+        $this->assertSame(['bar'], $event->getMessageParams());
+        $this->assertNull($event->getMessageFormatted());
+    }
+
     public function testGetServerOsContext(): void
     {
         $event = new Event();

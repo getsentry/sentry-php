@@ -108,9 +108,10 @@ final class EventFactory implements EventFactoryInterface
 
         $message = $payload['message'] ?? null;
         $messageParams = $payload['message_params'] ?? [];
+        $messageFormatted = isset($payload['message_formatted']) ? mb_substr($payload['message_formatted'], 0, $this->options->getMaxValueLength()) : null;
 
         if (null !== $message) {
-            $event->setMessage(substr($message, 0, $this->options->getMaxValueLength()), $messageParams);
+            $event->setMessage(mb_substr($message, 0, $this->options->getMaxValueLength()), $messageParams, $messageFormatted);
         }
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
