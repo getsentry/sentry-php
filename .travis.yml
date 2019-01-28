@@ -7,8 +7,8 @@ php:
     - nightly
 
 env:
-    - dependencies=lowest
     - dependencies=highest
+    - dependencies=lowest
 
 matrix:
     fast_finish: true
@@ -39,7 +39,6 @@ jobs:
           name: PHPStan
         - stage: Code coverage
           php: 7.3
-          env: dependencies=highest
           script:
               - vendor/bin/phpunit --verbose --coverage-clover=build/logs/clover.xml
               - wget https://scrutinizer-ci.com/ocular.phar
