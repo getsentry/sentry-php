@@ -266,23 +266,23 @@ final class Options
     }
 
     /**
-     * Gets the list of paths to exclude from app_path detection.
+     * Gets the list of paths to exclude from in_app detection.
      *
      * @return string[]
      */
-    public function getExcludedProjectPaths(): array
+    public function getInAppExcludedPaths(): array
     {
-        return $this->options['excluded_app_paths'];
+        return $this->options['in_app_exclude'];
     }
 
     /**
-     * Sets the list of paths to exclude from app_path detection.
+     * Sets the list of paths to exclude from in_app detection.
      *
      * @param array $paths The list of paths
      */
-    public function setExcludedProjectPaths(array $paths): void
+    public function setInAppExcludedPaths(array $paths): void
     {
-        $options = array_merge($this->options, ['excluded_app_paths' => $paths]);
+        $options = array_merge($this->options, ['in_app_exclude' => $paths]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -632,7 +632,7 @@ final class Options
                 return $breadcrumb;
             },
             'excluded_exceptions' => [],
-            'excluded_app_paths' => [],
+            'in_app_exclude' => [],
             'send_default_pii' => false,
         ]);
 
@@ -644,7 +644,7 @@ final class Options
         $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
-        $resolver->setAllowedTypes('excluded_app_paths', 'array');
+        $resolver->setAllowedTypes('in_app_exclude', 'array');
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
@@ -676,7 +676,7 @@ final class Options
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
-        $resolver->setNormalizer('excluded_app_paths', function (SymfonyOptions $options, $value) {
+        $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }
