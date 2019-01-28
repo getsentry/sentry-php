@@ -20,12 +20,14 @@ cache:
         - $HOME/.composer/cache
 
 stages:
+    - Windows
     - Code style & static analysis
     - Test
     - Code coverage
 
 jobs:
     include:
+        - stage: Windows
         - os: windows
           language: sh
           before_install:
