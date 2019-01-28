@@ -6,6 +6,8 @@
 
 - The `exclude` option has been removed. 
 
+- The `excluded_app_path` option has been renamed to `in_app_exclude`
+
 - The `send_callback` option has been renamed to `before_send`.
 
 - The `name` option has been renamed to `server_name`.
@@ -203,8 +205,8 @@
   ```
 
 - The methods `Raven_Client::getExcludedAppPaths` and `Raven_Client::setExcludedAppPaths`
-  have been removed. You should use `Options::getExcludedProjectPaths`
-  and `Options::setExcludedProjectPaths` instead.
+  have been removed. You should use `Options::getInAppExcludedPaths`
+  and `Options::setInAppExcludedPaths` instead.
 
   Before:
 

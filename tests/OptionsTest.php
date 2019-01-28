@@ -45,7 +45,7 @@ final class OptionsTest extends TestCase
             ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
             ['excluded_exceptions', ['foo', 'bar', 'baz'], 'getExcludedExceptions', 'setExcludedExceptions'],
-            ['excluded_app_paths', ['foo', 'bar'], 'getExcludedProjectPaths', 'setExcludedProjectPaths'],
+            ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
             ['release', 'dev', 'getRelease', 'setRelease'],
@@ -228,9 +228,9 @@ final class OptionsTest extends TestCase
      */
     public function testExcludedAppPathsPathRegressionWithFileName($value, $expected)
     {
-        $configuration = new Options(['excluded_app_paths' => [$value]]);
+        $configuration = new Options(['in_app_exclude' => [$value]]);
 
-        $this->assertSame([$expected], $configuration->getExcludedProjectPaths());
+        $this->assertSame([$expected], $configuration->getInAppExcludedPaths());
     }
 
     public function excludedPathProviders()

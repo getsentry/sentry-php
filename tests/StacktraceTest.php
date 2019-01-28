@@ -125,7 +125,7 @@ final class StacktraceTest extends TestCase
     public function testAddFrameMarksAsInApp(): void
     {
         $this->options->setProjectRoot('path/to');
-        $this->options->setExcludedProjectPaths(['path/to/excluded/path']);
+        $this->options->setInAppExcludedPaths(['path/to/excluded/path']);
 
         $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
