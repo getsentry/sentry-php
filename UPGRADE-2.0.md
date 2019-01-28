@@ -61,8 +61,7 @@
 
 - The `install_default_breadcrumb_handlers` option has been removed.
 
-- The `serialize_all_object` option has been added to configure whether all the
-  object instances should be serialized.
+- The `serialize_all_object` option has been removed.
 
 - The `context_lines` option has been added to configure the number of lines of
   code context to capture.
