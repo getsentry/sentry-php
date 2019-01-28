@@ -613,7 +613,6 @@ final class Options
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
-            'mb_detect_order' => null,
             'attach_stacktrace' => false,
             'context_lines' => 3,
             'enable_compression' => true,
@@ -640,7 +639,6 @@ final class Options
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('enable_compression', 'bool');
