@@ -612,7 +612,6 @@ final class Options
             'default_integrations' => true,
             'send_attempts' => 6,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
-            'serialize_all_object' => false,
             'sample_rate' => 1,
             'mb_detect_order' => null,
             'attach_stacktrace' => false,
@@ -640,7 +639,6 @@ final class Options
 
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'array');
-        $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
