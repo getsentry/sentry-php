@@ -26,6 +26,12 @@ stages:
 
 jobs:
     include:
+        - os: windows
+          language: sh
+          before_install:
+            - choco install php
+            - export PATH=/c/tools/php72:$PATH
+            - wget https://raw.githubusercontent.com/composer/getcomposer.org/d3e09029468023aa4e9dcd165e9b6f43df0a9999/web/installer -O - -q | php -- --quiet
         - stage: Code style & static analysis
           name: PHP CS Fixer
           script: composer phpcs
