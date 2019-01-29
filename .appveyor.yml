@@ -30,5 +30,5 @@ install:
 
 test_script:
   - SET X=0
-  - php phpunit || SET X=!errorlevel!
+  - php composer.phar tests || SET X=!errorlevel!
   - exit %X%
