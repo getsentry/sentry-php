@@ -608,9 +608,9 @@ final class Options
     }
 
     /**
-     * The number of characters after which the values containing text will be truncated.
+     * Sets the truncation length for specific values in the event payload.
      *
-     * @param int $truncationLength The number of characters after specific values will be truncated
+     * @param int $truncationLength The number of characters after which the values containing text will be truncated
      */
     public function setTruncationLength(int $truncationLength): void
     {
