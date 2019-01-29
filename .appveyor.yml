@@ -18,7 +18,7 @@ install:
   - echo memory_limit=-1 >> php.ini
   - echo zend_extension=php_opcache.dll >> php.ini
   - echo opcache.enable_cli=1 >> php.ini
-  - cd c:\projects\symfony
+  - cd c:\projects\sentry-php
   - IF NOT EXIST composer.phar (appveyor DownloadFile https://github.com/composer/composer/releases/download/1.8.0/composer.phar)
   - php composer.phar self-update
   - php composer.phar global require --no-progress --no-scripts --no-plugins hirak/prestissimo
