@@ -3,6 +3,7 @@ clone_folder: c:\projects\sentry-php
 
 cache:
   - composer.phar
+  - C:\Users\appveyor\AppData\Local\Composer\files
 
 init:
   - SET PATH=c:\php;%PATH%
