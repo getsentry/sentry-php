@@ -111,10 +111,6 @@ final class SerializerTest extends AbstractSerializerTest
 
     public function testClippingUTF8Characters(): void
     {
-        if (!\extension_loaded('mbstring')) {
-            $this->markTestSkipped('mbstring extension is not enabled.');
-        }
-
         $serializer = $this->createSerializer(new Options(['truncation_length' => 19]));
 
         $clipped = $this->invokeSerialization($serializer, 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках');
@@ -125,11 +121,11 @@ final class SerializerTest extends AbstractSerializerTest
     }
 
     /**
-     * @param Options $options
+     * @param Options $options|null
      *
      * @return Serializer
      */
-    protected function createSerializer(Options $options = null): AbstractSerializer
+    protected function createSerializer(?Options $options = null): AbstractSerializer
     {
         if (null === $options) {
             $options = new Options();

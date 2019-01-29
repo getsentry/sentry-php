@@ -285,7 +285,8 @@ final class StacktraceTest extends TestCase
             'function' => 'a_test',
         ];
 
-        $result = Stacktrace::getFrameArguments($frame, 5);
+        $stacktrace = new Stacktrace(new Options(['truncation_length' => 5]), $this->serializer, $this->representationSerializer);
+        $result = $stacktrace->getFrameArguments($frame);
 
         // Check we haven't modified our vars.
         $this->assertEquals($originalFoo, 'bloopblarp');

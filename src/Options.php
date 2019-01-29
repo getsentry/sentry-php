@@ -608,7 +608,7 @@ final class Options
     }
 
     /**
-     * Sets the truncation length for specific values in the event payload.
+     * The number of characters after which the values containing text will be truncated.
      *
      * @param int $truncationLength The number of characters after specific values will be truncated
      */
@@ -636,7 +636,6 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'serialize_all_object' => false,
             'sample_rate' => 1,
-            'mb_detect_order' => null,
             'attach_stacktrace' => false,
             'context_lines' => 3,
             'enable_compression' => true,
@@ -665,7 +664,6 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('serialize_all_object', 'bool');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('mb_detect_order', ['null', 'array', 'string']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', 'int');
         $resolver->setAllowedTypes('enable_compression', 'bool');

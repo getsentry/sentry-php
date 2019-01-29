@@ -16,20 +16,29 @@ use Sentry\Stacktrace;
 
 class EventFactoryTest extends TestCase
 {
+    /**
+     * @var Options
+     */
+    private $options;
+
+    protected function setUp(): void
+    {
+        $this->options = new Options();
+    }
+
     public function testCreateEventWithDefaultValues(): void
     {
-        $options = new Options();
-        $options->setServerName('testServerName');
-        $options->setRelease('testRelease');
-        $options->setTags(['test' => 'tag']);
-        $options->setEnvironment('testEnvironment');
+        $this->options->setServerName('testServerName');
+        $this->options->setRelease('testRelease');
+        $this->options->setTags(['test' => 'tag']);
+        $this->options->setEnvironment('testEnvironment');
 
         $_SERVER['PATH_INFO'] = 'testPathInfo';
 
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            $options,
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -38,10 +47,10 @@ class EventFactoryTest extends TestCase
 
         $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
         $this->assertSame('1.2.3', $event->getSdkVersion());
-        $this->assertSame($options->getServerName(), $event->getServerName());
-        $this->assertSame($options->getRelease(), $event->getRelease());
-        $this->assertSame($options->getTags(), $event->getTagsContext()->toArray());
-        $this->assertSame($options->getEnvironment(), $event->getEnvironment());
+        $this->assertSame($this->options->getServerName(), $event->getServerName());
+        $this->assertSame($this->options->getRelease(), $event->getRelease());
+        $this->assertSame($this->options->getTags(), $event->getTagsContext()->toArray());
+        $this->assertSame($this->options->getEnvironment(), $event->getEnvironment());
         $this->assertSame('testPathInfo', $event->getTransaction());
         $this->assertNull($event->getStacktrace());
     }
@@ -54,7 +63,7 @@ class EventFactoryTest extends TestCase
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -100,7 +109,7 @@ class EventFactoryTest extends TestCase
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -115,9 +124,9 @@ class EventFactoryTest extends TestCase
         $previousException = new \RuntimeException('testMessage2');
         $exception = new \Exception('testMessage', 0, $previousException);
         $eventFactory = new EventFactory(
-            new Serializer(new Options()),
+            new Serializer($this->options),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -145,9 +154,9 @@ class EventFactoryTest extends TestCase
     {
         $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
         $eventFactory = new EventFactory(
-            new Serializer(new Options()),
+            new Serializer($this->options),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -159,13 +168,13 @@ class EventFactoryTest extends TestCase
 
     public function testCreateWithStacktrace(): void
     {
-        $options = new Options();
-        $options->setAttachStacktrace(true);
+        $this->options = $this->options;
+        $this->options->setAttachStacktrace(true);
 
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
-            $options,
+            $this->options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
