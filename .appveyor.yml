@@ -5,6 +5,7 @@ clone_folder: c:\projects\sentry-php
 cache:
   - composer.phar
   - C:\Users\appveyor\AppData\Roaming\Composer\files
+  - c:\projects\sentry-php\vendor
 
 init:
   - SET PATH=c:\php;%PATH%
@@ -29,6 +30,5 @@ install:
   - php composer.phar update --no-progress --no-suggest --ansi
 
 test_script:
-  - SET X=0
-  - php composer.phar tests || SET X=!errorlevel!
-  - exit %X%
+  - cd c:\projects\sentry-php
+  - php composer.phar tests
