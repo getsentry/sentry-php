@@ -26,7 +26,7 @@ install:
   - cd c:\projects\sentry-php
   - IF NOT EXIST composer.phar (appveyor DownloadFile https://github.com/composer/composer/releases/download/1.7.1/composer.phar)
   - php composer.phar self-update
-  - php composer.phar global require --no-progress --no-scripts --no-plugins hirak/prestissimo
+  - php composer.phar global require --no-progress --ansi hirak/prestissimo
   - php composer.phar update --no-progress --no-suggest --ansi
 
 test_script:
