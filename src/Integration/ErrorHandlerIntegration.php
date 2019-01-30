@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Sentry\Breadcrumb;
 use Sentry\ErrorHandler;
+use Sentry\Options;
 use Sentry\State\Hub;
 
 /**
@@ -14,14 +15,31 @@ use Sentry\State\Hub;
  */
 final class ErrorHandlerIntegration implements IntegrationInterface
 {
+    /**
+     * @var Options The client options
+     */
+    private $options;
+
+    /**
+     * ErrorHandlerIntegration constructor.
+     *
+     * @param Options $options The Client Options
+     */
+    public function __construct(Options $options)
+    {
+        $this->options = $options;
+    }
+
     public function setupOnce(): void
     {
-        ErrorHandler::register(function (\Throwable $exception): void {
+        ErrorHandler::register(function (\Throwable $exception, int $level): void {
             $self = Hub::getCurrent()->getIntegration(self::class);
 
             if ($self instanceof self) {
                 $self->addBreadcrumb($exception);
-                $self->captureException($exception);
+                if (0 === $level || ($self->options->getErrorTypes() & $level)) {
+                    $self->captureException($exception);
+                }
             }
         });
     }

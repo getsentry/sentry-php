@@ -41,9 +41,14 @@ final class ErrorHandler
     private $previousExceptionHandler;
 
     /**
-     * @var int The errors that will be catched by the error handler
+     * @var int The errors that will be caught by the error handler
      */
     private $capturedErrors = E_ALL;
+
+    /**
+     * @var int The last caught error type
+     */
+    private $lastErrorType = 0;
 
     /**
      * @var bool Flag indicating whether this error handler is the first in the
@@ -190,6 +195,7 @@ final class ErrorHandler
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
         try {
+            $this->lastErrorType = $level;
             $this->handleException($errorAsException);
         } catch (\Throwable $exception) {
             // Do nothing as this error handler should be as transparent as possible
@@ -231,6 +237,7 @@ final class ErrorHandler
 
         try {
             if (null !== $errorAsException) {
+                $this->lastErrorType = $error['type'];
                 $this->handleException($errorAsException);
             }
         } catch (\Throwable $errorAsException) {
@@ -250,7 +257,7 @@ final class ErrorHandler
      */
     public function handleException(\Throwable $exception): void
     {
-        \call_user_func($this->callback, $exception);
+        \call_user_func($this->callback, $exception, $this->lastErrorType);
 
         $previousExceptionHandlerException = $exception;
 
