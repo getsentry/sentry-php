@@ -31,4 +31,4 @@ install:
 
 test_script:
   - cd c:\projects\sentry-php
-  - php composer.phar tests
+  - php vendor/bin/phpunit
