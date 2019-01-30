@@ -40,5 +40,5 @@ trigger_error("Cannot divide by zero", E_USER_WARNING);
 Assert::assertAttributeNotEmpty('pendingRequests', $transport);
 Assert::assertNotNull(Hub::getCurrent()->getLastEventId());
 ?>
---EXPECTF--
-Fatal error: Cannot divide by zero in Standard input code on line 30
+--EXPECTREGEX--
+Fatal error: Cannot divide by zero in .* on line 30
