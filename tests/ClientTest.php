@@ -394,7 +394,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $serializer = new Serializer();
+        $serializer = new Serializer(new Options());
         $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
 
         $client = ClientBuilder::create()

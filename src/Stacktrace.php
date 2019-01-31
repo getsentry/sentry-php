@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 
 /**
@@ -161,14 +159,14 @@ class Stacktrace implements \JsonSerializable
             }
         }
 
-        $frameArguments = self::getFrameArguments($backtraceFrame);
+        $frameArguments = $this->getFrameArguments($backtraceFrame);
 
         if (!empty($frameArguments)) {
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, Client::MESSAGE_MAX_LENGTH_LIMIT);
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, $this->options->getMaxValueLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -297,12 +295,11 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the values of the arguments of the given stackframe.
      *
-     * @param array $frame          The frame from where arguments are retrieved
-     * @param int   $maxValueLength The maximum string length to get from the arguments values
+     * @param array $frame The frame from where arguments are retrieved
      *
      * @return array
      */
-    protected static function getFrameArgumentsValues(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT): array
+    protected function getFrameArgumentsValues(array $frame): array
     {
         if (!isset($frame['args'])) {
             return [];
@@ -311,7 +308,7 @@ class Stacktrace implements \JsonSerializable
         $result = [];
 
         foreach ($frame['args'] as $index => $argument) {
-            $result['param' . ($index + 1)] = self::serializeArgument($argument, $maxValueLength);
+            $result['param' . ($index + 1)] = $this->serializeArgument($argument);
         }
 
         return $result;
@@ -320,12 +317,11 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the arguments of the given stackframe.
      *
-     * @param array $frame          The frame from where arguments are retrieved
-     * @param int   $maxValueLength The maximum string length to get from the arguments values
+     * @param array $frame The frame from where arguments are retrieved
      *
      * @return array
      */
-    public static function getFrameArguments(array $frame, int $maxValueLength = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    public function getFrameArguments(array $frame): array
     {
         if (!isset($frame['args'])) {
             return [];
@@ -334,19 +330,19 @@ class Stacktrace implements \JsonSerializable
         // The Reflection API seems more appropriate if we associate it with the frame
         // where the function is actually called (since we're treating them as function context)
         if (!isset($frame['function'])) {
-            return self::getFrameArgumentsValues($frame, $maxValueLength);
+            return $this->getFrameArgumentsValues($frame);
         }
 
         if (false !== strpos($frame['function'], '__lambda_func')) {
-            return self::getFrameArgumentsValues($frame, $maxValueLength);
+            return $this->getFrameArgumentsValues($frame);
         }
 
         if (false !== strpos($frame['function'], '{closure}')) {
-            return self::getFrameArgumentsValues($frame, $maxValueLength);
+            return $this->getFrameArgumentsValues($frame);
         }
 
         if (isset($frame['class']) && 'Closure' === $frame['class']) {
-            return self::getFrameArgumentsValues($frame, $maxValueLength);
+            return $this->getFrameArgumentsValues($frame);
         }
 
         if (\in_array($frame['function'], static::$importStatements, true)) {
@@ -355,7 +351,7 @@ class Stacktrace implements \JsonSerializable
             }
 
             return [
-                'param1' => self::serializeArgument($frame['args'][0], $maxValueLength),
+                'param1' => $this->serializeArgument($frame['args'][0]),
             ];
         }
 
@@ -371,17 +367,17 @@ class Stacktrace implements \JsonSerializable
             } elseif (\function_exists($frame['function'])) {
                 $reflection = new \ReflectionFunction($frame['function']);
             } else {
-                return self::getFrameArgumentsValues($frame, $maxValueLength);
+                return $this->getFrameArgumentsValues($frame);
             }
         } catch (\ReflectionException $ex) {
-            return self::getFrameArgumentsValues($frame, $maxValueLength);
+            return $this->getFrameArgumentsValues($frame);
         }
 
         $params = $reflection->getParameters();
         $args = [];
 
         foreach ($frame['args'] as $index => $arg) {
-            $arg = self::serializeArgument($arg, $maxValueLength);
+            $arg = $this->serializeArgument($arg);
 
             if (isset($params[$index])) {
                 // Assign the argument by the parameter name
@@ -394,8 +390,10 @@ class Stacktrace implements \JsonSerializable
         return $args;
     }
 
-    protected static function serializeArgument($arg, int $maxValueLength)
+    protected function serializeArgument($arg)
     {
+        $maxValueLength = $this->options->getMaxValueLength();
+
         if (\is_array($arg)) {
             $result = [];
 

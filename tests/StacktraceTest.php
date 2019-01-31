@@ -31,8 +31,8 @@ final class StacktraceTest extends TestCase
     protected function setUp(): void
     {
         $this->options = new Options();
-        $this->serializer = new Serializer();
-        $this->representationSerializer = new RepresentationSerializer();
+        $this->serializer = new Serializer($this->options);
+        $this->representationSerializer = new RepresentationSerializer($this->options);
     }
 
     public function testGetFramesAndToArray(): void
@@ -285,7 +285,8 @@ final class StacktraceTest extends TestCase
             'function' => 'a_test',
         ];
 
-        $result = Stacktrace::getFrameArguments($frame, 5);
+        $stacktrace = new Stacktrace(new Options(['max_value_length' => 5]), $this->serializer, $this->representationSerializer);
+        $result = $stacktrace->getFrameArguments($frame);
 
         // Check we haven't modified our vars.
         $this->assertEquals($originalFoo, 'bloopblarp');

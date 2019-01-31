@@ -27,12 +27,6 @@ final class Client implements ClientInterface
     public const SDK_IDENTIFIER = 'sentry.php';
 
     /**
-     * This constant defines the maximum length of the message captured by the
-     * message SDK interface.
-     */
-    public const MESSAGE_MAX_LENGTH_LIMIT = 1024;
-
-    /**
      * @var Options The client options
      */
     private $options;

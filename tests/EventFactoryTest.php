@@ -112,12 +112,13 @@ class EventFactoryTest extends TestCase
 
     public function testCreateWithException(): void
     {
+        $options = new Options();
         $previousException = new \RuntimeException('testMessage2');
         $exception = new \Exception('testMessage', 0, $previousException);
         $eventFactory = new EventFactory(
-            new Serializer(),
+            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $options,
             'sentry.sdk.identifier',
             '1.2.3'
         );
@@ -143,11 +144,12 @@ class EventFactoryTest extends TestCase
 
     public function testCreateWithErrorException(): void
     {
+        $options = new Options();
         $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
         $eventFactory = new EventFactory(
-            new Serializer(),
+            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
+            $options,
             'sentry.sdk.identifier',
             '1.2.3'
         );

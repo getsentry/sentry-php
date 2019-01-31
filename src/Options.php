@@ -598,6 +598,28 @@ final class Options
     }
 
     /**
+     * Gets the max length for values in the event payload.
+     *
+     * @return int
+     */
+    public function getMaxValueLength(): int
+    {
+        return $this->options['max_value_length'];
+    }
+
+    /**
+     * Sets the max length for specific values in the event payload.
+     *
+     * @param int $maxValueLength The number of characters after which the values containing text will be truncated
+     */
+    public function setMaxValueLength(int $maxValueLength): void
+    {
+        $options = array_merge($this->options, ['max_value_length' => $maxValueLength]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -634,6 +656,7 @@ final class Options
             'excluded_exceptions' => [],
             'in_app_exclude' => [],
             'send_default_pii' => false,
+            'max_value_length' => 1024,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -658,6 +681,7 @@ final class Options
         $resolver->setAllowedTypes('integrations', 'array');
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
+        $resolver->setAllowedTypes('max_value_length', 'int');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Serializer;
 
+use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\RepresentationSerializer;
 
@@ -129,6 +130,6 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
      */
     protected function createSerializer(): AbstractSerializer
     {
-        return new RepresentationSerializer();
+        return new RepresentationSerializer(new Options());
     }
 }

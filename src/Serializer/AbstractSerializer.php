@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
-use Sentry\Client;
+use Sentry\Options;
 
 /**
  * This helper is based on code from Facebook's Phabricator project.
@@ -63,11 +63,9 @@ abstract class AbstractSerializer
     protected $serializeAllObjects = false;
 
     /**
-     * The default maximum message lengths. Longer strings will be truncated.
-     *
-     * @var int
+     * @var Options The Sentry options
      */
-    protected $messageLimit;
+    protected $options;
 
     /**
      * Whether the ext-mbstring PHP extension is enabled or not.
@@ -76,7 +74,14 @@ abstract class AbstractSerializer
      */
     private $mbStringEnabled;
 
-    public function __construct(int $maxDepth = 3, ?string $mbDetectOrder = null, int $messageLimit = Client::MESSAGE_MAX_LENGTH_LIMIT)
+    /**
+     * AbstractSerializer constructor.
+     *
+     * @param Options     $options       The SDK configuration options
+     * @param int         $maxDepth
+     * @param string|null $mbDetectOrder
+     */
+    public function __construct(Options $options, int $maxDepth = 3, ?string $mbDetectOrder = null)
     {
         $this->maxDepth = $maxDepth;
 
@@ -84,7 +89,7 @@ abstract class AbstractSerializer
             $this->mbDetectOrder = $mbDetectOrder;
         }
 
-        $this->messageLimit = $messageLimit;
+        $this->options = $options;
     }
 
     /**
@@ -164,12 +169,12 @@ abstract class AbstractSerializer
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
 
-            if (mb_strlen($value) > $this->messageLimit) {
-                $value = mb_substr($value, 0, $this->messageLimit - 10, 'UTF-8') . ' {clipped}';
+            if (mb_strlen($value) > $this->options->getMaxValueLength()) {
+                $value = mb_substr($value, 0, $this->options->getMaxValueLength() - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
-            if (\strlen($value) > $this->messageLimit) {
-                $value = substr($value, 0, $this->messageLimit - 10) . ' {clipped}';
+            if (\strlen($value) > $this->options->getMaxValueLength()) {
+                $value = substr($value, 0, $this->options->getMaxValueLength() - 10) . ' {clipped}';
             }
         }
 
@@ -305,26 +310,6 @@ abstract class AbstractSerializer
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMessageLimit(): int
-    {
-        return $this->messageLimit;
-    }
-
-    /**
-     * @param int $messageLimit
-     *
-     * @return AbstractSerializer
-     */
-    public function setMessageLimit(int $messageLimit): self
-    {
-        $this->messageLimit = $messageLimit;
-
-        return $this;
     }
 
     private function isMbStringEnabled(): bool

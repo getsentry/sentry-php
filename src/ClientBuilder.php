@@ -328,8 +328,8 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createEventFactory(): EventFactoryInterface
     {
-        $this->serializer = $this->serializer ?? new Serializer();
-        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer();
+        $this->serializer = $this->serializer ?? new Serializer($this->options);
+        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer($this->options);
 
         return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->getSdkVersion());
     }
