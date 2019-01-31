@@ -166,7 +166,7 @@ class Stacktrace implements \JsonSerializable
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, $this->options->getTruncationLength());
+                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, $this->options->getMaxValueLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -392,7 +392,7 @@ class Stacktrace implements \JsonSerializable
 
     protected function serializeArgument($arg)
     {
-        $maxValueLength = $this->options->getTruncationLength();
+        $maxValueLength = $this->options->getMaxValueLength();
 
         if (\is_array($arg)) {
             $result = [];

@@ -169,12 +169,12 @@ abstract class AbstractSerializer
                 $value = mb_convert_encoding($value, 'UTF-8');
             }
 
-            if (mb_strlen($value) > $this->options->getTruncationLength()) {
-                $value = mb_substr($value, 0, $this->options->getTruncationLength() - 10, 'UTF-8') . ' {clipped}';
+            if (mb_strlen($value) > $this->options->getMaxValueLength()) {
+                $value = mb_substr($value, 0, $this->options->getMaxValueLength() - 10, 'UTF-8') . ' {clipped}';
             }
         } else {
-            if (\strlen($value) > $this->options->getTruncationLength()) {
-                $value = substr($value, 0, $this->options->getTruncationLength() - 10) . ' {clipped}';
+            if (\strlen($value) > $this->options->getMaxValueLength()) {
+                $value = substr($value, 0, $this->options->getMaxValueLength() - 10) . ' {clipped}';
             }
         }
 

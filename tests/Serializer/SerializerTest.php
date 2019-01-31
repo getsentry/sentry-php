@@ -98,7 +98,7 @@ final class SerializerTest extends AbstractSerializerTest
 
     public function testLongStringWithOverwrittenMessageLength(): void
     {
-        $serializer = $this->createSerializer(new Options(['truncation_length' => 500]));
+        $serializer = $this->createSerializer(new Options(['max_value_length' => 500]));
 
         foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
             $input = str_repeat('x', $length);
@@ -111,7 +111,7 @@ final class SerializerTest extends AbstractSerializerTest
 
     public function testClippingUTF8Characters(): void
     {
-        $serializer = $this->createSerializer(new Options(['truncation_length' => 19]));
+        $serializer = $this->createSerializer(new Options(['max_value_length' => 19]));
 
         $clipped = $this->invokeSerialization($serializer, 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках');
 

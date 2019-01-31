@@ -598,23 +598,23 @@ final class Options
     }
 
     /**
-     * Gets the truncation length for values in the event payload.
+     * Gets the max length for values in the event payload.
      *
      * @return int
      */
-    public function getTruncationLength(): int
+    public function getMaxValueLength(): int
     {
-        return $this->options['truncation_length'];
+        return $this->options['max_value_length'];
     }
 
     /**
-     * Sets the truncation length for specific values in the event payload.
+     * Sets the max length for specific values in the event payload.
      *
-     * @param int $truncationLength The number of characters after which the values containing text will be truncated
+     * @param int $maxValueLength The number of characters after which the values containing text will be truncated
      */
-    public function setTruncationLength(int $truncationLength): void
+    public function setMaxValueLength(int $maxValueLength): void
     {
-        $options = array_merge($this->options, ['truncation_length' => $truncationLength]);
+        $options = array_merge($this->options, ['max_value_length' => $maxValueLength]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -657,7 +657,7 @@ final class Options
             'excluded_exceptions' => [],
             'excluded_app_paths' => [],
             'send_default_pii' => false,
-            'truncation_length' => 1024,
+            'max_value_length' => 1024,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -683,7 +683,7 @@ final class Options
         $resolver->setAllowedTypes('integrations', 'array');
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
-        $resolver->setAllowedTypes('truncation_length', 'int');
+        $resolver->setAllowedTypes('max_value_length', 'int');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
