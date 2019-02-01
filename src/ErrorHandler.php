@@ -51,17 +51,6 @@ final class ErrorHandler
     private $previousExceptionHandler;
 
     /**
-     * @var int The errors that will be catched by the error handler
-     */
-    private $capturedErrors = E_ALL;
-
-    /**
-     * @var bool Flag indicating whether this error handler is the first in the
-     *           chain of registered error handlers
-     */
-    private $isRoot = false;
-
-    /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed
      *                  in case a fatal error occurs to handle it
      */
@@ -117,9 +106,7 @@ final class ErrorHandler
             // first call to the set_error_handler method would cause the PHP
             // bug https://bugs.php.net/63206 if the handler is not the first
             // one in the chain of handlers
-            set_error_handler([$this, 'handleError'], $this->capturedErrors);
-
-            $this->isRoot = true;
+            set_error_handler([$this, 'handleError'], E_ALL);
         }
 
         $this->previousExceptionHandler = set_exception_handler([$this, 'handleException']);
@@ -174,30 +161,6 @@ final class ErrorHandler
     }
 
     /**
-     * Sets the PHP error levels that will be captured by the Raven client when
-     * a PHP error occurs.
-     *
-     * @param int  $levels  A bit field of E_* constants for captured errors
-     * @param bool $replace Whether to replace or amend the previous value
-     *
-     * @return int The previous value
-     */
-    public function captureAt(int $levels, bool $replace = false): int
-    {
-        $prev = $this->capturedErrors;
-
-        $this->capturedErrors = $levels;
-
-        if (!$replace) {
-            $this->capturedErrors |= $prev;
-        }
-
-        $this->reRegister($prev);
-
-        return $prev;
-    }
-
-    /**
      * Handles errors by capturing them through the Raven client according to
      * the configured bit field.
      *
@@ -216,12 +179,6 @@ final class ErrorHandler
      */
     public function handleError(int $level, string $message, string $file, int $line): bool
     {
-        $shouldCaptureError = (bool) ($this->capturedErrors & $level);
-
-        if (!$shouldCaptureError) {
-            return false;
-        }
-
         $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
         $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $file, $line);
 
@@ -307,34 +264,6 @@ final class ErrorHandler
         }
 
         $this->handleException($previousExceptionHandlerException);
-    }
-
-    /**
-     * Re-registers the error handler if the mask that configures the intercepted
-     * error types changed.
-     *
-     * @param int $previousThrownErrors The previous error mask
-     */
-    private function reRegister(int $previousThrownErrors): void
-    {
-        if ($this->capturedErrors === $previousThrownErrors) {
-            return;
-        }
-
-        $handler = set_error_handler('var_dump');
-        $handler = \is_array($handler) ? $handler[0] : null;
-
-        restore_error_handler();
-
-        if ($handler === $this) {
-            restore_error_handler();
-
-            if ($this->isRoot) {
-                set_error_handler([$this, 'handleError'], $this->capturedErrors);
-            } else {
-                set_error_handler([$this, 'handleError']);
-            }
-        }
     }
 
     /**

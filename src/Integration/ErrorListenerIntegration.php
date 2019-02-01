@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Sentry\ErrorHandler;
 use Sentry\ErrorListenerInterface;
+use Sentry\Options;
 use Sentry\State\Hub;
 
 /**
@@ -14,6 +15,18 @@ use Sentry\State\Hub;
  */
 final class ErrorListenerIntegration implements IntegrationInterface, ErrorListenerInterface
 {
+    /** @var Options The options, to know which error level to use */
+    private $options;
+
+    /**
+     * ErrorListenerIntegration constructor.
+     * @param Options $options
+     */
+    public function __construct(Options $options)
+    {
+        $this->options = $options;
+    }
+
     public function setupOnce(): void
     {
         ErrorHandler::addErrorListener($this);
@@ -21,10 +34,12 @@ final class ErrorListenerIntegration implements IntegrationInterface, ErrorListe
 
     public function __invoke(\ErrorException $error): void
     {
-        $client = Hub::getCurrent()->getClient();
-        
-        if ($client) {
-            $client->captureException($error);
+        if ($this->options->getErrorTypes() & $error->getSeverity()) {
+            $client = Hub::getCurrent()->getClient();
+
+            if ($client) {
+                $client->captureException($error);
+            }
         }
     }
 }
