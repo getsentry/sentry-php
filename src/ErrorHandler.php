@@ -19,15 +19,20 @@ final class ErrorHandler
      */
     private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
-    /** 
-     * @var self The current registered handler (this class is a singleton) 
+    /**
+     * @var self The current registered handler (this class is a singleton)
      */
     private static $registeredHandler;
 
     /**
-     * @var callable[] List of callable that will act as listeners on each captured error
+     * @var ErrorListenerInterface[] List of listeners that will act on each captured error
      */
-    private $listeners;
+    private $errorListeners;
+
+    /**
+     * @var ExceptionListenerInterface[] List of listeners that will act on each captured exception
+     */
+    private $exceptionListeners;
 
     /**
      * @var \ReflectionProperty A reflection cached instance that points to the
@@ -86,7 +91,7 @@ final class ErrorHandler
     /**
      * Constructor.
      *
-     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param int $reservedMemorySize The amount of memory to reserve for the fatal error handler
      */
     private function __construct(int $reservedMemorySize)
     {
@@ -121,12 +126,13 @@ final class ErrorHandler
     }
 
     /**
-     * Gets the current registered error handler; if none is present, it will register it
-     * 
+     * Gets the current registered error handler; if none is present, it will register it.
+     *
      * @param int|null $reservedMemorySize The requested amount of memory to reserve
+     *
      * @return ErrorHandler The ErrorHandler singleton
      */
-    public static function getRegisteredHandler(int $reservedMemorySize = null): ErrorHandler
+    public static function getRegisteredHandler(int $reservedMemorySize = null): self
     {
         if (null === self::$registeredHandler) {
             self::$registeredHandler = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
@@ -141,12 +147,30 @@ final class ErrorHandler
      * Adds a listener to the current error handler to be called upon each invoked captured error;
      * if no handler is registered, this method will instantiate and register it.
      *
-     * @param callable $listener A callable that will act as a listener
+     * If you want to use a naked callable and not an object as a listener,
+     * you can create one with \Closure::fromCallable.
+     *
+     * @param ErrorListenerInterface $listener A type-safe callable that will act as a listener
      */
-    public static function addListener(callable $listener): void
+    public static function addErrorListener(ErrorListenerInterface $listener): void
     {
         $handler = self::getRegisteredHandler();
-        $handler->listeners[] = $listener;
+        $handler->errorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler to be called upon each invoked captured exception;
+     * if no handler is registered, this method will instantiate and register it.
+     *
+     * If you want to use a naked callable and not an object as a listener,
+     * you can create one with \Closure::fromCallable.
+     *
+     * @param ExceptionListenerInterface $listener A type-safe callable that will act as a listener
+     */
+    public static function addExceptionListener(ExceptionListenerInterface $listener): void
+    {
+        $handler = self::getRegisteredHandler();
+        $handler->exceptionListeners[] = $listener;
     }
 
     /**
@@ -203,11 +227,7 @@ final class ErrorHandler
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
-        try {
-            $this->handleException($errorAsException);
-        } catch (\Throwable $exception) {
-            // Do nothing as this error handler should be as transparent as possible
-        }
+        $this->invokeErrorListeners($errorAsException);
 
         if (null !== $this->previousErrorHandler) {
             return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
@@ -243,30 +263,22 @@ final class ErrorHandler
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
         }
 
-        try {
-            if (null !== $errorAsException) {
-                $this->handleException($errorAsException);
-            }
-        } catch (\Throwable $errorAsException) {
-            // Ignore this re-throw
-        }
+        $this->invokeErrorListeners($errorAsException);
     }
 
     /**
-     * Handles the given exception by capturing it through the Raven client and
+     * Handles the given exception by passing it to all the listeners,
      * then forwarding it to another handler.
      *
      * @param \Throwable $exception The exception to handle
      *
      * @throws \Throwable
      *
-     * @internal
+     * @internal This method is public only because it's used with set_exception_handler
      */
     public function handleException(\Throwable $exception): void
     {
-        foreach ($this->listeners as $listener) {
-            $listener($exception);
-        }
+        $this->invokeExceptionListeners($exception);
 
         $previousExceptionHandlerException = $exception;
 
@@ -352,5 +364,33 @@ final class ErrorHandler
         }
 
         return $cleanedBacktrace;
+    }
+
+    /**
+     * @param \ErrorException $errorAsException The error to be passed onto listeners
+     */
+    private function invokeErrorListeners(\ErrorException $errorAsException): void
+    {
+        foreach ($this->errorListeners as $listener) {
+            try {
+                $listener($errorAsException);
+            } catch (\Throwable $exception) {
+                // Do nothing as this should be as transparent as possible
+            }
+        }
+    }
+
+    /**
+     * @param \Throwable $throwable The exception to be passed onto listeners
+     */
+    private function invokeExceptionListeners(\Throwable $throwable): void
+    {
+        foreach ($this->exceptionListeners as $listener) {
+            try {
+                $listener($throwable);
+            } catch (\Throwable $exception) {
+                // Do nothing as this should be as transparent as possible
+            }
+        }
     }
 }
