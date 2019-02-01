@@ -19,10 +19,15 @@ final class ErrorHandler
      */
     private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
-    /**
-     * @var callable Callback that will be invoked when an error is caught
+    /** 
+     * @var self The current registered handler (this class is a singleton) 
      */
-    private $callback;
+    private static $registeredHandler;
+
+    /**
+     * @var callable[] List of callable that will act as listeners on each captured error
+     */
+    private $listeners;
 
     /**
      * @var \ReflectionProperty A reflection cached instance that points to the
@@ -81,18 +86,14 @@ final class ErrorHandler
     /**
      * Constructor.
      *
-     * @param callable $callback           The callback that will be invoked in case an error is caught
      * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
-     *
-     * @throws \ReflectionException
      */
-    private function __construct(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE)
+    private function __construct(int $reservedMemorySize)
     {
         if ($reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
         }
 
-        $this->callback = $callback;
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
 
@@ -120,19 +121,32 @@ final class ErrorHandler
     }
 
     /**
-     * Registers this error handler and associates the given callback to the
-     * instance.
-     *
-     * @param callable $callback           callback that will be called when exception is caught
-     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
-     *
-     * @return self
-     *
-     * @throws \ReflectionException
+     * Gets the current registered error handler; if none is present, it will register it
+     * 
+     * @param int|null $reservedMemorySize The requested amount of memory to reserve
+     * @return ErrorHandler The ErrorHandler singleton
      */
-    public static function register(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
+    public static function getRegisteredHandler(int $reservedMemorySize = null): ErrorHandler
     {
-        return new self($callback, $reservedMemorySize);
+        if (null === self::$registeredHandler) {
+            self::$registeredHandler = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
+        } elseif (null !== $reservedMemorySize) {
+            self::$reservedMemory = str_repeat('x', $reservedMemorySize);
+        }
+
+        return self::$registeredHandler;
+    }
+
+    /**
+     * Adds a listener to the current error handler to be called upon each invoked captured error;
+     * if no handler is registered, this method will instantiate and register it.
+     *
+     * @param callable $listener A callable that will act as a listener
+     */
+    public static function addListener(callable $listener): void
+    {
+        $handler = self::getRegisteredHandler();
+        $handler->listeners[] = $listener;
     }
 
     /**
@@ -250,7 +264,9 @@ final class ErrorHandler
      */
     public function handleException(\Throwable $exception): void
     {
-        \call_user_func($this->callback, $exception);
+        foreach ($this->listeners as $listener) {
+            $listener($exception);
+        }
 
         $previousExceptionHandlerException = $exception;
 
