@@ -261,9 +261,8 @@ final class ErrorHandler
 
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
+            $this->invokeErrorListeners($errorAsException);
         }
-
-        $this->invokeErrorListeners($errorAsException);
     }
 
     /**
