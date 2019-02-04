@@ -297,6 +297,25 @@ final class StacktraceTest extends TestCase
         $this->assertEquals($result['param2']['key'], 'xxxxx');
     }
 
+    public function testPreserveXdebugFrameArgumentNames(): void
+    {
+        $frame = [
+            'file' => __DIR__ . '/resources/a.php',
+            'line' => 9,
+            'args' => [
+                'foo' => 'bar',
+                'alice' => 'bob',
+            ],
+            'function' => 'a_test',
+        ];
+
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $result = $stacktrace->getFrameArguments($frame);
+
+        $this->assertEquals('bar', $result['foo']);
+        $this->assertEquals('bob', $result['alice']);
+    }
+
     private function getFixturePath(string $file): string
     {
         $filePath = realpath(__DIR__ . \DIRECTORY_SEPARATOR . 'Fixtures' . \DIRECTORY_SEPARATOR . $file);

@@ -301,14 +301,18 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getFrameArgumentsValues(array $frame): array
     {
-        if (!isset($frame['args'])) {
+        if (empty($frame['args'])) {
             return [];
         }
 
         $result = [];
 
-        foreach ($frame['args'] as $index => $argument) {
-            $result['param' . ($index + 1)] = $this->serializeArgument($argument);
+        if (\is_string(array_keys($frame['args'])[0])) {
+            $result = array_map([$this, 'serializeArgument'], $frame['args']);
+        } else {
+            foreach (array_values($frame['args']) as $index => $argument) {
+                $result['param' . ($index + 1)] = $this->serializeArgument($argument);
+            }
         }
 
         return $result;
