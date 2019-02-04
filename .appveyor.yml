@@ -1,10 +1,12 @@
+version: 2.x-{build}
 build: false
 clone_depth: 2
 clone_folder: c:\projects\sentry-php
+skip_branch_with_pr: true
 
 cache:
   - composer.phar
-  - C:\Users\appveyor\AppData\Roaming\Composer\files
+  - '%LocalAppData%\Composer\files'
   - c:\projects\sentry-php\vendor
 
 init:
@@ -26,7 +28,6 @@ install:
   - cd c:\projects\sentry-php
   - IF NOT EXIST composer.phar (appveyor DownloadFile https://github.com/composer/composer/releases/download/1.7.1/composer.phar)
   - php composer.phar self-update
-  - php composer.phar global require --no-progress --ansi hirak/prestissimo
   - php composer.phar update --no-progress --no-suggest --ansi
 
 test_script:
