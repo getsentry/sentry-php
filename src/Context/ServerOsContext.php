@@ -186,7 +186,7 @@ class ServerOsContext extends Context
     private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'name' => PHP_OS,
+            'name' => php_uname('s'),
             'version' => php_uname('r'),
             'build' => php_uname('v'),
             'kernel_version' => php_uname('a'),
