@@ -37,9 +37,16 @@ final class ErrorHandlerIntegration implements IntegrationInterface
 
             if ($self instanceof self) {
                 $self->addBreadcrumb($exception);
-                if (0 === $level || ($self->options->getErrorTypes() & $level)) {
+                if ($self->options->getErrorTypes() & $level) {
                     $self->captureException($exception);
                 }
+            }
+        }, function (\Throwable $exception): void {
+            $self = Hub::getCurrent()->getIntegration(self::class);
+
+            if ($self instanceof self) {
+                $self->addBreadcrumb($exception);
+                $self->captureException($exception);
             }
         });
     }

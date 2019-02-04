@@ -9,17 +9,19 @@ use Sentry\ErrorHandler;
 
 final class ErrorHandlerTest extends TestCase
 {
-    protected $callbackMock;
+    protected $callbackErrorMock;
+    protected $callbackExceptionMock;
 
     protected function setUp(): void
     {
-        $this->callbackMock = $this->createPartialMock(\stdClass::class, ['__invoke']);
+        $this->callbackErrorMock = $this->createPartialMock(\stdClass::class, ['__invoke']);
+        $this->callbackExceptionMock = $this->createPartialMock(\stdClass::class, ['__invoke']);
     }
 
     public function testConstructor(): void
     {
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
             $previousErrorHandler = set_error_handler('var_dump');
 
             restore_error_handler();
@@ -39,7 +41,7 @@ final class ErrorHandlerTest extends TestCase
      */
     public function testConstructorThrowsWhenReservedMemorySizeIsWrong(int $reservedMemorySize): void
     {
-        ErrorHandler::register($this->callbackMock, $reservedMemorySize);
+        ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock, $reservedMemorySize);
     }
 
     public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider(): array
@@ -50,67 +52,9 @@ final class ErrorHandlerTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider handleErrorShouldNotCaptureDataProvider
-     */
-    public function testHandleErrorShouldNotCapture(bool $expectedToCapture, int $captureAt): void
-    {
-        if (!$expectedToCapture) {
-            $this->callbackMock->expects($this->never())
-                ->method('__invoke');
-        }
-
-        $errorHandler = ErrorHandler::register($this->callbackMock);
-        $errorHandler->captureAt($captureAt, true);
-
-        $prevErrorReporting = error_reporting(E_ERROR); // to avoid making the test error bubble up and make the test fail
-
-        try {
-            $this->assertFalse($errorHandler->handleError(E_WARNING, 'Test', __FILE__, __LINE__));
-        } finally {
-            error_reporting($prevErrorReporting);
-            restore_error_handler();
-            restore_exception_handler();
-            $this->addToAssertionCount(1);
-        }
-    }
-
-    public function handleErrorShouldNotCaptureDataProvider(): array
-    {
-        return [
-            [false, E_ERROR],
-            [true, E_ALL],
-        ];
-    }
-
-    /**
-     * @dataProvider captureAtDataProvider
-     */
-    public function testCaptureAt($levels, $replace, $expectedCapturedErrors): void
-    {
-        try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
-            $previousCapturedErrors = $this->getObjectAttribute($errorHandler, 'capturedErrors');
-
-            $this->assertEquals($previousCapturedErrors, $errorHandler->captureAt($levels, $replace));
-            $this->assertAttributeEquals($expectedCapturedErrors, 'capturedErrors', $errorHandler);
-        } finally {
-            restore_error_handler();
-            restore_exception_handler();
-        }
-    }
-
-    public function captureAtDataProvider(): array
-    {
-        return [
-            [E_USER_NOTICE, false, E_ALL],
-            [E_USER_NOTICE, true, E_USER_NOTICE],
-        ];
-    }
-
     public function testHandleError(): void
     {
-        $this->callbackMock->expects($this->exactly(1))
+        $this->callbackErrorMock->expects($this->exactly(2))
             ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
@@ -136,8 +80,7 @@ final class ErrorHandlerTest extends TestCase
             }));
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
-            $errorHandler->captureAt(0, true);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -145,8 +88,6 @@ final class ErrorHandlerTest extends TestCase
             $reflectionProperty->setAccessible(false);
 
             $this->assertFalse($errorHandler->handleError(0, 'foo bar', __FILE__, __LINE__));
-
-            $errorHandler->captureAt(E_USER_NOTICE, true);
 
             $this->assertFalse($errorHandler->handleError(E_USER_WARNING, 'foo bar', __FILE__, __LINE__));
             $this->assertFalse($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, 123));
@@ -161,7 +102,7 @@ final class ErrorHandlerTest extends TestCase
      */
     public function testHandleErrorWithPreviousErrorHandler($previousErrorHandlerErrorReturnValue, bool $expectedHandleErrorReturnValue): void
     {
-        $this->callbackMock->expects($this->once())
+        $this->callbackErrorMock->expects($this->once())
             ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
@@ -193,7 +134,7 @@ final class ErrorHandlerTest extends TestCase
             ->willReturn($previousErrorHandlerErrorReturnValue);
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -221,7 +162,7 @@ final class ErrorHandlerTest extends TestCase
 
     public function testHandleFatalError(): void
     {
-        $this->callbackMock->expects($this->exactly(1))
+        $this->callbackErrorMock->expects($this->exactly(1))
             ->method('__invoke')
             ->with($this->callback(function ($exception) {
                 /* @var \ErrorException $exception */
@@ -235,7 +176,7 @@ final class ErrorHandlerTest extends TestCase
             }));
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
             $errorHandler->handleFatalError([
                 'type' => E_PARSE,
                 'message' => 'foo bar',
@@ -250,11 +191,11 @@ final class ErrorHandlerTest extends TestCase
 
     public function testHandleFatalErrorWithNonFatalErrorDoesNothing(): void
     {
-        $this->callbackMock->expects($this->never())
+        $this->callbackErrorMock->expects($this->never())
             ->method('__invoke');
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
             $errorHandler->handleFatalError([
                 'type' => E_USER_NOTICE,
                 'message' => 'foo bar',
@@ -271,12 +212,12 @@ final class ErrorHandlerTest extends TestCase
     {
         $exception = new \Exception('foo bar');
 
-        $this->callbackMock->expects($this->once())
+        $this->callbackExceptionMock->expects($this->once())
             ->method('__invoke')
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
 
             try {
                 $errorHandler->handleException($exception);
@@ -295,7 +236,7 @@ final class ErrorHandlerTest extends TestCase
     {
         $exception = new \Exception('foo bar');
 
-        $this->callbackMock->expects($this->once())
+        $this->callbackExceptionMock->expects($this->once())
             ->method('__invoke')
             ->with($this->identicalTo($exception));
 
@@ -305,7 +246,7 @@ final class ErrorHandlerTest extends TestCase
             ->with($this->identicalTo($exception));
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
@@ -330,7 +271,7 @@ final class ErrorHandlerTest extends TestCase
         $exception1 = new \Exception('foo bar');
         $exception2 = new \Exception('bar foo');
 
-        $this->callbackMock->expects($this->exactly(2))
+        $this->callbackExceptionMock->expects($this->exactly(2))
             ->method('__invoke')
             ->withConsecutive($this->identicalTo($exception1), $this->identicalTo($exception2));
 
@@ -341,7 +282,7 @@ final class ErrorHandlerTest extends TestCase
             ->will($this->throwException($exception2));
 
         try {
-            $errorHandler = ErrorHandler::register($this->callbackMock);
+            $errorHandler = ErrorHandler::register($this->callbackErrorMock, $this->callbackExceptionMock);
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);

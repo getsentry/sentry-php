@@ -20,9 +20,14 @@ final class ErrorHandler
     private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
-     * @var callable Callback that will be invoked when an error is caught
+     * @var callable The callback that will be invoked in case an error happens
      */
-    private $callback;
+    private $handleErrorCallback;
+
+    /**
+     * @var callable The callback that will be invoked in case an exception happens
+     */
+    private $handleExceptionCallback;
 
     /**
      * @var \ReflectionProperty A reflection cached instance that points to the
@@ -39,22 +44,6 @@ final class ErrorHandler
      * @var callable|null The previous exception handler, if any
      */
     private $previousExceptionHandler;
-
-    /**
-     * @var int The errors that will be caught by the error handler
-     */
-    private $capturedErrors = E_ALL;
-
-    /**
-     * @var int The last caught error type
-     */
-    private $lastErrorType = 0;
-
-    /**
-     * @var bool Flag indicating whether this error handler is the first in the
-     *           chain of registered error handlers
-     */
-    private $isRoot = false;
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed
@@ -86,18 +75,20 @@ final class ErrorHandler
     /**
      * Constructor.
      *
-     * @param callable $callback           The callback that will be invoked in case an error is caught
-     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param callable $handleErrorCallback     The callback that will be invoked in case an error happens
+     * @param callable $handleExceptionCallback The callback that will be invoked in case an exception happens
+     * @param int      $reservedMemorySize      The amount of memory to reserve for the fatal error handler
      *
      * @throws \ReflectionException
      */
-    private function __construct(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE)
+    private function __construct(callable $handleErrorCallback, callable $handleExceptionCallback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE)
     {
         if ($reservedMemorySize <= 0) {
             throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
         }
 
-        $this->callback = $callback;
+        $this->handleErrorCallback = $handleErrorCallback;
+        $this->handleExceptionCallback = $handleExceptionCallback;
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
 
@@ -116,9 +107,7 @@ final class ErrorHandler
             // first call to the set_error_handler method would cause the PHP
             // bug https://bugs.php.net/63206 if the handler is not the first
             // one in the chain of handlers
-            set_error_handler([$this, 'handleError'], $this->capturedErrors);
-
-            $this->isRoot = true;
+            set_error_handler([$this, 'handleError'], E_ALL);
         }
 
         $this->previousExceptionHandler = set_exception_handler([$this, 'handleException']);
@@ -128,45 +117,21 @@ final class ErrorHandler
      * Registers this error handler and associates the given callback to the
      * instance.
      *
-     * @param callable $callback           callback that will be called when exception is caught
-     * @param int      $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @param callable $handleErrorCallback     The callback that will be invoked in case an error happens
+     * @param callable $handleExceptionCallback The callback that will be invoked in case an exception happens
+     * @param int      $reservedMemorySize      The amount of memory to reserve for the fatal error handler
      *
      * @return self
      *
      * @throws \ReflectionException
      */
-    public static function register(callable $callback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
+    public static function register(callable $handleErrorCallback, callable $handleExceptionCallback, int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
     {
-        return new self($callback, $reservedMemorySize);
+        return new self($handleErrorCallback, $handleExceptionCallback, $reservedMemorySize);
     }
 
     /**
-     * Sets the PHP error levels that will be captured by the Raven client when
-     * a PHP error occurs.
-     *
-     * @param int  $levels  A bit field of E_* constants for captured errors
-     * @param bool $replace Whether to replace or amend the previous value
-     *
-     * @return int The previous value
-     */
-    public function captureAt(int $levels, bool $replace = false): int
-    {
-        $prev = $this->capturedErrors;
-
-        $this->capturedErrors = $levels;
-
-        if (!$replace) {
-            $this->capturedErrors |= $prev;
-        }
-
-        $this->reRegister($prev);
-
-        return $prev;
-    }
-
-    /**
-     * Handles errors by capturing them through the Raven client according to
-     * the configured bit field.
+     * Handles errors by capturing them and calling the handleErrorCallback.
      *
      * @param int    $level   The level of the error raised, represented by one
      *                        of the E_* constants
@@ -183,7 +148,7 @@ final class ErrorHandler
      */
     public function handleError(int $level, string $message, string $file, int $line): bool
     {
-        $shouldCaptureError = (bool) ($this->capturedErrors & $level);
+        $shouldCaptureError = (bool) (E_ALL & $level);
 
         if (!$shouldCaptureError) {
             return false;
@@ -195,8 +160,7 @@ final class ErrorHandler
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
         try {
-            $this->lastErrorType = $level;
-            $this->handleException($errorAsException);
+            \call_user_func($this->handleErrorCallback, $errorAsException, $level);
         } catch (\Throwable $exception) {
             // Do nothing as this error handler should be as transparent as possible
         }
@@ -209,7 +173,7 @@ final class ErrorHandler
     }
 
     /**
-     * Handles fatal errors by capturing them through the Raven client. This
+     * Handles fatal errors by capturing them and calling the handleErrorCallback. This
      * method is used as callback of a shutdown function.
      *
      * @param array|null $error The error details as returned by error_get_last()
@@ -237,8 +201,7 @@ final class ErrorHandler
 
         try {
             if (null !== $errorAsException) {
-                $this->lastErrorType = $error['type'];
-                $this->handleException($errorAsException);
+                \call_user_func($this->handleErrorCallback, $errorAsException, $error['type']);
             }
         } catch (\Throwable $errorAsException) {
             // Ignore this re-throw
@@ -257,7 +220,7 @@ final class ErrorHandler
      */
     public function handleException(\Throwable $exception): void
     {
-        \call_user_func($this->callback, $exception, $this->lastErrorType);
+        \call_user_func($this->handleExceptionCallback, $exception);
 
         $previousExceptionHandlerException = $exception;
 
@@ -272,11 +235,11 @@ final class ErrorHandler
             }
         } catch (\Throwable $previousExceptionHandlerException) {
             // Do nothing, we just need to set the $previousExceptionHandlerException
-            // variable to the exception we just catched to compare it later
+            // variable to the exception we just caught to compare it later
             // with the original object instance
         }
 
-        // If the exception object instance is the same as the one catched from
+        // If the exception object instance is the same as the one caught from
         // the previous exception handler, if any, give it back to the native
         // PHP handler to prevent infinite circular loop
         if ($exception === $previousExceptionHandlerException) {
@@ -287,34 +250,6 @@ final class ErrorHandler
         }
 
         $this->handleException($previousExceptionHandlerException);
-    }
-
-    /**
-     * Re-registers the error handler if the mask that configures the intercepted
-     * error types changed.
-     *
-     * @param int $previousThrownErrors The previous error mask
-     */
-    private function reRegister(int $previousThrownErrors): void
-    {
-        if ($this->capturedErrors === $previousThrownErrors) {
-            return;
-        }
-
-        $handler = set_error_handler('var_dump');
-        $handler = \is_array($handler) ? $handler[0] : null;
-
-        restore_error_handler();
-
-        if ($handler === $this) {
-            restore_error_handler();
-
-            if ($this->isRoot) {
-                set_error_handler([$this, 'handleError'], $this->capturedErrors);
-            } else {
-                set_error_handler([$this, 'handleError']);
-            }
-        }
     }
 
     /**

@@ -20,7 +20,9 @@ require $vendor . '/vendor/autoload.php';
 error_reporting(E_ERROR);
 
 ErrorHandler::register(function () {
-    echo 'Callback invoked' . PHP_EOL;
+   echo 'Callback invoked' . PHP_EOL;
+}, function () {
+   echo 'Callback not invoked' . PHP_EOL;
 });
 
 echo 'Triggering error' . PHP_EOL;

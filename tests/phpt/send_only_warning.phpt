@@ -30,15 +30,19 @@ $client = Hub::getCurrent()->getClient();
 /** @var \Sentry\Transport\HttpTransport $transport */
 $transport = Assert::getObjectAttribute($client, 'transport');
 
-trigger_error("Cannot divide by zero", E_USER_ERROR);
+trigger_error("Cannot divide by zero", E_USER_NOTICE);
 
 Assert::assertAttributeEmpty('pendingRequests', $transport);
 Assert::assertNull(Hub::getCurrent()->getLastEventId());
 
+echo "we are here" . PHP_EOL;
 trigger_error("Cannot divide by zero", E_USER_WARNING);
 
 Assert::assertAttributeNotEmpty('pendingRequests', $transport);
 Assert::assertNotNull(Hub::getCurrent()->getLastEventId());
 ?>
 --EXPECTREGEX--
-Fatal error: Cannot divide by zero in .* on line 30
+Notice: Cannot divide by zero in .* on line 30
+we are here
+
+Warning: Cannot divide by zero in .* on line 36
