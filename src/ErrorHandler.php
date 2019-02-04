@@ -84,18 +84,12 @@ final class ErrorHandler
      */
     private function __construct(int $reservedMemorySize)
     {
-        if ($reservedMemorySize <= 0) {
-            throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
-        }
+        self::setReservedMemory($reservedMemorySize);
 
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
 
-        if (null === self::$reservedMemory) {
-            self::$reservedMemory = str_repeat('x', $reservedMemorySize);
-
-            register_shutdown_function([$this, 'handleFatalError']);
-        }
+        register_shutdown_function([$this, 'handleFatalError']);
 
         $this->previousErrorHandler = set_error_handler([$this, 'handleError']);
 
@@ -124,7 +118,7 @@ final class ErrorHandler
         if (null === self::$registeredHandler) {
             self::$registeredHandler = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
         } elseif (null !== $reservedMemorySize) {
-            self::$reservedMemory = str_repeat('x', $reservedMemorySize);
+            self::setReservedMemory($reservedMemorySize);
         }
 
         return self::$registeredHandler;
@@ -158,6 +152,20 @@ final class ErrorHandler
     {
         $handler = self::getRegisteredHandler();
         $handler->exceptionListeners[] = $listener;
+    }
+
+    /**
+     * Fills a static property with a string to reserve some memory to be used while handling fatal errors.
+     * 
+     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length 
+     */
+    private static function setReservedMemory(int $reservedMemorySize): void
+    {
+        if ($reservedMemorySize <= 0) {
+            throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
+        }
+
+        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
     }
 
     /**
