@@ -20,6 +20,7 @@ final class ErrorListenerIntegration implements IntegrationInterface, ErrorListe
 
     /**
      * ErrorListenerIntegration constructor.
+     *
      * @param Options $options
      */
     public function __construct(Options $options)
