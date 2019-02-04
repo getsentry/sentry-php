@@ -7,8 +7,8 @@ php:
     - nightly
 
 env:
-    - dependencies=lowest
     - dependencies=highest
+    - dependencies=lowest
 
 matrix:
     fast_finish: true
@@ -28,8 +28,10 @@ jobs:
     include:
         - stage: Code style & static analysis
           name: PHP CS Fixer
+          env: dependencies=highest
           script: composer phpcs
         - script: composer phpstan
+          env: dependencies=highest
           name: PHPStan
         - stage: Code coverage
           php: 7.3
