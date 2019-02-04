@@ -156,8 +156,8 @@ final class ErrorHandler
 
     /**
      * Fills a static property with a string to reserve some memory to be used while handling fatal errors.
-     * 
-     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length 
+     *
+     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length
      */
     private static function setReservedMemory(int $reservedMemorySize): void
     {

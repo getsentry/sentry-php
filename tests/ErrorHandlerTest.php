@@ -6,8 +6,8 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ErrorHandler;
-use Sentry\ErrorListenerInterface;
 use Sentry\ExceptionListenerInterface;
+use Sentry\Tests\Fixtures\classes\StubErrorListener;
 
 final class ErrorHandlerTest extends TestCase
 {
@@ -61,7 +61,7 @@ final class ErrorHandlerTest extends TestCase
             restore_exception_handler();
 
             $exception = $listener->getError();
-    
+
             $this->assertInstanceOf(\ErrorException::class, $exception);
             $this->assertEquals(__FILE__, $exception->getFile());
             $this->assertEquals($errorLine, $exception->getLine());
@@ -106,7 +106,7 @@ final class ErrorHandlerTest extends TestCase
             restore_exception_handler();
 
             $exception = $listener->getError();
-            
+
             $this->assertInstanceOf(\ErrorException::class, $exception);
             $this->assertEquals(__FILE__, $exception->getFile());
             $this->assertEquals(123, $exception->getLine());
@@ -184,7 +184,7 @@ final class ErrorHandlerTest extends TestCase
         } finally {
             restore_error_handler();
             restore_exception_handler();
-            
+
             $this->assertNull($listener->getError());
         }
     }
@@ -286,21 +286,5 @@ final class ErrorHandlerTest extends TestCase
             restore_error_handler();
             restore_exception_handler();
         }
-    }
-}
-
-final class StubErrorListener implements ErrorListenerInterface
-{
-    /** @var \ErrorException|null */
-    private $error;
-
-    public function __invoke(\ErrorException $error): void
-    {
-        $this->error = $error;
-    }
-
-    public function getError(): ?\ErrorException
-    {
-        return $this->error;
     }
 }
