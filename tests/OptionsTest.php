@@ -238,7 +238,7 @@ final class OptionsTest extends TestCase
         return [
             ['some/path', 'some/path'],
             ['some/specific/file.php', 'some/specific/file.php'],
-            [__DIR__, __DIR__ . '/'],
+            [__DIR__, __DIR__],
             [__FILE__, __FILE__],
         ];
     }

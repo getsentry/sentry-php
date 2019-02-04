@@ -182,7 +182,7 @@ class ClientTest extends TestCase
     {
         $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
 
-        $this->assertEquals('/foo/bar/', $client->getOptions()->getProjectRoot());
+        $this->assertEquals('/foo/bar', $client->getOptions()->getProjectRoot());
 
         $client->getOptions()->setProjectRoot('/foo/baz/');
 
