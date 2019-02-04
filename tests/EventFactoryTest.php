@@ -178,6 +178,9 @@ class EventFactoryTest extends TestCase
         /** @var Frame $lastFrame */
         $lastFrame = array_reverse($stacktrace->getFrames())[0];
 
-        $this->assertSame('src/EventFactory.php', $lastFrame->getFile());
+        $this->assertSame(
+            'src' . \DIRECTORY_SEPARATOR . 'EventFactory.php',
+            ltrim($lastFrame->getFile(), \DIRECTORY_SEPARATOR)
+        );
     }
 }

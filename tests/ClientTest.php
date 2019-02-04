@@ -175,6 +175,9 @@ class ClientTest extends TestCase
         $client->captureLastError();
     }
 
+    /**
+     * @requires OSFAMILY Linux
+     */
     public function testAppPathLinux(): void
     {
         $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
