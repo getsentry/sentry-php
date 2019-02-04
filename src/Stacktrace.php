@@ -301,7 +301,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getFrameArgumentsValues(array $frame): array
     {
-        if (!isset($frame['args']) || empty($frame['args'])) {
+        if (empty($frame['args'])) {
             return [];
         }
 
