@@ -309,7 +309,7 @@ final class StacktraceTest extends TestCase
             'function' => 'a_test',
         ];
 
-        $stacktrace = new Stacktrace(new Options(['max_value_length' => 5]), $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
         $result = $stacktrace->getFrameArguments($frame);
 
         $this->assertEquals('bar', $result['foo']);
