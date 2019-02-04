@@ -16,6 +16,7 @@ use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
@@ -189,12 +190,12 @@ final class ClientBuilderTest extends TestCase
             [
                 true,
                 [],
-                [RequestIntegration::class, ExceptionListenerIntegration::class],
+                [ErrorListenerIntegration::class, ExceptionListenerIntegration::class, RequestIntegration::class],
             ],
             [
                 true,
                 [new StubIntegration()],
-                [RequestIntegration::class, ExceptionListenerIntegration::class, StubIntegration::class],
+                [ErrorListenerIntegration::class, ExceptionListenerIntegration::class, RequestIntegration::class, StubIntegration::class],
             ],
         ];
     }
