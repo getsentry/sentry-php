@@ -128,9 +128,6 @@ final class ErrorHandler
      * Adds a listener to the current error handler to be called upon each invoked captured error;
      * if no handler is registered, this method will instantiate and register it.
      *
-     * If you want to use a naked callable and not an object as a listener,
-     * you can create one with \Closure::fromCallable.
-     *
      * @param ErrorListenerInterface $listener A type-safe callable that will act as a listener
      */
     public static function addErrorListener(ErrorListenerInterface $listener): void
@@ -142,9 +139,6 @@ final class ErrorHandler
     /**
      * Adds a listener to the current error handler to be called upon each invoked captured exception;
      * if no handler is registered, this method will instantiate and register it.
-     *
-     * If you want to use a naked callable and not an object as a listener,
-     * you can create one with \Closure::fromCallable.
      *
      * @param ExceptionListenerInterface $listener A type-safe callable that will act as a listener
      */

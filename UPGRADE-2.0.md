@@ -537,7 +537,7 @@
 
 - The method `Raven_Client::install` has been removed. The error handler is
   registered automatically when using the `ExceptionListenerIntegration` 
-  and `ErrorListenerIntegration` integrations (which is enabled by default).
+  and `ErrorListenerIntegration` integrations (which are enabled by default).
 
 ### Processors
 
