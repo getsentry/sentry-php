@@ -21,10 +21,6 @@ final class ExceptionListenerIntegration implements IntegrationInterface, Except
 
     public function __invoke(\Throwable $throwable): void
     {
-        $client = Hub::getCurrent()->getClient();
-
-        if ($client) {
-            $client->captureException($throwable);
-        }
+        Hub::getCurrent()->captureException($throwable);
     }
 }

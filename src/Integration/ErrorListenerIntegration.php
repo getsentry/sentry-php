@@ -36,11 +36,7 @@ final class ErrorListenerIntegration implements IntegrationInterface, ErrorListe
     public function __invoke(\ErrorException $error): void
     {
         if ($this->options->getErrorTypes() & $error->getSeverity()) {
-            $client = Hub::getCurrent()->getClient();
-
-            if ($client) {
-                $client->captureException($error);
-            }
+            Hub::getCurrent()->captureException($error);
         }
     }
 }
