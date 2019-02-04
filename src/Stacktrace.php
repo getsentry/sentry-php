@@ -307,14 +307,13 @@ class Stacktrace implements \JsonSerializable
 
         $result = [];
 
-        if (is_string(array_keys($frame['args'])[0])) {
+        if (\is_string(array_keys($frame['args'])[0])) {
             $result = array_map([$this, 'serializeArgument'], $frame['args']);
         } else {
             foreach (array_values($frame['args']) as $index => $argument) {
                 $result['param' . ($index + 1)] = $this->serializeArgument($argument);
             }
         }
-
 
         return $result;
     }

@@ -304,7 +304,7 @@ final class StacktraceTest extends TestCase
             'line' => 9,
             'args' => [
                 'foo' => 'bar',
-                'alice' => 'bob'
+                'alice' => 'bob',
             ],
             'function' => 'a_test',
         ];
