@@ -7,10 +7,9 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
 use Sentry\ClientBuilder;
-use function Sentry\init;
 use Sentry\State\Hub;
 use Sentry\Tests\Fixtures\classes\StubTransport;
-use Sentry\Transport\HttpTransport;
+use function Sentry\init;
 
 $vendor = __DIR__;
 
