@@ -262,18 +262,13 @@ final class ErrorHandlerTest extends TestCase
         $listenerCalled = 0;
         $exception1 = new \Exception('foo bar');
         $exception2 = new \Exception('bar foo');
+        $captured1 = $captured2 = null;
 
-        $listener = function (\Throwable $throwable) use ($exception1, $exception2, &$listenerCalled): void {
-            $this->assertIsInt($listenerCalled);
-            switch ($listenerCalled) {
-                case 0:
-                    $this->assertSame($exception1, $throwable);
-                    break;
-                case 1:
-                    $this->assertSame($exception2, $throwable);
-                    break;
-                default:
-                    $this->fail('Listener called more than two times!');
+        $listener = function (\Throwable $throwable) use (&$captured1, &$captured2, &$listenerCalled): void {
+            if (0 === $listenerCalled) {
+                $captured1 = $throwable;
+            } elseif (1 === $listenerCalled) {
+                $captured2 = $throwable;
             }
 
             ++$listenerCalled;
@@ -307,6 +302,8 @@ final class ErrorHandlerTest extends TestCase
             restore_exception_handler();
 
             $this->assertSame(2, $listenerCalled);
+            $this->assertSame($exception1, $captured1);
+            $this->assertSame($exception2, $captured2);
         }
     }
 }
