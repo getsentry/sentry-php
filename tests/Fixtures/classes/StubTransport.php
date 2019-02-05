@@ -7,10 +7,14 @@ use Sentry\Transport\TransportInterface;
 
 class StubTransport implements TransportInterface
 {
-    /** @var Event[] */
+    /** 
+     * @var Event[] 
+     */
     private $events = [];
     
-    /** @var Event|null */
+    /** 
+     * @var Event|null 
+     */
     private $lastSent;
 
     public function send(Event $event): ?string

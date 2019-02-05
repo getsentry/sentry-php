@@ -190,12 +190,21 @@ final class ClientBuilderTest extends TestCase
             [
                 true,
                 [],
-                [ErrorListenerIntegration::class, ExceptionListenerIntegration::class, RequestIntegration::class],
+                [
+                    ErrorListenerIntegration::class,
+                    ExceptionListenerIntegration::class,
+                    RequestIntegration::class,
+                ],
             ],
             [
                 true,
                 [new StubIntegration()],
-                [ErrorListenerIntegration::class, ExceptionListenerIntegration::class, RequestIntegration::class, StubIntegration::class],
+                [
+                    ErrorListenerIntegration::class,
+                    ExceptionListenerIntegration::class,
+                    RequestIntegration::class,
+                    StubIntegration::class,
+                ],
             ],
         ];
     }

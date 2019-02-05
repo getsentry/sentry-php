@@ -21,10 +21,9 @@ while (!file_exists($vendor . '/vendor')) {
 require $vendor . '/vendor/autoload.php';
 
 $options = [
-    'dsn' => 'http://public:secret@local.host/1',
-    'send_attempts' => 1,
     'error_types' => E_ALL & ~E_USER_NOTICE
 ];
+
 init($options);
 
 error_reporting(E_ALL);
@@ -44,7 +43,9 @@ Assert::assertEmpty($stubTransport->getEvents());
 trigger_error('Cannot divide by zero', E_USER_WARNING);
 
 Assert::assertCount(1, $stubTransport->getEvents());
+
 $event = $stubTransport->getLastSent();
+
 Assert::assertSame($event->getId(), $hub->getLastEventId());
 
 echo 'All assertions executed';

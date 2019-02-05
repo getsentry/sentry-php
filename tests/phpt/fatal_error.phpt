@@ -5,10 +5,9 @@ Test catching fatal errors
 
 namespace Sentry\Tests;
 
-use PHPUnit\Framework\Assert;
 use Sentry\ErrorHandler;
+use Sentry\Tests\Fixtures\classes\StubErrorListener;
 use function Sentry\init;
-use Sentry\State\Hub;use Sentry\Tests\Fixtures\classes\StubErrorListener;
 
 $vendor = __DIR__;
 

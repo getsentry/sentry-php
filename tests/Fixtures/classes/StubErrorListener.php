@@ -6,10 +6,14 @@ use Sentry\ErrorListenerInterface;
 
 final class StubErrorListener implements ErrorListenerInterface
 {
-    /** @var \ErrorException|null */
+    /** 
+     * @var \ErrorException|null 
+     */
     private $error;
     
-    /** @var callable|null */
+    /** 
+     * @var callable|null 
+     */
     private $callable;
 
     public function __construct(callable $callable = null)

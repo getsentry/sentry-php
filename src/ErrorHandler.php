@@ -22,17 +22,17 @@ final class ErrorHandler
     /**
      * @var self The current registered handler (this class is a singleton)
      */
-    private static $registeredHandler;
+    private static $handlerInstance;
 
     /**
      * @var ErrorListenerInterface[] List of listeners that will act on each captured error
      */
-    private $errorListeners;
+    private $errorListeners = [];
 
     /**
      * @var ExceptionListenerInterface[] List of listeners that will act on each captured exception
      */
-    private $exceptionListeners;
+    private $exceptionListeners = [];
 
     /**
      * @var \ReflectionProperty A reflection cached instance that points to the
@@ -111,17 +111,17 @@ final class ErrorHandler
      *
      * @param int|null $reservedMemorySize The requested amount of memory to reserve
      *
-     * @return ErrorHandler The ErrorHandler singleton
+     * @return self The ErrorHandler singleton
      */
-    public static function getRegisteredHandler(int $reservedMemorySize = null): self
+    public static function getInstance(int $reservedMemorySize = null): self
     {
-        if (null === self::$registeredHandler) {
-            self::$registeredHandler = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
+        if (null === self::$handlerInstance) {
+            self::$handlerInstance = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
         } elseif (null !== $reservedMemorySize) {
             self::setReservedMemory($reservedMemorySize);
         }
 
-        return self::$registeredHandler;
+        return self::$handlerInstance;
     }
 
     /**
@@ -132,7 +132,7 @@ final class ErrorHandler
      */
     public static function addErrorListener(ErrorListenerInterface $listener): void
     {
-        $handler = self::getRegisteredHandler();
+        $handler = self::getInstance();
         $handler->errorListeners[] = $listener;
     }
 
@@ -144,22 +144,8 @@ final class ErrorHandler
      */
     public static function addExceptionListener(ExceptionListenerInterface $listener): void
     {
-        $handler = self::getRegisteredHandler();
+        $handler = self::getInstance();
         $handler->exceptionListeners[] = $listener;
-    }
-
-    /**
-     * Fills a static property with a string to reserve some memory to be used while handling fatal errors.
-     *
-     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length
-     */
-    private static function setReservedMemory(int $reservedMemorySize): void
-    {
-        if ($reservedMemorySize <= 0) {
-            throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
-        }
-
-        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
     }
 
     /**
@@ -266,6 +252,20 @@ final class ErrorHandler
         }
 
         $this->handleException($previousExceptionHandlerException);
+    }
+
+    /**
+     * Fills a static property with a string to reserve some memory to be used while handling fatal errors.
+     *
+     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length
+     */
+    private static function setReservedMemory(int $reservedMemorySize): void
+    {
+        if ($reservedMemorySize <= 0) {
+            throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
+        }
+
+        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
     }
 
     /**

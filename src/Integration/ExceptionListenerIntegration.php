@@ -14,11 +14,17 @@ use Sentry\State\Hub;
  */
 final class ExceptionListenerIntegration implements IntegrationInterface, ExceptionListenerInterface
 {
+    /**
+     * {@inheritdoc}
+     */
     public function setupOnce(): void
     {
         ErrorHandler::addExceptionListener($this);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function __invoke(\Throwable $throwable): void
     {
         Hub::getCurrent()->captureException($throwable);

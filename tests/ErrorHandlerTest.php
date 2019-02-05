@@ -13,9 +13,9 @@ final class ErrorHandlerTest extends TestCase
 {
     public function testGetCurrent(): void
     {
-        $errorHandler = ErrorHandler::getRegisteredHandler();
+        $errorHandler = ErrorHandler::getInstance();
 
-        $this->assertSame($errorHandler, ErrorHandler::getRegisteredHandler());
+        $this->assertSame($errorHandler, ErrorHandler::getInstance());
     }
 
     /**
@@ -29,7 +29,7 @@ final class ErrorHandlerTest extends TestCase
         $this->expectException(\UnexpectedValueException::class);
         $this->expectExceptionMessage('The $reservedMemorySize argument must be greater than 0.');
 
-        ErrorHandler::getRegisteredHandler($reservedMemorySize);
+        ErrorHandler::getInstance($reservedMemorySize);
     }
 
     public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider(): array
@@ -47,7 +47,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+            $errorHandler = ErrorHandler::getInstance();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -73,7 +73,7 @@ final class ErrorHandlerTest extends TestCase
             $this->assertGreaterThanOrEqual(2, $backtrace);
 
             $this->assertEquals('testHandleError', $backtrace[0]['function']);
-            $this->assertEquals(__CLASS__, $backtrace[0]['class']);
+            $this->assertEquals(self::class, $backtrace[0]['class']);
             $this->assertEquals('->', $backtrace[0]['type']);
         }
     }
@@ -93,7 +93,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+            $errorHandler = ErrorHandler::getInstance();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -122,7 +122,7 @@ final class ErrorHandlerTest extends TestCase
             $this->assertEquals('->', $backtrace[0]['type']);
 
             $this->assertEquals('testHandleErrorWithPreviousErrorHandler', $backtrace[1]['function']);
-            $this->assertEquals(__CLASS__, $backtrace[1]['class']);
+            $this->assertEquals(self::class, $backtrace[1]['class']);
             $this->assertEquals('->', $backtrace[1]['type']);
         }
     }
@@ -145,7 +145,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+            $errorHandler = ErrorHandler::getInstance();
 
             $errorHandler->handleFatalError([
                 'type' => E_PARSE,
@@ -173,7 +173,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+            $errorHandler = ErrorHandler::getInstance();
 
             $errorHandler->handleFatalError([
                 'type' => E_USER_NOTICE,
@@ -199,7 +199,8 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addExceptionListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+
+            $errorHandler = ErrorHandler::getInstance();
 
             try {
                 $errorHandler->handleException($exception);
@@ -230,7 +231,8 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addExceptionListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+
+            $errorHandler = ErrorHandler::getInstance();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
@@ -268,7 +270,8 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addExceptionListener($listener);
-            $errorHandler = ErrorHandler::getRegisteredHandler();
+
+            $errorHandler = ErrorHandler::getInstance();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
