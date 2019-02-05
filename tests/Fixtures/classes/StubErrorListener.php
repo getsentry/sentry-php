@@ -2,9 +2,7 @@
 
 namespace Sentry\Tests\Fixtures\classes;
 
-use Sentry\ErrorListenerInterface;
-
-final class StubErrorListener implements ErrorListenerInterface
+final class StubErrorListener
 {
     /** 
      * @var \ErrorException|null 

@@ -25,12 +25,12 @@ final class ErrorHandler
     private static $handlerInstance;
 
     /**
-     * @var ErrorListenerInterface[] List of listeners that will act on each captured error
+     * @var callable[] List of listeners that will act on each captured error
      */
     private $errorListeners = [];
 
     /**
-     * @var ExceptionListenerInterface[] List of listeners that will act on each captured exception
+     * @var callable[] List of listeners that will act on each captured exception
      */
     private $exceptionListeners = [];
 
@@ -128,9 +128,10 @@ final class ErrorHandler
      * Adds a listener to the current error handler to be called upon each invoked captured error;
      * if no handler is registered, this method will instantiate and register it.
      *
-     * @param ErrorListenerInterface $listener A type-safe callable that will act as a listener
+     * @param callable $listener A callable that will act as a listener; this callable will receive
+     *                           a single \ErrorException argument
      */
-    public static function addErrorListener(ErrorListenerInterface $listener): void
+    public static function addErrorListener(callable $listener): void
     {
         $handler = self::getInstance();
         $handler->errorListeners[] = $listener;
@@ -140,9 +141,10 @@ final class ErrorHandler
      * Adds a listener to the current error handler to be called upon each invoked captured exception;
      * if no handler is registered, this method will instantiate and register it.
      *
-     * @param ExceptionListenerInterface $listener A type-safe callable that will act as a listener
+     * @param callable $listener A callable that will act as a listener; this callable will receive
+     *                           a single \Throwable argument
      */
-    public static function addExceptionListener(ExceptionListenerInterface $listener): void
+    public static function addExceptionListener(callable $listener): void
     {
         $handler = self::getInstance();
         $handler->exceptionListeners[] = $listener;

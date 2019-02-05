@@ -6,7 +6,6 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ErrorHandler;
-use Sentry\ExceptionListenerInterface;
 use Sentry\Tests\Fixtures\classes\StubErrorListener;
 
 final class ErrorHandlerTest extends TestCase
@@ -191,11 +190,12 @@ final class ErrorHandlerTest extends TestCase
 
     public function testHandleException(): void
     {
+        $listenerCalled = false;
         $exception = new \Exception('foo bar');
-        $listener = $this->createMock(ExceptionListenerInterface::class);
-        $listener->expects($this->once())
-            ->method('__invoke')
-            ->with($this->identicalTo($exception));
+        $listener = function (\Throwable $throwable) use ($exception, &$listenerCalled): void {
+            $listenerCalled = true;
+            $this->assertSame($exception, $throwable);
+        };
 
         try {
             ErrorHandler::addExceptionListener($listener);
@@ -212,17 +212,20 @@ final class ErrorHandlerTest extends TestCase
         } finally {
             restore_error_handler();
             restore_exception_handler();
+
+            $this->assertTrue($listenerCalled, 'Listener was not called');
         }
     }
 
     public function testHandleExceptionWithPreviousExceptionHandler(): void
     {
+        $listenerCalled = false;
         $exception = new \Exception('foo bar');
 
-        $listener = $this->createMock(ExceptionListenerInterface::class);
-        $listener->expects($this->once())
-            ->method('__invoke')
-            ->with($this->identicalTo($exception));
+        $listener = function (\Throwable $throwable) use ($exception, &$listenerCalled): void {
+            $listenerCalled = true;
+            $this->assertSame($exception, $throwable);
+        };
 
         $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
         $previousExceptionHandler->expects($this->once())
@@ -249,18 +252,32 @@ final class ErrorHandlerTest extends TestCase
         } finally {
             restore_error_handler();
             restore_exception_handler();
+
+            $this->assertTrue($listenerCalled, 'Listener was not called');
         }
     }
 
     public function testHandleExceptionWithThrowingPreviousExceptionHandler(): void
     {
+        $listenerCalled = 0;
         $exception1 = new \Exception('foo bar');
         $exception2 = new \Exception('bar foo');
-        $listener = $this->createMock(ExceptionListenerInterface::class);
 
-        $listener->expects($this->exactly(2))
-            ->method('__invoke')
-            ->withConsecutive($this->identicalTo($exception1), $this->identicalTo($exception2));
+        $listener = function (\Throwable $throwable) use ($exception1, $exception2, &$listenerCalled): void {
+            $this->assertIsInt($listenerCalled);
+            switch ($listenerCalled) {
+                case 0:
+                    $this->assertSame($exception1, $throwable);
+                    break;
+                case 1:
+                    $this->assertSame($exception2, $throwable);
+                    break;
+                default:
+                    $this->fail('Listener called more than two times!');
+            }
+
+            ++$listenerCalled;
+        };
 
         $previousExceptionHandler = $this->createPartialMock(\stdClass::class, ['__invoke']);
         $previousExceptionHandler->expects($this->once())
@@ -288,6 +305,8 @@ final class ErrorHandlerTest extends TestCase
         } finally {
             restore_error_handler();
             restore_exception_handler();
+
+            $this->assertSame(2, $listenerCalled);
         }
     }
 }
