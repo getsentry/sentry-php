@@ -18,14 +18,8 @@ final class ExceptionListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        ErrorHandler::addExceptionListener($this);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __invoke(\Throwable $throwable): void
-    {
-        Hub::getCurrent()->captureException($throwable);
+        ErrorHandler::addExceptionListener(function (\Throwable $throwable): void {
+            Hub::getCurrent()->captureException($throwable);
+        });
     }
 }

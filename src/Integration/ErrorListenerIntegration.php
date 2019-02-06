@@ -22,7 +22,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
     /**
      * ErrorListenerIntegration constructor.
      *
-     * @param Options $options
+     * @param Options $options The options to be used with this integration
      */
     public function __construct(Options $options)
     {
@@ -34,16 +34,10 @@ final class ErrorListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        ErrorHandler::addErrorListener($this);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __invoke(\ErrorException $error): void
-    {
-        if ($this->options->getErrorTypes() & $error->getSeverity()) {
-            Hub::getCurrent()->captureException($error);
-        }
+        ErrorHandler::addErrorListener(function (\ErrorException $error): void {
+            if ($this->options->getErrorTypes() & $error->getSeverity()) {
+                Hub::getCurrent()->captureException($error);
+            }
+        });
     }
 }

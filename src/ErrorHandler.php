@@ -174,7 +174,7 @@ final class ErrorHandler
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
-        $this->invokeErrorListeners($errorAsException);
+        $this->invokeListeners($this->errorListeners, $errorAsException);
 
         if (null !== $this->previousErrorHandler) {
             return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
@@ -208,7 +208,8 @@ final class ErrorHandler
 
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
-            $this->invokeErrorListeners($errorAsException);
+
+            $this->invokeListeners($this->errorListeners, $errorAsException);
         }
     }
 
@@ -224,7 +225,7 @@ final class ErrorHandler
      */
     public function handleException(\Throwable $exception): void
     {
-        $this->invokeExceptionListeners($exception);
+        $this->invokeListeners($this->exceptionListeners, $exception);
 
         $previousExceptionHandlerException = $exception;
 
@@ -257,14 +258,18 @@ final class ErrorHandler
     }
 
     /**
-     * Fills a static property with a string to reserve some memory to be used while handling fatal errors.
+     * Fills a static property with a string to reserve some memory to be used
+     * while handling fatal errors.
      *
-     * @param int $reservedMemorySize The amount of memory to be reserved, is in char string length
+     * @param int $reservedMemorySize The amount of memory to be reserved, is
+     *                                in char string length
+     *
+     * @throws \InvalidArgumentException If $reservedMemorySize is negative
      */
     private static function setReservedMemory(int $reservedMemorySize): void
     {
         if ($reservedMemorySize <= 0) {
-            throw new \UnexpectedValueException('The $reservedMemorySize argument must be greater than 0.');
+            throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
         }
 
         self::$reservedMemory = str_repeat('x', $reservedMemorySize);
@@ -299,25 +304,14 @@ final class ErrorHandler
     }
 
     /**
-     * @param \ErrorException $errorAsException The error to be passed onto listeners
-     */
-    private function invokeErrorListeners(\ErrorException $errorAsException): void
-    {
-        foreach ($this->errorListeners as $listener) {
-            try {
-                $listener($errorAsException);
-            } catch (\Throwable $exception) {
-                // Do nothing as this should be as transparent as possible
-            }
-        }
-    }
-
-    /**
+     * Invokes all the listeners and pass the exception to all of them.
+     *
+     * @param callable[] $listeners
      * @param \Throwable $throwable The exception to be passed onto listeners
      */
-    private function invokeExceptionListeners(\Throwable $throwable): void
+    private function invokeListeners(array $listeners, \Throwable $throwable): void
     {
-        foreach ($this->exceptionListeners as $listener) {
+        foreach ($listeners as $listener) {
             try {
                 $listener($throwable);
             } catch (\Throwable $exception) {

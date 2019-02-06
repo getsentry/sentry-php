@@ -19,13 +19,10 @@ final class ErrorHandlerTest extends TestCase
 
     /**
      * @dataProvider constructorThrowsWhenReservedMemorySizeIsWrongDataProvider
-     *
-     * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage The $reservedMemorySize argument must be greater than 0.
      */
     public function testConstructorThrowsWhenReservedMemorySizeIsWrong(int $reservedMemorySize): void
     {
-        $this->expectException(\UnexpectedValueException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The $reservedMemorySize argument must be greater than 0.');
 
         ErrorHandler::getInstance($reservedMemorySize);
@@ -305,5 +302,35 @@ final class ErrorHandlerTest extends TestCase
             $this->assertSame($exception1, $captured1);
             $this->assertSame($exception2, $captured2);
         }
+    }
+
+    /**
+     * @dataProvider callableProvider
+     */
+    public function testAddListener(callable $listener): void 
+    {
+        try {
+            ErrorHandler::addExceptionListener($listener);
+
+            $exception = new \Exception();
+            ErrorHandler::getInstance()->handleException($exception);
+        } catch (\Throwable $rethrownException) {
+            $this->assertSame($exception, $rethrownException);
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
+        }
+    }
+
+    public function callableProvider(): array
+    {
+        $stubErrorListener = new StubErrorListener();
+
+        return [
+            [[$stubErrorListener, '__invoke']],
+            [\Closure::fromCallable([$stubErrorListener, '__invoke'])],
+            [$stubErrorListener],
+            [function (\Throwable $throwable): void {}],
+        ];
     }
 }
