@@ -4,6 +4,16 @@
 
 - ...
 
+## 2.0.0-beta-2 (unreleased)
+- Rename `SentryAuth` class to `SentryAuthentication` (#742)
+- `Client` class is now final
+- Fix issue with `ClientBuilder`: factories are not instantiated if transport is set manually (#747)
+- Rename `excluded_paths` to `in_app_exclude` option to follow Unified API spec (#755)
+- Add `max_value_length` option to trim long values during serialization (#754)
+- Lower the default `send_attempts` to 3 (#760)
+- Fox method argument name handling when xDebug is enabled (#763)
+- Add CI build under Windows with AppVeyor (#758) and fix some bugs
+
 ## 2.0.0-beta-1 (2018-12-19)
 
 - Require PHP >= 7.1
