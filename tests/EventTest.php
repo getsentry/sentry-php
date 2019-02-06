@@ -119,32 +119,27 @@ final class EventTest extends TestCase
         $this->assertEquals($expected, $event->toArray());
     }
 
-    public function testToArrayWithMessage(): void
+    /**
+     * @dataProvider toArrayWithMessageDataProvider
+     */
+    public function testToArrayWithMessage(array $message, $expectedValue): void
     {
         $event = new Event();
-        $event->setMessage('foo bar');
+        \call_user_func_array([$event, 'setMessage'], $message);
 
         $data = $event->toArray();
 
         $this->assertArrayHasKey('message', $data);
-        $this->assertEquals('foo bar', $data['message']);
+        $this->assertSame($expectedValue, $data['message']);
     }
 
-    public function testToArrayWithMessageWithParams(): void
+    public function toArrayWithMessageDataProvider(): array
     {
-        $expected = [
-            'message' => 'foo %s',
-            'params' => ['bar'],
-            'formatted' => 'foo bar',
+        return [
+            [['foo bar'], 'foo bar'],
+            [['foo %s', ['bar']], ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => 'foo bar']],
+            [['foo @bar', ['@bar' => 'bar'], 'foo bar'], ['message' => 'foo @bar', 'params' => ['@bar' => 'bar'], 'formatted' => 'foo bar']],
         ];
-
-        $event = new Event();
-        $event->setMessage('foo %s', ['bar']);
-
-        $data = $event->toArray();
-
-        $this->assertArrayHasKey('message', $data);
-        $this->assertEquals($expected, $data['message']);
     }
 
     public function testToArrayWithBreadcrumbs(): void
@@ -165,36 +160,25 @@ final class EventTest extends TestCase
         $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
-    public function testToArrayWithMessageWithFormatted(): void
+    /**
+     * @dataProvider getMessageDataProvider
+     */
+    public function testGetMessage(array $message, array $expectedValue): void
     {
-        $expected = [
-            'message' => 'foo @bar',
-            'params' => ['@bar' => 'bar'],
-            'formatted' => 'foo bar',
-        ];
-
         $event = new Event();
-        $event->setMessage('foo @bar', ['@bar' => 'bar'], 'foo bar');
+        \call_user_func_array([$event, 'setMessage'], $message);
 
-        $data = $event->toArray();
-
-        $this->assertArrayHasKey('message', $data);
-        $this->assertSame($expected, $data['message']);
+        $this->assertSame($expectedValue['message'], $event->getMessage());
+        $this->assertSame($expectedValue['params'], $event->getMessageParams());
+        $this->assertSame($expectedValue['formatted'], $event->getMessageFormatted());
     }
 
-    public function testGetMessage(): void
+    public function getMessageDataProvider(): array
     {
-        $event = new Event();
-        $event->setMessage('foo @bar', ['@bar' => 'bar'], 'foo bar');
-        $this->assertSame('foo @bar', $event->getMessage());
-        $this->assertSame(['@bar' => 'bar'], $event->getMessageParams());
-        $this->assertSame('foo bar', $event->getMessageFormatted());
-
-        $event = new Event();
-        $event->setMessage('foo %s', ['bar']);
-        $this->assertSame('foo %s', $event->getMessage());
-        $this->assertSame(['bar'], $event->getMessageParams());
-        $this->assertNull($event->getMessageFormatted());
+        return [
+            [['foo %s', ['bar']], ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => null]],
+            [['foo @bar', ['@bar' => 'bar'], 'foo bar'], ['message' => 'foo @bar', 'params' => ['@bar' => 'bar'], 'formatted' => 'foo bar']],
+        ];
     }
 
     public function testGetServerOsContext(): void
