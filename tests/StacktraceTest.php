@@ -138,82 +138,47 @@ final class StacktraceTest extends TestCase
         $this->assertTrue($frames[1]->isInApp());
     }
 
-    public function testAddFrameReadsCodeFromShortFile(): void
+    /**
+     * @dataProvider contextDataProvider
+     */
+    public function testAddFrameWithDifferentContexts($fixture, $lineNumber, $contextLines, $preContextCount, $postContextCount)
     {
-        $fileContent = explode("\n", $this->getFixture('code/ShortFile.php'));
+        if (isset($contextLines)) {
+            $this->options->setContextLines($contextLines);
+        }
+
+        $fileContent = explode("\n", $this->getFixture($fixture));
         $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
-        $stacktrace->addFrame($this->getFixturePath('code/ShortFile.php'), 3, ['function' => '[unknown]']);
+        $stacktrace->addFrame($this->getFixturePath($fixture), $lineNumber, ['function' => '[unknown]']);
 
         $frames = $stacktrace->getFrames();
 
         $this->assertCount(1, $frames);
-        $this->assertCount(2, $frames[0]->getPreContext());
-        $this->assertCount(2, $frames[0]->getPostContext());
+        $this->assertCount($preContextCount, $frames[0]->getPreContext());
+        $this->assertCount($postContextCount, $frames[0]->getPostContext());
 
-        for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i]), $frames[0]->getPreContext()[$i]);
+        for ($i = 0; $i < $preContextCount; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + ($lineNumber - $preContextCount - 1)]), $frames[0]->getPreContext()[$i]);
         }
 
-        $this->assertEquals(rtrim($fileContent[2]), $frames[0]->getContextLine());
+        $this->assertEquals(rtrim($fileContent[$lineNumber - 1]), $frames[0]->getContextLine());
 
-        for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 3]), $frames[0]->getPostContext()[$i]);
+        for ($i = 0; $i < $postContextCount; ++$i) {
+            $this->assertEquals(rtrim($fileContent[$i + $lineNumber]), $frames[0]->getPostContext()[$i]);
         }
     }
 
-    public function testAddFrameReadsCodeFromLongFile(): void
+    public function contextDataProvider()
     {
-        $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
-
-        $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
-            'function' => '[unknown]',
-        ]);
-
-        $frames = $stacktrace->getFrames();
-
-        $this->assertCount(1, $frames);
-        $this->assertCount(5, $frames[0]->getPreContext());
-        $this->assertCount(5, $frames[0]->getPostContext());
-
-        for ($i = 0; $i < 5; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 2]), $frames[0]->getPreContext()[$i]);
-        }
-
-        $this->assertEquals(rtrim($fileContent[7]), $frames[0]->getContextLine());
-
-        for ($i = 0; $i < 5; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]->getPostContext()[$i]);
-        }
-    }
-
-    public function testAddFrameUsesOptionsContext(): void
-    {
-        $this->options->setContextLines(2);
-
-        $fileContent = explode("\n", $this->getFixture('code/LongFile.php'));
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
-
-        $stacktrace->addFrame($this->getFixturePath('code/LongFile.php'), 8, [
-            'function' => '[unknown]',
-        ]);
-
-        $frames = $stacktrace->getFrames();
-
-        $this->assertCount(1, $frames);
-        $this->assertCount(2, $frames[0]->getPreContext());
-        $this->assertCount(2, $frames[0]->getPostContext());
-
-        for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 5]), $frames[0]->getPreContext()[$i]);
-        }
-
-        $this->assertEquals(rtrim($fileContent[7]), $frames[0]->getContextLine());
-
-        for ($i = 0; $i < 2; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + 8]), $frames[0]->getPostContext()[$i]);
-        }
+        return [
+            'read code from short file' => ['code/ShortFile.php', 3, 2, 2, 2],
+            'read code from long file with default context' => ['code/LongFile.php', 8, null, 5, 5],
+            'read code from long file with specified context' => ['code/LongFile.php', 8, 2, 2, 2],
+            'read code from short file with no context' => ['code/ShortFile.php', 3, 0, 0, 0],
+            'read code from long file near end of file' => ['code/LongFile.php', 11, 5, 5, 2],
+            'read code from long file near beginning of file' => ['code/LongFile.php', 3, 5, 2, 5],
+        ];
     }
 
     /**
