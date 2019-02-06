@@ -12,28 +12,9 @@ final class ErrorHandlerTest extends TestCase
 {
     public function testGetCurrent(): void
     {
-        $errorHandler = ErrorHandler::getInstance();
+        $errorHandler = ErrorHandler::registerOnce();
 
-        $this->assertSame($errorHandler, ErrorHandler::getInstance());
-    }
-
-    /**
-     * @dataProvider constructorThrowsWhenReservedMemorySizeIsWrongDataProvider
-     */
-    public function testConstructorThrowsWhenReservedMemorySizeIsWrong(int $reservedMemorySize): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The $reservedMemorySize argument must be greater than 0.');
-
-        ErrorHandler::getInstance($reservedMemorySize);
-    }
-
-    public function constructorThrowsWhenReservedMemorySizeIsWrongDataProvider(): array
-    {
-        return [
-            [-1],
-            [0],
-        ];
+        $this->assertSame($errorHandler, ErrorHandler::registerOnce());
     }
 
     public function testHandleError(): void
@@ -43,7 +24,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -89,7 +70,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
             $reflectionProperty->setAccessible(true);
@@ -141,7 +122,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $errorHandler->handleFatalError([
                 'type' => E_PARSE,
@@ -169,7 +150,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $errorHandler->handleFatalError([
                 'type' => E_USER_NOTICE,
@@ -197,7 +178,7 @@ final class ErrorHandlerTest extends TestCase
         try {
             ErrorHandler::addExceptionListener($listener);
 
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             try {
                 $errorHandler->handleException($exception);
@@ -232,7 +213,7 @@ final class ErrorHandlerTest extends TestCase
         try {
             ErrorHandler::addExceptionListener($listener);
 
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
@@ -280,7 +261,7 @@ final class ErrorHandlerTest extends TestCase
         try {
             ErrorHandler::addExceptionListener($listener);
 
-            $errorHandler = ErrorHandler::getInstance();
+            $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousExceptionHandler');
             $reflectionProperty->setAccessible(true);
@@ -314,7 +295,7 @@ final class ErrorHandlerTest extends TestCase
         try {
             ErrorHandler::addExceptionListener($listener);
 
-            ErrorHandler::getInstance()->handleException($exception);
+            ErrorHandler::registerOnce()->handleException($exception);
         } catch (\Throwable $rethrownException) {
             $this->assertSame($exception, $rethrownException);
         } finally {

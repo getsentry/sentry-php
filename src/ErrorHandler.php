@@ -108,17 +108,16 @@ final class ErrorHandler
 
     /**
      * Gets the current registered error handler; if none is present, it will register it.
+     * Subsequent calls will not change the reserved memory size.
      *
      * @param int|null $reservedMemorySize The requested amount of memory to reserve
      *
      * @return self The ErrorHandler singleton
      */
-    public static function getInstance(int $reservedMemorySize = null): self
+    public static function registerOnce(int $reservedMemorySize = null): self
     {
         if (null === self::$handlerInstance) {
             self::$handlerInstance = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
-        } elseif (null !== $reservedMemorySize) {
-            self::setReservedMemory($reservedMemorySize);
         }
 
         return self::$handlerInstance;
@@ -133,7 +132,7 @@ final class ErrorHandler
      */
     public static function addErrorListener(callable $listener): void
     {
-        $handler = self::getInstance();
+        $handler = self::registerOnce();
         $handler->errorListeners[] = $listener;
     }
 
@@ -146,7 +145,7 @@ final class ErrorHandler
      */
     public static function addExceptionListener(callable $listener): void
     {
-        $handler = self::getInstance();
+        $handler = self::registerOnce();
         $handler->exceptionListeners[] = $listener;
     }
 
