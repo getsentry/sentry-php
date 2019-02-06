@@ -307,12 +307,13 @@ final class ErrorHandlerTest extends TestCase
     /**
      * @dataProvider callableProvider
      */
-    public function testAddListener(callable $listener): void 
+    public function testAddListener(callable $listener): void
     {
+        $exception = new \Exception();
+
         try {
             ErrorHandler::addExceptionListener($listener);
 
-            $exception = new \Exception();
             ErrorHandler::getInstance()->handleException($exception);
         } catch (\Throwable $rethrownException) {
             $this->assertSame($exception, $rethrownException);
@@ -328,9 +329,18 @@ final class ErrorHandlerTest extends TestCase
 
         return [
             [[$stubErrorListener, '__invoke']],
+            [[new ExtendedStubListener(), 'parent::someCallable']],
             [\Closure::fromCallable([$stubErrorListener, '__invoke'])],
             [$stubErrorListener],
             [function (\Throwable $throwable): void {}],
         ];
+    }
+}
+
+final class ExtendedStubListener extends StubErrorListener
+{
+    public function someCallable(\ErrorException $error): void
+    {
+        trigger_error('Stop everything!');
     }
 }

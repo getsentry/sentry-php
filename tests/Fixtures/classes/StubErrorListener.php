@@ -2,7 +2,7 @@
 
 namespace Sentry\Tests\Fixtures\classes;
 
-final class StubErrorListener
+class StubErrorListener
 {
     /** 
      * @var \ErrorException|null 
@@ -26,6 +26,11 @@ final class StubErrorListener
         if ($this->callable) {
             call_user_func($this->callable, $error);
         }
+    }
+
+    public function someCallable(\ErrorException $error): void
+    {
+        $this->__invoke($error);
     }
 
     public function getError(): ?\ErrorException
