@@ -7,7 +7,7 @@
 ## 2.0.0-beta-1 (2018-12-19)
 
 - Require PHP >= 7.1
-- Refactorize the whole codebase to support the Unified API SDK specs
+- Refactor the whole codebase to support the Unified API SDK specs
 - See the UPGRADE.md document for more information.
 
 ## 1.10.0 (2018-11-09)
@@ -20,7 +20,7 @@
 
 - Remove secret_key from required keys for CLI test command. (#645)
 - Proper case in Raven_Util class name usage. (#642)
-- Support longer creditcard numbers. (#635)
+- Support longer credit card numbers. (#635)
 - Use configured message limit when creating serializers. (#634)
 - Do not truncate strings if message limit is set to zero. (#630)
 - Add option to ignore SERVER_PORT getting added to url. (#629)
