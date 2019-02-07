@@ -7,6 +7,7 @@
 # Sentry for PHP
 
 [![Build Status](https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master)](http://travis-ci.org/getsentry/sentry-php)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/getsentry/sentry-php?branch=master&svg=true)](https://ci.appveyor.com/project/sentry/sentry-php)
 [![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
 [![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
