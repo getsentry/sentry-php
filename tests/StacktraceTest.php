@@ -143,7 +143,7 @@ final class StacktraceTest extends TestCase
      */
     public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
     {
-        if ($contextLines !== null) {
+        if (null !== $contextLines) {
             $this->options->setContextLines($contextLines);
         }
 
