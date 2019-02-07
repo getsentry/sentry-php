@@ -300,9 +300,11 @@ final class ErrorHandlerTest extends TestCase
             ErrorHandler::registerOnce()->handleException($exception);
         } catch (\Throwable $rethrownException) {
             $this->assertSame($exception, $rethrownException);
+
             $exceptionRethrown = true;
         } finally {
             $this->assertTrue($exceptionRethrown, 'Handler did not rethrow the exception');
+
             restore_error_handler();
             restore_exception_handler();
         }
