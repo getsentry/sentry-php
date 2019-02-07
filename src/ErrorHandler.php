@@ -84,10 +84,14 @@ final class ErrorHandler
      */
     private function __construct(int $reservedMemorySize)
     {
-        self::setReservedMemory($reservedMemorySize);
+        if ($reservedMemorySize <= 0) {
+            throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
+        }
 
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
+
+        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
 
         register_shutdown_function([$this, 'handleFatalError']);
 
@@ -110,25 +114,27 @@ final class ErrorHandler
      * Gets the current registered error handler; if none is present, it will register it.
      * Subsequent calls will not change the reserved memory size.
      *
-     * @param int|null $reservedMemorySize The requested amount of memory to reserve
+     * @param int $reservedMemorySize The requested amount of memory to reserve
      *
      * @return self The ErrorHandler singleton
      */
-    public static function registerOnce(int $reservedMemorySize = null): self
+    public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
     {
         if (null === self::$handlerInstance) {
-            self::$handlerInstance = new self($reservedMemorySize ?? self::DEFAULT_RESERVED_MEMORY_SIZE);
+            self::$handlerInstance = new self($reservedMemorySize);
         }
 
         return self::$handlerInstance;
     }
 
     /**
-     * Adds a listener to the current error handler to be called upon each invoked captured error;
-     * if no handler is registered, this method will instantiate and register it.
+     * Adds a listener to the current error handler to be called upon each
+     * invoked captured error; if no handler is registered, this method will
+     * instantiate and register it.
      *
-     * @param callable $listener A callable that will act as a listener; this callable will receive
-     *                           a single \ErrorException argument
+     * @param callable $listener A callable that will act as a listener;
+     *                           this callable will receive a single
+     *                           \ErrorException argument
      */
     public static function addErrorListener(callable $listener): void
     {
@@ -137,11 +143,13 @@ final class ErrorHandler
     }
 
     /**
-     * Adds a listener to the current error handler to be called upon each invoked captured exception;
-     * if no handler is registered, this method will instantiate and register it.
+     * Adds a listener to the current error handler to be called upon each
+     * invoked captured exception; if no handler is registered, this method
+     * will instantiate and register it.
      *
-     * @param callable $listener A callable that will act as a listener; this callable will receive
-     *                           a single \Throwable argument
+     * @param callable $listener A callable that will act as a listener;
+     *                           this callable will receive a single
+     *                           \Throwable argument
      */
     public static function addExceptionListener(callable $listener): void
     {
@@ -257,24 +265,6 @@ final class ErrorHandler
     }
 
     /**
-     * Fills a static property with a string to reserve some memory to be used
-     * while handling fatal errors.
-     *
-     * @param int $reservedMemorySize The amount of memory to be reserved, is
-     *                                in char string length
-     *
-     * @throws \InvalidArgumentException If $reservedMemorySize is negative
-     */
-    private static function setReservedMemory(int $reservedMemorySize): void
-    {
-        if ($reservedMemorySize <= 0) {
-            throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
-        }
-
-        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
-    }
-
-    /**
      * Cleans and returns the backtrace without the first frames that belong to
      * this error handler.
      *
@@ -305,7 +295,7 @@ final class ErrorHandler
     /**
      * Invokes all the listeners and pass the exception to all of them.
      *
-     * @param callable[] $listeners
+     * @param callable[] $listeners The array of listeners to be called
      * @param \Throwable $throwable The exception to be passed onto listeners
      */
     private function invokeListeners(array $listeners, \Throwable $throwable): void

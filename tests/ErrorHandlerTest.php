@@ -10,11 +10,9 @@ use Sentry\Tests\Fixtures\classes\StubErrorListener;
 
 final class ErrorHandlerTest extends TestCase
 {
-    public function testGetCurrent(): void
+    public function testRegisterOnce(): void
     {
-        $errorHandler = ErrorHandler::registerOnce();
-
-        $this->assertSame($errorHandler, ErrorHandler::registerOnce());
+        $this->assertSame(ErrorHandler::registerOnce(), ErrorHandler::registerOnce());
     }
 
     public function testHandleError(): void
@@ -24,6 +22,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
+
             $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
@@ -31,7 +30,8 @@ final class ErrorHandlerTest extends TestCase
             $reflectionProperty->setValue($errorHandler, null);
             $reflectionProperty->setAccessible(false);
 
-            $errorLine = __LINE__ + 1;
+            $errorLine = __LINE__ + 2;
+
             $this->assertFalse($errorHandler->handleError(E_USER_NOTICE, 'foo bar', __FILE__, __LINE__));
         } finally {
             restore_error_handler();
@@ -48,7 +48,6 @@ final class ErrorHandlerTest extends TestCase
             $backtrace = $exception->getTrace();
 
             $this->assertGreaterThanOrEqual(2, $backtrace);
-
             $this->assertEquals('testHandleError', $backtrace[0]['function']);
             $this->assertEquals(self::class, $backtrace[0]['class']);
             $this->assertEquals('->', $backtrace[0]['type']);
@@ -70,6 +69,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
+
             $errorHandler = ErrorHandler::registerOnce();
 
             $reflectionProperty = new \ReflectionProperty(ErrorHandler::class, 'previousErrorHandler');
@@ -93,11 +93,9 @@ final class ErrorHandlerTest extends TestCase
             $backtrace = $exception->getTrace();
 
             $this->assertGreaterThanOrEqual(2, $backtrace);
-
             $this->assertEquals('handleError', $backtrace[0]['function']);
             $this->assertEquals(ErrorHandler::class, $backtrace[0]['class']);
             $this->assertEquals('->', $backtrace[0]['type']);
-
             $this->assertEquals('testHandleErrorWithPreviousErrorHandler', $backtrace[1]['function']);
             $this->assertEquals(self::class, $backtrace[1]['class']);
             $this->assertEquals('->', $backtrace[1]['type']);
@@ -122,6 +120,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
+
             $errorHandler = ErrorHandler::registerOnce();
 
             $errorHandler->handleFatalError([
@@ -150,6 +149,7 @@ final class ErrorHandlerTest extends TestCase
 
         try {
             ErrorHandler::addErrorListener($listener);
+
             $errorHandler = ErrorHandler::registerOnce();
 
             $errorHandler->handleFatalError([
@@ -172,6 +172,7 @@ final class ErrorHandlerTest extends TestCase
         $exception = new \Exception('foo bar');
         $listener = function (\Throwable $throwable) use ($exception, &$listenerCalled): void {
             $listenerCalled = true;
+
             $this->assertSame($exception, $throwable);
         };
 
@@ -202,6 +203,7 @@ final class ErrorHandlerTest extends TestCase
 
         $listener = function (\Throwable $throwable) use ($exception, &$listenerCalled): void {
             $listenerCalled = true;
+
             $this->assertSame($exception, $throwable);
         };
 
@@ -285,43 +287,24 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider callableProvider
-     */
-    public function testAddListener(callable $listener): void
+    public function testListenerThatThrowsExceptionShouldBeIgnored(): void
     {
         $exception = new \Exception();
+        $exceptionRethrown = false;
+        $listener = function (\Throwable $throwable): void {
+            throw new \RuntimeException('This exception should not bubble up');
+        };
 
         try {
             ErrorHandler::addExceptionListener($listener);
-
             ErrorHandler::registerOnce()->handleException($exception);
         } catch (\Throwable $rethrownException) {
             $this->assertSame($exception, $rethrownException);
+            $exceptionRethrown = true;
         } finally {
+            $this->assertTrue($exceptionRethrown, 'Handler did not rethrow the exception');
             restore_error_handler();
             restore_exception_handler();
         }
-    }
-
-    public function callableProvider(): array
-    {
-        $stubErrorListener = new StubErrorListener();
-
-        return [
-            [[$stubErrorListener, '__invoke']],
-            [[new ExtendedStubListener(), 'parent::someCallable']],
-            [\Closure::fromCallable([$stubErrorListener, '__invoke'])],
-            [$stubErrorListener],
-            [function (\Throwable $throwable): void {}],
-        ];
-    }
-}
-
-final class ExtendedStubListener extends StubErrorListener
-{
-    public function someCallable(\ErrorException $error): void
-    {
-        trigger_error('Stop everything!');
     }
 }
