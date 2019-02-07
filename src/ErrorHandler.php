@@ -302,7 +302,7 @@ final class ErrorHandler
     {
         foreach ($listeners as $listener) {
             try {
-                $listener($throwable);
+                \call_user_func($listener, $throwable);
             } catch (\Throwable $exception) {
                 // Do nothing as this should be as transparent as possible
             }
