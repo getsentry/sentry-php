@@ -20,7 +20,8 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
-use Sentry\Integration\ErrorHandlerIntegration;
+use Sentry\Integration\ErrorListenerIntegration;
+use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -98,7 +99,8 @@ final class ClientBuilder implements ClientBuilderInterface
 
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(array_merge([
-                new ErrorHandlerIntegration(),
+                new ExceptionListenerIntegration(),
+                new ErrorListenerIntegration($this->options),
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations()));
         }

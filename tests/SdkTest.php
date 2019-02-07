@@ -6,16 +6,16 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumb;
-use Sentry\ClientInterface;
-use Sentry\State\Hub;
 use function Sentry\addBreadcrumb;
+use Sentry\Breadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
 use function Sentry\captureMessage;
+use Sentry\ClientInterface;
 use function Sentry\configureScope;
 use function Sentry\init;
+use Sentry\State\Hub;
 use function Sentry\withScope;
 
 class SdkTest extends TestCase
