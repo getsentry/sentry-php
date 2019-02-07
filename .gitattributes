@@ -1,3 +1,5 @@
+* text=auto
+
 /tests export-ignore
 /.appveyor.yml export-ignore
 /.craft.yml export-ignore
