@@ -139,11 +139,11 @@ final class StacktraceTest extends TestCase
     }
 
     /**
-     * @dataProvider contextDataProvider
+     * @dataProvider addFrameRespectsContextLinesOptionDataProvider
      */
-    public function testAddFrameWithDifferentContexts($fixture, $lineNumber, $contextLines, $preContextCount, $postContextCount)
+    public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
     {
-        if (isset($contextLines)) {
+        if ($contextLines !== null) {
             $this->options->setContextLines($contextLines);
         }
 
@@ -169,7 +169,7 @@ final class StacktraceTest extends TestCase
         }
     }
 
-    public function contextDataProvider()
+    public function addFrameRespectsContextLinesOptionDataProvider(): array
     {
         return [
             'read code from short file' => ['code/ShortFile.php', 3, 2, 2, 2],
