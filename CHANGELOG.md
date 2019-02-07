@@ -11,10 +11,10 @@
 - Rename `excluded_paths` to `in_app_exclude` option to follow Unified API spec (#755)
 - Add `max_value_length` option to trim long values during serialization (#754)
 - Lower the default `send_attempts` to 3 (#760)
-- Fox method argument name handling when xDebug is enabled (#763)
+- Fix method argument name handling when Xdebug is enabled (#763)
 - Add CI build under Windows with AppVeyor (#758) and fix some bugs
 - Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
-and it's possible to attach a number of callables as listener for errors and exceptions (#762)
+  and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
 
 ## 2.0.0-beta-1 (2018-12-19)
 
