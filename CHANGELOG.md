@@ -13,6 +13,8 @@
 - Lower the default `send_attempts` to 3 (#760)
 - Fox method argument name handling when xDebug is enabled (#763)
 - Add CI build under Windows with AppVeyor (#758) and fix some bugs
+- Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
+and it's possible to attach a number of callables as listener for errors and exceptions (#762)
 
 ## 2.0.0-beta-1 (2018-12-19)
 
