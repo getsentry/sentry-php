@@ -72,7 +72,7 @@ The following integrations are fully supported and maintained by the Sentry team
 
 The following integrations are available and maintained by members of the Sentry community.
 
-- [Nette](https://github.com/Salamek/raven-nette)
+- [Nette](https://github.com/Kdyby/Monolog)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [Drupal](https://www.drupal.org/project/raven)
