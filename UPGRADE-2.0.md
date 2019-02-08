@@ -68,6 +68,9 @@
 - The `context_lines` option has been added to configure the number of lines of
   code context to capture.
 
+- The `max_value_length` option has been added to set an upper bound to the length
+  of serialized items.
+
 - The `server` option has been renamed to `dsn`.
 
 ### Misc

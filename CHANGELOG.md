@@ -4,10 +4,23 @@
 
 - ...
 
+## 2.0.0-beta-2 (unreleased)
+- Rename `SentryAuth` class to `SentryAuthentication` (#742)
+- `Client` class is now final
+- Fix issue with `ClientBuilder`: factories are not instantiated if transport is set manually (#747)
+- Rename `excluded_paths` to `in_app_exclude` option to follow Unified API spec (#755)
+- Add `max_value_length` option to trim long values during serialization (#754)
+- Lower the default `send_attempts` to 3 (#760)
+- Fix method argument name handling when Xdebug is enabled (#763)
+- Add CI build under Windows with AppVeyor (#758) and fix some bugs
+- Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
+  and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
+- The `context_lines` options changed the default to `5` and is properly applied (#743)
+
 ## 2.0.0-beta-1 (2018-12-19)
 
 - Require PHP >= 7.1
-- Refactorize the whole codebase to support the Unified API SDK specs
+- Refactor the whole codebase to support the Unified API SDK specs
 - See the UPGRADE.md document for more information.
 
 ## 1.10.0 (2018-11-09)
@@ -20,7 +33,7 @@
 
 - Remove secret_key from required keys for CLI test command. (#645)
 - Proper case in Raven_Util class name usage. (#642)
-- Support longer creditcard numbers. (#635)
+- Support longer credit card numbers. (#635)
 - Use configured message limit when creating serializers. (#634)
 - Do not truncate strings if message limit is set to zero. (#630)
 - Add option to ignore SERVER_PORT getting added to url. (#629)
