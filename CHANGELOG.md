@@ -15,6 +15,7 @@
 - Add CI build under Windows with AppVeyor (#758) and fix some bugs
 - Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
   and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
+- The `context_lines` options changed the default to `5` and is properly applied (#743)
 
 ## 2.0.0-beta-1 (2018-12-19)
 
