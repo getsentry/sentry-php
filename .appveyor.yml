@@ -3,31 +3,57 @@ build: false
 clone_depth: 2
 clone_folder: c:\projects\sentry-php
 skip_branch_with_pr: true
+branches:
+    only:
+        - master
+
+environment:
+    matrix:
+        - PHP_VERSION: 7.1-Win32-VC14
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.1-Win32-VC14
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.2-Win32-VC15
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.2-Win32-VC15
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.3-Win32-VC15
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.3-Win32-VC15
+          DEPENDENCIES: highest
+
+matrix:
+    fast_finish: true
 
 cache:
-  - composer.phar
-  - '%LocalAppData%\Composer\files'
-  - c:\projects\sentry-php\vendor
+    - composer.phar
+    - '%LocalAppData%\Composer\files'
+    - 'c:\php -> .appveyor.yml'
 
 init:
-  - SET PATH=c:\php;%PATH%
-  - SET COMPOSER_NO_INTERACTION=1
-  - SET SYMFONY_DEPRECATIONS_HELPER=strict
-  - SET ANSICON=121x90 (121x90)
+    - SET PATH=c:\php\%PHP_VERSION%;%PATH%
+    - SET SYMFONY_DEPRECATIONS_HELPER=strict
+    - SET ANSICON=121x90 (121x90)
+    - SET INSTALL_PHP=1
 
 install:
-  - mkdir c:\php && cd c:\php
-  - appveyor DownloadFile https://github.com/symfony/binary-utils/releases/download/v0.1/php-7.1.3-Win32-VC14-x86.zip
-  - 7z x php-7.1.3-Win32-VC14-x86.zip -y >nul
-  - echo memory_limit=-1 >> php.ini
-  - echo extension=php_curl.dll >> php.ini
-  - echo extension=php_mbstring.dll >> php.ini
-  - echo extension=php_openssl.dll >> php.ini
-  - cd c:\projects\sentry-php
-  - IF NOT EXIST composer.phar (appveyor DownloadFile https://github.com/composer/composer/releases/download/1.7.1/composer.phar)
-  - php composer.phar self-update
-  - php composer.phar update --no-progress --no-suggest --ansi
+    - IF NOT EXIST c:\php mkdir c:\php
+    - IF NOT EXIST c:\php\%PHP_VERSION% mkdir c:\php\%PHP_VERSION% ELSE SET INSTALL_PHP=0
+    - IF %INSTALL_PHP%==1 cd c:\php\%PHP_VERSION%
+    - IF %INSTALL_PHP%==1 curl --fail --location --silent --show-error -o php-%PHP_VERSION%-x64-latest.zip https://windows.php.net/downloads/releases/latest/php-%PHP_VERSION%-x64-latest.zip
+    - IF %INSTALL_PHP%==1 7z x php-%PHP_VERSION%-x64-latest.zip -y >nul
+    - IF %INSTALL_PHP%==1 del /Q php-%PHP_VERSION%-x64-latest.zip
+    - IF %INSTALL_PHP%==1 copy /Y php.ini-development php.ini >nul
+    - IF %INSTALL_PHP%==1 echo extension_dir=c:\php\%PHP_VERSION%\ext >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_curl.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
+    - cd c:\projects\sentry-php
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.8.3/composer.phar
+    - php composer.phar self-update
+    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
+    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
 
 test_script:
-  - cd c:\projects\sentry-php
-  - vendor\bin\phpunit.bat
+    - cd c:\projects\sentry-php
+    - vendor\bin\phpunit.bat
