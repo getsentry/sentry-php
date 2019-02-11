@@ -62,6 +62,11 @@ final class Event implements \JsonSerializable
     private $message;
 
     /**
+     * @var string|null The formatted error message
+     */
+    private $messageFormatted;
+
+    /**
      * @var array The parameters to use to format the message
      */
     private $messageParams = [];
@@ -340,6 +345,16 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Gets the formatted message.
+     *
+     * @return string|null
+     */
+    public function getMessageFormatted(): ?string
+    {
+        return $this->messageFormatted;
+    }
+
+    /**
      * Gets the parameters to use to format the message.
      *
      * @return string[]
@@ -352,13 +367,15 @@ final class Event implements \JsonSerializable
     /**
      * Sets the error message.
      *
-     * @param string $message The message
-     * @param array  $params  The parameters to use to format the message
+     * @param string      $message   The message
+     * @param array       $params    The parameters to use to format the message
+     * @param string|null $formatted The formatted message
      */
-    public function setMessage(string $message, array $params = []): void
+    public function setMessage(string $message, array $params = [], string $formatted = null): void
     {
         $this->message = $message;
         $this->messageParams = $params;
+        $this->messageFormatted = $formatted;
     }
 
     /**
@@ -659,7 +676,7 @@ final class Event implements \JsonSerializable
                 $data['message'] = [
                     'message' => $this->message,
                     'params' => $this->messageParams,
-                    'formatted' => vsprintf($this->message, $this->messageParams),
+                    'formatted' => $this->messageFormatted ?? vsprintf($this->message, $this->messageParams),
                 ];
             }
         }
