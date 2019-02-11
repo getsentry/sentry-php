@@ -5,9 +5,14 @@
     "keywords": ["sentry", "log", "logging", "error-monitoring", "error-handler", "crash-reporting", "crash-reports"],
     "homepage": "http://sentry.io",
     "license": "BSD-3-Clause",
-    "authors": [
+    "authors": "authors": [
         {
-            "name": "Sentry"
+            "name": "David Cramer",
+            "email": "dcramer@gmail.com"
+        },
+        {
+            "name": "Daniel Griesser",
+            "email": "daniel.griesser.86@gmail.com"
         }
     ],
     "require": {
