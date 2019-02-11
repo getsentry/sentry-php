@@ -4,7 +4,7 @@
 
 - ...
 
-## 2.0.0-beta-2 (2019-02-11)
+## 2.0.0-beta2 (2019-02-11)
 - Rename `SentryAuth` class to `SentryAuthentication` (#742)
 - `Client` class is now final
 - Fix issue with `ClientBuilder`: factories are not instantiated if transport is set manually (#747)
@@ -19,7 +19,7 @@
 - Add support for "formatted messages" in `captureEvent` as payload (#752)
 - Fix issue when capturing exceptions to remove warning when converting array args (#761)
 
-## 2.0.0-beta-1 (2018-12-19)
+## 2.0.0-beta1 (2018-12-19)
 
 - Require PHP >= 7.1
 - Refactor the whole codebase to support the Unified API SDK specs
