@@ -138,16 +138,41 @@ final class EventTest extends TestCase
     {
         return [
             [
-                ['foo bar'],
+                [
+                    'foo bar',
+                ],
                 'foo bar',
             ],
             [
-                ['foo %s', ['bar']],
-                ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => 'foo bar'],
+                [
+                    'foo %s',
+                    [
+                        'bar',
+                    ],
+                ],
+                [
+                    'message' => 'foo %s',
+                    'params' => [
+                        'bar',
+                    ],
+                    'formatted' => 'foo bar',
+                ],
             ],
             [
-                ['foo %bar', ['%bar' => 'baz'], 'foo baz'],
-                ['message' => 'foo %bar', 'params' => ['%bar' => 'baz'], 'formatted' => 'foo baz'],
+                [
+                    'foo %bar',
+                    [
+                        '%bar' => 'baz',
+                    ],
+                    'foo baz',
+                ],
+                [
+                    'message' => 'foo %bar',
+                    'params' => [
+                        '%bar' => 'baz',
+                    ],
+                    'formatted' => 'foo baz',
+                ],
             ],
         ];
     }
@@ -188,12 +213,35 @@ final class EventTest extends TestCase
     {
         return [
             [
-                ['foo %s', ['bar']],
-                ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => null],
+                [
+                    'foo %s',
+                    [
+                        'bar',
+                    ],
+                ],
+                [
+                    'message' => 'foo %s',
+                    'params' => [
+                        'bar',
+                    ],
+                    'formatted' => null,
+                ],
             ],
             [
-                ['foo %bar', ['%bar' => 'baz'], 'foo baz'],
-                ['message' => 'foo %bar', 'params' => ['%bar' => 'baz'], 'formatted' => 'foo baz'],
+                [
+                    'foo %bar',
+                    [
+                        '%bar' => 'baz',
+                    ],
+                    'foo baz',
+                ],
+                [
+                    'message' => 'foo %bar',
+                    'params' => [
+                        '%bar' => 'baz',
+                    ],
+                    'formatted' => 'foo baz',
+                ],
             ],
         ];
     }
