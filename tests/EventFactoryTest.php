@@ -94,14 +94,14 @@ class EventFactoryTest extends TestCase
             ],
             [
                 [
-                    'message' => 'testMessage @param',
-                    'message_params' => ['@param' => 'param'],
+                    'message' => 'testMessage %foo',
+                    'message_params' => ['%foo' => 'param'],
                     'message_formatted' => 'testMessage param',
                 ],
                 [
                     'message' => [
-                        'message' => 'testMessage @param',
-                        'params' => ['@param' => 'param'],
+                        'message' => 'testMessage %foo',
+                        'params' => ['%foo' => 'param'],
                         'formatted' => 'testMessage param',
                     ],
                 ],

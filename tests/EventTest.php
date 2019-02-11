@@ -122,10 +122,11 @@ final class EventTest extends TestCase
     /**
      * @dataProvider toArrayWithMessageDataProvider
      */
-    public function testToArrayWithMessage(array $message, $expectedValue): void
+    public function testToArrayWithMessage(array $setMessageArguments, $expectedValue): void
     {
         $event = new Event();
-        \call_user_func_array([$event, 'setMessage'], $message);
+
+        \call_user_func_array([$event, 'setMessage'], $setMessageArguments);
 
         $data = $event->toArray();
 
@@ -136,9 +137,18 @@ final class EventTest extends TestCase
     public function toArrayWithMessageDataProvider(): array
     {
         return [
-            [['foo bar'], 'foo bar'],
-            [['foo %s', ['bar']], ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => 'foo bar']],
-            [['foo @bar', ['@bar' => 'bar'], 'foo bar'], ['message' => 'foo @bar', 'params' => ['@bar' => 'bar'], 'formatted' => 'foo bar']],
+            [
+                ['foo bar'],
+                'foo bar',
+            ],
+            [
+                ['foo %s', ['bar']],
+                ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => 'foo bar'],
+            ],
+            [
+                ['foo %bar', ['%bar' => 'baz'], 'foo baz'],
+                ['message' => 'foo %bar', 'params' => ['%bar' => 'baz'], 'formatted' => 'foo baz'],
+            ],
         ];
     }
 
@@ -163,10 +173,11 @@ final class EventTest extends TestCase
     /**
      * @dataProvider getMessageDataProvider
      */
-    public function testGetMessage(array $message, array $expectedValue): void
+    public function testGetMessage(array $setMessageArguments, array $expectedValue): void
     {
         $event = new Event();
-        \call_user_func_array([$event, 'setMessage'], $message);
+
+        \call_user_func_array([$event, 'setMessage'], $setMessageArguments);
 
         $this->assertSame($expectedValue['message'], $event->getMessage());
         $this->assertSame($expectedValue['params'], $event->getMessageParams());
@@ -176,8 +187,14 @@ final class EventTest extends TestCase
     public function getMessageDataProvider(): array
     {
         return [
-            [['foo %s', ['bar']], ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => null]],
-            [['foo @bar', ['@bar' => 'bar'], 'foo bar'], ['message' => 'foo @bar', 'params' => ['@bar' => 'bar'], 'formatted' => 'foo bar']],
+            [
+                ['foo %s', ['bar']],
+                ['message' => 'foo %s', 'params' => ['bar'], 'formatted' => null],
+            ],
+            [
+                ['foo %bar', ['%bar' => 'baz'], 'foo baz'],
+                ['message' => 'foo %bar', 'params' => ['%bar' => 'baz'], 'formatted' => 'foo baz'],
+            ],
         ];
     }
 
