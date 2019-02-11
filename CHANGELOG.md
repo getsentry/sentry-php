@@ -4,7 +4,7 @@
 
 - ...
 
-## 2.0.0-beta-2 (unreleased)
+## 2.0.0-beta-2 (2019-02-11)
 - Rename `SentryAuth` class to `SentryAuthentication` (#742)
 - `Client` class is now final
 - Fix issue with `ClientBuilder`: factories are not instantiated if transport is set manually (#747)
@@ -16,6 +16,8 @@
 - Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
   and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
 - The `context_lines` options changed the default to `5` and is properly applied (#743)
+- Add support for "formatted messages" in `captureEvent` as payload (#752)
+- Fix issue when capturing exceptions to remove warning when converting array args (#761)
 
 ## 2.0.0-beta-1 (2018-12-19)
 
