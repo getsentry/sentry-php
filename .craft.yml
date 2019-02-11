@@ -3,6 +3,7 @@ github:
     owner: getsentry
     repo: sentry-php
 changelogPolicy: simple
+preReleaseCommand: ""
 targets:
     - name: github
     - name: registry
