@@ -1,5 +1,10 @@
 language: php
 
+branches:
+  only:
+  - master
+  - /^release\/.+$/
+
 php:
     - 7.1
     - 7.2
