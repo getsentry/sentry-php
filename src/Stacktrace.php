@@ -145,7 +145,7 @@ class Stacktrace implements \JsonSerializable
 
             if ($isApplicationFile && !empty($excludedAppPaths)) {
                 foreach ($excludedAppPaths as $path) {
-                    if (0 === strpos($absoluteFilePath, $path)) {
+                    if (0 === mb_strpos($absoluteFilePath, $path)) {
                         $frame->setIsInApp(false);
 
                         break;
@@ -161,7 +161,7 @@ class Stacktrace implements \JsonSerializable
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
                 if (\is_string($argumentValue) || is_numeric($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = substr($argumentValue, 0, $this->options->getMaxValueLength());
+                    $frameArguments[(string) $argumentName] = mb_substr($argumentValue, 0, $this->options->getMaxValueLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -279,8 +279,8 @@ class Stacktrace implements \JsonSerializable
     protected function stripPrefixFromFilePath(string $filePath): string
     {
         foreach ($this->options->getPrefixes() as $prefix) {
-            if (0 === strpos($filePath, $prefix)) {
-                return substr($filePath, \strlen($prefix));
+            if (0 === mb_strpos($filePath, $prefix)) {
+                return mb_substr($filePath, mb_strlen($prefix));
             }
         }
 
@@ -398,7 +398,7 @@ class Stacktrace implements \JsonSerializable
 
             foreach ($arg as $key => $value) {
                 if (\is_string($value) || is_numeric($value)) {
-                    $result[$key] = substr((string) $value, 0, $maxValueLength);
+                    $result[$key] = mb_substr((string) $value, 0, $maxValueLength);
                 } else {
                     $result[$key] = $value;
                 }
@@ -406,7 +406,7 @@ class Stacktrace implements \JsonSerializable
 
             return $result;
         } elseif (\is_string($arg) || is_numeric($arg)) {
-            return substr((string) $arg, 0, $maxValueLength);
+            return mb_substr((string) $arg, 0, $maxValueLength);
         } else {
             return $arg;
         }

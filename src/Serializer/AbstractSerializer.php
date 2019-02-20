@@ -161,21 +161,15 @@ abstract class AbstractSerializer
     {
         $value = (string) $value;
 
-        if ($this->isMbStringEnabled()) {
-            // we always guarantee this is coerced, even if we can't detect encoding
-            if ($currentEncoding = mb_detect_encoding($value, $this->mbDetectOrder)) {
-                $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
-            } else {
-                $value = mb_convert_encoding($value, 'UTF-8');
-            }
-
-            if (mb_strlen($value) > $this->options->getMaxValueLength()) {
-                $value = mb_substr($value, 0, $this->options->getMaxValueLength() - 10, 'UTF-8') . ' {clipped}';
-            }
+        // we always guarantee this is coerced, even if we can't detect encoding
+        if ($currentEncoding = mb_detect_encoding($value, $this->mbDetectOrder)) {
+            $value = mb_convert_encoding($value, 'UTF-8', $currentEncoding);
         } else {
-            if (\strlen($value) > $this->options->getMaxValueLength()) {
-                $value = substr($value, 0, $this->options->getMaxValueLength() - 10) . ' {clipped}';
-            }
+            $value = mb_convert_encoding($value, 'UTF-8');
+        }
+
+        if (mb_strlen($value) > $this->options->getMaxValueLength()) {
+            $value = mb_substr($value, 0, $this->options->getMaxValueLength() - 10, 'UTF-8') . ' {clipped}';
         }
 
         return $value;
@@ -310,14 +304,5 @@ abstract class AbstractSerializer
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;
-    }
-
-    private function isMbStringEnabled(): bool
-    {
-        if (null === $this->mbStringEnabled) {
-            $this->mbStringEnabled = \extension_loaded('mbstring');
-        }
-
-        return $this->mbStringEnabled;
     }
 }
