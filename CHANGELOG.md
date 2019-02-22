@@ -1,8 +1,9 @@
 # CHANGELOG
 
 ## Unreleased
-
-- ...
+- Updated .gitattributes to reduce package footprint (#770)
+- Use multibyte functions to handle unicode paths (#774)
+- Remove `Hub::getScope()` to deny direct access to `Scope` instances (#776)
 
 ## 2.0.0-beta2 (2019-02-11)
 - Rename `SentryAuth` class to `SentryAuthentication` (#742)
