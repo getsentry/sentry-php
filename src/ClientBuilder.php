@@ -13,6 +13,7 @@ use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
+use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
@@ -316,15 +317,13 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
 
         if (null === $this->httpClient && null !== $this->options->getHttpProxy()) {
-            try {
-                $curlClientClass = 'Http\Client\Curl\Client';
-                if (class_exists($curlClientClass)) {
-                    $this->httpClient = new $curlClientClass(null, null, [
-                        CURLOPT_PROXY => $this->options->getHttpProxy(),
-                    ]);
-                }
-            } catch (\Exception $e) {
-                throw new \RuntimeException('The http_proxy option requires curl client to be installed.');
+            $curlClientClass = 'Http\Client\Curl\Client';
+            if (ClassDiscovery::safeClassExists($curlClientClass)) {
+                $this->httpClient = new $curlClientClass(null, null, [
+                    CURLOPT_PROXY => $this->options->getHttpProxy(),
+                ]);
+            } else {
+                throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
             }
         }
 
