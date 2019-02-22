@@ -11,6 +11,7 @@ use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Severity;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
 final class HubTest extends TestCase
@@ -19,7 +20,7 @@ final class HubTest extends TestCase
     {
         $hub = new Hub(null, null);
 
-        $this->assertNotNull($hub->getScope());
+        $this->assertNotNull($this->getScope($hub));
     }
 
     public function testGetClient(): void
@@ -36,7 +37,7 @@ final class HubTest extends TestCase
         $scope = new Scope();
         $hub = new Hub($this->createMock(ClientInterface::class), $scope);
 
-        $this->assertSame($scope, $hub->getScope());
+        $this->assertSame($scope, $this->getScope($hub));
     }
 
     public function testGetLastEventId(): void
@@ -57,14 +58,14 @@ final class HubTest extends TestCase
     {
         $hub = new Hub($this->createMock(ClientInterface::class));
 
-        $scope1 = $hub->getScope();
+        $scope1 = $this->getScope($hub);
         $client1 = $hub->getClient();
 
         $scope2 = $hub->pushScope();
         $client2 = $hub->getClient();
 
         $this->assertNotSame($scope1, $scope2);
-        $this->assertSame($scope2, $hub->getScope());
+        $this->assertSame($scope2, $this->getScope($hub));
         $this->assertSame($client1, $client2);
         $this->assertSame($client1, $hub->getClient());
     }
@@ -73,22 +74,22 @@ final class HubTest extends TestCase
     {
         $hub = new Hub($this->createMock(ClientInterface::class));
 
-        $scope1 = $hub->getScope();
+        $scope1 = $this->getScope($hub);
         $client = $hub->getClient();
 
         $scope2 = $hub->pushScope();
 
-        $this->assertSame($scope2, $hub->getScope());
+        $this->assertSame($scope2, $this->getScope($hub));
         $this->assertSame($client, $hub->getClient());
 
         $this->assertTrue($hub->popScope());
 
-        $this->assertSame($scope1, $hub->getScope());
+        $this->assertSame($scope1, $this->getScope($hub));
         $this->assertSame($client, $hub->getClient());
 
         $this->assertFalse($hub->popScope());
 
-        $this->assertSame($scope1, $hub->getScope());
+        $this->assertSame($scope1, $this->getScope($hub));
         $this->assertSame($client, $hub->getClient());
     }
 
@@ -97,7 +98,7 @@ final class HubTest extends TestCase
         $scope = new Scope();
         $hub = new Hub($this->createMock(ClientInterface::class), $scope);
 
-        $this->assertSame($scope, $hub->getScope());
+        $this->assertSame($scope, $this->getScope($hub));
 
         $callbackInvoked = false;
 
@@ -116,7 +117,7 @@ final class HubTest extends TestCase
         }
 
         $this->assertTrue($callbackInvoked);
-        $this->assertSame($scope, $hub->getScope());
+        $this->assertSame($scope, $this->getScope($hub));
     }
 
     public function testConfigureScope(): void
@@ -134,7 +135,7 @@ final class HubTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
-        $this->assertSame($scope, $hub->getScope());
+        $this->assertSame($scope, $this->getScope($hub));
     }
 
     public function testBindClient(): void
@@ -217,7 +218,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb);
 
-        $this->assertSame([$breadcrumb], $hub->getScope()->getBreadcrumbs());
+        $this->assertSame([$breadcrumb], $this->getScope($hub)->getBreadcrumbs());
     }
 
     public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsZero(): void
@@ -227,14 +228,14 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
-        $this->assertEmpty($hub->getScope()->getBreadcrumbs());
+        $this->assertEmpty($this->getScope($hub)->getBreadcrumbs());
     }
 
     public function testAddBreadcrumbRespectsMaxBreadcrumbsLimit(): void
     {
         $client = ClientBuilder::create(['max_breadcrumbs' => 2])->getClient();
         $hub = new Hub($client);
-        $scope = $hub->getScope();
+        $scope = $this->getScope($hub);
 
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'foo');
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_ERROR, 'error_reporting', 'bar');
@@ -260,7 +261,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
-        $this->assertEmpty($hub->getScope()->getBreadcrumbs());
+        $this->assertEmpty($this->getScope($hub)->getBreadcrumbs());
     }
 
     public function testAddBreadcrumbStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void
@@ -276,7 +277,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb1);
 
-        $this->assertSame([$breadcrumb2], $hub->getScope()->getBreadcrumbs());
+        $this->assertSame([$breadcrumb2], $this->getScope($hub)->getBreadcrumbs());
     }
 
     public function testCaptureEvent(): void
@@ -291,5 +292,13 @@ final class HubTest extends TestCase
         $hub = new Hub($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
+    }
+
+    private function getScope(HubInterface $hub): Scope
+    {
+        $method = new \ReflectionMethod($hub, 'getScope');
+        $method->setAccessible(true);
+
+        return $method->invoke($hub);
     }
 }
