@@ -299,6 +299,6 @@ final class HubTest extends TestCase
         $method = new \ReflectionMethod($hub, 'getScope');
         $method->setAccessible(true);
 
-        return $method->invokeArgs($hub, []);
+        return $method->invoke($hub);
     }
 }

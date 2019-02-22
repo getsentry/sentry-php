@@ -280,7 +280,7 @@ class ClientTest extends TestCase
         $method = new \ReflectionMethod($hub, 'getScope');
         $method->setAccessible(true);
 
-        $client->captureException($this->createCarelessExceptionWithStacktrace(), $method->invokeArgs($hub, []));
+        $client->captureException($this->createCarelessExceptionWithStacktrace(), $method->invoke($hub));
     }
 
     /**
