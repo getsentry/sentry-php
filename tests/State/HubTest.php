@@ -294,10 +294,9 @@ final class HubTest extends TestCase
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
     }
 
-    protected function getScope(HubInterface $hub): Scope
+    private function getScope(HubInterface $hub): Scope
     {
-        $class = new \ReflectionClass($hub);
-        $method = $class->getMethod('getScope');
+        $method = new \ReflectionMethod($hub, 'getScope');
         $method->setAccessible(true);
 
         return $method->invokeArgs($hub, []);

@@ -277,8 +277,7 @@ class ClientTest extends TestCase
         $hub = Hub::getCurrent();
         $hub->bindClient($client);
 
-        $class = new \ReflectionClass($hub);
-        $method = $class->getMethod('getScope');
+        $method = new \ReflectionMethod($hub, 'getScope');
         $method->setAccessible(true);
 
         $client->captureException($this->createCarelessExceptionWithStacktrace(), $method->invokeArgs($hub, []));
