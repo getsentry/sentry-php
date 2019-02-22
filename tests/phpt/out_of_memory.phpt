@@ -6,8 +6,9 @@ Test catching out of memory fatal error
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
+use Sentry\Event;
+use Sentry\Severity;
 use function Sentry\init;
-use Sentry\State\Hub;
 
 ini_set('memory_limit', '20M');
 
@@ -20,23 +21,18 @@ while (!file_exists($vendor . '/vendor')) {
 require $vendor . '/vendor/autoload.php';
 
 init([
-    'dsn' => 'http://public:secret@local.host/1',
-    'send_attempts' => 1,
+    'before_send' => function (Event $event): ?Event {
+        Assert::assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
+        $error = $event->getExceptions()[0];
+        Assert::assertContains('Allowed memory size', $error['value']);
+        echo 'Sending event...';
+
+        return null;
+    },
 ]);
-
-register_shutdown_function('register_shutdown_function', function () {
-    $client = Hub::getCurrent()->getClient();
-
-    /** @var \Sentry\Transport\HttpTransport $transport */
-    $transport = Assert::getObjectAttribute($client, 'transport');
-
-    Assert::assertAttributeEmpty('pendingRequests', $transport);
-
-    echo 'Shutdown function called';
-});
 
 $foo = str_repeat('x', 1024 * 1024 * 30);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Shutdown function called
+Sending event...
