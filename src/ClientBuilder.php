@@ -14,7 +14,6 @@ use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Client\Curl\Client as HttpCurlClient;
-use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
@@ -318,7 +317,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
 
         if (null === $this->httpClient && null !== $this->options->getHttpProxy()) {
-            if (ClassDiscovery::safeClassExists(HttpCurlClient::class)) {
+            if (HttpAsyncClientDiscovery::safeClassExists(HttpCurlClient::class)) {
                 $this->httpClient = new HttpCurlClient(null, null, [
                     CURLOPT_PROXY => $this->options->getHttpProxy(),
                 ]);
