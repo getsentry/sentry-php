@@ -9,6 +9,7 @@ use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use Http\Promise\Promise;
 use Jean85\PrettyVersions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -301,14 +302,14 @@ final class StubIntegration implements IntegrationInterface
 
 final class PluginStub1 implements Plugin
 {
-    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
     {
     }
 }
 
 final class PluginStub2 implements Plugin
 {
-    public function handleRequest(RequestInterface $request, callable $next, callable $first)
+    public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
     {
     }
 }
