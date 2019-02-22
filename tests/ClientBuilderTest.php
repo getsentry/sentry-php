@@ -302,7 +302,7 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder->setHttpClient($this->createMock(HttpAsyncClient::class));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('http_proxy');
+        $this->expectExceptionMessage('The `http_proxy` option does not work together with a custom client.');
 
         $clientBuilder->getClient();
     }
