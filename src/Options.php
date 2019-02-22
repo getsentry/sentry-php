@@ -622,7 +622,7 @@ final class Options
     /**
      * Gets the http proxy setting.
      *
-     * @return string
+     * @return string|null
      */
     public function getHttpProxy(): ?string
     {
@@ -632,7 +632,7 @@ final class Options
     /**
      * Sets the http proxy. Be aware this option only works when curl client is used.
      *
-     * @param string $httpProxy The http proxy
+     * @param string|null $httpProxy The http proxy
      */
     public function setHttpProxy(?string $httpProxy): void
     {

@@ -318,6 +318,7 @@ final class ClientBuilder implements ClientBuilderInterface
 
         if (null === $this->httpClient && null !== $this->options->getHttpProxy()) {
             $curlClientClass = 'Http\Client\Curl\Client';
+            
             if (ClassDiscovery::safeClassExists($curlClientClass)) {
                 $this->httpClient = new $curlClientClass(null, null, [
                     CURLOPT_PROXY => $this->options->getHttpProxy(),
