@@ -94,7 +94,13 @@ class SdkTest extends TestCase
 
         addBreadcrumb($breadcrumb);
 
-        $this->assertSame([$breadcrumb], Hub::getCurrent()->getScope()->getBreadcrumbs());
+        $hub = Hub::getCurrent();
+
+        $class = new \ReflectionClass($hub);
+        $method = $class->getMethod('getScope');
+        $method->setAccessible(true);
+
+        $this->assertSame([$breadcrumb], $method->invokeArgs($hub, [])->getBreadcrumbs());
     }
 
     public function testWithScope(): void

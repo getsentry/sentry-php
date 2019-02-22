@@ -274,8 +274,14 @@ class ClientTest extends TestCase
 
         $client = new Client(new Options(), $transport, $this->createEventFactory());
 
-        Hub::getCurrent()->bindClient($client);
-        $client->captureException($this->createCarelessExceptionWithStacktrace(), Hub::getCurrent()->getScope());
+        $hub = Hub::getCurrent();
+        $hub->bindClient($client);
+
+        $class = new \ReflectionClass($hub);
+        $method = $class->getMethod('getScope');
+        $method->setAccessible(true);
+
+        $client->captureException($this->createCarelessExceptionWithStacktrace(), $method->invokeArgs($hub, []));
     }
 
     /**

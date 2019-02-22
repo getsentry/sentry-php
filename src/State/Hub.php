@@ -55,14 +55,6 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getScope(): Scope
-    {
-        return $this->getStackTop()->getScope();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getLastEventId(): ?string
     {
         return $this->lastEventId;
@@ -240,6 +232,16 @@ final class Hub implements HubInterface
         }
 
         return null;
+    }
+
+    /**
+     * Gets the scope bound to the top of the stack.
+     *
+     * @return Scope
+     */
+    private function getScope(): Scope
+    {
+        return $this->getStackTop()->getScope();
     }
 
     /**
