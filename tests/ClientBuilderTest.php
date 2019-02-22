@@ -290,6 +290,22 @@ final class ClientBuilderTest extends TestCase
             ClientBuilder::create([])
         );
     }
+
+    public function testCreateWithHttpProxyAndCustomTransportThrowsException(): void
+    {
+        $options = new Options([
+            'dsn' => 'http://public:secret@example.com/sentry/1',
+            'http_proxy' => 'some-proxy',
+        ]);
+
+        $clientBuilder = new ClientBuilder($options);
+        $clientBuilder->setHttpClient($this->createMock(HttpAsyncClient::class));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('http_proxy');
+
+        $clientBuilder->getClient();
+    }
 }
 
 final class StubIntegration implements IntegrationInterface
