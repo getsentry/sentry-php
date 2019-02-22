@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- ...
+- Reintroduce `http_proxy` option (#775)
 
 ## 2.0.0-beta2 (2019-02-11)
 - Rename `SentryAuth` class to `SentryAuthentication` (#742)
