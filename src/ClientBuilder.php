@@ -314,6 +314,20 @@ final class ClientBuilder implements ClientBuilderInterface
 
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
+
+        if ($this->options->getHttpProxy()) {
+            try {
+                $curlClientClass = 'Http\Client\Curl\Client';
+                if (class_exists($curlClientClass)) {
+                    $this->httpClient = new $curlClientClass(null, null, [
+                        CURLOPT_PROXY => $this->options->getHttpProxy(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                throw new \RuntimeException('The http_proxy option requires curl client to be installed.');
+            }
+        }
+
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
 
         if (null === $this->messageFactory) {
