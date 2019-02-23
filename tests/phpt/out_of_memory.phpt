@@ -22,10 +22,12 @@ require $vendor . '/vendor/autoload.php';
 
 init([
     'before_send' => function (Event $event): ?Event {
-        Assert::assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
+        Assert::assertArrayHasKey(0,  $event->getExceptions());
         $error = $event->getExceptions()[0];
         Assert::assertContains('Allowed memory size', $error['value']);
-        echo 'Sending event...';
+        Assert::assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
+
+        echo 'Sending event';
 
         return null;
     },
@@ -35,4 +37,4 @@ $foo = str_repeat('x', 1024 * 1024 * 30);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Sending event...
+Sending event

@@ -7,12 +7,13 @@ namespace Sentry\Tests;
 use Http\Client\HttpAsyncClient;
 use Http\Client\HttpClient;
 use Http\Discovery\Strategy\DiscoveryStrategy;
-use Http\Mock\Client as Mock;
+use Http\Mock\Client as HttpMockClient;
 
 /**
  * This class is ported from Http\Discovery\Strategy\MockClientStrategy.
  *
- * This versions provides the Mock client when an asycn client is required too.
+ * This version provides the Mock client when an asycn client is required too.
+ * PR upstream: https://github.com/php-http/discovery/pull/137
  */
 final class MockClientStrategy implements DiscoveryStrategy
 {
@@ -24,7 +25,7 @@ final class MockClientStrategy implements DiscoveryStrategy
         switch ($type) {
             case HttpClient::class:
             case HttpAsyncClient::class:
-                return [['class' => Mock::class, 'condition' => Mock::class]];
+                return [['class' => HttpMockClient::class, 'condition' => HttpMockClient::class]];
             default:
                 return [];
        }
