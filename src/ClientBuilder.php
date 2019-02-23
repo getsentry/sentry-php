@@ -12,6 +12,7 @@ use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
+use Http\Client\Curl\Client as HttpCurlClient;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
@@ -314,6 +315,21 @@ final class ClientBuilder implements ClientBuilderInterface
 
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
+
+        if (null !== $this->options->getHttpProxy()) {
+            if (null !== $this->httpClient) {
+                throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
+            }
+
+            if (HttpAsyncClientDiscovery::safeClassExists(HttpCurlClient::class)) {
+                $this->httpClient = new HttpCurlClient(null, null, [
+                    CURLOPT_PROXY => $this->options->getHttpProxy(),
+                ]);
+            } else {
+                throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
+            }
+        }
+
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
 
         if (null === $this->messageFactory) {

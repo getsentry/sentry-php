@@ -2,8 +2,6 @@
 
 ### Client options
 
-- The `http_proxy` option has been removed.
-
 - The `exclude` option has been removed. 
 
 - The `excluded_app_path` option has been renamed to `in_app_exclude`

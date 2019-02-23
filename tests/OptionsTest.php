@@ -58,6 +58,7 @@ final class OptionsTest extends TestCase
             ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
             ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
             ['max_value_length', 50, 'getMaxValueLength', 'setMaxValueLength'],
+            ['http_proxy', '127.0.0.1', 'getHttpProxy', 'setHttpProxy'],
         ];
     }
 
