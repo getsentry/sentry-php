@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Http\Discovery\ClassDiscovery;
-use Sentry\Tests\MockClientStrategy;
+use Http\Discovery\Strategy\MockClientStrategy;
 
 error_reporting(E_ALL | E_STRICT);
 
