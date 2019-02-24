@@ -38,8 +38,6 @@ jobs:
         - script: composer phpstan
           env: dependencies=highest
           name: PHPStan
-          before_install: 
-              - composer require --dev php-http/curl-client --no-update --no-interaction --no-suggest
         - stage: Code coverage
           php: 7.3
           env: dependencies=highest
