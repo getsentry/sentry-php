@@ -321,13 +321,13 @@ final class ClientBuilder implements ClientBuilderInterface
                 throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
             }
 
-            if (HttpAsyncClientDiscovery::safeClassExists(HttpCurlClient::class)) {
-                $this->httpClient = new HttpCurlClient(null, null, [
-                    CURLOPT_PROXY => $this->options->getHttpProxy(),
-                ]);
-            } else {
+            if (class_exists(HttpCurlClient::class)) {
                 throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
             }
+
+            $this->httpClient = new HttpCurlClient(null, null, [
+                CURLOPT_PROXY => $this->options->getHttpProxy(),
+            ]);
         }
 
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();

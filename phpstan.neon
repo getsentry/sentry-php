@@ -8,6 +8,7 @@ parameters:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
         - '/Method Sentry\\Serializer\\RepresentationSerializer::(representationSerialize|serializeValue)\(\) should return [\w|]+ but returns [\w|]+/'
+        - '/Http\\Client\\Curl\\Client/'
     excludes_analyse:
         - tests/resources
 includes:
