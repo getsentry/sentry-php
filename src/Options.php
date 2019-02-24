@@ -620,6 +620,28 @@ final class Options
     }
 
     /**
+     * Gets the http proxy setting.
+     *
+     * @return string|null
+     */
+    public function getHttpProxy(): ?string
+    {
+        return $this->options['http_proxy'];
+    }
+
+    /**
+     * Sets the http proxy. Be aware this option only works when curl client is used.
+     *
+     * @param string|null $httpProxy The http proxy
+     */
+    public function setHttpProxy(?string $httpProxy): void
+    {
+        $options = array_merge($this->options, ['http_proxy' => $httpProxy]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -657,6 +679,7 @@ final class Options
             'in_app_exclude' => [],
             'send_default_pii' => false,
             'max_value_length' => 1024,
+            'http_proxy' => null,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -682,6 +705,7 @@ final class Options
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
+        $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));

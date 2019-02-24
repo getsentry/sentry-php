@@ -24,13 +24,6 @@ interface HubInterface
     public function getClient(): ?ClientInterface;
 
     /**
-     * Gets the scope bound to the top of the stack.
-     *
-     * @return Scope
-     */
-    public function getScope(): Scope;
-
-    /**
      * Gets the ID of the last captured event.
      *
      * @return string|null
