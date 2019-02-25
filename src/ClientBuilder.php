@@ -14,6 +14,7 @@ use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\Curl\Client as HttpCurlClient;
 use Http\Client\HttpAsyncClient;
+use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
@@ -321,13 +322,13 @@ final class ClientBuilder implements ClientBuilderInterface
                 throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
             }
 
-            if (HttpAsyncClientDiscovery::safeClassExists(HttpCurlClient::class)) {
-                $this->httpClient = new HttpCurlClient(null, null, [
-                    CURLOPT_PROXY => $this->options->getHttpProxy(),
-                ]);
-            } else {
+            if (!ClassDiscovery::safeClassExists(HttpCurlClient::class)) {
                 throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
             }
+
+            $this->httpClient = new HttpCurlClient(null, null, [
+                CURLOPT_PROXY => $this->options->getHttpProxy(),
+            ]);
         }
 
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();

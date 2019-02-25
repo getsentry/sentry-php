@@ -17,10 +17,7 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-init([
-    'dsn' => 'http://public:secret@local.host/1',
-    'send_attempts' => 1,
-]);
+init();
 
 ErrorHandler::addErrorListener(new StubErrorListener(function () {
     echo 'Listener called';
