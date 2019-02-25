@@ -29,15 +29,24 @@ information needed to prioritize, identify, reproduce and fix each issue.
 To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
 in your project. To install it please see the [docs](https://getcomposer.org/download/).
 
-Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
+This is our "core" SDK, meaning that all the important code regarding error handling lives here. 
+If you are happy with using the HTTP client we recommend install the SDK like: [`sentry/sdk`](https://github.com/getsentry/sentry-php-sdk) 
+
+```bash
+php composer.phar require sentry/sdk
+```
+
+This package (`sentry/sentry`) is not tied to any specific library that sends HTTP messages. Instead,
 it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever
 PSR-7 implementation and HTTP client they want to use.
 
 If you just want to get started quickly you should run the following command:
 
 ```bash
-php composer.phar require sentry/sentry:2.0.0-beta1 php-http/curl-client guzzlehttp/psr7
+php composer.phar require sentry/sentry:2.0.0-beta2 php-http/curl-client guzzlehttp/psr7
 ```
+
+This is basically what our metapackage (`sentry/sdk`) provides.
 
 This will install the library itself along with an HTTP client adapter that uses
 cURL as transport method (provided by Httplug) and a PSR-7 implementation
@@ -50,15 +59,12 @@ and [`http-message-implementation`](https://packagist.org/providers/psr/http-mes
 ## Usage
 
 ```php
-use function Sentry\init;
-use function Sentry\captureException;
-
-init(['dsn' => '___PUBLIC_DSN___' ]);
+\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
 
 try {
     thisFunctionThrows(); // -> throw new \Exception('foo bar');
 } catch (\Exception $exception) {
-    captureException($exception);
+    \Sentry\captureException($exception);
 }
 ```
 
