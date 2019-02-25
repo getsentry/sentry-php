@@ -19,11 +19,6 @@ The Sentry PHP error reporter tracks errors and exceptions that happen during th
 execution of your application and provides instant notification with detailed
 information needed to prioritize, identify, reproduce and fix each issue.
 
-### Notice 2.0
-
-> The current master branch is our new major release of the SDK `2.0`.
-> We currently ship `2.0` with the `beta` tag, which means you have to install it by exactly providing the version otherwise you wont get `2.0`. We will drop the `beta` tag as soon as we do no longer expect any public API changes.
-
 ## Install
 
 To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
