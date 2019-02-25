@@ -1,10 +1,16 @@
 # CHANGELOG
 
 ## Unreleased
+
+## 2.0.0 (2019-02-25)
+
+**Version 2.0.0 is a complete rewrite of the existing SDK. Code Changes are needed. Please see [UPGRADE 2.0](https://github.com/getsentry/sentry-php/blob/master/UPGRADE-2.0.md) for more details.** 
+
 - Updated .gitattributes to reduce package footprint (#770)
 - Use multibyte functions to handle unicode paths (#774)
 - Remove `Hub::getScope()` to deny direct access to `Scope` instances (#776)
 - Reintroduce `http_proxy` option (#775)
+- Added support for HTTPlug 2 / PSR-18 (#777)
 
 ## 2.0.0-beta2 (2019-02-11)
 - Rename `SentryAuth` class to `SentryAuthentication` (#742)
