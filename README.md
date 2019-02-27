@@ -38,7 +38,7 @@ PSR-7 implementation and HTTP client they want to use.
 If you just want to get started quickly you should run the following command:
 
 ```bash
-php composer.phar require sentry/sentry:2.0.0-beta2 php-http/curl-client guzzlehttp/psr7
+php composer.phar require sentry/sentry php-http/curl-client guzzlehttp/psr7
 ```
 
 This is basically what our metapackage (`sentry/sdk`) provides.

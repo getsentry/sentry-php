@@ -7,12 +7,8 @@
     "license": "BSD-3-Clause",
     "authors": [
         {
-            "name": "David Cramer",
-            "email": "dcramer@gmail.com"
-        },
-        {
-            "name": "Daniel Griesser",
-            "email": "daniel.griesser.86@gmail.com"
+            "name": "Sentry",
+            "email": "accounts@sentry.io"
         }
     ],
     "require": {
