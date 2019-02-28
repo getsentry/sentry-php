@@ -1,18 +1,12 @@
 # Upgrade from 1.10 to 2.0
 
 Version `2.x` is a complete rewrite of the existing code base. The public API has been trimmed down to a minimum.
-The preferred way of using the SDK is through our static API.
+The preferred way of using the SDK is through our "Static API" / global functions.
 
 Here is a simple example to get started:
 
 ```php
 \Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
-
-try {
-    thisFunctionThrows(); // -> throw new \Exception('foo bar');
-} catch (\Exception $exception) {
-    \Sentry\captureException($exception);
-}
 
 \Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
      $scope->setTag('page_locale', 'de-at');
@@ -21,12 +15,19 @@ try {
      $scope->setExtra('character_name', 'Mighty Fighter');
 });
 
+// The following capture call will contain the data from the previous configured Scope
+try {
+    thisFunctionThrows(); // -> throw new \Exception('foo bar');
+} catch (\Exception $exception) {
+    \Sentry\captureException($exception);
+}
+
 \Sentry\addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting', 'Message'));
 ```
 
 The call to `\Sentry\init()` sets up global exception/error handlers and uncaught errors will be sent to Sentry.
 
-Version `>= 2.0` conforms the [Unified SDK API](https://docs.sentry.io/development/sdk-dev/unified-api/).
+Version `>= 2.0` conforms to the [Unified SDK API](https://docs.sentry.io/development/sdk-dev/unified-api/).
 It has fundamentally different concepts, it's no longer recommended to just use a `Client` unless you really know what you are doing.
 
 If you are still want to use Dependecy Injection you should inject and use `HubInterface` which comes closest to `Raven_Client` you knew before.
