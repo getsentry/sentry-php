@@ -5,8 +5,7 @@ Test that the error handler ignores silenced errors
 
 namespace Sentry\Tests;
 
-use Sentry\ErrorHandler;
-use Sentry\Tests\Fixtures\classes\StubErrorListener;
+use function Sentry\init;
 
 $vendor = __DIR__;
 
@@ -16,9 +15,11 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-ErrorHandler::addErrorListener(new StubErrorListener(function () {
-    echo 'Callback invoked' . PHP_EOL;
-}));
+init([
+    'before_send' => function () {
+        echo 'Event captured' . PHP_EOL;
+    }    
+]);
 
 echo 'Triggering silenced error' . PHP_EOL;
 @$a['missing'];

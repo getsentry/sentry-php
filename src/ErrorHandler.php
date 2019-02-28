@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Exception\SilencedErrorException;
+
 /**
  * This class implements a simple error handler that catches all configured
  * error types and logs them using a certain Raven client. Registering more
@@ -176,7 +178,12 @@ final class ErrorHandler
      */
     public function handleError(int $level, string $message, string $file, int $line): bool
     {
-        $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+        if (0 === error_reporting()) {
+            $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+        } else {
+            $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+        }
+
         $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $file, $line);
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);

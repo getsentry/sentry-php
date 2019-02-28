@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Sentry\ErrorHandler;
+use Sentry\Exception\SilencedErrorException;
 use Sentry\Options;
 use Sentry\State\Hub;
 
@@ -35,6 +36,10 @@ final class ErrorListenerIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         ErrorHandler::addErrorListener(function (\ErrorException $error): void {
+            if ($error instanceof SilencedErrorException) {
+                return;
+            }
+
             if ($this->options->getErrorTypes() & $error->getSeverity()) {
                 Hub::getCurrent()->captureException($error);
             }
