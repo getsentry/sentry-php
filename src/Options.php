@@ -642,9 +642,9 @@ final class Options
     }
 
     /**
-     * Return the capture_silenced_errors option.
+     * Gets whether the silenced errors should be captured or not.
      *
-     * @return bool if true, errors silenced through the @ operator will be reported,
+     * @return bool If true, errors silenced through the @ operator will be reported,
      *              ignored otherwise
      */
     public function shouldCaptureSilencedErrors(): bool
@@ -653,9 +653,9 @@ final class Options
     }
 
     /**
-     * Sets the capture_silenced_errors option.
+     * Sets whether the silenced errors should be captured or not.
      *
-     * @param bool $shouldCapture if set to true, errors silenced through the @
+     * @param bool $shouldCapture If set to true, errors silenced through the @
      *                            operator will be reported, ignored otherwise
      */
     public function setCaptureSilencedErrors(bool $shouldCapture): void
