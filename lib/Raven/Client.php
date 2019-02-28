@@ -1101,6 +1101,9 @@ class Raven_Client
         if ($this->curl_ssl_version) {
             $options[CURLOPT_SSLVERSION] = $this->curl_ssl_version;
         }
+        if ($this->verify_ssl === false) {
+            $options[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
         if ($this->curl_ipv4) {
             $options[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
         }
