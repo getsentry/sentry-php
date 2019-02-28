@@ -642,6 +642,30 @@ final class Options
     }
 
     /**
+     * Gets whether the silenced errors should be captured or not.
+     *
+     * @return bool If true, errors silenced through the @ operator will be reported,
+     *              ignored otherwise
+     */
+    public function shouldCaptureSilencedErrors(): bool
+    {
+        return $this->options['capture_silenced_errors'];
+    }
+
+    /**
+     * Sets whether the silenced errors should be captured or not.
+     *
+     * @param bool $shouldCapture If set to true, errors silenced through the @
+     *                            operator will be reported, ignored otherwise
+     */
+    public function setCaptureSilencedErrors(bool $shouldCapture): void
+    {
+        $options = array_merge($this->options, ['capture_silenced_errors' => $shouldCapture]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -680,6 +704,7 @@ final class Options
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
+            'capture_silenced_errors' => false,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -706,6 +731,7 @@ final class Options
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
+        $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
 
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));

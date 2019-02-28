@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
+- Do no longer report silenced errors by default (#785)
+- New option `capture_silenced_error` to enable reporting of silenced errors, disabled by default (#785)
 
 ## 2.0.0 (2019-02-25)
 
