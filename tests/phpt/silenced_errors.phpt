@@ -1,11 +1,12 @@
 --TEST--
-Test that the error handler ignores silenced errors
+Test that the error handler ignores silenced errors by default, but it reports them with the appropriate option enabled.
 --FILE--
 <?php
 
 namespace Sentry\Tests;
 
 use function Sentry\init;
+use Sentry\State\Hub;
 
 $vendor = __DIR__;
 
@@ -23,8 +24,18 @@ init([
 
 echo 'Triggering silenced error' . PHP_EOL;
 @$a['missing'];
+echo 'End first test' . PHP_EOL;
+Hub::getCurrent()
+    ->getClient()
+    ->getOptions()
+    ->setCaptureSilencedErrors(true);
+echo 'Triggering silenced error' . PHP_EOL;
+@$a['missing'];
 echo 'End'
 ?>
 --EXPECTF--
 Triggering silenced error
+End first test
+Triggering silenced error
+Event captured
 End

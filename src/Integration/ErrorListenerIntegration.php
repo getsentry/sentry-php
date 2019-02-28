@@ -36,7 +36,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         ErrorHandler::addErrorListener(function (\ErrorException $error): void {
-            if ($error instanceof SilencedErrorException) {
+            if ($error instanceof SilencedErrorException && !$this->options->shouldCaptureSilencedErrors()) {
                 return;
             }
 
