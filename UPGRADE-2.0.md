@@ -25,10 +25,9 @@ try {
 \Sentry\addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting', 'Message'));
 ```
 
-The call to `\Sentry\init()` sets up global exception/error handlers and uncaught errors will be sent to Sentry.
-
+The call to `\Sentry\init()` sets up global exception/error handlers and any uncaught error will be sent to Sentry.
 Version `>= 2.0` conforms to the [Unified SDK API](https://docs.sentry.io/development/sdk-dev/unified-api/).
-It has fundamentally different concepts, it's no longer recommended to just use a `Client` unless you really know what you are doing.
+It has a fundamentally different concept, it's no longer recommended to just use a `Client` unless you really know what you are doing.
 
 If you are still want to use Dependecy Injection you should inject and use `HubInterface` which comes closest to `Raven_Client` you knew before.
 
@@ -127,7 +126,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
 ### Client
 
-- The constructor of the `Client` before (`Raven_Client`) class has changed its signature and
+- The constructor of the `Client` (before `Raven_Client`) class has changed its signature and
   now requires to be passed a configuration object, an instance of a transport
   and an event factory.
 
@@ -149,7 +148,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
   }
   ```
   
-  In general if you need to create your own instance of a `Client` we advise you to use the `ClientBuilder` instead since it does a lot for you internally.
+ The suggested way to create your own instance of the client is to use the provided builder (`ClientBuilder`) that will take care of instantiating a few dependencies like the PSR-7 factories and the HTTP client.
 
 - The method `Raven_Client::close_all_children_link` has been removed and there
 
@@ -332,7 +331,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
 - The `Raven_Client::getLastEventID` method has been removed. The ID of the
   last event that was captured is now returned by each of the `Client::capture*`
-  methods. Also you can use `Hub::getCurrent()->getLastEventId()`.
+  methods. You can also use `Hub::getCurrent()->getLastEventId()`.
 
 - The `Raven_Client::parseDSN` method has been removed.
 
