@@ -29,8 +29,6 @@ The call to `\Sentry\init()` sets up global exception/error handlers and any unc
 Version `>= 2.0` conforms to the [Unified SDK API](https://docs.sentry.io/development/sdk-dev/unified-api/).
 It has a fundamentally different concept, it's no longer recommended to just use a `Client` unless you really know what you are doing.
 
-If you are still want to use Dependecy Injection you should inject and use `HubInterface` which comes closest to `Raven_Client` you knew before.
-
 Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platform=php) to get a full overview.
 
 ### Client options
