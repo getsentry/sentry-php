@@ -1,5 +1,36 @@
 # Upgrade from 1.10 to 2.0
 
+Version `2.x` is a complete rewrite of the existing code base. The public API has been trimmed down to a minimum.
+The preferred way of using the SDK is through our "Static API" / global functions.
+
+Here is a simple example to get started:
+
+```php
+\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+
+\Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+     $scope->setTag('page_locale', 'de-at');
+     $scope->setUser(['email' => 'john.doe@example.com']);
+     $scope->setLevel(\Sentry\Severity::warning());
+     $scope->setExtra('character_name', 'Mighty Fighter');
+});
+
+// The following capture call will contain the data from the previous configured Scope
+try {
+    thisFunctionThrows(); // -> throw new \Exception('foo bar');
+} catch (\Exception $exception) {
+    \Sentry\captureException($exception);
+}
+
+\Sentry\addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting', 'Message'));
+```
+
+The call to `\Sentry\init()` sets up global exception/error handlers and any uncaught error will be sent to Sentry.
+Version `>= 2.0` conforms to the [Unified SDK API](https://docs.sentry.io/development/sdk-dev/unified-api/).
+It has a fundamentally different concept, it's no longer recommended to just use a `Client` unless you really know what you are doing.
+
+Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platform=php) to get a full overview.
+
 ### Client options
 
 - The `exclude` option has been removed. 
@@ -79,6 +110,8 @@
 - The `Raven_Autoloader` class has been removed. To install and use the
   library you are required to use [Composer](https://getcomposer.org/).
 
+- The `Raven_Util` class has been removed.
+
 - The `Raven_Compat` class has been removed.
 
 - The `Raven_Util` class has been removed.
@@ -91,7 +124,7 @@
 
 ### Client
 
-- The constructor of the `Raven_Client` class has changed its signature and
+- The constructor of the `Client` (before `Raven_Client`) class has changed its signature and
   now requires to be passed a configuration object, an instance of a transport
   and an event factory.
 
@@ -112,6 +145,8 @@
       // ...
   }
   ```
+  
+ The suggested way to create your own instance of the client is to use the provided builder (`ClientBuilder`) that will take care of instantiating a few dependencies like the PSR-7 factories and the HTTP client.
 
 - The method `Raven_Client::close_all_children_link` has been removed and there
 
@@ -129,7 +164,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -151,7 +186,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -175,7 +210,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -197,7 +232,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -219,7 +254,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -241,7 +276,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -260,7 +295,7 @@
   After:
 
   ```php
-  use Sentry\Hub;
+  use Sentry\State\Hub;
 
   $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -294,7 +329,7 @@
 
 - The `Raven_Client::getLastEventID` method has been removed. The ID of the
   last event that was captured is now returned by each of the `Client::capture*`
-  methods.
+  methods. You can also use `Hub::getCurrent()->getLastEventId()`.
 
 - The `Raven_Client::parseDSN` method has been removed.
 
@@ -488,8 +523,8 @@
   After:
 
   ```php
-  use Sentry\Hub;
-  use Sentry\Scope;
+  use Sentry\State\Hub;
+  use Sentry\State\Scope;
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setUser(['email' => 'foo@example.com']);
@@ -508,8 +543,8 @@
   After:
 
   ```php
-  use Sentry\Hub;
-  use Sentry\Scope;
+  use Sentry\State\Hub;
+  use Sentry\State\Scope;
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setTag('tag_name', 'tag_value');
@@ -528,8 +563,8 @@
   After:
 
   ```php
-  use Sentry\Hub;
-  use Sentry\Scope;
+  use Sentry\State\Hub;
+  use Sentry\State\Scope;
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setExtra('extra_key', 'extra_value');
