@@ -3,12 +3,14 @@ Test catching out of memory fatal error
 --FILE--
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
+use Sentry\ErrorHandler;
 use Sentry\Event;
 use Sentry\Severity;
-use function Sentry\init;
 
 ini_set('memory_limit', '20M');
 
@@ -20,21 +22,21 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-init([
-    'before_send' => function (Event $event): ?Event {
-        Assert::assertArrayHasKey(0,  $event->getExceptions());
-        $error = $event->getExceptions()[0];
-        Assert::assertContains('Allowed memory size', $error['value']);
-        Assert::assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
+ErrorHandler::addErrorListener(static function (): void {
+    echo 'Error listener called' . PHP_EOL;
+});
 
-        echo 'Sending event';
+ErrorHandler::addFatalErrorListener(static function (): void {
+    echo 'Fatal error listener called' . PHP_EOL;
+});
 
-        return null;
-    },
-]);
+ErrorHandler::addExceptionListener(static function (): void {
+    echo 'Exception listener called' . PHP_EOL;
+});
 
 $foo = str_repeat('x', 1024 * 1024 * 30);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Sending event
+Error listener called
+Fatal error listener called

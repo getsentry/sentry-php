@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Exception\FatalErrorException;
 use Sentry\Exception\SilencedErrorException;
 
 /**
@@ -30,6 +31,11 @@ final class ErrorHandler
      * @var callable[] List of listeners that will act on each captured error
      */
     private $errorListeners = [];
+
+    /**
+     * @var callable[] List of listeners that will act of each captured fatal error
+     */
+    private $fatalErrorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act on each captured exception
@@ -146,6 +152,21 @@ final class ErrorHandler
 
     /**
      * Adds a listener to the current error handler to be called upon each
+     * invoked captured fatal error; if no handler is registered, this method
+     * will instantiate and register it.
+     *
+     * @param callable $listener A callable that will act as a listener;
+     *                           this callable will receive a single
+     *                           \ErrorException argument
+     */
+    public static function addFatalErrorListener(callable $listener): void
+    {
+        $handler = self::registerOnce();
+        $handler->fatalErrorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler to be called upon each
      * invoked captured exception; if no handler is registered, this method
      * will instantiate and register it.
      *
@@ -221,9 +242,10 @@ final class ErrorHandler
         }
 
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
-            $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
+            $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
 
             $this->invokeListeners($this->errorListeners, $errorAsException);
+            $this->invokeListeners($this->fatalErrorListeners, $errorAsException);
         }
     }
 

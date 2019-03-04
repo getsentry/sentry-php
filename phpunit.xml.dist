@@ -11,7 +11,7 @@
     </php>
 
     <testsuites>
-        <testsuite name="Sentry for PHP Test Suite">
+        <testsuite name="Sentry for PHP">
             <directory>tests</directory>
             <directory suffix=".phpt">tests/phpt</directory>
         </testsuite>

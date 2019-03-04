@@ -1,7 +1,11 @@
 --TEST--
 Test catching fatal errors
+--INI--
+errore_reporting=E_ALL
 --FILE--
 <?php
+
+declare(strict_types=1);
 
 namespace Sentry\Tests;
 
@@ -24,8 +28,6 @@ $options = [
 ];
 
 init($options);
-
-error_reporting(E_ALL);
 
 $stubTransport = new StubTransport();
 $client = ClientBuilder::create($options)

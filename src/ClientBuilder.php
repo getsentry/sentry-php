@@ -24,6 +24,7 @@ use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
+use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -102,7 +103,8 @@ final class ClientBuilder implements ClientBuilderInterface
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(array_merge([
                 new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration($this->options),
+                new ErrorListenerIntegration($this->options, false),
+                new FatalErrorListenerIntegration($this->options),
                 new RequestIntegration($this->options),
             ], $this->options->getIntegrations()));
         }

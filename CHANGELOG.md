@@ -9,6 +9,8 @@
 - Add support for `SENTRY_ENVRIONMENT` and `SENTRY_RELEASE` environment variables (#810)
 - Fix the default value of the `$exceptions` property of the Event class (#806)
 - Add a Monolog handler (#808)
+- Increase default severity of `E_RECOVERABLE_ERROR` to `Severity::ERROR`, instead of warning (#792)
+- Make it possible to register fatal error listeners separately from the error listeners (#788)
 
 ## 2.0.1 (2019-03-01)
 

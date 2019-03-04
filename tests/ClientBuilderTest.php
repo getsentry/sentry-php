@@ -19,6 +19,7 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
+use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
@@ -193,6 +194,7 @@ final class ClientBuilderTest extends TestCase
                 [],
                 [
                     ErrorListenerIntegration::class,
+                    FatalErrorListenerIntegration::class,
                     ExceptionListenerIntegration::class,
                     RequestIntegration::class,
                 ],
@@ -202,6 +204,7 @@ final class ClientBuilderTest extends TestCase
                 [new StubIntegration()],
                 [
                     ErrorListenerIntegration::class,
+                    FatalErrorListenerIntegration::class,
                     ExceptionListenerIntegration::class,
                     RequestIntegration::class,
                     StubIntegration::class,
