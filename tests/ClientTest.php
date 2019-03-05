@@ -423,9 +423,12 @@ class ClientTest extends TestCase
                 $result = $event->getStacktrace();
 
                 $this->assertInstanceOf(Stacktrace::class, $result);
-                $this->assertNotEmpty($result->getFrames());
-                $this->assertTrue($result->getFrames()[0]->isInApp());
-                $this->assertFalse($result->getFrames()[\count($result->getFrames()) - 1]->isInApp());
+
+                $frames = $result->getFrames();
+
+                $this->assertNotEmpty($frames);
+                $this->assertTrue($frames[0]->isInApp());
+                $this->assertFalse($frames[\count($frames) - 1]->isInApp());
 
                 return true;
             }));
