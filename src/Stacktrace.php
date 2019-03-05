@@ -138,6 +138,11 @@ class Stacktrace implements \JsonSerializable
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
         }
 
+        // In case it's an Sentry internal frame, we mark it as in_app false
+        if (null !== $functionName && 0 === strpos($functionName, 'Sentry\\')) {
+            $frame->setIsInApp(false);
+        }
+
         if (null !== $this->options->getProjectRoot()) {
             $excludedAppPaths = $this->options->getInAppExcludedPaths();
             $absoluteFilePath = @realpath($file) ?: $file;

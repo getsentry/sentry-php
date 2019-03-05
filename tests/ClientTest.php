@@ -424,6 +424,8 @@ class ClientTest extends TestCase
 
                 $this->assertInstanceOf(Stacktrace::class, $result);
                 $this->assertNotEmpty($result->getFrames());
+                $this->assertTrue($result->getFrames()[0]->isInApp());
+                $this->assertFalse($result->getFrames()[\count($result->getFrames()) - 1]->isInApp());
 
                 return true;
             }));
