@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (786)
+
 ## 2.0.1 (2019-03-01)
 
 - Do no longer report silenced errors by default (#785)
