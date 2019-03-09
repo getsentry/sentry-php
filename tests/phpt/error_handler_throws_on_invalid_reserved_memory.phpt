@@ -17,7 +17,7 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-ErrorHandler::registerOnce(-1);
+ErrorHandler::registerOnceFatalErrorHandler(-1);
 ?>
 --EXPECTF--
 Fatal error: Uncaught InvalidArgumentException: The $reservedMemorySize argument must be greater than 0. in %s:%d

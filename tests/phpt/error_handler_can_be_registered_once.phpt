@@ -17,40 +17,46 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-var_dump(ErrorHandler::registerOnce() === ErrorHandler::registerOnce());
+function getHandlerRegistrationCount(callable $setHandlerCallback, callable $restoreHandlerCallback): int
+{
+    $savedErrorHandlers = [];
+    $errorHandler = null;
+    $previousErrorHandler = null;
 
-$savedErrorHandlers = [];
-$errorHandler = null;
-$previousErrorHandler = null;
+    while (true) {
+        $errorHandler = call_user_func($setHandlerCallback, 'var_dump');
 
-while (true) {
-    $errorHandler = set_error_handler('var_dump');
+        // Restore the error handler that has been popped out from the stack with
+        // the line above
+        call_user_func($restoreHandlerCallback);
 
-    // Restore the error handler that has been popped out from the stack with
-    // the line above
-    restore_error_handler();
+        if (!$errorHandler) {
+            break;
+        }
 
-    if (!$errorHandler) {
-        break;
+        // Restore the next error handler so that we don't reuse it in the next loop
+        // iteration
+        call_user_func($restoreHandlerCallback);
+
+        if ($errorHandler !== $previousErrorHandler) {
+            array_unshift($savedErrorHandlers, $errorHandler);
+
+            $previousErrorHandler = $errorHandler;
+        }
     }
 
-    // Restore the next error handler so that we don't reuse it in the next loop
-    // iteration
-    restore_error_handler();
-
-    if ($errorHandler !== $previousErrorHandler) {
-        array_unshift($savedErrorHandlers, $errorHandler);
-
-        $previousErrorHandler = $errorHandler;
+    foreach ($savedErrorHandlers as $savedErrorHandler) {
+        call_user_func($setHandlerCallback, $savedErrorHandler);
     }
+
+    return count($savedErrorHandlers);
 }
 
-foreach ($savedErrorHandlers as $savedErrorHandler) {
-    set_error_handler($savedErrorHandler);
-}
-
-var_dump(1 === count($savedErrorHandlers));
+var_dump(ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false) === ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false));
+var_dump(1 === getHandlerRegistrationCount('set_error_handler', 'restore_error_handler'));
+var_dump(1 === getHandlerRegistrationCount('set_exception_handler', 'restore_exception_handler'));
 ?>
---EXPECTF--
+--EXPECT--
+bool(true)
 bool(true)
 bool(true)

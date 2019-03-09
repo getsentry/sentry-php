@@ -37,7 +37,7 @@ trigger_error('Error thrown', E_USER_WARNING);
 
 echo 'End of script reached';
 ?>
---EXPECTF--
+--EXPECT--
 Triggering error
 Error listener called
 End of script reached
