@@ -81,7 +81,6 @@ final class Severity
              case E_USER_DEPRECATED:
              case E_WARNING:
              case E_USER_WARNING:
-             case E_RECOVERABLE_ERROR:
                  return self::warning();
              case E_ERROR:
              case E_PARSE:
@@ -90,6 +89,7 @@ final class Severity
              case E_COMPILE_ERROR:
              case E_COMPILE_WARNING:
                  return self::fatal();
+             case E_RECOVERABLE_ERROR:
              case E_USER_ERROR:
                  return self::error();
              case E_NOTICE:
