@@ -20,7 +20,7 @@ final class ErrorHandler
     /**
      * The default amount of bytes of memory to reserve for the fatal error handler.
      */
-    public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
+    private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
      * @var self The current registered handler (this class is a singleton)
@@ -116,14 +116,20 @@ final class ErrorHandler
      * Gets the current registered error handler; if none is present, it will
      * register it. Subsequent calls will not change the reserved memory size.
      *
-     * @param int $reservedMemorySize The amount of memory to reserve for the
-     *                                fatal error handler
+     * @param int  $reservedMemorySize The amount of memory to reserve for the
+     *                                 fatal error handler
+     * @param bool $triggerDeprecation Whether to trigger the deprecation about
+     *                                 the usage of this method. This is used
+     *                                 to avoid errors when this method is called
+     *                                 from other methods of this class until
+     *                                 their implementation and behavior of
+     *                                 registering all handlers can be changed
      *
      * @return self
      *
      * @deprecated since version 2.1, to be removed in 3.0.
      */
-    public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE/*, bool $triggerDeprecation = true*/): self
+    public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE, bool $triggerDeprecation = true): self
     {
         if (2 > \func_num_args() || func_get_arg(1)) {
             @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Please use the registerOnceErrorHandler(), registerOnceFatalErrorHandler() or registerOnceExceptionHandler() methods instead.', __METHOD__), E_USER_DEPRECATED);
@@ -171,8 +177,8 @@ final class ErrorHandler
 
     /**
      * Registers the fatal error handler and reserves a certain amount of memory
-     * that will be reclaimed to handle the errors (to prevent out of memory issues
-     * while handling them) and returns its instance.
+     * that will be reclaimed to handle the errors (to prevent out of memory
+     * issues while handling them) and returns its instance.
      *
      * @param int $reservedMemorySize The amount of memory to reserve for the fatal
      *                                error handler expressed in bytes

@@ -52,7 +52,7 @@ function getHandlerRegistrationCount(callable $setHandlerCallback, callable $res
     return count($savedErrorHandlers);
 }
 
-var_dump(ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false) === ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false));
+var_dump(ErrorHandler::registerOnce(10240, false) === ErrorHandler::registerOnce(10240, false));
 var_dump(1 === getHandlerRegistrationCount('set_error_handler', 'restore_error_handler'));
 var_dump(1 === getHandlerRegistrationCount('set_exception_handler', 'restore_exception_handler'));
 ?>

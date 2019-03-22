@@ -37,7 +37,7 @@ trigger_error('Error thrown', E_USER_WARNING);
 
 $returnValue = 'foo bar';
 
-echo 'Triggering error (should be displayed)' . PHP_EOL;
+echo 'Triggering error (shouldn\'t be displayed)' . PHP_EOL;
 
 trigger_error('Error thrown', E_USER_WARNING);
 
@@ -48,5 +48,5 @@ Triggering error (shouldn't be displayed)
 Triggering error (should be displayed)
 
 Warning: Error thrown in %s on line %d
-Triggering error (should be displayed)
+Triggering error (shouldn't be displayed)
 End of script reached
