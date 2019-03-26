@@ -53,8 +53,6 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
 - The `ignore_server_port` option has been removed.
 
-- The `error_types` option has been removed.
-
 - The `trust_x_forwarded_proto` option has been removed.
 
 - The `mb_detect_order` option has been removed.

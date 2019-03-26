@@ -462,7 +462,7 @@ final class Options
     }
 
     /**
-     * Gets a bit mask for error_reporting used in {@link ErrorHandler::handleError}.
+     * Gets a bit mask for error_reporting used in {@link ErrorListenerIntegration} to filter which errors to report.
      *
      * @return int
      */
@@ -472,7 +472,7 @@ final class Options
     }
 
     /**
-     * Sets a bit mask for error_reporting used in {@link ErrorHandler::handleError}.
+     * Sets a bit mask for error_reporting used in {@link ErrorListenerIntegration} to filter which errors to report.
      *
      * @param int $errorTypes The bit mask
      */
