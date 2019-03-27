@@ -298,11 +298,15 @@ final class ErrorHandler
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
         }
 
-        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $file, $line);
+        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $errorAsException->getFile(), $errorAsException->getLine());
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
-        $this->invokeListeners($this->errorListeners, $errorAsException);
+        try {
+            $this->handleException($errorAsException);
+        } catch (\ErrorException $exception) {
+            // Do nothing and ignore the re-throw of the exception
+        }
 
         if (null !== $this->previousErrorHandler) {
             return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
@@ -335,8 +339,13 @@ final class ErrorHandler
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
             $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
 
-            $this->invokeListeners($this->errorListeners, $errorAsException);
-            $this->invokeListeners($this->fatalErrorListeners, $errorAsException);
+            $this->exceptionReflection->setValue($errorAsException, []);
+
+            try {
+                $this->handleException($errorAsException);
+            } catch (FatalErrorException $exception) {
+                // Do nothing and ignore the re-throw of the exception
+            }
         }
     }
 
@@ -346,11 +355,25 @@ final class ErrorHandler
      *
      * @param \Throwable $exception The exception to handle
      *
-     * @throws \Throwable
+     * @throws FatalErrorException|\ErrorException|\Throwable
      */
     private function handleException(\Throwable $exception): void
     {
-        $this->invokeListeners($this->exceptionListeners, $exception);
+        // The order of the `case` statements of this switch MUST be from the
+        // most to the least specific exception type
+        switch (true) {
+            case $exception instanceof FatalErrorException:
+                $this->invokeListeners($this->errorListeners, $exception);
+                $this->invokeListeners($this->fatalErrorListeners, $exception);
+                break;
+
+            case $exception instanceof \ErrorException:
+                $this->invokeListeners($this->errorListeners, $exception);
+                break;
+
+            default:
+                $this->invokeListeners($this->exceptionListeners, $exception);
+        }
 
         $previousExceptionHandlerException = $exception;
 
