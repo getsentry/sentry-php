@@ -131,7 +131,7 @@ final class ErrorHandler
      */
     public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE, bool $triggerDeprecation = true): self
     {
-        if (2 > \func_num_args() || func_get_arg(1)) {
+        if ($triggerDeprecation) {
             @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Please use the registerOnceErrorHandler(), registerOnceFatalErrorHandler() or registerOnceExceptionHandler() methods instead.', __METHOD__), E_USER_DEPRECATED);
         }
 
@@ -302,11 +302,7 @@ final class ErrorHandler
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
-        try {
-            $this->handleException($errorAsException);
-        } catch (\ErrorException $exception) {
-            // Do nothing and ignore the re-throw of the exception
-        }
+        $this->invokeListeners($this->errorListeners, $errorAsException);
 
         if (null !== $this->previousErrorHandler) {
             return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
@@ -341,11 +337,8 @@ final class ErrorHandler
 
             $this->exceptionReflection->setValue($errorAsException, []);
 
-            try {
-                $this->handleException($errorAsException);
-            } catch (FatalErrorException $exception) {
-                // Do nothing and ignore the re-throw of the exception
-            }
+            $this->invokeListeners($this->errorListeners, $errorAsException);
+            $this->invokeListeners($this->fatalErrorListeners, $errorAsException);
         }
     }
 
@@ -355,25 +348,11 @@ final class ErrorHandler
      *
      * @param \Throwable $exception The exception to handle
      *
-     * @throws FatalErrorException|\ErrorException|\Throwable
+     * @throws \Throwable
      */
     private function handleException(\Throwable $exception): void
     {
-        // The order of the `case` statements of this switch MUST be from the
-        // most to the least specific exception type
-        switch (true) {
-            case $exception instanceof FatalErrorException:
-                $this->invokeListeners($this->errorListeners, $exception);
-                $this->invokeListeners($this->fatalErrorListeners, $exception);
-                break;
-
-            case $exception instanceof \ErrorException:
-                $this->invokeListeners($this->errorListeners, $exception);
-                break;
-
-            default:
-                $this->invokeListeners($this->exceptionListeners, $exception);
-        }
+        $this->invokeListeners($this->exceptionListeners, $exception);
 
         $previousExceptionHandlerException = $exception;
 
