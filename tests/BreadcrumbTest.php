@@ -102,4 +102,25 @@ final class BreadcrumbTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $breadcrumb->getMetadata());
         $this->assertArrayNotHasKey('foo', $newBreadcrumb->getMetadata());
     }
+
+    public function testJsonSerialize(): void
+    {
+        $type = Breadcrumb::TYPE_USER;
+        $level = Breadcrumb::LEVEL_INFO;
+        $category = 'foo';
+        $data = ['baz' => 'bar'];
+        $message = 'message';
+        $breadcrumb = new Breadcrumb($level, $type, $category, $message, $data);
+
+        $expected = [
+            'type' => $type,
+            'category' => $category,
+            'message' => $message,
+            'level' => $level,
+            'timestamp' => microtime(true),
+            'data' => $data,
+        ];
+
+        $this->assertEquals($expected, $breadcrumb->jsonSerialize());
+    }
 }
