@@ -85,6 +85,20 @@ final class Scope
     }
 
     /**
+     * Merges the given tags into the current tags context.
+     *
+     * @param array<string, string> $tags The tags to merge into the current context
+     *
+     * @return $this
+     */
+    public function setTags(array $tags): self
+    {
+        $this->tags->merge($tags);
+
+        return $this;
+    }
+
+    /**
      * Gets the tags contained in the tags context.
      *
      * @return array<string, string>
@@ -107,6 +121,20 @@ final class Scope
     public function setExtra(string $key, $value): self
     {
         $this->extra[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Merges the given data into the current extras context.
+     *
+     * @param array<string, mixed> $extras Data to merge into the current context
+     *
+     * @return $this
+     */
+    public function setExtras(array $extras): self
+    {
+        $this->extra->merge($extras);
 
         return $this;
     }
@@ -227,6 +255,18 @@ final class Scope
     public function getBreadcrumbs(): array
     {
         return $this->breadcrumbs;
+    }
+
+    /**
+     * Clears all the breadcrumbs.
+     *
+     * @return $this
+     */
+    public function clearBreadcrumbs(): self
+    {
+        $this->breadcrumbs = [];
+
+        return $this;
     }
 
     /**

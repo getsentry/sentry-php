@@ -227,6 +227,7 @@ final class Hub implements HubInterface
     public function getIntegration(string $className): ?IntegrationInterface
     {
         $client = $this->getClient();
+
         if (null !== $client) {
             return $client->getIntegration($className);
         }
