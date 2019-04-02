@@ -13,6 +13,8 @@ use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\AsyncTransportInterface;
+use Sentry\Transport\TransportInterface;
 
 final class HubTest extends TestCase
 {
@@ -292,6 +294,41 @@ final class HubTest extends TestCase
         $hub = new Hub($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
+    }
+
+    public function testClientAwait(): void
+    {
+        /** @var ClientInterface|MockObject $asyncTransport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $hub = new Hub($client);
+
+        $client->expects($this->once())
+               ->method('getTransport')
+               ->willReturn($transport);
+
+        $hub->await();
+    }
+
+    public function testClientAwaitAsync(): void
+    {
+        /** @var ClientInterface|MockObject $asyncTransport */
+        $asyncTransport = $this->createMock(AsyncTransportInterface::class);
+
+        /** @var ClientInterface|MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $hub = new Hub($client);
+
+        $client->expects($this->once())
+               ->method('getTransport')
+               ->willReturn($asyncTransport);
+
+        $asyncTransport->expects($this->once())
+                       ->method('await');
+
+        $hub->await();
     }
 
     private function getScope(HubInterface $hub): Scope

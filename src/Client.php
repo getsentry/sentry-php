@@ -72,6 +72,14 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function getTransport(): TransportInterface
+    {
+        return $this->transport;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
     {
         $payload = [

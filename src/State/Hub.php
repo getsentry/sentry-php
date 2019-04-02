@@ -8,6 +8,7 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Transport\AsyncTransportInterface;
 
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
@@ -197,6 +198,18 @@ final class Hub implements HubInterface
         }
 
         return null !== $breadcrumb;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function await(): void
+    {
+        $transport = $this->getClient()->getTransport();
+
+        if ($transport instanceof AsyncTransportInterface) {
+            $transport->await();
+        }
     }
 
     /**

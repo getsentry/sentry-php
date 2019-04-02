@@ -6,9 +6,10 @@ namespace Sentry;
 
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\TransportInterface;
 
 /**
- * This interface must be implemented by all Raven client classes.
+ * This interface must be implemented by all Sentry client classes.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
@@ -20,6 +21,13 @@ interface ClientInterface
      * @return Options
      */
     public function getOptions(): Options;
+
+    /**
+     * Returns the transport of the client.
+     *
+     * @return TransportInterface
+     */
+    public function getTransport(): TransportInterface;
 
     /**
      * Logs a message.

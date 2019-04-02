@@ -16,7 +16,7 @@ use Sentry\Util\JSON;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class HttpTransport implements TransportInterface
+final class HttpTransport implements AsyncTransportInterface
 {
     /**
      * @var Options The Raven client configuration
@@ -54,7 +54,7 @@ final class HttpTransport implements TransportInterface
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
         // will be executed last
-        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'cleanupPendingRequests']));
+        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'await']));
     }
 
     /**
@@ -63,7 +63,7 @@ final class HttpTransport implements TransportInterface
      */
     public function __destruct()
     {
-        $this->cleanupPendingRequests();
+        $this->await();
     }
 
     /**
@@ -102,9 +102,13 @@ final class HttpTransport implements TransportInterface
      * Cleanups the pending requests by forcing them to be sent. Any error that
      * occurs will be ignored.
      */
-    private function cleanupPendingRequests(): void
+    public function await(): void
     {
-        foreach ($this->pendingRequests as $pendingRequest) {
+        if (empty($this->pendingRequests)) {
+            return;
+        }
+
+        while ($pendingRequest = array_pop($this->pendingRequests)) {
             try {
                 $pendingRequest->wait();
             } catch (\Throwable $exception) {

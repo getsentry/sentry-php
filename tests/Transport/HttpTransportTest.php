@@ -70,10 +70,7 @@ final class HttpTransportTest extends TestCase
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
-        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
-        $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($transport);
-        $reflectionMethod->setAccessible(false);
+        $transport->await();
     }
 
     public function testSendFailureCleanupPendingRequests(): void
