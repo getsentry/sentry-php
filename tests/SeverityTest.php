@@ -18,39 +18,31 @@ final class SeverityTest extends TestCase
         new Severity('foo');
     }
 
-    public function testDebug(): void
+    /**
+     * @dataProvider constantsDataProvider
+     */
+    public function testConstructor(Severity $severity, string $expectedStringRepresentation): void
     {
-        $severity = Severity::debug();
-
-        $this->assertSame(Severity::DEBUG, (string) $severity);
+        $this->assertTrue($severity->isEqualTo(new Severity($expectedStringRepresentation)));
     }
 
-    public function testInfo(): void
+    /**
+     * @dataProvider constantsDataProvider
+     */
+    public function testToString(Severity $severity, string $expectedStringRepresentation): void
     {
-        $severity = Severity::info();
-
-        $this->assertSame(Severity::INFO, (string) $severity);
+        $this->assertSame($expectedStringRepresentation, (string) $severity);
     }
 
-    public function testWarning(): void
+    public function constantsDataProvider(): array
     {
-        $severity = Severity::warning();
-
-        $this->assertSame(Severity::WARNING, (string) $severity);
-    }
-
-    public function testError(): void
-    {
-        $severity = Severity::error();
-
-        $this->assertSame(Severity::ERROR, (string) $severity);
-    }
-
-    public function testFatal(): void
-    {
-        $severity = Severity::fatal();
-
-        $this->assertSame(Severity::FATAL, (string) $severity);
+        return [
+            [Severity::debug(), 'debug'],
+            [Severity::info(), 'info'],
+            [Severity::warning(), 'warning'],
+            [Severity::error(), 'error'],
+            [Severity::fatal(), 'fatal'],
+        ];
     }
 
     public function testIsEqualTo(): void
@@ -61,5 +53,38 @@ final class SeverityTest extends TestCase
 
         $this->assertTrue($severity1->isEqualTo($severity2));
         $this->assertFalse($severity1->isEqualTo($severity3));
+    }
+
+    /**
+     * @dataProvider levelsDataProvider
+     */
+    public function testFromError(int $errorLevel, string $expectedSeverity): void
+    {
+        $this->assertSame($expectedSeverity, (string) Severity::fromError($errorLevel));
+    }
+
+    public function levelsDataProvider(): array
+    {
+        return [
+            // Warning
+            [E_DEPRECATED, 'warning'],
+            [E_USER_DEPRECATED, 'warning'],
+            [E_WARNING, 'warning'],
+            [E_USER_WARNING, 'warning'],
+            // Fatal
+            [E_ERROR, 'fatal'],
+            [E_PARSE, 'fatal'],
+            [E_CORE_ERROR, 'fatal'],
+            [E_CORE_WARNING, 'fatal'],
+            [E_COMPILE_ERROR, 'fatal'],
+            [E_COMPILE_WARNING, 'fatal'],
+            // Error
+            [E_RECOVERABLE_ERROR, 'error'],
+            [E_USER_ERROR, 'error'],
+            // Info
+            [E_NOTICE, 'info'],
+            [E_USER_NOTICE, 'info'],
+            [E_STRICT, 'info'],
+        ];
     }
 }
