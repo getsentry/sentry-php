@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
@@ -205,10 +206,14 @@ final class Hub implements HubInterface
      */
     public function await(): void
     {
-        $transport = $this->getClient()->getTransport();
+        $client = $this->getClient();
 
-        if ($transport instanceof AsyncTransportInterface) {
-            $transport->await();
+        if ($client instanceof Client) {
+            $transport = $client->getTransport();
+
+            if ($transport instanceof AsyncTransportInterface) {
+                $transport->await();
+            }
         }
     }
 
