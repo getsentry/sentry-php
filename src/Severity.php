@@ -14,31 +14,37 @@ final class Severity
 {
     /**
      * This constant represents the "debug" severity level.
+     * @internal
      */
     public const DEBUG = 'debug';
 
     /**
      * This constant represents the "info" severity level.
+     * @internal
      */
     public const INFO = 'info';
 
     /**
      * This constant represents the "warning" severity level.
+     * @internal
      */
     public const WARNING = 'warning';
 
     /**
      * This constant represents the "error" severity level.
+     * @internal
      */
     public const ERROR = 'error';
 
     /**
      * This constant represents the "fatal" severity level.
+     * @internal
      */
     public const FATAL = 'fatal';
 
     /**
      * This constant contains the list of allowed enum values.
+     * @internal 
      */
     public const ALLOWED_SEVERITIES = [
         self::DEBUG,
