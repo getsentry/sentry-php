@@ -9,7 +9,7 @@ use Sentry\Exception\SilencedErrorException;
 
 /**
  * This class implements a simple error handler that catches all configured
- * error types and logs them using a certain Raven client. Registering more
+ * error types and logs them using a certain Sentry client. Registering more
  * than once this error handler is not supported and will lead to nasty problems.
  * The code is based on the Symfony Debug component.
  *
@@ -329,7 +329,7 @@ final class ErrorHandler
     }
 
     /**
-     * Handles errors by capturing them through the Raven client according to
+     * Handles errors by capturing them through the Sentry client according to
      * the configured bit field.
      *
      * @param int    $level   The level of the error raised, represented by one
@@ -365,7 +365,7 @@ final class ErrorHandler
     }
 
     /**
-     * Handles fatal errors by capturing them through the Raven client. This
+     * Handles fatal errors by capturing them through the Sentry client. This
      * method is used as callback of a shutdown function.
      *
      * @param array|null $error The error details as returned by error_get_last()

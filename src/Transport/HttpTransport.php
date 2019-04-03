@@ -19,7 +19,7 @@ use Sentry\Util\JSON;
 final class HttpTransport implements AsyncTransportInterface
 {
     /**
-     * @var Options The Raven client configuration
+     * @var Options The Sentry client configuration
      */
     private $config;
 
@@ -41,7 +41,7 @@ final class HttpTransport implements AsyncTransportInterface
     /**
      * Constructor.
      *
-     * @param Options         $config         The Raven client configuration
+     * @param Options         $config         The Sentry client configuration
      * @param HttpAsyncClient $httpClient     The HTTP client
      * @param RequestFactory  $requestFactory The PSR-7 request factory
      */
