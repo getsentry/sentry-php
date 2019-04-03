@@ -104,10 +104,6 @@ final class HttpTransport implements AsyncTransportInterface
      */
     public function await(): void
     {
-        if (empty($this->pendingRequests)) {
-            return;
-        }
-
         while ($pendingRequest = array_pop($this->pendingRequests)) {
             try {
                 $pendingRequest->wait();

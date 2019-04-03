@@ -34,10 +34,6 @@ final class MemorySpool implements SpoolInterface
      */
     public function flushQueue(TransportInterface $transport): void
     {
-        if (empty($this->events)) {
-            return;
-        }
-
         while ($event = array_pop($this->events)) {
             $transport->send($event);
         }
