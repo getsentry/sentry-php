@@ -629,9 +629,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
   ```php
   use Sentry\ErrorHandler;
 
-  ErrorHandler::register(function (\Throwable $exception): void {
-      // ...
-  });
+  ErrorHandler::registerOnce();
   ```
 
 - The method `Raven_ErrorHandler::handleError` has changed its signature by
