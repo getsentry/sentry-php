@@ -15,7 +15,6 @@ use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\AsyncTransportInterface;
-use Sentry\Transport\TransportInterface;
 
 final class HubTest extends TestCase
 {
