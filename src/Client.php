@@ -70,7 +70,9 @@ final class Client implements ClientInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Returns the transport of the client.
+     *
+     * @return TransportInterface
      */
     public function getTransport(): TransportInterface
     {
