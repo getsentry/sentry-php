@@ -7,6 +7,7 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Severity;
@@ -296,38 +297,19 @@ final class HubTest extends TestCase
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
     }
 
-    public function testClientAwait(): void
-    {
-        /** @var ClientInterface|MockObject $asyncTransport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $hub = new Hub($client);
-
-        $client->expects($this->once())
-               ->method('getTransport')
-               ->willReturn($transport);
-
-        $hub->await();
-    }
-
     public function testClientAwaitAsync(): void
     {
-        /** @var ClientInterface|MockObject $asyncTransport */
+        /** @var AsyncTransportInterface|MockObject $asyncTransport */
         $asyncTransport = $this->createMock(AsyncTransportInterface::class);
-
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $hub = new Hub($client);
-
-        $client->expects($this->once())
-               ->method('getTransport')
-               ->willReturn($asyncTransport);
-
         $asyncTransport->expects($this->once())
-                       ->method('await');
+            ->method('await');
 
+        /** @var Client $client */
+        $client = ClientBuilder::create()
+            ->setTransport($asyncTransport)
+            ->getClient();
+
+        $hub = new Hub($client);
         $hub->await();
     }
 
