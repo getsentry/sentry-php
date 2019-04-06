@@ -18,7 +18,8 @@ final class ExceptionListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        ErrorHandler::addExceptionListener(static function (\Throwable $exception): void {
+        $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
+        $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
             Hub::getCurrent()->captureException($exception);
         });
     }

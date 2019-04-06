@@ -36,7 +36,8 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        ErrorHandler::addFatalErrorListener(function (FatalErrorException $exception): void {
+        $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+        $errorHandler->addFatalErrorHandlerListener(function (FatalErrorException $exception): void {
             if (!($this->options->getErrorTypes() & $exception->getSeverity())) {
                 return;
             }

@@ -19,8 +19,10 @@ final class ErrorHandler
 {
     /**
      * The default amount of bytes of memory to reserve for the fatal error handler.
+     *
+     * @internal
      */
-    private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
+    public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
      * @var self The current registered handler (this class is a singleton)
@@ -238,9 +240,13 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener;
      *                           this callable will receive a single
      *                           \ErrorException argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addErrorListener(callable $listener): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->errorListeners[] = $listener;
     }
@@ -253,9 +259,13 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener;
      *                           this callable will receive a single
      *                           \ErrorException argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addFatalErrorListener(callable $listener): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addFatalErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->fatalErrorListeners[] = $listener;
     }
@@ -268,11 +278,54 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener;
      *                           this callable will receive a single
      *                           \Throwable argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addExceptionListener(callable $listener): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addExceptionHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->exceptionListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time an error is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \ErrorException
+     */
+    public function addErrorHandlerListener(callable $listener): void
+    {
+        $this->errorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time a fatal error handler is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \Sentry\Exception\FatalErrorException
+     */
+    public function addFatalErrorHandlerListener(callable $listener): void
+    {
+        $this->fatalErrorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time an exception is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \Throwable
+     */
+    public function addExceptionHandlerListener(callable $listener): void
+    {
+        $this->exceptionListeners[] = $listener;
     }
 
     /**

@@ -27,7 +27,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
     private $handleFatalErrors;
 
     /**
-     * ErrorListenerIntegration constructor.
+     * Constructor.
      *
      * @param Options $options           The options to be used with this integration
      * @param bool    $handleFatalErrors Whether to handle fatal errors or not
@@ -47,7 +47,8 @@ final class ErrorListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        ErrorHandler::addErrorListener(function (\ErrorException $exception): void {
+        $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
+        $errorHandler->addErrorHandlerListener(function (\ErrorException $exception): void {
             if (!$this->handleFatalErrors && $exception instanceof FatalErrorException) {
                 return;
             }

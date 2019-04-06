@@ -19,15 +19,18 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-ErrorHandler::addErrorListener(static function (): void {
+$errorHandler = ErrorHandler::registerOnceErrorHandler();
+$errorHandler->addErrorHandlerListener(static function (): void {
     echo 'Error listener called' . PHP_EOL;
 });
 
-ErrorHandler::addFatalErrorListener(static function (): void {
+$errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+$errorHandler->addFatalErrorHandlerListener(static function (): void {
     echo 'Fatal error listener called (it should not have been)';
 });
 
-ErrorHandler::addExceptionListener(static function (): void {
+$errorHandler = ErrorHandler::registerOnceExceptionHandler();
+$errorHandler->addExceptionHandlerListener(static function (): void {
     echo 'Exception listener called (it should not have been)';
 });
 
