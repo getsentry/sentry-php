@@ -274,6 +274,46 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame(['foo' => ['key' => 'value']], $result);
     }
 
+    public function testChangeDefaultMaxDepth(): void
+    {
+        $serializer = $this->createSerializer();
+        $serializer->setSerializeAllObjects(true);
+        $input = [
+            1 => [
+                2 => [
+                    3 => [
+                        4 => [
+                            5 => 6,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expectedDefaultResult = [
+            1 => [
+                2 => [
+                    3 => 'Array of length 1',
+                ],
+            ],
+        ];
+
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame($expectedDefaultResult, $result);
+
+        $expectedChangedResult = [
+            1 => [
+                2 => [
+                    3 => [
+                        4 => 'Array of length 1',
+                    ],
+                ],
+            ],
+        ];
+        $serializer->setDefaultMaxDepth(4);
+        $result = $this->invokeSerialization($serializer, $input);
+        $this->assertSame($expectedChangedResult, $result);
+    }
+
     /**
      * @dataProvider serializeAllObjectsDataProvider
      */

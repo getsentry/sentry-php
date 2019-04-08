@@ -46,9 +46,16 @@ abstract class AbstractSerializer
     /**
      * The maximum depth to reach when serializing recursively.
      *
-     * @var int
+     * @var int|null
      */
     private $maxDepth;
+
+    /**
+     * The default max depth.
+     *
+     * @var int
+     */
+    private $defaultMaxDepth = 3;
 
     /**
      * This is the default mb detect order for the detection of encoding.
@@ -78,12 +85,12 @@ abstract class AbstractSerializer
      * AbstractSerializer constructor.
      *
      * @param Options     $options       The SDK configuration options
-     * @param int         $maxDepth
+     * @param int|null    $maxDepth
      * @param string|null $mbDetectOrder
      */
-    public function __construct(Options $options, int $maxDepth = 3, ?string $mbDetectOrder = null)
+    public function __construct(Options $options, ?int $maxDepth = null, ?string $mbDetectOrder = null)
     {
-        $this->maxDepth = $maxDepth;
+        $this->setMaxDepth($maxDepth);
 
         if (null != $mbDetectOrder) {
             $this->mbDetectOrder = $mbDetectOrder;
@@ -103,7 +110,7 @@ abstract class AbstractSerializer
      */
     protected function serializeRecursively($value, int $_depth = 0)
     {
-        if ($_depth >= $this->maxDepth) {
+        if ($_depth >= $this->getMaxDepth()) {
             return $this->serializeValue($value);
         }
 
@@ -139,7 +146,7 @@ abstract class AbstractSerializer
      */
     protected function serializeObject($object, int $_depth = 0, array $hashes = [])
     {
-        if ($_depth >= $this->maxDepth || \in_array(spl_object_hash($object), $hashes, true)) {
+        if ($_depth >= $this->getMaxDepth() || \in_array(spl_object_hash($object), $hashes, true)) {
             return $this->serializeValue($object);
         }
 
@@ -304,5 +311,37 @@ abstract class AbstractSerializer
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxDepth(): int
+    {
+        return $this->maxDepth ?? $this->getDefaultMaxDepth();
+    }
+
+    /**
+     * @param int|null $maxDepth
+     */
+    public function setMaxDepth(?int $maxDepth): void
+    {
+        $this->maxDepth = $maxDepth;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDefaultMaxDepth(): int
+    {
+        return $this->defaultMaxDepth;
+    }
+
+    /**
+     * @param int $maxDepth
+     */
+    public function setDefaultMaxDepth(int $maxDepth): void
+    {
+        $this->defaultMaxDepth = $maxDepth;
     }
 }
