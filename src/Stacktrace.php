@@ -115,8 +115,10 @@ class Stacktrace implements \JsonSerializable
             $line = (int) $matches[2];
         }
 
-        if (isset($backtraceFrame['class'])) {
+        if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
+        } elseif (isset($backtraceFrame['class'])) {
+            $functionName = $backtraceFrame['class'];
         } elseif (isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['function'];
         } else {
