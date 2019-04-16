@@ -666,6 +666,40 @@ final class Options
     }
 
     /**
+     * Gets whether integrations should capture HTTP request bodies.
+     *
+     * @return string
+     */
+    public function getRequestBodies(): string
+    {
+        return $this->options['request_bodies'];
+    }
+
+    /**
+     * Sets whether integrations should capture HTTP request bodies.
+     *
+     * @param string $requestBodies The limit up to which request body are
+     *                              captured. It can be set to one of the
+     *                              following values:
+     *
+     *                               - never: request bodies are never sent
+     *                               - small: only small request bodies will
+     *                                 be captured where the cutoff for small
+     *                                 depends on the SDK (typically 4KB)
+     *                               - medium: medium-sized requests and small
+     *                                 requests will be captured. (typically 10KB)
+     *                               - always: the SDK will always capture the
+     *                                 request body for as long as sentry can make
+     *                                 sense of it
+     */
+    public function setRequestBodies(string $requestBodies): void
+    {
+        $options = array_merge($this->options, ['request_bodies' => $requestBodies]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -705,6 +739,7 @@ final class Options
             'max_value_length' => 1024,
             'http_proxy' => null,
             'capture_silenced_errors' => false,
+            'request_bodies' => 'none',
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -732,7 +767,9 @@ final class Options
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
+        $resolver->setAllowedTypes('request_bodies', 'string');
 
+        $resolver->setAllowedValues('request_bodies', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
