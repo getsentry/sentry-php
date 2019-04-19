@@ -124,7 +124,7 @@ final class Event implements \JsonSerializable
     /**
      * @var array The exceptions
      */
-    private $exceptions;
+    private $exceptions = [];
 
     /**
      * @var Stacktrace|null The stacktrace that generated this event
@@ -640,7 +640,7 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
-        if (null !== $this->exceptions) {
+        if (!empty($this->exceptions)) {
             $reversedException = array_reverse($this->exceptions);
 
             foreach ($reversedException as $exception) {
