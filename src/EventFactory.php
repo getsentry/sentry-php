@@ -80,8 +80,8 @@ final class EventFactory implements EventFactoryInterface
     {
         try {
             $event = new Event();
-        } catch (\Throwable $error) {
-            throw new EventCreationException($error);
+        } catch (\Throwable $exception) {
+            throw new EventCreationException($exception);
         }
 
         $event->setSdkIdentifier($this->sdkIdentifier);
