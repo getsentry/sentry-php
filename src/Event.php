@@ -640,23 +640,19 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
-        if (!empty($this->exceptions)) {
-            $reversedException = array_reverse($this->exceptions);
+        foreach (array_reverse($this->exceptions) as $exception) {
+            $exceptionData = [
+                'type' => $exception['type'],
+                'value' => $exception['value'],
+            ];
 
-            foreach ($reversedException as $exception) {
-                $exceptionData = [
-                    'type' => $exception['type'],
-                    'value' => $exception['value'],
+            if (isset($exception['stacktrace'])) {
+                $exceptionData['stacktrace'] = [
+                    'frames' => $exception['stacktrace']->toArray(),
                 ];
-
-                if (isset($exception['stacktrace'])) {
-                    $exceptionData['stacktrace'] = [
-                        'frames' => $exception['stacktrace']->toArray(),
-                    ];
-                }
-
-                $data['exception']['values'][] = $exceptionData;
             }
+
+            $data['exception']['values'][] = $exceptionData;
         }
 
         if (null !== $this->stacktrace) {
