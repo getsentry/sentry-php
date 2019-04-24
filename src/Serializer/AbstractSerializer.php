@@ -124,7 +124,7 @@ abstract class AbstractSerializer
         if (\is_object($value)) {
             $objectSerializer = $this->resolveObjectSerializer($value);
 
-            if ($objectSerializer !== null) {
+            if (null !== $objectSerializer) {
                 try {
                     if (\is_array($serializedObjectData = $objectSerializer($value))) {
                         return [

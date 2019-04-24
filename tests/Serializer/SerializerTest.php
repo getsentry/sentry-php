@@ -111,7 +111,7 @@ final class SerializerTest extends AbstractSerializerTest
             ],
         ]));
 
-        $object = new StubObject;
+        $object = new StubObject();
 
         $this->assertEquals([
             'class' => \get_class($object),
@@ -123,7 +123,7 @@ final class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->createSerializer();
 
-        $object = new StubSerializableObject;
+        $object = new StubSerializableObject();
 
         $this->assertEquals([
             'class' => \get_class($object),
@@ -135,7 +135,7 @@ final class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->createSerializer();
 
-        $object = new StubSerializableObjectThrowingException;
+        $object = new StubSerializableObjectThrowingException();
 
         $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
