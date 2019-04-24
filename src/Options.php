@@ -702,6 +702,28 @@ final class Options
     }
 
     /**
+     * Gets the type serializers.
+     *
+     * @return array
+     */
+    public function getTypeSerializers(): array
+    {
+        return $this->options['type_serializers'];
+    }
+
+    /**
+     * Sets the type serializers.
+     *
+     * @param array $serializers
+     */
+    public function setTypeSerializers(array $serializers): void
+    {
+        $options = array_merge($this->options, ['type_serializers' => $serializers]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -742,6 +764,7 @@ final class Options
             'http_proxy' => null,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
+            'type_serializers' => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -770,6 +793,7 @@ final class Options
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
+        $resolver->setAllowedTypes('type_serializers', 'callable[]');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));

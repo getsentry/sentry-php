@@ -7,6 +7,9 @@ namespace Sentry\Tests\Serializer;
 use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\Serializer;
+use Sentry\Tests\Fixtures\classes\StubObject;
+use Sentry\Tests\Fixtures\classes\StubSerializableObject;
+use Sentry\Tests\Fixtures\classes\StubSerializableObjectThrowingException;
 
 final class SerializerTest extends AbstractSerializerTest
 {
@@ -94,6 +97,47 @@ final class SerializerTest extends AbstractSerializerTest
         $result = $this->invokeSerialization($serializer, null);
 
         $this->assertNull($result);
+    }
+
+    public function testRegisteredObjectSerializers(): void
+    {
+        $serializer = $this->createSerializer(new Options([
+            'type_serializers' => [
+                StubObject::class => $customSerializerCallback = static function (StubObject $object): array {
+                    return [
+                        'purpose' => $object->getPurpose(),
+                    ];
+                },
+            ],
+        ]));
+
+        $object = new StubObject;
+
+        $this->assertEquals([
+            'class' => \get_class($object),
+            'data' => $customSerializerCallback($object),
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testSerializableObject(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $object = new StubSerializableObject;
+
+        $this->assertEquals([
+            'class' => \get_class($object),
+            'data' => $object->__toSentry(),
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testSerializableObjectThatThrowsAnException(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $object = new StubSerializableObjectThrowingException;
+
+        $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
 
     public function testLongStringWithOverwrittenMessageLength(): void
