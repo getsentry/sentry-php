@@ -706,19 +706,19 @@ final class Options
      *
      * @return array
      */
-    public function getTypeSerializers(): array
+    public function getClassSerializers(): array
     {
-        return $this->options['type_serializers'];
+        return $this->options['class_serializers'];
     }
 
     /**
-     * Sets the type serializers.
+     * Sets the class serializers.
      *
      * @param array $serializers
      */
-    public function setTypeSerializers(array $serializers): void
+    public function setClassSerializers(array $serializers): void
     {
-        $options = array_merge($this->options, ['type_serializers' => $serializers]);
+        $options = array_merge($this->options, ['class_serializers' => $serializers]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -764,7 +764,7 @@ final class Options
             'http_proxy' => null,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
-            'type_serializers' => [],
+            'class_serializers' => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -793,13 +793,13 @@ final class Options
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
-        $resolver->setAllowedTypes('type_serializers', 'array');
+        $resolver->setAllowedTypes('class_serializers', 'array');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
-        $resolver->setAllowedValues('type_serializers', \Closure::fromCallable([$this, 'validateTypeSerializers']));
+        $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializers']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
@@ -967,13 +967,13 @@ final class Options
     }
 
     /**
-     * Validates all the type serializers are callables indexed by string keys.
+     * Validates all the class serializers are callables indexed by string keys.
      *
      * @param array $serializers
      *
      * @return bool
      */
-    private function validateTypeSerializers(array $serializers): bool
+    private function validateClassSerializers(array $serializers): bool
     {
         foreach ($serializers as $key => $serializer) {
             if (!\is_string($key) || !\is_callable($serializer)) {

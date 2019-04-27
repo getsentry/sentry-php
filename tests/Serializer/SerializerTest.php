@@ -102,7 +102,7 @@ final class SerializerTest extends AbstractSerializerTest
     public function testRegisteredObjectSerializers(): void
     {
         $serializer = $this->createSerializer(new Options([
-            'type_serializers' => [
+            'class_serializers' => [
                 StubObject::class => $customSerializerCallback = static function (StubObject $object): array {
                     return [
                         'purpose' => $object->getPurpose(),
@@ -127,7 +127,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $this->assertEquals([
             'class' => \get_class($object),
-            'data' => $object->__toSentry(),
+            'data' => $object->toSentry(),
         ], $this->invokeSerialization($serializer, $object));
     }
 

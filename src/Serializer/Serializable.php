@@ -11,5 +11,5 @@ interface Serializable
      *
      * @return array
      */
-    public function __toSentry(): array;
+    public function toSentry(): array;
 }

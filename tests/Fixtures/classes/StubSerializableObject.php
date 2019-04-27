@@ -6,7 +6,7 @@ use Sentry\Serializer\Serializable;
 
 class StubSerializableObject implements Serializable
 {
-    public function __toSentry(): array
+    public function toSentry(): array
     {
         return [
             'purpose' => 'Being serialized!',

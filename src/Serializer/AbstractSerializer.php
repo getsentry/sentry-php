@@ -122,11 +122,11 @@ abstract class AbstractSerializer
         }
 
         if (\is_object($value)) {
-            $objectSerializer = $this->resolveObjectSerializer($value);
+            $classSerializer = $this->resolveClassSerializer($value);
 
-            if (null !== $objectSerializer) {
+            if (null !== $classSerializer) {
                 try {
-                    if (\is_array($serializedObjectData = $objectSerializer($value))) {
+                    if (\is_array($serializedObjectData = $classSerializer($value))) {
                         return [
                             'class' => \get_class($value),
                             'data' => $this->serializeRecursively($serializedObjectData, $_depth + 1),
@@ -150,15 +150,15 @@ abstract class AbstractSerializer
      *
      * @return callable|null
      */
-    protected function resolveObjectSerializer($object): ?callable
+    protected function resolveClassSerializer($object): ?callable
     {
         if ($object instanceof Serializable) {
             return static function (Serializable $object): array {
-                return $object->__toSentry();
+                return $object->toSentry();
             };
         }
 
-        foreach ($this->options->getTypeSerializers() as $type => $serializer) {
+        foreach ($this->options->getClassSerializers() as $type => $serializer) {
             if ($object instanceof $type) {
                 return $serializer;
             }
