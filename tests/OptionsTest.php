@@ -272,4 +272,33 @@ final class OptionsTest extends TestCase
             [false, '1'],
         ];
     }
+
+    public function testDsnOptionSupportsEnvironmentVariable(): void
+    {
+        $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
+        $options = new Options();
+        unset($_SERVER['SENTRY_DSN']);
+
+        $this->assertSame('http://example.com', $options->getDsn());
+        $this->assertSame('public', $options->getPublicKey());
+        $this->assertSame('1', $options->getProjectId());
+    }
+
+    public function testEnvironmentOptionSupportsEnvironmentVariable(): void
+    {
+        $_SERVER['SENTRY_ENVIRONMENT'] = 'test_environment';
+        $options = new Options();
+        unset($_SERVER['SENTRY_ENVIRONMENT']);
+
+        $this->assertSame('test_environment', $options->getEnvironment());
+    }
+
+    public function testReleaseOptionSupportsEnvironmentVariable(): void
+    {
+        $_SERVER['SENTRY_RELEASE'] = '0.0.1';
+        $options = new Options();
+        unset($_SERVER['SENTRY_RELEASE']);
+
+        $this->assertSame('0.0.1', $options->getRelease());
+    }
 }

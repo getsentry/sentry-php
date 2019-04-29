@@ -684,10 +684,10 @@ final class Options
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
-            'environment' => null,
+            'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'project_root' => null,
             'logger' => 'php',
-            'release' => null,
+            'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'before_send' => function (Event $event): ?Event {
