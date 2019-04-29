@@ -2,9 +2,9 @@
 
 namespace Sentry\Tests\Fixtures\classes;
 
-use Sentry\Serializer\Serializable;
+use Sentry\Serializer\SerializableInterface;
 
-class StubSerializableObjectThrowingException implements Serializable
+class StubSerializableInterfaceObjectThrowingException implements SerializableInterface
 {
     public function toSentry(): array
     {

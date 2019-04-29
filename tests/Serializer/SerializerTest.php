@@ -8,8 +8,8 @@ use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\Serializer;
 use Sentry\Tests\Fixtures\classes\StubObject;
-use Sentry\Tests\Fixtures\classes\StubSerializableObject;
-use Sentry\Tests\Fixtures\classes\StubSerializableObjectThrowingException;
+use Sentry\Tests\Fixtures\classes\StubSerializableInterfaceObject;
+use Sentry\Tests\Fixtures\classes\StubSerializableInterfaceObjectThrowingException;
 
 final class SerializerTest extends AbstractSerializerTest
 {
@@ -123,7 +123,7 @@ final class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->createSerializer();
 
-        $object = new StubSerializableObject();
+        $object = new StubSerializableInterfaceObject();
 
         $this->assertEquals([
             'class' => \get_class($object),
@@ -135,7 +135,7 @@ final class SerializerTest extends AbstractSerializerTest
     {
         $serializer = $this->createSerializer();
 
-        $object = new StubSerializableObjectThrowingException();
+        $object = new StubSerializableInterfaceObjectThrowingException();
 
         $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
