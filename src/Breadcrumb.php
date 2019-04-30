@@ -14,6 +14,11 @@ use Sentry\Exception\InvalidArgumentException;
 final class Breadcrumb implements \JsonSerializable
 {
     /**
+     * This constant defines the default breadcrumb type.
+     */
+    public const TYPE_DEFAULT = 'default';
+
+    /**
      * This constant defines the http breadcrumb type.
      */
     public const TYPE_HTTP = 'http';
@@ -355,6 +360,22 @@ final class Breadcrumb implements \JsonSerializable
             'timestamp' => $this->timestamp,
             'data' => $this->metadata,
         ];
+    }
+
+    /**
+     * Helper method to create an instance of this class from an array of data.
+     *
+     * @param array $data Data used to populate the breadcrumb
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            $data['level'],
+            $data['type'] ?? self::TYPE_DEFAULT,
+            $data['category'],
+            $data['message'] ?? null,
+            $data['data'] ?? []
+        );
     }
 
     /**

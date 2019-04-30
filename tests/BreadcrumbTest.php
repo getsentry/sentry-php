@@ -43,6 +43,52 @@ final class BreadcrumbTest extends TestCase
         $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
     }
 
+    /**
+     * @dataProvider fromArrayDataProvider
+     */
+    public function testFromArray(array $requestData, array $expectedResult): void
+    {
+        $expectedResult['timestamp'] = microtime(true);
+        $breadcrumb = Breadcrumb::fromArray($requestData);
+
+        $this->assertEquals($expectedResult, $breadcrumb->toArray());
+    }
+
+    public function fromArrayDataProvider(): array
+    {
+        return [
+            [
+                [
+                    'level' => Breadcrumb::LEVEL_INFO,
+                    'type' => Breadcrumb::TYPE_USER,
+                    'category' => 'foo',
+                    'message' => 'foo bar',
+                    'data' => ['baz'],
+                ],
+                [
+                    'level' => Breadcrumb::LEVEL_INFO,
+                    'type' => Breadcrumb::TYPE_USER,
+                    'category' => 'foo',
+                    'message' => 'foo bar',
+                    'data' => ['baz'],
+                ],
+            ],
+            [
+                [
+                    'level' => Breadcrumb::LEVEL_INFO,
+                    'category' => 'foo',
+                ],
+                [
+                    'level' => Breadcrumb::LEVEL_INFO,
+                    'type' => Breadcrumb::TYPE_DEFAULT,
+                    'category' => 'foo',
+                    'message' => null,
+                    'data' => [],
+                ],
+            ],
+        ];
+    }
+
     public function testWithCategory(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
