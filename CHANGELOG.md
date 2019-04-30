@@ -4,6 +4,9 @@
 
 - Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (#786)
 - Increase default severity of `E_RECOVERABLE_ERROR` to `Severity::ERROR`, instead of warning (#792)
+- feat: Add Breadcrumb::fromArray (#798)
+- feat: Add support for SENTRY_ENVRIONMENT and SENTRY_RELEASE (#810)
+- fix: The default value of the $exceptions property of the Event class (#806)
 
 ## 2.0.1 (2019-03-01)
 
