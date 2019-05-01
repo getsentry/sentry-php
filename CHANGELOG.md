@@ -9,6 +9,7 @@
 - Add support for `SENTRY_ENVRIONMENT` and `SENTRY_RELEASE` environment variables (#810)
 - Fix the default value of the `$exceptions` property of the Event class (#806)
 - Add a Monolog handler (#808)
+- Allow capturing the body of an HTTP request (#807)
 
 ## 2.0.1 (2019-03-01)
 

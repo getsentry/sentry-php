@@ -24,15 +24,15 @@ final class RequestIntegration implements IntegrationInterface
 {
     /**
      * This constant represents the size limit in bytes beyond which the body
-     * of the request is not captured when the `request_bodies` option is set
-     * to `small`.
+     * of the request is not captured when the `max_request_body_size` option
+     * is set to `small`.
      */
     private const REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH = 10 ** 3;
 
     /**
      * This constant represents the size limit in bytes beyond which the body
-     * of the request is not captured when the `request_bodies` option is set
-     * to `medium`.
+     * of the request is not captured when the `max_request_body_size` option
+     * is set to `medium`.
      */
     private const REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH = 10 ** 4;
 
@@ -153,10 +153,14 @@ final class RequestIntegration implements IntegrationInterface
      */
     private function captureRequestBody(ServerRequestInterface $serverRequest)
     {
-        $maxRequestBodySize = $this->options->getRequestBodies();
+        $maxRequestBodySize = $this->options->getMaxRequestBodySize();
         $requestBody = $serverRequest->getBody();
 
-        if ('none' === $maxRequestBodySize || ('small' === $maxRequestBodySize && $requestBody->getSize() > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) || ('medium' === $maxRequestBodySize && $requestBody->getSize() > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH)) {
+        if (
+            'none' === $maxRequestBodySize ||
+            ('small' === $maxRequestBodySize && $requestBody->getSize() > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) ||
+            ('medium' === $maxRequestBodySize && $requestBody->getSize() > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH)
+        ) {
             return null;
         }
 

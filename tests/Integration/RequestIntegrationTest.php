@@ -190,7 +190,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'none',
+                'max_request_body_size' => 'none',
             ],
             (new ServerRequest())
                 ->withParsedBody([
@@ -211,7 +211,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'small',
+                'max_request_body_size' => 'small',
             ],
             (new ServerRequest())
                 ->withParsedBody([
@@ -236,7 +236,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'small',
+                'max_request_body_size' => 'small',
             ],
             (new ServerRequest())
                 ->withParsedBody([
@@ -257,7 +257,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'medium',
+                'max_request_body_size' => 'medium',
             ],
             (new ServerRequest())
                 ->withParsedBody([
@@ -282,7 +282,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'medium',
+                'max_request_body_size' => 'medium',
             ],
             (new ServerRequest())
                 ->withParsedBody([
@@ -303,7 +303,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'always',
+                'max_request_body_size' => 'always',
             ],
             (new ServerRequest())
                 ->withUploadedFiles([
@@ -331,7 +331,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'always',
+                'max_request_body_size' => 'always',
             ],
             (new ServerRequest())
                 ->withUploadedFiles([
@@ -367,7 +367,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'always',
+                'max_request_body_size' => 'always',
             ],
             (new ServerRequest())
                 ->withUploadedFiles([
@@ -403,7 +403,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'always',
+                'max_request_body_size' => 'always',
             ],
             (new ServerRequest())
                 ->withUri(new Uri('http://www.example.com/foo'))
@@ -425,7 +425,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'request_bodies' => 'always',
+                'max_request_body_size' => 'always',
             ],
             (new ServerRequest())
                 ->withUri(new Uri('http://www.example.com/foo'))

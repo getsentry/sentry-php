@@ -666,35 +666,37 @@ final class Options
     }
 
     /**
-     * Gets whether integrations should capture HTTP request bodies.
+     * Gets the limit up to which integrations should capture the HTTP request
+     * body.
      *
      * @return string
      */
-    public function getRequestBodies(): string
+    public function getMaxRequestBodySize(): string
     {
-        return $this->options['request_bodies'];
+        return $this->options['max_request_body_size'];
     }
 
     /**
-     * Sets whether integrations should capture HTTP request bodies.
+     * Sets the limit up to which integrations should capture the HTTP request
+     * body.
      *
-     * @param string $requestBodies The limit up to which request body are
-     *                              captured. It can be set to one of the
-     *                              following values:
+     * @param string $maxRequestBodySize The limit up to which request body are
+     *                                   captured. It can be set to one of the
+     *                                   following values:
      *
-     *                               - never: request bodies are never sent
-     *                               - small: only small request bodies will
-     *                                 be captured where the cutoff for small
-     *                                 depends on the SDK (typically 4KB)
-     *                               - medium: medium-sized requests and small
-     *                                 requests will be captured. (typically 10KB)
-     *                               - always: the SDK will always capture the
-     *                                 request body for as long as sentry can make
-     *                                 sense of it
+     *                                    - never: request bodies are never sent
+     *                                    - small: only small request bodies will
+     *                                      be captured where the cutoff for small
+     *                                      depends on the SDK (typically 4KB)
+     *                                    - medium: medium-sized requests and small
+     *                                      requests will be captured. (typically 10KB)
+     *                                    - always: the SDK will always capture the
+     *                                      request body for as long as sentry can
+     *                                      make sense of it
      */
-    public function setRequestBodies(string $requestBodies): void
+    public function setMaxRequestBodySize(string $maxRequestBodySize): void
     {
-        $options = array_merge($this->options, ['request_bodies' => $requestBodies]);
+        $options = array_merge($this->options, ['max_request_body_size' => $maxRequestBodySize]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -739,7 +741,7 @@ final class Options
             'max_value_length' => 1024,
             'http_proxy' => null,
             'capture_silenced_errors' => false,
-            'request_bodies' => 'none',
+            'max_request_body_size' => 'none',
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -767,9 +769,9 @@ final class Options
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
-        $resolver->setAllowedTypes('request_bodies', 'string');
+        $resolver->setAllowedTypes('max_request_body_size', 'string');
 
-        $resolver->setAllowedValues('request_bodies', ['none', 'small', 'medium', 'always']);
+        $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
