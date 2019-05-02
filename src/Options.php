@@ -741,7 +741,7 @@ final class Options
             'max_value_length' => 1024,
             'http_proxy' => null,
             'capture_silenced_errors' => false,
-            'max_request_body_size' => 'none',
+            'max_request_body_size' => 'medium',
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
