@@ -666,6 +666,42 @@ final class Options
     }
 
     /**
+     * Gets the limit up to which integrations should capture the HTTP request
+     * body.
+     *
+     * @return string
+     */
+    public function getMaxRequestBodySize(): string
+    {
+        return $this->options['max_request_body_size'];
+    }
+
+    /**
+     * Sets the limit up to which integrations should capture the HTTP request
+     * body.
+     *
+     * @param string $maxRequestBodySize The limit up to which request body are
+     *                                   captured. It can be set to one of the
+     *                                   following values:
+     *
+     *                                    - never: request bodies are never sent
+     *                                    - small: only small request bodies will
+     *                                      be captured where the cutoff for small
+     *                                      depends on the SDK (typically 4KB)
+     *                                    - medium: medium-sized requests and small
+     *                                      requests will be captured. (typically 10KB)
+     *                                    - always: the SDK will always capture the
+     *                                      request body for as long as sentry can
+     *                                      make sense of it
+     */
+    public function setMaxRequestBodySize(string $maxRequestBodySize): void
+    {
+        $options = array_merge($this->options, ['max_request_body_size' => $maxRequestBodySize]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -705,6 +741,7 @@ final class Options
             'max_value_length' => 1024,
             'http_proxy' => null,
             'capture_silenced_errors' => false,
+            'max_request_body_size' => 'medium',
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -732,7 +769,9 @@ final class Options
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
+        $resolver->setAllowedTypes('max_request_body_size', 'string');
 
+        $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));

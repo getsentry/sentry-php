@@ -14,9 +14,9 @@ final class JSONTest extends TestCase
     /**
      * @dataProvider encodeDataProvider
      */
-    public function testEncode($value, $expectedResult): void
+    public function testEncode($value, string $expectedResult): void
     {
-        $this->assertEquals($expectedResult, JSON::encode($value));
+        $this->assertSame($expectedResult, JSON::encode($value));
     }
 
     public function encodeDataProvider(): array
@@ -58,7 +58,7 @@ final class JSONTest extends TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
+     * @expectedException \Sentry\Exception\JsonException
      * @expectedExceptionMessage Could not encode value into JSON format. Error was: "Type is not supported".
      */
     public function testEncodeThrowsIfValueIsResource(): void
@@ -70,5 +70,46 @@ final class JSONTest extends TestCase
         fclose($resource);
 
         JSON::encode($resource);
+    }
+
+    /**
+     * @dataProvider decodeDataProvider
+     */
+    public function testDecode(string $value, $expectedResult): void
+    {
+        $this->assertSame($expectedResult, JSON::decode($value));
+    }
+
+    public function decodeDataProvider(): array
+    {
+        return [
+            [
+                '{"key":"value"}',
+                [
+                    'key' => 'value',
+                ],
+            ],
+            [
+                '"string"',
+                'string',
+            ],
+            [
+                '123.45',
+                123.45,
+            ],
+            [
+                'null',
+                null,
+            ],
+        ];
+    }
+
+    /**
+     * @expectedException \Sentry\Exception\JsonException
+     * @expectedExceptionMessage Could not decode value from JSON format. Error was: "Syntax error".
+     */
+    public function testDecodeThrowsIfValueIsNotValidJson(): void
+    {
+        JSON::decode('foo');
     }
 }
