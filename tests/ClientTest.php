@@ -17,8 +17,6 @@ use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
-use Sentry\State\Hub;
-use Sentry\Tests\Fixtures\classes\CarelessException;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
@@ -257,32 +255,6 @@ class ClientTest extends TestCase
         ];
     }
 
-    public function testHandlingExceptionThrowingAnException(): void
-    {
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function ($event) {
-                /* @var Event $event*/
-                // Make sure the exception is of the careless exception and not the exception thrown inside
-                // the __set method of that exception caused by setting the event_id on the exception instance
-                $this->assertSame(CarelessException::class, $event->getExceptions()[0]['type']);
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, $this->createEventFactory());
-
-        $hub = Hub::getCurrent();
-        $hub->bindClient($client);
-
-        $method = new \ReflectionMethod($hub, 'getScope');
-        $method->setAccessible(true);
-
-        $client->captureException($this->createCarelessExceptionWithStacktrace(), $method->invoke($hub));
-    }
-
     /**
      * @dataProvider convertExceptionDataProvider
      */
@@ -464,22 +436,13 @@ class ClientTest extends TestCase
      */
     private function clearLastError(): void
     {
-        $handler = function () {
+        $handler = static function () {
             return false;
         };
 
         set_error_handler($handler);
         @trigger_error('');
         restore_error_handler();
-    }
-
-    private function createCarelessExceptionWithStacktrace(): CarelessException
-    {
-        try {
-            throw new CarelessException('Foo bar');
-        } catch (CarelessException $ex) {
-            return $ex;
-        }
     }
 
     private function createEventFactory(): EventFactory

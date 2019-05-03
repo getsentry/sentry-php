@@ -3,6 +3,8 @@ Test emptying spool transport
 --FILE--
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
@@ -40,6 +42,8 @@ register_shutdown_function('register_shutdown_function', function () use ($spool
 
 \Foo\Bar::baz();
 ?>
---EXPECTREGEX--
-Fatal error: (?:Class 'Foo\\Bar' not found in [^\r\n]+ on line \d+|Uncaught Error: Class 'Foo\\Bar' not found in [^\r\n]+:\d+)
-(?:Stack trace:[\s\S]+)?Shutdown function called
+--EXPECTF--
+Fatal error: Uncaught Error: Class '%s' not found in %s:%d
+Stack trace:
+%a
+Shutdown function called

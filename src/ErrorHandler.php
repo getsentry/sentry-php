@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Exception\FatalErrorException;
 use Sentry\Exception\SilencedErrorException;
 
 /**
@@ -18,8 +19,10 @@ final class ErrorHandler
 {
     /**
      * The default amount of bytes of memory to reserve for the fatal error handler.
+     *
+     * @internal
      */
-    private const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
+    public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
      * @var self The current registered handler (this class is a singleton)
@@ -30,6 +33,11 @@ final class ErrorHandler
      * @var callable[] List of listeners that will act on each captured error
      */
     private $errorListeners = [];
+
+    /**
+     * @var callable[] List of listeners that will act of each captured fatal error
+     */
+    private $fatalErrorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act on each captured exception
@@ -51,6 +59,21 @@ final class ErrorHandler
      * @var callable|null The previous exception handler, if any
      */
     private $previousExceptionHandler;
+
+    /**
+     * @var bool Whether the error handler has been registered
+     */
+    private $isErrorHandlerRegistered = false;
+
+    /**
+     * @var bool Whether the exception handler has been registered
+     */
+    private $isExceptionHandlerRegistered = false;
+
+    /**
+     * @var bool Whether the fatal error handler has been registered
+     */
+    private $isFatalErrorHandlerRegistered = false;
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed
@@ -82,49 +105,129 @@ final class ErrorHandler
     /**
      * Constructor.
      *
-     * @param int $reservedMemorySize The amount of memory to reserve for the fatal error handler
+     * @throws \ReflectionException If hooking into the \Exception class to
+     *                              make the `trace` property accessible fails
      */
-    private function __construct(int $reservedMemorySize)
+    private function __construct()
     {
-        if ($reservedMemorySize <= 0) {
-            throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
-        }
-
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
         $this->exceptionReflection->setAccessible(true);
+    }
 
-        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
+    /**
+     * Gets the current registered error handler; if none is present, it will
+     * register it. Subsequent calls will not change the reserved memory size.
+     *
+     * @param int  $reservedMemorySize The amount of memory to reserve for the
+     *                                 fatal error handler
+     * @param bool $triggerDeprecation Whether to trigger the deprecation about
+     *                                 the usage of this method. This is used
+     *                                 to avoid errors when this method is called
+     *                                 from other methods of this class until
+     *                                 their implementation and behavior of
+     *                                 registering all handlers can be changed
+     *
+     * @return self
+     *
+     * @deprecated since version 2.1, to be removed in 3.0.
+     */
+    public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE, bool $triggerDeprecation = true): self
+    {
+        if ($triggerDeprecation) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Please use the registerOnceErrorHandler(), registerOnceFatalErrorHandler() or registerOnceExceptionHandler() methods instead.', __METHOD__), E_USER_DEPRECATED);
+        }
 
-        register_shutdown_function([$this, 'handleFatalError']);
+        self::registerOnceErrorHandler();
+        self::registerOnceFatalErrorHandler($reservedMemorySize);
+        self::registerOnceExceptionHandler();
 
-        $this->previousErrorHandler = set_error_handler([$this, 'handleError']);
+        return self::$handlerInstance;
+    }
 
-        if (null === $this->previousErrorHandler) {
+    /**
+     * Registers the error handler once and returns its instance.
+     *
+     * @return self
+     */
+    public static function registerOnceErrorHandler(): self
+    {
+        if (null === self::$handlerInstance) {
+            self::$handlerInstance = new self();
+        }
+
+        if (self::$handlerInstance->isErrorHandlerRegistered) {
+            return self::$handlerInstance;
+        }
+
+        $errorHandlerCallback = \Closure::fromCallable([self::$handlerInstance, 'handleError']);
+
+        self::$handlerInstance->isErrorHandlerRegistered = true;
+        self::$handlerInstance->previousErrorHandler = set_error_handler($errorHandlerCallback);
+
+        if (null === self::$handlerInstance->previousErrorHandler) {
             restore_error_handler();
 
             // Specifying the error types caught by the error handler with the
             // first call to the set_error_handler method would cause the PHP
             // bug https://bugs.php.net/63206 if the handler is not the first
             // one in the chain of handlers
-            set_error_handler([$this, 'handleError'], E_ALL);
+            set_error_handler($errorHandlerCallback, E_ALL);
         }
 
-        $this->previousExceptionHandler = set_exception_handler([$this, 'handleException']);
+        return self::$handlerInstance;
     }
 
     /**
-     * Gets the current registered error handler; if none is present, it will register it.
-     * Subsequent calls will not change the reserved memory size.
+     * Registers the fatal error handler and reserves a certain amount of memory
+     * that will be reclaimed to handle the errors (to prevent out of memory
+     * issues while handling them) and returns its instance.
      *
-     * @param int $reservedMemorySize The requested amount of memory to reserve
+     * @param int $reservedMemorySize The amount of memory to reserve for the fatal
+     *                                error handler expressed in bytes
      *
-     * @return self The ErrorHandler singleton
+     * @return self
      */
-    public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
+    public static function registerOnceFatalErrorHandler(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
+    {
+        if ($reservedMemorySize <= 0) {
+            throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
+        }
+
+        if (null === self::$handlerInstance) {
+            self::$handlerInstance = new self();
+        }
+
+        if (self::$handlerInstance->isFatalErrorHandlerRegistered) {
+            return self::$handlerInstance;
+        }
+
+        self::$handlerInstance->isFatalErrorHandlerRegistered = true;
+        self::$reservedMemory = str_repeat('x', $reservedMemorySize);
+
+        register_shutdown_function(\Closure::fromCallable([self::$handlerInstance, 'handleFatalError']));
+
+        return self::$handlerInstance;
+    }
+
+    /**
+     * Registers the exception handler, effectively replacing the current one
+     * and returns its instance. The previous one will be saved anyway and
+     * called when appropriate.
+     *
+     * @return self
+     */
+    public static function registerOnceExceptionHandler(): self
     {
         if (null === self::$handlerInstance) {
-            self::$handlerInstance = new self($reservedMemorySize);
+            self::$handlerInstance = new self();
         }
+
+        if (self::$handlerInstance->isExceptionHandlerRegistered) {
+            return self::$handlerInstance;
+        }
+
+        self::$handlerInstance->isExceptionHandlerRegistered = true;
+        self::$handlerInstance->previousExceptionHandler = set_exception_handler(\Closure::fromCallable([self::$handlerInstance, 'handleException']));
 
         return self::$handlerInstance;
     }
@@ -137,11 +240,34 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener;
      *                           this callable will receive a single
      *                           \ErrorException argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addErrorListener(callable $listener): void
     {
-        $handler = self::registerOnce();
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->errorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler to be called upon each
+     * invoked captured fatal error; if no handler is registered, this method
+     * will instantiate and register it.
+     *
+     * @param callable $listener A callable that will act as a listener;
+     *                           this callable will receive a single
+     *                           \ErrorException argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
+     */
+    public static function addFatalErrorListener(callable $listener): void
+    {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addFatalErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
+        $handler->fatalErrorListeners[] = $listener;
     }
 
     /**
@@ -152,11 +278,54 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener;
      *                           this callable will receive a single
      *                           \Throwable argument
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addExceptionListener(callable $listener): void
     {
-        $handler = self::registerOnce();
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addExceptionHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->exceptionListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time an error is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \ErrorException
+     */
+    public function addErrorHandlerListener(callable $listener): void
+    {
+        $this->errorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time a fatal error handler is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \Sentry\Exception\FatalErrorException
+     */
+    public function addFatalErrorHandlerListener(callable $listener): void
+    {
+        $this->fatalErrorListeners[] = $listener;
+    }
+
+    /**
+     * Adds a listener to the current error handler that will be called every
+     * time an exception is captured.
+     *
+     * @param callable $listener A callable that will act as a listener
+     *                           and that must accept a single argument
+     *                           of type \Throwable
+     */
+    public function addExceptionHandlerListener(callable $listener): void
+    {
+        $this->exceptionListeners[] = $listener;
     }
 
     /**
@@ -173,10 +342,8 @@ final class ErrorHandler
      *              handler will be called
      *
      * @throws \Throwable
-     *
-     * @internal
      */
-    public function handleError(int $level, string $message, string $file, int $line): bool
+    private function handleError(int $level, string $message, string $file, int $line): bool
     {
         if (0 === error_reporting()) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
@@ -184,7 +351,7 @@ final class ErrorHandler
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
         }
 
-        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $file, $line);
+        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $errorAsException->getFile(), $errorAsException->getLine());
 
         $this->exceptionReflection->setValue($errorAsException, $backtrace);
 
@@ -202,10 +369,8 @@ final class ErrorHandler
      * method is used as callback of a shutdown function.
      *
      * @param array|null $error The error details as returned by error_get_last()
-     *
-     * @internal
      */
-    public function handleFatalError(array $error = null): void
+    private function handleFatalError(array $error = null): void
     {
         // If there is not enough memory that can be used to handle the error
         // do nothing
@@ -221,9 +386,12 @@ final class ErrorHandler
         }
 
         if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
-            $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
+            $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
+
+            $this->exceptionReflection->setValue($errorAsException, []);
 
             $this->invokeListeners($this->errorListeners, $errorAsException);
+            $this->invokeListeners($this->fatalErrorListeners, $errorAsException);
         }
     }
 
@@ -234,10 +402,8 @@ final class ErrorHandler
      * @param \Throwable $exception The exception to handle
      *
      * @throws \Throwable
-     *
-     * @internal This method is public only because it's used with set_exception_handler
      */
-    public function handleException(\Throwable $exception): void
+    private function handleException(\Throwable $exception): void
     {
         $this->invokeListeners($this->exceptionListeners, $exception);
 

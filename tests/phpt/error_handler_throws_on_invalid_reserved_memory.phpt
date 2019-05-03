@@ -3,10 +3,11 @@ Test that the error handler throws an error when trying to reserve a negative am
 --FILE--
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests;
 
 use Sentry\ErrorHandler;
-use Sentry\Tests\Fixtures\classes\StubErrorListener;
 
 $vendor = __DIR__;
 
@@ -16,12 +17,9 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-try {
-    ErrorHandler::registerOnce(-1);
-} catch (\InvalidArgumentException $exception) {
-    echo 'Exception caught: ';
-    echo $exception->getMessage();
-}
+ErrorHandler::registerOnceFatalErrorHandler(-1);
 ?>
 --EXPECTF--
-Exception caught: The $reservedMemorySize argument must be greater than 0.
+Fatal error: Uncaught InvalidArgumentException: The $reservedMemorySize argument must be greater than 0. in %s:%d
+Stack trace:
+%a
