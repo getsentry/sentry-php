@@ -8,6 +8,7 @@
   and change the type of the reported exception to `\Sentry\Exception\FatalErrorException` (#788)
 - Add a static factory method to create a breadcrumb from an array of data (#798)
 - Add support for `SENTRY_ENVRIONMENT` and `SENTRY_RELEASE` environment variables (#810)
+- Implement class serializers and interface to customize how objects are serialized (#809)
 - Fix the default value of the `$exceptions` property of the Event class (#806)
 - Add a Monolog handler (#808)
 - Allow capturing the body of an HTTP request (#807)
