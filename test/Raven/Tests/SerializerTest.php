@@ -201,4 +201,49 @@ class Raven_Tests_SerializerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(JSON_ERROR_NONE, json_last_error());
     }
+
+    /**
+     * @covers Raven_Serializer::getDefaultMaxDepth
+     * @covers Raven_Serializer::setDefaultMaxDepth
+     */
+    public function testChangeDefaultMaxDepth()
+    {
+        $serializer = new Raven_Serializer();
+        $input = array(
+            1 => array(
+                2 => array(
+                    3 => array(
+                        4 => array(
+                            5 => 6
+                        )
+                    )
+                )
+            )
+        );
+        $expectedDefaultResult = array(
+            1 => array(
+                2 => array(
+                    3 => 'Array of length 1'
+                )
+            )
+        );
+        $this->assertSame(
+            $expectedDefaultResult,
+            $serializer->serialize($input)
+        );
+        $expectedChangedResult = array(
+            1 => array(
+                2 => array(
+                    3 => array(
+                        4 => 'Array of length 1'
+                    )
+                )
+            )
+        );
+        $serializer->setDefaultMaxDepth(4);
+        $this->assertSame(
+            $expectedChangedResult,
+            $serializer->serialize($input)
+        );
+    }
 }
