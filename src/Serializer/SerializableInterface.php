@@ -9,7 +9,7 @@ interface SerializableInterface
     /**
      * Return an array representation of the object for Sentry.
      *
-     * @return array
+     * @return array|null
      */
-    public function toSentry(): array;
+    public function toSentry(): ?array;
 }
