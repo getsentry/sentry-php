@@ -967,16 +967,16 @@ final class Options
     }
 
     /**
-     * Validates all the class serializers are callables indexed by string keys.
+     * Validates all the class serializers are callables indexed by class names.
      *
-     * @param array $serializers
+     * @param array $serializers The value to validate
      *
      * @return bool
      */
     private function validateClassSerializers(array $serializers): bool
     {
-        foreach ($serializers as $key => $serializer) {
-            if (!\is_string($key) || !\is_callable($serializer)) {
+        foreach ($serializers as $class => $serializer) {
+            if (!\is_string($class) || !\is_callable($serializer)) {
                 return false;
             }
         }

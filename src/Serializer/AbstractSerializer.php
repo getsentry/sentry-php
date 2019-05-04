@@ -126,7 +126,9 @@ abstract class AbstractSerializer
 
             if (null !== $classSerializer) {
                 try {
-                    if (\is_array($serializedObjectData = $classSerializer($value))) {
+                    $serializedObjectData = $classSerializer($value);
+
+                    if (\is_array($serializedObjectData)) {
                         return [
                             'class' => \get_class($value),
                             'data' => $this->serializeRecursively($serializedObjectData, $_depth + 1),
