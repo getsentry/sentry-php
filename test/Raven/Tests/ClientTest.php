@@ -2466,7 +2466,11 @@ class Raven_Tests_ClientTest extends \PHPUnit\Framework\TestCase
             $event = array_pop($events);
 
             $this->assertEquals('error', $event['level']);
-            $this->assertEquals(substr($message, 0, min(Raven_Client::MESSAGE_LIMIT, $length)), $event['message']);
+            if (extension_loaded('mbstring')) {
+                $this->assertEquals(mb_substr($message, 0, min(Raven_Client::MESSAGE_LIMIT, $length), 'UTF-8'), $event['message']);
+            } else {
+                $this->assertEquals(substr($message, 0, min(Raven_Client::MESSAGE_LIMIT, $length)), $event['message']);
+            }
             $this->assertArrayNotHasKey('release', $event);
             $this->assertArrayNotHasKey('environment', $event);
         }

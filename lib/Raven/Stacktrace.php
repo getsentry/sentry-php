@@ -117,7 +117,7 @@ class Raven_Stacktrace
                 foreach ($vars as $key => $value) {
                     $value = $reprSerializer->serialize($value);
                     if (is_string($value) || is_numeric($value)) {
-                        $cleanVars[(string)$key] = substr($value, 0, $frame_var_limit);
+                        $cleanVars[(string)$key] = Raven_Compat::substr($value, 0, $frame_var_limit);
                     } else {
                         $cleanVars[(string)$key] = $value;
                     }
@@ -217,14 +217,14 @@ class Raven_Stacktrace
             $_arg = array();
             foreach ($arg as $key => $value) {
                 if (is_string($value) || is_numeric($value)) {
-                    $_arg[$key] = substr($value, 0, $frame_arg_limit);
+                    $_arg[$key] = Raven_Compat::substr($value, 0, $frame_arg_limit);
                 } else {
                     $_arg[$key] = $value;
                 }
             }
             return $_arg;
         } elseif (is_string($arg) || is_numeric($arg)) {
-            return substr($arg, 0, $frame_arg_limit);
+            return Raven_Compat::substr($arg, 0, $frame_arg_limit);
         } else {
             return $arg;
         }

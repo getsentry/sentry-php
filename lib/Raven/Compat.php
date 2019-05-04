@@ -177,4 +177,22 @@ class Raven_Compat
             return '{' . join(',', $result) . '}';
         }
     }
+
+    public static function strlen($string)
+    {
+        if (extension_loaded('mbstring')) {
+            return mb_strlen($string, 'UTF-8');
+        }
+
+        return strlen($string);
+    }
+
+    public static function substr($string, $start, $length)
+    {
+        if (extension_loaded('mbstring')) {
+            return mb_substr($string, $start, $length, 'UTF-8');
+        }
+
+        return substr($string, $start, $length);
+    }
 }
