@@ -132,7 +132,7 @@ abstract class AbstractSerializer
                     if (\is_array($serializedObjectData)) {
                         return [
                             'class' => \get_class($value),
-                            'data'  => $this->serializeRecursively($serializedObjectData, $_depth + 1),
+                            'data' => $this->serializeRecursively($serializedObjectData, $_depth + 1),
                         ];
                     }
                 } catch (\Exception $e) {
