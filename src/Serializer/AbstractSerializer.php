@@ -155,7 +155,7 @@ abstract class AbstractSerializer
     protected function resolveClassSerializer($object): ?callable
     {
         if ($object instanceof SerializableInterface) {
-            return static function (SerializableInterface $object): array {
+            return static function (SerializableInterface $object): ?array {
                 return $object->toSentry();
             };
         }

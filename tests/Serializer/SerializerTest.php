@@ -135,6 +135,16 @@ final class SerializerTest extends AbstractSerializerTest
         ], $this->invokeSerialization($serializer, $object));
     }
 
+    public function testSerializableThatReturnsNull(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $object = $this->createMock(SerializableInterface::class);
+        $object->method('toSentry')->willReturn(null);
+
+        $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
+    }
+
     public function testSerializableObjectThatThrowsAnException(): void
     {
         $serializer = $this->createSerializer();
