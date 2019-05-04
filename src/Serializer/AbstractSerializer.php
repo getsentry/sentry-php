@@ -122,16 +122,17 @@ abstract class AbstractSerializer
         }
 
         if (\is_object($value)) {
-            $classSerializer = $this->resolveClassSerializer($value);
+            $classSerializers = $this->resolveClassSerializers($value);
 
-            if (null !== $classSerializer) {
+            // Try each serializer until there is none left or the serializer returned data
+            foreach ($classSerializers as $classSerializer) {
                 try {
                     $serializedObjectData = $classSerializer($value);
 
                     if (\is_array($serializedObjectData)) {
                         return [
                             'class' => \get_class($value),
-                            'data' => $this->serializeRecursively($serializedObjectData, $_depth + 1),
+                            'data'  => $this->serializeRecursively($serializedObjectData, $_depth + 1),
                         ];
                     }
                 } catch (\Exception $e) {
@@ -148,25 +149,32 @@ abstract class AbstractSerializer
     }
 
     /**
+     * Find class serializers for a object.
+     *
+     * Registered serializers with the `class_serializers` option take precedence over
+     * objects implementing the `SerializableInterface`.
+     *
      * @param object $object
      *
-     * @return callable|null
+     * @return array
      */
-    protected function resolveClassSerializer($object): ?callable
+    protected function resolveClassSerializers($object): array
     {
+        $serializers = [];
+
         foreach ($this->options->getClassSerializers() as $type => $serializer) {
             if ($object instanceof $type) {
-                return $serializer;
+                $serializers[] = $serializer;
             }
         }
 
         if ($object instanceof SerializableInterface) {
-            return static function (SerializableInterface $object): ?array {
+            $serializers[] = static function (SerializableInterface $object): ?array {
                 return $object->toSentry();
             };
         }
 
-        return null;
+        return $serializers;
     }
 
     /**
