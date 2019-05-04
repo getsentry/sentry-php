@@ -154,16 +154,16 @@ abstract class AbstractSerializer
      */
     protected function resolveClassSerializer($object): ?callable
     {
-        if ($object instanceof SerializableInterface) {
-            return static function (SerializableInterface $object): ?array {
-                return $object->toSentry();
-            };
-        }
-
         foreach ($this->options->getClassSerializers() as $type => $serializer) {
             if ($object instanceof $type) {
                 return $serializer;
             }
+        }
+
+        if ($object instanceof SerializableInterface) {
+            return static function (SerializableInterface $object): ?array {
+                return $object->toSentry();
+            };
         }
 
         return null;
