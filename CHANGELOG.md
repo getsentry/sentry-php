@@ -4,6 +4,13 @@
 
 - ...
 
+## 1.11.0 (2020-02-12)
+
+- Fixed array and string offset access syntax with curly braces deprecations (#975)
+- Fixed curl verify host for synchronous mode (#767)
+- Use `mb_substr` instead of `substr` if available (#734)
+- Make it possible to change `default_max_depth` in `Raven_Serializer` (#632)
+
 ## 1.10.0 (2018-11-09)
 
 - Added passing data from context in monolog breadcrumb handler (#683)
