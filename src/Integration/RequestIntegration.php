@@ -20,7 +20,7 @@ use Zend\Diactoros\ServerRequestFactory;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class RequestIntegration implements IntegrationInterface
+class RequestIntegration implements IntegrationInterface
 {
     /**
      * This constant represents the size limit in bytes beyond which the body

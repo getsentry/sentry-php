@@ -19,7 +19,7 @@ use Sentry\Context\UserContext;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Event implements \JsonSerializable
+class Event implements \JsonSerializable
 {
     /**
      * @var UuidInterface The UUID

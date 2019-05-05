@@ -11,7 +11,7 @@ use Sentry\State\Hub;
  * This integration hooks into the global error handlers and emits events to
  * Sentry.
  */
-final class ExceptionListenerIntegration implements IntegrationInterface
+class ExceptionListenerIntegration implements IntegrationInterface
 {
     /**
      * {@inheritdoc}

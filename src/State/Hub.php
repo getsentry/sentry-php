@@ -12,7 +12,7 @@ use Sentry\Severity;
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
  */
-final class Hub implements HubInterface
+class Hub implements HubInterface
 {
     /**
      * @var Layer[] The stack of client/scope pairs

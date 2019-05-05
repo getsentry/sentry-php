@@ -11,7 +11,7 @@ use Sentry\Exception\JsonException;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class JSON
+class JSON
 {
     /**
      * Encodes the given data into JSON.

@@ -15,7 +15,7 @@ use Sentry\Severity;
  * The scope holds data that should implicitly be sent with Sentry events. It
  * can hold context data, extra parameters, level overrides, fingerprints etc.
  */
-final class Scope
+class Scope
 {
     /**
      * @var Breadcrumb[] The list of breadcrumbs recorded in this scope

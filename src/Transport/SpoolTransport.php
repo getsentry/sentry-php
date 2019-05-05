@@ -12,7 +12,7 @@ use Sentry\Spool\SpoolInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SpoolTransport implements TransportInterface
+class SpoolTransport implements TransportInterface
 {
     /**
      * @var SpoolInterface The spool instance

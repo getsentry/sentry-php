@@ -10,7 +10,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Severity
+class Severity
 {
     /**
      * This constant represents the "debug" severity level.

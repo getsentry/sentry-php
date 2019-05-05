@@ -14,7 +14,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Client implements ClientInterface
+class Client implements ClientInterface
 {
     /**
      * The version of the protocol to communicate with the Sentry server.

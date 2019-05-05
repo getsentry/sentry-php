@@ -9,6 +9,6 @@ namespace Sentry\Exception;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class FatalErrorException extends \ErrorException
+class FatalErrorException extends \ErrorException
 {
 }

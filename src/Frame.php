@@ -9,7 +9,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Frame implements \JsonSerializable
+class Frame implements \JsonSerializable
 {
     /**
      * @var string|null The name of the function being called

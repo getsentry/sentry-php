@@ -12,7 +12,7 @@ use Sentry\ClientInterface;
  *
  * @internal
  */
-final class Layer
+class Layer
 {
     /**
      * @var ClientInterface|null The client held by this layer

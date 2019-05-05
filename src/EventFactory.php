@@ -12,7 +12,7 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * Factory for the {@see Event} class.
  */
-final class EventFactory implements EventFactoryInterface
+class EventFactory implements EventFactoryInterface
 {
     /**
      * @var SerializerInterface The serializer

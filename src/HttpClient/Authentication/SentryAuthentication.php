@@ -15,7 +15,7 @@ use Sentry\Options;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class SentryAuthentication implements Authentication
+class SentryAuthentication implements Authentication
 {
     /**
      * @var Options The Sentry client configuration

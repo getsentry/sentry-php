@@ -14,7 +14,7 @@ use Sentry\State\Scope;
  * This integration logs with the event details all the versions of the packages
  * installed with Composer; the root project is included too.
  */
-final class ModulesIntegration implements IntegrationInterface
+class ModulesIntegration implements IntegrationInterface
 {
     /**
      * @var array The list of installed vendors

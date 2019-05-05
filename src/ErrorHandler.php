@@ -15,7 +15,7 @@ use Sentry\Exception\SilencedErrorException;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ErrorHandler
+class ErrorHandler
 {
     /**
      * The default amount of bytes of memory to reserve for the fatal error handler.

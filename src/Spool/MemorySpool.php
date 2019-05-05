@@ -12,7 +12,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class MemorySpool implements SpoolInterface
+class MemorySpool implements SpoolInterface
 {
     /**
      * @var Event[] List of enqueued events

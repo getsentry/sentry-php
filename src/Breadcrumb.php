@@ -11,7 +11,7 @@ use Sentry\Exception\InvalidArgumentException;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Breadcrumb implements \JsonSerializable
+class Breadcrumb implements \JsonSerializable
 {
     /**
      * This constant defines the default breadcrumb type.

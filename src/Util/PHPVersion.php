@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Util;
 
-final class PHPVersion
+class PHPVersion
 {
     private const VERSION_PARSING_REGEX = '/^(?<base>\d\.\d\.\d{1,2})(?<extra>-(beta|rc)-?(\d+)?(-dev)?)?/i';
 

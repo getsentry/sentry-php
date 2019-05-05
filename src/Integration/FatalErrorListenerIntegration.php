@@ -14,7 +14,7 @@ use Sentry\State\Hub;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class FatalErrorListenerIntegration implements IntegrationInterface
+class FatalErrorListenerIntegration implements IntegrationInterface
 {
     /**
      * @var Options The options, to know which error level to use

@@ -39,7 +39,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ClientBuilder implements ClientBuilderInterface
+class ClientBuilder implements ClientBuilderInterface
 {
     /**
      * @var Options The client options

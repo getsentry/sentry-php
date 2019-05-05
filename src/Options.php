@@ -13,7 +13,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Options
+class Options
 {
     /**
      * The default maximum number of breadcrumbs that will be sent with an event.

@@ -16,7 +16,7 @@ use Sentry\Util\JSON;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class HttpTransport implements TransportInterface
+class HttpTransport implements TransportInterface
 {
     /**
      * @var Options The Raven client configuration
