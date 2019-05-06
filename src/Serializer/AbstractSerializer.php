@@ -210,7 +210,7 @@ abstract class AbstractSerializer
      *
      * @return string
      */
-    protected function serializeCallable(callable $callable): string
+    protected function serializeCallable($callable): string
     {
         try {
             if (\is_array($callable)) {
