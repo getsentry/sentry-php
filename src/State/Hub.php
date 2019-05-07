@@ -204,22 +204,6 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function await(): void
-    {
-        $client = $this->getClient();
-
-        if ($client instanceof Client) {
-            $transport = $client->getTransport();
-
-            if ($transport instanceof AsyncTransportInterface) {
-                $transport->await();
-            }
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public static function getCurrent(): HubInterface
     {
         if (null === self::$currentHub) {

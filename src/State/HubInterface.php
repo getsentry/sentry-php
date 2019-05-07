@@ -120,12 +120,6 @@ interface HubInterface
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool;
 
     /**
-     * Await all async transports, this effectively forces all async event to be
-     * transported immediately.
-     */
-    public function await(): void;
-
-    /**
      * Returns the current global Hub.
      *
      * @return self

@@ -70,7 +70,7 @@ final class HttpTransportTest extends TestCase
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
-        $transport->await();
+        $transport->flush();
     }
 
     public function testSendFailureCleanupPendingRequests(): void

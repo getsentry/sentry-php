@@ -54,7 +54,7 @@ final class HttpTransport implements AsyncTransportInterface
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
         // will be executed last
-        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'await']));
+        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'flush']));
     }
 
     /**
@@ -63,7 +63,7 @@ final class HttpTransport implements AsyncTransportInterface
      */
     public function __destruct()
     {
-        $this->await();
+        $this->flush();
     }
 
     /**
@@ -99,12 +99,12 @@ final class HttpTransport implements AsyncTransportInterface
     }
 
     /**
-     * Cleanups the pending requests by forcing them to be sent. Any error that
-     * occurs will be ignored.
+     * Cleanup the pending requests by forcing them to be sent.
+     * Any error that occurs will be ignored to prevent recursion.
      */
-    public function await(): void
+    public function flush(): void
     {
-        while ($pendingRequest = array_pop($this->pendingRequests)) {
+        foreach ($this->pendingRequests as $pendingRequest) {
             try {
                 $pendingRequest->wait();
             } catch (\Throwable $exception) {

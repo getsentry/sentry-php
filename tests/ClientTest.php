@@ -17,6 +17,7 @@ use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\Transport\AsyncTransportInterface;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
@@ -429,6 +430,21 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureEvent([]);
+    }
+
+    public function testClientFlushEvents(): void
+    {
+        /** @var AsyncTransportInterface|MockObject $asyncTransport */
+        $asyncTransport = $this->createMock(AsyncTransportInterface::class);
+        $asyncTransport->expects($this->once())
+                       ->method('flush');
+
+        /** @var Client $client */
+        $client = ClientBuilder::create()
+                               ->setTransport($asyncTransport)
+                               ->getClient();
+
+        $client->flush();
     }
 
     /**

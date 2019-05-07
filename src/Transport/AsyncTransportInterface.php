@@ -15,5 +15,5 @@ interface AsyncTransportInterface extends TransportInterface
     /**
      * Wait for all events to be transported.
      */
-    public function await(): void;
+    public function flush(): void;
 }

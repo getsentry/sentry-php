@@ -296,22 +296,6 @@ final class HubTest extends TestCase
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
     }
 
-    public function testClientAwaitAsync(): void
-    {
-        /** @var AsyncTransportInterface|MockObject $asyncTransport */
-        $asyncTransport = $this->createMock(AsyncTransportInterface::class);
-        $asyncTransport->expects($this->once())
-            ->method('await');
-
-        /** @var Client $client */
-        $client = ClientBuilder::create()
-            ->setTransport($asyncTransport)
-            ->getClient();
-
-        $hub = new Hub($client);
-        $hub->await();
-    }
-
     private function getScope(HubInterface $hub): Scope
     {
         $method = new \ReflectionMethod($hub, 'getScope');

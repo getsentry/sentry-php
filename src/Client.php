@@ -7,6 +7,7 @@ namespace Sentry;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\AsyncTransportInterface;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -70,13 +71,13 @@ final class Client implements ClientInterface
     }
 
     /**
-     * Returns the transport of the client.
-     *
-     * @return TransportInterface
+     * Flush the event queue and make sure all events are sent if possible.
      */
-    public function getTransport(): TransportInterface
+    public function flush(): void
     {
-        return $this->transport;
+        if ($this->transport instanceof AsyncTransportInterface) {
+            $this->transport->flush();
+        }
     }
 
     /**
