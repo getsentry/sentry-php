@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
+/**
+ * This interface can be used to customize how an object is serialized in the
+ * payload of an event.
+ */
 interface SerializableInterface
 {
     /**

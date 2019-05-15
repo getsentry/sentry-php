@@ -702,9 +702,10 @@ final class Options
     }
 
     /**
-     * Gets the type serializers.
+     * Gets the callbacks used to customize how objects are serialized in the payload
+     * of the event.
      *
-     * @return array
+     * @return array<string, callable>
      */
     public function getClassSerializers(): array
     {
@@ -712,9 +713,11 @@ final class Options
     }
 
     /**
-     * Sets the class serializers.
+     * Sets a list of callables that will be called to customize how objects are
+     * serialized in the event's payload. * The list must be a map of FQCN/callable
+     * pairs.
      *
-     * @param array $serializers
+     * @param array<string, callable> $serializers The list of serializer callbacks
      */
     public function setClassSerializers(array $serializers): void
     {
@@ -799,7 +802,7 @@ final class Options
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
-        $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializers']));
+        $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
@@ -973,7 +976,7 @@ final class Options
      *
      * @return bool
      */
-    private function validateClassSerializers(array $serializers): bool
+    private function validateClassSerializersOption(array $serializers): bool
     {
         foreach ($serializers as $class => $serializer) {
             if (!\is_string($class) || !\is_callable($serializer)) {
