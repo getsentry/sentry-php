@@ -970,7 +970,7 @@ final class Options
     }
 
     /**
-     * Validates all the class serializers are callables indexed by class names.
+     * Validate that the value passed to the `class_serializers` option is valid.
      *
      * @param array $serializers The value to validate
      *
