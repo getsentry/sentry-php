@@ -8,7 +8,6 @@ use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\SerializableInterface;
 use Sentry\Serializer\Serializer;
-use Sentry\Tests\Fixtures\classes\StubObject;
 
 final class SerializerTest extends AbstractSerializerTest
 {
@@ -100,9 +99,19 @@ final class SerializerTest extends AbstractSerializerTest
 
     public function testRegisteredObjectSerializers(): void
     {
+        $object = new class
+        {
+            public function getPurpose(): string
+            {
+                return 'To be tested!';
+            }
+        };
+
+        $objectClass = \get_class($object);
+
         $serializer = $this->createSerializer(new Options([
             'class_serializers' => [
-                StubObject::class => $customSerializerCallback = static function (StubObject $object): array {
+                $objectClass => $customSerializerCallback = static function ($object): array {
                     return [
                         'purpose' => $object->getPurpose(),
                     ];
@@ -110,10 +119,8 @@ final class SerializerTest extends AbstractSerializerTest
             ],
         ]));
 
-        $object = new StubObject();
-
         $this->assertEquals([
-            'class' => \get_class($object),
+            'class' => $objectClass,
             'data' => $customSerializerCallback($object),
         ], $this->invokeSerialization($serializer, $object));
     }
