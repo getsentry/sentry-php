@@ -110,7 +110,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $serializer = $this->createSerializer(new Options([
             'class_serializers' => [
-                $objectClass => $customSerializerCallback = static function ($object): array {
+                $objectClass => static function ($object): array {
                     return [
                         'purpose' => $object->getPurpose(),
                     ];
@@ -120,7 +120,9 @@ final class SerializerTest extends AbstractSerializerTest
 
         $this->assertEquals([
             'class' => $objectClass,
-            'data' => $customSerializerCallback($object),
+            'data' => [
+                'purpose' => 'To be tested!',
+            ],
         ], $this->invokeSerialization($serializer, $object));
     }
 
