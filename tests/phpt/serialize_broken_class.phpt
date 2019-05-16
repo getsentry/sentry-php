@@ -31,7 +31,10 @@ function testSerialization($value) {
 }
 
 testSerialization(BrokenClass::class . '::brokenMethod');
+echo PHP_EOL;
+testSerialization([BrokenClass::class, 'brokenMethod']);
 
 ?>
---EXPECTF--
-Sentry\Tests\resources\BrokenClass::missingMethod
+--EXPECT--
+Sentry\Tests\resources\BrokenClass::brokenMethod {serialization error}
+{serialization error}

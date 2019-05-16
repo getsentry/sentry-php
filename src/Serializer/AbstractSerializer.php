@@ -103,31 +103,39 @@ abstract class AbstractSerializer
      */
     protected function serializeRecursively($value, int $_depth = 0)
     {
-        if ($_depth >= $this->maxDepth) {
+        try {
+            if ($_depth >= $this->maxDepth) {
+                return $this->serializeValue($value);
+            }
+
+            if (\is_callable($value)) {
+                return $this->serializeCallable($value);
+            }
+
+            if (\is_array($value)) {
+                $serializedArray = [];
+
+                foreach ($value as $k => $v) {
+                    $serializedArray[$k] = $this->serializeRecursively($v, $_depth + 1);
+                }
+
+                return $serializedArray;
+            }
+
+            if (\is_object($value)) {
+                if ($this->serializeAllObjects || ('stdClass' === \get_class($value))) {
+                    return $this->serializeObject($value, $_depth, []);
+                }
+            }
+
             return $this->serializeValue($value);
-        }
-
-        if (\is_callable($value)) {
-            return $this->serializeCallable($value);
-        }
-
-        if (\is_array($value)) {
-            $serializedArray = [];
-
-            foreach ($value as $k => $v) {
-                $serializedArray[$k] = $this->serializeRecursively($v, $_depth + 1);
+        } catch (\Throwable $error) {
+            if (\is_string($value)) {
+                return $value . ' {serialization error}';
             }
 
-            return $serializedArray;
+            return '{serialization error}';
         }
-
-        if (\is_object($value)) {
-            if ($this->serializeAllObjects || ('stdClass' === \get_class($value))) {
-                return $this->serializeObject($value, $_depth, []);
-            }
-        }
-
-        return $this->serializeValue($value);
     }
 
     /**
