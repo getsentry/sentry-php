@@ -134,7 +134,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $object = $this->createMock(SerializableInterface::class);
         $object->method('toSentry')
-               ->willReturn($serializedValue);
+            ->willReturn($serializedValue);
 
         $this->assertEquals([
             'class' => \get_class($object),
@@ -148,7 +148,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $object = $this->createMock(SerializableInterface::class);
         $object->method('toSentry')
-               ->willReturn(null);
+            ->willReturn(null);
 
         $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
@@ -159,7 +159,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $object = $this->createMock(SerializableInterface::class);
         $object->method('toSentry')
-               ->willThrowException(new \Exception('Doesn\'t matter what the exception is.'));
+            ->willThrowException(new \Exception('Doesn\'t matter what the exception is.'));
 
         $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }

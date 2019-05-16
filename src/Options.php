@@ -714,7 +714,7 @@ final class Options
 
     /**
      * Sets a list of callables that will be called to customize how objects are
-     * serialized in the event's payload. * The list must be a map of FQCN/callable
+     * serialized in the event's payload. The list must be a map of FQCN/callable
      * pairs.
      *
      * @param array<string, callable> $serializers The list of serializer callbacks
@@ -970,7 +970,7 @@ final class Options
     }
 
     /**
-     * Validate that the value passed to the `class_serializers` option is valid.
+     * Validates that the values passed to the `class_serializers` option are valid.
      *
      * @param array $serializers The value to validate
      *
