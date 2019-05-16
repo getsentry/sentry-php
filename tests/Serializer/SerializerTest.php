@@ -99,7 +99,7 @@ final class SerializerTest extends AbstractSerializerTest
 
     public function testRegisteredObjectSerializers(): void
     {
-        $object = new class {
+        $object = new class() {
             public function getPurpose(): string
             {
                 return 'To be tested!';
