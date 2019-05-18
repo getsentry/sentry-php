@@ -702,6 +702,31 @@ final class Options
     }
 
     /**
+     * Gets the callbacks used to customize how objects are serialized in the payload
+     * of the event.
+     *
+     * @return array<string, callable>
+     */
+    public function getClassSerializers(): array
+    {
+        return $this->options['class_serializers'];
+    }
+
+    /**
+     * Sets a list of callables that will be called to customize how objects are
+     * serialized in the event's payload. The list must be a map of FQCN/callable
+     * pairs.
+     *
+     * @param array<string, callable> $serializers The list of serializer callbacks
+     */
+    public function setClassSerializers(array $serializers): void
+    {
+        $options = array_merge($this->options, ['class_serializers' => $serializers]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -742,6 +767,7 @@ final class Options
             'http_proxy' => null,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
+            'class_serializers' => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -770,11 +796,13 @@ final class Options
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
+        $resolver->setAllowedTypes('class_serializers', 'array');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
+        $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
@@ -939,5 +967,23 @@ final class Options
     private function validateMaxBreadcrumbsOptions(int $value): bool
     {
         return $value >= 0 && $value <= self::DEFAULT_MAX_BREADCRUMBS;
+    }
+
+    /**
+     * Validates that the values passed to the `class_serializers` option are valid.
+     *
+     * @param array $serializers The value to validate
+     *
+     * @return bool
+     */
+    private function validateClassSerializersOption(array $serializers): bool
+    {
+        foreach ($serializers as $class => $serializer) {
+            if (!\is_string($class) || !\is_callable($serializer)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

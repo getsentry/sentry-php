@@ -6,6 +6,7 @@ namespace Sentry\Tests\Serializer;
 
 use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
+use Sentry\Serializer\SerializableInterface;
 use Sentry\Serializer\Serializer;
 
 final class SerializerTest extends AbstractSerializerTest
@@ -94,6 +95,75 @@ final class SerializerTest extends AbstractSerializerTest
         $result = $this->invokeSerialization($serializer, null);
 
         $this->assertNull($result);
+    }
+
+    public function testRegisteredObjectSerializers(): void
+    {
+        $object = new class() {
+            public function getPurpose(): string
+            {
+                return 'To be tested!';
+            }
+        };
+
+        $objectClass = \get_class($object);
+
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                $objectClass => static function ($object): array {
+                    return [
+                        'purpose' => $object->getPurpose(),
+                    ];
+                },
+            ],
+        ]));
+
+        $this->assertEquals([
+            'class' => $objectClass,
+            'data' => [
+                'purpose' => 'To be tested!',
+            ],
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testSerializableObject(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $serializedValue = [
+            'testing' => 'value',
+        ];
+
+        $object = $this->createMock(SerializableInterface::class);
+        $object->method('toSentry')
+            ->willReturn($serializedValue);
+
+        $this->assertEquals([
+            'class' => \get_class($object),
+            'data' => $serializedValue,
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testSerializableThatReturnsNull(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $object = $this->createMock(SerializableInterface::class);
+        $object->method('toSentry')
+            ->willReturn(null);
+
+        $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testSerializableObjectThatThrowsAnException(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $object = $this->createMock(SerializableInterface::class);
+        $object->method('toSentry')
+            ->willThrowException(new \Exception('Doesn\'t matter what the exception is.'));
+
+        $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
 
     public function testLongStringWithOverwrittenMessageLength(): void
