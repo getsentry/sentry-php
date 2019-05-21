@@ -12,6 +12,7 @@
 - Fix the default value of the `$exceptions` property of the Event class (#806)
 - Add a Monolog handler (#808)
 - Allow capturing the body of an HTTP request (#807)
+- Capture exceptions during serialization, to avoid hard failures (#818)
 
 ## 2.0.1 (2019-03-01)
 
