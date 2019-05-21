@@ -1,6 +1,6 @@
 <?php
 
-namespace Sentry\Tests\resources;
+namespace Sentry\Tests\Fixtures\code;
 
 class BrokenClass
 {

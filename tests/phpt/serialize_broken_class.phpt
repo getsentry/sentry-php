@@ -7,14 +7,9 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Sentry\ClientBuilder;
-use Sentry\Event;
-use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Options;
 use Sentry\Serializer\Serializer;
-use Sentry\State\Hub;
-use Sentry\Tests\resources\BrokenClass;
-use Sentry\Transport\TransportInterface;
+use Sentry\Tests\Fixtures\code\BrokenClass;
 
 $vendor = __DIR__;
 
@@ -36,5 +31,5 @@ testSerialization([BrokenClass::class, 'brokenMethod']);
 
 ?>
 --EXPECT--
-Sentry\Tests\resources\BrokenClass::brokenMethod {serialization error}
+Sentry\Tests\Fixtures\code\BrokenClass::brokenMethod {serialization error}
 {serialization error}
