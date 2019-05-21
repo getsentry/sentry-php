@@ -11,6 +11,6 @@ parameters:
         - '/Http\\Client\\Curl\\Client/'
     excludes_analyse:
         - tests/resources
-        - tests/Fixtures/code/BrokenClass.php
+        - tests/Fixtures
 includes:
 	- vendor/phpstan/phpstan-phpunit/extension.neon
