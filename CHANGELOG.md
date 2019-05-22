@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.1.0 (2019-05-22)
 
 - Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (#786)
 - Increase default severity of `E_RECOVERABLE_ERROR` to `Severity::ERROR`, instead of warning (#792)
