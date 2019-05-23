@@ -108,7 +108,7 @@ abstract class AbstractSerializer
         }
 
         if (\is_callable($value)) {
-            return $this->serializeCallable($value);
+            return $this->serializeCallableWithoutTypeHint($value);
         }
 
         if (\is_array($value)) {
@@ -195,7 +195,7 @@ abstract class AbstractSerializer
         }
 
         if (\is_callable($value)) {
-            return $this->serializeCallable($value);
+            return $this->serializeCallableWithoutTypeHint($value);
         }
 
         if (\is_array($value)) {
@@ -206,11 +206,33 @@ abstract class AbstractSerializer
     }
 
     /**
+     * This method is provided as a non-BC upgrade of serializeCallable, 
+     * since using the callable type raises a deprecation in some cases.
+     * 
+     * @param callable $callable
+     * @return string
+     */
+    protected function serializeCallableWithoutTypeHint($callable): string
+    {
+        if (!\is_callable($callable)) {
+            throw new \InvalidArgumentException('Expecting callable, got ' . \gettype($callable));
+        }
+
+        if (\is_string($callable) && !\function_exists($callable)) {
+            return $callable;
+        }
+
+        return $this->serializeCallable($callable);
+    }
+
+    /**
+     * @internal Use serializeCallableWithoutTypeHint instead (no type in argument)
+     *
      * @param callable $callable
      *
      * @return string
      */
-    protected function serializeCallable($callable): string
+    protected function serializeCallable(/* callable type to be removed in 3.0, see #821 => */callable $callable): string
     {
         if (!\is_callable($callable)) {
             throw new \InvalidArgumentException('Expecting callable, got ' . \gettype($callable));
@@ -226,8 +248,6 @@ abstract class AbstractSerializer
             } elseif (\is_object($callable) && method_exists($callable, '__invoke')) {
                 $reflection = new \ReflectionMethod($callable, '__invoke');
                 $class = $reflection->getDeclaringClass();
-            } elseif (\is_string($callable)) {
-                return $callable;
             } else {
                 throw new \InvalidArgumentException('Unrecognized type of callable');
             }
