@@ -357,7 +357,6 @@ abstract class AbstractSerializerTest extends TestCase
         $filename = \dirname(__DIR__) . '/resources/callable_without_namespace.inc';
         $this->assertFileExists($filename);
         $callableWithoutNamespaces = require $filename;
-        $pseudoStaticMethod = 'Sentry\Tests\Serializer\AbstractSerializerTest::serializableCallableProvider';
 
         return [
             [
@@ -457,8 +456,8 @@ abstract class AbstractSerializerTest extends TestCase
                 'expected' => 'Lambda void {closure} [int|null param1_70ns]',
             ],
             [
-                'callable' => $pseudoStaticMethod,
-                'expected' => '{unserializable callable, reflection error}',
+                'callable' => __METHOD__,
+                'expected' => __METHOD__,
             ],
         ];
     }

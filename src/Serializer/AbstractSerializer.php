@@ -212,16 +212,22 @@ abstract class AbstractSerializer
      */
     protected function serializeCallable($callable): string
     {
+        if (!\is_callable($callable)) {
+            throw new \InvalidArgumentException('Expecting callable, got ' . \gettype($callable));
+        }
+
         try {
             if (\is_array($callable)) {
                 $reflection = new \ReflectionMethod($callable[0], $callable[1]);
                 $class = $reflection->getDeclaringClass();
-            } elseif ($callable instanceof \Closure || \is_string($callable)) {
+            } elseif ($callable instanceof \Closure || (\is_string($callable) && \function_exists($callable))) {
                 $reflection = new \ReflectionFunction($callable);
                 $class = null;
             } elseif (\is_object($callable) && method_exists($callable, '__invoke')) {
                 $reflection = new \ReflectionMethod($callable, '__invoke');
                 $class = $reflection->getDeclaringClass();
+            } elseif (\is_string($callable)) {
+                return $callable;
             } else {
                 throw new \InvalidArgumentException('Unrecognized type of callable');
             }
