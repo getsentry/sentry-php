@@ -108,21 +108,16 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider captureExceptionWithExcludedExceptionsDataProvider
+     * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionWithExcludedExceptions(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
     {
         $transport = $this->createMock(TransportInterface::class);
 
         $transport->expects($shouldCapture ? $this->once() : $this->never())
             ->method('send')
-            ->with($this->callback(function (Event $event) use ($thrown): bool {
-                $this->assertCount(1, $event->getExceptions());
-
-                $exceptionData = $event->getExceptions()[0];
-
-                $this->assertSame(\get_class($thrown), $exceptionData['type']);
-                $this->assertSame($thrown->getMessage(), $exceptionData['value']);
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNotEmpty($event->getExceptions());
 
                 return true;
             }));
@@ -134,12 +129,24 @@ class ClientTest extends TestCase
         $client->captureException($thrown);
     }
 
-    public function captureExceptionWithExcludedExceptionsDataProvider(): array
+    public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
     {
         return [
-            [true, \Exception::class, new \Error()],
-            [false, \Exception::class, new \LogicException()],
-            [false, \Throwable::class, new \Error()],
+            [
+                true, 
+                \Exception::class, 
+                new \Error(),
+            ],
+            [
+                false, 
+                \Exception::class, 
+                new \LogicException(),
+            ],
+            [
+                false, 
+                \Throwable::class, 
+                new \Error(),
+            ],
         ];
     }
 
