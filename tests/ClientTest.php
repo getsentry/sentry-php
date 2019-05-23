@@ -107,6 +107,42 @@ class ClientTest extends TestCase
         $client->captureException($exception);
     }
 
+    /**
+     * @dataProvider captureExceptionWithExcludedExceptionsDataProvider
+     */
+    public function testCaptureExceptionWithExcludedExceptions(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    {
+        $transport = $this->createMock(TransportInterface::class);
+
+        $transport->expects($shouldCapture ? $this->once() : $this->never())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($thrown): bool {
+                $this->assertCount(1, $event->getExceptions());
+
+                $exceptionData = $event->getExceptions()[0];
+
+                $this->assertSame(\get_class($thrown), $exceptionData['type']);
+                $this->assertSame($thrown->getMessage(), $exceptionData['value']);
+
+                return true;
+            }));
+
+        $client = ClientBuilder::create(['excluded_exceptions' => [$excluded]])
+            ->setTransport($transport)
+            ->getClient();
+
+        $client->captureException($thrown);
+    }
+
+    public function captureExceptionWithExcludedExceptionsDataProvider(): array
+    {
+        return [
+            [true, \Exception::class, new \Error()],
+            [false, \Exception::class, new \LogicException()],
+            [false, \Throwable::class, new \Error()],
+        ];
+    }
+
     public function testCapture(): void
     {
         /** @var TransportInterface|MockObject $transport */
@@ -258,7 +294,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider convertExceptionDataProvider
      */
-    public function testConvertException(\Exception $exception, array $clientConfig, array $expectedResult): void
+    public function testConvertException(\Exception $exception, array $expectedResult): void
     {
         /** @var TransportInterface|MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -277,7 +313,7 @@ class ClientTest extends TestCase
                 return true;
             }));
 
-        $client = ClientBuilder::create($clientConfig)
+        $client = ClientBuilder::create()
             ->setTransport($transport)
             ->getClient();
 
@@ -289,7 +325,6 @@ class ClientTest extends TestCase
         return [
             [
                 new \RuntimeException('foo'),
-                [],
                 [
                     'level' => Severity::ERROR,
                     'exception' => [
@@ -304,7 +339,6 @@ class ClientTest extends TestCase
             ],
             [
                 new \ErrorException('foo', 0, E_USER_WARNING),
-                [],
                 [
                     'level' => Severity::WARNING,
                     'exception' => [
@@ -312,27 +346,6 @@ class ClientTest extends TestCase
                             [
                                 'type' => \ErrorException::class,
                                 'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                new \BadMethodCallException('baz', 0, new \BadFunctionCallException('bar', 0, new \LogicException('foo', 0))),
-                [
-                    'excluded_exceptions' => [\BadMethodCallException::class],
-                ],
-                [
-                    'level' => Severity::ERROR,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \LogicException::class,
-                                'value' => 'foo',
-                            ],
-                            [
-                                'type' => \BadFunctionCallException::class,
-                                'value' => 'bar',
                             ],
                         ],
                     ],
