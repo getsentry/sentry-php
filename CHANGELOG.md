@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the `exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822) 
+
 ## 2.1.0 (2019-05-22)
 
 - Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (#786)
