@@ -133,18 +133,18 @@ class ClientTest extends TestCase
     {
         return [
             [
-                true, 
-                \Exception::class, 
+                true,
+                \Exception::class,
                 new \Error(),
             ],
             [
-                false, 
-                \Exception::class, 
+                false,
+                \Exception::class,
                 new \LogicException(),
             ],
             [
-                false, 
-                \Throwable::class, 
+                false,
+                \Throwable::class,
                 new \Error(),
             ],
         ];
