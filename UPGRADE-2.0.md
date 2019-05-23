@@ -526,7 +526,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setUser(['email' => 'foo@example.com']);
-  })
+  });
   ```
 
 - The `Raven_Client::tags_context` method has been removed. You can set this
@@ -546,7 +546,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setTag('tag_name', 'tag_value');
-  })
+  });
   ```
 
 - The `Raven_Client::extra_context` method has been removed. You can set this
@@ -566,7 +566,7 @@ Please visit [our docs](https://docs.sentry.io/error-reporting/quickstart/?platf
 
   Hub::getCurrent()->configureScope(function (Scope $scope): void {
       $scope->setExtra('extra_key', 'extra_value');
-  })
+  });
   ```
 
 - The method `Raven_Client::install` has been removed. The error handler is

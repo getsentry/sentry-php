@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.1.0 (2019-05-22)
 
 - Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (#786)
 - Increase default severity of `E_RECOVERABLE_ERROR` to `Severity::ERROR`, instead of warning (#792)
@@ -8,9 +8,11 @@
   and change the type of the reported exception to `\Sentry\Exception\FatalErrorException` (#788)
 - Add a static factory method to create a breadcrumb from an array of data (#798)
 - Add support for `SENTRY_ENVRIONMENT` and `SENTRY_RELEASE` environment variables (#810)
+- Add the `class_serializers` option to make it possible to customize how objects are serialized in the event payload (#809)
 - Fix the default value of the `$exceptions` property of the Event class (#806)
 - Add a Monolog handler (#808)
 - Allow capturing the body of an HTTP request (#807)
+- Capture exceptions during serialization, to avoid hard failures (#818)
 
 ## 2.0.1 (2019-03-01)
 
