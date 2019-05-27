@@ -91,6 +91,10 @@ final class Client implements ClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
     {
+        if ($this->options->isExcludedException($exception)) {
+            return null;
+        }
+
         $payload['exception'] = $exception;
 
         return $this->captureEvent($payload, $scope);

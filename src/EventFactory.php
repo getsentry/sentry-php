@@ -145,10 +145,6 @@ final class EventFactory implements EventFactoryInterface
         $currentException = $exception;
 
         do {
-            if ($this->options->isExcludedException($currentException)) {
-                continue;
-            }
-
             $data = [
                 'type' => \get_class($currentException),
                 'value' => $this->serializer->serialize($currentException->getMessage()),
