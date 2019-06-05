@@ -372,6 +372,46 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest())
                 ->withUploadedFiles([
                     'foo' => [
+                        'bar' => [
+                            new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
+                            new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        ],
+                    ],
+                ])
+                ->withUri(new Uri('http://www.example.com/foo'))
+                ->withMethod('POST'),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                ],
+                'data' => [
+                    'foo' => [
+                        'bar' => [
+                            [
+                                'client_filename' => 'foo.ext',
+                                'client_media_type' => 'application/text',
+                                'size' => 123,
+                            ],
+                            [
+                                'client_filename' => 'bar.ext',
+                                'client_media_type' => 'application/octet-stream',
+                                'size' => 321,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest())
+                ->withUploadedFiles([
+                    'foo' => [
                         new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
                         new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
                     ],
