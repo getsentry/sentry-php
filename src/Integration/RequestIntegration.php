@@ -164,23 +164,11 @@ final class RequestIntegration implements IntegrationInterface
             return null;
         }
 
-        $requestData = $serverRequest->getParsedBody();
-        $requestData = \is_array($requestData) ? $requestData : [];
-
-        foreach ($serverRequest->getUploadedFiles() as $fieldName => $uploadedFiles) {
-            if (!\is_array($uploadedFiles)) {
-                $uploadedFiles = [$uploadedFiles];
-            }
-
-            /** @var UploadedFileInterface $uploadedFile */
-            foreach ($uploadedFiles as $uploadedFile) {
-                $requestData[$fieldName][] = [
-                    'client_filename' => $uploadedFile->getClientFilename(),
-                    'client_media_type' => $uploadedFile->getClientMediaType(),
-                    'size' => $uploadedFile->getSize(),
-                ];
-            }
-        }
+        $parsedBody = $serverRequest->getParsedBody();
+        $requestData = array_merge(
+            $this->parseUploadedFiles($serverRequest->getUploadedFiles()),
+            \is_array($parsedBody) ? $parsedBody : []
+        );
 
         if (!empty($requestData)) {
             return $requestData;
@@ -195,5 +183,26 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         return $requestBody->getContents();
+    }
+
+    private function parseUploadedFiles(array $uploadedFiles): array
+    {
+        $data = [];
+
+        foreach ($uploadedFiles as $key => $item) {
+            if ($item instanceof UploadedFileInterface) {
+                $data[$key] = [
+                    'client_filename' => $item->getClientFilename(),
+                    'client_media_type' => $item->getClientMediaType(),
+                    'size' => $item->getSize(),
+                ];
+            } elseif (\is_array($item)) {
+                $data[$key] = $this->parseUploadedFiles($item);
+            } else {
+                throw new \InvalidArgumentException('Unrecognized UploadedFiles item, got ' . \gettype($item));
+            }
+        }
+
+        return $data;
     }
 }

@@ -319,11 +319,9 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
+                        'client_filename' => 'foo.ext',
+                        'client_media_type' => 'application/text',
+                        'size' => 123,
                     ],
                 ],
             ],
