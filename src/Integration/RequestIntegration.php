@@ -164,10 +164,10 @@ final class RequestIntegration implements IntegrationInterface
             return null;
         }
 
-        $parsedBody = $serverRequest->getParsedBody();
+        $requestData = $serverRequest->getParsedBody();
         $requestData = array_merge(
             $this->parseUploadedFiles($serverRequest->getUploadedFiles()),
-            \is_array($parsedBody) ? $parsedBody : []
+            \is_array($requestData) ? $requestData : []
         );
 
         if (!empty($requestData)) {
@@ -191,27 +191,26 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
      *
-     * @return array The same array with UploadedFileInterface replaced with plain info
+     * @return array
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {
-        $data = [];
+        $result = [];
 
         foreach ($uploadedFiles as $key => $item) {
             if ($item instanceof UploadedFileInterface) {
-                $data[$key] = [
+                $result[$key] = [
                     'client_filename' => $item->getClientFilename(),
                     'client_media_type' => $item->getClientMediaType(),
                     'size' => $item->getSize(),
                 ];
             } elseif (\is_array($item)) {
-                $data[$key] = $this->parseUploadedFiles($item);
+                $result[$key] = $this->parseUploadedFiles($item);
             } else {
-                $type = \is_object($item) ? \get_class($item) : \gettype($item);
-                throw new \UnexpectedValueException('Expecting UploadedFileInterface , got ' . $type);
+                throw new \UnexpectedValueException(sprintf('Expected either an object implementing the "%s" interface or an array. Got: "%s".', UploadedFileInterface::class, \is_object($item) ? \get_class($item) : \gettype($item)));
             }
         }
 
-        return $data;
+        return $result;
     }
 }
