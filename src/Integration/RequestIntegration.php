@@ -188,6 +188,10 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Create an array with the same structure as $uploadedFiles, but replacing
      * each UploadedFileInterface with an array of info.
+     *
+     * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
+     *
+     * @return array The same array with UploadedFileInterface replaced with plain info
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {
@@ -203,7 +207,7 @@ final class RequestIntegration implements IntegrationInterface
             } elseif (\is_array($item)) {
                 $data[$key] = $this->parseUploadedFiles($item);
             } else {
-                $type = is_object($item) ? \get_class($item) : \gettype($item);
+                $type = \is_object($item) ? \get_class($item) : \gettype($item);
                 throw new \UnexpectedValueException('Expecting UploadedFileInterface , got ' . $type);
             }
         }
