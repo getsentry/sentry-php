@@ -165,22 +165,10 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         $requestData = $serverRequest->getParsedBody();
-        $requestData = \is_array($requestData) ? $requestData : [];
-
-        foreach ($serverRequest->getUploadedFiles() as $fieldName => $uploadedFiles) {
-            if (!\is_array($uploadedFiles)) {
-                $uploadedFiles = [$uploadedFiles];
-            }
-
-            /** @var UploadedFileInterface $uploadedFile */
-            foreach ($uploadedFiles as $uploadedFile) {
-                $requestData[$fieldName][] = [
-                    'client_filename' => $uploadedFile->getClientFilename(),
-                    'client_media_type' => $uploadedFile->getClientMediaType(),
-                    'size' => $uploadedFile->getSize(),
-                ];
-            }
-        }
+        $requestData = array_merge(
+            $this->parseUploadedFiles($serverRequest->getUploadedFiles()),
+            \is_array($requestData) ? $requestData : []
+        );
 
         if (!empty($requestData)) {
             return $requestData;
@@ -195,5 +183,34 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         return $requestBody->getContents();
+    }
+
+    /**
+     * Create an array with the same structure as $uploadedFiles, but replacing
+     * each UploadedFileInterface with an array of info.
+     *
+     * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
+     *
+     * @return array
+     */
+    private function parseUploadedFiles(array $uploadedFiles): array
+    {
+        $result = [];
+
+        foreach ($uploadedFiles as $key => $item) {
+            if ($item instanceof UploadedFileInterface) {
+                $result[$key] = [
+                    'client_filename' => $item->getClientFilename(),
+                    'client_media_type' => $item->getClientMediaType(),
+                    'size' => $item->getSize(),
+                ];
+            } elseif (\is_array($item)) {
+                $result[$key] = $this->parseUploadedFiles($item);
+            } else {
+                throw new \UnexpectedValueException(sprintf('Expected either an object implementing the "%s" interface or an array. Got: "%s".', UploadedFileInterface::class, \is_object($item) ? \get_class($item) : \gettype($item)));
+            }
+        }
+
+        return $result;
     }
 }

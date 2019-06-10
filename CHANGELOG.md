@@ -4,6 +4,7 @@
 
 - Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the 
 `exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822) 
+- Fix handling of uploaded files in the `RequestIntegration`, to respect the PSR-7 spec fully (#827)
 
 ## 2.1.0 (2019-05-22)
 

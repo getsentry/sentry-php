@@ -319,11 +319,9 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
+                        'client_filename' => 'foo.ext',
+                        'client_media_type' => 'application/text',
+                        'size' => 123,
                     ],
                 ],
             ],
@@ -372,8 +370,10 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest())
                 ->withUploadedFiles([
                     'foo' => [
-                        new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                        new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        'bar' => [
+                            new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
+                            new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        ],
                     ],
                 ])
                 ->withUri(new Uri('http://www.example.com/foo'))
@@ -386,15 +386,17 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
-                        [
-                            'client_filename' => 'bar.ext',
-                            'client_media_type' => 'application/octet-stream',
-                            'size' => 321,
+                        'bar' => [
+                            [
+                                'client_filename' => 'foo.ext',
+                                'client_media_type' => 'application/text',
+                                'size' => 123,
+                            ],
+                            [
+                                'client_filename' => 'bar.ext',
+                                'client_media_type' => 'application/octet-stream',
+                                'size' => 321,
+                            ],
                         ],
                     ],
                 ],
