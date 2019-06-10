@@ -203,7 +203,8 @@ final class RequestIntegration implements IntegrationInterface
             } elseif (\is_array($item)) {
                 $data[$key] = $this->parseUploadedFiles($item);
             } else {
-                throw new \InvalidArgumentException('Unrecognized UploadedFiles item, got ' . \gettype($item));
+                $type = is_object($item) ? \get_class($item) : \gettype($item);
+                throw new \UnexpectedValueException('Expecting UploadedFileInterface , got ' . $type);
             }
         }
 
