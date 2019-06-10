@@ -185,6 +185,10 @@ final class RequestIntegration implements IntegrationInterface
         return $requestBody->getContents();
     }
 
+    /**
+     * Create an array with the same structure as $uploadedFiles, but replacing
+     * each UploadedFileInterface with an array of info.
+     */
     private function parseUploadedFiles(array $uploadedFiles): array
     {
         $data = [];
