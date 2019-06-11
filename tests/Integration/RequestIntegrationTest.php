@@ -25,8 +25,7 @@ final class RequestIntegrationTest extends TestCase
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $request = new ServerRequest();
-        $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
+        $request = new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']);
 
         $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
@@ -140,11 +139,10 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest())
+            (new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']))
                 ->withUri(new Uri('http://www.example.com/foo?foo=bar&bar=baz'))
                 ->withMethod('GET')
                 ->withHeader('Host', 'www.example.com')
-                ->withHeader('REMOTE_ADDR', '127.0.0.1')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
@@ -155,7 +153,6 @@ final class RequestIntegrationTest extends TestCase
                 'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
-                    'REMOTE_ADDR' => ['127.0.0.1'],
                     'Authorization' => ['foo'],
                     'Cookie' => ['bar'],
                     'Set-Cookie' => ['baz'],
@@ -170,11 +167,10 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest())
+            (new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']))
                 ->withUri(new Uri('http://www.example.com/foo?foo=bar&bar=baz'))
                 ->withMethod('GET')
                 ->withHeader('Host', 'www.example.com')
-                ->withHeader('REMOTE_ADDR', '127.0.0.1')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
