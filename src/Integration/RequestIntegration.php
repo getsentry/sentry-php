@@ -96,8 +96,10 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         if ($self->options->shouldSendDefaultPii()) {
-            if ($request->hasHeader('REMOTE_ADDR')) {
-                $requestData['env']['REMOTE_ADDR'] = $request->getHeaderLine('REMOTE_ADDR');
+            $serverParams = $request->getServerParams();
+
+            if (isset($serverParams['REMOTE_ADDR'])) {
+                $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
             }
 
             $requestData['cookies'] = $request->getCookieParams();
@@ -105,8 +107,8 @@ final class RequestIntegration implements IntegrationInterface
 
             $userContext = $event->getUserContext();
 
-            if (null === $userContext->getIpAddress() && $request->hasHeader('REMOTE_ADDR')) {
-                $userContext->setIpAddress($request->getHeaderLine('REMOTE_ADDR'));
+            if (null === $userContext->getIpAddress() && isset($serverParams['REMOTE_ADDR'])) {
+                $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
             }
         } else {
             $requestData['headers'] = $self->removePiiFromHeaders($request->getHeaders());
