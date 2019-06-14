@@ -302,7 +302,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
-                1 => 'numeric key',
+                '1' => 'numeric key',
             ],
             [],
         ];
