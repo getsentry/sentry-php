@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
+
 ## 2.1.1 (2019-06-13)
 
 - Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the 

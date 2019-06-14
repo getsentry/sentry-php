@@ -281,5 +281,30 @@ final class HandlerTest extends TestCase
                 'bar.tag' => 'bar tag value',
             ],
         ];
+
+        yield [
+            [
+                'message' => 'foo bar',
+                'level' => Logger::INFO,
+                'level_name' => Logger::getLevelName(Logger::INFO),
+                'channel' => 'channel.foo',
+                'context' => [
+                    'extra' => [
+                        1 => 'numeric key',
+                    ],
+                ],
+                'extra' => [],
+            ],
+            [
+                'level' => Severity::info(),
+                'message' => 'foo bar',
+            ],
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::INFO),
+                '1' => 'numeric key',
+            ],
+            [],
+        ];
     }
 }
