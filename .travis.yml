@@ -4,7 +4,6 @@ branches:
     only:
         - master
         - develop
-        - /^release\/.+$/
 
 php:
     - 7.1
@@ -36,9 +35,12 @@ jobs:
           name: PHP CS Fixer
           env: dependencies=highest
           script: composer phpcs
-        - script: composer phpstan
+        - name: PHPStan
           env: dependencies=highest
-          name: PHPStan
+          script: composer phpstan
+        - name: Psalm
+          env: dependencies=highest
+          script: composer psalm
         - stage: Code coverage
           php: 7.3
           env: dependencies=highest

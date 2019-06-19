@@ -25,7 +25,7 @@ final class Hub implements HubInterface
     private $lastEventId;
 
     /**
-     * @var HubInterface The hub that is set as the current one
+     * @var HubInterface|null The hub that is set as the current one
      */
     private static $currentHub;
 

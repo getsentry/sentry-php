@@ -37,7 +37,7 @@ final class Event implements \JsonSerializable
     private $level;
 
     /**
-     * @var string The name of the logger which created the record
+     * @var string|null The name of the logger which created the record
      */
     private $logger;
 
@@ -47,7 +47,7 @@ final class Event implements \JsonSerializable
     private $transaction;
 
     /**
-     * @var string The name of the server (e.g. the host name)
+     * @var string|null The name of the server (e.g. the host name)
      */
     private $serverName;
 
@@ -67,7 +67,7 @@ final class Event implements \JsonSerializable
     private $messageFormatted;
 
     /**
-     * @var array The parameters to use to format the message
+     * @var mixed[] The parameters to use to format the message
      */
     private $messageParams = [];
 
@@ -77,12 +77,12 @@ final class Event implements \JsonSerializable
     private $environment;
 
     /**
-     * @var array A list of relevant modules and their versions
+     * @var array<string, string> A list of relevant modules and their versions
      */
     private $modules = [];
 
     /**
-     * @var array The request data
+     * @var array<string, mixed> The request data
      */
     private $request = [];
 
@@ -122,7 +122,13 @@ final class Event implements \JsonSerializable
     private $breadcrumbs = [];
 
     /**
-     * @var array The exceptions
+     * @var array<int, array<string, mixed>> The exceptions
+     *
+     * @psalm-var array<int, array{
+     *     type: class-string,
+     *     value: string,
+     *     stacktrace: Stacktrace
+     * }>
      */
     private $exceptions = [];
 
@@ -158,6 +164,7 @@ final class Event implements \JsonSerializable
         $this->userContext = new UserContext();
         $this->extraContext = new Context();
         $this->tagsContext = new TagsContext();
+        $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
     /**
@@ -203,10 +210,6 @@ final class Event implements \JsonSerializable
      */
     public function getSdkVersion(): string
     {
-        if (null === $this->sdkVersion) {
-            $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
-        }
-
         return $this->sdkVersion;
     }
 
@@ -255,9 +258,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the name of the logger which created the event.
      *
-     * @return string
+     * @return string|null
      */
-    public function getLogger(): string
+    public function getLogger(): ?string
     {
         return $this->logger;
     }
@@ -265,9 +268,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the name of the logger which created the event.
      *
-     * @param string $logger The logger name
+     * @param string|null $logger The logger name
      */
-    public function setLogger(string $logger): void
+    public function setLogger(?string $logger): void
     {
         $this->logger = $logger;
     }
@@ -297,9 +300,9 @@ final class Event implements \JsonSerializable
     /**
      * Gets the name of the server.
      *
-     * @return string
+     * @return string|null
      */
-    public function getServerName(): string
+    public function getServerName(): ?string
     {
         return $this->serverName;
     }
@@ -307,9 +310,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the name of the server.
      *
-     * @param string $serverName The server name
+     * @param string|null $serverName The server name
      */
-    public function setServerName(string $serverName): void
+    public function setServerName(?string $serverName): void
     {
         $this->serverName = $serverName;
     }
@@ -368,10 +371,10 @@ final class Event implements \JsonSerializable
      * Sets the error message.
      *
      * @param string      $message   The message
-     * @param array       $params    The parameters to use to format the message
+     * @param mixed[]     $params    The parameters to use to format the message
      * @param string|null $formatted The formatted message
      */
-    public function setMessage(string $message, array $params = [], string $formatted = null): void
+    public function setMessage(string $message, array $params = [], ?string $formatted = null): void
     {
         $this->message = $message;
         $this->messageParams = $params;
@@ -381,7 +384,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets a list of relevant modules and their versions.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getModules(): array
     {
@@ -391,7 +394,7 @@ final class Event implements \JsonSerializable
     /**
      * Sets a list of relevant modules and their versions.
      *
-     * @param array $modules
+     * @param array<string, string> $modules
      */
     public function setModules(array $modules): void
     {
@@ -411,7 +414,7 @@ final class Event implements \JsonSerializable
     /**
      * Sets the request data.
      *
-     * @param array $request The request data
+     * @param array<string, mixed> $request The request data
      */
     public function setRequest(array $request): void
     {
@@ -543,7 +546,13 @@ final class Event implements \JsonSerializable
     /**
      * Sets the exception.
      *
-     * @param array $exceptions The exception
+     * @param array<int, array<string, mixed>> $exceptions The exception
+     *
+     * @psalm-param array<int, array{
+     *     type: class-string,
+     *     value: string,
+     *     stacktrace: Stacktrace
+     * }> $exceptions
      */
     public function setExceptions(array $exceptions): void
     {
@@ -574,6 +583,49 @@ final class Event implements \JsonSerializable
      * Gets the event as an array.
      *
      * @return array
+     *
+     * @psalm-return array{
+     *     event_id: string,
+     *     timestamp: string,
+     *     level: string,
+     *     platform: string,
+     *     sdk: array{
+     *         name: string,
+     *         version: string
+     *     },
+     *     logger?: string,
+     *     transaction?: string,
+     *     server_name?: string,
+     *     release?: string,
+     *     environment?: string,
+     *     fingerprint?: string[],
+     *     modules?: array<string, string>,
+     *     extra?: mixed[],
+     *     tags?: mixed[],
+     *     user?: mixed[],
+     *     contexts?: array{
+     *         os?: mixed[],
+     *         runtime?: mixed[]
+     *     },
+     *     breadcrumbs?: array{
+     *         values: Breadcrumb[]
+     *     },
+     *     exception?: array{
+     *         values: array{
+     *             type: class-string,
+     *             value: string,
+     *             stacktrace?: array{
+     *                 frames: Frame[]
+     *             }
+     *         }[]
+     *     },
+     *     request?: array<string, mixed>,
+     *     message?: string|array{
+     *         message: string,
+     *         params: mixed[],
+     *         formatted: string
+     *     }
+     * }
      */
     public function toArray(): array
     {

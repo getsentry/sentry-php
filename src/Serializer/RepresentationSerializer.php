@@ -47,6 +47,6 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
             return (string) $value;
         }
 
-        return parent::serializeValue($value);
+        return (string) parent::serializeValue($value);
     }
 }

@@ -10,6 +10,9 @@ namespace Sentry\Integration;
  */
 final class Handler
 {
+    /**
+     * @var array<string, bool> The registered integrations
+     */
     private static $integrations = [];
 
     /**

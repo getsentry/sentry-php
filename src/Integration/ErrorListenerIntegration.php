@@ -51,6 +51,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
+        /** @psalm-suppress DeprecatedMethod */
         $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $errorHandler->addErrorHandlerListener(function (\ErrorException $exception): void {
             if (!$this->handleFatalErrors && $exception instanceof FatalErrorException) {
