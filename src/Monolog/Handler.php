@@ -47,7 +47,7 @@ final class Handler extends AbstractProcessingHandler
         $payload = [
             'level' => $this->getSeverityFromLevel($record['level']),
             'message' => $record['message'],
-            'logger' => sprintf('monolog.%s', $record['channel']),
+            'logger' => 'monolog.' . $record['channel'],
         ];
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
