@@ -62,6 +62,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::debug(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -82,6 +83,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -102,6 +104,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -122,6 +125,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -142,6 +146,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::error(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -162,6 +167,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -182,6 +188,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -202,6 +209,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -232,6 +240,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -269,6 +278,7 @@ final class HandlerTest extends TestCase
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
                 'exception' => new \Exception('exception message'),
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -298,6 +308,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'channel' => 'channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
