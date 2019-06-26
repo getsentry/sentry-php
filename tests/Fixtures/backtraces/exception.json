@@ -4,11 +4,6 @@
     "backtrace": [
         {
             "file": "path/to/file",
-            "line": 30,
-            "class": "CrashyClass"
-        },
-        {
-            "file": "path/to/file",
             "function": "triggerError",
             "line": 7,
             "class": "TestClass"

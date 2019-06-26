@@ -58,7 +58,7 @@ final class StacktraceTest extends TestCase
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
-        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 2, 'class' => 'CrashyClass']);
+        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 2, 'class' => 'TestClass']);
 
         $frames = json_encode($stacktrace->getFrames());
         $serializedStacktrace = json_encode($stacktrace);
@@ -75,7 +75,7 @@ final class StacktraceTest extends TestCase
             $this->getJsonFixture('frames/eval.json'),
             $this->getJsonFixture('frames/runtime_created.json'),
             $this->getJsonFixture('frames/function.json'),
-            $this->getJsonFixture('frames/class.json'),
+            $this->getJsonFixture('frames/missing_function_key.json'),
         ];
 
         foreach ($frames as $frame) {
@@ -85,7 +85,7 @@ final class StacktraceTest extends TestCase
         $frames = $stacktrace->getFrames();
 
         $this->assertCount(4, $frames);
-        $this->assertFrameEquals($frames[0], 'CrashyClass', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[0], 'TestClass', 'path/to/file', 12);
         $this->assertFrameEquals($frames[1], 'TestClass::test_function', 'path/to/file', 12);
         $this->assertFrameEquals($frames[2], 'test_function', 'path/to/file', 12);
         $this->assertFrameEquals($frames[3], 'test_function', 'path/to/file', 12);
@@ -232,8 +232,7 @@ final class StacktraceTest extends TestCase
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
-        $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 30);
-        $this->assertFrameEquals($frames[3], 'CrashyClass', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
     public function testFromBacktraceWithAnonymousFrame(): void
@@ -243,8 +242,7 @@ final class StacktraceTest extends TestCase
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
-        $this->assertFrameEquals($frames[2], 'CrashyClass', '[internal]', 0);
-        $this->assertFrameEquals($frames[3], 'TestClass::triggerError', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
     public function testInAppWithEmptyFrame(): void

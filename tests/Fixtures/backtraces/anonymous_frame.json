@@ -7,9 +7,6 @@
             "class": "TestClass"
         },
         {
-            "class": "CrashyClass"
-        },
-        {
             "file": "path/to/file",
             "line": 7,
             "function": "call_user_func"
