@@ -35,6 +35,9 @@
         "phpunit/phpunit": "^7.0",
         "symfony/phpunit-bridge": "^4.1.6"
     },
+    "suggest": {
+        "monolog/monolog": "If you want to use the monolog sentry handler."
+    },
     "conflict": {
         "php-http/client-common": "1.8.0",
         "raven/raven": "*"

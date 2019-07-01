@@ -6,6 +6,7 @@ namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Sentry\Breadcrumb;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
@@ -24,6 +25,11 @@ final class Handler extends AbstractProcessingHandler
     private $hub;
 
     /**
+     * @var array
+     */
+    protected $breadcrumbsBuffer = [];
+
+    /**
      * Constructor.
      *
      * @param HubInterface $hub    The hub to which errors are reported
@@ -37,6 +43,50 @@ final class Handler extends AbstractProcessingHandler
         $this->hub = $hub;
 
         parent::__construct($level, $bubble);
+
+        $this->hub = $hub;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function handleBatch(array $records): void
+    {
+        if (!$records) {
+            return;
+        }
+
+        // filter records
+        $records = array_filter(
+            $records,
+            function ($record) {
+                return $record['level'] >= $this->level;
+            }
+        );
+
+        // the record with the highest severity is the "main" one
+        $main = array_reduce(
+            $records,
+            static function ($highest, $record) {
+                if ($record['level'] > $highest['level']) {
+                    return $record;
+                }
+
+                return $highest;
+            }
+        );
+
+        // the other ones are added as a context items
+        foreach ($records as $record) {
+            $record              = $this->processRecord($record);
+            $record['formatted'] = $this->getFormatter()->format($record);
+
+            $this->breadcrumbsBuffer[] = $record;
+        }
+
+        $this->handle($main);
+
+        $this->breadcrumbsBuffer = [];
     }
 
     /**
@@ -56,6 +106,7 @@ final class Handler extends AbstractProcessingHandler
         $this->hub->withScope(function (Scope $scope) use ($record, $payload): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
+            $scope->setExtra('monolog.formatted', $record['formatted']);
 
             if (isset($record['context']['extra']) && \is_array($record['context']['extra'])) {
                 foreach ($record['context']['extra'] as $key => $value) {
@@ -65,8 +116,17 @@ final class Handler extends AbstractProcessingHandler
 
             if (isset($record['context']['tags']) && \is_array($record['context']['tags'])) {
                 foreach ($record['context']['tags'] as $key => $value) {
-                    $scope->setTag($key, $value);
+                    $scope->setTag((string) $key, $value ?? 'N/A');
                 }
+            }
+
+            foreach ($this->breadcrumbsBuffer as $breadcrumbRecord) {
+                $scope->addBreadcrumb(new Breadcrumb(
+                    $this->getBreadcrumbLevelFromLevel($breadcrumbRecord['level']),
+                    $this->getBreadcrumbTypeFromLevel($breadcrumbRecord['level']),
+                    $breadcrumbRecord['channel'] ?? 'N/A',
+                    $breadcrumbRecord['formatted']
+                ));
             }
 
             $this->hub->captureEvent($payload);
@@ -99,5 +159,49 @@ final class Handler extends AbstractProcessingHandler
             default:
                 return Severity::info();
         }
+    }
+
+    /**
+     * Translates the Monolog level into the Sentry breadcrumb level.
+     *
+     * @param int $level The Monolog log level
+     *
+     * @return string
+     */
+    private function getBreadcrumbLevelFromLevel(int $level): string
+    {
+        switch ($level) {
+            case Logger::DEBUG:
+                return Breadcrumb::LEVEL_DEBUG;
+            case Logger::INFO:
+            case Logger::NOTICE:
+                return Breadcrumb::LEVEL_INFO;
+            case Logger::WARNING:
+                return Breadcrumb::LEVEL_WARNING;
+            case Logger::ERROR:
+                return Breadcrumb::LEVEL_ERROR;
+            case Logger::CRITICAL:
+            case Logger::ALERT:
+            case Logger::EMERGENCY:
+                return Breadcrumb::LEVEL_CRITICAL;
+            default:
+                return Breadcrumb::LEVEL_CRITICAL;
+        }
+    }
+
+    /**
+     * Translates the Monolog level into the Sentry breadcrumb type.
+     *
+     * @param int $level The Monolog log level
+     *
+     * @return string
+     */
+    private function getBreadcrumbTypeFromLevel(int $level): string
+    {
+        if ($level >= Logger::ERROR) {
+            return Breadcrumb::TYPE_ERROR;
+        }
+
+        return Breadcrumb::TYPE_DEFAULT;
     }
 }
