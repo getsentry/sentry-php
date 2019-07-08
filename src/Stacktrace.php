@@ -165,8 +165,8 @@ class Stacktrace implements \JsonSerializable
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
-                if (\is_string($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = mb_substr($argumentValue, 0, $this->options->getMaxValueLength());
+                if (\is_string($argumentValue) || is_numeric($argumentValue)) {
+                    $frameArguments[(string) $argumentName] = mb_substr((string) $argumentValue, 0, $this->options->getMaxValueLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }

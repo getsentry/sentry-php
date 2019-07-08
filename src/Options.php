@@ -421,7 +421,7 @@ final class Options
      *
      * @return callable
      *
-     * @psalm-return \Closure(Event): ?Event
+     * @psalm-return callable(Event): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -434,7 +434,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param \Closure(Event): ?Event $callback
+     * @psalm-param callable(Event): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): void
     {
@@ -514,7 +514,7 @@ final class Options
      *
      * @return callable
      *
-     * @psalm-return \Closure(Breadcrumb): ?Breadcrumb
+     * @psalm-return callable(Breadcrumb): ?Breadcrumb
      */
     public function getBeforeBreadcrumbCallback(): callable
     {
@@ -530,7 +530,7 @@ final class Options
      *
      * @param callable $callback The callback
      *
-     * @psalm-param \Closure(Breadcrumb): ?Breadcrumb $callback
+     * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
      */
     public function setBeforeBreadcrumbCallback(callable $callback): void
     {

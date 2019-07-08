@@ -32,21 +32,21 @@ final class ErrorHandler
     /**
      * @var callable[] List of listeners that will act on each captured error
      *
-     * @psalm-var (\Closure(\ErrorException): void)[]
+     * @psalm-var (callable(\ErrorException): void)[]
      */
     private $errorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act of each captured fatal error
      *
-     * @psalm-var (\Closure(FatalErrorException): void)[]
+     * @psalm-var (callable(FatalErrorException): void)[]
      */
     private $fatalErrorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act on each captured exception
      *
-     * @psalm-var (\Closure(\Throwable): void)[]
+     * @psalm-var (callable(\Throwable): void)[]
      */
     private $exceptionListeners = [];
 
@@ -251,7 +251,7 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \ErrorException argument
      *
-     * @psalm-param \Closure(\ErrorException): void $listener
+     * @psalm-param callable(\ErrorException): void $listener
      *
      * @deprecated since version 2.1, to be removed in 3.0
      */
@@ -273,7 +273,7 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \ErrorException argument
      *
-     * @psalm-param \Closure(FatalErrorException): void $listener
+     * @psalm-param callable(FatalErrorException): void $listener
      *
      * @deprecated since version 2.1, to be removed in 3.0
      */
@@ -295,7 +295,7 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \Throwable argument
      *
-     * @psalm-param \Closure(\Throwable): void $listener
+     * @psalm-param callable(\Throwable): void $listener
      *
      * @deprecated since version 2.1, to be removed in 3.0
      */
@@ -316,7 +316,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \ErrorException
      *
-     * @psalm-param \Closure(\ErrorException): void $listener
+     * @psalm-param callable(\ErrorException): void $listener
      */
     public function addErrorHandlerListener(callable $listener): void
     {
@@ -331,7 +331,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \Sentry\Exception\FatalErrorException
      *
-     * @psalm-param \Closure(FatalErrorException): void $listener
+     * @psalm-param callable(FatalErrorException): void $listener
      */
     public function addFatalErrorHandlerListener(callable $listener): void
     {
@@ -346,7 +346,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \Throwable
      *
-     * @psalm-param \Closure(\Throwable): void $listener
+     * @psalm-param callable(\Throwable): void $listener
      */
     public function addExceptionHandlerListener(callable $listener): void
     {

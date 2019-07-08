@@ -1,4 +1,5 @@
 parameters:
+    tipsOfTheDay: false
     level: 7
     paths:
         - src
