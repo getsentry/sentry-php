@@ -9,7 +9,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Util\JSON;
 use Zend\Diactoros\ServerRequestFactory;
@@ -61,9 +61,8 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
-            $currentHub = Hub::getCurrent();
-            $integration = $currentHub->getIntegration(self::class);
-            $client = $currentHub->getClient();
+            $integration = SentrySdk::getIntegration(self::class);
+            $client = SentrySdk::getClient();
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out

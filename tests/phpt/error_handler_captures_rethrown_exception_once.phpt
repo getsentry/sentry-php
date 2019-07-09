@@ -9,7 +9,7 @@ namespace Sentry\Tests;
 
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -39,7 +39,7 @@ $client = ClientBuilder::create([])
     ->setTransport($transport)
     ->getClient();
 
-Hub::getCurrent()->bindClient($client);
+SentrySdk::bindClient($client);
 
 throw new \Exception('foo bar');
 ?>

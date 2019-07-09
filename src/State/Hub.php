@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 
 /**
@@ -25,11 +26,6 @@ final class Hub implements HubInterface
     private $lastEventId;
 
     /**
-     * @var HubInterface|null The hub that is set as the current one
-     */
-    private static $currentHub;
-
-    /**
      * Hub constructor.
      *
      * @param ClientInterface|null $client The client bound to the hub
@@ -37,11 +33,7 @@ final class Hub implements HubInterface
      */
     public function __construct(?ClientInterface $client = null, ?Scope $scope = null)
     {
-        if (null === $scope) {
-            $scope = new Scope();
-        }
-
-        $this->stack[] = new Layer($client, $scope);
+        $this->stack[] = new Layer($client, $scope ?? new Scope());
     }
 
     /**
@@ -204,11 +196,9 @@ final class Hub implements HubInterface
      */
     public static function getCurrent(): HubInterface
     {
-        if (null === self::$currentHub) {
-            self::$currentHub = new self();
-        }
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
 
-        return self::$currentHub;
+        return SentrySdk::getCurrentHub(false);
     }
 
     /**
@@ -216,7 +206,9 @@ final class Hub implements HubInterface
      */
     public static function setCurrent(HubInterface $hub): HubInterface
     {
-        self::$currentHub = $hub;
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
+        SentrySdk::setCurrentHub($hub, false);
 
         return $hub;
     }

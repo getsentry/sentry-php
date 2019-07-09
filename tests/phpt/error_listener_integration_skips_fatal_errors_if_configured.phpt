@@ -11,7 +11,7 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -41,7 +41,7 @@ $client = (new ClientBuilder($options))
     ->setTransport($transport)
     ->getClient();
 
-Hub::getCurrent()->bindClient($client);
+SentrySdk::bindClient($client);
 
 class FooClass implements \Serializable
 {
