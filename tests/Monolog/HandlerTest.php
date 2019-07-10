@@ -227,7 +227,9 @@ final class HandlerTest extends TestCase
                 ],
                 'channel' => 'channel.foo',
                 'datetime' => new \DateTimeImmutable(),
-                'extra' => [],
+                'extra' => [
+                    'baz.extra' => 'baz extra value',
+                ],
             ],
             [
                 'level' => Severity::warning(),
@@ -238,6 +240,7 @@ final class HandlerTest extends TestCase
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
                 'foo.extra' => 'foo extra value',
                 'bar.extra' => 'bar extra value',
+                'baz.extra' => 'baz extra value',
             ],
             [
                 'foo.tag' => 'foo tag value',
@@ -263,7 +266,9 @@ final class HandlerTest extends TestCase
                 ],
                 'channel' => 'channel.foo',
                 'datetime' => new \DateTimeImmutable(),
-                'extra' => [],
+                'extra' => [
+                    'baz.extra' => 'baz extra value',
+                ],
             ],
             [
                 'level' => Severity::warning(),
@@ -275,6 +280,7 @@ final class HandlerTest extends TestCase
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
                 'foo.extra' => 'foo extra value',
                 'bar.extra' => 'bar extra value',
+                'baz.extra' => 'baz extra value',
             ],
             [
                 'foo.tag' => 'foo tag value',
@@ -293,7 +299,9 @@ final class HandlerTest extends TestCase
                         1 => 'numeric key',
                     ],
                 ],
-                'extra' => [],
+                'extra' => [
+                    2 => 'another numeric key',
+                ],
             ],
             [
                 'level' => Severity::info(),
@@ -303,6 +311,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
                 '1' => 'numeric key',
+                '2' => 'another numeric key',
             ],
             [],
         ];
