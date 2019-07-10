@@ -122,18 +122,18 @@ interface HubInterface
     /**
      * Returns the current global Hub.
      *
-     * @return self
+     * @return HubInterface
      */
-    public static function getCurrent(): self;
+    public static function getCurrent(): HubInterface;
 
     /**
      * Sets the Hub as the current.
      *
-     * @param self $hub The Hub that will become the current one
+     * @param HubInterface $hub The Hub that will become the current one
      *
-     * @return self
+     * @return HubInterface
      */
-    public static function setCurrent(self $hub): self;
+    public static function setCurrent(HubInterface $hub): HubInterface;
 
     /**
      * Gets the integration whose FQCN matches the given one if it's available on the current client.
