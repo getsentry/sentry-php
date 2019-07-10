@@ -62,7 +62,7 @@ final class Handler extends AbstractProcessingHandler
                     $scope->setExtra((string) $key, $value);
                 }
             }
-            
+
             if (isset($record['extra']) && \is_array($record['extra'])) {
                 foreach ($record['extra'] as $key => $value) {
                     $scope->setExtra((string) $key, $value);
