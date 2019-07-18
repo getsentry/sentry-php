@@ -77,8 +77,7 @@ final class SentryAuthenticationTest extends TestCase
     {
         $this->expectException(MissingPublicKeyCredentialException::class);
 
-        $configuration = new Options();
-        $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '2.0.0');
+        $authentication = new SentryAuthentication(new Options(), 'sentry.php.test', '2.0.0');
 
         /** @var RequestInterface&MockObject $request */
         $request = $this->createMock(RequestInterface::class);

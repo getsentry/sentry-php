@@ -17,5 +17,3 @@ parameters:
     excludes_analyse:
         - tests/resources
         - tests/Fixtures
-includes:
-	- vendor/phpstan/phpstan-phpunit/extension.neon

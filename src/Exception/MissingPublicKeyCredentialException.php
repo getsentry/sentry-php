@@ -6,6 +6,10 @@ namespace Sentry\Exception;
 
 use Throwable;
 
+/**
+ * This exception is thrown during the sending of an event when the public key
+ * is not provided in the DSN.
+ */
 final class MissingPublicKeyCredentialException extends \RuntimeException
 {
     public function __construct(?Throwable $previous = null)

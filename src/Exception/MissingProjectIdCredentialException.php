@@ -6,7 +6,11 @@ namespace Sentry\Exception;
 
 use Throwable;
 
-class MissingProjectIdCredentialException extends \RuntimeException
+/**
+ * This exception is thrown during the sending of an event when the project ID
+ * is not provided in the DSN.
+ */
+final class MissingProjectIdCredentialException extends \RuntimeException
 {
     public function __construct(?Throwable $previous = null)
     {

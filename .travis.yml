@@ -4,6 +4,7 @@ branches:
     only:
         - master
         - develop
+        - /^release\/.+$/
 
 php:
     - 7.1
