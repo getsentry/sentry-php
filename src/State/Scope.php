@@ -99,18 +99,6 @@ final class Scope
     }
 
     /**
-     * Gets the tags contained in the tags context.
-     *
-     * @return array<string, string>
-     *
-     * @internal
-     */
-    public function getTags(): array
-    {
-        return $this->tags->toArray();
-    }
-
-    /**
      * Sets a new information in the extra context.
      *
      * @param string $key   The key that uniquely identifies the information
@@ -140,18 +128,6 @@ final class Scope
     }
 
     /**
-     * Gets the information contained in the extra context.
-     *
-     * @return array<string, mixed>
-     *
-     * @internal
-     */
-    public function getExtra(): array
-    {
-        return $this->extra->toArray();
-    }
-
-    /**
      * Sets the given data in the user context.
      *
      * @param array $data The data
@@ -163,18 +139,6 @@ final class Scope
         $this->user->replaceData($data);
 
         return $this;
-    }
-
-    /**
-     * Gets the information contained in the user context.
-     *
-     * @return array<string, mixed>
-     *
-     * @internal
-     */
-    public function getUser(): array
-    {
-        return $this->user->toArray();
     }
 
     /**
@@ -192,18 +156,6 @@ final class Scope
     }
 
     /**
-     * Gets the list of strings used to dictate the deduplication of this event.
-     *
-     * @return string[]
-     *
-     * @internal
-     */
-    public function getFingerprint(): array
-    {
-        return $this->fingerprint;
-    }
-
-    /**
      * Sets the severity to apply to all events captured in this scope.
      *
      * @param Severity|null $level The severity
@@ -215,18 +167,6 @@ final class Scope
         $this->level = $level;
 
         return $this;
-    }
-
-    /**
-     * Gets the severity to apply to all events captured in this scope.
-     *
-     * @return Severity|null
-     *
-     * @internal
-     */
-    public function getLevel(): ?Severity
-    {
-        return $this->level;
     }
 
     /**
@@ -243,18 +183,6 @@ final class Scope
         $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
 
         return $this;
-    }
-
-    /**
-     * Gets the breadcrumbs.
-     *
-     * @return Breadcrumb[]
-     *
-     * @internal
-     */
-    public function getBreadcrumbs(): array
-    {
-        return $this->breadcrumbs;
     }
 
     /**
