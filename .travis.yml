@@ -1,9 +1,10 @@
 language: php
 
 branches:
-  only:
-  - master
-  - /^release\/.+$/
+    only:
+        - master
+        - develop
+        - /^release\/.+$/
 
 php:
     - 7.1
