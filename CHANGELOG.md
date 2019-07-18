@@ -27,7 +27,6 @@
 - Add a Monolog handler (#808)
 - Allow capturing the body of an HTTP request (#807)
 - Capture exceptions during serialization, to avoid hard failures (#818)
-- Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (786)
 
 ## 2.0.1 (2019-03-01)
 
