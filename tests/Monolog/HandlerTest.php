@@ -310,29 +310,5 @@ final class HandlerTest extends TestCase
             ],
             [],
         ];
-
-        yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::DEBUG,
-                'level_name' => Logger::getLevelName(Logger::DEBUG),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [
-                    'transaction' => 'Foo transaction',
-                ],
-            ],
-            [
-                'level' => Severity::debug(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-                'transaction' => 'Foo transaction',
-            ],
-            [
-                'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::DEBUG),
-            ],
-            [],
-        ];
     }
 }

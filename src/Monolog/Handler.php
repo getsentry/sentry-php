@@ -54,10 +54,6 @@ final class Handler extends AbstractProcessingHandler
             $payload['exception'] = $record['context']['exception'];
         }
 
-        if (isset($record['extra']['transaction'])) {
-            $payload['transaction'] = $record['extra']['transaction'];
-        }
-
         $this->hub->withScope(function (Scope $scope) use ($record, $payload): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
