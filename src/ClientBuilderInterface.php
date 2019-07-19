@@ -10,12 +10,15 @@ use Http\Message\MessageFactory as MessageFactoryInterface;
 use Http\Message\UriFactory as UriFactoryInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
+use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
 /**
  * A configurable builder for Client objects.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @method self setTransportFactory(TransportFactoryInterface $transportFactory)
  */
 interface ClientBuilderInterface
 {
@@ -41,6 +44,8 @@ interface ClientBuilderInterface
      * @param UriFactoryInterface $uriFactory The factory
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function setUriFactory(UriFactoryInterface $uriFactory): self;
 
@@ -50,6 +55,8 @@ interface ClientBuilderInterface
      * @param MessageFactoryInterface $messageFactory The factory
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function setMessageFactory(MessageFactoryInterface $messageFactory): self;
 
@@ -59,6 +66,8 @@ interface ClientBuilderInterface
      * @param TransportInterface $transport The transport
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function setTransport(TransportInterface $transport): self;
 
@@ -68,6 +77,8 @@ interface ClientBuilderInterface
      * @param HttpAsyncClient $httpClient The HTTP client
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function setHttpClient(HttpAsyncClient $httpClient): self;
 
@@ -77,6 +88,8 @@ interface ClientBuilderInterface
      * @param PluginInterface $plugin The plugin instance
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function addHttpClientPlugin(PluginInterface $plugin): self;
 
@@ -86,6 +99,8 @@ interface ClientBuilderInterface
      * @param string $className The class name
      *
      * @return $this
+     *
+     * @deprecated Since version 2.3, to be removed in 3.0
      */
     public function removeHttpClientPlugin(string $className): self;
 
