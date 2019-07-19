@@ -4,6 +4,7 @@
 
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
 - Changed type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
+- Add the `setTags`, `setExtras` and `clearBreadcrumbs` methods to the `Scope` class (#852)
 
 ## 2.1.1 (2019-06-13)
 

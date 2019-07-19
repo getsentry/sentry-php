@@ -14,8 +14,11 @@ use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use Sentry\ClientInterface;
 use function Sentry\configureScope;
+use Sentry\Event;
 use function Sentry\init;
+use Sentry\Options;
 use Sentry\State\Hub;
+use Sentry\State\Scope;
 use function Sentry\withScope;
 
 class SdkTest extends TestCase
@@ -92,14 +95,21 @@ class SdkTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+
+        Hub::getCurrent()->bindClient($client);
+
         addBreadcrumb($breadcrumb);
+        configureScope(function (Scope $scope) use ($breadcrumb): void {
+            $event = $scope->applyToEvent(new Event(), []);
 
-        $hub = Hub::getCurrent();
-
-        $method = new \ReflectionMethod($hub, 'getScope');
-        $method->setAccessible(true);
-
-        $this->assertSame([$breadcrumb], $method->invoke($hub)->getBreadcrumbs());
+            $this->assertNotNull($event);
+            $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
+        });
     }
 
     public function testWithScope(): void

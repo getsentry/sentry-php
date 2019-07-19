@@ -13,6 +13,7 @@ return PhpCsFixer\Config::create()
         'psr4' => true,
         'random_api_migration' => true,
         'yoda_style' => true,
+        'self_accessor' => false,
         'phpdoc_no_useless_inheritdoc' => false,
         'phpdoc_align' => [
             'tags' => ['param', 'return', 'throws', 'type', 'var'],
