@@ -64,7 +64,7 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
     }
 
-    public function setExtras(): void
+    public function testSetExtras(): void
     {
         $scope = new Scope();
         $scope->setExtras(['foo' => 'bar']);
