@@ -29,9 +29,9 @@ class TagsContextTest extends TestCase
     {
         return [
             [
-                ['foo' => 'baz', 'baz' => 'foo'],
+                ['foo' => 'baz', 'baz' => 'foo', 'int' => 1, 'float' => 1.1],
                 false,
-                ['foo' => 'baz', 'bar' => 'foo', 'baz' => 'foo'],
+                ['foo' => 'baz', 'bar' => 'foo', 'baz' => 'foo', 'int' => '1', 'float' => '1.1'],
                 null,
             ],
             [
