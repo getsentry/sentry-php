@@ -57,13 +57,14 @@ class TagsContext extends Context
     }
 
     /**
-     * Convert numeric values to string, throw exception if item in $data array is not string or number.
+     * Sanitizes the given data by converting numeric values to strings.
      *
-     * @param array $data
+     * @param array $data The data to sanitize
      *
      * @return array
      *
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException If any of the values of the input data
+     *                                   is not a number or a string
      */
     private static function sanitizeData(array $data): array
     {
