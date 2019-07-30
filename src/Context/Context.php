@@ -65,9 +65,10 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * Sets the given data into this object.
+     * Sets each element of the array to the value of the corresponding key in
+     * the given input data.
      *
-     * @param array $data
+     * @param array $data The data to set
      */
     public function setData(array $data): void
     {
