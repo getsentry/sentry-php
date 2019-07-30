@@ -33,7 +33,7 @@
         "phpstan/phpstan-phpunit": "^0.10",
         "phpstan/phpstan": "^0.10.3",
         "phpunit/phpunit": "^7.0",
-        "symfony/phpunit-bridge": "^4.1.6"
+        "symfony/phpunit-bridge": "^4.3"
     },
     "conflict": {
         "php-http/client-common": "1.8.0",
