@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
+- Fix sending of GZIP-compressed requests when the `enable_compression` option is `true` (#857)
 
 ## 2.1.1 (2019-06-13)
 
