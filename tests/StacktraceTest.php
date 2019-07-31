@@ -39,15 +39,17 @@ final class StacktraceTest extends TestCase
     {
         $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
-        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
-        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
+        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'class' => 'TestClass']);
+        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function']);
+        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 3, 'function' => 'test_function', 'class' => 'TestClass']);
 
         $frames = $stacktrace->getFrames();
 
-        $this->assertCount(2, $frames);
+        $this->assertCount(3, $frames);
         $this->assertEquals($frames, $stacktrace->toArray());
-        $this->assertFrameEquals($frames[0], 'TestClass::test_function', 'path/to/file', 2);
-        $this->assertFrameEquals($frames[1], 'test_function', 'path/to/file', 1);
+        $this->assertFrameEquals($frames[0], 'TestClass::test_function', 'path/to/file', 3);
+        $this->assertFrameEquals($frames[1], 'test_function', 'path/to/file', 2);
+        $this->assertFrameEquals($frames[2], null, 'path/to/file', 1);
     }
 
     public function testStacktraceJsonSerialization(): void
@@ -56,6 +58,7 @@ final class StacktraceTest extends TestCase
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
+        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 3, 'class' => 'TestClass']);
 
         $frames = json_encode($stacktrace->getFrames());
         $serializedStacktrace = json_encode($stacktrace);
@@ -72,6 +75,7 @@ final class StacktraceTest extends TestCase
             $this->getJsonFixture('frames/eval.json'),
             $this->getJsonFixture('frames/runtime_created.json'),
             $this->getJsonFixture('frames/function.json'),
+            $this->getJsonFixture('frames/missing_function_key.json'),
         ];
 
         foreach ($frames as $frame) {
@@ -80,10 +84,11 @@ final class StacktraceTest extends TestCase
 
         $frames = $stacktrace->getFrames();
 
-        $this->assertCount(3, $frames);
-        $this->assertFrameEquals($frames[0], 'TestClass::test_function', 'path/to/file', 12);
-        $this->assertFrameEquals($frames[1], 'test_function', 'path/to/file', 12);
+        $this->assertCount(4, $frames);
+        $this->assertFrameEquals($frames[0], null, 'path/to/file', 12);
+        $this->assertFrameEquals($frames[1], 'TestClass::test_function', 'path/to/file', 12);
         $this->assertFrameEquals($frames[2], 'test_function', 'path/to/file', 12);
+        $this->assertFrameEquals($frames[3], 'test_function', 'path/to/file', 12);
     }
 
     public function testAddFrameSerializesMethodArguments(): void
