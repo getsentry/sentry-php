@@ -5,6 +5,7 @@
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
 - Fix sending of GZIP-compressed requests when the `enable_compression` option is `true` (#857)
 - Fix error thrown when trying to set the `transaction` attribute of the event in a CLI environment (#862)
+- Fix integrations that were not skipped if the client binded to the current hub was not using them (#861)
 
 ## 2.1.1 (2019-06-13)
 

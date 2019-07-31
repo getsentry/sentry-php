@@ -17,7 +17,7 @@ use Sentry\State\Hub;
 final class ErrorListenerIntegration implements IntegrationInterface
 {
     /**
-     * @var Options The options, to know which error level to use
+     * @var Options|null The options, to know which error level to use
      */
     private $options;
 
@@ -29,17 +29,21 @@ final class ErrorListenerIntegration implements IntegrationInterface
     /**
      * Constructor.
      *
-     * @param Options $options           The options to be used with this integration
-     * @param bool    $handleFatalErrors Whether to handle fatal errors or not
+     * @param Options|null $options           The options to be used with this integration
+     * @param bool         $handleFatalErrors Whether to handle fatal errors or not
      */
-    public function __construct(Options $options, bool $handleFatalErrors = true)
+    public function __construct(?Options $options = null, bool $handleFatalErrors = true)
     {
-        $this->options = $options;
-        $this->handleFatalErrors = $handleFatalErrors;
+        if (null !== $options) {
+            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
+        }
 
         if ($handleFatalErrors) {
             @trigger_error(sprintf('Handling fatal errors with the "%s" class is deprecated since version 2.1. Use the "%s" integration instead.', self::class, FatalErrorListenerIntegration::class), E_USER_DEPRECATED);
         }
+
+        $this->options = $options;
+        $this->handleFatalErrors = $handleFatalErrors;
     }
 
     /**
@@ -53,15 +57,34 @@ final class ErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            if ($exception instanceof SilencedErrorException && !$this->options->shouldCaptureSilencedErrors()) {
+            $currentHub = Hub::getCurrent();
+            $client = $currentHub->getClient();
+
+            // The client could have been detached from the hub. If this is the
+            // case this integration should not run
+            if (null === $client) {
                 return;
             }
 
-            if (!($this->options->getErrorTypes() & $exception->getSeverity())) {
+            $integration = $client->getIntegration(self::class);
+
+            // The integration could be binded to a client that is not the one
+            // attached to the current hub. If this is the case, bail out
+            if (null === $integration) {
                 return;
             }
 
-            Hub::getCurrent()->captureException($exception);
+            $options = $this->options ?? $client->getOptions();
+
+            if ($exception instanceof SilencedErrorException && !$options->shouldCaptureSilencedErrors()) {
+                return;
+            }
+
+            if (!($options->getErrorTypes() & $exception->getSeverity())) {
+                return;
+            }
+
+            $currentHub->captureException($exception);
         });
     }
 }

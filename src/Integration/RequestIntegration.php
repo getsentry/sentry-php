@@ -37,7 +37,7 @@ final class RequestIntegration implements IntegrationInterface
     private const REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH = 10 ** 4;
 
     /**
-     * @var Options The client options
+     * @var Options|null The client options
      */
     private $options;
 
@@ -46,8 +46,12 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param Options $options The client options
      */
-    public function __construct(Options $options)
+    public function __construct(?Options $options = null)
     {
+        if (null !== $options) {
+            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
+        }
+
         $this->options = $options;
     }
 
@@ -57,13 +61,23 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
-            $self = Hub::getCurrent()->getIntegration(self::class);
+            $client = Hub::getCurrent()->getClient();
 
-            if (!$self instanceof self) {
+            // The client could have been detached from the hub. If this is the
+            // case this integration should not run
+            if (null === $client) {
                 return $event;
             }
 
-            self::applyToEvent($self, $event);
+            $integration = $client->getIntegration(self::class);
+
+            // The integration could be binded to a client that is not the one
+            // attached to the current hub. If this is the case, bail out
+            if (!$integration instanceof self) {
+                return $event;
+            }
+
+            $this->processEvent($event, $this->options ?? $client->getOptions());
 
             return $event;
         });
@@ -77,6 +91,19 @@ final class RequestIntegration implements IntegrationInterface
      * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
+    {
+        if (null !== $request) {
+            @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        }
+
+        if (null === $self->options) {
+            throw new \BadMethodCallException('The options of the integration must be set.');
+        }
+
+        $self->processEvent($event, $self->options, $request);
+    }
+
+    private function processEvent(Event $event, Options $options, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
@@ -95,7 +122,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['query_string'] = $request->getUri()->getQuery();
         }
 
-        if ($self->options->shouldSendDefaultPii()) {
+        if ($options->shouldSendDefaultPii()) {
             $serverParams = $request->getServerParams();
 
             if (isset($serverParams['REMOTE_ADDR'])) {
@@ -111,10 +138,10 @@ final class RequestIntegration implements IntegrationInterface
                 $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
             }
         } else {
-            $requestData['headers'] = $self->removePiiFromHeaders($request->getHeaders());
+            $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
         }
 
-        $requestBody = $self->captureRequestBody($request);
+        $requestBody = $this->captureRequestBody($options, $request);
 
         if (!empty($requestBody)) {
             $requestData['data'] = $requestBody;
@@ -126,9 +153,9 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
-     * @param array $headers Array containing request headers
+     * @param array<string, array<int, string>> $headers Array containing request headers
      *
-     * @return array
+     * @return array<string, array<int, string>>
      */
     private function removePiiFromHeaders(array $headers): array
     {
@@ -149,13 +176,14 @@ final class RequestIntegration implements IntegrationInterface
      * the parsing fails then the raw data is returned. If there are submitted
      * fields or files, all of their information are parsed and returned.
      *
+     * @param Options                $options       The options of the client
      * @param ServerRequestInterface $serverRequest The server request
      *
      * @return mixed
      */
-    private function captureRequestBody(ServerRequestInterface $serverRequest)
+    private function captureRequestBody(Options $options, ServerRequestInterface $serverRequest)
     {
-        $maxRequestBodySize = $this->options->getMaxRequestBodySize();
+        $maxRequestBodySize = $options->getMaxRequestBodySize();
         $requestBody = $serverRequest->getBody();
 
         if (
