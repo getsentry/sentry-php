@@ -79,6 +79,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Drupal](https://www.drupal.org/project/raven)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [OXID eShop](https://github.com/OXIDprojects/sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## Community
