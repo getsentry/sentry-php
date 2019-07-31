@@ -39,9 +39,9 @@ final class StacktraceTest extends TestCase
     {
         $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
 
-        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 2, 'class' => 'CrashyClass']);
-        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
-        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
+        $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'class' => 'CrashyClass']);
+        $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function']);
+        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 3, 'function' => 'test_function', 'class' => 'TestClass']);
 
         $frames = $stacktrace->getFrames();
 
@@ -58,7 +58,7 @@ final class StacktraceTest extends TestCase
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
-        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 2, 'class' => 'TestClass']);
+        $stacktrace->addFrame('path/to/file', 3, ['file' => 'path/to/file', 'line' => 3, 'class' => 'TestClass']);
 
         $frames = json_encode($stacktrace->getFrames());
         $serializedStacktrace = json_encode($stacktrace);
