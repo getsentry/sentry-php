@@ -43,19 +43,12 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
         $errorHandler->addFatalErrorHandlerListener(function (FatalErrorException $exception): void {
             $currentHub = Hub::getCurrent();
+            $integration = $currentHub->getIntegration(self::class);
             $client = $currentHub->getClient();
 
-            // The client could have been detached from the hub. If this is the
-            // case this integration should not run
-            if (null === $client) {
-                return;
-            }
-
-            $integration = $client->getIntegration(self::class);
-
-            // The integration could be binded to a client that is not the one
-            // attached to the current hub. If this is the case, bail out
-            if (null === $integration) {
+            // The client binded to the current hub, if any, could not have this
+            // integration enabled. If this is the case, bail out
+            if (null === $integration || null === $client) {
                 return;
             }
 

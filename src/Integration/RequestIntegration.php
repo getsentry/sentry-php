@@ -61,19 +61,13 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
-            $client = Hub::getCurrent()->getClient();
+            $currentHub = Hub::getCurrent();
+            $integration = $currentHub->getIntegration(self::class);
+            $client = $currentHub->getClient();
 
-            // The client could have been detached from the hub. If this is the
-            // case this integration should not run
-            if (null === $client) {
-                return $event;
-            }
-
-            $integration = $client->getIntegration(self::class);
-
-            // The integration could be binded to a client that is not the one
-            // attached to the current hub. If this is the case, bail out
-            if (!$integration instanceof self) {
+            // The client binded to the current hub, if any, could not have this
+            // integration enabled. If this is the case, bail out
+            if (null === $integration || null === $client) {
                 return $event;
             }
 
@@ -92,9 +86,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
-        if (null !== $request) {
-            @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-        }
+        @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
 
         if (null === $self->options) {
             throw new \BadMethodCallException('The options of the integration must be set.');
