@@ -21,6 +21,9 @@ use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
+    /**
+     * @backupGlobals
+     */
     public function testTransactionEventAttributeIsPopulated(): void
     {
         $_SERVER['PATH_INFO'] = '/foo';
@@ -39,9 +42,6 @@ class ClientTest extends TestCase
 
         $client = new Client(new Options(), $transport, $this->createEventFactory());
         $client->captureMessage('test');
-
-        unset($_SERVER['PATH_INFO']);
-        unset($_SERVER['REQUEST_METHOD']);
     }
 
     public function testTransactionEventAttributeIsNotPopulatedInCli(): void
