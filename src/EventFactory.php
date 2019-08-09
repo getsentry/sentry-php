@@ -7,7 +7,6 @@ namespace Sentry;
 use Sentry\Exception\EventCreationException;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Factory for the {@see Event} class.
@@ -93,13 +92,8 @@ final class EventFactory implements EventFactoryInterface
 
         if (isset($payload['transaction'])) {
             $event->setTransaction($payload['transaction']);
-        } else {
-            $request = ServerRequestFactory::fromGlobals();
-            $serverParams = $request->getServerParams();
-
-            if (isset($serverParams['PATH_INFO'])) {
-                $event->setTransaction($serverParams['PATH_INFO']);
-            }
+        } elseif (isset($_SERVER['PATH_INFO'])) {
+            $event->setTransaction($_SERVER['PATH_INFO']);
         }
 
         if (isset($payload['logger'])) {

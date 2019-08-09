@@ -16,6 +16,9 @@ use Sentry\Stacktrace;
 
 class EventFactoryTest extends TestCase
 {
+    /**
+     * @backupGlobals
+     */
     public function testCreateEventWithDefaultValues(): void
     {
         $options = new Options();
