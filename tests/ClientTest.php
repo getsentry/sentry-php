@@ -8,7 +8,6 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventFactory;
@@ -23,46 +22,6 @@ use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
-    /**
-     * @backupGlobals
-     */
-    public function testTransactionEventAttributeIsPopulated(): void
-    {
-        $_SERVER['PATH_INFO'] = '/foo';
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertEquals('/foo', $event->getTransaction());
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, $this->createEventFactory());
-        $client->captureMessage('test');
-    }
-
-    public function testTransactionEventAttributeIsNotPopulatedInCli(): void
-    {
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNull($event->getTransaction());
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, $this->createEventFactory());
-        $client->captureMessage('test');
-    }
-
     public function testCaptureMessage(): void
     {
         /** @var TransportInterface|MockObject $transport */

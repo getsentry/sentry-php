@@ -8,6 +8,7 @@ parameters:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
         - '/Http\\Client\\Curl\\Client/'
+        - '/^Parameter #1 \$object of method ReflectionProperty::setValue\(\) expects object, null given\.$/' # https://github.com/phpstan/phpstan/pull/2340
         -
             message: /^Cannot assign offset 'os' to array\|string\.$/
             path: src/Event.php

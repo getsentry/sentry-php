@@ -24,6 +24,7 @@ use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
@@ -219,6 +220,7 @@ final class ClientBuilderTest extends TestCase
                     FatalErrorListenerIntegration::class,
                     ExceptionListenerIntegration::class,
                     RequestIntegration::class,
+                    TransactionIntegration::class,
                 ],
             ],
             [
@@ -229,6 +231,7 @@ final class ClientBuilderTest extends TestCase
                     FatalErrorListenerIntegration::class,
                     ExceptionListenerIntegration::class,
                     RequestIntegration::class,
+                    TransactionIntegration::class,
                     StubIntegration::class,
                 ],
             ],

@@ -90,12 +90,6 @@ final class EventFactory implements EventFactoryInterface
         $event->getTagsContext()->merge($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
 
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
-        } elseif (isset($_SERVER['PATH_INFO'])) {
-            $event->setTransaction($_SERVER['PATH_INFO']);
-        }
-
         if (isset($payload['logger'])) {
             $event->setLogger($payload['logger']);
         }
