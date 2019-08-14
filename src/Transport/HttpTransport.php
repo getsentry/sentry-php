@@ -102,7 +102,7 @@ final class HttpTransport implements TransportInterface
      * Cleanups the pending requests by forcing them to be sent. Any error that
      * occurs will be ignored.
      */
-    private function cleanupPendingRequests(): void
+    public function cleanupPendingRequests(): void
     {
         foreach ($this->pendingRequests as $pendingRequest) {
             try {
