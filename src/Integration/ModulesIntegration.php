@@ -29,7 +29,7 @@ final class ModulesIntegration implements IntegrationInterface
         Scope::addGlobalEventProcessor(function (Event $event) {
             $integration = Hub::getCurrent()->getIntegration(self::class);
 
-            // The integration could be binded to a client that is not the one
+            // The integration could be bound to a client that is not the one
             // attached to the current hub. If this is the case, bail out
             if ($integration instanceof self) {
                 self::applyToEvent($integration, $event);
