@@ -7,7 +7,6 @@ namespace Sentry\Integration;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 
 /**
@@ -26,12 +25,8 @@ final class ModulesIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(function (Event $event) {
-            $self = Hub::getCurrent()->getIntegration(self::class);
-
-            if ($self instanceof self) {
-                self::applyToEvent($self, $event);
-            }
+        Scope::addGlobalEventProcessor(static function (Event $event) {
+            static::applyToEvent($event);
 
             return $event;
         });
@@ -40,10 +35,9 @@ final class ModulesIntegration implements IntegrationInterface
     /**
      * Applies the information gathered by this integration to the event.
      *
-     * @param self  $self  The instance of this integration
      * @param Event $event The event that will be enriched with the modules
      */
-    public static function applyToEvent(self $self, Event $event): void
+    public static function applyToEvent(Event $event): void
     {
         if (empty(self::$loadedModules)) {
             foreach (Versions::VERSIONS as $package => $rawVersion) {

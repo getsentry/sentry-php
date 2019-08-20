@@ -9,7 +9,6 @@ use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Util\JSON;
 use Zend\Diactoros\ServerRequestFactory;
@@ -57,13 +56,7 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
-            $self = Hub::getCurrent()->getIntegration(self::class);
-
-            if (!$self instanceof self) {
-                return $event;
-            }
-
-            self::applyToEvent($self, $event);
+            $this->applyToEvent($event);
 
             return $event;
         });
@@ -72,11 +65,10 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Applies the information gathered by the this integration to the event.
      *
-     * @param self                        $self    The current instance of the integration
      * @param Event                       $event   The event that will be enriched with a request
      * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
      */
-    public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
+    public function applyToEvent(Event $event, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
             $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
@@ -95,7 +87,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['query_string'] = $request->getUri()->getQuery();
         }
 
-        if ($self->options->shouldSendDefaultPii()) {
+        if ($this->options->shouldSendDefaultPii()) {
             $serverParams = $request->getServerParams();
 
             if (isset($serverParams['REMOTE_ADDR'])) {
@@ -111,10 +103,10 @@ final class RequestIntegration implements IntegrationInterface
                 $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
             }
         } else {
-            $requestData['headers'] = $self->removePiiFromHeaders($request->getHeaders());
+            $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
         }
 
-        $requestBody = $self->captureRequestBody($request);
+        $requestBody = $this->captureRequestBody($request);
 
         if (!empty($requestBody)) {
             $requestData['data'] = $requestBody;

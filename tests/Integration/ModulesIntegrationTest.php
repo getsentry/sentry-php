@@ -16,7 +16,7 @@ final class ModulesIntegrationTest extends TestCase
         $event = new Event();
         $integration = new ModulesIntegration();
 
-        ModulesIntegration::applyToEvent($integration, $event);
+        ModulesIntegration::applyToEvent($event);
 
         $modules = $event->getModules();
 

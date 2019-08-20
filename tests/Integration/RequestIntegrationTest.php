@@ -30,8 +30,7 @@ final class RequestIntegrationTest extends TestCase
         $this->assertInstanceOf(ServerRequestInterface::class, $request);
 
         $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
-
-        RequestIntegration::applyToEvent($integration, $event, $request);
+        $integration->applyToEvent($event, $request);
 
         $this->assertEquals($expectedValue, $event->getUserContext()->toArray());
     }
@@ -57,8 +56,7 @@ final class RequestIntegrationTest extends TestCase
     {
         $event = new Event();
         $integration = new RequestIntegration(new Options($options));
-
-        RequestIntegration::applyToEvent($integration, $event, $request);
+        $integration->applyToEvent($event, $request);
 
         $this->assertEquals($expectedResult, $event->getRequest());
     }
