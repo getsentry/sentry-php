@@ -20,7 +20,16 @@ final class ExceptionListenerIntegration implements IntegrationInterface
     {
         $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
-            Hub::getCurrent()->captureException($exception);
+            $currentHub = Hub::getCurrent();
+            $integration = $currentHub->getIntegration(self::class);
+
+            // The client bound to the current hub, if any, could not have this
+            // integration enabled. If this is the case, bail out
+            if (null === $integration) {
+                return;
+            }
+
+            $currentHub->captureException($exception);
         });
     }
 }

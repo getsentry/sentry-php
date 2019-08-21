@@ -18,7 +18,21 @@ use Zend\Diactoros\Uri;
 final class RequestIntegrationTest extends TestCase
 {
     /**
+     * @group legacy
+     *
+     * @expectedDeprecation Passing the options as argument of the constructor of the "Sentry\Integration\RequestIntegration" class is deprecated since version 2.1 and will not work in 3.0.
+     */
+    public function testConstructorThrowsDeprecationIfPassingOptions(): void
+    {
+        new RequestIntegration(new Options([]));
+    }
+
+    /**
+     * @group legacy
+     *
      * @dataProvider applyToEventWithRequestHavingIpAddressDataProvider
+     *
+     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
      */
     public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
     {
@@ -26,9 +40,6 @@ final class RequestIntegrationTest extends TestCase
         $event->getUserContext()->setData(['foo' => 'bar']);
 
         $request = new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']);
-
-        $this->assertInstanceOf(ServerRequestInterface::class, $request);
-
         $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
@@ -41,7 +52,10 @@ final class RequestIntegrationTest extends TestCase
         return [
             [
                 true,
-                ['ip_address' => '127.0.0.1', 'foo' => 'bar'],
+                [
+                    'ip_address' => '127.0.0.1',
+                    'foo' => 'bar',
+                ],
             ],
             [
                 false,
@@ -51,7 +65,11 @@ final class RequestIntegrationTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider applyToEventDataProvider
+     *
+     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
      */
     public function testApplyToEvent(array $options, ServerRequestInterface $request, array $expectedResult): void
     {
