@@ -29,13 +29,10 @@ use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
-    public function testCreate(): void
-    {
-        $clientBuilder = ClientBuilder::create();
-
-        $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
-    }
-
+    /**
+     * @group legacy
+     * @expectedDeprecation Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
     public function testHttpTransportIsUsedWhenServeIsConfigured(): void
     {
         $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -65,6 +62,10 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
     }
 
+    /**
+     * @group legacy
+     * @expectedDeprecation Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
     public function testSetMessageFactory(): void
     {
         /** @var MessageFactory|MockObject $messageFactory */
@@ -92,6 +93,10 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($transport, 'transport', $clientBuilder->getClient());
     }
 
+    /**
+     * @group legacy
+     * @expectedDeprecation Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
     public function testSetHttpClient(): void
     {
         /** @var HttpAsyncClient|MockObject $httpClient */
@@ -141,6 +146,10 @@ final class ClientBuilderTest extends TestCase
         $this->assertSame($plugin2, reset($plugins));
     }
 
+    /**
+     * @group legacy
+     * @expectedDeprecation Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
     public function testGetClient(): void
     {
         $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -258,11 +267,15 @@ final class ClientBuilderTest extends TestCase
 
     /**
      * @dataProvider getClientTogglesCompressionPluginInHttpClientDataProvider
+     *
+     * @group legacy
+     * @expectedDeprecation Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
     {
         $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $options->setEnableCompression($enabled);
+
         $builder = new ClientBuilder($options);
         $builder->getClient();
 

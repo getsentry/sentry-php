@@ -6,6 +6,7 @@
 - Changed type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
 - Add the `setTags`, `setExtras` and `clearBreadcrumbs` methods to the `Scope` class (#852)
 - Silently cast numeric values to strings when trying to set the tags instead of throwing (#858)
+- Support force sending events on-demand and fix sending of events in long-running processes (#813)
 
 ## 2.1.1 (2019-06-13)
 
