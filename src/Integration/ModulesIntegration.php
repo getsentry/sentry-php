@@ -27,10 +27,12 @@ final class ModulesIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
-            $self = Hub::getCurrent()->getIntegration(self::class);
+            $integration = Hub::getCurrent()->getIntegration(self::class);
 
-            if ($self instanceof self) {
-                self::applyToEvent($self, $event);
+            // The integration could be bound to a client that is not the one
+            // attached to the current hub. If this is the case, bail out
+            if ($integration instanceof self) {
+                self::applyToEvent($integration, $event);
             }
 
             return $event;

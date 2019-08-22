@@ -33,7 +33,6 @@ cache:
 
 init:
     - SET PATH=c:\php\%PHP_VERSION%;%PATH%
-    - SET SYMFONY_DEPRECATIONS_HELPER=strict
     - SET ANSICON=121x90 (121x90)
     - SET INSTALL_PHP=1
 

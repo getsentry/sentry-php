@@ -22,6 +22,7 @@ use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
+use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -103,9 +104,9 @@ final class ClientBuilder implements ClientBuilderInterface
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(array_merge([
                 new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration($this->options, false),
-                new FatalErrorListenerIntegration($this->options),
-                new RequestIntegration($this->options),
+                new ErrorListenerIntegration(null, false),
+                new FatalErrorListenerIntegration(),
+                new RequestIntegration(),
             ], $this->options->getIntegrations()));
         }
     }
@@ -291,12 +292,14 @@ final class ClientBuilder implements ClientBuilderInterface
 
         $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuthentication($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
-        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
-        $this->addHttpClientPlugin(new ErrorPlugin());
 
         if ($this->options->isCompressionEnabled()) {
+            $this->addHttpClientPlugin(new GzipEncoderPlugin());
             $this->addHttpClientPlugin(new DecoderPlugin());
         }
+
+        $this->addHttpClientPlugin(new RetryPlugin(['retries' => $this->options->getSendAttempts()]));
+        $this->addHttpClientPlugin(new ErrorPlugin());
 
         return new PluginClient($this->httpClient, $this->httpClientPlugins);
     }
