@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.1.2 (2019-08-22)
+
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
 - Fix sending of GZIP-compressed requests when the `enable_compression` option is `true` (#857)
 - Fix error thrown when trying to set the `transaction` attribute of the event in a CLI environment (#862)
