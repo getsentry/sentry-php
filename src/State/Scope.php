@@ -274,6 +274,18 @@ final class Scope
     }
 
     /**
+     * Resets the extra data
+     *
+     * @return $this
+     */
+    public function clearExtra(): self
+    {
+        $this->extra->clear();
+
+        return $this;
+    }
+
+    /**
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
