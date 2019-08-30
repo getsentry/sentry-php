@@ -21,7 +21,7 @@ final class Options
     public const DEFAULT_MAX_BREADCRUMBS = 100;
 
     /**
-     * @var array The configuration options
+     * @var array<string, mixed> The configuration options
      */
     private $options = [];
 
@@ -36,12 +36,12 @@ final class Options
     private $projectId;
 
     /**
-     * @var string The public key to authenticate the SDK
+     * @var string|null The public key to authenticate the SDK
      */
     private $publicKey;
 
     /**
-     * @var string The secret key to authenticate the SDK
+     * @var string|null The secret key to authenticate the SDK
      */
     private $secretKey;
 
@@ -420,6 +420,8 @@ final class Options
      * If `null` is returned it won't be sent.
      *
      * @return callable
+     *
+     * @psalm-return callable(Event): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -431,6 +433,8 @@ final class Options
      * be captured or not.
      *
      * @param callable $callback The callable
+     *
+     * @psalm-param callable(Event): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): void
     {
@@ -442,7 +446,7 @@ final class Options
     /**
      * Gets a list of default tags for events.
      *
-     * @return string[]
+     * @return array<string, string>
      */
     public function getTags(): array
     {
@@ -452,7 +456,7 @@ final class Options
     /**
      * Sets a list of default tags for events.
      *
-     * @param string[] $tags A list of tags
+     * @param array<string, string> $tags A list of tags
      */
     public function setTags(array $tags): void
     {
@@ -509,6 +513,8 @@ final class Options
      * Gets a callback that will be invoked when adding a breadcrumb.
      *
      * @return callable
+     *
+     * @psalm-return callable(Breadcrumb): ?Breadcrumb
      */
     public function getBeforeBreadcrumbCallback(): callable
     {
@@ -523,6 +529,8 @@ final class Options
      * cause the breadcrumb to be dropped.
      *
      * @param callable $callback The callback
+     *
+     * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
      */
     public function setBeforeBreadcrumbCallback(callable $callback): void
     {
@@ -751,13 +759,13 @@ final class Options
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
-            'before_send' => function (Event $event): ?Event {
+            'before_send' => static function (Event $event): Event {
                 return $event;
             },
             'tags' => [],
             'error_types' => E_ALL,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
-            'before_breadcrumb' => function (Breadcrumb $breadcrumb): ?Breadcrumb {
+            'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
             },
             'excluded_exceptions' => [],
@@ -782,7 +790,7 @@ final class Options
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
-        $resolver->setAllowedTypes('dsn', ['null', 'boolean', 'string']);
+        $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
@@ -803,9 +811,10 @@ final class Options
         $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
+        $resolver->setAllowedValues('tags', \Closure::fromCallable([$this, 'validateTagsOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
-        $resolver->setNormalizer('project_root', function (SymfonyOptions $options, $value) {
+        $resolver->setNormalizer('project_root', function (SymfonyOptions $options, ?string $value) {
             if (null === $value) {
                 return null;
             }
@@ -813,11 +822,11 @@ final class Options
             return $this->normalizeAbsolutePath($value);
         });
 
-        $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, $value) {
+        $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
-        $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, $value) {
+        $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }
@@ -829,7 +838,7 @@ final class Options
      *
      * @return string
      */
-    private function normalizeAbsolutePath($value)
+    private function normalizeAbsolutePath(string $value): string
     {
         $path = @realpath($value);
 
@@ -844,12 +853,12 @@ final class Options
      * Normalizes the DSN option by parsing the host, public and secret keys and
      * an optional path.
      *
-     * @param SymfonyOptions $options The configuration options
-     * @param mixed          $dsn     The actual value of the option to normalize
+     * @param SymfonyOptions$options The configuration options
+     * @param string|null $dsn The actual value of the option to normalize
      *
      * @return string|null
      */
-    private function normalizeDsnOption(SymfonyOptions $options, $dsn): ?string
+    private function normalizeDsnOption(SymfonyOptions $options, ?string $dsn): ?string
     {
         if (empty($dsn)) {
             return null;
@@ -867,6 +876,10 @@ final class Options
         }
 
         $parsed = @parse_url($dsn);
+
+        if (false === $parsed || !isset($parsed['scheme'], $parsed['host'], $parsed['path'], $parsed['user'])) {
+            return null;
+        }
 
         $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
 
@@ -980,6 +993,24 @@ final class Options
     {
         foreach ($serializers as $class => $serializer) {
             if (!\is_string($class) || !\is_callable($serializer)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates that the values passed to the `tags` option are valid.
+     *
+     * @param array $tags The value to validate
+     *
+     * @return bool
+     */
+    private function validateTagsOption(array $tags): bool
+    {
+        foreach ($tags as $tagName => $tagValue) {
+            if (!\is_string($tagValue)) {
                 return false;
             }
         }

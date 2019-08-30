@@ -15,6 +15,7 @@ return PhpCsFixer\Config::create()
         'yoda_style' => true,
         'self_accessor' => false,
         'phpdoc_no_useless_inheritdoc' => false,
+        'phpdoc_to_comment' => false,
         'phpdoc_align' => [
             'tags' => ['param', 'return', 'throws', 'type', 'var'],
         ],

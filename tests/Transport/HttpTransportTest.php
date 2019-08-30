@@ -11,6 +11,7 @@ use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
+use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 
@@ -64,5 +65,16 @@ final class HttpTransportTest extends TestCase
         $transport->send(new Event());
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
+    }
+
+    public function testSendThrowsOnMissingProjectIdCredential(): void
+    {
+        $this->expectException(MissingProjectIdCredentialException::class);
+
+        /** @var HttpAsyncClient&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $transport = new HttpTransport(new Options(), $httpClient, MessageFactoryDiscovery::find(), false);
+
+        $transport->send(new Event());
     }
 }

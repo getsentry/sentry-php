@@ -139,21 +139,18 @@ final class EventFactory implements EventFactoryInterface
         $currentException = $exception;
 
         do {
-            $data = [
+            $exceptions[] = [
                 'type' => \get_class($currentException),
-                'value' => $this->serializer->serialize($currentException->getMessage()),
+                'value' => $currentException->getMessage(),
+                'stacktrace' => Stacktrace::createFromBacktrace(
+                    $this->options,
+                    $this->serializer,
+                    $this->representationSerializer,
+                    $currentException->getTrace(),
+                    $currentException->getFile(),
+                    $currentException->getLine()
+                ),
             ];
-
-            $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->options,
-                $this->serializer,
-                $this->representationSerializer,
-                $currentException->getTrace(),
-                $currentException->getFile(),
-                $currentException->getLine()
-            );
-
-            $exceptions[] = $data;
         } while ($currentException = $currentException->getPrevious());
 
         $event->setExceptions($exceptions);

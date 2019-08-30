@@ -7,6 +7,7 @@ namespace Sentry\HttpClient\Authentication;
 use Http\Message\Authentication;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
+use Sentry\Exception\MissingPublicKeyCredentialException;
 use Sentry\Options;
 
 /**
@@ -48,18 +49,27 @@ final class SentryAuthentication implements Authentication
 
     /**
      * {@inheritdoc}
+     *
+     * @throws MissingPublicKeyCredentialException If the public key is missing in the DSN
      */
     public function authenticate(RequestInterface $request): RequestInterface
     {
+        $publicKey = $this->options->getPublicKey();
+        $secretKey = $this->options->getSecretKey();
+
+        if (null === $publicKey) {
+            throw new MissingPublicKeyCredentialException();
+        }
+
         $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,
             'sentry_client' => $this->sdkIdentifier . '/' . $this->sdkVersion,
             'sentry_timestamp' => sprintf('%F', microtime(true)),
-            'sentry_key' => $this->options->getPublicKey(),
+            'sentry_key' => $publicKey,
         ];
 
-        if ($this->options->getSecretKey()) {
-            $data['sentry_secret'] = $this->options->getSecretKey();
+        if (null !== $secretKey) {
+            $data['sentry_secret'] = $secretKey;
         }
 
         $headers = [];

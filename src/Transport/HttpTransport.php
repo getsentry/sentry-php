@@ -8,6 +8,7 @@ use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
 use Http\Promise\Promise as PromiseInterface;
 use Sentry\Event;
+use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
 use Sentry\Util\JSON;
 
@@ -87,9 +88,15 @@ final class HttpTransport implements TransportInterface
      */
     public function send(Event $event): ?string
     {
+        $projectId = $this->config->getProjectId();
+
+        if (null === $projectId) {
+            throw new MissingProjectIdCredentialException();
+        }
+
         $request = $this->requestFactory->createRequest(
             'POST',
-            sprintf('/api/%d/store/', $this->config->getProjectId()),
+            sprintf('/api/%d/store/', $projectId),
             ['Content-Type' => 'application/json'],
             JSON::encode($event)
         );

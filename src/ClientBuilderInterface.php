@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\HttpAsyncClient;
-use Http\Message\MessageFactory;
-use Http\Message\UriFactory;
+use Http\Message\MessageFactory as MessageFactoryInterface;
+use Http\Message\UriFactory as UriFactoryInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\TransportInterface;
@@ -38,20 +38,20 @@ interface ClientBuilderInterface
     /**
      * Sets the factory to use to create URIs.
      *
-     * @param UriFactory $uriFactory The factory
+     * @param UriFactoryInterface $uriFactory The factory
      *
      * @return $this
      */
-    public function setUriFactory(UriFactory $uriFactory): self;
+    public function setUriFactory(UriFactoryInterface $uriFactory): self;
 
     /**
      * Sets the factory to use to create PSR-7 messages.
      *
-     * @param MessageFactory $messageFactory The factory
+     * @param MessageFactoryInterface $messageFactory The factory
      *
      * @return $this
      */
-    public function setMessageFactory(MessageFactory $messageFactory): self;
+    public function setMessageFactory(MessageFactoryInterface $messageFactory): self;
 
     /**
      * Sets the transport that will be used to send events.
@@ -74,11 +74,11 @@ interface ClientBuilderInterface
     /**
      * Adds a new HTTP client plugin to the end of the plugins chain.
      *
-     * @param Plugin $plugin The plugin instance
+     * @param PluginInterface $plugin The plugin instance
      *
      * @return $this
      */
-    public function addHttpClientPlugin(Plugin $plugin): self;
+    public function addHttpClientPlugin(PluginInterface $plugin): self;
 
     /**
      * Removes a HTTP client plugin by its fully qualified class name (FQCN).

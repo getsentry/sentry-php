@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
 use Http\Client\Common\Plugin\DecoderPlugin;
@@ -18,8 +18,8 @@ use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\MessageFactory;
-use Http\Message\UriFactory;
+use Http\Message\MessageFactory as MessageFactoryInterface;
+use Http\Message\UriFactory as UriFactoryInterface;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
@@ -48,17 +48,17 @@ final class ClientBuilder implements ClientBuilderInterface
     private $options;
 
     /**
-     * @var UriFactory|null The PSR-7 URI factory
+     * @var UriFactoryInterface|null The PSR-7 URI factory
      */
     private $uriFactory;
 
     /**
-     * @var MessageFactory|null The PSR-7 message factory
+     * @var MessageFactoryInterface|null The PSR-7 message factory
      */
     private $messageFactory;
 
     /**
-     * @var TransportInterface The transport
+     * @var TransportInterface|null The transport
      */
     private $transport;
 
@@ -68,17 +68,17 @@ final class ClientBuilder implements ClientBuilderInterface
     private $httpClient;
 
     /**
-     * @var Plugin[] The list of Httplug plugins
+     * @var PluginInterface[] The list of Httplug plugins
      */
     private $httpClientPlugins = [];
 
     /**
-     * @var SerializerInterface The serializer to be injected in the client
+     * @var SerializerInterface|null The serializer to be injected in the client
      */
     private $serializer;
 
     /**
-     * @var RepresentationSerializerInterface The representation serializer to be injected in the client
+     * @var RepresentationSerializerInterface|null The representation serializer to be injected in the client
      */
     private $representationSerializer;
 
@@ -100,6 +100,7 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(Options $options = null)
     {
         $this->options = $options ?? new Options();
+        $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         if ($this->options->hasDefaultIntegrations()) {
             $this->options->setIntegrations(array_merge([
@@ -130,7 +131,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setUriFactory(UriFactory $uriFactory): ClientBuilderInterface
+    public function setUriFactory(UriFactoryInterface $uriFactory): ClientBuilderInterface
     {
         $this->uriFactory = $uriFactory;
 
@@ -140,7 +141,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setMessageFactory(MessageFactory $messageFactory): ClientBuilderInterface
+    public function setMessageFactory(MessageFactoryInterface $messageFactory): ClientBuilderInterface
     {
         $this->messageFactory = $messageFactory;
 
@@ -170,7 +171,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function addHttpClientPlugin(Plugin $plugin): ClientBuilderInterface
+    public function addHttpClientPlugin(PluginInterface $plugin): ClientBuilderInterface
     {
         $this->httpClientPlugins[] = $plugin;
 
@@ -224,20 +225,6 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Gets the SDK version to be passed onto {@see Event} and HTTP User-Agent header.
-     *
-     * @return string
-     */
-    private function getSdkVersion(): string
-    {
-        if (null === $this->sdkVersion) {
-            $this->setSdkVersionByPackageName('sentry/sentry');
-        }
-
-        return $this->sdkVersion;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function setSdkVersion(string $sdkVersion): ClientBuilderInterface
@@ -253,9 +240,13 @@ final class ClientBuilder implements ClientBuilderInterface
      * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
      *
      * @return $this
+     *
+     * @deprecated since version 2.2, to be removed in 3.0
      */
     public function setSdkVersionByPackageName(string $packageName): ClientBuilderInterface
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
         $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
 
         return $this;
@@ -290,8 +281,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->addHttpClientPlugin(new BaseUriPlugin($this->uriFactory->createUri($this->options->getDsn())));
         }
 
-        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->getSdkVersion()]));
-        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuthentication($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
+        $this->addHttpClientPlugin(new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->sdkVersion]));
+        $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuthentication($this->options, $this->sdkIdentifier, $this->sdkVersion)));
 
         if ($this->options->isCompressionEnabled()) {
             $this->addHttpClientPlugin(new GzipEncoderPlugin());
@@ -331,16 +322,14 @@ final class ClientBuilder implements ClientBuilderInterface
                 throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
             }
 
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             $this->httpClient = new HttpCurlClient(null, null, [
                 CURLOPT_PROXY => $this->options->getHttpProxy(),
             ]);
         }
 
+        /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
-
-        if (null === $this->messageFactory) {
-            throw new \RuntimeException('The PSR-7 message factory must be set.');
-        }
 
         return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
     }
@@ -355,6 +344,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer($this->options);
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer($this->options);
 
-        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->getSdkVersion());
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->sdkVersion);
     }
 }
