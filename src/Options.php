@@ -642,6 +642,28 @@ final class Options
     }
 
     /**
+     * Gets the ssl verify peer setting.
+     *
+     * @return bool
+     */
+    public function getSSLVerifyPeer(): bool
+    {
+        return $this->options['ssl_verify_peer'];
+    }
+
+    /**
+     * Sets the ssl verify peer option. Be aware this option only works when curl client is used.
+     *
+     * @param bool $sslVerifyPeer The http proxy
+     */
+    public function setSSLVerifyPeer(bool $sslVerifyPeer): void
+    {
+        $options = array_merge($this->options, ['ssl_verify_peer' => $sslVerifyPeer]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets whether the silenced errors should be captured or not.
      *
      * @return bool If true, errors silenced through the @ operator will be reported,
@@ -765,6 +787,7 @@ final class Options
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
+            'ssl_verify_peer' => true,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
@@ -794,6 +817,7 @@ final class Options
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
+        $resolver->setAllowedTypes('ssl_verify_peer', 'bool');
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');

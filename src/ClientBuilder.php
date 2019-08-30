@@ -322,17 +322,18 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
 
-        if (null !== $this->options->getHttpProxy()) {
+        if (null !== $this->options->getHttpProxy() || true !== $this->options->getSSLVerifyPeer()) {
             if (null !== $this->httpClient) {
-                throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
+                throw new \RuntimeException('The options `http_proxy` and `ssl_verify_peer` do not work together with a custom client.');
             }
 
             if (!ClassDiscovery::safeClassExists(HttpCurlClient::class)) {
-                throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
+                throw new \RuntimeException('The options `http_proxy` and `ssl_verify_peer` require the `php-http/curl-client` package to be installed.');
             }
 
             $this->httpClient = new HttpCurlClient(null, null, [
                 CURLOPT_PROXY => $this->options->getHttpProxy(),
+                CURLOPT_SSL_VERIFYPEER => $this->options->getSSLVerifyPeer(),
             ]);
         }
 

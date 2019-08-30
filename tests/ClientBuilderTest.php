@@ -313,7 +313,23 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder->setHttpClient($this->createMock(HttpAsyncClient::class));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('The `http_proxy` option does not work together with a custom client.');
+        $this->expectExceptionMessage('The options `http_proxy` and `ssl_verify_peer` do not work together with a custom client.');
+
+        $clientBuilder->getClient();
+    }
+
+    public function testCreateWithSSLVerifyPeerAndCustomTransportThrowsException(): void
+    {
+        $options = new Options([
+            'dsn' => 'http://public:secret@example.com/sentry/1',
+            'ssl_verify_peer' => false,
+        ]);
+
+        $clientBuilder = new ClientBuilder($options);
+        $clientBuilder->setHttpClient($this->createMock(HttpAsyncClient::class));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The options `http_proxy` and `ssl_verify_peer` do not work together with a custom client.');
 
         $clientBuilder->getClient();
     }
