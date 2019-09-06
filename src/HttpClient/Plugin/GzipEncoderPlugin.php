@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\HttpClient\Plugin;
 
 use Http\Client\Common\Plugin as PluginInterface;
-use Http\Message\StreamFactory;
+use Http\Message\StreamFactory as StreamFactoryInterface;
 use Http\Promise\Promise as PromiseInterface;
 use Psr\Http\Message\RequestInterface;
 
@@ -17,18 +17,18 @@ use Psr\Http\Message\RequestInterface;
 final class GzipEncoderPlugin implements PluginInterface
 {
     /**
-     * @var StreamFactory The PSR-17 stream factory
+     * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
 
     /**
      * Constructor.
      *
-     * @param \Http\Message\StreamFactory $streamFactory
+     * @param StreamFactoryInterface $streamFactory The stream factory
      *
      * @throws \RuntimeException If the zlib extension is not enabled
      */
-    public function __construct(StreamFactory $streamFactory)
+    public function __construct(StreamFactoryInterface $streamFactory)
     {
         if (!\extension_loaded('zlib')) {
             throw new \RuntimeException('The "zlib" extension must be enabled to use this plugin.');

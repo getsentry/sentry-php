@@ -20,7 +20,7 @@ use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
-use Http\Message\StreamFactory;
+use Http\Message\StreamFactory as StreamFactoryInterface;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
@@ -55,7 +55,7 @@ final class ClientBuilder implements ClientBuilderInterface
     private $uriFactory;
 
     /**
-     * @var StreamFactory|null The PSR-17 stream factory
+     * @var StreamFactoryInterface|null The PSR-17 stream factory
      */
     private $streamFactory;
 
