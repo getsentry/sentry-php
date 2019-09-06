@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.1.3 (2019-09-06)
+
 - Fix GZIP-compressed requests failing when `exit($code)` was used to terminate the application (#877)
 
 ## 2.1.2 (2019-08-22)
