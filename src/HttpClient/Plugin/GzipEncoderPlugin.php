@@ -39,12 +39,15 @@ final class GzipEncoderPlugin implements PluginInterface
             $requestBody->rewind();
         }
 
-        $encodedBody = (new StreamFactory())->createStream(
-            gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP)
-        );
+        $encodedBody = gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP);
+
+        // If an error occurred during the compression the request is sent uncompressed
+        if ($encodedBody === false) {
+            return $next($request);
+        }
 
         $request = $request->withHeader('Content-Encoding', 'gzip');
-        $request = $request->withBody($encodedBody);
+        $request = $request->withBody((new StreamFactory())->createStream($encodedBody));
 
         return $next($request);
     }
