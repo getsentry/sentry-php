@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix GZIP-compressed requests failing when `exit($code)` was used to terminate the application (#877)
+
 ## 2.1.2 (2019-08-22)
 
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
