@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Sentry\HttpClient\Plugin;
 
 use Http\Client\Common\Plugin as PluginInterface;
-use Http\Message\Encoding\GzipEncodeStream;
 use Http\Promise\Promise as PromiseInterface;
 use Psr\Http\Message\RequestInterface;
+use Zend\Diactoros\StreamFactory;
 
 /**
  * This plugin encodes the request body by compressing it with Gzip.
@@ -39,8 +39,12 @@ final class GzipEncoderPlugin implements PluginInterface
             $requestBody->rewind();
         }
 
+        $encodedBody = (new StreamFactory())->createStream(
+            gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP)
+        );
+
         $request = $request->withHeader('Content-Encoding', 'gzip');
-        $request = $request->withBody(new GzipEncodeStream($requestBody));
+        $request = $request->withBody($encodedBody);
 
         return $next($request);
     }
