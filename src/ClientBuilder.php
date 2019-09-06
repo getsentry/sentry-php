@@ -17,8 +17,10 @@ use Http\Client\HttpAsyncClient;
 use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory;
+use Http\Message\StreamFactory as StreamFactoryInterface;
 use Http\Message\UriFactory;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
@@ -51,6 +53,11 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var UriFactory|null The PSR-7 URI factory
      */
     private $uriFactory;
+
+    /**
+     * @var StreamFactoryInterface|null The PSR-17 stream factory
+     */
+    private $streamFactory;
 
     /**
      * @var MessageFactory|null The PSR-7 message factory
@@ -282,6 +289,10 @@ final class ClientBuilder implements ClientBuilderInterface
             throw new \RuntimeException('The PSR-7 URI factory must be set.');
         }
 
+        if (null === $this->streamFactory) {
+            throw new \RuntimeException('The PSR-17 stream factory must be set.');
+        }
+
         if (null === $this->httpClient) {
             throw new \RuntimeException('The PSR-18 HTTP client must be set.');
         }
@@ -294,7 +305,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->addHttpClientPlugin(new AuthenticationPlugin(new SentryAuthentication($this->options, $this->sdkIdentifier, $this->getSdkVersion())));
 
         if ($this->options->isCompressionEnabled()) {
-            $this->addHttpClientPlugin(new GzipEncoderPlugin());
+            $this->addHttpClientPlugin(new GzipEncoderPlugin($this->streamFactory));
             $this->addHttpClientPlugin(new DecoderPlugin());
         }
 
@@ -320,6 +331,7 @@ final class ClientBuilder implements ClientBuilderInterface
         }
 
         $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
+        $this->streamFactory = $this->streamFactory ?? StreamFactoryDiscovery::find();
         $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
 
         if (null !== $this->options->getHttpProxy()) {
