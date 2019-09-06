@@ -41,7 +41,7 @@ final class GzipEncoderPlugin implements PluginInterface
 
         $encodedBody = gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP);
 
-        if ($encodedBody === false) {
+        if (false === $encodedBody) {
             throw new \RuntimeException('Failed to GZIP-encode the request body.');
         }
 
