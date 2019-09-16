@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 
 /**
@@ -125,6 +126,7 @@ interface HubInterface
      * @return HubInterface
      *
      * @deprecated since version 2.2, to be removed in 3.0
+     * @see SentrySdk::getCurrentHub()
      */
     public static function getCurrent(): self;
 
@@ -136,6 +138,7 @@ interface HubInterface
      * @return HubInterface
      *
      * @deprecated since version 2.2, to be removed in 3.0
+     * @see SentrySdk::setCurrentHub()
      */
     public static function setCurrent(self $hub): self;
 

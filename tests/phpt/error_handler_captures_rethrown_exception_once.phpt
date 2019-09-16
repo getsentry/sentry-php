@@ -39,7 +39,7 @@ $client = ClientBuilder::create([])
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
 throw new \Exception('foo bar');
 ?>

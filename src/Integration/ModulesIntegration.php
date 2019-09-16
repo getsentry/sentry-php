@@ -27,7 +27,7 @@ final class ModulesIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event) {
-            $integration = SentrySdk::getIntegration(self::class);
+            $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
 
             // The integration could be bound to a client that is not the one
             // attached to the current hub. If this is the case, bail out

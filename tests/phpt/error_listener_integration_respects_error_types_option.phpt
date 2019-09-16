@@ -42,7 +42,7 @@ $client = (new ClientBuilder($options))
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
 trigger_error('Error thrown', E_USER_NOTICE);
 trigger_error('Error thrown', E_USER_WARNING);

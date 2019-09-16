@@ -41,7 +41,7 @@ $client = (new ClientBuilder($options))
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
 class FooClass implements \Serializable
 {

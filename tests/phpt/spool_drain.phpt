@@ -30,9 +30,9 @@ $client = ClientBuilder::create()
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
-register_shutdown_function('register_shutdown_function', function () use ($spool, $nullTransport) {
+register_shutdown_function('register_shutdown_function', static function () use ($spool, $nullTransport): void {
     Assert::assertAttributeCount(1, 'events', $spool);
 
     $spool->flushQueue($nullTransport);

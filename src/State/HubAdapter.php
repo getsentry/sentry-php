@@ -49,7 +49,7 @@ final class HubAdapter implements HubInterface
      */
     public function getClient(): ?ClientInterface
     {
-        return SentrySdk::getClient();
+        return SentrySdk::getCurrentHub()->getClient();
     }
 
     /**
@@ -57,7 +57,7 @@ final class HubAdapter implements HubInterface
      */
     public function getLastEventId(): ?string
     {
-        return SentrySdk::getLastEventId();
+        return SentrySdk::getCurrentHub()->getLastEventId();
     }
 
     /**
@@ -65,7 +65,7 @@ final class HubAdapter implements HubInterface
      */
     public function pushScope(): Scope
     {
-        return SentrySdk::pushScope();
+        return SentrySdk::getCurrentHub()->pushScope();
     }
 
     /**
@@ -73,7 +73,7 @@ final class HubAdapter implements HubInterface
      */
     public function popScope(): bool
     {
-        return SentrySdk::popScope();
+        return SentrySdk::getCurrentHub()->popScope();
     }
 
     /**
@@ -81,7 +81,7 @@ final class HubAdapter implements HubInterface
      */
     public function withScope(callable $callback): void
     {
-        SentrySdk::withScope($callback);
+        SentrySdk::getCurrentHub()->withScope($callback);
     }
 
     /**
@@ -89,7 +89,7 @@ final class HubAdapter implements HubInterface
      */
     public function configureScope(callable $callback): void
     {
-        SentrySdk::configureScope($callback);
+        SentrySdk::getCurrentHub()->configureScope($callback);
     }
 
     /**
@@ -97,7 +97,7 @@ final class HubAdapter implements HubInterface
      */
     public function bindClient(ClientInterface $client): void
     {
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
     }
 
     /**
@@ -105,7 +105,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureMessage(string $message, ?Severity $level = null): ?string
     {
-        return SentrySdk::captureMessage($message, $level);
+        return SentrySdk::getCurrentHub()->captureMessage($message, $level);
     }
 
     /**
@@ -113,7 +113,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureException(\Throwable $exception): ?string
     {
-        return SentrySdk::captureException($exception);
+        return SentrySdk::getCurrentHub()->captureException($exception);
     }
 
     /**
@@ -121,7 +121,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureEvent(array $payload): ?string
     {
-        return SentrySdk::captureEvent($payload);
+        return SentrySdk::getCurrentHub()->captureEvent($payload);
     }
 
     /**
@@ -129,7 +129,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureLastError(): ?string
     {
-        return SentrySdk::captureLastError();
+        return SentrySdk::getCurrentHub()->captureLastError();
     }
 
     /**
@@ -137,7 +137,7 @@ final class HubAdapter implements HubInterface
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
-        return SentrySdk::addBreadcrumb($breadcrumb);
+        return SentrySdk::getCurrentHub()->addBreadcrumb($breadcrumb);
     }
 
     /**
@@ -145,9 +145,9 @@ final class HubAdapter implements HubInterface
      */
     public static function getCurrent(): HubInterface
     {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
 
-        return SentrySdk::getCurrentHub(false);
+        return SentrySdk::getCurrentHub();
     }
 
     /**
@@ -155,9 +155,9 @@ final class HubAdapter implements HubInterface
      */
     public static function setCurrent(HubInterface $hub): HubInterface
     {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
 
-        return SentrySdk::setCurrentHub($hub, false);
+        return SentrySdk::setCurrentHub($hub);
     }
 
     /**
@@ -165,7 +165,7 @@ final class HubAdapter implements HubInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        return SentrySdk::getIntegration($className);
+        return SentrySdk::getCurrentHub()->getIntegration($className);
     }
 
     /**

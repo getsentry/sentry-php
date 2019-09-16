@@ -34,7 +34,7 @@ $client = ClientBuilder::create([])
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
 $errorHandler = ErrorHandler::registerOnceErrorHandler();
 $errorHandler->addErrorHandlerListener(static function (): void {

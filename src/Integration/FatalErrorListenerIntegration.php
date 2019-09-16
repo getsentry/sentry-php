@@ -42,8 +42,9 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
     {
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
         $errorHandler->addFatalErrorHandlerListener(function (FatalErrorException $exception): void {
-            $integration = SentrySdk::getIntegration(self::class);
-            $client = SentrySdk::getClient();
+            $currentHub = SentrySdk::getCurrentHub();
+            $integration = $currentHub->getIntegration(self::class);
+            $client = $currentHub->getClient();
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out
@@ -57,7 +58,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            SentrySdk::captureException($exception);
+            $currentHub->captureException($exception);
         });
     }
 }

@@ -21,7 +21,8 @@ final class ExceptionListenerIntegration implements IntegrationInterface
         /** @psalm-suppress DeprecatedMethod */
         $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
-            $integration = SentrySdk::getIntegration(self::class);
+            $currentHub = SentrySdk::getCurrentHub();
+            $integration = $currentHub->getIntegration(self::class);
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out
@@ -29,7 +30,7 @@ final class ExceptionListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            SentrySdk::captureException($exception);
+            $currentHub->captureException($exception);
         });
     }
 }

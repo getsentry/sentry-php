@@ -31,7 +31,7 @@ final class FunctionsTest extends TestCase
     {
         init(['default_integrations' => false]);
 
-        $this->assertNotNull(SentrySdk::getClient());
+        $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
     }
 
     public function testCaptureMessage(): void
@@ -43,7 +43,7 @@ final class FunctionsTest extends TestCase
             ->with('foo', Severity::debug())
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         $this->assertEquals('92db40a886c0458288c7c83935a350ef', captureMessage('foo', Severity::debug()));
     }
@@ -59,7 +59,7 @@ final class FunctionsTest extends TestCase
             ->with($exception)
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureException($exception));
     }
@@ -73,7 +73,7 @@ final class FunctionsTest extends TestCase
             ->with(['message' => 'foo'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'foo']));
     }
@@ -85,7 +85,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->once())
             ->method('captureLastError');
 
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         @trigger_error('foo', E_USER_NOTICE);
 
@@ -102,7 +102,7 @@ final class FunctionsTest extends TestCase
             ->method('getOptions')
             ->willReturn(new Options(['default_integrations' => false]));
 
-        SentrySdk::bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         addBreadcrumb($breadcrumb);
         configureScope(function (Scope $scope) use ($breadcrumb): void {
