@@ -27,6 +27,7 @@ use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -108,6 +109,7 @@ final class ClientBuilder implements ClientBuilderInterface
                 new ErrorListenerIntegration(null, false),
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
+                new TransactionIntegration(),
             ], $this->options->getIntegrations()));
         }
     }

@@ -7,6 +7,7 @@
 - Silently cast numeric values to strings when trying to set the tags instead of throwing (#858)
 - Support force sending events on-demand and fix sending of events in long-running processes (#813)
 - Update PHPStan and introduce Psalm (#846)
+- Add an integration to set the transaction attribute of the event (#865)
 
 ## 2.1.2 (2019-08-22)
 
@@ -19,7 +20,7 @@
 ## 2.1.1 (2019-06-13)
 
 - Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the
-`exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822)
+  `exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822)
 - Fix handling of uploaded files in the `RequestIntegration`, to respect the PSR-7 spec fully (#827)
 - Fix use of `REMOTE_ADDR` server variable rather than HTTP header
 - Fix exception, open_basedir restriction in effect (#824)

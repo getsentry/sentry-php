@@ -27,8 +27,6 @@ class EventFactoryTest extends TestCase
         $options->setTags(['test' => 'tag']);
         $options->setEnvironment('testEnvironment');
 
-        $_SERVER['PATH_INFO'] = 'testPathInfo';
-
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class),
@@ -45,7 +43,6 @@ class EventFactoryTest extends TestCase
         $this->assertSame($options->getRelease(), $event->getRelease());
         $this->assertSame($options->getTags(), $event->getTagsContext()->toArray());
         $this->assertSame($options->getEnvironment(), $event->getEnvironment());
-        $this->assertSame('testPathInfo', $event->getTransaction());
         $this->assertNull($event->getStacktrace());
     }
 
@@ -70,10 +67,6 @@ class EventFactoryTest extends TestCase
     public function createWithPayloadDataProvider()
     {
         return [
-            [
-                ['transaction' => 'testTransaction'],
-                ['transaction' => 'testTransaction'],
-            ],
             [
                 ['logger' => 'testLogger'],
                 ['logger' => 'testLogger'],
