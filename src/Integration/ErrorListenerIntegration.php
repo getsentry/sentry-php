@@ -8,7 +8,7 @@ use Sentry\ErrorHandler;
 use Sentry\Exception\FatalErrorException;
 use Sentry\Exception\SilencedErrorException;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 
 /**
  * This integration hooks into the global error handlers and emits events to
@@ -58,7 +58,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            $currentHub = Hub::getCurrent();
+            $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
             $client = $currentHub->getClient();
 

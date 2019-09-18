@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Sentry\ErrorHandler;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 
 /**
  * This integration hooks into the global error handlers and emits events to
@@ -21,7 +21,7 @@ final class ExceptionListenerIntegration implements IntegrationInterface
         /** @psalm-suppress DeprecatedMethod */
         $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
-            $currentHub = Hub::getCurrent();
+            $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
 
             // The client bound to the current hub, if any, could not have this

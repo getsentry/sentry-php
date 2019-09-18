@@ -44,7 +44,7 @@
     },
     "autoload": {
         "files": [
-            "src/Sdk.php"
+            "src/functions.php"
         ],
         "psr-4" : {
             "Sentry\\" : "src/"
@@ -59,11 +59,8 @@
         "tests": [
             "vendor/bin/phpunit --verbose"
         ],
-        "tests-report": [
-            "vendor/bin/phpunit --verbose --configuration phpunit.xml.dist --coverage-html tests/html-report"
-        ],
         "phpcs": [
-            "vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run"
+            "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run"
         ],
         "phpstan": [
             "vendor/bin/phpstan analyse"
