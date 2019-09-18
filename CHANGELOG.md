@@ -8,6 +8,7 @@
 - Support force sending events on-demand and fix sending of events in long-running processes (#813)
 - Update PHPStan and introduce Psalm (#846)
 - Add an integration to set the transaction attribute of the event (#865)
+- Deprecate `Hub::getCurrent` and `Hub::setCurrent` methods to set the current hub instance (#847)
 
 ## 2.1.2 (2019-08-22)
 

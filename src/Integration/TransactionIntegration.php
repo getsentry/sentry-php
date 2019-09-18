@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Sentry\Event;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 /**
@@ -23,8 +23,7 @@ final class TransactionIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(static function (Event $event, array $payload): Event {
-            $currentHub = Hub::getCurrent();
-            $integration = $currentHub->getIntegration(self::class);
+            $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out

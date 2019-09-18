@@ -11,9 +11,8 @@ use Sentry\SentrySdk;
 use Sentry\Severity;
 
 /**
- * An implementation of {@see HubInterface} which forwards any call to {@see SentrySdk}.
- * This allows testing classes which otherwise would need to depend on it by
- * having them depend on the interface instead, which can be mocked.
+ * An implementation of {@see HubInterface} that uses {@see SentrySdk} internally
+ * to manage the current hub.
  */
 final class HubAdapter implements HubInterface
 {

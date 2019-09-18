@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\TransactionIntegration;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use function Sentry\withScope;
 
@@ -33,7 +33,7 @@ final class TransactionIntegrationTest extends TestCase
             ->method('getIntegration')
             ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($event, $payload, $expectedTransaction): void {
             $event = $scope->applyToEvent($event, $payload);
