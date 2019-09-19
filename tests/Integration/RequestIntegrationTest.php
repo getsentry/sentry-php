@@ -18,18 +18,28 @@ use Zend\Diactoros\Uri;
 final class RequestIntegrationTest extends TestCase
 {
     /**
+     * @group legacy
+     *
+     * @expectedDeprecation Passing the options as argument of the constructor of the "Sentry\Integration\RequestIntegration" class is deprecated since version 2.1 and will not work in 3.0.
+     */
+    public function testConstructorThrowsDeprecationIfPassingOptions(): void
+    {
+        new RequestIntegration(new Options([]));
+    }
+
+    /**
+     * @group legacy
+     *
      * @dataProvider applyToEventWithRequestHavingIpAddressDataProvider
+     *
+     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
      */
     public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
     {
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $request = new ServerRequest();
-        $request = $request->withHeader('REMOTE_ADDR', '127.0.0.1');
-
-        $this->assertInstanceOf(ServerRequestInterface::class, $request);
-
+        $request = new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']);
         $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
@@ -42,7 +52,10 @@ final class RequestIntegrationTest extends TestCase
         return [
             [
                 true,
-                ['ip_address' => '127.0.0.1', 'foo' => 'bar'],
+                [
+                    'ip_address' => '127.0.0.1',
+                    'foo' => 'bar',
+                ],
             ],
             [
                 false,
@@ -52,7 +65,11 @@ final class RequestIntegrationTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider applyToEventDataProvider
+     *
+     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
      */
     public function testApplyToEvent(array $options, ServerRequestInterface $request, array $expectedResult): void
     {
@@ -140,11 +157,10 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest())
+            (new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']))
                 ->withUri(new Uri('http://www.example.com/foo?foo=bar&bar=baz'))
                 ->withMethod('GET')
                 ->withHeader('Host', 'www.example.com')
-                ->withHeader('REMOTE_ADDR', '127.0.0.1')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
@@ -155,7 +171,6 @@ final class RequestIntegrationTest extends TestCase
                 'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
-                    'REMOTE_ADDR' => ['127.0.0.1'],
                     'Authorization' => ['foo'],
                     'Cookie' => ['bar'],
                     'Set-Cookie' => ['baz'],
@@ -170,11 +185,10 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest())
+            (new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']))
                 ->withUri(new Uri('http://www.example.com/foo?foo=bar&bar=baz'))
                 ->withMethod('GET')
                 ->withHeader('Host', 'www.example.com')
-                ->withHeader('REMOTE_ADDR', '127.0.0.1')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
@@ -319,11 +333,9 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
+                        'client_filename' => 'foo.ext',
+                        'client_media_type' => 'application/text',
+                        'size' => 123,
                     ],
                 ],
             ],
@@ -372,8 +384,10 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest())
                 ->withUploadedFiles([
                     'foo' => [
-                        new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                        new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        'bar' => [
+                            new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
+                            new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        ],
                     ],
                 ])
                 ->withUri(new Uri('http://www.example.com/foo'))
@@ -386,15 +400,17 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
-                        [
-                            'client_filename' => 'bar.ext',
-                            'client_media_type' => 'application/octet-stream',
-                            'size' => 321,
+                        'bar' => [
+                            [
+                                'client_filename' => 'foo.ext',
+                                'client_media_type' => 'application/text',
+                                'size' => 123,
+                            ],
+                            [
+                                'client_filename' => 'bar.ext',
+                                'client_media_type' => 'application/octet-stream',
+                                'size' => 321,
+                            ],
                         ],
                     ],
                 ],

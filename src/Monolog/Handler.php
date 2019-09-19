@@ -59,7 +59,7 @@ final class Handler extends AbstractProcessingHandler
 
             if (isset($record['context']['extra']) && \is_array($record['context']['extra'])) {
                 foreach ($record['context']['extra'] as $key => $value) {
-                    $scope->setExtra($key, $value);
+                    $scope->setExtra((string) $key, $value);
                 }
             }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use Http\Client\Common\Plugin;
+use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
@@ -17,6 +18,7 @@ use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -261,22 +263,27 @@ final class ClientBuilderTest extends TestCase
      */
     public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
     {
-        $options = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $options->setEnableCompression($enabled);
+        $options = new Options([
+            'dsn' => 'http://public:secret@example.com/sentry/1',
+            'enable_compression' => $enabled,
+        ]);
+
         $builder = new ClientBuilder($options);
         $builder->getClient();
 
+        $encoderPluginFound = false;
         $decoderPluginFound = false;
 
         foreach ($this->getObjectAttribute($builder, 'httpClientPlugins') as $plugin) {
-            if ($plugin instanceof Plugin\DecoderPlugin) {
+            if ($plugin instanceof GzipEncoderPlugin) {
+                $encoderPluginFound = true;
+            } elseif ($plugin instanceof DecoderPlugin) {
                 $decoderPluginFound = true;
-
-                break;
             }
         }
 
-        $this->assertEquals($enabled, $decoderPluginFound);
+        $this->assertSame($enabled, $encoderPluginFound);
+        $this->assertSame($enabled, $decoderPluginFound);
     }
 
     public function getClientTogglesCompressionPluginInHttpClientDataProvider(): array

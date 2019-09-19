@@ -115,7 +115,7 @@ class Stacktrace implements \JsonSerializable
             $line = (int) $matches[2];
         }
 
-        if (isset($backtraceFrame['class'])) {
+        if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
         } elseif (isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['function'];
@@ -224,7 +224,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
-        if (!is_file($path) || !is_readable($path)) {
+        if (@!is_readable($path) || !is_file($path)) {
             return [];
         }
 
