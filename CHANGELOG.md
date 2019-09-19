@@ -10,6 +10,10 @@
 - Add an integration to set the transaction attribute of the event (#865)
 - Deprecate `Hub::getCurrent` and `Hub::setCurrent` methods to set the current hub instance (#847)
 
+## 2.1.3 (2019-09-06)
+
+- Fix GZIP-compressed requests failing when `exit($code)` was used to terminate the application (#877)
+
 ## 2.1.2 (2019-08-22)
 
 - Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).

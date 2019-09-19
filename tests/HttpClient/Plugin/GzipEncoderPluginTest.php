@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\HttpClient\Plugin;
 
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
 use Http\Promise\Promise as PromiseInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -17,7 +18,7 @@ final class GzipEncoderPluginTest extends TestCase
      */
     public function testHandleRequest(): void
     {
-        $plugin = new GzipEncoderPlugin();
+        $plugin = new GzipEncoderPlugin(StreamFactoryDiscovery::find());
         $nextCallableCalled = false;
         $expectedPromise = $this->createMock(PromiseInterface::class);
         $request = MessageFactoryDiscovery::find()->createRequest(
