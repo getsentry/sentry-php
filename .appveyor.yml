@@ -6,6 +6,7 @@ skip_branch_with_pr: true
 branches:
     only:
         - master
+        - develop
 
 environment:
     matrix:

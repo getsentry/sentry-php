@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\ClosableTransportInterface;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -14,7 +17,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Client implements ClientInterface
+final class Client implements FlushableClientInterface
 {
     /**
      * The version of the protocol to communicate with the Sentry server.
@@ -79,11 +82,13 @@ final class Client implements ClientInterface
             'level' => $level,
         ];
 
-        if ($event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace())) {
-            return $this->transport->send($event);
+        $event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace());
+
+        if (null === $event) {
+            return null;
         }
 
-        return null;
+        return $this->transport->send($event);
     }
 
     /**
@@ -95,9 +100,7 @@ final class Client implements ClientInterface
             return null;
         }
 
-        $payload['exception'] = $exception;
-
-        return $this->captureEvent($payload, $scope);
+        return $this->captureEvent(['exception' => $exception], $scope);
     }
 
     /**
@@ -105,11 +108,13 @@ final class Client implements ClientInterface
      */
     public function captureEvent(array $payload, ?Scope $scope = null): ?string
     {
-        if ($event = $this->prepareEvent($payload, $scope)) {
-            return $this->transport->send($event);
+        $event = $this->prepareEvent($payload, $scope);
+
+        if (null === $event) {
+            return null;
         }
 
-        return null;
+        return $this->transport->send($event);
     }
 
     /**
@@ -134,6 +139,18 @@ final class Client implements ClientInterface
     public function getIntegration(string $className): ?IntegrationInterface
     {
         return $this->integrations[$className] ?? null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function flush(?int $timeout = null): PromiseInterface
+    {
+        if (!$this->transport instanceof ClosableTransportInterface) {
+            return new FulfilledPromise(true);
+        }
+
+        return $this->transport->close($timeout);
     }
 
     /**

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use Http\Discovery\MessageFactoryDiscovery;
 use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventFactory;
@@ -17,50 +17,11 @@ use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
-    /**
-     * @backupGlobals
-     */
-    public function testTransactionEventAttributeIsPopulated(): void
-    {
-        $_SERVER['PATH_INFO'] = '/foo';
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertEquals('/foo', $event->getTransaction());
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, $this->createEventFactory());
-        $client->captureMessage('test');
-    }
-
-    public function testTransactionEventAttributeIsNotPopulatedInCli(): void
-    {
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNull($event->getTransaction());
-
-                return true;
-            }));
-
-        $client = new Client(new Options(), $transport, $this->createEventFactory());
-        $client->captureMessage('test');
-    }
-
     public function testCaptureMessage(): void
     {
         /** @var TransportInterface|MockObject $transport */
@@ -268,12 +229,11 @@ class ClientTest extends TestCase
     public function testSampleRateAbsolute(float $sampleRate): void
     {
         $httpClient = new MockClient();
-
         $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
         $options->setSampleRate($sampleRate);
 
         $client = (new ClientBuilder($options))
-            ->setHttpClient($httpClient)
+            ->setTransport(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), false))
             ->getClient();
 
         for ($i = 0; $i < 10; ++$i) {

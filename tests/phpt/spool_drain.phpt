@@ -8,11 +8,11 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
+use Sentry\SentrySdk;
 use Sentry\Spool\MemorySpool;
 use Sentry\Transport\SpoolTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\ClientBuilder;
-use Sentry\State\Hub;
 
 $vendor = __DIR__;
 
@@ -26,11 +26,13 @@ $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
 $nullTransport = new NullTransport();
 
-$builder = ClientBuilder::create()->setTransport($transport);
+$client = ClientBuilder::create()
+    ->setTransport($transport)
+    ->getClient();
 
-Hub::getCurrent()->bindClient($builder->getClient());
+SentrySdk::getCurrentHub()->bindClient($client);
 
-register_shutdown_function('register_shutdown_function', function () use ($spool, $nullTransport) {
+register_shutdown_function('register_shutdown_function', static function () use ($spool, $nullTransport): void {
     Assert::assertAttributeCount(1, 'events', $spool);
 
     $spool->flushQueue($nullTransport);

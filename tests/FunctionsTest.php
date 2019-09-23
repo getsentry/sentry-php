@@ -6,28 +6,32 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use function Sentry\addBreadcrumb;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\Options;
+use Sentry\SentrySdk;
+use Sentry\Severity;
+use Sentry\State\Scope;
+use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
 use function Sentry\captureMessage;
-use Sentry\ClientInterface;
 use function Sentry\configureScope;
 use function Sentry\init;
-use Sentry\State\Hub;
 use function Sentry\withScope;
 
-class SdkTest extends TestCase
+/**
+ * @group legacy
+ */
+final class FunctionsTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        init();
-    }
-
     public function testInit(): void
     {
-        $this->assertNotNull(Hub::getCurrent()->getClient());
+        init(['default_integrations' => false]);
+
+        $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
     }
 
     public function testCaptureMessage(): void
@@ -36,12 +40,12 @@ class SdkTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
+            ->with('foo', Severity::debug())
             ->willReturn('92db40a886c0458288c7c83935a350ef');
 
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertEquals($client, Hub::getCurrent()->getClient());
-        $this->assertEquals('92db40a886c0458288c7c83935a350ef', captureMessage('foo'));
+        $this->assertEquals('92db40a886c0458288c7c83935a350ef', captureMessage('foo', Severity::debug()));
     }
 
     public function testCaptureException(): void
@@ -55,7 +59,7 @@ class SdkTest extends TestCase
             ->with($exception)
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureException($exception));
     }
@@ -66,12 +70,12 @@ class SdkTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with(['message' => 'test'])
+            ->with(['message' => 'foo'])
             ->willReturn('2b867534eead412cbdb882fd5d441690');
 
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'test']));
+        $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'foo']));
     }
 
     public function testCaptureLastError()
@@ -81,7 +85,7 @@ class SdkTest extends TestCase
         $client->expects($this->once())
             ->method('captureLastError');
 
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::getCurrentHub()->bindClient($client);
 
         @trigger_error('foo', E_USER_NOTICE);
 
@@ -92,21 +96,28 @@ class SdkTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['default_integrations' => false]));
+
+        SentrySdk::getCurrentHub()->bindClient($client);
+
         addBreadcrumb($breadcrumb);
+        configureScope(function (Scope $scope) use ($breadcrumb): void {
+            $event = $scope->applyToEvent(new Event(), []);
 
-        $hub = Hub::getCurrent();
-
-        $method = new \ReflectionMethod($hub, 'getScope');
-        $method->setAccessible(true);
-
-        $this->assertSame([$breadcrumb], $method->invoke($hub)->getBreadcrumbs());
+            $this->assertNotNull($event);
+            $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
+        });
     }
 
     public function testWithScope(): void
     {
         $callbackInvoked = false;
 
-        withScope(function () use (&$callbackInvoked): void {
+        withScope(static function () use (&$callbackInvoked): void {
             $callbackInvoked = true;
         });
 
@@ -117,7 +128,7 @@ class SdkTest extends TestCase
     {
         $callbackInvoked = false;
 
-        configureScope(function () use (&$callbackInvoked): void {
+        configureScope(static function () use (&$callbackInvoked): void {
             $callbackInvoked = true;
         });
 

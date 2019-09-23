@@ -1,16 +1,20 @@
 parameters:
+    tipsOfTheDay: false
     level: 7
     paths:
         - src
         - tests
     ignoreErrors:
-        - '/Method Sentry\\ClientBuilder::\w+\(\) should return \$this\(Sentry\\ClientBuilderInterface\) but returns \$this\(Sentry\\ClientBuilder\)/'
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
-        - '/Method Sentry\\Serializer\\RepresentationSerializer::(representationSerialize|serializeValue)\(\) should return [\w|]+ but returns [\w|]+/'
         - '/Http\\Client\\Curl\\Client/'
+        - '/^Parameter #1 \$object of method ReflectionProperty::setValue\(\) expects object, null given\.$/' # https://github.com/phpstan/phpstan/pull/2340
+        -
+            message: /^Cannot assign offset 'os' to array\|string\.$/
+            path: src/Event.php
+        -
+            message: "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
+            path: src/Transport/HttpTransport.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures
-includes:
-	- vendor/phpstan/phpstan-phpunit/extension.neon

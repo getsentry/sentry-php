@@ -90,12 +90,6 @@ final class EventFactory implements EventFactoryInterface
         $event->getTagsContext()->merge($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
 
-        if (isset($payload['transaction'])) {
-            $event->setTransaction($payload['transaction']);
-        } elseif (isset($_SERVER['PATH_INFO'])) {
-            $event->setTransaction($_SERVER['PATH_INFO']);
-        }
-
         if (isset($payload['logger'])) {
             $event->setLogger($payload['logger']);
         }
@@ -139,21 +133,18 @@ final class EventFactory implements EventFactoryInterface
         $currentException = $exception;
 
         do {
-            $data = [
+            $exceptions[] = [
                 'type' => \get_class($currentException),
-                'value' => $this->serializer->serialize($currentException->getMessage()),
+                'value' => $currentException->getMessage(),
+                'stacktrace' => Stacktrace::createFromBacktrace(
+                    $this->options,
+                    $this->serializer,
+                    $this->representationSerializer,
+                    $currentException->getTrace(),
+                    $currentException->getFile(),
+                    $currentException->getLine()
+                ),
             ];
-
-            $data['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->options,
-                $this->serializer,
-                $this->representationSerializer,
-                $currentException->getTrace(),
-                $currentException->getFile(),
-                $currentException->getLine()
-            );
-
-            $exceptions[] = $data;
         } while ($currentException = $currentException->getPrevious());
 
         $event->setExceptions($exceptions);

@@ -15,18 +15,11 @@ final class MemorySpoolTest extends TestCase
     /**
      * @var MemorySpool
      */
-    protected $spool;
+    private $spool;
 
     protected function setUp(): void
     {
         $this->spool = new MemorySpool();
-    }
-
-    public function testQueueEvent(): void
-    {
-        $this->assertAttributeEmpty('events', $this->spool);
-        $this->assertTrue($this->spool->queueEvent(new Event()));
-        $this->assertAttributeNotEmpty('events', $this->spool);
     }
 
     public function testFlushQueue(): void
@@ -38,23 +31,12 @@ final class MemorySpoolTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->exactly(2))
             ->method('send')
-            ->withConsecutive($event1, $event2);
+            ->withConsecutive([$event2], [$event1]);
 
         $this->spool->queueEvent($event1);
         $this->spool->queueEvent($event2);
 
         $this->spool->flushQueue($transport);
-
-        $this->assertAttributeEmpty('events', $this->spool);
-    }
-
-    public function testFlushQueueWithEmptyQueue(): void
-    {
-        /** @var TransportInterface|MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->never())
-            ->method('send');
-
         $this->spool->flushQueue($transport);
     }
 }

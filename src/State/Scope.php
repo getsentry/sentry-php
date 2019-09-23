@@ -85,15 +85,17 @@ final class Scope
     }
 
     /**
-     * Gets the tags contained in the tags context.
+     * Merges the given tags into the current tags context.
      *
-     * @return array<string, string>
+     * @param array<string, string> $tags The tags to merge into the current context
      *
-     * @internal
+     * @return $this
      */
-    public function getTags(): array
+    public function setTags(array $tags): self
     {
-        return $this->tags->toArray();
+        $this->tags->merge($tags);
+
+        return $this;
     }
 
     /**
@@ -112,15 +114,17 @@ final class Scope
     }
 
     /**
-     * Gets the information contained in the extra context.
+     * Merges the given data into the current extras context.
      *
-     * @return array<string, mixed>
+     * @param array<string, mixed> $extras Data to merge into the current context
      *
-     * @internal
+     * @return $this
      */
-    public function getExtra(): array
+    public function setExtras(array $extras): self
     {
-        return $this->extra->toArray();
+        $this->extra->merge($extras);
+
+        return $this;
     }
 
     /**
@@ -138,18 +142,6 @@ final class Scope
     }
 
     /**
-     * Gets the information contained in the user context.
-     *
-     * @return array<string, mixed>
-     *
-     * @internal
-     */
-    public function getUser(): array
-    {
-        return $this->user->toArray();
-    }
-
-    /**
      * Sets the list of strings used to dictate the deduplication of this event.
      *
      * @param string[] $fingerprint The fingerprint values
@@ -164,18 +156,6 @@ final class Scope
     }
 
     /**
-     * Gets the list of strings used to dictate the deduplication of this event.
-     *
-     * @return string[]
-     *
-     * @internal
-     */
-    public function getFingerprint(): array
-    {
-        return $this->fingerprint;
-    }
-
-    /**
      * Sets the severity to apply to all events captured in this scope.
      *
      * @param Severity|null $level The severity
@@ -187,18 +167,6 @@ final class Scope
         $this->level = $level;
 
         return $this;
-    }
-
-    /**
-     * Gets the severity to apply to all events captured in this scope.
-     *
-     * @return Severity|null
-     *
-     * @internal
-     */
-    public function getLevel(): ?Severity
-    {
-        return $this->level;
     }
 
     /**
@@ -218,15 +186,15 @@ final class Scope
     }
 
     /**
-     * Gets the breadcrumbs.
+     * Clears all the breadcrumbs.
      *
-     * @return Breadcrumb[]
-     *
-     * @internal
+     * @return $this
      */
-    public function getBreadcrumbs(): array
+    public function clearBreadcrumbs(): self
     {
-        return $this->breadcrumbs;
+        $this->breadcrumbs = [];
+
+        return $this;
     }
 
     /**

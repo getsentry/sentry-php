@@ -18,7 +18,7 @@ interface RepresentationSerializerInterface
      *
      * @param mixed $value
      *
-     * @return string|object|array|null
+     * @return array|string|null
      */
     public function representationSerialize($value);
 }

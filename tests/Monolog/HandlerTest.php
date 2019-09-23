@@ -8,6 +8,7 @@ use Monolog\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Monolog\Handler;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -16,35 +17,27 @@ use Sentry\State\Scope;
 final class HandlerTest extends TestCase
 {
     /**
-     * @var MockObject|ClientInterface
-     */
-    private $client;
-
-    protected function setUp(): void
-    {
-        $this->client = $this->createMock(ClientInterface::class);
-    }
-
-    /**
      * @dataProvider handleDataProvider
      */
     public function testHandle(array $record, array $expectedPayload, array $expectedExtra, array $expectedTags): void
     {
-        $this->client->expects($this->once())
-            ->method('captureEvent')
-            ->with($expectedPayload, $this->callback(static function (Scope $scope) use ($expectedExtra, $expectedTags): bool {
-                if ($expectedExtra !== $scope->getExtra()) {
-                    return false;
-                }
+        $scope = new Scope();
 
-                if ($expectedTags !== $scope->getTags()) {
-                    return false;
-                }
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($expectedPayload, $this->callback(function (Scope $scopeArg) use ($expectedExtra, $expectedTags): bool {
+                $event = $scopeArg->applyToEvent(new Event(), []);
+
+                $this->assertNotNull($event);
+                $this->assertSame($expectedExtra, $event->getExtraContext()->toArray());
+                $this->assertSame($expectedTags, $event->getTagsContext()->toArray());
 
                 return true;
             }));
 
-        $handler = new Handler(new Hub($this->client));
+        $handler = new Handler(new Hub($client, $scope));
         $handler->handle($record);
     }
 
@@ -62,6 +55,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::debug(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -82,6 +76,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -102,6 +97,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -122,6 +118,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -142,6 +139,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::error(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -162,6 +160,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -182,6 +181,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -202,6 +202,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::fatal(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -232,6 +233,7 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -269,6 +271,7 @@ final class HandlerTest extends TestCase
                 'level' => Severity::warning(),
                 'message' => 'foo bar',
                 'exception' => new \Exception('exception message'),
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
@@ -298,11 +301,12 @@ final class HandlerTest extends TestCase
             [
                 'level' => Severity::info(),
                 'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
             ],
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
-                '1' => 'numeric key',
+                '0' => 'numeric key',
             ],
             [],
         ];
