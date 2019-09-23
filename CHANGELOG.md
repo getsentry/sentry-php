@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.2.0 (2019-09-23)
+
 - Change type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
 - Add the `setTags`, `setExtras` and `clearBreadcrumbs` methods to the `Scope` class (#852)
 - Silently cast numeric values to strings when trying to set the tags instead of throwing (#858)
