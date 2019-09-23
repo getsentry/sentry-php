@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.2.1 (2019-09-23)
+
+- Disable default deprecation warning `Sentry\Transport\HttpTransport` (#884)
+
 ## 2.2.0 (2019-09-23)
 
 - Change type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
