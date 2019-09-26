@@ -32,13 +32,6 @@ use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
-    public function testCreate(): void
-    {
-        $clientBuilder = ClientBuilder::create();
-
-        $this->assertInstanceOf(ClientBuilder::class, $clientBuilder);
-    }
-
     /**
      * @group legacy
      *

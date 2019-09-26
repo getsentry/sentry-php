@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use GuzzleHttp\RequestOptions as GuzzleHttpClientOptions;
+use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
 use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\BaseUriPlugin;
@@ -12,7 +14,7 @@ use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
-use Http\Client\Curl\Client as HttpCurlClient;
+use Http\Client\Curl\Client as CurlHttpClient;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\ClassDiscovery;
 use Http\Discovery\HttpAsyncClientDiscovery;
@@ -332,14 +334,19 @@ final class ClientBuilder implements ClientBuilderInterface
                 throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
             }
 
-            if (!ClassDiscovery::safeClassExists(HttpCurlClient::class)) {
-                throw new \RuntimeException('The `http_proxy` option requires the `php-http/curl-client` package to be installed.');
+            if (ClassDiscovery::safeClassExists(CurlHttpClient::class)) {
+                /** @psalm-suppress InvalidPropertyAssignmentValue */
+                $this->httpClient = new CurlHttpClient(null, null, [
+                    CURLOPT_PROXY => $this->options->getHttpProxy(),
+                ]);
+            } elseif (ClassDiscovery::safeClassExists(GuzzleHttpClient::class)) {
+                /** @psalm-suppress InvalidPropertyAssignmentValue */
+                $this->httpClient = GuzzleHttpClient::createWithConfig([
+                    GuzzleHttpClientOptions::PROXY => $this->options->getHttpProxy(),
+                ]);
             }
 
-            /** @psalm-suppress InvalidPropertyAssignmentValue */
-            $this->httpClient = new HttpCurlClient(null, null, [
-                CURLOPT_PROXY => $this->options->getHttpProxy(),
-            ]);
+            throw new \RuntimeException('The `http_proxy` option requires either the `php-http/curl-client` or the `php-http/guzzle6-adapter` package to be installed.');
         }
 
         /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
