@@ -357,7 +357,7 @@ final class ErrorHandler
      * Handles errors by capturing them through the Raven client according to
      * the configured bit field.
      *
-     * @param int    $level      The level of the error raised, represented by 
+     * @param int    $level      The level of the error raised, represented by
      *                           one of the E_* constants
      * @param string $message    The error message
      * @param string $file       The filename the error was raised in
@@ -384,7 +384,7 @@ final class ErrorHandler
         $this->invokeListeners($this->errorListeners, $errorAsException);
 
         if (null !== $this->previousErrorHandler) {
-            return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
+            return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line, $errcontext);
         }
 
         return false;
