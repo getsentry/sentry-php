@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
+use Sentry\Exception\MissingPublicKeyCredentialException;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Options;
 
@@ -70,5 +71,17 @@ final class SentryAuthenticationTest extends TestCase
             ->willReturn($newRequest);
 
         $this->assertSame($newRequest, $authentication->authenticate($request));
+    }
+
+    public function testAuthenticateWithNoPublicKeyThrowsException(): void
+    {
+        $this->expectException(MissingPublicKeyCredentialException::class);
+
+        $authentication = new SentryAuthentication(new Options(), 'sentry.php.test', '2.0.0');
+
+        /** @var RequestInterface&MockObject $request */
+        $request = $this->createMock(RequestInterface::class);
+
+        $authentication->authenticate($request);
     }
 }

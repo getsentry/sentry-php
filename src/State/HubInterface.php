@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 
 /**
@@ -122,16 +123,22 @@ interface HubInterface
     /**
      * Returns the current global Hub.
      *
-     * @return self
+     * @return HubInterface
+     *
+     * @deprecated since version 2.2, to be removed in 3.0
+     * @see SentrySdk::getCurrentHub()
      */
     public static function getCurrent(): self;
 
     /**
      * Sets the Hub as the current.
      *
-     * @param self $hub The Hub that will become the current one
+     * @param HubInterface $hub The Hub that will become the current one
      *
-     * @return self
+     * @return HubInterface
+     *
+     * @deprecated since version 2.2, to be removed in 3.0
+     * @see SentrySdk::setCurrentHub()
      */
     public static function setCurrent(self $hub): self;
 

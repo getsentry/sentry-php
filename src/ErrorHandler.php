@@ -25,22 +25,28 @@ final class ErrorHandler
     public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
-     * @var self The current registered handler (this class is a singleton)
+     * @var self|null The current registered handler (this class is a singleton)
      */
     private static $handlerInstance;
 
     /**
      * @var callable[] List of listeners that will act on each captured error
+     *
+     * @psalm-var (callable(\ErrorException): void)[]
      */
     private $errorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act of each captured fatal error
+     *
+     * @psalm-var (callable(FatalErrorException): void)[]
      */
     private $fatalErrorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act on each captured exception
+     *
+     * @psalm-var (callable(\Throwable): void)[]
      */
     private $exceptionListeners = [];
 
@@ -135,6 +141,10 @@ final class ErrorHandler
     {
         if ($triggerDeprecation) {
             @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Please use the registerOnceErrorHandler(), registerOnceFatalErrorHandler() or registerOnceExceptionHandler() methods instead.', __METHOD__), E_USER_DEPRECATED);
+        }
+
+        if (null === self::$handlerInstance) {
+            self::$handlerInstance = new self();
         }
 
         self::registerOnceErrorHandler();
@@ -241,12 +251,15 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \ErrorException argument
      *
+     * @psalm-param callable(\ErrorException): void $listener
+     *
      * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addErrorListener(callable $listener): void
     {
         @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
 
+        /** @psalm-suppress DeprecatedMethod */
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->errorListeners[] = $listener;
     }
@@ -260,12 +273,15 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \ErrorException argument
      *
+     * @psalm-param callable(FatalErrorException): void $listener
+     *
      * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addFatalErrorListener(callable $listener): void
     {
         @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addFatalErrorHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
 
+        /** @psalm-suppress DeprecatedMethod */
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->fatalErrorListeners[] = $listener;
     }
@@ -279,12 +295,15 @@ final class ErrorHandler
      *                           this callable will receive a single
      *                           \Throwable argument
      *
+     * @psalm-param callable(\Throwable): void $listener
+     *
      * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function addExceptionListener(callable $listener): void
     {
         @trigger_error(sprintf('Method %s() is deprecated since version 2.1 and will be removed in 3.0. Use the addExceptionHandlerListener() method instead.', __METHOD__), E_USER_DEPRECATED);
 
+        /** @psalm-suppress DeprecatedMethod */
         $handler = self::registerOnce(self::DEFAULT_RESERVED_MEMORY_SIZE, false);
         $handler->exceptionListeners[] = $listener;
     }
@@ -296,6 +315,8 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener
      *                           and that must accept a single argument
      *                           of type \ErrorException
+     *
+     * @psalm-param callable(\ErrorException): void $listener
      */
     public function addErrorHandlerListener(callable $listener): void
     {
@@ -309,6 +330,8 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener
      *                           and that must accept a single argument
      *                           of type \Sentry\Exception\FatalErrorException
+     *
+     * @psalm-param callable(FatalErrorException): void $listener
      */
     public function addFatalErrorHandlerListener(callable $listener): void
     {
@@ -322,6 +345,8 @@ final class ErrorHandler
      * @param callable $listener A callable that will act as a listener
      *                           and that must accept a single argument
      *                           of type \Throwable
+     *
+     * @psalm-param callable(\Throwable): void $listener
      */
     public function addExceptionHandlerListener(callable $listener): void
     {
@@ -379,7 +404,6 @@ final class ErrorHandler
         }
 
         self::$reservedMemory = null;
-        $errorAsException = null;
 
         if (null === $error) {
             $error = error_get_last();

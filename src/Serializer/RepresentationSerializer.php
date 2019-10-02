@@ -15,7 +15,17 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
      */
     public function representationSerialize($value)
     {
-        return $this->serializeRecursively($value);
+        $value = $this->serializeRecursively($value);
+
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        return $value;
     }
 
     /**
@@ -47,6 +57,6 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
             return (string) $value;
         }
 
-        return parent::serializeValue($value);
+        return (string) parent::serializeValue($value);
     }
 }

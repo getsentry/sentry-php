@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\State\Hub;
-
 /**
  * Creates a new Client and Hub which will be set as current.
  *
@@ -15,7 +13,7 @@ function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    Hub::setCurrent(new Hub($client));
+    SentrySdk::init()->bindClient($client);
 }
 
 /**
@@ -28,7 +26,7 @@ function init(array $options = []): void
  */
 function captureMessage(string $message, ?Severity $level = null): ?string
 {
-    return Hub::getCurrent()->captureMessage($message, $level);
+    return SentrySdk::getCurrentHub()->captureMessage($message, $level);
 }
 
 /**
@@ -40,7 +38,7 @@ function captureMessage(string $message, ?Severity $level = null): ?string
  */
 function captureException(\Throwable $exception): ?string
 {
-    return Hub::getCurrent()->captureException($exception);
+    return SentrySdk::getCurrentHub()->captureException($exception);
 }
 
 /**
@@ -52,7 +50,7 @@ function captureException(\Throwable $exception): ?string
  */
 function captureEvent(array $payload): ?string
 {
-    return Hub::getCurrent()->captureEvent($payload);
+    return SentrySdk::getCurrentHub()->captureEvent($payload);
 }
 
 /**
@@ -62,7 +60,7 @@ function captureEvent(array $payload): ?string
  */
 function captureLastError(): ?string
 {
-    return Hub::getCurrent()->captureLastError();
+    return SentrySdk::getCurrentHub()->captureLastError();
 }
 
 /**
@@ -74,7 +72,7 @@ function captureLastError(): ?string
  */
 function addBreadcrumb(Breadcrumb $breadcrumb): void
 {
-    Hub::getCurrent()->addBreadcrumb($breadcrumb);
+    SentrySdk::getCurrentHub()->addBreadcrumb($breadcrumb);
 }
 
 /**
@@ -85,7 +83,7 @@ function addBreadcrumb(Breadcrumb $breadcrumb): void
  */
 function configureScope(callable $callback): void
 {
-    Hub::getCurrent()->configureScope($callback);
+    SentrySdk::getCurrentHub()->configureScope($callback);
 }
 
 /**
@@ -96,5 +94,5 @@ function configureScope(callable $callback): void
  */
 function withScope(callable $callback): void
 {
-    Hub::getCurrent()->withScope($callback);
+    SentrySdk::getCurrentHub()->withScope($callback);
 }

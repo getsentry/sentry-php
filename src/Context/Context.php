@@ -14,26 +14,36 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
 {
     /**
      * This constant defines the alias used for the user context.
+     *
+     * @deprecated To be removed in 3.0 because unused
      */
     public const CONTEXT_USER = 'user';
 
     /**
      * This constant defines the alias used for the runtime context.
+     *
+     * @deprecated To be removed in 3.0 because unused
      */
     public const CONTEXT_RUNTIME = 'runtime';
 
     /**
      * This constant defines the alias used for the tags context.
+     *
+     * @deprecated To be removed in 3.0 because unused
      */
     public const CONTEXT_TAGS = 'tags';
 
     /**
      * This constant defines the alias used for the extra context.
+     *
+     * @deprecated To be removed in 3.0 because unused
      */
     public const CONTEXT_EXTRA = 'extra';
 
     /**
      * This constant defines the alias used for the server OS context.
+     *
+     * @deprecated To be removed in 3.0 because unused
      */
     public const CONTEXT_SERVER_OS = 'server_os';
 
@@ -65,9 +75,10 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * Sets the given data into this object.
+     * Sets each element of the array to the value of the corresponding key in
+     * the given input data.
      *
-     * @param array $data
+     * @param array $data The data to set
      */
     public function setData(array $data): void
     {

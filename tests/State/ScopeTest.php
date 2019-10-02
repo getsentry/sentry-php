@@ -15,62 +15,127 @@ final class ScopeTest extends TestCase
     public function testSetTag(): void
     {
         $scope = new Scope();
+        $event = $scope->applyToEvent(new Event(), []);
 
-        $this->assertEquals([], $scope->getTags());
+        $this->assertNotNull($event);
+        $this->assertTrue($event->getTagsContext()->isEmpty());
 
         $scope->setTag('foo', 'bar');
         $scope->setTag('bar', 'baz');
 
-        $this->assertEquals(['foo' => 'bar', 'bar' => 'baz'], $scope->getTags());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
+    }
+
+    public function setTags(): void
+    {
+        $scope = new Scope();
+        $scope->setTags(['foo' => 'bar']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
+
+        $scope->setTags(['bar' => 'baz']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
     }
 
     public function testSetExtra(): void
     {
         $scope = new Scope();
+        $event = $scope->applyToEvent(new Event(), []);
 
-        $this->assertEquals([], $scope->getExtra());
+        $this->assertNotNull($event);
+        $this->assertTrue($event->getExtraContext()->isEmpty());
 
         $scope->setExtra('foo', 'bar');
         $scope->setExtra('bar', 'baz');
 
-        $this->assertEquals(['foo' => 'bar', 'bar' => 'baz'], $scope->getExtra());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
+    }
+
+    public function testSetExtras(): void
+    {
+        $scope = new Scope();
+        $scope->setExtras(['foo' => 'bar']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getExtraContext()->toArray());
+
+        $scope->setExtras(['bar' => 'baz']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
     }
 
     public function testSetUser(): void
     {
         $scope = new Scope();
 
-        $this->assertEquals([], $scope->getUser());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getUserContext()->toArray());
 
         $scope->setUser(['foo' => 'bar']);
 
-        $this->assertEquals(['foo' => 'bar'], $scope->getUser());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
 
         $scope->setUser(['bar' => 'baz']);
 
-        $this->assertEquals(['bar' => 'baz'], $scope->getUser());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
     }
 
     public function testSetFingerprint(): void
     {
         $scope = new Scope();
+        $event = $scope->applyToEvent(new Event(), []);
 
-        $this->assertEmpty($scope->getFingerprint());
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getFingerprint());
 
         $scope->setFingerprint(['foo', 'bar']);
 
-        $this->assertEquals(['foo', 'bar'], $scope->getFingerprint());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo', 'bar'], $event->getFingerprint());
     }
 
     public function testSetLevel(): void
     {
         $scope = new Scope();
+        $event = $scope->applyToEvent(new Event(), []);
 
-        $this->assertNull($scope->getLevel());
+        $this->assertNotNull($event);
+        $this->assertEquals(Severity::error(), $event->getLevel());
 
         $scope->setLevel(Severity::debug());
 
-        $this->assertEquals(Breadcrumb::LEVEL_DEBUG, $scope->getLevel());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEquals(Severity::debug(), $event->getLevel());
     }
 
     public function testAddBreadcrumb(): void
@@ -80,16 +145,45 @@ final class ScopeTest extends TestCase
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        $this->assertEmpty($scope->getBreadcrumbs());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getBreadcrumbs());
 
         $scope->addBreadcrumb($breadcrumb1);
         $scope->addBreadcrumb($breadcrumb2);
 
-        $this->assertSame([$breadcrumb1, $breadcrumb2], $scope->getBreadcrumbs());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
 
         $scope->addBreadcrumb($breadcrumb3, 2);
 
-        $this->assertSame([$breadcrumb2, $breadcrumb3], $scope->getBreadcrumbs());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
+    }
+
+    public function testClearBreadcrumbs(): void
+    {
+        $scope = new Scope();
+
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertNotEmpty($event->getBreadcrumbs());
+
+        $scope->clearBreadcrumbs();
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getBreadcrumbs());
     }
 
     public function testAddEventProcessor(): void
@@ -136,19 +230,36 @@ final class ScopeTest extends TestCase
     public function testClear(): void
     {
         $scope = new Scope();
-        $scope->setLevel(Severity::error());
-        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
-        $scope->setFingerprint(['foo']);
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        $this->assertNotNull($scope->getLevel());
-        $this->assertNotEmpty($scope->getBreadcrumbs());
-        $this->assertNotEmpty($scope->getFingerprint());
+        $scope->setLevel(Severity::info());
+        $scope->addBreadcrumb($breadcrumb);
+        $scope->setFingerprint(['foo']);
+        $scope->setExtras(['foo' => 'bar']);
+        $scope->setTags(['bar' => 'foo']);
+        $scope->setUser(['foobar' => 'barfoo']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEquals(Severity::info(), $event->getLevel());
+        $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
+        $this->assertSame(['foo'], $event->getFingerprint());
+        $this->assertSame(['foo' => 'bar'], $event->getExtraContext()->toArray());
+        $this->assertSame(['bar' => 'foo'], $event->getTagsContext()->toArray());
+        $this->assertSame(['foobar' => 'barfoo'], $event->getUserContext()->toArray());
 
         $scope->clear();
 
-        $this->assertNull($scope->getLevel());
-        $this->assertEmpty($scope->getBreadcrumbs());
-        $this->assertEmpty($scope->getFingerprint());
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEquals(Severity::error(), $event->getLevel());
+        $this->assertEmpty($event->getBreadcrumbs());
+        $this->assertEmpty($event->getFingerprint());
+        $this->assertEmpty($event->getExtraContext()->toArray());
+        $this->assertEmpty($event->getTagsContext()->toArray());
+        $this->assertEmpty($event->getUserContext()->toArray());
     }
 
     public function testApplyToEvent(): void

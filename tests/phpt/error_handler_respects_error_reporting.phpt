@@ -9,7 +9,7 @@ namespace Sentry\Tests;
 
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -33,7 +33,7 @@ $client = ClientBuilder::create(['capture_silenced_errors' => true])
     ->setTransport($transport)
     ->getClient();
 
-Hub::getCurrent()->bindClient($client);
+SentrySdk::getCurrentHub()->bindClient($client);
 
 echo 'Triggering silenced error' . PHP_EOL;
 

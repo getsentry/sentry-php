@@ -4,6 +4,16 @@
 
 - Fix deprecation raised when serializing callable in certain circumstances (#821)
 
+## 2.2.0 (2019-09-23)
+
+- Change type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
+- Add the `setTags`, `setExtras` and `clearBreadcrumbs` methods to the `Scope` class (#852)
+- Silently cast numeric values to strings when trying to set the tags instead of throwing (#858)
+- Support force sending events on-demand and fix sending of events in long-running processes (#813)
+- Update PHPStan and introduce Psalm (#846)
+- Add an integration to set the transaction attribute of the event (#865)
+- Deprecate `Hub::getCurrent` and `Hub::setCurrent` methods to set the current hub instance (#847)
+
 ## 2.1.3 (2019-09-06)
 
 - Fix GZIP-compressed requests failing when `exit($code)` was used to terminate the application (#877)
@@ -18,8 +28,8 @@
 
 ## 2.1.1 (2019-06-13)
 
-- Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the 
-`exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822) 
+- Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the
+  `exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822)
 - Fix handling of uploaded files in the `RequestIntegration`, to respect the PSR-7 spec fully (#827)
 - Fix use of `REMOTE_ADDR` server variable rather than HTTP header
 - Fix exception, open_basedir restriction in effect (#824)
@@ -45,7 +55,7 @@
 
 ## 2.0.0 (2019-02-25)
 
-**Version 2.0.0 is a complete rewrite of the existing SDK. Code Changes are needed. Please see [UPGRADE 2.0](https://github.com/getsentry/sentry-php/blob/master/UPGRADE-2.0.md) for more details.** 
+**Version 2.0.0 is a complete rewrite of the existing SDK. Code Changes are needed. Please see [UPGRADE 2.0](https://github.com/getsentry/sentry-php/blob/master/UPGRADE-2.0.md) for more details.**
 
 - Updated .gitattributes to reduce package footprint (#770)
 - Use multibyte functions to handle unicode paths (#774)
@@ -62,7 +72,7 @@
 - Lower the default `send_attempts` to 3 (#760)
 - Fix method argument name handling when Xdebug is enabled (#763)
 - Add CI build under Windows with AppVeyor (#758) and fix some bugs
-- Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton, 
+- Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton,
   and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
 - The `context_lines` options changed the default to `5` and is properly applied (#743)
 - Add support for "formatted messages" in `captureEvent` as payload (#752)

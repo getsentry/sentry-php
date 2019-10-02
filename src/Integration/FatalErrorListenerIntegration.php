@@ -7,7 +7,7 @@ namespace Sentry\Integration;
 use Sentry\ErrorHandler;
 use Sentry\Exception\FatalErrorException;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 
 /**
  * This integration hooks into the error handler and captures fatal errors.
@@ -42,7 +42,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
     {
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
         $errorHandler->addFatalErrorHandlerListener(function (FatalErrorException $exception): void {
-            $currentHub = Hub::getCurrent();
+            $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
             $client = $currentHub->getClient();
 
