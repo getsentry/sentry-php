@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
+use Sentry\Exception\InvalidArgumentException;
 use Sentry\Options;
 
 /**
@@ -270,9 +271,7 @@ abstract class AbstractSerializer
      */
     protected function serializeCallableWithoutTypeHint($callable): string
     {
-        if (!\is_callable($callable)) {
-            throw new \InvalidArgumentException('Expecting callable, got ' . \gettype($callable));
-        }
+        $this->assertIsValidCallable($callable);
 
         if (\is_string($callable) && !\function_exists($callable)) {
             return $callable;
@@ -282,7 +281,9 @@ abstract class AbstractSerializer
     }
 
     /**
-     * @internal Use serializeCallableWithoutTypeHint instead (no type in argument)
+     * Use serializeCallableWithoutTypeHint instead (no type in argument).
+     *
+     * @see https://github.com/getsentry/sentry-php/pull/821
      *
      * @param callable $callable
      *
@@ -290,9 +291,7 @@ abstract class AbstractSerializer
      */
     protected function serializeCallable(/* callable type to be removed in 3.0, see #821 => */callable $callable): string
     {
-        if (!\is_callable($callable)) {
-            throw new \InvalidArgumentException('Expecting callable, got ' . \gettype($callable));
-        }
+        $this->assertIsValidCallable($callable);
 
         try {
             if (\is_array($callable)) {
@@ -386,5 +385,22 @@ abstract class AbstractSerializer
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;
+    }
+
+    /**
+     * @param mixed $callable
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertIsValidCallable($callable): void
+    {
+        if (!\is_callable($callable)) {
+            throw new InvalidArgumentException(sprintf(
+                'Expecting callable, got %s',
+                \is_object($callable)
+                    ? \get_class($callable)
+                    : \gettype($callable)
+            ));
+        }
     }
 }
