@@ -362,14 +362,14 @@ final class ErrorHandler
      * @param string $message    The error message
      * @param string $file       The filename the error was raised in
      * @param int    $line       The line number the error was raised at
-     * @param array  $errcontext The error context (deprecated in PHP 7.2)
+     * @param array  $errcontext The error context (deprecated since PHP 7.2)
      *
      * @return bool If the function returns `false` then the PHP native error
      *              handler will be called
      *
      * @throws \Throwable
      */
-    private function handleError(int $level, string $message, string $file, int $line, array $errcontext): bool
+    private function handleError(int $level, string $message, string $file, int $line, array $errcontext = []): bool
     {
         if (0 === error_reporting()) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
