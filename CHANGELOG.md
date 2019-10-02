@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix handling of fifth argument in the error handler (#892)
+
 ## 2.2.1 (2019-09-23)
 
 - Disable default deprecation warning `Sentry\Transport\HttpTransport` (#884)
