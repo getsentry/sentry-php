@@ -76,13 +76,16 @@ The following integrations are available and maintained by members of the Sentry
 
 - [Drupal](https://www.drupal.org/project/raven)
 - [Flow Framework](https://github.com/networkteam/Networkteam.SentryClient)
-- [Neos CMS](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
-- [OpenCart](https://github.com/BurdaPraha/oc_sentry)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
-- [TYPO3](https://github.com/networkteam/sentry_client)
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - ... feel free to be famous, create a port to your favourite platform!
+
+### 3rd party integrations using old SDK 1.x
+
+- [Neos CMS](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
+- [OpenCart](https://github.com/BurdaPraha/oc_sentry)
+- [TYPO3](https://github.com/networkteam/sentry_client)
 
 ## Community
 
