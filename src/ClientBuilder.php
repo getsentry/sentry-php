@@ -334,15 +334,15 @@ final class ClientBuilder implements ClientBuilderInterface
                 throw new \RuntimeException('The `http_proxy` option does not work together with a custom client.');
             }
 
-            if (ClassDiscovery::safeClassExists(CurlHttpClient::class)) {
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $this->httpClient = new CurlHttpClient(null, null, [
-                    CURLOPT_PROXY => $this->options->getHttpProxy(),
-                ]);
-            } elseif (ClassDiscovery::safeClassExists(GuzzleHttpClient::class)) {
+            if (ClassDiscovery::safeClassExists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->httpClient = GuzzleHttpClient::createWithConfig([
                     GuzzleHttpClientOptions::PROXY => $this->options->getHttpProxy(),
+                ]);
+            } elseif (ClassDiscovery::safeClassExists(CurlHttpClient::class)) {
+                /** @psalm-suppress InvalidPropertyAssignmentValue */
+                $this->httpClient = new CurlHttpClient(null, null, [
+                    CURLOPT_PROXY => $this->options->getHttpProxy(),
                 ]);
             }
 
