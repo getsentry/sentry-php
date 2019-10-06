@@ -79,6 +79,7 @@ The following integrations are available and maintained by members of the Sentry
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
+- [SilverStripe](https://github.com/phptek/silverstripe-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 1.x
