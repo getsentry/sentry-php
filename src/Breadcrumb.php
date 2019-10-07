@@ -135,9 +135,13 @@ final class Breadcrumb implements \JsonSerializable
      * @param \ErrorException $exception The exception
      *
      * @return string
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
     public static function levelFromErrorException(\ErrorException $exception): string
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
         switch ($exception->getSeverity()) {
             case E_DEPRECATED:
             case E_USER_DEPRECATED:

@@ -279,7 +279,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Sets the transport factory {@see TransportFactoryInterface}.
+     * Sets the transport factory.
      *
      * @param TransportFactoryInterface $transportFactory The transport factory
      *
@@ -318,13 +318,7 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer($this->options);
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer($this->options);
 
-        return new EventFactory(
-            $this->serializer,
-            $this->representationSerializer,
-            $this->options,
-            $this->sdkIdentifier,
-            $this->sdkVersion
-        );
+        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->sdkVersion);
     }
 
     /**

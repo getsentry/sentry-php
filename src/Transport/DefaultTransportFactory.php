@@ -25,7 +25,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
     private $httpClientFactory;
 
     /**
-     * DefaultTransportFactory constructor.
+     * Constructor.
      *
      * @param MessageFactoryInterface    $messageFactory    The PSR-7 message factory
      * @param HttpClientFactoryInterface $httpClientFactory The HTTP client factory
@@ -45,6 +45,11 @@ final class DefaultTransportFactory implements TransportFactoryInterface
             return new NullTransport();
         }
 
-        return new HttpTransport($options, $this->httpClientFactory->create($options), $this->messageFactory, false);
+        return new HttpTransport(
+            $options,
+            $this->httpClientFactory->create($options),
+            $this->messageFactory,
+            false
+        );
     }
 }
