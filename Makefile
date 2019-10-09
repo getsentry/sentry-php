@@ -15,7 +15,7 @@ cs-dry-run:
 	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run
 
 cs-fix:
-	vendor/bin/php-cs-fixer fix --config=.php_cs.dist
+	vendor/bin/php-cs-fixer fix
 
 phpstan:
 	vendor/bin/phpstan analyse
