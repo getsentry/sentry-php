@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
+use Http\Client\Common\Exception\ClientErrorException;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
 use Http\Promise\Promise as PromiseInterface;
@@ -88,28 +89,32 @@ final class HttpTransport implements TransportInterface
      */
     public function send(Event $event): ?string
     {
-        $projectId = $this->config->getProjectId();
+        try {
+            $projectId = $this->config->getProjectId();
 
-        if (null === $projectId) {
-            throw new MissingProjectIdCredentialException();
+            if (null === $projectId) {
+                throw new MissingProjectIdCredentialException();
+            }
+
+            $request = $this->requestFactory->createRequest(
+                'POST',
+                sprintf('/api/%d/store/', $projectId),
+                ['Content-Type' => 'application/json'],
+                JSON::encode($event)
+            );
+
+            $promise = $this->httpClient->sendAsyncRequest($request);
+
+            if ($this->delaySendingUntilShutdown) {
+                $this->pendingRequests[] = $promise;
+            } else {
+                $promise->wait(false);
+            }
+            
+            return $event->getId();
+        } catch (ClientErrorException $e) {
+            return null;
         }
-
-        $request = $this->requestFactory->createRequest(
-            'POST',
-            sprintf('/api/%d/store/', $projectId),
-            ['Content-Type' => 'application/json'],
-            JSON::encode($event)
-        );
-
-        $promise = $this->httpClient->sendAsyncRequest($request);
-
-        if ($this->delaySendingUntilShutdown) {
-            $this->pendingRequests[] = $promise;
-        } else {
-            $promise->wait(false);
-        }
-
-        return $event->getId();
     }
 
     /**
