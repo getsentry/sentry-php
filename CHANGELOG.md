@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix handling of fifth argument in the error handler (#892)
+- Catch exception from vendors in `Sentry\Transport\HttpTransport` (#899)
 
 ## 2.2.1 (2019-09-23)
 
