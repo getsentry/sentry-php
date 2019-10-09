@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
-use Http\Client\Common\Exception\ClientErrorException;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
 use Http\Promise\Promise as PromiseInterface;
@@ -109,7 +108,7 @@ final class HttpTransport implements TransportInterface
         } else {
             try {
                 $promise->wait();
-            } catch (ClientErrorException $exception) {
+            } catch (\Exception $exception) {
                 return null;
             }
         }
@@ -126,7 +125,7 @@ final class HttpTransport implements TransportInterface
         while ($promise = array_pop($this->pendingRequests)) {
             try {
                 $promise->wait();
-            } catch (ClientErrorException $exception) {
+            } catch (\Exception $exception) {
             }
         }
     }
