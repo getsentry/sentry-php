@@ -110,7 +110,7 @@ final class HttpTransport implements TransportInterface
             } else {
                 $promise->wait(false);
             }
-            
+
             return $event->getId();
         } catch (ClientErrorException $e) {
             return null;
