@@ -108,8 +108,8 @@ final class HttpTransport implements TransportInterface
             $this->pendingRequests[] = $promise;
         } else {
             try {
-                $promise->wait(false);
-            } catch (ClientErrorException $e) {
+                $promise->wait();
+            } catch (ClientErrorException $exception) {
                 return null;
             }
         }
@@ -125,8 +125,8 @@ final class HttpTransport implements TransportInterface
     {
         while ($promise = array_pop($this->pendingRequests)) {
             try {
-                $promise->wait(false);
-            } catch (ClientErrorException $e) {
+                $promise->wait();
+            } catch (ClientErrorException $exception) {
             }
         }
     }
