@@ -89,32 +89,32 @@ final class HttpTransport implements TransportInterface
      */
     public function send(Event $event): ?string
     {
-        try {
-            $projectId = $this->config->getProjectId();
+        $projectId = $this->config->getProjectId();
 
-            if (null === $projectId) {
-                throw new MissingProjectIdCredentialException();
-            }
-
-            $request = $this->requestFactory->createRequest(
-                'POST',
-                sprintf('/api/%d/store/', $projectId),
-                ['Content-Type' => 'application/json'],
-                JSON::encode($event)
-            );
-
-            $promise = $this->httpClient->sendAsyncRequest($request);
-
-            if ($this->delaySendingUntilShutdown) {
-                $this->pendingRequests[] = $promise;
-            } else {
-                $promise->wait(false);
-            }
-
-            return $event->getId();
-        } catch (ClientErrorException $e) {
-            return null;
+        if (null === $projectId) {
+            throw new MissingProjectIdCredentialException();
         }
+
+        $request = $this->requestFactory->createRequest(
+            'POST',
+            sprintf('/api/%d/store/', $projectId),
+            ['Content-Type' => 'application/json'],
+            JSON::encode($event)
+        );
+
+        $promise = $this->httpClient->sendAsyncRequest($request);
+
+        if ($this->delaySendingUntilShutdown) {
+            $this->pendingRequests[] = $promise;
+        } else {
+            try {
+                $promise->wait(false);
+            } catch (ClientErrorException $e) {
+                return null;
+            }
+        }
+
+        return $event->getId();
     }
 
     /**
@@ -124,7 +124,10 @@ final class HttpTransport implements TransportInterface
     private function cleanupPendingRequests(): void
     {
         while ($promise = array_pop($this->pendingRequests)) {
-            $promise->wait(false);
+            try {
+                $promise->wait(false);
+            } catch (ClientErrorException $e) {
+            }
         }
     }
 }
