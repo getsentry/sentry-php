@@ -12,9 +12,6 @@ use Sentry\Exception\MissingPublicKeyCredentialException;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Options;
 
-/**
- * @group time-sensitive
- */
 final class SentryAuthenticationTest extends TestCase
 {
     public function testAuthenticate(): void
@@ -31,10 +28,9 @@ final class SentryAuthenticationTest extends TestCase
             ->getMock();
 
         $headerValue = sprintf(
-            'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public, sentry_secret=secret',
+            'Sentry sentry_version=%s, sentry_client=%s, sentry_key=public, sentry_secret=secret',
             Client::PROTOCOL_VERSION,
-            'sentry.php.test/1.2.3',
-            microtime(true)
+            'sentry.php.test/1.2.3'
         );
 
         $request->expects($this->once())
@@ -59,10 +55,9 @@ final class SentryAuthenticationTest extends TestCase
             ->getMock();
 
         $headerValue = sprintf(
-            'Sentry sentry_version=%s, sentry_client=%s, sentry_timestamp=%F, sentry_key=public',
+            'Sentry sentry_version=%s, sentry_client=%s, sentry_key=public',
             Client::PROTOCOL_VERSION,
-            'sentry.php.test/2.0.0',
-            microtime(true)
+            'sentry.php.test/2.0.0'
         );
 
         $request->expects($this->once())

@@ -7,7 +7,6 @@ parameters:
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/Binary operation "\*" between array and 2 results in an error\./'
-        - '/Http\\Client\\Curl\\Client/'
         - '/^Parameter #1 \$object of method ReflectionProperty::setValue\(\) expects object, null given\.$/' # https://github.com/phpstan/phpstan/pull/2340
         -
             message: /^Cannot assign offset 'os' to array\|string\.$/
@@ -16,14 +15,23 @@ parameters:
             message: "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
             path: src/Transport/HttpTransport.php
         -
+            message: '/^Class Http\\Client\\Curl\\Client not found\.$/'
+            path: src/HttpClient/HttpClientFactory.php
+        -
             message: '/^Class Http\\Adapter\\Guzzle6\\Client not found\.$/'
-            path: src/ClientBuilder.php
+            path: src/HttpClient/HttpClientFactory.php
+        -
+            message: '/^Instantiated class Http\\Client\\Curl\\Client not found\.$/'
+            path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Call to static method createWithConfig\(\) on an unknown class Http\\Adapter\\Guzzle6\\Client\.$/'
-            path: src/ClientBuilder.php
+            path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Access to constant PROXY on an unknown class GuzzleHttp\\RequestOptions\.$/'
-            path: src/ClientBuilder.php
+            path: src/HttpClient/HttpClientFactory.php
+        -
+            message: '/^Property Sentry\\HttpClient\\HttpClientFactory::\$httpClient \(Http\\Client\\HttpAsyncClient\|null\) does not accept Http\\Client\\Curl\\Client.$/'
+            path: src/HttpClient/HttpClientFactory.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

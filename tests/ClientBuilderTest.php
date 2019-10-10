@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use Http\Client\Common\Plugin;
-use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory;
@@ -18,7 +17,6 @@ use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -55,6 +53,11 @@ final class ClientBuilderTest extends TestCase
         $this->assertInstanceOf(NullTransport::class, $transport);
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Method Sentry\ClientBuilder::setUriFactory() is deprecated since version 2.3 and will be removed in 3.0.
+     */
     public function testSetUriFactory(): void
     {
         /** @var UriFactory|MockObject $uriFactory */
@@ -86,6 +89,11 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($messageFactory, 'requestFactory', $transport);
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Method Sentry\ClientBuilder::setTransport() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.
+     */
     public function testSetTransport(): void
     {
         /** @var TransportInterface|MockObject $transport */
@@ -118,6 +126,11 @@ final class ClientBuilderTest extends TestCase
         $this->assertAttributeSame($httpClient, 'client', $this->getObjectAttribute($transport, 'httpClient'));
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecationMessage Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
+     */
     public function testAddHttpClientPlugin(): void
     {
         /** @var Plugin|MockObject $plugin */
@@ -132,6 +145,12 @@ final class ClientBuilderTest extends TestCase
         $this->assertSame($plugin, $plugins[0]);
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
+     * @expectedDeprecation Method Sentry\ClientBuilder::removeHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
+     */
     public function testRemoveHttpClientPlugin(): void
     {
         $plugin = new PluginStub1();
@@ -169,10 +188,6 @@ final class ClientBuilderTest extends TestCase
 
         $this->assertAttributeSame($this->getObjectAttribute($clientBuilder, 'messageFactory'), 'requestFactory', $transport);
         $this->assertAttributeInstanceOf(PluginClient::class, 'httpClient', $transport);
-
-        $httpClientPlugin = $this->getObjectAttribute($transport, 'httpClient');
-
-        $this->assertAttributeSame($this->getObjectAttribute($clientBuilder, 'httpClient'), 'client', $httpClientPlugin);
     }
 
     /**
@@ -274,68 +289,12 @@ final class ClientBuilderTest extends TestCase
         $this->assertTrue($callbackCalled, 'Callback not invoked, no assertions performed');
     }
 
-    /**
-     * @group legacy
-     *
-     * @dataProvider getClientTogglesCompressionPluginInHttpClientDataProvider
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
-    public function testGetClientTogglesCompressionPluginInHttpClient(bool $enabled): void
-    {
-        $options = new Options([
-            'dsn' => 'http://public:secret@example.com/sentry/1',
-            'enable_compression' => $enabled,
-        ]);
-
-        $builder = new ClientBuilder($options);
-        $builder->getClient();
-
-        $encoderPluginFound = false;
-        $decoderPluginFound = false;
-
-        foreach ($this->getObjectAttribute($builder, 'httpClientPlugins') as $plugin) {
-            if ($plugin instanceof GzipEncoderPlugin) {
-                $encoderPluginFound = true;
-            } elseif ($plugin instanceof DecoderPlugin) {
-                $decoderPluginFound = true;
-            }
-        }
-
-        $this->assertSame($enabled, $encoderPluginFound);
-        $this->assertSame($enabled, $decoderPluginFound);
-    }
-
-    public function getClientTogglesCompressionPluginInHttpClientDataProvider(): array
-    {
-        return [
-            [true],
-            [false],
-        ];
-    }
-
     public function testCreateWithNoOptionsIsTheSameAsDefaultOptions(): void
     {
         $this->assertEquals(
             new ClientBuilder(new Options()),
             ClientBuilder::create([])
         );
-    }
-
-    public function testCreateWithHttpProxyAndCustomTransportThrowsException(): void
-    {
-        $options = new Options([
-            'dsn' => 'http://public:secret@example.com/sentry/1',
-            'http_proxy' => 'some-proxy',
-        ]);
-
-        $clientBuilder = new ClientBuilder($options);
-        $clientBuilder->setHttpClient($this->createMock(HttpAsyncClient::class));
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('The `http_proxy` option does not work together with a custom client.');
-
-        $clientBuilder->getClient();
     }
 }
 
