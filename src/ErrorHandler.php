@@ -357,18 +357,19 @@ final class ErrorHandler
      * Handles errors by capturing them through the Raven client according to
      * the configured bit field.
      *
-     * @param int    $level   The level of the error raised, represented by one
-     *                        of the E_* constants
-     * @param string $message The error message
-     * @param string $file    The filename the error was raised in
-     * @param int    $line    The line number the error was raised at
+     * @param int    $level      The level of the error raised, represented by
+     *                           one of the E_* constants
+     * @param string $message    The error message
+     * @param string $file       The filename the error was raised in
+     * @param int    $line       The line number the error was raised at
+     * @param array  $errcontext The error context (deprecated since PHP 7.2)
      *
      * @return bool If the function returns `false` then the PHP native error
      *              handler will be called
      *
      * @throws \Throwable
      */
-    private function handleError(int $level, string $message, string $file, int $line): bool
+    private function handleError(int $level, string $message, string $file, int $line, array $errcontext = []): bool
     {
         if (0 === error_reporting()) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
@@ -383,7 +384,7 @@ final class ErrorHandler
         $this->invokeListeners($this->errorListeners, $errorAsException);
 
         if (null !== $this->previousErrorHandler) {
-            return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line);
+            return false !== \call_user_func($this->previousErrorHandler, $level, $message, $file, $line, $errcontext);
         }
 
         return false;

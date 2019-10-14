@@ -345,7 +345,12 @@ final class ClientBuilder implements ClientBuilderInterface
         /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
 
-        return new HttpTransport($this->options, $this->createHttpClientInstance(), $this->messageFactory);
+        return new HttpTransport(
+            $this->options,
+            $this->createHttpClientInstance(),
+            $this->messageFactory,
+            false
+        );
     }
 
     /**

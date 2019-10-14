@@ -106,7 +106,11 @@ final class HttpTransport implements TransportInterface
         if ($this->delaySendingUntilShutdown) {
             $this->pendingRequests[] = $promise;
         } else {
-            $promise->wait(false);
+            try {
+                $promise->wait();
+            } catch (\Exception $exception) {
+                return null;
+            }
         }
 
         return $event->getId();
@@ -119,7 +123,10 @@ final class HttpTransport implements TransportInterface
     private function cleanupPendingRequests(): void
     {
         while ($promise = array_pop($this->pendingRequests)) {
-            $promise->wait(false);
+            try {
+                $promise->wait();
+            } catch (\Exception $exception) {
+            }
         }
     }
 }
