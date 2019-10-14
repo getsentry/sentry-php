@@ -271,7 +271,14 @@ abstract class AbstractSerializer
      */
     protected function serializeCallableWithoutTypeHint($callable): string
     {
-        $this->assertIsValidCallable($callable);
+        if (!\is_callable($callable)) {
+            throw new InvalidArgumentException(sprintf(
+                'Expecting callable, got %s',
+                \is_object($callable)
+                    ? \get_class($callable)
+                    : \gettype($callable)
+            ));
+        }
 
         if (\is_string($callable) && !\function_exists($callable)) {
             return $callable;
@@ -285,13 +292,20 @@ abstract class AbstractSerializer
      *
      * @see https://github.com/getsentry/sentry-php/pull/821
      *
-     * @param callable $callable
+     * @param callable $callable callable type to be removed in 3.0, see #821
      *
      * @return string
      */
-    protected function serializeCallable(/* callable type to be removed in 3.0, see #821 => */callable $callable): string
+    protected function serializeCallable(callable $callable): string
     {
-        $this->assertIsValidCallable($callable);
+        if (!\is_callable($callable)) {
+            throw new InvalidArgumentException(sprintf(
+                'Expecting callable, got %s',
+                \is_object($callable)
+                    ? \get_class($callable)
+                    : \gettype($callable)
+            ));
+        }
 
         try {
             if (\is_array($callable)) {
@@ -382,22 +396,5 @@ abstract class AbstractSerializer
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;
-    }
-
-    /**
-     * @param mixed $callable
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertIsValidCallable($callable): void
-    {
-        if (!\is_callable($callable)) {
-            throw new InvalidArgumentException(sprintf(
-                'Expecting callable, got %s',
-                \is_object($callable)
-                    ? \get_class($callable)
-                    : \gettype($callable)
-            ));
-        }
     }
 }
