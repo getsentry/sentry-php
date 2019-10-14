@@ -34,7 +34,7 @@ jobs:
     include:
         - stage: Code style & static analysis
           name: PHP CS Fixer
-          env: dependencies=highestsrc/Serializer/AbstractSerializer.php
+          env: dependencies=highest
           script: composer phpcs
         - name: PHPStan
           env: dependencies=highest
