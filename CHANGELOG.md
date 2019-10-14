@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix deprecation raised when serializing callable in certain circumstances (#821)
+
 ## 2.2.2 (2019-10-10)
 
 - Fix handling of fifth argument in the error handler (#892)

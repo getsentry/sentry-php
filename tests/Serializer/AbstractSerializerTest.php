@@ -455,13 +455,17 @@ abstract class AbstractSerializerTest extends TestCase
                 'callable' => $callableWithoutNamespaces,
                 'expected' => 'Lambda void {closure} [int|null param1_70ns]',
             ],
+            [
+                'callable' => __METHOD__,
+                'expected' => __METHOD__,
+            ],
         ];
     }
 
     /**
      * @dataProvider serializableCallableProvider
      */
-    public function testSerializeCallable(callable $callable, string $expected): void
+    public function testSerializeCallable($callable, string $expected): void
     {
         $serializer = $this->createSerializer();
         $actual = $this->invokeSerialization($serializer, $callable);

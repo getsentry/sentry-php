@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
+use Sentry\Exception\InvalidArgumentException;
 use Sentry\Options;
 
 /**
@@ -102,7 +103,7 @@ abstract class AbstractSerializer
             }
 
             if (\is_callable($value)) {
-                return $this->serializeCallable($value);
+                return $this->serializeCallableWithoutTypeHint($value);
             }
 
             if (\is_array($value)) {
@@ -250,7 +251,7 @@ abstract class AbstractSerializer
         }
 
         if (\is_callable($value)) {
-            return $this->serializeCallable($value);
+            return $this->serializeCallableWithoutTypeHint($value);
         }
 
         if (\is_array($value)) {
@@ -261,7 +262,37 @@ abstract class AbstractSerializer
     }
 
     /**
-     * @param callable $callable
+     * This method is provided as a non-BC upgrade of serializeCallable,
+     * since using the callable type raises a deprecation in some cases.
+     *
+     * @param callable|mixed $callable
+     *
+     * @return string
+     */
+    protected function serializeCallableWithoutTypeHint($callable): string
+    {
+        if (\is_string($callable) && !\function_exists($callable)) {
+            return $callable;
+        }
+
+        if (!\is_callable($callable)) {
+            throw new InvalidArgumentException(sprintf(
+                'Expecting callable, got %s',
+                \is_object($callable)
+                    ? \get_class($callable)
+                    : \gettype($callable)
+            ));
+        }
+
+        return $this->serializeCallable($callable);
+    }
+
+    /**
+     * Use serializeCallableWithoutTypeHint instead (no type in argument).
+     *
+     * @see https://github.com/getsentry/sentry-php/pull/821
+     *
+     * @param callable $callable callable type to be removed in 3.0, see #821
      *
      * @return string
      */
@@ -271,7 +302,7 @@ abstract class AbstractSerializer
             if (\is_array($callable)) {
                 $reflection = new \ReflectionMethod($callable[0], $callable[1]);
                 $class = $reflection->getDeclaringClass();
-            } elseif ($callable instanceof \Closure || \is_string($callable)) {
+            } elseif ($callable instanceof \Closure || (\is_string($callable) && \function_exists($callable))) {
                 $reflection = new \ReflectionFunction($callable);
                 $class = null;
             } elseif (\is_object($callable) && method_exists($callable, '__invoke')) {
