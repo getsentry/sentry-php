@@ -265,12 +265,16 @@ abstract class AbstractSerializer
      * This method is provided as a non-BC upgrade of serializeCallable,
      * since using the callable type raises a deprecation in some cases.
      *
-     * @param callable $callable
+     * @param callable|mixed $callable
      *
      * @return string
      */
     protected function serializeCallableWithoutTypeHint($callable): string
     {
+        if (\is_string($callable) && !\function_exists($callable)) {
+            return $callable;
+        }
+
         if (!\is_callable($callable)) {
             throw new InvalidArgumentException(sprintf(
                 'Expecting callable, got %s',
@@ -278,10 +282,6 @@ abstract class AbstractSerializer
                     ? \get_class($callable)
                     : \gettype($callable)
             ));
-        }
-
-        if (\is_string($callable) && !\function_exists($callable)) {
-            return $callable;
         }
 
         return $this->serializeCallable($callable);
@@ -298,15 +298,6 @@ abstract class AbstractSerializer
      */
     protected function serializeCallable(callable $callable): string
     {
-        if (!\is_callable($callable)) {
-            throw new InvalidArgumentException(sprintf(
-                'Expecting callable, got %s',
-                \is_object($callable)
-                    ? \get_class($callable)
-                    : \gettype($callable)
-            ));
-        }
-
         try {
             if (\is_array($callable)) {
                 $reflection = new \ReflectionMethod($callable[0], $callable[1]);
