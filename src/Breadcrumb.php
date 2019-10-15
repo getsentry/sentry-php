@@ -60,8 +60,15 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * This constant defines the critical level for a breadcrumb.
+     *
+     * @deprecated 2.2.2 Use fatal instead. Will be removed in a later version.
      */
     public const LEVEL_CRITICAL = 'critical';
+
+    /**
+     * This constant defines the fatal level for a breadcrumb.
+     */
+    public const LEVEL_FATAL = 'fatal';
 
     /**
      * This constant defines the list of values allowed to be set as severity
@@ -73,6 +80,7 @@ final class Breadcrumb implements \JsonSerializable
         self::LEVEL_WARNING,
         self::LEVEL_ERROR,
         self::LEVEL_CRITICAL,
+        self::LEVEL_FATAL,
     ];
 
     /**
@@ -151,7 +159,7 @@ final class Breadcrumb implements \JsonSerializable
             case E_CORE_WARNING:
             case E_COMPILE_ERROR:
             case E_COMPILE_WARNING:
-                return self::LEVEL_CRITICAL;
+                return self::LEVEL_FATAL;
             case E_USER_ERROR:
                 return self::LEVEL_ERROR;
             case E_NOTICE:

@@ -286,7 +286,7 @@ final class ScopeTest extends TestCase
         $this->assertEquals(['foo' => 'baz'], $event->getUserContext()->toArray());
 
         $scope->setFingerprint(['foo', 'bar']);
-        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_CRITICAL, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_FATAL, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->setLevel(Severity::fatal());
         $scope->setTag('bar', 'foo');
         $scope->setExtra('foo', 'bar');
