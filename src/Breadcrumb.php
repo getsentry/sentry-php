@@ -61,7 +61,7 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * This constant defines the critical level for a breadcrumb.
      *
-     * @deprecated 2.2.2 Use fatal instead. Will be removed in a later version.
+     * @deprecated since version 2.2.2, to be removed in 3.0; use fatal instead.
      */
     public const LEVEL_CRITICAL = 'critical';
 
