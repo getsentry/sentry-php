@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix deprecation raised when serializing callable in certain circumstances (#821)
+- Replace `critical` (deprecated) with `fatal` breadcrumb status (#901)
 
 ## 2.2.2 (2019-10-10)
 
