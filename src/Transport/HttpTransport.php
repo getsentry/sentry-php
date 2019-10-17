@@ -82,7 +82,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
         // will be executed last
-        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'close']));
+        register_shutdown_function('register_shutdown_function', \Closure::fromCallable([$this, 'cleanupPendingRequests']));
     }
 
     /**
@@ -91,7 +91,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     public function __destruct()
     {
-        $this->close();
+        $this->cleanupPendingRequests();
     }
 
     /**
@@ -120,7 +120,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             try {
                 $promise->wait();
             } catch (\Throwable $exception) {
-                return $event->getId();
+                return null;
             }
         }
 
@@ -132,13 +132,29 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     public function close(?int $timeout = null): PromiseInterface
     {
+        $this->cleanupPendingRequests();
+
+        return new FulfilledPromise(true);
+    }
+
+    /**
+     * Cleanups the pending promises by awaiting for them. Any error that occurs
+     * will be ignored.
+     *
+     * @deprecated since version 2.2.3, to be removed in 3.0. Even though this
+     *             method is `private` we cannot delete it because it's used
+     *             in some old versions of the `sentry-laravel` package using
+     *             tricky code involving reflection and Closure binding
+     */
+    private function cleanupPendingRequests(): void
+    {
         while ($promise = array_pop($this->pendingRequests)) {
             try {
                 $promise->wait();
             } catch (\Throwable $exception) {
+                // Do nothing because we don't want to break applications while
+                // trying to send events
             }
         }
-
-        return new FulfilledPromise(true);
     }
 }
