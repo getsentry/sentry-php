@@ -10,10 +10,12 @@ use Http\Promise\FulfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
+use Sentry\Transport\PendingRequest;
 
 final class HttpTransportTest extends TestCase
 {
@@ -62,6 +64,31 @@ final class HttpTransportTest extends TestCase
         $transport->send(new Event());
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
+    }
+
+    public function testSendDoesReturnNullAndLogsErrorWhenSendingFailed(): void
+    {
+        $exception = new \Exception();
+        $event = new Event();
+        $promise = new RejectedPromise($exception);
+
+        /** @var HttpAsyncClient|MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn($promise);
+
+        $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
+        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find(), false);
+        $loggerProphecy = $this->prophesize(AbstractLogger::class);
+        $loggerProphecy->error('Event could not be delivered', ['exception' => $exception, 'failedRequest' => new PendingRequest($promise, $event)])->shouldBeCalled();
+        $transport->setLogger($loggerProphecy->reveal());
+
+        $eventId = $transport->send($event);
+
+        $this->assertAttributeEmpty('pendingRequests', $transport);
+        // null is returned if sending request failed
+        $this->assertNull($eventId);
     }
 
     public function testSendThrowsOnMissingProjectIdCredential(): void

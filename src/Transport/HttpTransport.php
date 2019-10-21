@@ -8,9 +8,10 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
-use Http\Promise\Promise as HttpPromiseInterface;
+use Psr\Log\LoggerAwareInterface;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
+use Sentry\Log\OptionalLoggerAwareTrait;
 use Sentry\Options;
 use Sentry\Util\JSON;
 
@@ -20,8 +21,10 @@ use Sentry\Util\JSON;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class HttpTransport implements TransportInterface, ClosableTransportInterface
+final class HttpTransport implements TransportInterface, ClosableTransportInterface, LoggerAwareInterface
 {
+    use OptionalLoggerAwareTrait;
+
     /**
      * @var Options The Raven client configuration
      */
@@ -38,7 +41,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private $requestFactory;
 
     /**
-     * @var HttpPromiseInterface[] The list of pending promises
+     * @var PendingRequest[] The list of pending requests
      */
     private $pendingRequests = [];
 
@@ -115,13 +118,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         $promise = $this->httpClient->sendAsyncRequest($request);
 
         if ($this->delaySendingUntilShutdown) {
-            $this->pendingRequests[] = $promise;
+            $this->pendingRequests[] = new PendingRequest($promise, $event);
         } else {
-            try {
-                $promise->wait();
-            } catch (\Throwable $exception) {
-                return null;
-            }
+            return $this->sendPendingRequest(new PendingRequest($promise, $event));
         }
 
         return $event->getId();
@@ -148,13 +147,29 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     private function cleanupPendingRequests(): void
     {
-        while ($promise = array_pop($this->pendingRequests)) {
-            try {
-                $promise->wait();
-            } catch (\Throwable $exception) {
-                // Do nothing because we don't want to break applications while
-                // trying to send events
-            }
+        while ($pendingRequest = array_pop($this->pendingRequests)) {
+            $this->sendPendingRequest($pendingRequest);
         }
+    }
+
+    private function sendPendingRequest(PendingRequest $pendingRequest): ?string
+    {
+        try {
+            $pendingRequest->getPromise()->wait();
+        } catch (\Exception $exception) {
+            // Do nothing except logging because we don't want to break applications while
+            // trying to send events
+            $this->getLogger()->error(
+                'Event could not be delivered',
+                [
+                    'exception' => $exception,
+                    'failedRequest' => $pendingRequest,
+                ]
+            );
+
+            return null;
+        }
+
+        return $pendingRequest->getEvent()->getId();
     }
 }

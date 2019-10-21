@@ -23,6 +23,7 @@ use Http\Message\MessageFactory as MessageFactoryInterface;
 use Http\Message\StreamFactory as StreamFactoryInterface;
 use Http\Message\UriFactory as UriFactoryInterface;
 use Jean85\PrettyVersions;
+use Psr\Log\LoggerAwareInterface;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Integration\ErrorListenerIntegration;
@@ -30,6 +31,7 @@ use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
+use Sentry\Log\OptionalLoggerAwareTrait;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -43,8 +45,10 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class ClientBuilder implements ClientBuilderInterface
+final class ClientBuilder implements ClientBuilderInterface, LoggerAwareInterface
 {
+    use OptionalLoggerAwareTrait;
+
     /**
      * @var Options The client options
      */
@@ -345,13 +349,16 @@ final class ClientBuilder implements ClientBuilderInterface
         /** @psalm-suppress PossiblyInvalidPropertyAssignmentValue */
         $this->httpClient = $this->httpClient ?? HttpAsyncClientDiscovery::find();
 
-        return new HttpTransport(
+        $httpTransport = new HttpTransport(
             $this->options,
             $this->createHttpClientInstance(),
             $this->messageFactory,
             true,
             false
         );
+        $httpTransport->setLogger($this->getLogger());
+
+        return $httpTransport;
     }
 
     /**
