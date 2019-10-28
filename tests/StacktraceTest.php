@@ -136,11 +136,13 @@ final class StacktraceTest extends TestCase
 
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function']);
         $stacktrace->addFrame('path/to/excluded/path/to/file', 12, ['function' => 'test_function']);
+        $stacktrace->addFrame('path/elsewhere', 12, ['function' => 'test_function']);
 
         $frames = $stacktrace->getFrames();
 
         $this->assertFalse($frames[0]->isInApp());
-        $this->assertTrue($frames[1]->isInApp());
+        $this->assertFalse($frames[1]->isInApp());
+        $this->assertTrue($frames[2]->isInApp());
     }
 
     /**
