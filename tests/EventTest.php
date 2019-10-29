@@ -58,7 +58,45 @@ final class EventTest extends TestCase
             ],
         ];
 
-        $this->assertEquals($expected, $event->toArray());
+        $this->assertSame($expected, $event->toArray());
+    }
+
+    public function testToArrayMergesCustomContextsWithDefaultContexts(): void
+    {
+        $event = new Event();
+        $event->setContext('foo', ['foo' => 'bar']);
+        $event->setContext('bar', ['bar' => 'foo']);
+        $event->setContext('runtime', ['baz' => 'baz']);
+
+        $expected = [
+            'event_id' => $event->getId(),
+            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
+            'level' => 'error',
+            'platform' => 'php',
+            'sdk' => [
+                'name' => Client::SDK_IDENTIFIER,
+                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
+            ],
+            'contexts' => [
+                'os' => [
+                    'name' => php_uname('s'),
+                    'version' => php_uname('r'),
+                    'build' => php_uname('v'),
+                    'kernel_version' => php_uname('a'),
+                ],
+                'runtime' => [
+                    'baz' => 'baz',
+                ],
+                'foo' => [
+                    'foo' => 'bar',
+                ],
+                'bar' => [
+                    'bar' => 'foo',
+                ],
+            ],
+        ];
+
+        $this->assertSame($expected, $event->toArray());
     }
 
     /**
@@ -186,41 +224,6 @@ final class EventTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testGetServerOsContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
-    }
-
-    public function testGetRuntimeContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
-    }
-
-    public function testGetUserContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(Context::class, $event->getUserContext());
-    }
-
-    public function testGetExtraContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(Context::class, $event->getExtraContext());
-    }
-
-    public function getTagsContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(TagsContext::class, $event->getTagsContext());
     }
 
     /**

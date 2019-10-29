@@ -28,6 +28,11 @@ final class Scope
     private $user;
 
     /**
+     * @var array<string, array<string, mixed>> The list of contexts associated to this scope
+     */
+    private $contexts = [];
+
+    /**
      * @var TagsContext The list of tags associated to this scope
      */
     private $tags;
@@ -67,6 +72,7 @@ final class Scope
         $this->user = new UserContext();
         $this->tags = new TagsContext();
         $this->extra = new Context();
+        $this->contexts = [];
     }
 
     /**
@@ -94,6 +100,35 @@ final class Scope
     public function setTags(array $tags): self
     {
         $this->tags->merge($tags);
+
+        return $this;
+    }
+
+    /**
+     * Sets context data with the given name.
+     *
+     * @param string               $name  The name that uniquely identifies the context
+     * @param array<string, mixed> $value The value
+     *
+     * @return $this
+     */
+    public function setContext(string $name, array $value): self
+    {
+        $this->contexts[$name] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Removes the context from the scope.
+     *
+     * @param string $name The name that uniquely identifies the context
+     *
+     * @return $this
+     */
+    public function removeContext(string $name): self
+    {
+        unset($this->contexts[$name]);
 
         return $this;
     }
@@ -246,6 +281,7 @@ final class Scope
         $this->level = null;
         $this->fingerprint = [];
         $this->breadcrumbs = [];
+        $this->contexts = [];
 
         return $this;
     }
@@ -274,6 +310,10 @@ final class Scope
         $event->getTagsContext()->merge($this->tags->toArray());
         $event->getExtraContext()->merge($this->extra->toArray());
         $event->getUserContext()->merge($this->user->toArray());
+
+        foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
+            $event->setContext($name, $data);
+        }
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
             $event = \call_user_func($processor, $event, $payload);
