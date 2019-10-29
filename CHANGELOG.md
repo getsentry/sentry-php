@@ -5,6 +5,7 @@
 - Fix deprecation raised when serializing callable in certain circumstances (#821)
 - Fix incorrect `critical` breadcrumb level by replacing it with the `fatal` level (#901)
 - Fix regression on default sending behavior of the `HttpTransport` transport (#905)
+- Fix stacktrace frame inApp detection: all paths outside the project_root are now considered as not in app (#911)
 
 ## 2.2.2 (2019-10-10)
 
