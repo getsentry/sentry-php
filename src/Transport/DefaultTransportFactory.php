@@ -49,6 +49,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
             $options,
             $this->httpClientFactory->create($options),
             $this->messageFactory,
+            true,
             false
         );
     }

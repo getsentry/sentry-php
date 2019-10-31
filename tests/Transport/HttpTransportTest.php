@@ -33,7 +33,7 @@ final class HttpTransportTest extends TestCase
             ->willReturn($promise);
 
         $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
+        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find(), true, false);
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
 
@@ -41,10 +41,7 @@ final class HttpTransportTest extends TestCase
 
         $this->assertAttributeNotEmpty('pendingRequests', $transport);
 
-        $reflectionMethod = new \ReflectionMethod(HttpTransport::class, 'cleanupPendingRequests');
-        $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($transport);
-        $reflectionMethod->setAccessible(false);
+        $transport->close();
 
         $this->assertAttributeEmpty('pendingRequests', $transport);
     }
@@ -60,7 +57,7 @@ final class HttpTransportTest extends TestCase
             ->willReturn($promise);
 
         $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find(), false);
+        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find(), false, false);
 
         $transport->send(new Event());
 
@@ -73,7 +70,7 @@ final class HttpTransportTest extends TestCase
 
         /** @var HttpAsyncClient&MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
-        $transport = new HttpTransport(new Options(), $httpClient, MessageFactoryDiscovery::find(), false);
+        $transport = new HttpTransport(new Options(), $httpClient, MessageFactoryDiscovery::find(), true, false);
 
         $transport->send(new Event());
     }
