@@ -43,9 +43,6 @@
         "raven/raven": "*"
     },
     "autoload": {
-        "files": [
-            "src/functions.php"
-        ],
         "psr-4" : {
             "Sentry\\" : "src/"
         }
