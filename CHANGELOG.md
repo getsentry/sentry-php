@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.2.3 (2019-10-31)
+
 - Fix deprecation raised when serializing callable in certain circumstances (#821)
 - Fix incorrect `critical` breadcrumb level by replacing it with the `fatal` level (#901)
 - Fix regression on default sending behavior of the `HttpTransport` transport (#905)
