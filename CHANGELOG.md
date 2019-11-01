@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Suggest installing Monolog to send log messages directly to Sentry (#908)
+
 ## 2.2.3 (2019-10-31)
 
 - Fix deprecation raised when serializing callable in certain circumstances (#821)
