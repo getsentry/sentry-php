@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Suggest installing Monolog to send log messages directly to Sentry (#908)
+- Make the `$errcontext` argument of the `ErrorHandler::handleError()` method `nullable` (#917)
 
 ## 2.2.3 (2019-10-31)
 
