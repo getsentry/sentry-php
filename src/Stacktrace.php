@@ -221,8 +221,6 @@ class Stacktrace implements \JsonSerializable
      * @param string $path            The file path
      * @param int    $lineNumber      The line to centre about
      * @param int    $maxLinesToFetch The maximum number of lines to fetch
-     *
-     * @return array
      */
     protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
@@ -280,8 +278,6 @@ class Stacktrace implements \JsonSerializable
      * Removes from the given file path the specified prefixes.
      *
      * @param string $filePath The path to the file
-     *
-     * @return string
      */
     protected function stripPrefixFromFilePath(string $filePath): string
     {
@@ -298,8 +294,6 @@ class Stacktrace implements \JsonSerializable
      * Gets the values of the arguments of the given stackframe.
      *
      * @param array $frame The frame from where arguments are retrieved
-     *
-     * @return array
      */
     protected function getFrameArgumentsValues(array $frame): array
     {
@@ -325,8 +319,6 @@ class Stacktrace implements \JsonSerializable
      * Gets the arguments of the given stackframe.
      *
      * @param array $frame The frame from where arguments are retrieved
-     *
-     * @return array
      */
     public function getFrameArguments(array $frame): array
     {

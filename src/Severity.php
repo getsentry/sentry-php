@@ -115,8 +115,6 @@ final class Severity
 
     /**
      * Creates a new instance of this enum for the "debug" value.
-     *
-     * @return self
      */
     public static function debug(): self
     {
@@ -125,8 +123,6 @@ final class Severity
 
     /**
      * Creates a new instance of this enum for the "info" value.
-     *
-     * @return self
      */
     public static function info(): self
     {
@@ -135,8 +131,6 @@ final class Severity
 
     /**
      * Creates a new instance of this enum for the "warning" value.
-     *
-     * @return self
      */
     public static function warning(): self
     {
@@ -145,8 +139,6 @@ final class Severity
 
     /**
      * Creates a new instance of this enum for the "error" value.
-     *
-     * @return self
      */
     public static function error(): self
     {
@@ -155,8 +147,6 @@ final class Severity
 
     /**
      * Creates a new instance of this enum for the "fatal" value.
-     *
-     * @return self
      */
     public static function fatal(): self
     {
@@ -167,8 +157,6 @@ final class Severity
      * Returns whether two object instances of this class are equal.
      *
      * @param self $other The object to compare
-     *
-     * @return bool
      */
     public function isEqualTo(self $other): bool
     {

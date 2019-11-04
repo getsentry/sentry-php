@@ -273,8 +273,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Creates a new instance of the HTTP client.
-     *
-     * @return PluginClient
      */
     private function createHttpClientInstance(): PluginClient
     {
@@ -310,8 +308,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Creates a new instance of the transport mechanism.
-     *
-     * @return TransportInterface
      */
     private function createTransportInstance(): TransportInterface
     {
@@ -356,8 +352,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Instantiate the {@see EventFactory} with the configured serializers.
-     *
-     * @return EventFactoryInterface
      */
     private function createEventFactory(): EventFactoryInterface
     {

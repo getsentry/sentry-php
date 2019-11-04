@@ -29,8 +29,6 @@ final class SentrySdk
     /**
      * Initializes the SDK by creating a new hub instance each time this method
      * gets called.
-     *
-     * @return HubInterface
      */
     public static function init(): HubInterface
     {
@@ -42,8 +40,6 @@ final class SentrySdk
     /**
      * Gets the current hub. If it's not initialized then creates a new instance
      * and sets it as current hub.
-     *
-     * @return HubInterface
      */
     public static function getCurrentHub(): HubInterface
     {
@@ -58,8 +54,6 @@ final class SentrySdk
      * Sets the current hub.
      *
      * @param HubInterface $hub The hub to set
-     *
-     * @return HubInterface
      */
     public static function setCurrentHub(HubInterface $hub): HubInterface
     {

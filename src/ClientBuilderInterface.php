@@ -30,8 +30,6 @@ interface ClientBuilderInterface
 
     /**
      * The options that will be used to create the {@see Client}.
-     *
-     * @return Options
      */
     public function getOptions(): Options;
 
@@ -91,8 +89,6 @@ interface ClientBuilderInterface
 
     /**
      * Gets the instance of the client built using the configured options.
-     *
-     * @return ClientInterface
      */
     public function getClient(): ClientInterface;
 

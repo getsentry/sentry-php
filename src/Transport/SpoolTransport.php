@@ -31,8 +31,6 @@ final class SpoolTransport implements TransportInterface
 
     /**
      * Gets the spool.
-     *
-     * @return SpoolInterface
      */
     public function getSpool(): SpoolInterface
     {

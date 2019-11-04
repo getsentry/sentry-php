@@ -107,8 +107,6 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
 
     /**
      * Checks whether the object is not storing any data.
-     *
-     * @return bool
      */
     public function isEmpty(): bool
     {
@@ -117,8 +115,6 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
 
     /**
      * Returns an array representation of the data stored by the object.
-     *
-     * @return array
      */
     public function toArray(): array
     {
