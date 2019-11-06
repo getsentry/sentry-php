@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Integration\ErrorListenerIntegration;
+use Sentry\Integration\ExceptionListenerIntegration;
+use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -51,6 +56,11 @@ final class Options
     private $resolver;
 
     /**
+     * @var IntegrationInterface[] The list of default integrations
+     */
+    private $defaultIntegrations = [];
+
+    /**
      * Class constructor.
      *
      * @param array $options The configuration options
@@ -58,6 +68,13 @@ final class Options
     public function __construct(array $options = [])
     {
         $this->resolver = new OptionsResolver();
+        $this->defaultIntegrations = [
+            new ExceptionListenerIntegration(),
+            new ErrorListenerIntegration(null, false),
+            new FatalErrorListenerIntegration(),
+            new RequestIntegration(),
+            new TransactionIntegration(),
+        ];
 
         $this->configureOptions($this->resolver);
 
@@ -504,11 +521,13 @@ final class Options
     }
 
     /**
-     * Set integrations that will be used by the created client.
+     * Sets the list of integrations that should be installed after SDK was
+     * initialized or a function that receives default integrations and returns
+     * a new, updated list.
      *
-     * @param IntegrationInterface[] $integrations The integrations
+     * @param IntegrationInterface[]|callable $integrations The list or callable
      */
-    public function setIntegrations(array $integrations): void
+    public function setIntegrations($integrations): void
     {
         $options = array_merge($this->options, ['integrations' => $integrations]);
 
@@ -522,7 +541,40 @@ final class Options
      */
     public function getIntegrations(): array
     {
-        return $this->options['integrations'];
+        $defaultIntegrations = $this->options['default_integrations'] ? $this->defaultIntegrations : [];
+        $userIntegrations = $this->options['integrations'];
+        $integrations = [];
+
+        if (\is_array($userIntegrations)) {
+            $userIntegrationsClasses = array_map('get_class', $userIntegrations);
+
+            /** @var array<string, bool> $pickedIntegrationsClasses */
+            $pickedIntegrationsClasses = [];
+
+            foreach ($defaultIntegrations as $defaultIntegration) {
+                $defaultIntegrationClass = \get_class($defaultIntegration);
+
+                if (!\in_array($defaultIntegrationClass, $userIntegrationsClasses, true)) {
+                    $pickedIntegrationsClasses[$defaultIntegrationClass] = true;
+                    $integrations[] = $defaultIntegration;
+                }
+            }
+
+            foreach ($userIntegrations as $userIntegration) {
+                $userIntegrationClass = \get_class($userIntegration);
+
+                if (isset($pickedIntegrationsClasses[$userIntegrationClass])) {
+                    continue;
+                }
+
+                $pickedIntegrationsClasses[$userIntegrationClass] = true;
+                $integrations[] = $userIntegration;
+            }
+
+            return $integrations;
+        }
+
+        return $userIntegrations($defaultIntegrations);
     }
 
     /**
@@ -751,7 +803,7 @@ final class Options
         $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('integrations', 'array');
+        $resolver->setAllowedTypes('integrations', ['array', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
@@ -903,10 +955,14 @@ final class Options
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array $integrations The value to validate
+     * @param array|callable $integrations The value to validate
      */
-    private function validateIntegrationsOption(array $integrations): bool
+    private function validateIntegrationsOption($integrations): bool
     {
+        if (\is_callable($integrations)) {
+            return true;
+        }
+
         foreach ($integrations as $integration) {
             if (!$integration instanceof IntegrationInterface) {
                 return false;
