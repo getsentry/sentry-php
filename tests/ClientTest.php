@@ -6,8 +6,10 @@ namespace Sentry\Tests;
 
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Mock\Client as MockClient;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventFactory;
@@ -19,6 +21,8 @@ use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
+use function Clue\StreamFilter\fun;
+use function Sentry\addBreadcrumb;
 
 class ClientTest extends TestCase
 {
@@ -71,8 +75,11 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
-    {
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(
+        bool $shouldCapture,
+        string $excluded,
+        \Throwable $thrown
+    ): void {
         $transport = $this->createMock(TransportInterface::class);
 
         $transport->expects($shouldCapture ? $this->once() : $this->never())
@@ -412,6 +419,36 @@ class ClientTest extends TestCase
     }
 
     /**
+     * @see https://github.com/getsentry/sentry-php/issues/828
+     */
+    public function testCaptureWithInvalidEncoding(): void
+    {
+        $transport = new class implements TransportInterface {
+            public function send(Event $event): ?string
+            {
+                $serializer = new Serializer(new Options(), 3000);
+                json_encode($serializer->serialize($event), JSON_PRETTY_PRINT);
+                Assert::assertSame(JSON_ERROR_NONE, json_last_error(), 'JSON ENCODE ERROR: ' . json_last_error_msg());
+
+                return null;
+            }
+        };
+
+        $client = (new ClientBuilder())
+            ->setTransport($transport)
+            ->getClient();
+        $brokenString = "\x42\x65\x61\x75\x6d\x6f\x6e\x74\x2d\x65\x6e\x2d\x76\xe9\x72\x6f\x6e";
+
+        $client->captureMessage($brokenString);
+
+        try {
+            $brokenString();
+        } catch (\Throwable $exception) {
+            $client->captureException($exception);
+        }
+    }
+
+    /**
      * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
      */
     private function clearLastError(): void
@@ -435,4 +472,13 @@ class ClientTest extends TestCase
             '1.2.3'
         );
     }
+}
+
+function invalid_encoding()
+{
+}
+
+function simple_function($a = null, $b = null, $c = null)
+{
+    throw new \RuntimeException('This simple function should fail before reaching this line!');
 }
