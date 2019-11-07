@@ -346,7 +346,8 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->createHttpClientInstance(),
             $this->messageFactory,
             true,
-            false
+            false,
+            $this->serializer
         );
     }
 

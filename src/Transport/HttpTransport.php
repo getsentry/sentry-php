@@ -12,6 +12,8 @@ use Http\Promise\Promise as HttpPromiseInterface;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Util\JSON;
 
 /**
@@ -48,6 +50,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     private $delaySendingUntilShutdown = false;
 
+    /** @var SerializerInterface */
+    private $serializer;
+
     /**
      * Constructor.
      *
@@ -62,13 +67,16 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      *                                                            used relying on the deprecated behavior
      *                                                            of delaying the sending of the events
      *                                                            until the shutdown of the application
+     * @param SerializerInterface|null $serializer                The serializer to be used before passing
+     *                                                            the event to the JSON::encode function
      */
     public function __construct(
         Options $config,
         HttpAsyncClientInterface $httpClient,
         RequestFactoryInterface $requestFactory,
         bool $delaySendingUntilShutdown = true,
-        bool $triggerDeprecation = true
+        bool $triggerDeprecation = true,
+        SerializerInterface $serializer = null
     ) {
         if ($delaySendingUntilShutdown && $triggerDeprecation) {
             @trigger_error(sprintf('Delaying the sending of the events using the "%s" class is deprecated since version 2.2 and will not work in 3.0.', __CLASS__), E_USER_DEPRECATED);
@@ -78,6 +86,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->delaySendingUntilShutdown = $delaySendingUntilShutdown;
+        $this->serializer = $serializer ?? new Serializer(new Options(), 512);
 
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
@@ -109,7 +118,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             'POST',
             sprintf('/api/%d/store/', $projectId),
             ['Content-Type' => 'application/json'],
-            JSON::encode($event)
+            JSON::encode($this->serializer->serialize($event))
         );
 
         $promise = $this->httpClient->sendAsyncRequest($request);
