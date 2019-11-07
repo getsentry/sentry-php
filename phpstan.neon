@@ -15,6 +15,9 @@ parameters:
         -
             message: "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
             path: src/Transport/HttpTransport.php
+        -
+            message: "/^Trying to invoke '.+' but it's not a callable.$/"
+            path: tests/ClientTest.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

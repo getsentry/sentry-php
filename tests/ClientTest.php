@@ -9,7 +9,6 @@ use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventFactory;
@@ -21,8 +20,6 @@ use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
-use function Clue\StreamFilter\fun;
-use function Sentry\addBreadcrumb;
 
 class ClientTest extends TestCase
 {
@@ -423,7 +420,7 @@ class ClientTest extends TestCase
      */
     public function testCaptureWithInvalidEncoding(): void
     {
-        $transport = new class implements TransportInterface {
+        $transport = new class() implements TransportInterface {
             public function send(Event $event): ?string
             {
                 $serializer = new Serializer(new Options(), 3000);
