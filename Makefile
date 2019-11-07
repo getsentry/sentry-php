@@ -20,7 +20,10 @@ cs-fix:
 phpstan:
 	vendor/bin/phpstan analyse
 
-test: cs-fix phpstan
+psalm:
+	vendor/bin/psalm --config=psalm.xml.dist
+
+test: cs-fix phpstan psalm
 	vendor/bin/phpunit --verbose
 
 setup-git:
