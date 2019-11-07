@@ -133,8 +133,6 @@ final class ErrorHandler
      *                                 their implementation and behavior of
      *                                 registering all handlers can be changed
      *
-     * @return self
-     *
      * @deprecated since version 2.1, to be removed in 3.0.
      */
     public static function registerOnce(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE, bool $triggerDeprecation = true): self
@@ -156,8 +154,6 @@ final class ErrorHandler
 
     /**
      * Registers the error handler once and returns its instance.
-     *
-     * @return self
      */
     public static function registerOnceErrorHandler(): self
     {
@@ -194,8 +190,6 @@ final class ErrorHandler
      *
      * @param int $reservedMemorySize The amount of memory to reserve for the fatal
      *                                error handler expressed in bytes
-     *
-     * @return self
      */
     public static function registerOnceFatalErrorHandler(int $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE): self
     {
@@ -223,8 +217,6 @@ final class ErrorHandler
      * Registers the exception handler, effectively replacing the current one
      * and returns its instance. The previous one will be saved anyway and
      * called when appropriate.
-     *
-     * @return self
      */
     public static function registerOnceExceptionHandler(): self
     {
@@ -357,19 +349,19 @@ final class ErrorHandler
      * Handles errors by capturing them through the Raven client according to
      * the configured bit field.
      *
-     * @param int    $level      The level of the error raised, represented by
-     *                           one of the E_* constants
-     * @param string $message    The error message
-     * @param string $file       The filename the error was raised in
-     * @param int    $line       The line number the error was raised at
-     * @param array  $errcontext The error context (deprecated since PHP 7.2)
+     * @param int        $level      The level of the error raised, represented by
+     *                               one of the E_* constants
+     * @param string     $message    The error message
+     * @param string     $file       The filename the error was raised in
+     * @param int        $line       The line number the error was raised at
+     * @param array|null $errcontext The error context (deprecated since PHP 7.2)
      *
      * @return bool If the function returns `false` then the PHP native error
      *              handler will be called
      *
      * @throws \Throwable
      */
-    private function handleError(int $level, string $message, string $file, int $line, array $errcontext = []): bool
+    private function handleError(int $level, string $message, string $file, int $line, ?array $errcontext = []): bool
     {
         if (0 === error_reporting()) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
@@ -469,8 +461,6 @@ final class ErrorHandler
      * @param array  $backtrace The backtrace to clear
      * @param string $file      The filename the backtrace was raised in
      * @param int    $line      The line number the backtrace was raised at
-     *
-     * @return array
      */
     private function cleanBacktraceFromErrorHandlerFrames(array $backtrace, string $file, int $line): array
     {

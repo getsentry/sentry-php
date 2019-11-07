@@ -247,8 +247,6 @@ final class Scope
      *
      * @param Event $event   The event object that will be enriched with scope data
      * @param array $payload The raw payload of the event that will be propagated to the event processors
-     *
-     * @return Event|null
      */
     public function applyToEvent(Event $event, array $payload): ?Event
     {

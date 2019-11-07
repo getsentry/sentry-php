@@ -18,8 +18,6 @@ final class JSON
      *
      * @param mixed $data The data to encode
      *
-     * @return string
-     *
      * @throws JsonException If the encoding failed
      */
     public static function encode($data): string

@@ -17,8 +17,6 @@ interface HttpClientFactoryInterface
      * Create HTTP Client wrapped with configured plugins.
      *
      * @param Options $options The client options
-     *
-     * @return HttpAsyncClientInterface
      */
     public function create(Options $options): HttpAsyncClientInterface;
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.2.4 (2019-11-04)
+
+- Suggest installing Monolog to send log messages directly to Sentry (#908)
+- Make the `$errcontext` argument of the `ErrorHandler::handleError()` method `nullable` (#917)
+
 ## 2.2.3 (2019-10-31)
 
 - Fix deprecation raised when serializing callable in certain circumstances (#821)

@@ -38,6 +38,9 @@
         "symfony/phpunit-bridge": "^4.3",
         "vimeo/psalm": "^3.4"
     },
+    "suggest": {
+        "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
+    },
     "conflict": {
         "php-http/client-common": "1.8.0",
         "raven/raven": "*"

@@ -142,8 +142,6 @@ final class Breadcrumb implements \JsonSerializable
      *
      * @param \ErrorException $exception The exception
      *
-     * @return string
-     *
      * @deprecated since version 2.3, to be removed in 3.0
      */
     public static function levelFromErrorException(\ErrorException $exception): string
@@ -177,8 +175,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb type.
-     *
-     * @return string
      */
     public function getType(): string
     {
@@ -206,8 +202,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb level.
-     *
-     * @return string
      */
     public function getLevel(): string
     {
@@ -239,8 +233,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb category.
-     *
-     * @return string
      */
     public function getCategory(): string
     {
@@ -268,8 +260,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb message.
-     *
-     * @return string|null
      */
     public function getMessage(): ?string
     {
@@ -297,8 +287,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb meta data.
-     *
-     * @return array
      */
     public function getMetadata(): array
     {
@@ -349,8 +337,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb timestamp.
-     *
-     * @return float
      */
     public function getTimestamp(): float
     {
@@ -359,8 +345,6 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb as an array.
-     *
-     * @return array
      */
     public function toArray(): array
     {

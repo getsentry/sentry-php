@@ -169,8 +169,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the UUID of this event.
-     *
-     * @return string
      */
     public function getId(): string
     {
@@ -179,8 +177,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the identifier of the SDK package that generated this event.
-     *
-     * @return string
      *
      * @internal
      */
@@ -192,8 +188,6 @@ final class Event implements \JsonSerializable
     /**
      * Sets the identifier of the SDK package that generated this event.
      *
-     * @param string $sdkIdentifier
-     *
      * @internal
      */
     public function setSdkIdentifier(string $sdkIdentifier): void
@@ -203,8 +197,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the version of the SDK package that generated this Event.
-     *
-     * @return string
      *
      * @internal
      */
@@ -216,8 +208,6 @@ final class Event implements \JsonSerializable
     /**
      * Sets the version of the SDK package that generated this Event.
      *
-     * @param string $sdkVersion
-     *
      * @internal
      */
     public function setSdkVersion(string $sdkVersion): void
@@ -227,8 +217,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the timestamp of when this event was generated.
-     *
-     * @return string
      */
     public function getTimestamp(): string
     {
@@ -237,8 +225,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the severity of this event.
-     *
-     * @return Severity
      */
     public function getLevel(): Severity
     {
@@ -257,8 +243,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the name of the logger which created the event.
-     *
-     * @return string|null
      */
     public function getLogger(): ?string
     {
@@ -278,8 +262,6 @@ final class Event implements \JsonSerializable
     /**
      * Gets the name of the transaction (or culprit) which caused this
      * exception.
-     *
-     * @return string|null
      */
     public function getTransaction(): ?string
     {
@@ -299,8 +281,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the name of the server.
-     *
-     * @return string|null
      */
     public function getServerName(): ?string
     {
@@ -319,8 +299,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the release of the program.
-     *
-     * @return string|null
      */
     public function getRelease(): ?string
     {
@@ -339,8 +317,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the error message.
-     *
-     * @return string|null
      */
     public function getMessage(): ?string
     {
@@ -349,8 +325,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the formatted message.
-     *
-     * @return string|null
      */
     public function getMessageFormatted(): ?string
     {
@@ -403,8 +377,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the request data.
-     *
-     * @return array
      */
     public function getRequest(): array
     {
@@ -423,8 +395,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets an arbitrary mapping of additional metadata.
-     *
-     * @return Context
      */
     public function getExtraContext(): Context
     {
@@ -433,8 +403,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets a list of tags.
-     *
-     * @return TagsContext
      */
     public function getTagsContext(): TagsContext
     {
@@ -443,8 +411,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the user context.
-     *
-     * @return UserContext
      */
     public function getUserContext(): UserContext
     {
@@ -453,8 +419,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the server OS context.
-     *
-     * @return ServerOsContext
      */
     public function getServerOsContext(): ServerOsContext
     {
@@ -463,8 +427,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the runtime context data.
-     *
-     * @return RuntimeContext
      */
     public function getRuntimeContext(): RuntimeContext
     {
@@ -495,8 +457,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the environment in which this event was generated.
-     *
-     * @return string|null
      */
     public function getEnvironment(): ?string
     {
@@ -535,8 +495,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the exception.
-     *
-     * @return array
      */
     public function getExceptions(): array
     {
@@ -561,8 +519,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the stacktrace that generated this event.
-     *
-     * @return Stacktrace|null
      */
     public function getStacktrace(): ?Stacktrace
     {
@@ -581,8 +537,6 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the event as an array.
-     *
-     * @return array
      *
      * @psalm-return array{
      *     event_id: string,

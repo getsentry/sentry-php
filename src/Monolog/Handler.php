@@ -78,8 +78,6 @@ final class Handler extends AbstractProcessingHandler
      * Translates the Monolog level into the Sentry severity.
      *
      * @param int $level The Monolog log level
-     *
-     * @return Severity
      */
     private function getSeverityFromLevel(int $level): Severity
     {

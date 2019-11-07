@@ -72,8 +72,6 @@ final class Frame implements \JsonSerializable
 
     /**
      * Gets the name of the function being called.
-     *
-     * @return string|null
      */
     public function getFunctionName(): ?string
     {
@@ -82,8 +80,6 @@ final class Frame implements \JsonSerializable
 
     /**
      * Gets the file where the frame originated.
-     *
-     * @return string
      */
     public function getFile(): string
     {
@@ -92,8 +88,6 @@ final class Frame implements \JsonSerializable
 
     /**
      * Gets the line at which the frame originated.
-     *
-     * @return int
      */
     public function getLine(): int
     {
@@ -123,8 +117,6 @@ final class Frame implements \JsonSerializable
     /**
      * Gets the source code written at the line number of the file that originated
      * this frame.
-     *
-     * @return string|null
      */
     public function getContextLine(): ?string
     {
@@ -165,8 +157,6 @@ final class Frame implements \JsonSerializable
     /**
      * Gets whether the frame is related to the execution of the relevant code
      * in this stacktrace.
-     *
-     * @return bool
      */
     public function isInApp(): bool
     {
@@ -187,8 +177,6 @@ final class Frame implements \JsonSerializable
     /**
      * Gets a mapping of variables which were available within this frame
      * (usually context-locals).
-     *
-     * @return array
      */
     public function getVars(): array
     {
@@ -209,8 +197,6 @@ final class Frame implements \JsonSerializable
     /**
      * Returns an array representation of the data of this frame modeled according
      * to the specifications of the Sentry SDK Stacktrace Interface.
-     *
-     * @return array
      */
     public function toArray(): array
     {

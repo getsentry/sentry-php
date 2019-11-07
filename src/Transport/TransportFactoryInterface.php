@@ -16,8 +16,6 @@ interface TransportFactoryInterface
      * Creates a new instance of a transport that will be used to send events.
      *
      * @param Options $options The options of the Sentry client
-     *
-     * @return TransportInterface
      */
     public function create(Options $options): TransportInterface;
 }

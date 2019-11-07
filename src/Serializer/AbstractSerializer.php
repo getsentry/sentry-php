@@ -71,9 +71,7 @@ abstract class AbstractSerializer
     /**
      * AbstractSerializer constructor.
      *
-     * @param Options     $options       The SDK configuration options
-     * @param int         $maxDepth
-     * @param string|null $mbDetectOrder
+     * @param Options $options The SDK configuration options
      */
     public function __construct(Options $options, int $maxDepth = 3, ?string $mbDetectOrder = null)
     {
@@ -91,7 +89,6 @@ abstract class AbstractSerializer
      * sanitization and encoding.
      *
      * @param mixed $value
-     * @param int   $_depth
      *
      * @return string|bool|float|int|array|null
      */
@@ -157,8 +154,6 @@ abstract class AbstractSerializer
      * objects implementing the `SerializableInterface`.
      *
      * @param object $object
-     *
-     * @return array
      */
     protected function resolveClassSerializers($object): array
     {
@@ -181,7 +176,6 @@ abstract class AbstractSerializer
 
     /**
      * @param object   $object
-     * @param int      $_depth
      * @param string[] $hashes
      *
      * @return array|string|bool|float|int|null
@@ -210,8 +204,6 @@ abstract class AbstractSerializer
      * Serializes the given value to a string.
      *
      * @param mixed $value The value to serialize
-     *
-     * @return string
      */
     protected function serializeString($value): string
     {
@@ -266,8 +258,6 @@ abstract class AbstractSerializer
      * since using the callable type raises a deprecation in some cases.
      *
      * @param callable|mixed $callable
-     *
-     * @return string
      */
     protected function serializeCallableWithoutTypeHint($callable): string
     {
@@ -276,12 +266,7 @@ abstract class AbstractSerializer
         }
 
         if (!\is_callable($callable)) {
-            throw new InvalidArgumentException(sprintf(
-                'Expecting callable, got %s',
-                \is_object($callable)
-                    ? \get_class($callable)
-                    : \gettype($callable)
-            ));
+            throw new InvalidArgumentException(sprintf('Expecting callable, got %s', \is_object($callable) ? \get_class($callable) : \gettype($callable)));
         }
 
         return $this->serializeCallable($callable);
@@ -293,8 +278,6 @@ abstract class AbstractSerializer
      * @see https://github.com/getsentry/sentry-php/pull/821
      *
      * @param callable $callable callable type to be removed in 3.0, see #821
-     *
-     * @return string
      */
     protected function serializeCallable(callable $callable): string
     {
@@ -329,11 +312,6 @@ abstract class AbstractSerializer
         return $callableType . $reflection->getName() . ' ' . $this->serializeCallableParameters($reflection);
     }
 
-    /**
-     * @param \ReflectionFunctionAbstract $reflection
-     *
-     * @return string
-     */
     private function serializeCallableParameters(\ReflectionFunctionAbstract $reflection): string
     {
         $params = [];
@@ -362,8 +340,6 @@ abstract class AbstractSerializer
     }
 
     /**
-     * @param string $mbDetectOrder
-     *
      * @return $this
      */
     public function setMbDetectOrder(string $mbDetectOrder): self
@@ -373,17 +349,11 @@ abstract class AbstractSerializer
         return $this;
     }
 
-    /**
-     * @param bool $value
-     */
     public function setSerializeAllObjects(bool $value): void
     {
         $this->serializeAllObjects = $value;
     }
 
-    /**
-     * @return bool
-     */
     public function getSerializeAllObjects(): bool
     {
         return $this->serializeAllObjects;

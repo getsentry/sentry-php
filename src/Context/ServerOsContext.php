@@ -100,8 +100,6 @@ class ServerOsContext extends Context
 
     /**
      * Gets the name of the operating system.
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -120,8 +118,6 @@ class ServerOsContext extends Context
 
     /**
      * Gets the version of the operating system.
-     *
-     * @return string
      */
     public function getVersion(): string
     {
@@ -140,8 +136,6 @@ class ServerOsContext extends Context
 
     /**
      * Gets the build of the operating system.
-     *
-     * @return string
      */
     public function getBuild(): string
     {
@@ -160,8 +154,6 @@ class ServerOsContext extends Context
 
     /**
      * Gets the version of the kernel of the operating system.
-     *
-     * @return string
      */
     public function getKernelVersion(): string
     {

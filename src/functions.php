@@ -21,8 +21,6 @@ function init(array $options = []): void
  *
  * @param string   $message The message
  * @param Severity $level   The severity level of the message
- *
- * @return string|null
  */
 function captureMessage(string $message, ?Severity $level = null): ?string
 {
@@ -33,8 +31,6 @@ function captureMessage(string $message, ?Severity $level = null): ?string
  * Captures an exception event and sends it to Sentry.
  *
  * @param \Throwable $exception The exception
- *
- * @return string|null
  */
 function captureException(\Throwable $exception): ?string
 {
@@ -45,8 +41,6 @@ function captureException(\Throwable $exception): ?string
  * Captures a new event using the provided data.
  *
  * @param array $payload The data of the event being captured
- *
- * @return string|null
  */
 function captureEvent(array $payload): ?string
 {
@@ -55,8 +49,6 @@ function captureEvent(array $payload): ?string
 
 /**
  * Logs the most recent error (obtained with {@link error_get_last}).
- *
- * @return string|null
  */
 function captureLastError(): ?string
 {

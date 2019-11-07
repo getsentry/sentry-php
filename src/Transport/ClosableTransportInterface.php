@@ -18,8 +18,6 @@ interface ClosableTransportInterface
      *
      * @param int|null $timeout Maximum time in seconds before the sending
      *                          operation is interrupted
-     *
-     * @return PromiseInterface
      */
     public function close(?int $timeout = null): PromiseInterface;
 }
