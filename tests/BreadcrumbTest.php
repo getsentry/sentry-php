@@ -40,7 +40,7 @@ final class BreadcrumbTest extends TestCase
         $this->assertEquals('foo bar', $breadcrumb->getMessage());
         $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
         $this->assertEquals(['baz'], $breadcrumb->getMetadata());
-        $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
+        $this->assertEquals(microtime(true), $breadcrumb->getTimestamp(), '', 0.1);
     }
 
     /**
@@ -51,7 +51,7 @@ final class BreadcrumbTest extends TestCase
         $expectedResult['timestamp'] = microtime(true);
         $breadcrumb = Breadcrumb::fromArray($requestData);
 
-        $this->assertEquals($expectedResult, $breadcrumb->toArray());
+        $this->assertEquals($expectedResult, $breadcrumb->toArray(), '', 0.1);
     }
 
     public function fromArrayDataProvider(): array
@@ -167,6 +167,6 @@ final class BreadcrumbTest extends TestCase
             'data' => $data,
         ];
 
-        $this->assertEquals($expected, $breadcrumb->jsonSerialize());
+        $this->assertEquals($expected, $breadcrumb->jsonSerialize(), '', 0.1);
     }
 }
