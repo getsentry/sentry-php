@@ -71,11 +71,8 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(
-        bool $shouldCapture,
-        string $excluded,
-        \Throwable $thrown
-    ): void {
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    {
         $transport = $this->createMock(TransportInterface::class);
 
         $transport->expects($shouldCapture ? $this->once() : $this->never())
@@ -438,13 +435,4 @@ class ClientTest extends TestCase
             '1.2.3'
         );
     }
-}
-
-function invalid_encoding()
-{
-}
-
-function simple_function($a = null, $b = null, $c = null)
-{
-    throw new \RuntimeException('This simple function should fail before reaching this line!');
 }
