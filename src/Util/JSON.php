@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Util;
 
 use Sentry\Exception\JsonException;
+use Sentry\Options;
+use Sentry\Serializer\Serializer;
 
 /**
  * This class provides some utility methods to encode/decode JSON data.
@@ -22,7 +24,11 @@ final class JSON
      */
     public static function encode($data): string
     {
-        $encodedData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        if (version_compare(PHP_VERSION, '7.2.0') >= 0) {
+            $encodedData = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
+        } else {
+            $encodedData = json_encode(self::getSerializer()->serialize($data), JSON_UNESCAPED_UNICODE);
+        }
 
         if (JSON_ERROR_NONE !== json_last_error() || false === $encodedData) {
             throw new JsonException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
@@ -49,5 +55,13 @@ final class JSON
         }
 
         return $decodedData;
+    }
+
+    /**
+     * @return Serializer
+     */
+    protected static function getSerializer(): Serializer
+    {
+        return new Serializer(new Options(), 512);
     }
 }
