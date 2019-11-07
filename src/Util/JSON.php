@@ -15,6 +15,8 @@ use Sentry\Serializer\Serializer;
  */
 final class JSON
 {
+    private static $serializer;
+
     /**
      * Encodes the given data into JSON.
      *
@@ -57,11 +59,12 @@ final class JSON
         return $decodedData;
     }
 
-    /**
-     * @return Serializer
-     */
     protected static function getSerializer(): Serializer
     {
-        return new Serializer(new Options(), 512);
+        if (null === self::$serializer) {
+            self::$serializer = new Serializer(new Options(), 512);
+        }
+
+        return self::$serializer;
     }
 }
