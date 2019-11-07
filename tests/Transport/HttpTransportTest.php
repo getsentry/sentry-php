@@ -10,6 +10,7 @@ use Http\Promise\FulfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
@@ -73,5 +74,42 @@ final class HttpTransportTest extends TestCase
         $transport = new HttpTransport(new Options(), $httpClient, MessageFactoryDiscovery::find(), false);
 
         $transport->send(new Event());
+    }
+
+    /**
+     * @see https://github.com/getsentry/sentry-php/issues/828
+     * @dataProvider sendEventWithInvalidEncodingDataProvider
+     */
+    public function testSendEventWithInvalidEncoding(Event $eventWithInvalidEncoding): void
+    {
+        /** @var HttpAsyncClient&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn(new FulfilledPromise('foo'));
+        $transport = new HttpTransport(new Options(['dsn' => 'http://public@example.com/1']), $httpClient, MessageFactoryDiscovery::find(), false);
+
+        $transport->send($eventWithInvalidEncoding);
+    }
+
+    public function sendEventWithInvalidEncodingDataProvider(): ?\Generator
+    {
+        $brokenString = "\x42\x65\x61\x75\x6d\x6f\x6e\x74\x2d\x65\x6e\x2d\x76\xe9\x72\x6f\x6e";
+
+        $event = new Event();
+        $event->setMessage($brokenString);
+
+        yield 'broken message' => [$event];
+
+        $event = new Event();
+        $breadcrumb = new Breadcrumb(
+            Breadcrumb::LEVEL_ERROR,
+            Breadcrumb::TYPE_ERROR,
+            'error_reporting',
+            $brokenString
+        );
+        $event->setBreadcrumb([$breadcrumb]);
+
+        yield 'broken breadcrumb' => [$event];
     }
 }

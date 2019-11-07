@@ -6,7 +6,6 @@ namespace Sentry\Tests;
 
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Mock\Client as MockClient;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
@@ -413,36 +412,6 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureEvent([]);
-    }
-
-    /**
-     * @see https://github.com/getsentry/sentry-php/issues/828
-     */
-    public function testCaptureWithInvalidEncoding(): void
-    {
-        $transport = new class() implements TransportInterface {
-            public function send(Event $event): ?string
-            {
-                $serializer = new Serializer(new Options(), 3000);
-                json_encode($serializer->serialize($event), JSON_PRETTY_PRINT);
-                Assert::assertSame(JSON_ERROR_NONE, json_last_error(), 'JSON ENCODE ERROR: ' . json_last_error_msg());
-
-                return null;
-            }
-        };
-
-        $client = (new ClientBuilder())
-            ->setTransport($transport)
-            ->getClient();
-        $brokenString = "\x42\x65\x61\x75\x6d\x6f\x6e\x74\x2d\x65\x6e\x2d\x76\xe9\x72\x6f\x6e";
-
-        $client->captureMessage($brokenString);
-
-        try {
-            $brokenString();
-        } catch (\Throwable $exception) {
-            $client->captureException($exception);
-        }
     }
 
     /**
