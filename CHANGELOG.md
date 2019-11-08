@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## 2.2.4 (2019-11-04)
+
+- Suggest installing Monolog to send log messages directly to Sentry (#908)
+- Make the `$errcontext` argument of the `ErrorHandler::handleError()` method `nullable` (#917)
+
+## 2.2.3 (2019-10-31)
+
+- Fix deprecation raised when serializing callable in certain circumstances (#821)
+- Fix incorrect `critical` breadcrumb level by replacing it with the `fatal` level (#901)
+- Fix regression on default sending behavior of the `HttpTransport` transport (#905)
+- Fix stacktrace frame inApp detection: all paths outside the project_root are now considered as not in app (#911)
+
+## 2.2.2 (2019-10-10)
+
+- Fix handling of fifth argument in the error handler (#892)
+- Catch exception from vendors in `Sentry\Transport\HttpTransport` (#899)
+
+## 2.2.1 (2019-09-23)
+
+- Disable default deprecation warning `Sentry\Transport\HttpTransport` (#884)
+
 ## 2.2.0 (2019-09-23)
 
 - Change type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)

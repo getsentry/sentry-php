@@ -61,8 +61,6 @@ class TagsContext extends Context
      *
      * @param array $data The data to sanitize
      *
-     * @return array
-     *
      * @throws \InvalidArgumentException If any of the values of the input data
      *                                   is not a number or a string
      */

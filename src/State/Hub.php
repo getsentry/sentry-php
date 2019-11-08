@@ -229,8 +229,6 @@ final class Hub implements HubInterface
 
     /**
      * Gets the scope bound to the top of the stack.
-     *
-     * @return Scope
      */
     private function getScope(): Scope
     {
@@ -239,8 +237,6 @@ final class Hub implements HubInterface
 
     /**
      * Gets the topmost client/layer pair in the stack.
-     *
-     * @return Layer
      */
     private function getStackTop(): Layer
     {

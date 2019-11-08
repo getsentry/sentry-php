@@ -212,8 +212,6 @@ final class RequestIntegration implements IntegrationInterface
      * each UploadedFileInterface with an array of info.
      *
      * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
-     *
-     * @return array
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {

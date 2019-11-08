@@ -19,8 +19,6 @@ interface FlushableClientInterface extends ClientInterface
      * and the queue takes longer to drain, the promise resolves with `false`.
      *
      * @param int|null $timeout Maximum time in seconds the client should wait
-     *
-     * @return PromiseInterface
      */
     public function flush(?int $timeout = null): PromiseInterface;
 }

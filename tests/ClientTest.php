@@ -230,7 +230,7 @@ class ClientTest extends TestCase
         $httpClient = new MockClient();
         $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
         $options->setSampleRate($sampleRate);
-        $transportFactory = $this->createTransportFactory(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), false));
+        $transportFactory = $this->createTransportFactory(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), true, false));
 
         $client = (new ClientBuilder($options))
             ->setTransportFactory($transportFactory)

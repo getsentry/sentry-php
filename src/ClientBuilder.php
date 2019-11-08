@@ -294,8 +294,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Creates a new instance of the transport mechanism.
-     *
-     * @return TransportInterface
      */
     private function createTransportInstance(): TransportInterface
     {
@@ -310,8 +308,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Instantiate the {@see EventFactory} with the configured serializers.
-     *
-     * @return EventFactoryInterface
      */
     private function createEventFactory(): EventFactoryInterface
     {
@@ -323,8 +319,6 @@ final class ClientBuilder implements ClientBuilderInterface
 
     /**
      * Creates a new instance of the {@see DefaultTransportFactory} factory.
-     *
-     * @return DefaultTransportFactory
      */
     private function createDefaultTransportFactory(): DefaultTransportFactory
     {

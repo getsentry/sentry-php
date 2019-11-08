@@ -66,8 +66,6 @@ final class Options
 
     /**
      * Gets the number of attempts to resend an event that failed to be sent.
-     *
-     * @return int
      */
     public function getSendAttempts(): int
     {
@@ -113,8 +111,6 @@ final class Options
     /**
      * Gets the sampling factor to apply to events. A value of 0 will deny
      * sending any events, and a value of 1 will send 100% of events.
-     *
-     * @return float
      */
     public function getSampleRate(): float
     {
@@ -136,8 +132,6 @@ final class Options
 
     /**
      * Gets whether the stacktrace will be attached on captureMessage.
-     *
-     * @return bool
      */
     public function shouldAttachStacktrace(): bool
     {
@@ -158,8 +152,6 @@ final class Options
 
     /**
      * Gets the number of lines of code context to capture, or null if none.
-     *
-     * @return int
      */
     public function getContextLines(): int
     {
@@ -180,8 +172,6 @@ final class Options
 
     /**
      * Returns whether the requests should be compressed using GZIP or not.
-     *
-     * @return bool
      */
     public function isCompressionEnabled(): bool
     {
@@ -202,8 +192,6 @@ final class Options
 
     /**
      * Gets the environment.
-     *
-     * @return string|null
      */
     public function getEnvironment(): ?string
     {
@@ -251,8 +239,6 @@ final class Options
      * to Sentry.
      *
      * @param \Throwable $exception The exception
-     *
-     * @return bool
      */
     public function isExcludedException(\Throwable $exception): bool
     {
@@ -289,8 +275,6 @@ final class Options
 
     /**
      * Gets the project ID number to send to the Sentry server.
-     *
-     * @return string|null
      */
     public function getProjectId(): ?string
     {
@@ -299,8 +283,6 @@ final class Options
 
     /**
      * Gets the project which the authenticated user is bound to.
-     *
-     * @return string|null
      */
     public function getProjectRoot(): ?string
     {
@@ -321,8 +303,6 @@ final class Options
 
     /**
      * Gets the public key to authenticate the SDK.
-     *
-     * @return string|null
      */
     public function getPublicKey(): ?string
     {
@@ -331,8 +311,6 @@ final class Options
 
     /**
      * Gets the secret key to authenticate the SDK.
-     *
-     * @return string|null
      */
     public function getSecretKey(): ?string
     {
@@ -341,8 +319,6 @@ final class Options
 
     /**
      * Gets the logger used by Sentry.
-     *
-     * @return string
      */
     public function getLogger(): string
     {
@@ -385,8 +361,6 @@ final class Options
 
     /**
      * Gets the DSN of the Sentry server the authenticated user is bound to.
-     *
-     * @return string|null
      */
     public function getDsn(): ?string
     {
@@ -395,8 +369,6 @@ final class Options
 
     /**
      * Gets the name of the server the SDK is running on (e.g. the hostname).
-     *
-     * @return string
      */
     public function getServerName(): string
     {
@@ -418,8 +390,6 @@ final class Options
     /**
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
-     *
-     * @return callable
      *
      * @psalm-return callable(Event): ?Event
      */
@@ -467,8 +437,6 @@ final class Options
 
     /**
      * Gets a bit mask for error_reporting used in {@link ErrorListenerIntegration} to filter which errors to report.
-     *
-     * @return int
      */
     public function getErrorTypes(): int
     {
@@ -489,8 +457,6 @@ final class Options
 
     /**
      * Gets the maximum number of breadcrumbs sent with events.
-     *
-     * @return int
      */
     public function getMaxBreadcrumbs(): int
     {
@@ -511,8 +477,6 @@ final class Options
 
     /**
      * Gets a callback that will be invoked when adding a breadcrumb.
-     *
-     * @return callable
      *
      * @psalm-return callable(Breadcrumb): ?Breadcrumb
      */
@@ -563,8 +527,6 @@ final class Options
 
     /**
      * Should default PII be sent by default.
-     *
-     * @return bool
      */
     public function shouldSendDefaultPii(): bool
     {
@@ -585,8 +547,6 @@ final class Options
 
     /**
      * Returns whether the default integrations are enabled.
-     *
-     * @return bool
      */
     public function hasDefaultIntegrations(): bool
     {
@@ -607,8 +567,6 @@ final class Options
 
     /**
      * Gets the max length for values in the event payload.
-     *
-     * @return int
      */
     public function getMaxValueLength(): int
     {
@@ -629,8 +587,6 @@ final class Options
 
     /**
      * Gets the http proxy setting.
-     *
-     * @return string|null
      */
     public function getHttpProxy(): ?string
     {
@@ -676,8 +632,6 @@ final class Options
     /**
      * Gets the limit up to which integrations should capture the HTTP request
      * body.
-     *
-     * @return string
      */
     public function getMaxRequestBodySize(): string
     {
@@ -835,8 +789,6 @@ final class Options
      * Normalizes the given path as an absolute path.
      *
      * @param string $value The path
-     *
-     * @return string
      */
     private function normalizeAbsolutePath(string $value): string
     {
@@ -855,8 +807,6 @@ final class Options
      *
      * @param SymfonyOptions$options The configuration options
      * @param string|null $dsn The actual value of the option to normalize
-     *
-     * @return string|null
      */
     private function normalizeDsnOption(SymfonyOptions $options, ?string $dsn): ?string
     {
@@ -910,8 +860,6 @@ final class Options
      * that the URL is valid.
      *
      * @param string|null $dsn The value of the option
-     *
-     * @return bool
      */
     private function validateDsnOption(?string $dsn): bool
     {
@@ -956,8 +904,6 @@ final class Options
      * implements the {@see IntegrationInterface} interface.
      *
      * @param array $integrations The value to validate
-     *
-     * @return bool
      */
     private function validateIntegrationsOption(array $integrations): bool
     {
@@ -974,8 +920,6 @@ final class Options
      * Validates if the value of the max_breadcrumbs option is in range.
      *
      * @param int $value The value to validate
-     *
-     * @return bool
      */
     private function validateMaxBreadcrumbsOptions(int $value): bool
     {
@@ -986,8 +930,6 @@ final class Options
      * Validates that the values passed to the `class_serializers` option are valid.
      *
      * @param array $serializers The value to validate
-     *
-     * @return bool
      */
     private function validateClassSerializersOption(array $serializers): bool
     {
@@ -1004,8 +946,6 @@ final class Options
      * Validates that the values passed to the `tags` option are valid.
      *
      * @param array $tags The value to validate
-     *
-     * @return bool
      */
     private function validateTagsOption(array $tags): bool
     {

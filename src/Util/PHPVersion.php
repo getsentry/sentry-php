@@ -13,8 +13,6 @@ final class PHPVersion
      * normalized form.
      *
      * @param string $version The string to parse
-     *
-     * @return string
      */
     public static function parseVersion(string $version = PHP_VERSION): string
     {
