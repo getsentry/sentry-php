@@ -336,16 +336,16 @@ final class OptionsTest extends TestCase
             [],
         ];
 
-        $integration1 = new class() implements IntegrationInterface {
+        $integration = new class() implements IntegrationInterface {
             public function setupOnce(): void
             {
             }
         };
 
-        yield 'User integration added + && default integration appearing only once' => [
+        yield 'User integration added && default integration appearing only once' => [
             true,
             [
-                $integration1,
+                $integration,
                 new ExceptionListenerIntegration(),
             ],
             [
@@ -353,12 +353,12 @@ final class OptionsTest extends TestCase
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
-                $integration1,
+                $integration,
                 new ExceptionListenerIntegration(),
             ],
         ];
 
-        $integration1 = new class() implements IntegrationInterface {
+        $integration = new class() implements IntegrationInterface {
             public function setupOnce(): void
             {
             }
@@ -367,23 +367,23 @@ final class OptionsTest extends TestCase
         yield 'User integration added twice' => [
             false,
             [
-                $integration1,
-                $integration1,
+                $integration,
+                $integration,
             ],
             [
-                $integration1,
+                $integration,
             ],
         ];
 
         yield 'User integrations as callable returning empty list' => [
             true,
-            static function (array $defaultIntegrations): array {
+            static function (): array {
                 return [];
             },
             [],
         ];
 
-        $integration1 = new class() implements IntegrationInterface {
+        $integration = new class() implements IntegrationInterface {
             public function setupOnce(): void
             {
             }
@@ -391,15 +391,15 @@ final class OptionsTest extends TestCase
 
         yield 'User integrations as callable returning custom list' => [
             true,
-            static function (array $defaultIntegrations) use ($integration1): array {
-                return [$integration1];
+            static function () use ($integration): array {
+                return [$integration];
             },
-            [$integration1],
+            [$integration],
         ];
 
         yield 'User integrations as callable returning $defaultIntegrations argument' => [
             true,
-            static function (array $defaultIntegrations) use ($integration1): array {
+            static function (array $defaultIntegrations): array {
                 return $defaultIntegrations;
             },
             [

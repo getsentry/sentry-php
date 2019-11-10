@@ -58,7 +58,7 @@ final class Options
     /**
      * @var IntegrationInterface[] The list of default integrations
      */
-    private $defaultIntegrations = [];
+    private $defaultIntegrations;
 
     /**
      * Class constructor.
@@ -545,36 +545,34 @@ final class Options
         $userIntegrations = $this->options['integrations'];
         $integrations = [];
 
-        if (\is_array($userIntegrations)) {
-            $userIntegrationsClasses = array_map('get_class', $userIntegrations);
-
-            /** @var array<string, bool> $pickedIntegrationsClasses */
-            $pickedIntegrationsClasses = [];
-
-            foreach ($defaultIntegrations as $defaultIntegration) {
-                $defaultIntegrationClass = \get_class($defaultIntegration);
-
-                if (!\in_array($defaultIntegrationClass, $userIntegrationsClasses, true)) {
-                    $pickedIntegrationsClasses[$defaultIntegrationClass] = true;
-                    $integrations[] = $defaultIntegration;
-                }
-            }
-
-            foreach ($userIntegrations as $userIntegration) {
-                $userIntegrationClass = \get_class($userIntegration);
-
-                if (isset($pickedIntegrationsClasses[$userIntegrationClass])) {
-                    continue;
-                }
-
-                $pickedIntegrationsClasses[$userIntegrationClass] = true;
-                $integrations[] = $userIntegration;
-            }
-
-            return $integrations;
+        if (\is_callable($userIntegrations)) {
+            return $userIntegrations($defaultIntegrations);
         }
 
-        return $userIntegrations($defaultIntegrations);
+        $pickedIntegrationsClasses = [];
+        $userIntegrationsClasses = array_map('get_class', $userIntegrations);
+
+        foreach ($defaultIntegrations as $defaultIntegration) {
+            $defaultIntegrationClass = \get_class($defaultIntegration);
+
+            if (!\in_array($defaultIntegrationClass, $userIntegrationsClasses, true)) {
+                $pickedIntegrationsClasses[$defaultIntegrationClass] = true;
+                $integrations[] = $defaultIntegration;
+            }
+        }
+
+        foreach ($userIntegrations as $userIntegration) {
+            $userIntegrationClass = \get_class($userIntegration);
+
+            if (isset($pickedIntegrationsClasses[$userIntegrationClass])) {
+                continue;
+            }
+
+            $pickedIntegrationsClasses[$userIntegrationClass] = true;
+            $integrations[] = $userIntegration;
+        }
+
+        return $integrations;
     }
 
     /**
