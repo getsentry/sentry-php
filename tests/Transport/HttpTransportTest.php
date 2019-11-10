@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
-use Http\Client\HttpAsyncClient;
+use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Promise\FulfilledPromise;
-use Http\Promise\RejectedPromise;
+use Http\Promise\Promise as HttpPromiseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
@@ -25,91 +25,99 @@ final class HttpTransportTest extends TestCase
      */
     public function testSendDelaysExecutionUntilShutdown(): void
     {
-        $promise = new FulfilledPromise('foo');
+        /** @var HttpPromiseInterface&MockObject $promise */
+        $promise = $this->createMock(HttpPromiseInterface::class);
 
-        /** @var HttpAsyncClient|MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
-
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
+            $httpClient,
+            MessageFactoryDiscovery::find()
+        );
 
         $transport->send(new Event());
 
-        $this->assertAttributeNotEmpty('pendingRequests', $transport);
+        $promise->expects($this->once())
+            ->method('wait');
 
-        $transport->close();
-
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertTrue($transport->close()->wait());
     }
 
     public function testSendDoesNotDelayExecutionUntilShutdownWhenConfiguredToNotDoIt(): void
     {
-        $promise = new RejectedPromise(new \Exception());
+        /** @var HttpPromiseInterface&MockObject $promise */
+        $promise = $this->createMock(HttpPromiseInterface::class);
+        $promise->expects($this->once())
+            ->method('wait');
 
-        /** @var HttpAsyncClient|MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
             ->willReturn($promise);
 
-        $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
-        $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find(), false);
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
+            $httpClient,
+            MessageFactoryDiscovery::find(),
+            false
+        );
 
         $transport->send(new Event());
 
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertTrue($transport->close()->wait());
     }
 
     public function testSendThrowsOnMissingProjectIdCredential(): void
     {
         $this->expectException(MissingProjectIdCredentialException::class);
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
-        $transport = new HttpTransport(new Options(), $httpClient, MessageFactoryDiscovery::find(), false);
+        $transport = new HttpTransport(
+            new Options(),
+            $this->createMock(HttpAsyncClientInterface::class),
+            MessageFactoryDiscovery::find(),
+            false
+        );
 
         $transport->send(new Event());
     }
 
     /**
-     * @see https://github.com/getsentry/sentry-php/issues/828
-     * @dataProvider sendEventWithInvalidEncodingDataProvider
+     * @group time-sensitive
      */
-    public function testSendEventWithInvalidEncoding(Event $eventWithInvalidEncoding): void
+    public function testSendEventWithInvalidEncoding(): void
     {
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
-            ->willReturn(new FulfilledPromise('foo'));
-        $transport = new HttpTransport(new Options(['dsn' => 'http://public@example.com/1']), $httpClient, MessageFactoryDiscovery::find(), false);
+            ->willReturn(new FulfilledPromise(null));
 
-        $transport->send($eventWithInvalidEncoding);
-    }
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/1']),
+            $httpClient,
+            MessageFactoryDiscovery::find(),
+            false
+        );
 
-    public function sendEventWithInvalidEncodingDataProvider(): ?\Generator
-    {
         $brokenString = "\x42\x65\x61\x75\x6d\x6f\x6e\x74\x2d\x65\x6e\x2d\x76\xe9\x72\x6f\x6e";
 
         $event = new Event();
         $event->setMessage($brokenString);
+        $event->setBreadcrumb([
+            new Breadcrumb(
+                Breadcrumb::LEVEL_ERROR,
+                Breadcrumb::TYPE_ERROR,
+                'error_reporting',
+                $brokenString
+            )
+        ]);
 
-        yield 'broken message' => [$event];
-
-        $event = new Event();
-        $breadcrumb = new Breadcrumb(
-            Breadcrumb::LEVEL_ERROR,
-            Breadcrumb::TYPE_ERROR,
-            'error_reporting',
-            $brokenString
-        );
-        $event->setBreadcrumb([$breadcrumb]);
-
-        yield 'broken breadcrumb' => [$event];
+        $transport->send($event);
     }
 }

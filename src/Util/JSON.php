@@ -22,7 +22,13 @@ final class JSON
      */
     public static function encode($data): string
     {
-        $encodedData = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $options = JSON_UNESCAPED_UNICODE;
+
+        if (\PHP_VERSION_ID >= 70200) {
+            $options |= JSON_INVALID_UTF8_SUBSTITUTE;
+        }
+
+        $encodedData = json_encode($data, $options);
 
         if (JSON_ERROR_NONE !== json_last_error() || false === $encodedData) {
             throw new JsonException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));

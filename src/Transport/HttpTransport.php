@@ -50,7 +50,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     private $delaySendingUntilShutdown = false;
 
-    /** @var SerializerInterface */
+    /**
+     * @var SerializerInterface The serializer
+     */
     private $serializer;
 
     /**
@@ -86,7 +88,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->delaySendingUntilShutdown = $delaySendingUntilShutdown;
-        $this->serializer = $serializer ?? new Serializer(new Options(), 512);
+        $this->serializer = $serializer ?? new Serializer($config, 512);
 
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
@@ -118,7 +120,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             'POST',
             sprintf('/api/%d/store/', $projectId),
             ['Content-Type' => 'application/json'],
-            JSON::encode($this->serializer->serialize($event))
+            JSON::encode($this->serializer->serialize($event->toArray()))
         );
 
         $promise = $this->httpClient->sendAsyncRequest($request);
