@@ -64,5 +64,11 @@
                 <referencedClass name="Http\Client\Curl\Client" />
             </errorLevel>
         </UndefinedClass>
+
+        <UndefinedConstant errorLevel="error">
+            <errorLevel type="suppress">
+                <file name="src/Util/JSON.php" />
+            </errorLevel>
+        </UndefinedConstant>
     </issueHandlers>
 </psalm>
