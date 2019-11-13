@@ -145,6 +145,34 @@ final class StacktraceTest extends TestCase
         $this->assertTrue($frames[2]->isInApp());
     }
 
+    public function testAddFrameMarksAsInAppOverrideExcludedPaths(): void
+    {
+        $this->options->setProjectRoot('path/to');
+
+        $this->options->setInAppExcludedPaths([
+                'path/to/excluded/folder',
+                'path/to/excluded/path',
+                'path/to/recursive/excluded/path',
+        ]);
+        $this->options->setInAppIncludedPaths([
+                'path/to/excluded/path',
+                'path/to/recursive/', //recursive
+        ]);
+
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+
+        $stacktrace->addFrame('path/to/excluded/path/file.php', 12, ['function' => 'test_function']);
+        $stacktrace->addFrame('path/to/recursive/file.php', 12, ['function' => 'test_function']);
+        $stacktrace->addFrame('path/to/recursive/excluded/path/file.php', 12, ['function' => 'test_function']);
+        $stacktrace->addFrame('path/to/excluded/folder/file.php', 12, ['function' => 'test_function']);
+
+        $frames = $stacktrace->getFrames();
+        $this->assertTrue($frames[3]->isInApp());
+        $this->assertTrue($frames[2]->isInApp());
+        $this->assertTrue($frames[1]->isInApp());
+        $this->assertFalse($frames[0]->isInApp());
+    }
+
     /**
      * @dataProvider addFrameRespectsContextLinesOptionDataProvider
      */

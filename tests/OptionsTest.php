@@ -56,6 +56,7 @@ final class OptionsTest extends TestCase
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
             ['excluded_exceptions', ['foo', 'bar', 'baz'], 'getExcludedExceptions', 'setExcludedExceptions'],
             ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
+            ['in_app_include', ['foo', 'bar'], 'getInAppIncludedPaths', 'setInAppIncludedPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
             ['release', 'dev', 'getRelease', 'setRelease'],
@@ -248,6 +249,26 @@ final class OptionsTest extends TestCase
     }
 
     public function excludedPathProviders()
+    {
+        return [
+            ['some/path', 'some/path'],
+            ['some/specific/file.php', 'some/specific/file.php'],
+            [__DIR__, __DIR__],
+            [__FILE__, __FILE__],
+        ];
+    }
+
+    /**
+     * @dataProvider includedPathProviders
+     */
+    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected)
+    {
+        $configuration = new Options(['in_app_include' => [$value]]);
+
+        $this->assertSame([$expected], $configuration->getInAppIncludedPaths());
+    }
+
+    public function includedPathProviders(): array
     {
         return [
             ['some/path', 'some/path'],
