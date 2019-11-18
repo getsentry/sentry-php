@@ -1,0 +1,16 @@
+version: "3.6"
+
+services:
+  install:
+    image: composer:latest
+    volumes:
+      - ./:/app
+    command: install --prefer-dist
+
+  tests:
+    image: php:7.1
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: vendor/bin/phpunit -c phpunit.xml.dist
+
