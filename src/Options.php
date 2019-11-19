@@ -549,30 +549,15 @@ final class Options
             return $userIntegrations($defaultIntegrations);
         }
 
-        $pickedIntegrationsClasses = [];
-        $userIntegrationsClasses = array_map('get_class', $userIntegrations);
-
         foreach ($defaultIntegrations as $defaultIntegration) {
-            $defaultIntegrationClass = \get_class($defaultIntegration);
-
-            if (!\in_array($defaultIntegrationClass, $userIntegrationsClasses, true)) {
-                $pickedIntegrationsClasses[$defaultIntegrationClass] = true;
-                $integrations[] = $defaultIntegration;
-            }
+            $integrations[\get_class($defaultIntegration)] = $defaultIntegration;
         }
 
         foreach ($userIntegrations as $userIntegration) {
-            $userIntegrationClass = \get_class($userIntegration);
-
-            if (isset($pickedIntegrationsClasses[$userIntegrationClass])) {
-                continue;
-            }
-
-            $pickedIntegrationsClasses[$userIntegrationClass] = true;
-            $integrations[] = $userIntegration;
+            $integrations[\get_class($userIntegration)] = $userIntegration;
         }
 
-        return $integrations;
+        return array_values($integrations);
     }
 
     /**

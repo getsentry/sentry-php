@@ -349,12 +349,12 @@ final class OptionsTest extends TestCase
                 new ExceptionListenerIntegration(),
             ],
             [
+                new ExceptionListenerIntegration(),
                 new ErrorListenerIntegration(null, false),
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
                 $integration,
-                new ExceptionListenerIntegration(),
             ],
         ];
 
