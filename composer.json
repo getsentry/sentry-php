@@ -2,7 +2,15 @@
     "name": "sentry/sentry",
     "type": "library",
     "description": "A PHP SDK for Sentry (http://sentry.io)",
-    "keywords": ["sentry", "log", "logging", "error-monitoring", "error-handler", "crash-reporting", "crash-reports"],
+    "keywords": [
+        "sentry",
+        "log",
+        "logging",
+        "error-monitoring",
+        "error-handler",
+        "crash-reporting",
+        "crash-reports"
+    ],
     "homepage": "http://sentry.io",
     "license": "BSD-3-Clause",
     "authors": [
@@ -24,7 +32,7 @@
         "php-http/message": "^1.5",
         "psr/http-message-implementation": "^1.0",
         "ramsey/uuid": "^3.3",
-        "symfony/options-resolver": "^2.7|^3.0|^4.0",
+        "symfony/options-resolver": "^2.7|^3.0|^4.0|^5.0",
         "zendframework/zend-diactoros": "^1.4|^2.0"
     },
     "require-dev": {
@@ -35,7 +43,7 @@
         "phpstan/phpstan": "^0.11",
         "phpstan/phpstan-phpunit": "^0.11",
         "phpunit/phpunit": "^7.5",
-        "symfony/phpunit-bridge": "^4.3",
+        "symfony/phpunit-bridge": "^4.3|^5.0",
         "vimeo/psalm": "^3.4"
     },
     "suggest": {
@@ -49,8 +57,8 @@
         "files": [
             "src/functions.php"
         ],
-        "psr-4" : {
-            "Sentry\\" : "src/"
+        "psr-4": {
+            "Sentry\\": "src/"
         }
     },
     "autoload-dev": {
@@ -75,6 +83,7 @@
     "config": {
         "sort-packages": true
     },
+    "prefer-stable": true,
     "extra": {
         "branch-alias": {
             "dev-develop": "2.2-dev"
