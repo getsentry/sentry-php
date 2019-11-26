@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
+- Add compatibility with Symfony 5 (#925)
+- Ensure compatibility with PHP 7.4 (#894, #926)
 
 ## 2.2.4 (2019-11-04)
 
