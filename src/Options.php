@@ -56,7 +56,7 @@ final class Options
     private $resolver;
 
     /**
-     * @var IntegrationInterface[] The list of default integrations
+     * @var IntegrationInterface[]|null The list of default integrations
      */
     private $defaultIntegrations;
 
@@ -68,13 +68,6 @@ final class Options
     public function __construct(array $options = [])
     {
         $this->resolver = new OptionsResolver();
-        $this->defaultIntegrations = [
-            new ExceptionListenerIntegration(),
-            new ErrorListenerIntegration(null, false),
-            new FatalErrorListenerIntegration(),
-            new RequestIntegration(),
-            new TransactionIntegration(),
-        ];
 
         $this->configureOptions($this->resolver);
 
@@ -541,7 +534,7 @@ final class Options
      */
     public function getIntegrations(): array
     {
-        $defaultIntegrations = $this->options['default_integrations'] ? $this->defaultIntegrations : [];
+        $defaultIntegrations = $this->getDefaultIntegrations();
         $userIntegrations = $this->options['integrations'];
         $integrations = [];
 
@@ -995,5 +988,29 @@ final class Options
         }
 
         return true;
+    }
+
+    /**
+     * Gets the list of default integrations.
+     *
+     * @return IntegrationInterface[]
+     */
+    private function getDefaultIntegrations(): array
+    {
+        if (!$this->options['default_integrations']) {
+            return [];
+        }
+
+        if (null === $this->defaultIntegrations) {
+            $this->defaultIntegrations = [
+                new ExceptionListenerIntegration(),
+                new ErrorListenerIntegration(null, false),
+                new FatalErrorListenerIntegration(),
+                new RequestIntegration(),
+                new TransactionIntegration(),
+            ];
+        }
+
+        return $this->defaultIntegrations;
     }
 }
