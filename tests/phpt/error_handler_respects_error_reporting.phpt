@@ -37,13 +37,13 @@ SentrySdk::getCurrentHub()->bindClient($client);
 
 echo 'Triggering silenced error' . PHP_EOL;
 
-@$a['missing'];
+@$a++;
 
 $client->getOptions()->setCaptureSilencedErrors(false);
 
 echo 'Triggering silenced error' . PHP_EOL;
 
-@$a['missing'];
+@$b++;
 ?>
 --EXPECT--
 Triggering silenced error
