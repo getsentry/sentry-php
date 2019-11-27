@@ -15,11 +15,6 @@ use Http\Message\UriFactory as UriFactoryInterface;
 use Jean85\PrettyVersions;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\PluggableHttpClientFactory;
-use Sentry\Integration\ErrorListenerIntegration;
-use Sentry\Integration\ExceptionListenerIntegration;
-use Sentry\Integration\FatalErrorListenerIntegration;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\TransactionIntegration;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -104,16 +99,6 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = $options ?? new Options();
         $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
-
-        if ($this->options->hasDefaultIntegrations()) {
-            $this->options->setIntegrations(array_merge([
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-            ], $this->options->getIntegrations()));
-        }
     }
 
     /**
