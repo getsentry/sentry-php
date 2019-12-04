@@ -842,6 +842,8 @@ final class Options
                 return null;
             }
 
+            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+
             return $this->normalizeAbsolutePath($value);
         });
 
