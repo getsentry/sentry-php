@@ -22,6 +22,8 @@ final class Handler
      * @param IntegrationInterface[] $integrations The integrations
      *
      * @return array<string, IntegrationInterface>
+     *
+     * @psalm-return array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     public static function setupIntegrations(array $integrations): array
     {

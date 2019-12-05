@@ -6,8 +6,8 @@
 
 # Sentry for PHP
 
-[![Build Status](https://secure.travis-ci.org/getsentry/sentry-php.png?branch=develop)](http://travis-ci.org/getsentry/sentry-php)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/getsentry/sentry-php?branch=master&svg=true)](https://ci.appveyor.com/project/sentry/sentry-php)
+[![Build Status](https://img.shields.io/travis/getsentry/sentry-php/develop?logo=travis)](http://travis-ci.org/getsentry/sentry-php)
+[![AppVeyor Build Status](https://img.shields.io/appveyor/ci/sentry/sentry-php/develop?logo=appveyor)](https://ci.appveyor.com/project/sentry/sentry-php)
 [![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
 [![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
@@ -24,8 +24,8 @@ information needed to prioritize, identify, reproduce and fix each issue.
 To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
 in your project. To install it please see the [docs](https://getcomposer.org/download/).
 
-This is our "core" SDK, meaning that all the important code regarding error handling lives here. 
-If you are happy with using the HTTP client we recommend install the SDK like: [`sentry/sdk`](https://github.com/getsentry/sentry-php-sdk) 
+This is our "core" SDK, meaning that all the important code regarding error handling lives here.
+If you are happy with using the HTTP client we recommend install the SDK like: [`sentry/sdk`](https://github.com/getsentry/sentry-php-sdk)
 
 ```bash
 php composer.phar require sentry/sdk

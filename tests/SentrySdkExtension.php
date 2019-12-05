@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Runner\BeforeTestHook as BeforeTestHookInterface;
+use Sentry\Integration\Handler;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -18,6 +19,11 @@ final class SentrySdkExtension implements BeforeTestHookInterface
         $reflectionProperty->setAccessible(false);
 
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'globalEventProcessors');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue(null, []);
+        $reflectionProperty->setAccessible(false);
+
+        $reflectionProperty = new \ReflectionProperty(Handler::class, 'integrations');
         $reflectionProperty->setAccessible(true);
         $reflectionProperty->setValue(null, []);
         $reflectionProperty->setAccessible(false);

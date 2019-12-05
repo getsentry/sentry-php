@@ -12,6 +12,7 @@ use Sentry\Event;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -22,24 +23,30 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$transport = new class implements TransportInterface {
-    public function send(Event $event): ?string
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(Options $options): TransportInterface
     {
-        echo 'Transport called';
+        return new class implements TransportInterface {
+            public function send(Event $event): ?string
+            {
+                echo 'Transport called';
 
-        return null;
+                return null;
+            }
+        };
     }
 };
 
-$options = new Options();
-$options->setErrorTypes(E_ALL & ~E_USER_WARNING);
-$options->setDefaultIntegrations(false);
-$options->setIntegrations([
-    new ErrorListenerIntegration($options),
+$options = new Options([
+    'error_types' => E_ALL & ~E_USER_WARNING,
+    'default_integrations' => false,
+    'integrations' => [
+        new ErrorListenerIntegration(),
+    ],
 ]);
 
 $client = (new ClientBuilder($options))
-    ->setTransport($transport)
+    ->setTransportFactory($transportFactory)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);

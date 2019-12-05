@@ -7,6 +7,7 @@ namespace Sentry;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Integration\Handler;
+use Sentry\Integration\InboundFiltersIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\ClosableTransportInterface;
@@ -45,7 +46,9 @@ final class Client implements FlushableClientInterface
     private $eventFactory;
 
     /**
-     * @var IntegrationInterface[] The stack of integrations
+     * @var array<string, IntegrationInterface> The stack of integrations
+     *
+     * @psalm-var array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     private $integrations;
 
@@ -96,7 +99,7 @@ final class Client implements FlushableClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
     {
-        if ($this->options->isExcludedException($exception)) {
+        if (!isset($this->integrations[InboundFiltersIntegration::class]) && $this->options->isExcludedException($exception, false)) {
             return null;
         }
 
@@ -135,9 +138,12 @@ final class Client implements FlushableClientInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-template T of IntegrationInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
+        /** @psalm-var T|null */
         return $this->integrations[$className] ?? null;
     }
 
@@ -178,6 +184,10 @@ final class Client implements FlushableClientInterface
 
         if (null !== $scope) {
             $event = $scope->applyToEvent($event, $payload);
+
+            if (null === $event) {
+                return null;
+            }
         }
 
         return \call_user_func($this->options->getBeforeSendCallback(), $event);

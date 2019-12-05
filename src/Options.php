@@ -225,9 +225,13 @@ final class Options
      * events to Sentry.
      *
      * @return string[]
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
     public function getExcludedExceptions(): array
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+
         return $this->options['excluded_exceptions'];
     }
 
@@ -236,9 +240,13 @@ final class Options
      * events to Sentry.
      *
      * @param string[] $exceptions The list of exception classes
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
     public function setExcludedExceptions(array $exceptions): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
         $this->options = $this->resolver->resolve($options);
@@ -248,10 +256,19 @@ final class Options
      * Checks whether the given exception should be ignored when sending events
      * to Sentry.
      *
-     * @param \Throwable $exception The exception
+     * @param \Throwable $exception        The exception
+     * @param bool       $throwDeprecation Flag indicating whether to throw a
+     *                                     deprecation for the usage of this
+     *                                     method
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
-    public function isExcludedException(\Throwable $exception): bool
+    public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
+        if ($throwDeprecation) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
             if ($exception instanceof $exceptionClass) {
                 return true;
