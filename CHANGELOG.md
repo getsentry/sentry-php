@@ -4,7 +4,7 @@
 
 - Fix remaining PHP 7.4 deprecations (#930)
 - Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
-- Add the `InboundFiltersIntegration` integration to deprecate and replace the `exclude_exceptions` option (#928)
+- Add the `IgnoreErrorsIntegration` integration to deprecate and replace the `exclude_exceptions` option (#928)
 
 ## 2.2.5 (2019-11-27)
 

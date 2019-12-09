@@ -8,19 +8,19 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
-use Sentry\Integration\InboundFiltersIntegration;
+use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use function Sentry\withScope;
 
-final class InboundFiltersIntegrationTest extends TestCase
+final class IgnoreErrorsIntegrationTest extends TestCase
 {
     /**
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(Event $event, bool $isIntegrationEnabled, array $integrationOptions, bool $expectedEventToBeDropped): void
     {
-        $integration = new InboundFiltersIntegration($integrationOptions);
+        $integration = new IgnoreErrorsIntegration($integrationOptions);
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */

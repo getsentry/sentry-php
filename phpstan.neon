@@ -33,10 +33,10 @@ parameters:
             path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Access to an undefined property Sentry\\Integration\\IntegrationInterface::\$options\.$/'
-            path: src/Integration/InboundFiltersIntegration.php
+            path: src/Integration/IgnoreErrorsIntegration.php
         -
             message: '/^Call to an undefined method Sentry\\Integration\\IntegrationInterface::shouldDropEvent\(\)\.$/'
-            path: src/Integration/InboundFiltersIntegration.php
+            path: src/Integration/IgnoreErrorsIntegration.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

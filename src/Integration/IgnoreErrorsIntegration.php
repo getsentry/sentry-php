@@ -15,7 +15,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class InboundFiltersIntegration implements IntegrationInterface
+final class IgnoreErrorsIntegration implements IntegrationInterface
 {
     /**
      * @var array<string, mixed> The options

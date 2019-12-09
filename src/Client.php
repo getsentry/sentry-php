@@ -7,7 +7,7 @@ namespace Sentry;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Integration\Handler;
-use Sentry\Integration\InboundFiltersIntegration;
+use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\ClosableTransportInterface;
@@ -99,7 +99,7 @@ final class Client implements FlushableClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
     {
-        if (!isset($this->integrations[InboundFiltersIntegration::class]) && $this->options->isExcludedException($exception, false)) {
+        if (!isset($this->integrations[IgnoreErrorsIntegration::class]) && $this->options->isExcludedException($exception, false)) {
             return null;
         }
 

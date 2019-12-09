@@ -230,7 +230,7 @@ final class Options
      */
     public function getExcludedExceptions(): array
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         return $this->options['excluded_exceptions'];
     }
@@ -245,7 +245,7 @@ final class Options
      */
     public function setExcludedExceptions(array $exceptions): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -266,7 +266,7 @@ final class Options
     public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
         if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "InboundFiltersIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
         }
 
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
