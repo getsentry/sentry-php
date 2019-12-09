@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix remaining PHP 7.4 deprecations (#930)
+
 ## 2.2.5 (2019-11-27)
 
 - Add compatibility with Symfony 5 (#925)
