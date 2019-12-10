@@ -6,6 +6,10 @@
          colors="true"
          bootstrap="tests/bootstrap.php"
 >
+    <php>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0" />
+    </php>
+
     <testsuites>
         <testsuite name="Sentry for PHP">
             <directory>tests</directory>
