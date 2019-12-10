@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Fix remaining PHP 7.4 deprecations (#930)
+- Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
+
+## 2.2.5 (2019-11-27)
+
+- Add compatibility with Symfony 5 (#925)
+- Ensure compatibility with PHP 7.4 (#894, #926)
+
 ## 2.2.4 (2019-11-04)
 
 - Suggest installing Monolog to send log messages directly to Sentry (#908)
@@ -32,7 +40,6 @@
 - Update PHPStan and introduce Psalm (#846)
 - Add an integration to set the transaction attribute of the event (#865)
 - Deprecate `Hub::getCurrent` and `Hub::setCurrent` methods to set the current hub instance (#847)
-- Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
 
 ## 2.1.3 (2019-09-06)
 

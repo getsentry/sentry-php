@@ -301,8 +301,8 @@ abstract class AbstractSerializer
         $callableType = $reflection->isClosure() ? 'Lambda ' : 'Callable ';
         $callableReturnType = $reflection->getReturnType();
 
-        if (null !== $callableReturnType) {
-            $callableType .= $callableReturnType . ' ';
+        if ($callableReturnType instanceof \ReflectionNamedType) {
+            $callableType .= $callableReturnType->getName() . ' ';
         }
 
         if ($class) {
@@ -316,7 +316,12 @@ abstract class AbstractSerializer
     {
         $params = [];
         foreach ($reflection->getParameters() as &$param) {
-            $paramType = $param->getType() ?? 'mixed';
+            $reflectionType = $param->getType();
+            if ($reflectionType instanceof \ReflectionNamedType) {
+                $paramType = $reflectionType->getName();
+            } else {
+                $paramType = 'mixed';
+            }
 
             if ($param->allowsNull()) {
                 $paramType .= '|null';
