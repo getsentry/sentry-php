@@ -29,24 +29,6 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
     }
 
-    public function setTags(): void
-    {
-        $scope = new Scope();
-        $scope->setTags(['foo' => 'bar']);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
-
-        $scope->setTags(['bar' => 'baz']);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
-    }
-
     public function testSetExtra(): void
     {
         $scope = new Scope();
@@ -82,7 +64,7 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
     }
 
-    public function testSetUser(): void
+    public function testDeprecatedSetUser(): void
     {
         $scope = new Scope();
 
@@ -104,6 +86,51 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
+    }
+
+    public function testSetUser(): void
+    {
+        $scope = new Scope();
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getUserContext()->toArray());
+
+        $merge = true;
+        $scope->setUser(['foo' => 'bar'], $merge);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
+
+        $scope->setUser(['bar' => 'baz'], $merge);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getUserContext()->toArray());
+    }
+
+    public function testClearUser(): void
+    {
+        $scope = new Scope();
+
+        $merge = true;
+        $scope->setUser(['foo' => 'bar'], $merge);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertNotEmpty($event->getUserContext()->toArray());
+
+        $scope->clearUser();
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getUserContext()->toArray());
     }
 
     public function testSetFingerprint(): void
@@ -237,7 +264,8 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
-        $scope->setUser(['foobar' => 'barfoo']);
+        $merge = true;
+        $scope->setUser(['foobar' => 'barfoo'], $merge);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -273,7 +301,8 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb);
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
-        $scope->setUser(['foo' => 'baz']);
+        $merge = true;
+        $scope->setUser(['foo' => 'baz'], $merge);
 
         $event = $scope->applyToEvent($event, []);
 
@@ -290,7 +319,7 @@ final class ScopeTest extends TestCase
         $scope->setLevel(Severity::fatal());
         $scope->setTag('bar', 'foo');
         $scope->setExtra('foo', 'bar');
-        $scope->setUser(['baz' => 'foo']);
+        $scope->setUser(['baz' => 'foo'], $merge);
 
         $event = $scope->applyToEvent($event, []);
 

@@ -131,12 +131,34 @@ final class Scope
      * Sets the given data in the user context.
      *
      * @param array $data The data
+     * @param bool $merge If true, $data will be merged into user context instead of replaciong it
      *
      * @return $this
      */
-    public function setUser(array $data): self
+    public function setUser(array $data, bool $merge = false): self
     {
+        if ($merge) {
+            $this->user->merge($data);
+
+            return $this;
+        }
+
+        @trigger_error('Replacing user context on setUser is deprecated since sentry-php 2.3 and will be changed to a merge on 3.0. '
+             . 'For now you can use $merge = true to merge instead of replacing it.', E_USER_DEPRECATED);
+
         $this->user->replaceData($data);
+
+        return $this;
+    }
+
+    /**
+     * Clears all user context data.
+     *
+     * @return $this
+     */
+    public function clearUser(): self
+    {
+        $this->user->clear();
 
         return $this;
     }
