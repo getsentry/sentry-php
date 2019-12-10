@@ -3,10 +3,12 @@ build: false
 clone_depth: 2
 clone_folder: c:\projects\sentry-php
 skip_branch_with_pr: true
+image: Visual Studio 2019
 branches:
     only:
         - master
         - develop
+        - /^release\/.+$/
 
 environment:
     matrix:
@@ -21,6 +23,10 @@ environment:
         - PHP_VERSION: 7.3-Win32-VC15
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.3-Win32-VC15
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.4-Win32-VC15
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.4-Win32-VC15
           DEPENDENCIES: highest
 
 matrix:
@@ -49,7 +55,7 @@ install:
     - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
     - cd c:\projects\sentry-php
-    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.8.3/composer.phar
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.9.1/composer.phar
     - php composer.phar self-update
     - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
     - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
