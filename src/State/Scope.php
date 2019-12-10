@@ -131,7 +131,7 @@ final class Scope
      * Sets the given data in the user context.
      *
      * @param array $data The data
-     * @param bool $merge If true, $data will be merged into user context instead of replaciong it
+     * @param bool $merge If true, $data will be merged into user context instead of replacing it
      *
      * @return $this
      */
