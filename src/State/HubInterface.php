@@ -7,7 +7,6 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\SentrySdk;
 use Sentry\Severity;
 
 /**
@@ -110,7 +109,6 @@ interface HubInterface
      * @return HubInterface
      *
      * @deprecated since version 2.2, to be removed in 3.0
-     * @see SentrySdk::getCurrentHub()
      */
     public static function getCurrent(): self;
 
@@ -122,7 +120,6 @@ interface HubInterface
      * @return HubInterface
      *
      * @deprecated since version 2.2, to be removed in 3.0
-     * @see SentrySdk::setCurrentHub()
      */
     public static function setCurrent(self $hub): self;
 
@@ -130,6 +127,12 @@ interface HubInterface
      * Gets the integration whose FQCN matches the given one if it's available on the current client.
      *
      * @param string $className The FQCN of the integration
+     *
+     * @psalm-template T of IntegrationInterface
+     *
+     * @psalm-param class-string<T> $className
+     *
+     * @psalm-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 }

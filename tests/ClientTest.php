@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
@@ -71,6 +72,7 @@ class ClientTest extends TestCase
      */
     public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
     {
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transportFactory = $this->createTransportFactory($transport);
 
@@ -86,7 +88,8 @@ class ClientTest extends TestCase
             ->setTransportFactory($transportFactory)
             ->getClient();
 
-        $client->captureException($thrown);
+        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::getCurrentHub()->captureException($thrown);
     }
 
     public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
