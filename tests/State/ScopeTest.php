@@ -87,7 +87,7 @@ final class ScopeTest extends TestCase
      *
      * @expectedDeprecation Replacing user context on setUser is deprecated since sentry-php 2.3 and will be changed to a merge on 3.0. For now you can use $merge = true to merge instead of replacing it.
      */
-    public function testDeprecatedSetUser(): void
+    public function testSetUserThrowsDeprecation(): void
     {
         $scope = new Scope();
 
