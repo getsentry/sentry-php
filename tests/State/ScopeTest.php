@@ -33,11 +33,16 @@ final class ScopeTest extends TestCase
     {
         $scope = new Scope();
         $scope->setTags(['foo' => 'bar']);
+
         $event = $scope->applyToEvent(new Event(), []);
+
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
+
         $scope->setTags(['bar' => 'baz']);
+
         $event = $scope->applyToEvent(new Event(), []);
+
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
     }
