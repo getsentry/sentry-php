@@ -143,7 +143,7 @@ final class ScopeTest extends TestCase
         $this->assertNotNull($event);
         $this->assertNotEmpty($event->getUserContext()->toArray());
 
-        $scope->clearUser();
+        $scope->removeUser();
 
         $event = $scope->applyToEvent(new Event(), []);
 

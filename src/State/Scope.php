@@ -155,7 +155,7 @@ final class Scope
      *
      * @return $this
      */
-    public function clearUser(): self
+    public function removeUser(): self
     {
         $this->user->clear();
 
