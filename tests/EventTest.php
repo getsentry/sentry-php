@@ -91,11 +91,9 @@ final class EventTest extends TestCase
 
     public function testToArray(): void
     {
-        $event = new Event();
-
         $expected = [
             'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
-            'timestamp' => $event->getTimestamp(),
+            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
             'sdk' => [
@@ -115,6 +113,8 @@ final class EventTest extends TestCase
                 ],
             ],
         ];
+
+        $event = new Event();
 
         $this->assertEquals($expected, $event->toArray());
     }
