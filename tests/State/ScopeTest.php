@@ -120,15 +120,14 @@ final class ScopeTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame([], $event->getUserContext()->toArray());
 
-        $merge = true;
-        $scope->setUser(['foo' => 'bar'], $merge);
+        $scope->setUser(['foo' => 'bar'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
 
-        $scope->setUser(['bar' => 'baz'], $merge);
+        $scope->setUser(['bar' => 'baz'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -140,8 +139,7 @@ final class ScopeTest extends TestCase
     {
         $scope = new Scope();
 
-        $merge = true;
-        $scope->setUser(['foo' => 'bar'], $merge);
+        $scope->setUser(['foo' => 'bar'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -287,8 +285,7 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
-        $merge = true;
-        $scope->setUser(['foobar' => 'barfoo'], $merge);
+        $scope->setUser(['foobar' => 'barfoo'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -324,8 +321,7 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb);
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
-        $merge = true;
-        $scope->setUser(['foo' => 'baz'], $merge);
+        $scope->setUser(['foo' => 'baz'], true);
 
         $event = $scope->applyToEvent($event, []);
 
@@ -342,7 +338,7 @@ final class ScopeTest extends TestCase
         $scope->setLevel(Severity::fatal());
         $scope->setTag('bar', 'foo');
         $scope->setExtra('foo', 'bar');
-        $scope->setUser(['baz' => 'foo'], $merge);
+        $scope->setUser(['baz' => 'foo'], true);
 
         $event = $scope->applyToEvent($event, []);
 
