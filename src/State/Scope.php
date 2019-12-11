@@ -143,8 +143,7 @@ final class Scope
             return $this;
         }
 
-        @trigger_error('Replacing user context on setUser is deprecated since sentry-php 2.3 and will be changed to a merge on 3.0. '
-             . 'For now you can use $merge = true to merge instead of replacing it.', E_USER_DEPRECATED);
+        @trigger_error('Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.', E_USER_DEPRECATED);
 
         $this->user->replaceData($data);
 
