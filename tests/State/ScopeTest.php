@@ -135,23 +135,23 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getUserContext()->toArray());
     }
 
-    public function testClearUser(): void
+    public function testRemoveUser(): void
     {
         $scope = new Scope();
 
-        $scope->setUser(['foo' => 'bar'], true);
+        $scope->setUser(['foo' => 'bar', 'bar' => 'baz'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
         $this->assertNotNull($event);
         $this->assertNotEmpty($event->getUserContext()->toArray());
 
-        $scope->removeUser();
+        $scope->removeUser('foo');
 
         $event = $scope->applyToEvent(new Event(), []);
 
         $this->assertNotNull($event);
-        $this->assertEmpty($event->getUserContext()->toArray());
+        $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
     }
 
     public function testSetFingerprint(): void

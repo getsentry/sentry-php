@@ -151,13 +151,15 @@ final class Scope
     }
 
     /**
-     * Clears all user context data.
+     * Removes specified data from user context.
+     *
+     * @param string $key The key of the information to remove
      *
      * @return $this
      */
-    public function removeUser(): self
+    public function removeUser(string $key): self
     {
-        $this->user->clear();
+        $this->user->offsetUnset($key);
 
         return $this;
     }
