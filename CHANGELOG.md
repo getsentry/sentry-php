@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Deprecate `Scope::setUser` behaviour of replacing user data. (#929)
-- Add the $merge parameter on `Scope::setUser` to allow merging user context. (#929)
+- Add the `$merge` parameter on `Scope::setUser` to allow merging user context. (#929)
 - Add the `Scope::clearUser` method to clear user context. (#929)
 
 ## 2.2.4 (2019-11-04)
