@@ -361,7 +361,7 @@ abstract class AbstractSerializerTest extends TestCase
         return [
             [
                 'callable' => function (array $param1) {
-                    return $param1 * 2;
+                    throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array param1]',
             ],

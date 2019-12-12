@@ -52,9 +52,15 @@ interface ClientInterface
     public function captureEvent(array $payload, ?Scope $scope = null): ?string;
 
     /**
-     * Returns the integration instance if it is installed on the Client.
+     * Returns the integration instance if it is installed on the client.
      *
      * @param string $className the classname of the integration
+     *
+     * @psalm-template T of IntegrationInterface
+     *
+     * @psalm-param class-string<T> $className
+     *
+     * @psalm-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 }

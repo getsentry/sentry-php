@@ -8,11 +8,15 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\Assert;
+use Sentry\ClientBuilder;
+use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Spool\MemorySpool;
-use Sentry\Transport\SpoolTransport;
+use Sentry\Spool\SpoolInterface;
 use Sentry\Transport\NullTransport;
-use Sentry\ClientBuilder;
+use Sentry\Transport\SpoolTransport;
+use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
 
@@ -23,11 +27,24 @@ while (!file_exists($vendor . '/vendor')) {
 require $vendor . '/vendor/autoload.php';
 
 $spool = new MemorySpool();
-$transport = new SpoolTransport($spool);
 $nullTransport = new NullTransport();
 
+$transportFactory = new class($spool) implements TransportFactoryInterface {
+    private $spool;
+
+    public function __construct(SpoolInterface $spool)
+    {
+        $this->spool = $spool;
+    }
+
+    public function create(Options $options): TransportInterface
+    {
+        return new SpoolTransport($this->spool);
+    }
+};
+
 $client = ClientBuilder::create()
-    ->setTransport($transport)
+    ->setTransportFactory($transportFactory)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);

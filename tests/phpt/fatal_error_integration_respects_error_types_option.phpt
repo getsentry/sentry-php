@@ -12,6 +12,7 @@ use Sentry\Event;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -22,23 +23,29 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$transport = new class implements TransportInterface {
-    public function send(Event $event): ?string
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(Options $options): TransportInterface
     {
-        echo 'Transport called' . PHP_EOL;
+        return new class implements TransportInterface {
+            public function send(Event $event): ?string
+            {
+                echo 'Transport called' . PHP_EOL;
 
-        return null;
+                return null;
+            }
+        };
     }
 };
 
-$options = new Options();
-$options->setDefaultIntegrations(false);
-$options->setIntegrations([
-    new FatalErrorListenerIntegration($options),
+$options = new Options([
+    'default_integrations' => false,
+    'integrations' => [
+        new FatalErrorListenerIntegration(),
+    ],
 ]);
 
 $client = (new ClientBuilder($options))
-    ->setTransport($transport)
+    ->setTransportFactory($transportFactory)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);

@@ -17,6 +17,8 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 final class OptionsTest extends TestCase
 {
     /**
+     * @group legacy
+     *
      * @dataProvider optionsDataProvider
      */
     public function testConstructor($option, $value, $getterMethod): void
@@ -27,6 +29,8 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider optionsDataProvider
      */
     public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
@@ -206,7 +210,7 @@ final class OptionsTest extends TestCase
     {
         $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
 
-        $this->assertSame($result, $configuration->isExcludedException($exception));
+        $this->assertSame($result, $configuration->isExcludedException($exception, false));
     }
 
     public function excludedExceptionsDataProvider()
