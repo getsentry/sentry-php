@@ -27,6 +27,7 @@ final class JSON
         $options = JSON_UNESCAPED_UNICODE;
 
         if (\PHP_VERSION_ID >= 70200) {
+            /** @psalm-suppress UndefinedConstant */
             $options |= JSON_INVALID_UTF8_SUBSTITUTE;
         }
 
