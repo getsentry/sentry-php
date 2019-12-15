@@ -37,7 +37,7 @@ final class JSON
         // try to sanitize the data ourselves before retrying encoding. If it
         // fails again we throw an exception as usual.
         if (JSON_ERROR_UTF8 === json_last_error()) {
-            $encodedData = json_encode(self::sanitizeData($data, 256), $options);
+            $encodedData = json_encode(self::sanitizeData($data, 512), $options);
         }
 
         if (JSON_ERROR_NONE !== json_last_error()) {
@@ -74,13 +74,11 @@ final class JSON
      * @param int   $maxDepth The maximum depth to walk through `$data`
      *
      * @return mixed
-     *
-     * @throws JsonException
      */
     private static function sanitizeData($data, int $maxDepth)
     {
         if ($maxDepth < 0) {
-            throw new JsonException('Max depth limit of data to be sanitized reached.');
+            return $data;
         }
 
         if (\is_string($data)) {
@@ -130,11 +128,7 @@ final class JSON
 
         mb_substitute_character(0xfffd);
 
-        if (false === $encoding) {
-            $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
-        } else {
-            $value = mb_convert_encoding($value, 'UTF-8', $encoding);
-        }
+        $value = mb_convert_encoding($value, 'UTF-8', $encoding ?: 'UTF-8');
 
         mb_substitute_character($previousSubstituteCharacter);
 
