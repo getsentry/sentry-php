@@ -154,6 +154,22 @@ final class JSONTest extends TestCase
         JSON::encode($resource);
     }
 
+    public function testEncodeRespectsOptionsArgument(): void
+    {
+        $this->assertSame('{}', JSON::encode([], JSON_FORCE_OBJECT));
+    }
+
+    /**
+     * @requires PHP < 7.2
+     *
+     * @expectedException \Sentry\Exception\JsonException
+     * @expectedExceptionMessage Reached the maximum depth limit while sanitizing the data.
+     */
+    public function testEncodeThrowsOnPhp71OrLowerWhenSanitizationReachesMaxDepthLimit(): void
+    {
+        JSON::encode([[["\x61\xb0\x62"]]], 0, 2);
+    }
+
     /**
      * @dataProvider decodeDataProvider
      */

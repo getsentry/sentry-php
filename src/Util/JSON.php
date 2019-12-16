@@ -16,15 +16,17 @@ final class JSON
     /**
      * Encodes the given data into JSON.
      *
-     * @param mixed $data The data to encode
+     * @param mixed $data     The data to encode
+     * @param int   $options  Bitmask consisting of JSON_* constants
+     * @param int   $maxDepth The maximum depth allowed for serializing $data
      *
      * @return mixed
      *
      * @throws JsonException If the encoding failed
      */
-    public static function encode($data)
+    public static function encode($data, int $options = 0, int $maxDepth = 512)
     {
-        $options = JSON_UNESCAPED_UNICODE;
+        $options |= JSON_UNESCAPED_UNICODE;
 
         if (\PHP_VERSION_ID >= 70200) {
             /** @psalm-suppress UndefinedConstant */
@@ -38,7 +40,7 @@ final class JSON
         // try to sanitize the data ourselves before retrying encoding. If it
         // fails again we throw an exception as usual.
         if (JSON_ERROR_UTF8 === json_last_error()) {
-            $encodedData = json_encode(self::sanitizeData($data, 512), $options);
+            $encodedData = json_encode(self::sanitizeData($data, $maxDepth - 1), $options);
         }
 
         if (JSON_ERROR_NONE !== json_last_error()) {
@@ -75,11 +77,13 @@ final class JSON
      * @param int   $maxDepth The maximum depth to walk through `$data`
      *
      * @return mixed
+     *
+     * @throws JsonException If the value of $maxDepth is less than 0
      */
     private static function sanitizeData($data, int $maxDepth)
     {
         if ($maxDepth < 0) {
-            return $data;
+            throw new JsonException('Reached the maximum depth limit while sanitizing the data.');
         }
 
         if (\is_string($data)) {
