@@ -29,7 +29,7 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
     }
 
-    public function setTags(): void
+    public function testSetTags(): void
     {
         $scope = new Scope();
         $scope->setTags(['foo' => 'bar']);
@@ -82,7 +82,12 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
     }
 
-    public function testSetUser(): void
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.
+     */
+    public function testSetUserThrowsDeprecation(): void
     {
         $scope = new Scope();
 
@@ -104,6 +109,30 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
+    }
+
+    public function testSetUser(): void
+    {
+        $scope = new Scope();
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getUserContext()->toArray());
+
+        $scope->setUser(['foo' => 'bar'], true);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
+
+        $scope->setUser(['bar' => 'baz'], true);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getUserContext()->toArray());
     }
 
     public function testSetFingerprint(): void
@@ -237,7 +266,7 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
-        $scope->setUser(['foobar' => 'barfoo']);
+        $scope->setUser(['foobar' => 'barfoo'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -273,7 +302,7 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb);
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
-        $scope->setUser(['foo' => 'baz']);
+        $scope->setUser(['foo' => 'baz'], true);
 
         $event = $scope->applyToEvent($event, []);
 
@@ -290,7 +319,7 @@ final class ScopeTest extends TestCase
         $scope->setLevel(Severity::fatal());
         $scope->setTag('bar', 'foo');
         $scope->setExtra('foo', 'bar');
-        $scope->setUser(['baz' => 'foo']);
+        $scope->setUser(['baz' => 'foo'], true);
 
         $event = $scope->applyToEvent($event, []);
 

@@ -130,12 +130,21 @@ final class Scope
     /**
      * Sets the given data in the user context.
      *
-     * @param array $data The data
+     * @param array $data  The data
+     * @param bool  $merge If true, $data will be merged into user context instead of replacing it
      *
      * @return $this
      */
-    public function setUser(array $data): self
+    public function setUser(array $data, bool $merge = false): self
     {
+        if ($merge) {
+            $this->user->merge($data);
+
+            return $this;
+        }
+
+        @trigger_error('Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.', E_USER_DEPRECATED);
+
         $this->user->replaceData($data);
 
         return $this;
