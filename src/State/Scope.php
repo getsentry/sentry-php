@@ -151,20 +151,6 @@ final class Scope
     }
 
     /**
-     * Removes specified data from user context.
-     *
-     * @param string $key The key of the information to remove
-     *
-     * @return $this
-     */
-    public function removeUser(string $key): self
-    {
-        $this->user->offsetUnset($key);
-
-        return $this;
-    }
-
-    /**
      * Sets the list of strings used to dictate the deduplication of this event.
      *
      * @param string[] $fingerprint The fingerprint values
