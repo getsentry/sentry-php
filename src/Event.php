@@ -147,7 +147,6 @@ final class Event implements \JsonSerializable
     /**
      * Event constructor.
      *
-     * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception
      */
