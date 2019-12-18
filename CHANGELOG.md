@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.2.6 (2019-12-18)
+
 - Fix remaining PHP 7.4 deprecations (#930)
 - Fix error thrown during JSON encoding if a string contains invalid UTF-8 characters (#934)
 
