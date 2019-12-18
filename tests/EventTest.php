@@ -8,14 +8,11 @@ use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Client;
-use Sentry\ClientBuilder;
-use Sentry\ClientInterface;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Event;
-use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Util\PHPVersion;
 
@@ -24,22 +21,6 @@ use Sentry\Util\PHPVersion;
  */
 final class EventTest extends TestCase
 {
-    /**
-     * @var Options
-     */
-    protected $options;
-
-    /**
-     * @var ClientInterface
-     */
-    protected $client;
-
-    protected function setUp(): void
-    {
-        $this->client = ClientBuilder::create()->getClient();
-        $this->options = $this->client->getOptions();
-    }
-
     public function testEventIsGeneratedWithUniqueIdentifier(): void
     {
         $event1 = new Event();
