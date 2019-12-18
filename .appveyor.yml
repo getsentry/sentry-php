@@ -12,21 +12,21 @@ branches:
 
 environment:
     matrix:
-        - PHP_VERSION: 7.1-Win32-VC14
+        - PHP_VERSION: 7.1
           DEPENDENCIES: lowest
-        - PHP_VERSION: 7.1-Win32-VC14
+        - PHP_VERSION: 7.1
           DEPENDENCIES: highest
-        - PHP_VERSION: 7.2-Win32-VC15
+        - PHP_VERSION: 7.2
           DEPENDENCIES: lowest
-        - PHP_VERSION: 7.2-Win32-VC15
+        - PHP_VERSION: 7.2
           DEPENDENCIES: highest
-        - PHP_VERSION: 7.3-Win32-VC15
+        - PHP_VERSION: 7.3
           DEPENDENCIES: lowest
-        - PHP_VERSION: 7.3-Win32-VC15
+        - PHP_VERSION: 7.3
           DEPENDENCIES: highest
-        - PHP_VERSION: 7.4-Win32-VC15
+        - PHP_VERSION: 7.4
           DEPENDENCIES: lowest
-        - PHP_VERSION: 7.4-Win32-VC15
+        - PHP_VERSION: 7.4
           DEPENDENCIES: highest
 
 matrix:
@@ -34,32 +34,32 @@ matrix:
 
 cache:
     - composer.phar
-    - '%LocalAppData%\Composer\files'
-    - 'c:\php -> .appveyor.yml'
+    - '%LOCALAPPDATA%\Composer\files'
+    - '%PROGRAMDATA%\chocolatey\bin -> .appveyor.yml'
+    - '%PROGRAMDATA%\chocolatey\lib -> .appveyor.yml'
+    - C:\php -> .appveyor.yml
 
 init:
-    - SET PATH=c:\php\%PHP_VERSION%;%PATH%
+    - SET PATH=C:\php;%PATH%
     - SET ANSICON=121x90 (121x90)
     - SET INSTALL_PHP=1
 
 install:
-    - IF NOT EXIST c:\php mkdir c:\php
-    - IF NOT EXIST c:\php\%PHP_VERSION% mkdir c:\php\%PHP_VERSION% ELSE SET INSTALL_PHP=0
-    - IF %INSTALL_PHP%==1 cd c:\php\%PHP_VERSION%
-    - IF %INSTALL_PHP%==1 curl --fail --location --silent --show-error -o php-%PHP_VERSION%-x64-latest.zip https://windows.php.net/downloads/releases/latest/php-%PHP_VERSION%-x64-latest.zip
-    - IF %INSTALL_PHP%==1 7z x php-%PHP_VERSION%-x64-latest.zip -y >nul
-    - IF %INSTALL_PHP%==1 del /Q php-%PHP_VERSION%-x64-latest.zip
-    - IF %INSTALL_PHP%==1 copy /Y php.ini-development php.ini >nul
-    - IF %INSTALL_PHP%==1 echo extension_dir=c:\php\%PHP_VERSION%\ext >> php.ini
+    - IF EXIST C:\php SET INSTALL_PHP=0
+    - ps: choco upgrade chocolatey --confirm --no-progress --allow-downgrade --version 0.10.13
+    - ps: choco install php --confirm --no-progress --package-parameters '""/InstallDir:C:\php""' --version (choco search php --exact --all-versions --limit-output | Select-String -Pattern $env:PHP_VERSION | ForEach-Object {$_ -Replace "php\|", ""} | Sort {[version] $_} -Descending | Select-Object -First 1)
+    - cd C:\php
+    - IF %INSTALL_PHP%==1 copy /Y php.ini-production php.ini
+    - IF %INSTALL_PHP%==1 echo extension_dir=C:\php\ext >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_curl.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
-    - cd c:\projects\sentry-php
+    - cd C:\projects\sentry-php
     - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.9.1/composer.phar
     - php composer.phar self-update
     - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
     - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
 
 test_script:
-    - cd c:\projects\sentry-php
+    - cd C:\projects\sentry-php
     - vendor\bin\phpunit.bat
