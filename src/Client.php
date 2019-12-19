@@ -108,7 +108,7 @@ final class Client implements FlushableClientInterface
      */
     public function captureEvent(array $payload, ?Scope $scope = null): ?string
     {
-        $event = $this->prepareEvent($payload, $scope);
+        $event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace());
 
         if (null === $event) {
             return null;
