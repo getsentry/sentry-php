@@ -113,7 +113,7 @@ class ClientTest extends TestCase
         ];
     }
 
-    public function testCapture(): void
+    public function testCaptureEvent(): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -135,6 +135,43 @@ class ClientTest extends TestCase
         ];
 
         $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
+    }
+
+    /**
+     * @dataProvider captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider
+     */
+    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $shouldAttachStacktrace): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(static function (Event $event) use ($shouldAttachStacktrace): bool {
+                if ($shouldAttachStacktrace && null === $event->getStacktrace()) {
+                    return false;
+                }
+
+                if (!$shouldAttachStacktrace && null !== $event->getStacktrace()) {
+                    return false;
+                }
+
+                return true;
+            }))
+            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+
+        $client = ClientBuilder::create(['attach_stacktrace' => $shouldAttachStacktrace])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent([]));
+    }
+
+    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): array
+    {
+        return [
+            [true],
+            [false],
+        ];
     }
 
     public function testCaptureLastError(): void
@@ -375,17 +412,7 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                $result = $event->getStacktrace();
-
-                $this->assertInstanceOf(Stacktrace::class, $result);
-
-                $frames = $result->getFrames();
-
-                $this->assertNotEmpty($frames);
-                $this->assertTrue($frames[0]->isInApp());
-                $this->assertFalse($frames[\count($frames) - 1]->isInApp());
-
-                return true;
+                return null !== $event->getStacktrace();
             }));
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
@@ -393,25 +420,6 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureMessage('test');
-    }
-
-    public function testAttachStacktraceShouldNotWorkWithCaptureEvent(): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNull($event->getStacktrace());
-
-                return true;
-            }));
-
-        $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->getClient();
-
-        $client->captureEvent([]);
     }
 
     /**

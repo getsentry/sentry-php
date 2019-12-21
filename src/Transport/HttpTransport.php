@@ -109,7 +109,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             'POST',
             sprintf('/api/%d/store/', $projectId),
             ['Content-Type' => 'application/json'],
-            JSON::encode($event)
+            JSON::encode($event->toArray())
         );
 
         $promise = $this->httpClient->sendAsyncRequest($request);
