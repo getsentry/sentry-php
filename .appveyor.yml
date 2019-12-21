@@ -35,8 +35,6 @@ matrix:
 cache:
     - composer.phar
     - '%LOCALAPPDATA%\Composer\files'
-    - '%PROGRAMDATA%\chocolatey\bin -> .appveyor.yml'
-    - '%PROGRAMDATA%\chocolatey\lib -> .appveyor.yml'
     - C:\php -> .appveyor.yml
 
 init:

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `Client::captureEvent` not considering the `attach_stacktrace` option (#940)
+
 ## 2.2.6 (2019-12-18)
 
 - Fix remaining PHP 7.4 deprecations (#930)
