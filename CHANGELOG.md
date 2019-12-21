@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix `Client::captureEvent` not considering the `attach_stacktrace` option (#940)
+- Replace `ramsey/uuid` dependency with `uuid_create` from the PECL [`uuid`](https://pecl.php.net/package/uuid) extension or [`symfony/polyfill-uuid`](https://github.com/symfony/polyfill-uuid) (#937)
 - Deprecate `Scope::setUser` behaviour of replacing user data. (#929)
 - Add the `$merge` parameter on `Scope::setUser` to allow merging user context. (#929)
 - Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
