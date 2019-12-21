@@ -77,7 +77,7 @@
             "vendor/bin/phpstan analyse"
         ],
         "psalm": [
-            "vendor/bin/psalm --config=psalm.xml.dist"
+            "vendor/bin/psalm"
         ]
     },
     "config": {
