@@ -99,6 +99,11 @@ final class Event implements \JsonSerializable
     private $userContext;
 
     /**
+     * @var array<string, array<string, mixed>> An arbitrary mapping of additional contexts associated to this event
+     */
+    private $contexts = [];
+
+    /**
      * @var Context An arbitrary mapping of additional metadata
      */
     private $extraContext;
@@ -390,6 +395,29 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Gets an arbitrary mapping of additional contexts.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getContexts(): array
+    {
+        return $this->contexts;
+    }
+
+    /**
+     * Sets the data of the context with the given name.
+     *
+     * @param string               $name The name that uniquely identifies the context
+     * @param array<string, mixed> $data The data of the context
+     */
+    public function setContext(string $name, array $data): self
+    {
+        $this->contexts[$name] = $data;
+
+        return $this;
+    }
+
+    /**
      * Gets an arbitrary mapping of additional metadata.
      */
     public function getExtraContext(): Context
@@ -553,10 +581,7 @@ final class Event implements \JsonSerializable
      *     extra?: mixed[],
      *     tags?: mixed[],
      *     user?: mixed[],
-     *     contexts?: array{
-     *         os?: mixed[],
-     *         runtime?: mixed[]
-     *     },
+     *     contexts?: mixed[],
      *     breadcrumbs?: array{
      *         values: Breadcrumb[]
      *     },
@@ -636,6 +661,10 @@ final class Event implements \JsonSerializable
 
         if (!$this->runtimeContext->isEmpty()) {
             $data['contexts']['runtime'] = $this->runtimeContext->toArray();
+        }
+
+        if (!empty($this->contexts)) {
+            $data['contexts'] = array_merge($data['contexts'] ?? [], $this->contexts);
         }
 
         if (!empty($this->breadcrumbs)) {

@@ -47,6 +47,24 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
     }
 
+    public function testSetAndRemoveContext(): void
+    {
+        $scope = new Scope();
+        $scope->setContext('foo', ['foo' => 'bar']);
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => ['foo' => 'bar']], $event->getContexts());
+
+        $scope->removeContext('foo');
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getContexts());
+    }
+
     public function testSetExtra(): void
     {
         $scope = new Scope();
@@ -293,8 +311,10 @@ final class ScopeTest extends TestCase
 
     public function testApplyToEvent(): void
     {
-        $event = new Event();
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        $event = new Event();
+        $event->setContext('foocontext', ['foo' => 'foo', 'bar' => 'bar']);
 
         $scope = new Scope();
         $scope->setLevel(Severity::warning());
@@ -303,34 +323,16 @@ final class ScopeTest extends TestCase
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
         $scope->setUser(['foo' => 'baz'], true);
+        $scope->setContext('foocontext', ['foo' => 'bar']);
+        $scope->setContext('barcontext', ['bar' => 'foo']);
 
-        $event = $scope->applyToEvent($event, []);
-
-        $this->assertNotNull($event);
+        $this->assertSame($event, $scope->applyToEvent($event, []));
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
         $this->assertSame(['foo'], $event->getFingerprint());
         $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
-        $this->assertEquals(['foo' => 'bar'], $event->getTagsContext()->toArray());
-        $this->assertEquals(['bar' => 'foo'], $event->getExtraContext()->toArray());
-        $this->assertEquals(['foo' => 'baz'], $event->getUserContext()->toArray());
-
-        $scope->setFingerprint(['foo', 'bar']);
-        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_FATAL, Breadcrumb::TYPE_ERROR, 'error_reporting'));
-        $scope->setLevel(Severity::fatal());
-        $scope->setTag('bar', 'foo');
-        $scope->setExtra('foo', 'bar');
-        $scope->setUser(['baz' => 'foo'], true);
-
-        $event = $scope->applyToEvent($event, []);
-
-        $this->assertNotNull($event);
-        $this->assertTrue($event->getLevel()->isEqualTo(Severity::fatal()));
-        $this->assertSame(['foo'], $event->getFingerprint());
-        $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
-        $this->assertEquals(['foo' => 'bar', 'bar' => 'foo'], $event->getTagsContext()->toArray());
-        $this->assertEquals(['bar' => 'foo', 'foo' => 'bar'], $event->getExtraContext()->toArray());
-        $this->assertEquals(['foo' => 'baz', 'baz' => 'foo'], $event->getUserContext()->toArray());
-
-        $this->assertSame($event, $scope->applyToEvent($event, []));
+        $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
+        $this->assertSame(['bar' => 'foo'], $event->getExtraContext()->toArray());
+        $this->assertSame(['foo' => 'baz'], $event->getUserContext()->toArray());
+        $this->assertSame(['foocontext' => ['foo' => 'foo', 'bar' => 'bar'], 'barcontext' => ['bar' => 'foo']], $event->getContexts());
     }
 }
