@@ -9,12 +9,11 @@ use Sentry\Severity;
 
 final class SeverityTest extends TestCase
 {
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage The "foo" is not a valid enum value.
-     */
     public function testConstructorThrowsOnInvalidValue(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The "foo" is not a valid enum value.');
+
         new Severity('foo');
     }
 

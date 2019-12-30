@@ -148,12 +148,12 @@ final class OptionsTest extends TestCase
 
     /**
      * @dataProvider invalidServerOptionDataProvider
-     *
-     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
-     * @expectedExceptionMessageRegExp /^The option "dsn" with value "(.*)" is invalid.$/
      */
     public function testServerOptionsWithInvalidServer(string $dsn): void
     {
+        $this->expectException(\Symfony\Component\OptionsResolver\Exception\InvalidOptionsException::class);
+        $this->expectExceptionMessageMatches('/^The option "dsn" with value "(.*)" is invalid.$/');
+
         new Options(['dsn' => $dsn]);
     }
 

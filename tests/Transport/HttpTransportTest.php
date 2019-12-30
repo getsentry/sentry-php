@@ -35,15 +35,15 @@ final class HttpTransportTest extends TestCase
         $config = new Options(['dsn' => 'http://public@example.com/sentry/1']);
         $transport = new HttpTransport($config, $httpClient, MessageFactoryDiscovery::find());
 
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertEmpty($transport->getPendingRequestsCount());
 
         $transport->send(new Event());
 
-        $this->assertAttributeNotEmpty('pendingRequests', $transport);
+        $this->assertNotEmpty($transport->getPendingRequestsCount());
 
         $transport->close();
 
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertEmpty($transport->getPendingRequestsCount());
     }
 
     public function testSendDoesNotDelayExecutionUntilShutdownWhenConfiguredToNotDoIt(): void
@@ -61,7 +61,7 @@ final class HttpTransportTest extends TestCase
 
         $transport->send(new Event());
 
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertEmpty($transport->getPendingRequestsCount());
     }
 
     public function testSendThrowsOnMissingProjectIdCredential(): void

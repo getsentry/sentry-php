@@ -13,7 +13,7 @@ class ContextTest extends TestCase
     {
         $context = new Context(['foo' => 'bar']);
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
+        $this->assertEquals(['foo' => 'bar'], $context->toArray());
     }
 
     public function testMerge()
@@ -27,11 +27,11 @@ class ContextTest extends TestCase
 
         $context->merge(['bar' => ['barfoo' => 'foobar']], true);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => ['foobar' => 'barfoo', 'barfoo' => 'foobar']], 'data', $context);
+        $this->assertEquals(['foo' => 'bar', 'bar' => ['foobar' => 'barfoo', 'barfoo' => 'foobar']], $context->toArray());
 
         $context->merge(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => 'foo'], 'data', $context);
+        $this->assertEquals(['foo' => 'bar', 'bar' => 'foo'], $context->toArray());
     }
 
     public function testSetData()
@@ -39,11 +39,11 @@ class ContextTest extends TestCase
         $context = new Context(['foo' => 'bar']);
         $context->setData(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => 'foo'], 'data', $context);
+        $this->assertEquals(['foo' => 'bar', 'bar' => 'foo'], $context->toArray());
 
         $context->setData(['foo' => ['bar' => 'baz']]);
 
-        $this->assertAttributeEquals(['foo' => ['bar' => 'baz'], 'bar' => 'foo'], 'data', $context);
+        $this->assertEquals(['foo' => ['bar' => 'baz'], 'bar' => 'foo'], $context->toArray());
     }
 
     public function testReplaceData()
@@ -51,18 +51,18 @@ class ContextTest extends TestCase
         $context = new Context(['foo' => 'bar']);
         $context->replaceData(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['bar' => 'foo'], 'data', $context);
+        $this->assertEquals(['bar' => 'foo'], $context->toArray());
     }
 
     public function testClear()
     {
         $context = new Context(['foo' => 'bar']);
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
+        $this->assertEquals(['foo' => 'bar'], $context->toArray());
 
         $context->clear();
 
-        $this->assertAttributeEmpty('data', $context);
+        $this->assertEmpty($context->toArray());
     }
 
     public function testIsEmpty()
@@ -94,7 +94,7 @@ class ContextTest extends TestCase
     {
         $context = new Context();
 
-        $this->assertAttributeEquals([], 'data', $context);
+        $this->assertEquals([], $context->toArray());
         $this->assertArrayNotHasKey('foo', $context);
 
         // Accessing a key that does not exists in the data object should behave
@@ -103,12 +103,12 @@ class ContextTest extends TestCase
 
         $error = error_get_last();
 
-        $this->assertInternalType('array', $error);
+        $this->assertIsArray($error);
         $this->assertEquals('Undefined index: foo', $error['message']);
 
         $context['foo'] = 'bar';
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
+        $this->assertEquals(['foo' => 'bar'], $context->toArray());
         $this->assertTrue(isset($context['foo']));
         $this->assertEquals('bar', $context['foo']);
 

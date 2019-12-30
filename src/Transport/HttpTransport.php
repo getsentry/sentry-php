@@ -157,4 +157,12 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             }
         }
     }
+
+    /**
+     * @deprecated this method in for internal use only, in UnitTest
+     */
+    public function getPendingRequestsCount(): int
+    {
+        return \count($this->pendingRequests);
+    }
 }

@@ -169,7 +169,7 @@ final class ClientBuilderTest extends TestCase
 
         $actualIntegrationsClassNames = array_map('\get_class', $client->getOptions()->getIntegrations());
 
-        $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
+        $this->assertEqualsCanonicalizing($expectedIntegrations, $actualIntegrationsClassNames);
     }
 
     public function integrationsAreAddedToClientCorrectlyDataProvider(): array
