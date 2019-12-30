@@ -53,8 +53,10 @@ final class OptionsTest extends TestCase
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
             ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
-            ['before_send', function () {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
-            ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
+            ['before_send', function () {
+            }, 'getBeforeSendCallback', 'setBeforeSendCallback'],
+            ['before_breadcrumb', function () {
+            }, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
             ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
             ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
             ['max_value_length', 50, 'getMaxValueLength', 'setMaxValueLength'],
@@ -152,8 +154,10 @@ final class OptionsTest extends TestCase
     public function testServerOptionsWithInvalidServer(string $dsn): void
     {
         $this->expectException(\Symfony\Component\OptionsResolver\Exception\InvalidOptionsException::class);
-        $this->expectExceptionMessageMatches('/^The option "dsn" with value "(.*)" is invalid.$/');
 
+        if (version_compare(PHP_VERSION, '7.2', '>=')) { // on phpUnit 7.* on php 7.1 this method not exists
+            $this->expectExceptionMessageMatches('/^The option "dsn" with value "(.*)" is invalid.$/');
+        }
         new Options(['dsn' => $dsn]);
     }
 
