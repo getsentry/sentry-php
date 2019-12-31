@@ -39,7 +39,7 @@ final class RequestIntegrationTest extends TestCase
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $request = new ServerRequest('GET', new Uri(''), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']);
+        $request = new ServerRequest('GET', new Uri('http://www.example.com/fo'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']);
         $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
 
         RequestIntegration::applyToEvent($integration, $event, $request);
