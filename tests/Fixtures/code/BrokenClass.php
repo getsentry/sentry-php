@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection SyntaxError */
 
 namespace Sentry\Tests\Fixtures\code;
 
