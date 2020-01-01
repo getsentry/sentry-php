@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
+use GuzzleHttp\Psr7\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
@@ -12,7 +13,6 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Util\JSON;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * This integration collects information from the request and attaches them to
@@ -98,7 +98,7 @@ final class RequestIntegration implements IntegrationInterface
     private function processEvent(Event $event, Options $options, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
-            $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequestFactory::fromGlobals() : null;
+            $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequest::fromGlobals() : null;
         }
 
         if (null === $request) {
