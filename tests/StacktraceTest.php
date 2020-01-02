@@ -127,22 +127,161 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[3], 'test_function_parent_parent_parent', 'app/file', 12);
     }
 
-    public function testAddFrameMarksAsInApp(): void
+    /**
+     * @group legacy
+     *
+     * @dataProvider addFrameSetsInAppFlagCorrectlyDataProvider
+     */
+    public function testAddFrameSetsInAppFlagCorrectly(array $options, string $file, string $functionName, bool $expectedResult): void
     {
-        $this->options->setProjectRoot('path/to');
-        $this->options->setInAppExcludedPaths(['path/to/excluded/path']);
+        $options = new Options($options);
+        $stacktrace = new Stacktrace(
+            $options,
+            new Serializer($options),
+            new RepresentationSerializer($options)
+        );
 
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace->addFrame($file, 0, ['function' => $functionName]);
 
-        $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function']);
-        $stacktrace->addFrame('path/to/excluded/path/to/file', 12, ['function' => 'test_function']);
-        $stacktrace->addFrame('path/elsewhere', 12, ['function' => 'test_function']);
+        $this->assertSame($expectedResult, $stacktrace->getFrame(0)->isInApp());
+    }
 
-        $frames = $stacktrace->getFrames();
+    public function addFrameSetsInAppFlagCorrectlyDataProvider(): \Generator
+    {
+        yield 'No config specified' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [],
+                'in_app_include' => [],
+            ],
+            '[internal]',
+            'test_function',
+            false,
+        ];
 
-        $this->assertFalse($frames[0]->isInApp());
-        $this->assertFalse($frames[1]->isInApp());
-        $this->assertTrue($frames[2]->isInApp());
+        yield 'project_root specified && file path matching project_root' => [
+            [
+                'project_root' => 'path/to',
+                'in_app_exclude' => [],
+                'in_app_include' => [],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
+        ];
+
+        yield 'project_root specified && file path matching project_root && file path matching in_app_exclude' => [
+            [
+                'project_root' => 'path/to/file',
+                'in_app_exclude' => [
+                    'path/to',
+                ],
+                'in_app_include' => [],
+            ],
+            'path/to/file',
+            'test_function',
+            false,
+        ];
+
+        yield 'project_root specified && file path not maching project_root && file path matching in_app_include' => [
+            [
+                'project_root' => 'nested/path/to',
+                'in_app_exclude' => [],
+                'in_app_include' => [
+                    'path/to',
+                ],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
+        ];
+
+        yield 'in_app_include specified && file path not matching' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [],
+                'in_app_include' => [
+                    'path/to/nested/file',
+                ],
+            ],
+            'path/to/file',
+            'test_function',
+            false,
+        ];
+
+        yield 'in_app_include specified && file path matching' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [],
+                'in_app_include' => [
+                    'path/to/nested/file',
+                    'path/to/file',
+                ],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
+        ];
+
+        yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_include' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [
+                    'path/to/nested/file',
+                ],
+                'in_app_include' => [
+                    'path/to/file',
+                ],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
+        ];
+
+        yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_exclude' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [
+                    'path/to/nested/file',
+                ],
+                'in_app_include' => [
+                    'path/to/file',
+                ],
+            ],
+            'path/to/nested/file',
+            'test_function',
+            false,
+        ];
+
+        yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_include && in_app_include prioritized over in_app_exclude' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [
+                    'path/to/file',
+                ],
+                'in_app_include' => [
+                    'path/to/file/nested',
+                ],
+            ],
+            'path/to/file/nested',
+            'test_function',
+            true,
+        ];
+
+        yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_exclude && in_app_exclude prioritized over in_app_include' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [
+                    'path/to/file',
+                ],
+                'in_app_include' => [
+                    'path/to/file/nested',
+                ],
+            ],
+            'path/to/file',
+            'test_function',
+            false,
+        ];
     }
 
     /**
@@ -245,24 +384,6 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
-    }
-
-    public function testInAppWithEmptyFrame(): void
-    {
-        $stack = [
-            [
-                'function' => '{closure}',
-            ],
-            null,
-        ];
-
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
-        $stacktrace->addFrame('/some/file', 123, $stack);
-        $frames = $stacktrace->getFrames();
-
-        $this->assertCount(1, $frames);
-        $this->assertContainsOnlyInstancesOf(Frame::class, $frames);
-        $this->assertTrue($frames[0]->isInApp());
     }
 
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs(): void

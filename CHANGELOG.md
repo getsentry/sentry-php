@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `in_app_include` option to whitelist paths that should be marked as part of the app (#909)
 - Fix `Client::captureEvent` not considering the `attach_stacktrace` option (#940)
 - Replace `ramsey/uuid` dependency with `uuid_create` from the PECL [`uuid`](https://pecl.php.net/package/uuid) extension or [`symfony/polyfill-uuid`](https://github.com/symfony/polyfill-uuid) (#937)
 - Deprecate `Scope::setUser` behaviour of replacing user data. (#929)

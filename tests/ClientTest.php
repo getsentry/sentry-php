@@ -217,6 +217,8 @@ class ClientTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @requires OSFAMILY Linux
      */
     public function testAppPathLinux(): void
@@ -230,6 +232,9 @@ class ClientTest extends TestCase
         $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
     }
 
+    /**
+     * @group legacy
+     */
     public function testAppPathWindows(): void
     {
         $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
@@ -412,7 +417,9 @@ class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                return null !== $event->getStacktrace();
+                $result = $event->getStacktrace();
+
+                return null !== $result;
             }));
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])

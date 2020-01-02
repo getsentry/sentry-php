@@ -301,6 +301,28 @@ final class Options
     }
 
     /**
+     * Gets the list of paths which has to be identified as in_app.
+     *
+     * @return string[]
+     */
+    public function getInAppIncludedPaths(): array
+    {
+        return $this->options['in_app_include'];
+    }
+
+    /**
+     * Set the list of paths to include in in_app detection.
+     *
+     * @param string[] $paths The list of paths
+     */
+    public function setInAppIncludedPaths(array $paths): void
+    {
+        $options = array_merge($this->options, ['in_app_include' => $paths]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the project ID number to send to the Sentry server.
      */
     public function getProjectId(): ?string
@@ -769,6 +791,7 @@ final class Options
             },
             'excluded_exceptions' => [],
             'in_app_exclude' => [],
+            'in_app_include' => [],
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
@@ -786,6 +809,7 @@ final class Options
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('in_app_exclude', 'array');
+        $resolver->setAllowedTypes('in_app_include', 'array');
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
@@ -818,6 +842,8 @@ final class Options
                 return null;
             }
 
+            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+
             return $this->normalizeAbsolutePath($value);
         });
 
@@ -826,6 +852,10 @@ final class Options
         });
 
         $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
+            return array_map([$this, 'normalizeAbsolutePath'], $value);
+        });
+
+        $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }
