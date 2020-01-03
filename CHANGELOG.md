@@ -10,6 +10,7 @@
 - Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
 - Add the `IgnoreErrorsIntegration` integration to deprecate and replace the `exclude_exceptions` option (#928)
 - Allow setting custom contexts on the scope and on the event (#839)
+- Replace dependency to `zendframework/zend-diactoros` with `guzzlehttp/psr7` (#945)
 
 ## 2.2.6 (2019-12-18)
 
