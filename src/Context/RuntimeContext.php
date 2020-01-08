@@ -14,6 +14,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * stores information about the current runtime.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @final since version 2.3
  */
 class RuntimeContext extends Context
 {

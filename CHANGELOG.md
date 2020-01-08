@@ -2,7 +2,17 @@
 
 ## Unreleased
 
+## 2.3.0 (2020-01-08)
+
+- Add `in_app_include` option to whitelist paths that should be marked as part of the app (#909)
 - Fix `Client::captureEvent` not considering the `attach_stacktrace` option (#940)
+- Replace `ramsey/uuid` dependency with `uuid_create` from the PECL [`uuid`](https://pecl.php.net/package/uuid) extension or [`symfony/polyfill-uuid`](https://github.com/symfony/polyfill-uuid) (#937)
+- Deprecate `Scope::setUser` behaviour of replacing user data. (#929)
+- Add the `$merge` parameter on `Scope::setUser` to allow merging user context. (#929)
+- Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
+- Add the `IgnoreErrorsIntegration` integration to deprecate and replace the `exclude_exceptions` option (#928)
+- Allow setting custom contexts on the scope and on the event (#839)
+- Replace dependency to `zendframework/zend-diactoros` with `guzzlehttp/psr7` (#945)
 
 ## 2.2.6 (2019-12-18)
 

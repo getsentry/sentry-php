@@ -10,21 +10,20 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\EventFactory;
 use Sentry\Options;
-use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\SentrySdk;
 use Sentry\Serializer\Serializer;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\Transport\HttpTransport;
+use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
 class ClientTest extends TestCase
 {
     public function testCaptureMessage(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -36,7 +35,7 @@ class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $client->captureMessage('foo', Severity::fatal());
@@ -46,7 +45,7 @@ class ClientTest extends TestCase
     {
         $exception = new \Exception('Some foo error');
 
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -62,7 +61,7 @@ class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $client->captureException($exception);
@@ -73,7 +72,9 @@ class ClientTest extends TestCase
      */
     public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
     {
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
+        $transportFactory = $this->createTransportFactory($transport);
 
         $transport->expects($shouldCapture ? $this->once() : $this->never())
             ->method('send')
@@ -84,10 +85,11 @@ class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create(['excluded_exceptions' => [$excluded]])
-            ->setTransport($transport)
+            ->setTransportFactory($transportFactory)
             ->getClient();
 
-        $client->captureException($thrown);
+        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::getCurrentHub()->captureException($thrown);
     }
 
     public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
@@ -120,7 +122,7 @@ class ClientTest extends TestCase
             ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $inputData = [
@@ -158,7 +160,7 @@ class ClientTest extends TestCase
             ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
         $client = ClientBuilder::create(['attach_stacktrace' => $shouldAttachStacktrace])
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent([]));
@@ -174,7 +176,7 @@ class ClientTest extends TestCase
 
     public function testCaptureLastError(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -188,7 +190,7 @@ class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         @trigger_error('foo', E_USER_NOTICE);
@@ -200,13 +202,13 @@ class ClientTest extends TestCase
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
             ->method('send');
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $this->clearLastError();
@@ -215,6 +217,8 @@ class ClientTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @requires OSFAMILY Linux
      */
     public function testAppPathLinux(): void
@@ -228,6 +232,9 @@ class ClientTest extends TestCase
         $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
     }
 
+    /**
+     * @group legacy
+     */
     public function testAppPathWindows(): void
     {
         $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
@@ -239,7 +246,7 @@ class ClientTest extends TestCase
     {
         $beforeSendCalled = false;
 
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
             ->method('send');
@@ -252,7 +259,7 @@ class ClientTest extends TestCase
         });
 
         $client = (new ClientBuilder($options))
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $client->captureEvent([]);
@@ -268,9 +275,10 @@ class ClientTest extends TestCase
         $httpClient = new MockClient();
         $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
         $options->setSampleRate($sampleRate);
+        $transportFactory = $this->createTransportFactory(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), true, false));
 
         $client = (new ClientBuilder($options))
-            ->setTransport(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), false))
+            ->setTransportFactory($transportFactory)
             ->getClient();
 
         for ($i = 0; $i < 10; ++$i) {
@@ -300,7 +308,7 @@ class ClientTest extends TestCase
      */
     public function testConvertException(\Exception $exception, array $expectedResult): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -318,7 +326,7 @@ class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $client->captureException($exception);
@@ -360,7 +368,7 @@ class ClientTest extends TestCase
 
     public function testConvertExceptionThrownInLatin1File(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -395,7 +403,7 @@ class ClientTest extends TestCase
         $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->setSerializer($serializer)
             ->getClient();
 
@@ -404,16 +412,18 @@ class ClientTest extends TestCase
 
     public function testAttachStacktrace(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event): bool {
-                return null !== $event->getStacktrace();
+                $result = $event->getStacktrace();
+
+                return null !== $result;
             }));
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransport($transport)
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
         $client->captureMessage('test');
@@ -424,23 +434,32 @@ class ClientTest extends TestCase
      */
     private function clearLastError(): void
     {
-        $handler = static function () {
+        set_error_handler(static function (): bool {
             return false;
-        };
+        });
 
-        set_error_handler($handler);
         @trigger_error('');
+
         restore_error_handler();
     }
 
-    private function createEventFactory(): EventFactory
+    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
     {
-        return new EventFactory(
-            $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class),
-            new Options(),
-            'sentry.sdk.identifier',
-            '1.2.3'
-        );
+        return new class($transport) implements TransportFactoryInterface {
+            /**
+             * @var TransportInterface
+             */
+            private $transport;
+
+            public function __construct(TransportInterface $transport)
+            {
+                $this->transport = $transport;
+            }
+
+            public function create(Options $options): TransportInterface
+            {
+                return $this->transport;
+            }
+        };
     }
 }

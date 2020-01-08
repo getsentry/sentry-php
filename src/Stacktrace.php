@@ -11,9 +11,13 @@ use Sentry\Serializer\SerializerInterface;
  * This class contains all the information about an error stacktrace.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @final since version 2.3
  */
 class Stacktrace implements \JsonSerializable
 {
+    private const INTERNAL_FRAME_FILENAME = '[internal]';
+
     /**
      * @var Options The client options
      */
@@ -77,7 +81,7 @@ class Stacktrace implements \JsonSerializable
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
 
-            $file = $frame['file'] ?? '[internal]';
+            $file = $frame['file'] ?? self::INTERNAL_FRAME_FILENAME;
             $line = $frame['line'] ?? 0;
         }
 
@@ -95,6 +99,15 @@ class Stacktrace implements \JsonSerializable
     public function getFrames(): array
     {
         return $this->frames;
+    }
+
+    public function getFrame(int $index): Frame
+    {
+        if ($index < 0 || $index >= \count($this->frames)) {
+            throw new \OutOfBoundsException();
+        }
+
+        return $this->frames[$index];
     }
 
     /**
@@ -138,28 +151,7 @@ class Stacktrace implements \JsonSerializable
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
         }
 
-        // In case it's an Sentry internal frame, we mark it as in_app false
-        if (null !== $functionName && 0 === strpos($functionName, 'Sentry\\')) {
-            $frame->setIsInApp(false);
-        }
-
-        if (null !== $this->options->getProjectRoot()) {
-            $excludedAppPaths = $this->options->getInAppExcludedPaths();
-            $absoluteFilePath = @realpath($file) ?: $file;
-            $isApplicationFile = 0 === strpos($absoluteFilePath, $this->options->getProjectRoot());
-
-            if (!$isApplicationFile) {
-                $frame->setIsInApp(false);
-            } elseif (!empty($excludedAppPaths)) {
-                foreach ($excludedAppPaths as $path) {
-                    if (0 === mb_strpos($absoluteFilePath, $path)) {
-                        $frame->setIsInApp(false);
-
-                        break;
-                    }
-                }
-            }
-        }
+        $frame->setIsInApp($this->isFrameInApp($file, $functionName));
 
         $frameArguments = $this->getFrameArguments($backtraceFrame);
 
@@ -417,5 +409,50 @@ class Stacktrace implements \JsonSerializable
         } else {
             return $arg;
         }
+    }
+
+    /**
+     * Checks whether a certain frame should be marked as "in app" or not.
+     *
+     * @param string      $file         The file to check
+     * @param string|null $functionName The name of the function
+     */
+    private function isFrameInApp(string $file, ?string $functionName): bool
+    {
+        if (self::INTERNAL_FRAME_FILENAME === $file) {
+            return false;
+        }
+
+        if (null !== $functionName && 0 === strpos($functionName, 'Sentry\\')) {
+            return false;
+        }
+
+        $projectRoot = $this->options->getProjectRoot();
+        $excludedAppPaths = $this->options->getInAppExcludedPaths();
+        $includedAppPaths = $this->options->getInAppIncludedPaths();
+        $absoluteFilePath = @realpath($file) ?: $file;
+        $isInApp = false;
+
+        if (null !== $projectRoot) {
+            $isInApp = 0 === mb_strpos($absoluteFilePath, $projectRoot);
+        }
+
+        foreach ($excludedAppPaths as $excludedAppPath) {
+            if (0 === mb_strpos($absoluteFilePath, $excludedAppPath)) {
+                $isInApp = false;
+
+                break;
+            }
+        }
+
+        foreach ($includedAppPaths as $includedAppPath) {
+            if (0 === mb_strpos($absoluteFilePath, $includedAppPath)) {
+                $isInApp = true;
+
+                break;
+            }
+        }
+
+        return $isInApp;
     }
 }

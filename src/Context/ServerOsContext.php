@@ -13,6 +13,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * stores information about the operating system of the server.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @final since version 2.3
  */
 class ServerOsContext extends Context
 {

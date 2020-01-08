@@ -5,21 +5,10 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use Jean85\PrettyVersions;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidFactory;
-use Ramsey\Uuid\UuidFactoryInterface;
 use Sentry\Breadcrumb;
 use Sentry\Client;
-use Sentry\ClientBuilder;
-use Sentry\ClientInterface;
-use Sentry\Context\Context;
-use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
 use Sentry\Event;
-use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Util\PHPVersion;
 
@@ -28,71 +17,22 @@ use Sentry\Util\PHPVersion;
  */
 final class EventTest extends TestCase
 {
-    private const GENERATED_UUID = [
-        '4d310518-9e9d-463c-8161-bd46416f7817',
-        '431a2537-d1de-49da-80b6-b7861954c9cf',
-    ];
-
-    /**
-     * @var int
-     */
-    protected $uuidGeneratorInvokationCount;
-
-    /**
-     * @var UuidFactoryInterface
-     */
-    protected $originalUuidFactory;
-
-    /**
-     * @var Options
-     */
-    protected $options;
-
-    /**
-     * @var ClientInterface
-     */
-    protected $client;
-
-    protected function setUp(): void
-    {
-        $this->uuidGeneratorInvokationCount = 0;
-        $this->originalUuidFactory = new UuidFactory();
-        $this->client = ClientBuilder::create()->getClient();
-        $this->options = $this->client->getOptions();
-
-        /** @var UuidFactoryInterface|MockObject $uuidFactory */
-        $uuidFactory = $this->getMockBuilder(UuidFactoryInterface::class)
-            ->getMock();
-
-        $uuidFactory->expects($this->any())
-            ->method('uuid4')
-            ->willReturnCallback(function () {
-                $uuid = static::GENERATED_UUID[$this->uuidGeneratorInvokationCount++];
-
-                return $this->originalUuidFactory->fromString($uuid);
-            });
-
-        Uuid::setFactory($uuidFactory);
-    }
-
-    protected function tearDown(): void
-    {
-        Uuid::setFactory($this->originalUuidFactory);
-    }
-
     public function testEventIsGeneratedWithUniqueIdentifier(): void
     {
         $event1 = new Event();
         $event2 = new Event();
 
-        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[0]), $event1->getId());
-        $this->assertEquals(str_replace('-', '', static::GENERATED_UUID[1]), $event2->getId());
+        $this->assertRegExp('/^[a-z0-9]{32}$/', $event1->getId());
+        $this->assertRegExp('/^[a-z0-9]{32}$/', $event2->getId());
+        $this->assertNotEquals($event1->getId(), $event2->getId());
     }
 
     public function testToArray(): void
     {
+        $event = new Event();
+
         $expected = [
-            'event_id' => str_replace('-', '', static::GENERATED_UUID[0]),
+            'event_id' => $event->getId(),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
@@ -114,9 +54,45 @@ final class EventTest extends TestCase
             ],
         ];
 
-        $event = new Event();
+        $this->assertSame($expected, $event->toArray());
+    }
 
-        $this->assertEquals($expected, $event->toArray());
+    public function testToArrayMergesCustomContextsWithDefaultContexts(): void
+    {
+        $event = new Event();
+        $event->setContext('foo', ['foo' => 'bar']);
+        $event->setContext('bar', ['bar' => 'foo']);
+        $event->setContext('runtime', ['baz' => 'baz']);
+
+        $expected = [
+            'event_id' => $event->getId(),
+            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
+            'level' => 'error',
+            'platform' => 'php',
+            'sdk' => [
+                'name' => Client::SDK_IDENTIFIER,
+                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
+            ],
+            'contexts' => [
+                'os' => [
+                    'name' => php_uname('s'),
+                    'version' => php_uname('r'),
+                    'build' => php_uname('v'),
+                    'kernel_version' => php_uname('a'),
+                ],
+                'runtime' => [
+                    'baz' => 'baz',
+                ],
+                'foo' => [
+                    'foo' => 'bar',
+                ],
+                'bar' => [
+                    'bar' => 'foo',
+                ],
+            ],
+        ];
+
+        $this->assertSame($expected, $event->toArray());
     }
 
     /**
@@ -244,41 +220,6 @@ final class EventTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testGetServerOsContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(ServerOsContext::class, $event->getServerOsContext());
-    }
-
-    public function testGetRuntimeContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(RuntimeContext::class, $event->getRuntimeContext());
-    }
-
-    public function testGetUserContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(Context::class, $event->getUserContext());
-    }
-
-    public function testGetExtraContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(Context::class, $event->getExtraContext());
-    }
-
-    public function getTagsContext(): void
-    {
-        $event = new Event();
-
-        $this->assertInstanceOf(TagsContext::class, $event->getTagsContext());
     }
 
     /**

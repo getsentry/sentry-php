@@ -5,12 +5,20 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Integration\ErrorListenerIntegration;
+use Sentry\Integration\ExceptionListenerIntegration;
+use Sentry\Integration\FatalErrorListenerIntegration;
+use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
     /**
+     * @group legacy
+     *
      * @dataProvider optionsDataProvider
      */
     public function testConstructor($option, $value, $getterMethod): void
@@ -21,6 +29,8 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider optionsDataProvider
      */
     public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
@@ -46,6 +56,7 @@ final class OptionsTest extends TestCase
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
             ['excluded_exceptions', ['foo', 'bar', 'baz'], 'getExcludedExceptions', 'setExcludedExceptions'],
             ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
+            ['in_app_include', ['foo', 'bar'], 'getInAppIncludedPaths', 'setInAppIncludedPaths'],
             ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
             ['release', 'dev', 'getRelease', 'setRelease'],
@@ -200,7 +211,7 @@ final class OptionsTest extends TestCase
     {
         $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
 
-        $this->assertSame($result, $configuration->isExcludedException($exception));
+        $this->assertSame($result, $configuration->isExcludedException($exception, false));
     }
 
     public function excludedExceptionsDataProvider()
@@ -248,6 +259,26 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * @dataProvider includedPathProviders
+     */
+    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected)
+    {
+        $configuration = new Options(['in_app_include' => [$value]]);
+
+        $this->assertSame([$expected], $configuration->getInAppIncludedPaths());
+    }
+
+    public function includedPathProviders(): array
+    {
+        return [
+            ['some/path', 'some/path'],
+            ['some/specific/file.php', 'some/specific/file.php'],
+            [__DIR__, __DIR__],
+            [__FILE__, __FILE__],
+        ];
+    }
+
+    /**
      * @dataProvider maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider
      */
     public function testMaxBreadcrumbsOptionIsValidatedCorrectly(bool $isValid, $value): void
@@ -277,7 +308,9 @@ final class OptionsTest extends TestCase
     public function testDsnOptionSupportsEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
+
         $options = new Options();
+
         unset($_SERVER['SENTRY_DSN']);
 
         $this->assertSame('http://example.com', $options->getDsn());
@@ -288,7 +321,9 @@ final class OptionsTest extends TestCase
     public function testEnvironmentOptionSupportsEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_ENVIRONMENT'] = 'test_environment';
+
         $options = new Options();
+
         unset($_SERVER['SENTRY_ENVIRONMENT']);
 
         $this->assertSame('test_environment', $options->getEnvironment());
@@ -297,9 +332,108 @@ final class OptionsTest extends TestCase
     public function testReleaseOptionSupportsEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
+
         $options = new Options();
+
         unset($_SERVER['SENTRY_RELEASE']);
 
         $this->assertSame('0.0.1', $options->getRelease());
+    }
+
+    /**
+     * @dataProvider integrationsOptionAsCallableDataProvider
+     */
+    public function testIntegrationsOptionAsCallable(bool $useDefaultIntegrations, $integrations, array $expectedResult): void
+    {
+        $options = new Options([
+            'default_integrations' => $useDefaultIntegrations,
+            'integrations' => $integrations,
+        ]);
+
+        $this->assertEquals($expectedResult, $options->getIntegrations());
+    }
+
+    public function integrationsOptionAsCallableDataProvider(): \Generator
+    {
+        yield 'No default integrations && no user integrations' => [
+            false,
+            [],
+            [],
+        ];
+
+        $integration = new class() implements IntegrationInterface {
+            public function setupOnce(): void
+            {
+            }
+        };
+
+        yield 'User integration added && default integration appearing only once' => [
+            true,
+            [
+                $integration,
+                new ExceptionListenerIntegration(),
+            ],
+            [
+                new ExceptionListenerIntegration(),
+                new ErrorListenerIntegration(null, false),
+                new FatalErrorListenerIntegration(),
+                new RequestIntegration(),
+                new TransactionIntegration(),
+                $integration,
+            ],
+        ];
+
+        $integration = new class() implements IntegrationInterface {
+            public function setupOnce(): void
+            {
+            }
+        };
+
+        yield 'User integration added twice' => [
+            false,
+            [
+                $integration,
+                $integration,
+            ],
+            [
+                $integration,
+            ],
+        ];
+
+        yield 'User integrations as callable returning empty list' => [
+            true,
+            static function (): array {
+                return [];
+            },
+            [],
+        ];
+
+        $integration = new class() implements IntegrationInterface {
+            public function setupOnce(): void
+            {
+            }
+        };
+
+        yield 'User integrations as callable returning custom list' => [
+            true,
+            static function () use ($integration): array {
+                return [$integration];
+            },
+            [$integration],
+        ];
+
+        yield 'User integrations as callable returning $defaultIntegrations argument' => [
+            true,
+            static function (array $defaultIntegrations): array {
+                return $defaultIntegrations;
+            },
+            [
+                new ExceptionListenerIntegration(),
+                new ErrorListenerIntegration(null, false),
+                new FatalErrorListenerIntegration(),
+                new RequestIntegration(),
+                new TransactionIntegration(),
+            ],
+        ];
     }
 }

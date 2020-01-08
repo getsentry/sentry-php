@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Integration\ErrorListenerIntegration;
+use Sentry\Integration\ExceptionListenerIntegration;
+use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -49,6 +54,11 @@ final class Options
      * @var OptionsResolver The options resolver
      */
     private $resolver;
+
+    /**
+     * @var IntegrationInterface[]|null The list of default integrations
+     */
+    private $defaultIntegrations;
 
     /**
      * Class constructor.
@@ -215,9 +225,13 @@ final class Options
      * events to Sentry.
      *
      * @return string[]
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
     public function getExcludedExceptions(): array
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+
         return $this->options['excluded_exceptions'];
     }
 
@@ -226,9 +240,13 @@ final class Options
      * events to Sentry.
      *
      * @param string[] $exceptions The list of exception classes
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
     public function setExcludedExceptions(array $exceptions): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
         $this->options = $this->resolver->resolve($options);
@@ -238,10 +256,19 @@ final class Options
      * Checks whether the given exception should be ignored when sending events
      * to Sentry.
      *
-     * @param \Throwable $exception The exception
+     * @param \Throwable $exception        The exception
+     * @param bool       $throwDeprecation Flag indicating whether to throw a
+     *                                     deprecation for the usage of this
+     *                                     method
+     *
+     * @deprecated since version 2.3, to be removed in 3.0
      */
-    public function isExcludedException(\Throwable $exception): bool
+    public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
+        if ($throwDeprecation) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
             if ($exception instanceof $exceptionClass) {
                 return true;
@@ -269,6 +296,28 @@ final class Options
     public function setInAppExcludedPaths(array $paths): void
     {
         $options = array_merge($this->options, ['in_app_exclude' => $paths]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the list of paths which has to be identified as in_app.
+     *
+     * @return string[]
+     */
+    public function getInAppIncludedPaths(): array
+    {
+        return $this->options['in_app_include'];
+    }
+
+    /**
+     * Set the list of paths to include in in_app detection.
+     *
+     * @param string[] $paths The list of paths
+     */
+    public function setInAppIncludedPaths(array $paths): void
+    {
+        $options = array_merge($this->options, ['in_app_include' => $paths]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -504,11 +553,13 @@ final class Options
     }
 
     /**
-     * Set integrations that will be used by the created client.
+     * Sets the list of integrations that should be installed after SDK was
+     * initialized or a function that receives default integrations and returns
+     * a new, updated list.
      *
-     * @param IntegrationInterface[] $integrations The integrations
+     * @param IntegrationInterface[]|callable $integrations The list or callable
      */
-    public function setIntegrations(array $integrations): void
+    public function setIntegrations($integrations): void
     {
         $options = array_merge($this->options, ['integrations' => $integrations]);
 
@@ -522,7 +573,23 @@ final class Options
      */
     public function getIntegrations(): array
     {
-        return $this->options['integrations'];
+        $defaultIntegrations = $this->getDefaultIntegrations();
+        $userIntegrations = $this->options['integrations'];
+        $integrations = [];
+
+        if (\is_callable($userIntegrations)) {
+            return $userIntegrations($defaultIntegrations);
+        }
+
+        foreach ($defaultIntegrations as $defaultIntegration) {
+            $integrations[\get_class($defaultIntegration)] = $defaultIntegration;
+        }
+
+        foreach ($userIntegrations as $userIntegration) {
+            $integrations[\get_class($userIntegration)] = $userIntegration;
+        }
+
+        return array_values($integrations);
     }
 
     /**
@@ -724,6 +791,7 @@ final class Options
             },
             'excluded_exceptions' => [],
             'in_app_exclude' => [],
+            'in_app_include' => [],
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
@@ -741,6 +809,7 @@ final class Options
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('in_app_exclude', 'array');
+        $resolver->setAllowedTypes('in_app_include', 'array');
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
@@ -751,7 +820,7 @@ final class Options
         $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('integrations', 'array');
+        $resolver->setAllowedTypes('integrations', ['array', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
@@ -773,6 +842,8 @@ final class Options
                 return null;
             }
 
+            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+
             return $this->normalizeAbsolutePath($value);
         });
 
@@ -781,6 +852,10 @@ final class Options
         });
 
         $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
+            return array_map([$this, 'normalizeAbsolutePath'], $value);
+        });
+
+        $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
     }
@@ -903,10 +978,14 @@ final class Options
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array $integrations The value to validate
+     * @param array|callable $integrations The value to validate
      */
-    private function validateIntegrationsOption(array $integrations): bool
+    private function validateIntegrationsOption($integrations): bool
     {
+        if (\is_callable($integrations)) {
+            return true;
+        }
+
         foreach ($integrations as $integration) {
             if (!$integration instanceof IntegrationInterface) {
                 return false;
@@ -956,5 +1035,29 @@ final class Options
         }
 
         return true;
+    }
+
+    /**
+     * Gets the list of default integrations.
+     *
+     * @return IntegrationInterface[]
+     */
+    private function getDefaultIntegrations(): array
+    {
+        if (!$this->options['default_integrations']) {
+            return [];
+        }
+
+        if (null === $this->defaultIntegrations) {
+            $this->defaultIntegrations = [
+                new ExceptionListenerIntegration(),
+                new ErrorListenerIntegration(null, false),
+                new FatalErrorListenerIntegration(),
+                new RequestIntegration(),
+                new TransactionIntegration(),
+            ];
+        }
+
+        return $this->defaultIntegrations;
     }
 }
