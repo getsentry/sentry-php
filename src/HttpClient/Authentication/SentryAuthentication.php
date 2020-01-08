@@ -64,7 +64,6 @@ final class SentryAuthentication implements Authentication
         $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,
             'sentry_client' => $this->sdkIdentifier . '/' . $this->sdkVersion,
-            'sentry_timestamp' => sprintf('%F', microtime(true)),
             'sentry_key' => $publicKey,
         ];
 

@@ -16,11 +16,14 @@ final class Handler
     private static $integrations = [];
 
     /**
-     * Calls {@link IntegrationInterface::setupOnce} for all passed integrations if it hasn't been called yet.
+     * Calls {@link IntegrationInterface::setupOnce} for all passed integrations
+     * if it hasn't been called yet.
      *
-     * @param array $integrations The integrations
+     * @param IntegrationInterface[] $integrations The integrations
      *
      * @return array<string, IntegrationInterface>
+     *
+     * @psalm-return array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     public static function setupIntegrations(array $integrations): array
     {

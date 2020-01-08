@@ -9,6 +9,8 @@ namespace Sentry\Context;
  * for the tags context.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @final since version 2.3
  */
 class TagsContext extends Context
 {

@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Jean85\PrettyVersions;
-use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
-use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 use Sentry\Context\Context;
 use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
@@ -22,7 +19,7 @@ use Sentry\Context\UserContext;
 final class Event implements \JsonSerializable
 {
     /**
-     * @var UuidInterface The UUID
+     * @var string The UUID
      */
     private $id;
 
@@ -102,6 +99,11 @@ final class Event implements \JsonSerializable
     private $userContext;
 
     /**
+     * @var array<string, array<string, mixed>> An arbitrary mapping of additional contexts associated to this event
+     */
+    private $contexts = [];
+
+    /**
      * @var Context An arbitrary mapping of additional metadata
      */
     private $extraContext;
@@ -150,13 +152,12 @@ final class Event implements \JsonSerializable
     /**
      * Event constructor.
      *
-     * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
      * @throws \Exception
      */
     public function __construct()
     {
-        $this->id = Uuid::uuid4();
+        $this->id = str_replace('-', '', uuid_create(UUID_TYPE_RANDOM));
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
         $this->serverOsContext = new ServerOsContext();
@@ -172,7 +173,7 @@ final class Event implements \JsonSerializable
      */
     public function getId(): string
     {
-        return str_replace('-', '', $this->id->toString());
+        return $this->id;
     }
 
     /**
@@ -394,6 +395,29 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Gets an arbitrary mapping of additional contexts.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getContexts(): array
+    {
+        return $this->contexts;
+    }
+
+    /**
+     * Sets the data of the context with the given name.
+     *
+     * @param string               $name The name that uniquely identifies the context
+     * @param array<string, mixed> $data The data of the context
+     */
+    public function setContext(string $name, array $data): self
+    {
+        $this->contexts[$name] = $data;
+
+        return $this;
+    }
+
+    /**
      * Gets an arbitrary mapping of additional metadata.
      */
     public function getExtraContext(): Context
@@ -557,10 +581,7 @@ final class Event implements \JsonSerializable
      *     extra?: mixed[],
      *     tags?: mixed[],
      *     user?: mixed[],
-     *     contexts?: array{
-     *         os?: mixed[],
-     *         runtime?: mixed[]
-     *     },
+     *     contexts?: mixed[],
      *     breadcrumbs?: array{
      *         values: Breadcrumb[]
      *     },
@@ -584,7 +605,7 @@ final class Event implements \JsonSerializable
     public function toArray(): array
     {
         $data = [
-            'event_id' => str_replace('-', '', $this->id->toString()),
+            'event_id' => $this->id,
             'timestamp' => $this->timestamp,
             'level' => (string) $this->level,
             'platform' => 'php',
@@ -640,6 +661,10 @@ final class Event implements \JsonSerializable
 
         if (!$this->runtimeContext->isEmpty()) {
             $data['contexts']['runtime'] = $this->runtimeContext->toArray();
+        }
+
+        if (!empty($this->contexts)) {
+            $data['contexts'] = array_merge($data['contexts'] ?? [], $this->contexts);
         }
 
         if (!empty($this->breadcrumbs)) {

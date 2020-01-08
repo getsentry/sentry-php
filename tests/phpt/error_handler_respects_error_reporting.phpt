@@ -9,7 +9,9 @@ namespace Sentry\Tests;
 
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -20,17 +22,22 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$transport = new class implements TransportInterface {
-    public function send(Event $event): ?string
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(Options $options): TransportInterface
     {
-        echo 'Transport called' . PHP_EOL;
+        return new class implements TransportInterface {
+            public function send(Event $event): ?string
+            {
+                echo 'Transport called' . PHP_EOL;
 
-        return null;
+                return null;
+            }
+        };
     }
 };
 
 $client = ClientBuilder::create(['capture_silenced_errors' => true])
-    ->setTransport($transport)
+    ->setTransportFactory($transportFactory)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);

@@ -17,7 +17,7 @@ use Sentry\Severity;
 final class HubAdapter implements HubInterface
 {
     /**
-     * @var self The single instance which forwards all calls to {@see SentrySdk}
+     * @var self|null The single instance which forwards all calls to {@see SentrySdk}
      */
     private static $instance;
 
