@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix client creation with proxy (#951)
+
 ## 2.3.0 (2020-01-08)
 
 - Add `in_app_include` option to whitelist paths that should be marked as part of the app (#909)
