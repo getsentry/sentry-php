@@ -129,7 +129,11 @@ class Stacktrace implements \JsonSerializable
         }
 
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
-            $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
+            $functionName = sprintf(
+                '%s::%s',
+                preg_replace('/0x[a-fA-F0-9]+$/', '', $backtraceFrame['class']),
+                $backtraceFrame['function']
+            );
         } elseif (isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['function'];
         } else {

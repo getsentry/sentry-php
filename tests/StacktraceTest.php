@@ -386,6 +386,25 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
+    public function testFromBacktraceWithAnonymousClass(): void
+    {
+        $fixture = $this->getJsonFixture('backtraces/anonymous_frame_with_memory_address.json');
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+
+        $this->assertFrameEquals(
+            $frames[0],
+            null,
+            '[internal]',
+            0
+        );
+        $this->assertFrameEquals(
+            $frames[1],
+            'class@anonymous/path/to/app/consumer.php::messageCallback',
+            'path/to/file',
+            12
+        );
+    }
+
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs(): void
     {
         // PHP's errcontext as passed to the error handler contains REFERENCES to any vars that were in the global scope.
