@@ -140,7 +140,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider
      */
-    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $shouldAttachStacktrace): void
+    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, array $payload, bool $shouldAttachStacktrace): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -159,19 +159,63 @@ class ClientTest extends TestCase
             }))
             ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
-        $client = ClientBuilder::create(['attach_stacktrace' => $shouldAttachStacktrace])
+        $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent([]));
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
     }
 
-    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): array
+    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
-        return [
-            [true],
-            [false],
+        yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
+            true,
+            [],
+            true,
         ];
+
+        yield 'No stacktrace attached when attach_stacktrace = false' => [
+            false,
+            [],
+            false,
+        ];
+
+        yield 'No stacktrace attached when attach_stacktrace = true and payload.exception is set' => [
+            true,
+            [
+                'exception' => new \Exception(),
+            ],
+            false,
+        ];
+
+        yield 'No stacktrace attached when attach_stacktrace = false and payload.exception is set' => [
+            true,
+            [
+                'exception' => new \Exception(),
+            ],
+            false,
+        ];
+    }
+
+    public function testCaptureEventPrefersExplicitStacktrace(): void
+    {
+        $explicitStacktrace = $this->createMock(Stacktrace::class);
+        $payload = ['stacktrace' => $explicitStacktrace];
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(static function (Event $event) use ($explicitStacktrace): bool {
+                return $explicitStacktrace === $event->getStacktrace();
+            }))
+            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
     }
 
     public function testCaptureLastError(): void
