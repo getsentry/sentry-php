@@ -166,13 +166,34 @@ class ClientTest extends TestCase
         $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
     }
 
-    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): array
+    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
-        return [
-            [true, [], true],
-            [false, [], false],
-            [true, ['exception' => new \Exception()], false],
-            [false, ['exception' => new \Exception()], false],
+        yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
+            true,
+            [],
+            true,
+        ];
+
+        yield 'No stacktrace attached when attach_stacktrace = false' => [
+            false,
+            [],
+            false,
+        ];
+
+        yield 'No stacktrace attached when attach_stacktrace = true and payload.exception is set' => [
+            true,
+            [
+                'exception' => new \Exception(),
+            ],
+            false,
+        ];
+
+        yield 'No stacktrace attached when attach_stacktrace = false and payload.exception is set' => [
+            true,
+            [
+                'exception' => new \Exception(),
+            ],
+            false,
         ];
     }
 
