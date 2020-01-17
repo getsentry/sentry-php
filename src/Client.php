@@ -85,13 +85,7 @@ final class Client implements FlushableClientInterface
             'level' => $level,
         ];
 
-        $event = $this->prepareEvent($payload, $scope);
-
-        if (null === $event) {
-            return null;
-        }
-
-        return $this->transport->send($event);
+        return $this->captureEvent($payload, $scope);
     }
 
     /**
