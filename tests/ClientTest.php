@@ -197,6 +197,27 @@ class ClientTest extends TestCase
         ];
     }
 
+    public function testCaptureEventPrefersExplicitStacktrace(): void
+    {
+        $explicitStacktrace = $this->createMock(Stacktrace::class);
+        $payload = ['stacktrace' => $explicitStacktrace];
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(static function (Event $event) use ($explicitStacktrace): bool {
+                return $explicitStacktrace === $event->getStacktrace();
+            }))
+            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
+    }
+
     public function testCaptureLastError(): void
     {
         /** @var TransportInterface&MockObject $transport */
