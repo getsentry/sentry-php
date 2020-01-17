@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix client creation with proxy (#951)
+- Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
 
 ## 2.3.0 (2020-01-08)
 
