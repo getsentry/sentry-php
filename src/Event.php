@@ -552,9 +552,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the stacktrace that generated this event.
      *
-     * @param Stacktrace $stacktrace The stacktrace instance
+     * @param Stacktrace|null $stacktrace The stacktrace instance
      */
-    public function setStacktrace(Stacktrace $stacktrace): void
+    public function setStacktrace(?Stacktrace $stacktrace): void
     {
         $this->stacktrace = $stacktrace;
     }
