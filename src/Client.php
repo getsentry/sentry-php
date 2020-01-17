@@ -85,7 +85,7 @@ final class Client implements FlushableClientInterface
             'level' => $level,
         ];
 
-        $event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace());
+        $event = $this->prepareEvent($payload, $scope);
 
         if (null === $event) {
             return null;
@@ -111,7 +111,7 @@ final class Client implements FlushableClientInterface
      */
     public function captureEvent(array $payload, ?Scope $scope = null): ?string
     {
-        $event = $this->prepareEvent($payload, $scope, $this->options->shouldAttachStacktrace());
+        $event = $this->prepareEvent($payload, $scope);
 
         if (null === $event) {
             return null;
@@ -162,13 +162,12 @@ final class Client implements FlushableClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload        the payload that will be converted to an Event
-     * @param Scope|null $scope          optional scope which enriches the Event
-     * @param bool       $withStacktrace True if the event should have and attached stacktrace
+     * @param array      $payload the payload that will be converted to an Event
+     * @param Scope|null $scope   optional scope which enriches the Event
      *
      * @return Event|null returns ready to send Event, however depending on options it can be discarded
      */
-    private function prepareEvent(array $payload, ?Scope $scope = null, bool $withStacktrace = false): ?Event
+    private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
         $sampleRate = $this->getOptions()->getSampleRate();
 
@@ -176,12 +175,7 @@ final class Client implements FlushableClientInterface
             return null;
         }
 
-        // when 'exception' is set, no backtrace should be auto-attached (#957)
-        if (
-            $withStacktrace
-            && !isset($payload['exception'])
-            && !isset($payload['stacktrace'])
-        ) {
+        if ($this->getOptions()->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
             $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
             $event = $this->eventFactory->create($payload);
