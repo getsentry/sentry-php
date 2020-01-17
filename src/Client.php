@@ -176,7 +176,12 @@ final class Client implements FlushableClientInterface
             return null;
         }
 
-        if ($withStacktrace) {
+        // when 'exception' is set, no backtrace should be auto-attached (#957)
+        if (
+            $withStacktrace
+            && !isset($payload['exception'])
+            && !isset($payload['stacktrace'])
+        ) {
             $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
             $event = $this->eventFactory->create($payload);

@@ -140,7 +140,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider
      */
-    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $shouldAttachStacktrace): void
+    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, array $payload, bool $shouldAttachStacktrace): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -159,18 +159,20 @@ class ClientTest extends TestCase
             }))
             ->willReturn('500a339f3ab2450b96dee542adf36ba7');
 
-        $client = ClientBuilder::create(['attach_stacktrace' => $shouldAttachStacktrace])
+        $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent([]));
+        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
     }
 
     public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): array
     {
         return [
-            [true],
-            [false],
+            [true, [], true],
+            [false, [], false],
+            [true, ['exception' => new \Exception()], false],
+            [false, ['exception' => new \Exception()], false],
         ];
     }
 
