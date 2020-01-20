@@ -1,0 +1,11 @@
+{
+    "file": "path/to/file",
+    "line": 12,
+    "backtrace": [
+        {
+            "class": "class@anonymous/path/to/app/consumer.php0x7fc3bc369418",
+            "function": "messageCallback",
+            "type": "->"
+        }
+    ]
+}
