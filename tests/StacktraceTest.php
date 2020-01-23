@@ -206,7 +206,18 @@ final class StacktraceTest extends TestCase
             ],
             'path/to/file',
             'test_function',
-            false,
+            true,
+        ];
+
+        yield 'in_app_include not specified && file path not matching' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [],
+                'in_app_include' => [],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
         ];
 
         yield 'in_app_include specified && file path matching' => [

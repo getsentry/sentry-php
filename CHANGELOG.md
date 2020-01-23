@@ -6,6 +6,7 @@
 - Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
 - Fix sending of both `event.stacktrace` and `event.exceptions` when `attach_stacktrace = true` (#960)
 - Fix issues with memory addresses in anonymous class stack traces (#956)
+- By default all paths are included in stacktrace (#958)
 
 ## 2.3.0 (2020-01-08)
 
