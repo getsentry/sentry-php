@@ -815,7 +815,7 @@ final class Options
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
-            'timeout' => 0,
+            'timeout' => null,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
