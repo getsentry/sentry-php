@@ -129,7 +129,11 @@ class Stacktrace implements \JsonSerializable
         }
 
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
-            $functionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
+            $functionName = sprintf(
+                '%s::%s',
+                preg_replace('/0x[a-fA-F0-9]+$/', '', $backtraceFrame['class']),
+                $backtraceFrame['function']
+            );
         } elseif (isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['function'];
         } else {
@@ -431,7 +435,7 @@ class Stacktrace implements \JsonSerializable
         $excludedAppPaths = $this->options->getInAppExcludedPaths();
         $includedAppPaths = $this->options->getInAppIncludedPaths();
         $absoluteFilePath = @realpath($file) ?: $file;
-        $isInApp = false;
+        $isInApp = true;
 
         if (null !== $projectRoot) {
             $isInApp = 0 === mb_strpos($absoluteFilePath, $projectRoot);

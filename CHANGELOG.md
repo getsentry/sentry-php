@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.3.1 (2020-01-23)
+
+- Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
+- Fix sending of both `event.stacktrace` and `event.exceptions` when `attach_stacktrace = true` (#960)
+- Fix regression that set all frames of a stacktrace as not in app by default (#958)
+- Fix issues with memory addresses in anonymous class stack traces (#956)
+- Fix exception thrown regardless of whether the HTTP client was instantiated when using the `http_proxy option` (#951)
+
 ## 2.3.0 (2020-01-08)
 
 - Add `in_app_include` option to whitelist paths that should be marked as part of the app (#909)

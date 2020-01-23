@@ -206,7 +206,18 @@ final class StacktraceTest extends TestCase
             ],
             'path/to/file',
             'test_function',
-            false,
+            true,
+        ];
+
+        yield 'in_app_include not specified && file path not matching' => [
+            [
+                'project_root' => null,
+                'in_app_exclude' => [],
+                'in_app_include' => [],
+            ],
+            'path/to/file',
+            'test_function',
+            true,
         ];
 
         yield 'in_app_include specified && file path matching' => [
@@ -384,6 +395,25 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
+    }
+
+    public function testFromBacktraceWithAnonymousClass(): void
+    {
+        $fixture = $this->getJsonFixture('backtraces/anonymous_frame_with_memory_address.json');
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+
+        $this->assertFrameEquals(
+            $frames[0],
+            null,
+            '[internal]',
+            0
+        );
+        $this->assertFrameEquals(
+            $frames[1],
+            'class@anonymous/path/to/app/consumer.php::messageCallback',
+            'path/to/file',
+            12
+        );
     }
 
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs(): void
