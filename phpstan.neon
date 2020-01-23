@@ -35,6 +35,9 @@ parameters:
             message: '/^Access to constant PROXY on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
+            message: '/^Access to constant TIMEOUT on an unknown class GuzzleHttp\\RequestOptions\.$/'
+            path: src/HttpClient/HttpClientFactory.php
+        -
             message: '/^Property Sentry\\HttpClient\\HttpClientFactory::\$httpClient \(Http\\Client\\HttpAsyncClient\|null\) does not accept Http\\Client\\Curl\\Client.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
