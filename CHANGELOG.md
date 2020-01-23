@@ -2,11 +2,13 @@
 
 ## Unreleased
 
-- Fix client creation with proxy (#951)
+## 2.3.1 (2020-01-23)
+
 - Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
 - Fix sending of both `event.stacktrace` and `event.exceptions` when `attach_stacktrace = true` (#960)
+- Fix regression that set all frames of a stacktrace as not in app by default (#958)
 - Fix issues with memory addresses in anonymous class stack traces (#956)
-- By default all paths are included in stacktrace (#958)
+- Fix exception thrown regardless of whether the HTTP client was instantiated when using the `http_proxy option` (#951)
 
 ## 2.3.0 (2020-01-08)
 
