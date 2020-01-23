@@ -109,14 +109,15 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 $guzzleConfig = [];
 
                 if (null !== $options->getHttpProxy()) {
+                    /** @psalm-suppress UndefinedClass */
                     $guzzleConfig[GuzzleHttpClientOptions::PROXY] = $options->getHttpProxy();
                 }
 
                 if (null !== $options->getTimeout()) {
+                    /** @psalm-suppress UndefinedClass */
                     $guzzleConfig[GuzzleHttpClientOptions::TIMEOUT] = $options->getTimeout() / 1000;
                 }
 
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->httpClient = GuzzleHttpClient::createWithConfig($guzzleConfig);
             } elseif (class_exists(CurlHttpClient::class)) {
                 $curlConfig = [];
@@ -129,7 +130,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                     $curlConfig[CURLOPT_TIMEOUT] = $options->getTimeout() / 1000;
                 }
 
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, $curlConfig);
             } else {
                 throw new \RuntimeException('The "http_proxy" and "timeout" options require either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
