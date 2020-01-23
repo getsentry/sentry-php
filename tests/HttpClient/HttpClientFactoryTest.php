@@ -99,4 +99,25 @@ final class HttpClientFactoryTest extends TestCase
             'http_proxy' => 'http://example.com',
         ]));
     }
+
+    public function testCreateThrowsIfTimeoutOptionIsUsedWithCustomHttpClient(): void
+    {
+        $httpClientFactory = new HttpClientFactory(
+            UriFactoryDiscovery::find(),
+            MessageFactoryDiscovery::find(),
+            StreamFactoryDiscovery::find(),
+            $this->createMock(HttpAsyncClientInterface::class),
+            'sentry.php.test',
+            '1.2.3'
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The "timeout" option does not work together with a custom HTTP client.');
+
+        $httpClientFactory->create(new Options([
+            'dsn' => 'http://public@example.com/sentry/1',
+            'default_integrations' => false,
+            'timeout' => 1500,
+        ]));
+    }
 }

@@ -221,6 +221,26 @@ final class Options
     }
 
     /**
+     * Gets the timeout in milliseconds. Zero means unlimited.
+     */
+    public function getTimeout(): ?int
+    {
+        return $this->options['timeout'];
+    }
+
+    /**
+     * Sets a timeout to avoid blocking Sentry threads because establishing a connection is taking too long.
+     *
+     * @param int $timeout The timeout in milliseconds (zero = unlimited)
+     */
+    public function setTimeout(int $timeout): void
+    {
+        $options = array_merge($this->options, ['timeout' => $timeout]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the list of exception classes that should be ignored when sending
      * events to Sentry.
      *
@@ -795,6 +815,7 @@ final class Options
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
+            'timeout' => 0,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
@@ -825,6 +846,7 @@ final class Options
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
+        $resolver->setAllowedTypes('timeout', ['null', 'int']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');

@@ -70,6 +70,7 @@ final class OptionsTest extends TestCase
             ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
             ['max_value_length', 50, 'getMaxValueLength', 'setMaxValueLength'],
             ['http_proxy', '127.0.0.1', 'getHttpProxy', 'setHttpProxy'],
+            ['timeout', '1500', 'getTimeout', 'setTimeout'],
             ['capture_silenced_errors', true, 'shouldCaptureSilencedErrors', 'setCaptureSilencedErrors'],
             ['max_request_body_size', 'small', 'getMaxRequestBodySize', 'setMaxRequestBodySize'],
         ];
