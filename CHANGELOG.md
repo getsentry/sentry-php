@@ -1,9 +1,5 @@
 # CHANGELOG
 
-## Unreleased
-
-- ...
-
 ## 1.11.0 (2020-02-12)
 
 - Fixed array and string offset access syntax with curly braces deprecations (#975)
