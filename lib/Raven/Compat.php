@@ -102,7 +102,7 @@ class Raven_Compat
      */
     public static function _json_encode($value, $depth = 513)
     {
-        if (ini_get('xdebug.extended_info') !== false) {
+        if (extension_loaded('xdebug')) {
             ini_set('xdebug.max_nesting_level', 2048);
         }
         return self::_json_encode_lowlevel($value, $depth);
