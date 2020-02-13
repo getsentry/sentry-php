@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Transport;
 
 use Sentry\Event;
-use Sentry\Exception\MissingProjectIdCredentialException;
 
 /**
  * This interface must be implemented by all classes willing to provide a way
@@ -21,8 +20,6 @@ interface TransportInterface
      * @param Event $event The event
      *
      * @return string|null Returns the ID of the event or `null` if it failed to be sent
-     *
-     * @throws MissingProjectIdCredentialException If the project ID is missing in the DSN
      */
     public function send(Event $event): ?string;
 }

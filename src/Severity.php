@@ -164,7 +164,7 @@ final class Severity
     }
 
     /**
-     * {@inheritdoc}
+     * @see https://www.php.net/manual/en/language.oop5.magic.php#object.tostring
      */
     public function __toString(): string
     {

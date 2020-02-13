@@ -7,7 +7,6 @@ namespace Sentry\HttpClient;
 use GuzzleHttp\RequestOptions as GuzzleHttpClientOptions;
 use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
-use Http\Client\Common\Plugin\BaseUriPlugin;
 use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
@@ -101,7 +100,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     public function create(Options $options): HttpAsyncClientInterface
     {
-        if (null === $options->getDsn()) {
+        if (null === $options->getDsn(false)) {
             throw new \RuntimeException('Cannot create an HTTP client without the Sentry DSN set in the options.');
         }
 
@@ -136,7 +135,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         }
 
         $httpClientPlugins = [
-            new BaseUriPlugin($this->uriFactory->createUri($options->getDsn())),
             new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->sdkVersion]),
             new AuthenticationPlugin(new SentryAuthentication($options, $this->sdkIdentifier, $this->sdkVersion)),
             new RetryPlugin(['retries' => $options->getSendAttempts()]),

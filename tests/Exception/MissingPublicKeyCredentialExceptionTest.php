@@ -9,6 +9,10 @@ use Sentry\Exception\MissingPublicKeyCredentialException;
 
 final class MissingPublicKeyCredentialExceptionTest extends TestCase
 {
+    /**
+     * @group legacy
+     * @expectedDeprecationMessage The Sentry\Exception\MissingPublicKeyCredentialExceptionTest class is deprecated since version 2.4 and will be removed in 3.0.
+     */
     public function testGetMessage(): void
     {
         $exception = new MissingPublicKeyCredentialException();

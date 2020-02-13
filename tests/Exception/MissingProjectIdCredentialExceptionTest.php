@@ -9,6 +9,10 @@ use Sentry\Exception\MissingProjectIdCredentialException;
 
 final class MissingProjectIdCredentialExceptionTest extends TestCase
 {
+    /**
+     * @group legacy
+     * @expectedDeprecationMessage The Sentry\Exception\MissingProjectIdCredentialException class is deprecated since version 2.4 and will be removed in 3.0.
+     */
     public function testGetMessage(): void
     {
         $exception = new MissingProjectIdCredentialException();

@@ -4,25 +4,45 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
-use Http\Client\HttpAsyncClient;
+use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Promise\FulfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\Event;
-use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 
 final class HttpTransportTest extends TestCase
 {
-    public function testSendDoesNotDelayExecutionUntilShutdownWhenConfiguredToNotDoIt(): void
+    public function testSendThrowsIfDsnOptionIsNotSet(): void
     {
-        $promise = new RejectedPromise(new \Exception());
+        $transport = new HttpTransport(
+            new Options(),
+            $this->createMock(HttpAsyncClientInterface::class),
+            MessageFactoryDiscovery::find(),
+            false
+        );
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The DSN option must be set to use the "Sentry\Transport\HttpTransport" transport.');
+
+        $transport->send(new Event());
+    }
+
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
+    public function testSendDelaysExecutionUntilShutdown(): void
+    {
+        $promise = new FulfilledPromise('foo');
+
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
             ->willReturn($promise);
@@ -31,20 +51,32 @@ final class HttpTransportTest extends TestCase
             new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $httpClient,
             MessageFactoryDiscovery::find(),
-            false
+            true
         );
 
+        $this->assertAttributeEmpty('pendingRequests', $transport);
+
         $transport->send(new Event());
+
+        $this->assertAttributeNotEmpty('pendingRequests', $transport);
+
+        $transport->close();
+
+        $this->assertAttributeEmpty('pendingRequests', $transport);
     }
 
-    public function testSendThrowsOnMissingProjectIdCredential(): void
+    public function testSendDoesNotDelayExecutionUntilShutdownWhenConfiguredToNotDoIt(): void
     {
-        $this->expectException(MissingProjectIdCredentialException::class);
+        $promise = new RejectedPromise(new \Exception());
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn($promise);
+
         $transport = new HttpTransport(
-            new Options(),
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $httpClient,
             MessageFactoryDiscovery::find(),
             false
@@ -64,8 +96,8 @@ final class HttpTransportTest extends TestCase
             ->method('error')
             ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception, 'event' => $event]);
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
             ->willReturn(new RejectedPromise($exception));
@@ -106,8 +138,8 @@ final class HttpTransportTest extends TestCase
                 ['exception' => $exception, 'event' => $event2],
             ]);
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->exactly(2))
             ->method('sendAsyncRequest')
             ->willReturnOnConsecutiveCalls(
@@ -146,8 +178,8 @@ final class HttpTransportTest extends TestCase
             ->method('error')
             ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception]);
 
-        /** @var HttpAsyncClient&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
             ->willThrowException($exception);
