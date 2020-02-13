@@ -30,6 +30,17 @@ use Sentry\Options;
 final class HttpClientFactory implements HttpClientFactoryInterface
 {
     /**
+     * @var int The timeout of the request in seconds
+     */
+    private const DEFAULT_HTTP_TIMEOUT = 5;
+
+    /**
+     * @var int The default number of seconds to wait while trying to connect
+     *          to a server
+     */
+    private const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
+
+    /**
      * @var UriFactoryInterface The PSR-7 URI factory
      */
     private $uriFactory;
@@ -105,11 +116,15 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->httpClient = GuzzleHttpClient::createWithConfig([
                     GuzzleHttpClientOptions::PROXY => $options->getHttpProxy(),
+                    GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                    GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ]);
             } elseif (class_exists(CurlHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
                     CURLOPT_PROXY => $options->getHttpProxy(),
+                    CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                    CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ]);
             } else {
                 throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
