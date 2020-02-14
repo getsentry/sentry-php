@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
+
 ## 2.3.1 (2020-01-23)
 
 - Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
