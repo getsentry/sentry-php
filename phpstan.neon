@@ -17,9 +17,6 @@ parameters:
             message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
             path: src/Util/JSON.php
         -
-            message: '/^Constant JSON_INVALID_UTF8_SUBSTITUTE not found\.$/'
-            path: src/Util/JSON.php
-        -
             message: '/^Class Http\\Client\\Curl\\Client not found\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
