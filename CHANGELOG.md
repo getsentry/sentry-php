@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `http_proxy` option not being applied (#978)
+
 ## 2.3.1 (2020-01-23)
 
 - Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
