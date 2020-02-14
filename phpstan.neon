@@ -35,9 +35,6 @@ parameters:
             message: '/^Access to constant PROXY on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
-            message: '/^Property Sentry\\HttpClient\\HttpClientFactory::\$httpClient \(Http\\Client\\HttpAsyncClient\|null\) does not accept Http\\Client\\Curl\\Client.$/'
-            path: src/HttpClient/HttpClientFactory.php
-        -
             message: '/^Access to an undefined property Sentry\\Integration\\IntegrationInterface::\$options\.$/'
             path: src/Integration/IgnoreErrorsIntegration.php
         -

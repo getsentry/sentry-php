@@ -103,12 +103,12 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         if (null === $httpClient && null !== $options->getHttpProxy()) {
             if (class_exists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $this->httpClient = GuzzleHttpClient::createWithConfig([
+                $httpClient = GuzzleHttpClient::createWithConfig([
                     GuzzleHttpClientOptions::PROXY => $options->getHttpProxy(),
                 ]);
             } elseif (class_exists(CurlHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $this->httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
+                $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
                     CURLOPT_PROXY => $options->getHttpProxy(),
                 ]);
             } else {
