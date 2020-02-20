@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
+use GuzzleHttp\Promise\EachPromise;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
-use Http\Promise\Promise as HttpPromiseInterface;
+use Psr\Http\Message\RequestInterface;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
@@ -38,7 +39,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private $requestFactory;
 
     /**
-     * @var HttpPromiseInterface[] The list of pending promises
+     * @var RequestInterface[] The list of pending requests
      */
     private $pendingRequests = [];
 
@@ -112,13 +113,11 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             JSON::encode($event->toArray())
         );
 
-        $promise = $this->httpClient->sendAsyncRequest($request);
-
         if ($this->delaySendingUntilShutdown) {
-            $this->pendingRequests[] = $promise;
+            $this->pendingRequests[] = $request;
         } else {
             try {
-                $promise->wait();
+                $this->httpClient->sendAsyncRequest($request)->wait();
             } catch (\Throwable $exception) {
                 return null;
             }
@@ -138,8 +137,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     }
 
     /**
-     * Cleanups the pending promises by awaiting for them. Any error that occurs
-     * will be ignored.
+     * Sends the pending requests. Any error that occurs will be ignored.
      *
      * @deprecated since version 2.2.3, to be removed in 3.0. Even though this
      *             method is `private` we cannot delete it because it's used
@@ -148,13 +146,20 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     private function cleanupPendingRequests(): void
     {
-        while ($promise = array_pop($this->pendingRequests)) {
-            try {
-                $promise->wait();
-            } catch (\Throwable $exception) {
-                // Do nothing because we don't want to break applications while
-                // trying to send events
-            }
+        try {
+            $requestGenerator = function (): \Generator {
+                foreach ($this->pendingRequests as $key => $request) {
+                    yield $key => $this->httpClient->sendAsyncRequest($request);
+                }
+            };
+
+            $eachPromise = new EachPromise($requestGenerator(), ['concurrency' => 30]);
+            $eachPromise->promise()->wait();
+        } catch (\Throwable $exception) {
+            // Do nothing because we don't want to break applications while
+            // trying to send events
         }
+
+        $this->pendingRequests = [];
     }
 }

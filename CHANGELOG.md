@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Hard-limit concurrent requests in `HttpTransport` and removed pre-init of promises (fixes "too many open files" errors) (#981)
 - Fix `http_proxy` option not being applied (#978)
 
 ## 2.3.1 (2020-01-23)
