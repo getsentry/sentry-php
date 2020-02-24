@@ -18,7 +18,7 @@ final class GzipEncoderPluginTest extends TestCase
      */
     public function testHandleRequest(): void
     {
-        $plugin = new GzipEncoderPlugin(StreamFactoryDiscovery::find());
+        $plugin = new GzipEncoderPlugin();
         $nextCallableCalled = false;
         $expectedPromise = $this->createMock(PromiseInterface::class);
         $request = MessageFactoryDiscovery::find()->createRequest(
