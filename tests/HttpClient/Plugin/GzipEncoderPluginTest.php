@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests\HttpClient\Plugin;
 
 use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
 use Http\Promise\Promise as PromiseInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;

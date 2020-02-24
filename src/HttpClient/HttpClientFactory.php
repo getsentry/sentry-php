@@ -129,7 +129,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         ];
 
         if ($options->isCompressionEnabled()) {
-            $httpClientPlugins[] = new GzipEncoderPlugin($this->streamFactory);
+            $httpClientPlugins[] = new GzipEncoderPlugin();
             $httpClientPlugins[] = new DecoderPlugin();
         }
 
