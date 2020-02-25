@@ -21,6 +21,11 @@ return PhpCsFixer\Config::create()
         'phpdoc_align' => [
             'tags' => ['param', 'return', 'throws', 'type', 'var'],
         ],
+        'phpdoc_line_span' => [
+            'const' => 'multi',
+            'method' => 'multi',
+            'property' => 'multi',
+        ],
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
