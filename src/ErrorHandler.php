@@ -9,9 +9,9 @@ use Sentry\Exception\SilencedErrorException;
 
 /**
  * This class implements a simple error handler that catches all configured
- * error types and logs them using a certain client. Registering more than
- * once this error handler is not supported and will lead to nasty problems.
- * The code is based on the Symfony ErrorHandler component.
+ * error types and relays them to all configured listeners. Registering this
+ * error handler more than once is not supported and will lead to nasty
+ * problems. The code is based on the Symfony ErrorHandler component.
  */
 final class ErrorHandler
 {
@@ -383,8 +383,9 @@ final class ErrorHandler
     }
 
     /**
-     * Handles fatal errors by capturing them through the client. This method
-     * is used as callback of a shutdown function.
+     * Tries to handle a fatal error if any and relay them to the listeners.
+     * It only tries to do this if we still have some reserved memory at
+     * disposal. This method is used as callback of a shutdown function.
      */
     private function handleFatalError(): void
     {
@@ -433,14 +434,14 @@ final class ErrorHandler
                 return;
             }
         } catch (\Throwable $previousExceptionHandlerException) {
-            // This `catch` statement seems to be useless, but in reality its purpose
-            // is to set the $previousExceptionHandlerException variable to the exception
+            // This `catch` statement is here to forcefully override the
+            // $previousExceptionHandlerException variable with the exception
             // we just catched
         }
 
         // If the instance of the exception we're handling is the same as the one
         // catched from the previous exception handler then we give it back to the
-        // native PHP handler to prevent infinite circular loop
+        // native PHP handler to prevent an infinite loop
         if ($exception === $previousExceptionHandlerException) {
             // Disable the fatal error handler or the error will be reported twice
             self::$reservedMemory = null;
