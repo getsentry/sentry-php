@@ -16,9 +16,6 @@ env:
     - dependencies=highest
     - dependencies=lowest
 
-matrix:
-    fast_finish: true
-
 cache:
     directories:
         - $HOME/.composer/cache
@@ -28,6 +25,7 @@ stages:
     - Test
 
 jobs:
+    fast_finish: true
     include:
         - &code-style-static-analysis
           stage: Code style & static analysis

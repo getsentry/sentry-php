@@ -1,5 +1,6 @@
 --TEST--
-Test catching exceptions
+Test that the handler captures the thrown exception when no previous handler is set
+and that the details of the exception are printed on the screen
 --FILE--
 <?php
 
@@ -17,10 +18,6 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-set_exception_handler(static function (): void {
-    echo 'Custom exception handler called';
-});
-
 $errorHandler = ErrorHandler::registerOnceErrorHandler();
 $errorHandler->addErrorHandlerListener(static function (): void {
     echo 'Error listener called (it should not have been)' . PHP_EOL;
@@ -28,7 +25,7 @@ $errorHandler->addErrorHandlerListener(static function (): void {
 
 $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
 $errorHandler->addFatalErrorHandlerListener(static function (): void {
-    echo 'Fatal error listener called (it should not have been)';
+    echo 'Fatal error listener called (it should not have been)' . PHP_EOL;
 });
 
 $errorHandler = ErrorHandler::registerOnceExceptionHandler();
@@ -40,7 +37,7 @@ throw new \Exception('foo bar');
 ?>
 --EXPECTF--
 Exception listener called
-Custom exception handler called
+
 Fatal error: Uncaught Exception: foo bar in %s:%d
 Stack trace:
 %a

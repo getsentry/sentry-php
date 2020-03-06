@@ -1,7 +1,6 @@
 --TEST--
-Test catching out of memory fatal error
---INI--
-memory_limit=20M
+Test that the exception being handled is captured only once even if it's
+rethrown from a previous exception handler
 --FILE--
 <?php
 
@@ -19,14 +18,15 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$errorHandler = ErrorHandler::registerOnceErrorHandler();
-$errorHandler->addErrorHandlerListener(static function (): void {
-    echo 'Error listener called' . PHP_EOL;
+set_exception_handler(static function (\Throwable $exception): void {
+    echo 'Custom exception handler called' . PHP_EOL;
+
+    throw $exception;
 });
 
 $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
 $errorHandler->addFatalErrorHandlerListener(static function (): void {
-    echo 'Fatal error listener called' . PHP_EOL;
+    echo 'Fatal error listener called (it should not have been)' . PHP_EOL;
 });
 
 $errorHandler = ErrorHandler::registerOnceExceptionHandler();
@@ -34,9 +34,12 @@ $errorHandler->addExceptionHandlerListener(static function (): void {
     echo 'Exception listener called' . PHP_EOL;
 });
 
-$foo = str_repeat('x', 1024 * 1024 * 30);
+throw new \Exception('foo bar');
 ?>
 --EXPECTF--
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Error listener called
-Fatal error listener called
+Exception listener called
+Custom exception handler called
+
+Fatal error: Uncaught Exception: foo bar in %s:%d
+Stack trace:
+%a
