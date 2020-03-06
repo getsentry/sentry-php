@@ -4,6 +4,12 @@
 
 - Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
 
+## 2.3.2 (2020-03-06)
+
+- Hard-limit concurrent requests in `HttpTransport` and removed pre-init of promises (fixes "too many open files" errors) (#981)
+- Fix `http_proxy` option not being applied (#978)
+- Fix the error handler rethrowing the captured exception when previous handler didn't (#974)
+
 ## 2.3.1 (2020-01-23)
 
 - Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)

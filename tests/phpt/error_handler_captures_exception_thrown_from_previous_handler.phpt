@@ -1,5 +1,5 @@
 --TEST--
-Test catching exceptions
+Test that an exception thrown from the previous handler is captured
 --FILE--
 <?php
 
@@ -23,7 +23,18 @@ set_exception_handler(static function (): void {
     throw new \Exception('foo bar baz');
 });
 
-ErrorHandler::addExceptionListener(static function (): void {
+$errorHandler = ErrorHandler::registerOnceErrorHandler();
+$errorHandler->addErrorHandlerListener(static function (): void {
+    echo 'Error listener called (it should not have been)' . PHP_EOL;
+});
+
+$errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+$errorHandler->addFatalErrorHandlerListener(static function (): void {
+    echo 'Fatal error listener called (it should not have been)' . PHP_EOL;
+});
+
+$errorHandler = ErrorHandler::registerOnceExceptionHandler();
+$errorHandler->addExceptionHandlerListener(static function (): void {
     echo 'Exception listener called' . PHP_EOL;
 });
 

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Mock\Client as MockClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
@@ -15,7 +13,6 @@ use Sentry\SentrySdk;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
-use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
@@ -316,26 +313,18 @@ class ClientTest extends TestCase
      */
     public function testSampleRateAbsolute(float $sampleRate): void
     {
-        $httpClient = new MockClient();
-        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
-        $options->setSampleRate($sampleRate);
-        $transportFactory = $this->createTransportFactory(new HttpTransport($options, $httpClient, MessageFactoryDiscovery::find(), true, false));
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects(0 == $sampleRate ? $this->never() : $this->exactly(10))
+            ->method('send');
 
-        $client = (new ClientBuilder($options))
+        $transportFactory = $this->createTransportFactory($transport);
+
+        $client = (new ClientBuilder(new Options(['sample_rate' => $sampleRate])))
             ->setTransportFactory($transportFactory)
             ->getClient();
 
         for ($i = 0; $i < 10; ++$i) {
             $client->captureMessage('foobar');
-        }
-
-        switch ($sampleRate) {
-            case 0:
-                $this->assertEmpty($httpClient->getRequests());
-                break;
-            case 1:
-                $this->assertNotEmpty($httpClient->getRequests());
-                break;
         }
     }
 

@@ -1,11 +1,14 @@
-minVersion: '0.7.0'
+minVersion: '0.9.0'
 github:
     owner: getsentry
     repo: sentry-php
 changelogPolicy: simple
+statusProvider: 
+    name: github
 preReleaseCommand: ""
 targets:
     - name: github
+      includeNames: /none/
     - name: registry
       type: sdk
       config:

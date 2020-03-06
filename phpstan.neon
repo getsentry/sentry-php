@@ -7,17 +7,12 @@ parameters:
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - '/^Parameter #1 \$object of method ReflectionProperty::setValue\(\) expects object, null given\.$/' # https://github.com/phpstan/phpstan/pull/2340
+        - "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
         -
             message: /^Cannot assign offset 'os' to array\|string\.$/
             path: src/Event.php
         -
-            message: "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
-            path: src/Transport/HttpTransport.php
-        -
             message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
-            path: src/Util/JSON.php
-        -
-            message: '/^Constant JSON_INVALID_UTF8_SUBSTITUTE not found\.$/'
             path: src/Util/JSON.php
         -
             message: '/^Class Http\\Client\\Curl\\Client not found\.$/'
@@ -33,9 +28,6 @@ parameters:
             path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
-            path: src/HttpClient/HttpClientFactory.php
-        -
-            message: '/^Property Sentry\\HttpClient\\HttpClientFactory::\$httpClient \(Http\\Client\\HttpAsyncClient\|null\) does not accept Http\\Client\\Curl\\Client.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Access to an undefined property Sentry\\Integration\\IntegrationInterface::\$options\.$/'

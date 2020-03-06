@@ -114,14 +114,14 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         if (null === $httpClient && null !== $options->getHttpProxy()) {
             if (class_exists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $this->httpClient = GuzzleHttpClient::createWithConfig([
+                $httpClient = GuzzleHttpClient::createWithConfig([
                     GuzzleHttpClientOptions::PROXY => $options->getHttpProxy(),
                     GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
                     GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ]);
             } elseif (class_exists(CurlHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $this->httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
+                $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
                     CURLOPT_PROXY => $options->getHttpProxy(),
                     CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
                     CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
