@@ -6,6 +6,7 @@ namespace Sentry;
 
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
+use Psr\Log\LoggerInterface;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -46,6 +47,11 @@ final class Client implements FlushableClientInterface
     private $eventFactory;
 
     /**
+     * @var LoggerInterface|null The PSR-3 logger
+     */
+    private $logger;
+
+    /**
      * @var array<string, IntegrationInterface> The stack of integrations
      *
      * @psalm-var array<class-string<IntegrationInterface>, IntegrationInterface>
@@ -58,13 +64,15 @@ final class Client implements FlushableClientInterface
      * @param Options               $options      The client configuration
      * @param TransportInterface    $transport    The transport
      * @param EventFactoryInterface $eventFactory The factory for events
+     * @param LoggerInterface|null  $logger       The PSR-3 logger
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory)
+    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory, ?LoggerInterface $logger = null)
     {
         $this->options = $options;
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
         $this->integrations = Handler::setupIntegrations($options->getIntegrations());
+        $this->logger = $logger;
     }
 
     /**
@@ -156,20 +164,24 @@ final class Client implements FlushableClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload the payload that will be converted to an Event
-     * @param Scope|null $scope   optional scope which enriches the Event
+     * @param array      $payload The payload that will be converted to an Event
+     * @param Scope|null $scope   Optional scope which enriches the Event
      *
      * @return Event|null returns ready to send Event, however depending on options it can be discarded
      */
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
-        $sampleRate = $this->getOptions()->getSampleRate();
+        $sampleRate = $this->options->getSampleRate();
 
         if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            if (null !== $this->logger) {
+                $this->logger->info('The event will be discarded because it has been sampled.');
+            }
+
             return null;
         }
 
-        if ($this->getOptions()->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
+        if ($this->options->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
             $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
             $event = $this->eventFactory->create($payload);
@@ -179,10 +191,20 @@ final class Client implements FlushableClientInterface
             $event = $scope->applyToEvent($event, $payload);
 
             if (null === $event) {
+                if (null !== $this->logger) {
+                    $this->logger->info('The event will be discarded because one of the event processors returned `null`.');
+                }
+
                 return null;
             }
         }
 
-        return \call_user_func($this->options->getBeforeSendCallback(), $event);
+        $event = ($this->options->getBeforeSendCallback())($event);
+
+        if (null === $event && null !== $this->logger) {
+            $this->logger->info('The event will be discarded because the "before_send" callback returned `null`.');
+        }
+
+        return $event;
     }
 }

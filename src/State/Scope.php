@@ -316,7 +316,7 @@ final class Scope
         }
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = \call_user_func($processor, $event, $payload);
+            $event = $processor($event, $payload);
 
             if (null === $event) {
                 return null;

@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
@@ -13,6 +14,7 @@ use Sentry\SentrySdk;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
@@ -311,7 +313,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider sampleRateAbsoluteDataProvider
      */
-    public function testSampleRateAbsolute(float $sampleRate): void
+    public function testProcessEventDiscardsEventAccordingToSampleRateOption(float $sampleRate): void
     {
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects(0 == $sampleRate ? $this->never() : $this->exactly(10))
@@ -334,6 +336,62 @@ class ClientTest extends TestCase
             'sample rate 0' => [0],
             'sample rate 1' => [1],
         ];
+    }
+
+    public function testProcessDiscardsEventWhenItIsSampledDueToSampleRateOption(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it has been sampled.');
+
+        $client = ClientBuilder::create(['sample_rate' => 0])
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureMessage('foo');
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send" callback returned `null`.');
+
+        $options = [
+            'before_send' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureMessage('foo');
+    }
+
+    public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because one of the event processors returned `null`.');
+
+        $client = ClientBuilder::create([])
+            ->setLogger($logger)
+            ->getClient();
+
+        $scope = new Scope();
+        $scope->addEventProcessor(static function () {
+            return null;
+        });
+
+        $client->captureMessage('foo', Severity::debug(), $scope);
     }
 
     /**

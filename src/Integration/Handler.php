@@ -7,6 +7,8 @@ namespace Sentry\Integration;
 /**
  * This class handles the state of already installed integrations.
  * It makes sure to call {@link IntegrationInterface::setupOnce} only once per integration.
+ *
+ * @internal since version 2.4
  */
 final class Handler
 {
