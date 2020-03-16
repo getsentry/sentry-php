@@ -9,8 +9,8 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
@@ -40,7 +40,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private $requestFactory;
 
     /**
-     * @var RequestInterface[] The list of pending requests
+     * @var array<array<mixed>> The list of pending requests
+     *
+     * @psalm-var array<array{\Psr\Http\Message\RequestInterface, Event}>
      */
     private $pendingRequests = [];
 
@@ -51,7 +53,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private $delaySendingUntilShutdown = false;
 
     /**
-     * @var LoggerInterface|null A PSR-3 logger
+     * @var LoggerInterface A PSR-3 logger
      */
     private $logger;
 
@@ -87,7 +89,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->delaySendingUntilShutdown = $delaySendingUntilShutdown;
-        $this->logger = $logger;
+        $this->logger = $logger ?? new NullLogger();
 
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
@@ -123,12 +125,18 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         );
 
         if ($this->delaySendingUntilShutdown) {
-            $this->pendingRequests[] = $request;
+            $this->pendingRequests[] = [$request, $event];
         } else {
             try {
                 $this->httpClient->sendAsyncRequest($request)->wait();
             } catch (\Throwable $exception) {
-                $this->logException($exception);
+                $this->logger->error(
+                    sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                    [
+                        'exception' => $exception,
+                        'event' => $event,
+                    ]
+                );
 
                 return null;
             }
@@ -158,39 +166,33 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private function cleanupPendingRequests(): void
     {
         $requestGenerator = function (): \Generator {
-            foreach ($this->pendingRequests as $key => $request) {
-                yield $key => $this->httpClient->sendAsyncRequest($request);
+            foreach ($this->pendingRequests as $key => $data) {
+                yield $key => $this->httpClient->sendAsyncRequest($data[0]);
             }
         };
 
         try {
             $eachPromise = new EachPromise($requestGenerator(), [
                 'concurrency' => 30,
-                'rejected' => \Closure::fromCallable([$this, 'logException']),
+                'rejected' => function (\Throwable $exception, int $requestIndex): void {
+                    $this->logger->error(
+                        sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                        [
+                            'exception' => $exception,
+                            'event' => $this->pendingRequests[$requestIndex][1],
+                        ]
+                    );
+                },
             ]);
 
             $eachPromise->promise()->wait();
         } catch (\Throwable $exception) {
-            $this->logException($exception);
+            $this->logger->error(
+                sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception]
+            );
         }
 
         $this->pendingRequests = [];
-    }
-
-    /**
-     * Logs the exception that interrupted the sending of an event.
-     *
-     * @param \Throwable $exception The thrown exception
-     */
-    private function logException(\Throwable $exception): void
-    {
-        if (null === $this->logger) {
-            return;
-        }
-
-        $this->logger->error(
-            sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
-            ['exception' => $exception]
-        );
     }
 }

@@ -7,6 +7,7 @@ namespace Sentry;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -47,7 +48,7 @@ final class Client implements FlushableClientInterface
     private $eventFactory;
 
     /**
-     * @var LoggerInterface|null The PSR-3 logger
+     * @var LoggerInterface The PSR-3 logger
      */
     private $logger;
 
@@ -72,7 +73,7 @@ final class Client implements FlushableClientInterface
         $this->transport = $transport;
         $this->eventFactory = $eventFactory;
         $this->integrations = Handler::setupIntegrations($options->getIntegrations());
-        $this->logger = $logger;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -171,38 +172,36 @@ final class Client implements FlushableClientInterface
      */
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
-        $sampleRate = $this->options->getSampleRate();
-
-        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-            if (null !== $this->logger) {
-                $this->logger->info('The event will be discarded because it has been sampled.');
-            }
-
-            return null;
-        }
-
         if ($this->options->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
             $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
             $event = $this->eventFactory->create($payload);
         }
 
+        $sampleRate = $this->options->getSampleRate();
+
+        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
+
+            return null;
+        }
+
         if (null !== $scope) {
+            $previousEvent = $event;
             $event = $scope->applyToEvent($event, $payload);
 
             if (null === $event) {
-                if (null !== $this->logger) {
-                    $this->logger->info('The event will be discarded because one of the event processors returned `null`.');
-                }
+                $this->logger->info('The event will be discarded because one of the event processors returned `null`.', ['event' => $previousEvent]);
 
                 return null;
             }
         }
 
+        $previousEvent = $event;
         $event = ($this->options->getBeforeSendCallback())($event);
 
-        if (null === $event && null !== $this->logger) {
-            $this->logger->info('The event will be discarded because the "before_send" callback returned `null`.');
+        if (null === $event) {
+            $this->logger->info('The event will be discarded because the "before_send" callback returned `null`.', ['event' => $previousEvent]);
         }
 
         return $event;

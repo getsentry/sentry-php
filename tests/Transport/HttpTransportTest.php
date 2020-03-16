@@ -92,12 +92,13 @@ final class HttpTransportTest extends TestCase
     public function testSendLogsErrorMessageIfSendingFailed(): void
     {
         $exception = new \Exception('foo');
+        $event = new Event();
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('error')
-            ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception]);
+            ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception, 'event' => $event]);
 
         /** @var HttpAsyncClient&MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
@@ -114,7 +115,7 @@ final class HttpTransportTest extends TestCase
             $logger
         );
 
-        $transport->send(new Event());
+        $transport->send($event);
     }
 
     /**
@@ -125,12 +126,21 @@ final class HttpTransportTest extends TestCase
     public function testCloseLogsErrorMessageIfSendingFailed(): void
     {
         $exception = new \Exception('foo');
+        $event1 = new Event();
+        $event2 = new Event();
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->exactly(2))
             ->method('error')
-            ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception]);
+            ->withConsecutive([
+                'Failed to send the event to Sentry. Reason: "foo".',
+                ['exception' => $exception, 'event' => $event1],
+            ],
+            [
+                'Failed to send the event to Sentry. Reason: "foo".',
+                ['exception' => $exception, 'event' => $event2],
+            ]);
 
         /** @var HttpAsyncClient&MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClient::class);
@@ -152,8 +162,8 @@ final class HttpTransportTest extends TestCase
 
         // Send multiple events to assert that they all gets the chance of
         // being sent regardless of which fails
-        $transport->send(new Event());
-        $transport->send(new Event());
+        $transport->send($event1);
+        $transport->send($event2);
         $transport->close();
     }
 }

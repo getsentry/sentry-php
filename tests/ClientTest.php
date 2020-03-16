@@ -344,7 +344,9 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because it has been sampled.');
+            ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
 
         $client = ClientBuilder::create(['sample_rate' => 0])
             ->setLogger($logger)
@@ -359,7 +361,9 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because the "before_send" callback returned `null`.');
+            ->with('The event will be discarded because the "before_send" callback returned `null`.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
 
         $options = [
             'before_send' => static function () {
@@ -380,7 +384,9 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because one of the event processors returned `null`.');
+            ->with('The event will be discarded because one of the event processors returned `null`.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
 
         $client = ClientBuilder::create([])
             ->setLogger($logger)
