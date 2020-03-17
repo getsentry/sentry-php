@@ -166,4 +166,38 @@ final class HttpTransportTest extends TestCase
         $transport->send($event2);
         $transport->close();
     }
+
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     */
+    public function testCloseLogsErrorMessageIfExceptionIsThrownWhileProcessingTheHttpRequest(): void
+    {
+        $exception = new \Exception('foo');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception]);
+
+        /** @var HttpAsyncClient&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClient::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willThrowException($exception);
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
+            $httpClient,
+            MessageFactoryDiscovery::find(),
+            true,
+            true,
+            $logger
+        );
+
+        $transport->send(new Event());
+        $transport->close();
+    }
 }

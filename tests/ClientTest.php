@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -311,48 +312,46 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider sampleRateAbsoluteDataProvider
+     * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
      */
-    public function testProcessEventDiscardsEventAccordingToSampleRateOption(float $sampleRate): void
+    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, Invocation $transportCallInvocationMatcher, Invocation $loggerCallInvocationMatcher): void
     {
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-        $transport->expects(0 == $sampleRate ? $this->never() : $this->exactly(10))
+        $transport->expects($transportCallInvocationMatcher)
             ->method('send');
 
-        $transportFactory = $this->createTransportFactory($transport);
-
-        $client = (new ClientBuilder(new Options(['sample_rate' => $sampleRate])))
-            ->setTransportFactory($transportFactory)
-            ->getClient();
-
-        for ($i = 0; $i < 10; ++$i) {
-            $client->captureMessage('foobar');
-        }
-    }
-
-    public function sampleRateAbsoluteDataProvider(): array
-    {
-        return [
-            'sample rate 0' => [0],
-            'sample rate 1' => [1],
-        ];
-    }
-
-    public function testProcessDiscardsEventWhenItIsSampledDueToSampleRateOption(): void
-    {
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
+        $logger->expects($loggerCallInvocationMatcher)
             ->method('info')
             ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
-        $client = ClientBuilder::create(['sample_rate' => 0])
+        $client = ClientBuilder::create(['sample_rate' => $sampleRate])
+            ->setTransportFactory($this->createTransportFactory($transport))
             ->setLogger($logger)
             ->getClient();
 
-        $client->captureMessage('foo');
+        for ($i = 0; $i < 10; ++$i) {
+            $client->captureMessage('foo');
+        }
+    }
+
+    public function processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider(): \Generator
+    {
+        yield [
+            0,
+            $this->never(),
+            $this->exactly(10),
+        ];
+
+        yield [
+            1,
+            $this->exactly(10),
+            $this->never(),
+        ];
     }
 
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
