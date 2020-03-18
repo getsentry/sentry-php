@@ -4,24 +4,56 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Integration;
 
-use Jean85\PrettyVersions;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
+use function Sentry\withScope;
 
 final class ModulesIntegrationTest extends TestCase
 {
-    public function testInvoke(): void
+    /**
+     * @dataProvider invokeDataProvider
+     */
+    public function testInvoke(bool $isIntegrationEnabled, bool $expectedEmptyModules): void
     {
-        $event = new Event();
         $integration = new ModulesIntegration();
+        $integration->setupOnce();
 
-        ModulesIntegration::applyToEvent($integration, $event);
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getIntegration')
+            ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        $modules = $event->getModules();
+        SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertArrayHasKey('sentry/sentry', $modules, 'Root project missing');
-        $this->assertArrayHasKey('ocramius/package-versions', $modules, 'Indirect dependency missing');
-        $this->assertEquals(PrettyVersions::getVersion('sentry/sentry'), $modules['sentry/sentry']);
+        withScope(function (Scope $scope) use ($expectedEmptyModules): void {
+            $event = $scope->applyToEvent(new Event(), []);
+
+            $this->assertNotNull($event);
+
+            if ($expectedEmptyModules) {
+                $this->assertEmpty($event->getModules());
+            } else {
+                $this->assertNotEmpty($event->getModules());
+            }
+        });
+    }
+
+    public function invokeDataProvider(): \Generator
+    {
+        yield [
+            false,
+            true,
+        ];
+
+        yield [
+            true,
+            false,
+        ];
     }
 }

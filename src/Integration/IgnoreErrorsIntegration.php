@@ -50,8 +50,7 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): ?Event {
-            $currentHub = SentrySdk::getCurrentHub();
-            $integration = $currentHub->getIntegration(self::class);
+            $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
 
             if (null !== $integration && $integration->shouldDropEvent($event, $integration->options)) {
                 return null;
