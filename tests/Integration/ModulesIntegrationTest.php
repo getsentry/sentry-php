@@ -56,4 +56,18 @@ final class ModulesIntegrationTest extends TestCase
             false,
         ];
     }
+
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecationMessage The "Sentry\Integration\ModulesIntegration::applyToEvent" method is deprecated since version 2.4 and will be removed in 3.0.
+     */
+    public function testApplyToEvent(): void
+    {
+        $event = new Event();
+        $integration = new ModulesIntegration();
+        $integration->applyToEvent($integration, $event);
+
+        $this->assertNotEmpty($event->getModules());
+    }
 }
