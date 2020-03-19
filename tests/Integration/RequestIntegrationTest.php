@@ -11,9 +11,14 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
+use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Integration\RequestFetcherInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
+use function Sentry\withScope;
 
 final class RequestIntegrationTest extends TestCase
 {
@@ -28,11 +33,7 @@ final class RequestIntegrationTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider applyToEventWithRequestHavingIpAddressDataProvider
-     *
-     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
      */
     public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
     {
@@ -40,11 +41,28 @@ final class RequestIntegrationTest extends TestCase
         $event->getUserContext()->setData(['foo' => 'bar']);
 
         $request = new ServerRequest('GET', new Uri('http://www.example.com/fo'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']);
-        $integration = new RequestIntegration(new Options(['send_default_pii' => $shouldSendPii]));
+        $integration = new RequestIntegration(null, $this->createRequestFetcher($request));
+        $integration->setupOnce();
 
-        RequestIntegration::applyToEvent($integration, $event, $request);
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
 
-        $this->assertEquals($expectedValue, $event->getUserContext()->toArray());
+        $client->expects($this->once())
+            ->method('getIntegration')
+            ->willReturn($integration);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['send_default_pii' => $shouldSendPii]));
+
+        SentrySdk::getCurrentHub()->bindClient($client);
+
+        withScope(function (Scope $scope) use ($event, $expectedValue): void {
+            $event = $scope->applyToEvent($event, []);
+
+            $this->assertNotNull($event);
+            $this->assertEquals($expectedValue, $event->getUserContext()->toArray());
+        });
     }
 
     public function applyToEventWithRequestHavingIpAddressDataProvider(): array
@@ -441,5 +459,25 @@ final class RequestIntegrationTest extends TestCase
             ->willReturn($content);
 
         return $stream;
+    }
+
+    private function createRequestFetcher(ServerRequestInterface $request): RequestFetcherInterface
+    {
+        return new class($request) implements RequestFetcherInterface {
+            /**
+             * @var ServerRequestInterface
+             */
+            private $request;
+
+            public function __construct(ServerRequestInterface $request)
+            {
+                $this->request = $request;
+            }
+
+            public function fetchRequest(): ServerRequestInterface
+            {
+                return $this->request;
+            }
+        };
     }
 }

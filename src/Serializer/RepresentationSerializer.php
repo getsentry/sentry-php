@@ -12,6 +12,8 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
 {
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress InvalidReturnType
      */
     public function representationSerialize($value)
     {

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
+- Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
 
 ## 2.3.2 (2020-03-06)
 
