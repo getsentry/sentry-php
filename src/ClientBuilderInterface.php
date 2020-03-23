@@ -8,6 +8,7 @@ use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\HttpAsyncClient;
 use Http\Message\MessageFactory as MessageFactoryInterface;
 use Http\Message\UriFactory as UriFactoryInterface;
+use Psr\Log\LoggerInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\TransportFactoryInterface;
@@ -19,6 +20,7 @@ use Sentry\Transport\TransportInterface;
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
  * @method self setTransportFactory(TransportFactoryInterface $transportFactory)
+ * @method self setLogger(LoggerInterface $logger)
  */
 interface ClientBuilderInterface
 {

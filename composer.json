@@ -32,6 +32,7 @@
         "php-http/httplug": "^1.1|^2.0",
         "php-http/message": "^1.5",
         "psr/http-message-implementation": "^1.0",
+        "psr/log": "^1.0",
         "symfony/options-resolver": "^2.7|^3.0|^4.0|^5.0",
         "symfony/polyfill-uuid": "^1.13.1"
     },

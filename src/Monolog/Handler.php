@@ -27,7 +27,7 @@ final class Handler extends AbstractProcessingHandler
      * Constructor.
      *
      * @param HubInterface $hub    The hub to which errors are reported
-     * @param int          $level  The minimum logging level at which this
+     * @param int|string   $level  The minimum logging level at which this
      *                             handler will be triggered
      * @param bool         $bubble Whether the messages that are handled can
      *                             bubble up the stack or not
@@ -45,7 +45,7 @@ final class Handler extends AbstractProcessingHandler
     protected function write(array $record): void
     {
         $payload = [
-            'level' => $this->getSeverityFromLevel($record['level']),
+            'level' => self::getSeverityFromLevel($record['level']),
             'message' => $record['message'],
             'logger' => 'monolog.' . $record['channel'],
         ];
@@ -79,7 +79,7 @@ final class Handler extends AbstractProcessingHandler
      *
      * @param int $level The Monolog log level
      */
-    private function getSeverityFromLevel(int $level): Severity
+    private static function getSeverityFromLevel(int $level): Severity
     {
         switch ($level) {
             case Logger::DEBUG:

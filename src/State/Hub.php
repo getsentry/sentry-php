@@ -182,7 +182,7 @@ final class Hub implements HubInterface
             return false;
         }
 
-        $breadcrumb = \call_user_func($beforeBreadcrumbCallback, $breadcrumb);
+        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
 
         if (null !== $breadcrumb) {
             $this->getScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);

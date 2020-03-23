@@ -9,7 +9,8 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sentry\Event;
 use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
@@ -39,7 +40,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     private $requestFactory;
 
     /**
-     * @var RequestInterface[] The list of pending requests
+     * @var array<array<mixed>> The list of pending requests
+     *
+     * @psalm-var array<array{\Psr\Http\Message\RequestInterface, Event}>
      */
     private $pendingRequests = [];
 
@@ -48,6 +51,11 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      *           delayed until the shutdown of the application
      */
     private $delaySendingUntilShutdown = false;
+
+    /**
+     * @var LoggerInterface A PSR-3 logger
+     */
+    private $logger;
 
     /**
      * Constructor.
@@ -63,13 +71,15 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      *                                                            used relying on the deprecated behavior
      *                                                            of delaying the sending of the events
      *                                                            until the shutdown of the application
+     * @param LoggerInterface|null     $logger                    An instance of a PSR-3 logger
      */
     public function __construct(
         Options $config,
         HttpAsyncClientInterface $httpClient,
         RequestFactoryInterface $requestFactory,
         bool $delaySendingUntilShutdown = true,
-        bool $triggerDeprecation = true
+        bool $triggerDeprecation = true,
+        ?LoggerInterface $logger = null
     ) {
         if ($delaySendingUntilShutdown && $triggerDeprecation) {
             @trigger_error(sprintf('Delaying the sending of the events using the "%s" class is deprecated since version 2.2 and will not work in 3.0.', __CLASS__), E_USER_DEPRECATED);
@@ -79,6 +89,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->delaySendingUntilShutdown = $delaySendingUntilShutdown;
+        $this->logger = $logger ?? new NullLogger();
 
         // By calling the cleanupPendingRequests function from a shutdown function
         // registered inside another shutdown function we can be confident that it
@@ -114,11 +125,19 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         );
 
         if ($this->delaySendingUntilShutdown) {
-            $this->pendingRequests[] = $request;
+            $this->pendingRequests[] = [$request, $event];
         } else {
             try {
                 $this->httpClient->sendAsyncRequest($request)->wait();
             } catch (\Throwable $exception) {
+                $this->logger->error(
+                    sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                    [
+                        'exception' => $exception,
+                        'event' => $event,
+                    ]
+                );
+
                 return null;
             }
         }
@@ -146,18 +165,32 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     private function cleanupPendingRequests(): void
     {
-        try {
-            $requestGenerator = function (): \Generator {
-                foreach ($this->pendingRequests as $key => $request) {
-                    yield $key => $this->httpClient->sendAsyncRequest($request);
-                }
-            };
+        $requestGenerator = function (): \Generator {
+            foreach ($this->pendingRequests as $key => $data) {
+                yield $key => $this->httpClient->sendAsyncRequest($data[0]);
+            }
+        };
 
-            $eachPromise = new EachPromise($requestGenerator(), ['concurrency' => 30]);
+        try {
+            $eachPromise = new EachPromise($requestGenerator(), [
+                'concurrency' => 30,
+                'rejected' => function (\Throwable $exception, int $requestIndex): void {
+                    $this->logger->error(
+                        sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                        [
+                            'exception' => $exception,
+                            'event' => $this->pendingRequests[$requestIndex][1],
+                        ]
+                    );
+                },
+            ]);
+
             $eachPromise->promise()->wait();
         } catch (\Throwable $exception) {
-            // Do nothing because we don't want to break applications while
-            // trying to send events
+            $this->logger->error(
+                sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception]
+            );
         }
 
         $this->pendingRequests = [];
