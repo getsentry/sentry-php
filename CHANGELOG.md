@@ -6,6 +6,7 @@
 - Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
 - Log internal debug and error messages to a PSR-3 compatible logger (#989)
 - Make `AbstractSerializer` to accept `Traversable` values using `is_iterable` instead of `is_array` (#991)
+- Refactor the `ModulesIntegration` integration to improve its code and its tests (#990)
 
 ## 2.3.2 (2020-03-06)
 

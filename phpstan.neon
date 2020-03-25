@@ -35,6 +35,9 @@ parameters:
         -
             message: '/^Call to an undefined method Sentry\\Integration\\IntegrationInterface::shouldDropEvent\(\)\.$/'
             path: src/Integration/IgnoreErrorsIntegration.php
+        -
+            message: '/^Call to an undefined method Sentry\\Integration\\IntegrationInterface::processEvent\(\)\.$/'
+            path: src/Integration/ModulesIntegration.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures
