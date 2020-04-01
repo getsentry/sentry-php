@@ -100,7 +100,8 @@ abstract class AbstractContextTest extends TestCase
         $context = $this->createContext();
         $context[$key] = $value;
 
-        $this->assertArraySubset([$key => $value], $context->toArray());
+        $this->assertArrayHasKey($key, $context);
+        $this->assertSame($value, $context[$key]);
     }
 
     /**
