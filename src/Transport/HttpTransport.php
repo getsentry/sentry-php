@@ -119,7 +119,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
 
         $request = $this->requestFactory->createRequest(
             'POST',
-            $dsn->getApiEndpointUrl(),
+            $dsn->getStoreApiEndpointUrl(),
             ['Content-Type' => 'application/json'],
             JSON::encode($event->toArray())
         );

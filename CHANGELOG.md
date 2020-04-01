@@ -7,6 +7,7 @@
 - Log internal debug and error messages to a PSR-3 compatible logger (#989)
 - Make `AbstractSerializer` to accept `Traversable` values using `is_iterable` instead of `is_array` (#991)
 - Refactor the `ModulesIntegration` integration to improve its code and its tests (#990)
+- Extract the parsing and validation logic of the DSN into its own value object (#995)
 
 ## 2.3.2 (2020-03-06)
 

@@ -172,4 +172,62 @@ final class DsnTest extends TestCase
             'The scheme of the "tcp://public:secret@example.com/1" DSN must be either "http" or "https".',
         ];
     }
+
+    /**
+     * @dataProvider getStoreApiEndpointUrlDataProvider
+     */
+    public function testGetStoreApiEndpointUrl(string $value, string $expectedUrl): void
+    {
+        $dsn = Dsn::createFromString($value);
+
+        $this->assertSame($expectedUrl, $dsn->getStoreApiEndpointUrl());
+    }
+
+    public function getStoreApiEndpointUrlDataProvider(): \Generator
+    {
+        yield [
+            'http://public@example.com/sentry/1',
+            'http://example.com/sentry/api/1/store/',
+        ];
+
+        yield [
+            'http://public@example.com/1',
+            'http://example.com/api/1/store/',
+        ];
+
+        yield [
+            'http://public@example.com:8080/sentry/1',
+            'http://example.com:8080/sentry/api/1/store/',
+        ];
+
+        yield [
+            'https://public@example.com/sentry/1',
+            'https://example.com/sentry/api/1/store/',
+        ];
+
+        yield [
+            'https://public@example.com:4343/sentry/1',
+            'https://example.com:4343/sentry/api/1/store/',
+        ];
+    }
+
+    /**
+     * @dataProvider toStringDataProvider
+     */
+    public function testToString(string $value): void
+    {
+        $this->assertSame($value, (string) Dsn::createFromString($value));
+    }
+
+    public function toStringDataProvider(): array
+    {
+        return [
+            ['http://public@example.com/sentry/1'],
+            ['http://public:secret@example.com/sentry/1'],
+            ['http://public@example.com/1'],
+            ['http://public@example.com:8080/sentry/1'],
+            ['https://public@example.com/sentry/1'],
+            ['https://public@example.com:4343/sentry/1'],
+        ];
+    }
 }

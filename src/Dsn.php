@@ -183,7 +183,7 @@ final class Dsn
     /**
      * Gets the URL of the API endpoint to use to post an event to Sentry.
      */
-    public function getApiEndpointUrl(): string
+    public function getStoreApiEndpointUrl(): string
     {
         $url = $this->scheme . '://' . $this->host;
 

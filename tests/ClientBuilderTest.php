@@ -7,9 +7,7 @@ namespace Sentry\Tests;
 use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory as MessageFactoryInterface;
-use Http\Message\UriFactory as UriFactoryInterface;
 use Http\Promise\FulfilledPromise;
 use Http\Promise\Promise as PromiseInterface;
 use Jean85\PrettyVersions;
@@ -54,26 +52,6 @@ final class ClientBuilderTest extends TestCase
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
         $this->assertInstanceOf(NullTransport::class, $transport);
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation Method Sentry\ClientBuilder::setUriFactory() is deprecated since version 2.3 and will be removed in 3.0.
-     */
-    public function testSetUriFactory(): void
-    {
-        /** @var UriFactoryInterface&MockObject $uriFactory */
-        $uriFactory = $this->createMock(UriFactoryInterface::class);
-        $uriFactory->expects($this->once())
-            ->method('createUri')
-            ->willReturn(UriFactoryDiscovery::find()->createUri('http://www.example.com'));
-
-        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
-            ->setUriFactory($uriFactory)
-            ->getClient();
-
-        $client->captureMessage('foo');
     }
 
     /**
