@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Uri;
 use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
 use Http\Message\MessageFactory as MessageFactoryInterface;
 use Http\Message\UriFactory as UriFactoryInterface;
 use Http\Promise\FulfilledPromise;
@@ -67,7 +67,7 @@ final class ClientBuilderTest extends TestCase
         $uriFactory = $this->createMock(UriFactoryInterface::class);
         $uriFactory->expects($this->once())
             ->method('createUri')
-            ->willReturn(new Uri('http://example.com'));
+            ->willReturn(UriFactoryDiscovery::find()->createUri('http://www.example.com'));
 
         $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
             ->setUriFactory($uriFactory)
@@ -87,7 +87,7 @@ final class ClientBuilderTest extends TestCase
         $messageFactory = $this->createMock(MessageFactoryInterface::class);
         $messageFactory->expects($this->once())
             ->method('createRequest')
-            ->willReturn(new Request('POST', ''));
+            ->willReturn(MessageFactoryDiscovery::find()->createRequest('POST', 'http://www.example.com'));
 
         $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
             ->setMessageFactory($messageFactory)
@@ -113,7 +113,7 @@ final class ClientBuilderTest extends TestCase
             ->setTransport($transport)
             ->getClient();
 
-        $client->captureMessage('foo');
+        $this->assertSame('ddb4a0b9ab1941bf92bd2520063663e3', $client->captureMessage('foo'));
     }
 
     /**
