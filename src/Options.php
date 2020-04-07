@@ -31,26 +31,6 @@ final class Options
     private $options = [];
 
     /**
-     * @var string|null A simple server string, set to the DSN found on your Sentry settings
-     */
-    private $dsn;
-
-    /**
-     * @var string|null The project ID number to send to the Sentry server
-     */
-    private $projectId;
-
-    /**
-     * @var string|null The public key to authenticate the SDK
-     */
-    private $publicKey;
-
-    /**
-     * @var string|null The secret key to authenticate the SDK
-     */
-    private $secretKey;
-
-    /**
      * @var OptionsResolver The options resolver
      */
     private $resolver;
@@ -324,10 +304,18 @@ final class Options
 
     /**
      * Gets the project ID number to send to the Sentry server.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getProjectId(): ?string
     {
-        return $this->projectId;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return (string) $this->options['dsn']->getProjectId();
     }
 
     /**
@@ -352,18 +340,34 @@ final class Options
 
     /**
      * Gets the public key to authenticate the SDK.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getPublicKey(): ?string
     {
-        return $this->publicKey;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return $this->options['dsn']->getPublicKey();
     }
 
     /**
      * Gets the secret key to authenticate the SDK.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getSecretKey(): ?string
     {
-        return $this->secretKey;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return $this->options['dsn']->getSecretKey();
     }
 
     /**
@@ -410,10 +414,35 @@ final class Options
 
     /**
      * Gets the DSN of the Sentry server the authenticated user is bound to.
+     *
+     * @param bool $returnAsString Whether to return the DSN as a string or as an object
+     *
+     * @return string|Dsn|null
      */
-    public function getDsn(): ?string
+    public function getDsn(bool $returnAsString = true)
     {
-        return $this->dsn;
+        /** @var Dsn|null $dsn */
+        $dsn = $this->options['dsn'];
+
+        if (null === $dsn) {
+            return null;
+        }
+
+        if ($returnAsString) {
+            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
+            $url = $dsn->getScheme() . '://' . $dsn->getHost();
+
+            if (('http' === $dsn->getScheme() && 80 !== $dsn->getPort()) || ('https' === $dsn->getScheme() && 443 !== $dsn->getPort())) {
+                $url .= ':' . $dsn->getPort();
+            }
+
+            $url .= $dsn->getPath();
+
+            return $url;
+        }
+
+        return $dsn;
     }
 
     /**
@@ -813,7 +842,7 @@ final class Options
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
-        $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool']);
+        $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
@@ -880,16 +909,20 @@ final class Options
      * Normalizes the DSN option by parsing the host, public and secret keys and
      * an optional path.
      *
-     * @param SymfonyOptions$options The configuration options
-     * @param string|null $dsn The actual value of the option to normalize
+     * @param SymfonyOptions       $options The configuration options
+     * @param string|bool|Dsn|null $value   The actual value of the option to normalize
      */
-    private function normalizeDsnOption(SymfonyOptions $options, ?string $dsn): ?string
+    private function normalizeDsnOption(SymfonyOptions $options, $value): ?Dsn
     {
-        if (empty($dsn)) {
+        if (null === $value || \is_bool($value)) {
             return null;
         }
 
-        switch (strtolower($dsn)) {
+        if ($value instanceof Dsn) {
+            return $value;
+        }
+
+        switch (strtolower($value)) {
             case '':
             case 'false':
             case '(false)':
@@ -900,46 +933,23 @@ final class Options
                 return null;
         }
 
-        $parsed = @parse_url($dsn);
-
-        if (false === $parsed || !isset($parsed['scheme'], $parsed['host'], $parsed['path'], $parsed['user'])) {
-            return null;
-        }
-
-        $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
-
-        if (isset($parsed['port']) && ((80 !== $parsed['port'] && 'http' === $parsed['scheme']) || (443 !== $parsed['port'] && 'https' === $parsed['scheme']))) {
-            $this->dsn .= ':' . $parsed['port'];
-        }
-
-        $lastSlashPosition = strrpos($parsed['path'], '/');
-
-        if (false !== $lastSlashPosition) {
-            $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
-        } else {
-            $this->dsn .= $parsed['path'];
-        }
-
-        $this->publicKey = $parsed['user'];
-        $this->secretKey = $parsed['pass'] ?? null;
-
-        $parts = explode('/', $parsed['path']);
-
-        $this->projectId = array_pop($parts);
-
-        return $dsn;
+        return Dsn::createFromString($value);
     }
 
     /**
      * Validates the DSN option ensuring that all required pieces are set and
      * that the URL is valid.
      *
-     * @param string|null $dsn The value of the option
+     * @param string|bool|Dsn|null $dsn The value of the option
      */
-    private function validateDsnOption(?string $dsn): bool
+    private function validateDsnOption($dsn): bool
     {
-        if (null === $dsn) {
+        if (null === $dsn || $dsn instanceof Dsn) {
             return true;
+        }
+
+        if (\is_bool($dsn)) {
+            return false === $dsn;
         }
 
         switch (strtolower($dsn)) {
@@ -953,25 +963,13 @@ final class Options
                 return true;
         }
 
-        $parsed = @parse_url($dsn);
+        try {
+            Dsn::createFromString($dsn);
 
-        if (false === $parsed) {
+            return true;
+        } catch (\InvalidArgumentException $exception) {
             return false;
         }
-
-        if (!isset($parsed['scheme'], $parsed['user'], $parsed['host'], $parsed['path'])) {
-            return false;
-        }
-
-        if (empty($parsed['user']) || (isset($parsed['pass']) && empty($parsed['pass']))) {
-            return false;
-        }
-
-        if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

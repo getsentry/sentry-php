@@ -14,6 +14,9 @@ use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\HttpClient\PluggableHttpClientFactory;
 use Sentry\Options;
 
+/**
+ * @group legacy
+ */
 final class PluggableHttpClientFactoryTest extends TestCase
 {
     public function testCreate(): void

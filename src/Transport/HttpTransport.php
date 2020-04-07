@@ -11,8 +11,8 @@ use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\Dsn;
 use Sentry\Event;
-use Sentry\Exception\MissingProjectIdCredentialException;
 use Sentry\Options;
 use Sentry\Util\JSON;
 
@@ -25,9 +25,9 @@ use Sentry\Util\JSON;
 final class HttpTransport implements TransportInterface, ClosableTransportInterface
 {
     /**
-     * @var Options The Raven client configuration
+     * @var Options The Sentry client options
      */
-    private $config;
+    private $options;
 
     /**
      * @var HttpAsyncClientInterface The HTTP client
@@ -60,7 +60,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     /**
      * Constructor.
      *
-     * @param Options                  $config                    The Raven client configuration
+     * @param Options                  $options                   The Sentry client configuration
      * @param HttpAsyncClientInterface $httpClient                The HTTP client
      * @param RequestFactoryInterface  $requestFactory            The PSR-7 request factory
      * @param bool                     $delaySendingUntilShutdown This flag controls whether to delay
@@ -74,7 +74,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      * @param LoggerInterface|null     $logger                    An instance of a PSR-3 logger
      */
     public function __construct(
-        Options $config,
+        Options $options,
         HttpAsyncClientInterface $httpClient,
         RequestFactoryInterface $requestFactory,
         bool $delaySendingUntilShutdown = true,
@@ -85,7 +85,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             @trigger_error(sprintf('Delaying the sending of the events using the "%s" class is deprecated since version 2.2 and will not work in 3.0.', __CLASS__), E_USER_DEPRECATED);
         }
 
-        $this->config = $config;
+        $this->options = $options;
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->delaySendingUntilShutdown = $delaySendingUntilShutdown;
@@ -111,15 +111,15 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     public function send(Event $event): ?string
     {
-        $projectId = $this->config->getProjectId();
+        $dsn = $this->options->getDsn(false);
 
-        if (null === $projectId) {
-            throw new MissingProjectIdCredentialException();
+        if (!$dsn instanceof Dsn) {
+            throw new \RuntimeException(sprintf('The DSN option must be set to use the "%s" transport.', self::class));
         }
 
         $request = $this->requestFactory->createRequest(
             'POST',
-            sprintf('/api/%d/store/', $projectId),
+            $dsn->getStoreApiEndpointUrl(),
             ['Content-Type' => 'application/json'],
             JSON::encode($event->toArray())
         );

@@ -37,15 +37,15 @@ final class HttpClientFactoryTest extends TestCase
             'enable_compression' => $isCompressionEnabled,
         ]));
 
-        $httpClient->sendAsyncRequest(MessageFactoryDiscovery::find()->createRequest('POST', '/foo', [], 'foo bar'));
+        $httpClient->sendAsyncRequest(MessageFactoryDiscovery::find()->createRequest('POST', 'http://example.com/sentry/foo', [], 'foo bar'));
 
         /** @var RequestInterface|bool $httpRequest */
         $httpRequest = $mockHttpClient->getLastRequest();
 
         $this->assertInstanceOf(RequestInterface::class, $httpRequest);
         $this->assertSame('http://example.com/sentry/foo', (string) $httpRequest->getUri());
-        $this->assertSame('sentry.php.test/1.2.3', (string) $httpRequest->getHeaderLine('User-Agent'));
-        $this->assertSame('Sentry sentry_version=7, sentry_client=sentry.php.test/1.2.3, sentry_key=public', (string) $httpRequest->getHeaderLine('X-Sentry-Auth'));
+        $this->assertSame('sentry.php.test/1.2.3', $httpRequest->getHeaderLine('User-Agent'));
+        $this->assertSame('Sentry sentry_version=7, sentry_client=sentry.php.test/1.2.3, sentry_key=public', $httpRequest->getHeaderLine('X-Sentry-Auth'));
         $this->assertSame($expectedRequestBody, (string) $httpRequest->getBody());
     }
 

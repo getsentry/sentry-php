@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Dsn;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -76,179 +77,191 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @dataProvider serverOptionDataProvider
-     */
-    public function testServerOption(string $dsn, array $options): void
-    {
-        $configuration = new Options(['dsn' => $dsn]);
-
-        $this->assertEquals($options['project_id'], $configuration->getProjectId());
-        $this->assertEquals($options['public_key'], $configuration->getPublicKey());
-        $this->assertEquals($options['secret_key'], $configuration->getSecretKey());
-        $this->assertEquals($options['server'], $configuration->getDsn());
-    }
-
-    public function serverOptionDataProvider(): array
-    {
-        return [
-            [
-                'http://public@example.com/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => null,
-                    'server' => 'http://example.com',
-                ],
-            ],
-            [
-                'http://public:secret@example.com/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'http://example.com',
-                ],
-            ],
-            [
-                'http://public:secret@example.com:80/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'http://example.com',
-                ],
-            ],
-            [
-                'https://public:secret@example.com/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'https://example.com',
-                ],
-            ],
-            [
-                'https://public:secret@example.com:443/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'https://example.com',
-                ],
-            ],
-            [
-                'http://public:secret@example.com/sentry/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'http://example.com/sentry',
-                ],
-            ],
-            [
-                'http://public:secret@example.com:3000/sentry/1',
-                [
-                    'project_id' => 1,
-                    'public_key' => 'public',
-                    'secret_key' => 'secret',
-                    'server' => 'http://example.com:3000/sentry',
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * @dataProvider invalidServerOptionDataProvider
+     * @group legacy
      *
-     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
-     * @expectedExceptionMessageRegExp /^The option "dsn" with value "(.*)" is invalid.$/
+     * @dataProvider dsnOptionDataProvider
+     *
+     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
-    public function testServerOptionsWithInvalidServer(string $dsn): void
+    public function testDsnOption($value, ?string $expectedProjectId, ?string $expectedPublicKey, ?string $expectedSecretKey, ?string $expectedDsnAsString, ?Dsn $expectedDsnAsObject): void
     {
-        new Options(['dsn' => $dsn]);
+        $options = new Options(['dsn' => $value]);
+
+        $this->assertSame($expectedProjectId, $options->getProjectId());
+        $this->assertSame($expectedPublicKey, $options->getPublicKey());
+        $this->assertSame($expectedSecretKey, $options->getSecretKey());
+        $this->assertEquals($expectedDsnAsString, $options->getDsn());
+        $this->assertEquals($expectedDsnAsObject, $options->getDsn(false));
     }
 
-    public function invalidServerOptionDataProvider(): array
+    public function dsnOptionDataProvider(): \Generator
     {
-        return [
-            ['http://public:secret@/1'],
-            ['http://public:secret@example.com'],
-            ['http://:secret@example.com/1'],
-            ['http://public:@example.com'],
-            ['tcp://public:secret@example.com/1'],
+        yield [
+            'http://public:secret@example.com/sentry/1',
+            '1',
+            'public',
+            'secret',
+            'http://example.com/sentry',
+            Dsn::createFromString('http://public:secret@example.com/sentry/1'),
+        ];
+
+        yield [
+            Dsn::createFromString('http://public:secret@example.com/sentry/1'),
+            '1',
+            'public',
+            'secret',
+            'http://example.com/sentry',
+            Dsn::createFromString('http://public:secret@example.com/sentry/1'),
+        ];
+
+        yield [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            'null',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            '(null)',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            false,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            'false',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            '(false)',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            '',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            'empty',
+            null,
+            null,
+            null,
+            null,
+            null,
+        ];
+
+        yield [
+            '(empty)',
+            null,
+            null,
+            null,
+            null,
+            null,
         ];
     }
 
     /**
-     * @dataProvider disabledDsnProvider
+     * @dataProvider dsnOptionThrowsOnInvalidValueDataProvider
      */
-    public function testParseDSNWithDisabledValue($dsn)
+    public function testDsnOptionThrowsOnInvalidValue($value, string $expectedExceptionMessage): void
     {
-        $configuration = new Options(['dsn' => $dsn]);
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
 
-        $this->assertNull($configuration->getProjectId());
-        $this->assertNull($configuration->getPublicKey());
-        $this->assertNull($configuration->getSecretKey());
-        $this->assertNull($configuration->getDsn());
+        new Options(['dsn' => $value]);
     }
 
-    public function disabledDsnProvider()
+    public function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
     {
-        return [
-            [null],
-            ['null'],
-            [false],
-            ['false'],
-            [''],
-            ['empty'],
+        yield [
+            true,
+            'The option "dsn" with value true is invalid.',
+        ];
+
+        yield [
+            'foo',
+            'The option "dsn" with value "foo" is invalid.',
         ];
     }
 
     /**
      * @dataProvider excludedExceptionsDataProvider
      */
-    public function testIsExcludedException($excludedExceptions, $exception, $result)
+    public function testIsExcludedException(array $excludedExceptions, \Throwable $exception, bool $result): void
     {
         $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
 
         $this->assertSame($result, $configuration->isExcludedException($exception, false));
     }
 
-    public function excludedExceptionsDataProvider()
+    public function excludedExceptionsDataProvider(): \Generator
     {
-        return [
-            [
-                [\BadFunctionCallException::class, \BadMethodCallException::class],
-                new \BadMethodCallException(),
-                true,
-            ],
-            [
-                [\BadFunctionCallException::class],
-                new \Exception(),
-                false,
-            ],
-            [
-                [\Exception::class],
-                new \BadFunctionCallException(),
-                true,
-            ],
+        yield [
+            [\BadFunctionCallException::class, \BadMethodCallException::class],
+            new \BadMethodCallException(),
+            true,
+        ];
+
+        yield [
+            [\BadFunctionCallException::class],
+            new \Exception(),
+            false,
+        ];
+
+        yield [
+            [\Exception::class],
+            new \BadFunctionCallException(),
+            true,
         ];
     }
 
     /**
      * @dataProvider excludedPathProviders
-     *
-     * @param string $value
-     * @param string $expected
      */
-    public function testExcludedAppPathsPathRegressionWithFileName($value, $expected)
+    public function testExcludedAppPathsPathRegressionWithFileName(string $value, string $expected): void
     {
         $configuration = new Options(['in_app_exclude' => [$value]]);
 
         $this->assertSame([$expected], $configuration->getInAppExcludedPaths());
     }
 
-    public function excludedPathProviders()
+    public function excludedPathProviders(): array
     {
         return [
             ['some/path', 'some/path'],
@@ -305,37 +318,43 @@ final class OptionsTest extends TestCase
         ];
     }
 
-    public function testDsnOptionSupportsEnvironmentVariable(): void
+    /**
+     * @group legacy
+     * @backupGlobals enabled
+     *
+     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
+     */
+    public function testDsnOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
 
         $options = new Options();
-
-        unset($_SERVER['SENTRY_DSN']);
 
         $this->assertSame('http://example.com', $options->getDsn());
         $this->assertSame('public', $options->getPublicKey());
         $this->assertSame('1', $options->getProjectId());
     }
 
-    public function testEnvironmentOptionSupportsEnvironmentVariable(): void
+    /**
+     * @backupGlobals enabled
+     */
+    public function testEnvironmentOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_ENVIRONMENT'] = 'test_environment';
 
         $options = new Options();
 
-        unset($_SERVER['SENTRY_ENVIRONMENT']);
-
         $this->assertSame('test_environment', $options->getEnvironment());
     }
 
-    public function testReleaseOptionSupportsEnvironmentVariable(): void
+    /**
+     * @backupGlobals enabled
+     */
+    public function testReleaseOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
         $options = new Options();
-
-        unset($_SERVER['SENTRY_RELEASE']);
 
         $this->assertSame('0.0.1', $options->getRelease());
     }

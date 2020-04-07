@@ -4,79 +4,58 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\HttpClient\Authentication;
 
-use PHPUnit\Framework\MockObject\MockObject;
+use GuzzleHttp\Psr7\Request;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
-use Sentry\Exception\MissingPublicKeyCredentialException;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\Options;
 
 final class SentryAuthenticationTest extends TestCase
 {
-    public function testAuthenticate(): void
+    public function testAuthenticateWithSecretKey(): void
     {
-        $configuration = new Options(['dsn' => 'http://public:secret@example.com/']);
+        $configuration = new Options(['dsn' => 'http://public:secret@example.com/sentry/1']);
         $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '1.2.3');
-
-        /** @var RequestInterface|MockObject $request */
-        $request = $this->getMockBuilder(RequestInterface::class)
-            ->getMock();
-
-        /** @var RequestInterface|MockObject $newRequest */
-        $newRequest = $this->getMockBuilder(RequestInterface::class)
-            ->getMock();
-
-        $headerValue = sprintf(
+        $request = new Request('POST', 'http://www.example.com', []);
+        $expectedHeader = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_key=public, sentry_secret=secret',
             Client::PROTOCOL_VERSION,
             'sentry.php.test/1.2.3'
         );
 
-        $request->expects($this->once())
-            ->method('withHeader')
-            ->with('X-Sentry-Auth', $headerValue)
-            ->willReturn($newRequest);
+        $this->assertFalse($request->hasHeader('X-Sentry-Auth'));
 
-        $this->assertSame($newRequest, $authentication->authenticate($request));
+        $request = $authentication->authenticate($request);
+
+        $this->assertTrue($request->hasHeader('X-Sentry-Auth'));
+        $this->assertSame($expectedHeader, $request->getHeaderLine('X-Sentry-Auth'));
     }
 
-    public function testAuthenticateWithNoSecretKey(): void
+    public function testAuthenticateWithoutSecretKey(): void
     {
-        $configuration = new Options(['dsn' => 'http://public@example.com/']);
-        $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '2.0.0');
-
-        /** @var RequestInterface|MockObject $request */
-        $request = $this->getMockBuilder(RequestInterface::class)
-            ->getMock();
-
-        /** @var RequestInterface|MockObject $newRequest */
-        $newRequest = $this->getMockBuilder(RequestInterface::class)
-            ->getMock();
-
-        $headerValue = sprintf(
+        $configuration = new Options(['dsn' => 'http://public@example.com/sentry/1']);
+        $authentication = new SentryAuthentication($configuration, 'sentry.php.test', '1.2.3');
+        $request = new Request('POST', 'http://www.example.com', []);
+        $expectedHeader = sprintf(
             'Sentry sentry_version=%s, sentry_client=%s, sentry_key=public',
             Client::PROTOCOL_VERSION,
-            'sentry.php.test/2.0.0'
+            'sentry.php.test/1.2.3'
         );
 
-        $request->expects($this->once())
-            ->method('withHeader')
-            ->with('X-Sentry-Auth', $headerValue)
-            ->willReturn($newRequest);
+        $this->assertFalse($request->hasHeader('X-Sentry-Auth'));
 
-        $this->assertSame($newRequest, $authentication->authenticate($request));
+        $request = $authentication->authenticate($request);
+
+        $this->assertTrue($request->hasHeader('X-Sentry-Auth'));
+        $this->assertSame($expectedHeader, $request->getHeaderLine('X-Sentry-Auth'));
     }
 
-    public function testAuthenticateWithNoPublicKeyThrowsException(): void
+    public function testAuthenticateWithoutDsnOptionSet(): void
     {
-        $this->expectException(MissingPublicKeyCredentialException::class);
+        $authentication = new SentryAuthentication(new Options(), 'sentry.php.test', '1.2.3');
+        $request = new Request('POST', 'http://www.example.com', []);
+        $request = $authentication->authenticate($request);
 
-        $authentication = new SentryAuthentication(new Options(), 'sentry.php.test', '2.0.0');
-
-        /** @var RequestInterface&MockObject $request */
-        $request = $this->createMock(RequestInterface::class);
-
-        $authentication->authenticate($request);
+        $this->assertFalse($request->hasHeader('X-Sentry-Auth'));
     }
 }

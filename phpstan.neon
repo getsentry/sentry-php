@@ -38,6 +38,33 @@ parameters:
         -
             message: '/^Call to an undefined method Sentry\\Integration\\IntegrationInterface::processEvent\(\)\.$/'
             path: src/Integration/ModulesIntegration.php
+        -
+            message: '/^Parameter #2 \$str of function explode expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #1 \$haystack of function strrpos expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #1 \$str of function substr expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #2 \$host of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #3 \$port of class Sentry\\Dsn constructor expects int, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #5 \$path of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #6 \$publicKey of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #7 \$secretKey of class Sentry\\Dsn constructor expects string\|null, int\|string\|null given\.$/'
+            path: src/Dsn.php
+        -
+            message: '/^Parameter #1 \$c of function ctype_digit expects int\|string, string\|null given\.$/'
+            path: src/Dsn.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures
