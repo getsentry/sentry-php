@@ -9,14 +9,14 @@ use Sentry\Context\Context;
 
 class ContextTest extends TestCase
 {
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $context = new Context(['foo' => 'bar']);
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
+        $this->assertSame(['foo' => 'bar'], $context->toArray());
     }
 
-    public function testMerge()
+    public function testMerge(): void
     {
         $context = new Context([
             'foo' => 'bar',
@@ -27,45 +27,45 @@ class ContextTest extends TestCase
 
         $context->merge(['bar' => ['barfoo' => 'foobar']], true);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => ['foobar' => 'barfoo', 'barfoo' => 'foobar']], 'data', $context);
+        $this->assertSame(['foo' => 'bar', 'bar' => ['foobar' => 'barfoo', 'barfoo' => 'foobar']], $context->toArray());
 
         $context->merge(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => 'foo'], 'data', $context);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'foo'], $context->toArray());
     }
 
-    public function testSetData()
+    public function testSetData(): void
     {
         $context = new Context(['foo' => 'bar']);
         $context->setData(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['foo' => 'bar', 'bar' => 'foo'], 'data', $context);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'foo'], $context->toArray());
 
         $context->setData(['foo' => ['bar' => 'baz']]);
 
-        $this->assertAttributeEquals(['foo' => ['bar' => 'baz'], 'bar' => 'foo'], 'data', $context);
+        $this->assertSame(['foo' => ['bar' => 'baz'], 'bar' => 'foo'], $context->toArray());
     }
 
-    public function testReplaceData()
+    public function testReplaceData(): void
     {
         $context = new Context(['foo' => 'bar']);
         $context->replaceData(['bar' => 'foo']);
 
-        $this->assertAttributeEquals(['bar' => 'foo'], 'data', $context);
+        $this->assertSame(['bar' => 'foo'], $context->toArray());
     }
 
-    public function testClear()
+    public function testClear(): void
     {
         $context = new Context(['foo' => 'bar']);
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
+        $this->assertSame(['foo' => 'bar'], $context->toArray());
 
         $context->clear();
 
-        $this->assertAttributeEmpty('data', $context);
+        $this->assertSame([], $context->toArray());
     }
 
-    public function testIsEmpty()
+    public function testIsEmpty(): void
     {
         $context = new Context();
 
@@ -76,26 +76,16 @@ class ContextTest extends TestCase
         $this->assertFalse($context->isEmpty());
     }
 
-    public function testToArray()
+    public function testJsonSerialize(): void
     {
         $context = new Context(['foo' => 'bar']);
 
-        $this->assertEquals(['foo' => 'bar'], $context->toArray());
+        $this->assertSame('{"foo":"bar"}', json_encode($context));
     }
 
-    public function testJsonSerialize()
-    {
-        $context = new Context(['foo' => 'bar']);
-
-        $this->assertEquals('{"foo":"bar"}', json_encode($context));
-    }
-
-    public function testArrayLikeBehaviour()
+    public function testArrayLikeBehaviour(): void
     {
         $context = new Context();
-
-        $this->assertAttributeEquals([], 'data', $context);
-        $this->assertArrayNotHasKey('foo', $context);
 
         // Accessing a key that does not exists in the data object should behave
         // like accessing a non-existent key of an array
@@ -103,24 +93,23 @@ class ContextTest extends TestCase
 
         $error = error_get_last();
 
-        $this->assertInternalType('array', $error);
-        $this->assertEquals('Undefined index: foo', $error['message']);
+        $this->assertIsArray($error);
+        $this->assertSame('Undefined index: foo', $error['message']);
 
         $context['foo'] = 'bar';
 
-        $this->assertAttributeEquals(['foo' => 'bar'], 'data', $context);
         $this->assertTrue(isset($context['foo']));
-        $this->assertEquals('bar', $context['foo']);
+        $this->assertSame('bar', $context['foo']);
 
         unset($context['foo']);
 
         $this->assertArrayNotHasKey('foo', $context);
     }
 
-    public function testGetIterator()
+    public function testGetIterator(): void
     {
         $context = new Context(['foo' => 'bar', 'bar' => 'foo']);
 
-        $this->assertEquals($context->toArray(), iterator_to_array($context));
+        $this->assertSame($context->toArray(), iterator_to_array($context));
     }
 }

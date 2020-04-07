@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Http\Client\Common\Plugin;
-use Http\Client\Common\PluginClient;
-use Http\Client\HttpAsyncClient;
-use Http\Message\MessageFactory;
-use Http\Message\UriFactory;
-use Http\Promise\Promise;
+use Http\Client\Common\Plugin as PluginInterface;
+use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\MessageFactory as MessageFactoryInterface;
+use Http\Message\UriFactory as UriFactoryInterface;
+use Http\Promise\FulfilledPromise;
+use Http\Promise\Promise as PromiseInterface;
 use Jean85\PrettyVersions;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -17,6 +19,7 @@ use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\FlushableClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -60,13 +63,17 @@ final class ClientBuilderTest extends TestCase
      */
     public function testSetUriFactory(): void
     {
-        /** @var UriFactory|MockObject $uriFactory */
-        $uriFactory = $this->createMock(UriFactory::class);
+        /** @var UriFactoryInterface&MockObject $uriFactory */
+        $uriFactory = $this->createMock(UriFactoryInterface::class);
+        $uriFactory->expects($this->once())
+            ->method('createUri')
+            ->willReturn(UriFactoryDiscovery::find()->createUri('http://www.example.com'));
 
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $clientBuilder->setUriFactory($uriFactory);
+        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
+            ->setUriFactory($uriFactory)
+            ->getClient();
 
-        $this->assertAttributeSame($uriFactory, 'uriFactory', $clientBuilder);
+        $client->captureMessage('foo');
     }
 
     /**
@@ -76,17 +83,17 @@ final class ClientBuilderTest extends TestCase
      */
     public function testSetMessageFactory(): void
     {
-        /** @var MessageFactory|MockObject $messageFactory */
-        $messageFactory = $this->createMock(MessageFactory::class);
+        /** @var MessageFactoryInterface&MockObject $messageFactory */
+        $messageFactory = $this->createMock(MessageFactoryInterface::class);
+        $messageFactory->expects($this->once())
+            ->method('createRequest')
+            ->willReturn(MessageFactoryDiscovery::find()->createRequest('POST', 'http://www.example.com'));
 
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $clientBuilder->setMessageFactory($messageFactory);
+        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
+            ->setMessageFactory($messageFactory)
+            ->getClient();
 
-        $this->assertAttributeSame($messageFactory, 'messageFactory', $clientBuilder);
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
-
-        $this->assertAttributeSame($messageFactory, 'requestFactory', $transport);
+        $client->captureMessage('foo');
     }
 
     /**
@@ -96,14 +103,17 @@ final class ClientBuilderTest extends TestCase
      */
     public function testSetTransport(): void
     {
-        /** @var TransportInterface|MockObject $transport */
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->willReturn('ddb4a0b9ab1941bf92bd2520063663e3');
 
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $clientBuilder->setTransport($transport);
+        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
+            ->setTransport($transport)
+            ->getClient();
 
-        $this->assertAttributeSame($transport, 'transport', $clientBuilder);
-        $this->assertAttributeSame($transport, 'transport', $clientBuilder->getClient());
+        $this->assertSame('ddb4a0b9ab1941bf92bd2520063663e3', $client->captureMessage('foo'));
     }
 
     /**
@@ -113,17 +123,19 @@ final class ClientBuilderTest extends TestCase
      */
     public function testSetHttpClient(): void
     {
-        /** @var HttpAsyncClient|MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClient::class);
+        /** @var HttpAsyncClientInterface&MockObject $httpClient */
+        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
+        $httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn(new FulfilledPromise(true));
 
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $clientBuilder->setHttpClient($httpClient);
+        /** @var FlushableClientInterface $client */
+        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
+            ->setHttpClient($httpClient)
+            ->getClient();
 
-        $this->assertAttributeSame($httpClient, 'httpClient', $clientBuilder);
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
-
-        $this->assertAttributeSame($httpClient, 'client', $this->getObjectAttribute($transport, 'httpClient'));
+        $client->captureMessage('foo');
+        $client->flush();
     }
 
     /**
@@ -133,16 +145,19 @@ final class ClientBuilderTest extends TestCase
      */
     public function testAddHttpClientPlugin(): void
     {
-        /** @var Plugin|MockObject $plugin */
-        $plugin = $this->createMock(Plugin::class);
+        /** @var PluginInterface&MockObject $plugin */
+        $plugin = $this->createMock(PluginInterface::class);
+        $plugin->expects($this->once())
+            ->method('handleRequest')
+            ->willReturn(new FulfilledPromise(true));
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addHttpClientPlugin($plugin);
+        /** @var FlushableClientInterface $client */
+        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
+            ->addHttpClientPlugin($plugin)
+            ->getClient();
 
-        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
-
-        $this->assertCount(1, $plugins);
-        $this->assertSame($plugin, $plugins[0]);
+        $client->captureMessage('foo');
+        $client->flush();
     }
 
     /**
@@ -153,36 +168,30 @@ final class ClientBuilderTest extends TestCase
      */
     public function testRemoveHttpClientPlugin(): void
     {
-        $plugin = new PluginStub1();
-        $plugin2 = new PluginStub2();
+        $plugin = new class() implements PluginInterface {
+            public function handleRequest(RequestInterface $request, callable $next, callable $first): PromiseInterface
+            {
+                return new FulfilledPromise(true);
+            }
+        };
 
-        $clientBuilder = new ClientBuilder();
-        $clientBuilder->addHttpClientPlugin($plugin);
-        $clientBuilder->addHttpClientPlugin($plugin);
-        $clientBuilder->addHttpClientPlugin($plugin2);
+        $plugin2 = new class() implements PluginInterface {
+            public function handleRequest(RequestInterface $request, callable $next, callable $first): PromiseInterface
+            {
+                return new FulfilledPromise(true);
+            }
+        };
 
-        $this->assertAttributeCount(3, 'httpClientPlugins', $clientBuilder);
+        /** @var FlushableClientInterface $client */
+        $client = ClientBuilder::create()
+            ->addHttpClientPlugin($plugin)
+            ->addHttpClientPlugin($plugin)
+            ->addHttpClientPlugin($plugin2)
+            ->removeHttpClientPlugin(\get_class($plugin2))
+            ->getClient();
 
-        $clientBuilder->removeHttpClientPlugin(PluginStub1::class);
-
-        $plugins = $this->getObjectAttribute($clientBuilder, 'httpClientPlugins');
-
-        $this->assertCount(1, $plugins);
-        $this->assertSame($plugin2, reset($plugins));
-    }
-
-    public function testGetClient(): void
-    {
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-        $client = $clientBuilder->getClient();
-
-        $this->assertInstanceOf(Client::class, $client);
-        $this->assertAttributeInstanceOf(HttpTransport::class, 'transport', $client);
-
-        $transport = $this->getObjectAttribute($client, 'transport');
-
-        $this->assertAttributeSame($this->getObjectAttribute($clientBuilder, 'messageFactory'), 'requestFactory', $transport);
-        $this->assertAttributeInstanceOf(PluginClient::class, 'httpClient', $transport);
+        $client->captureMessage('foo');
+        $client->flush();
     }
 
     /**
@@ -194,8 +203,7 @@ final class ClientBuilderTest extends TestCase
         $options->setDefaultIntegrations($defaultIntegrations);
         $options->setIntegrations($integrations);
 
-        $clientBuilder = new ClientBuilder($options);
-        $client = $clientBuilder->getClient();
+        $client = (new ClientBuilder($options))->getClient();
 
         $actualIntegrationsClassNames = array_map('\get_class', $client->getOptions()->getIntegrations());
 
@@ -296,20 +304,6 @@ final class ClientBuilderTest extends TestCase
 final class StubIntegration implements IntegrationInterface
 {
     public function setupOnce(): void
-    {
-    }
-}
-
-final class PluginStub1 implements Plugin
-{
-    public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
-    {
-    }
-}
-
-final class PluginStub2 implements Plugin
-{
-    public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
     {
     }
 }
