@@ -15,6 +15,6 @@ final class NullTransportTest extends TestCase
         $transport = new NullTransport();
         $event = new Event();
 
-        $this->assertEquals($event->getId(), $transport->send($event));
+        $this->assertSame($event->getId(), $transport->send($event));
     }
 }

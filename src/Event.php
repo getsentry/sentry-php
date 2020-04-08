@@ -19,7 +19,7 @@ use Sentry\Context\UserContext;
 final class Event implements \JsonSerializable
 {
     /**
-     * @var string The UUID
+     * @var EventId The ID
      */
     private $id;
 
@@ -150,14 +150,13 @@ final class Event implements \JsonSerializable
     private $sdkVersion;
 
     /**
-     * Event constructor.
+     * Class constructor.
      *
-     * @throws \InvalidArgumentException
-     * @throws \Exception
+     * @param EventId|null $eventId The ID of the event
      */
-    public function __construct()
+    public function __construct(?EventId $eventId = null)
     {
-        $this->id = str_replace('-', '', uuid_create(UUID_TYPE_RANDOM));
+        $this->id = $eventId ?? EventId::generate();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
         $this->serverOsContext = new ServerOsContext();
@@ -173,7 +172,7 @@ final class Event implements \JsonSerializable
      */
     public function getId(): string
     {
-        return $this->id;
+        return (string) $this->id;
     }
 
     /**
@@ -579,7 +578,7 @@ final class Event implements \JsonSerializable
     public function toArray(): array
     {
         $data = [
-            'event_id' => $this->id,
+            'event_id' => (string) $this->id,
             'timestamp' => $this->timestamp,
             'level' => (string) $this->level,
             'platform' => 'php',

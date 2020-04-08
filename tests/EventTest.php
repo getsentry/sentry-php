@@ -23,8 +23,6 @@ final class EventTest extends TestCase
         $event1 = new Event();
         $event2 = new Event();
 
-        $this->assertRegExp('/^[a-z0-9]{32}$/', $event1->getId());
-        $this->assertRegExp('/^[a-z0-9]{32}$/', $event2->getId());
         $this->assertNotEquals($event1->getId(), $event2->getId());
     }
 
