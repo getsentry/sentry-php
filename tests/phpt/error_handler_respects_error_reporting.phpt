@@ -51,8 +51,15 @@ $client->getOptions()->setCaptureSilencedErrors(false);
 echo 'Triggering silenced error' . PHP_EOL;
 
 @$b++;
+
+$errorReporting = error_reporting(E_ALL & ~E_WARNING);
+include 'foo.bar';
+echo 'Triggering silenced by error_reporting error' . PHP_EOL;
+error_reporting($errorReporting);
+
 ?>
 --EXPECT--
 Triggering silenced error
 Transport called
 Triggering silenced error
+Triggering silenced by error_reporting error
