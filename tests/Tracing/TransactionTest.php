@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
@@ -41,19 +43,20 @@ final class TransactionTest extends TestCase
         $context->startTimestamp = microtime(true);
         $context->endTimestamp = microtime(true);
         $transaction = new Transaction($context);
-        $data = $transaction->jsonSerialize();
+        $data = $transaction->toEvent();
+        $traceContext = $data->getContexts()['trace'];
 
-        $this->assertEquals($context->op, $data['contexts']['trace']['op']);
-        $this->assertEquals($context->name, $data['transaction']);
-        $this->assertEquals($context->traceId->__toString(), $data['contexts']['trace']['trace_id']);
-        $this->assertEquals($context->spanId->__toString(), $data['contexts']['trace']['span_id']);
-        $this->assertEquals($context->parentSpanId->__toString(), $data['contexts']['trace']['parent_span_id']);
-        $this->assertEquals($context->description, $data['contexts']['trace']['description']);
-        $this->assertEquals($context->status, $data['contexts']['trace']['status']);
-        $this->assertEquals($context->tags, $data['tags']);
-        $this->assertEquals($context->data, $data['contexts']['trace']['data']);
-        $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
-        $this->assertEquals($context->endTimestamp, $data['timestamp']);
+        $this->assertEquals($context->op, $traceContext['op']);
+        $this->assertEquals($context->name, $data->getTransaction());
+        $this->assertEquals($context->traceId->__toString(), $traceContext['trace_id']);
+        $this->assertEquals($context->spanId->__toString(), $traceContext['span_id']);
+        $this->assertEquals($context->parentSpanId->__toString(), $traceContext['parent_span_id']);
+        $this->assertEquals($context->description, $traceContext['description']);
+        $this->assertEquals($context->status, $traceContext['status']);
+        $this->assertEquals($context->tags, $data->getTags());
+        $this->assertEquals($context->data, $traceContext['data']);
+        $this->assertEquals($context->startTimestamp, $data->getStartTimestamp());
+        $this->assertEquals($context->endTimestamp, $data->getTimestamp());
     }
 
     public function testShouldContainFinishSpans(): void
@@ -67,8 +70,8 @@ final class TransactionTest extends TestCase
         $span2->finish();
         // $span3 is not finished and therefore not included
         $transaction->finish();
-        $data = $transaction->jsonSerialize();
-        $this->assertCount(2, $data['spans']);
+        $data = $transaction->toEvent();
+        $this->assertCount(2, $data->getSpans());
     }
 
     public function testStartAndSendTransaction(): void
@@ -85,36 +88,20 @@ final class TransactionTest extends TestCase
         $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
         $span2->finish();
-        $endTimestamp = microtime(true);
-        $data = $transaction->jsonSerialize();
 
-        // We fake the endtime here
-        $data['timestamp'] = $endTimestamp;
+        $data = $transaction->toEvent();
+
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function ($event) use ($data): bool {
-                $this->assertEqualWithIgnore($data, $event->toArray(), ['event_id']);
+            ->with($this->callback(function (Event $eventArg) use ($data): bool {
+                $this->assertSame(EventType::transaction(), $eventArg->getType());
+                $this->assertSame($data->getStartTimestamp(), $eventArg->getStartTimestamp());
+                $this->assertSame(microtime(true), $eventArg->getTimestamp());
+                $this->assertCount(2, $data->getSpans());
 
                 return true;
             }));
 
-        $transaction->finish($endTimestamp);
-
-        $this->assertCount(2, $data['spans']);
-    }
-
-    private function assertEqualWithIgnore($expected, $actual, $ignoreKeys = [], $currentKey = null): void
-    {
-        if (\is_object($expected)) {
-            foreach ($expected as $key => $value) {
-                $this->assertEqualWithIgnore($expected->$key, $actual->$key, $ignoreKeys, $key);
-            }
-        } elseif (\is_array($expected)) {
-            foreach ($expected as $key => $value) {
-                $this->assertEqualWithIgnore($expected[$key], $actual[$key], $ignoreKeys, $key);
-            }
-        } elseif (null !== $currentKey && !\in_array($currentKey, $ignoreKeys)) {
-            $this->assertEquals($expected, $actual);
-        }
+        $transaction->finish(microtime(true));
     }
 }

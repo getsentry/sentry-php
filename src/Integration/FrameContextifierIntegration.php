@@ -78,7 +78,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
     private function addContextToStacktraceFrames(int $maxContextLines, Stacktrace $stacktrace): void
     {
         foreach ($stacktrace->getFrames() as $frame) {
-            if ($frame->isInternal()) {
+            if ($frame->isInternal() || null === $frame->getAbsoluteFilePath()) {
                 continue;
             }
 

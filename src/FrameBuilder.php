@@ -64,6 +64,7 @@ final class FrameBuilder
 
         $functionName = null;
         $rawFunctionName = null;
+        $strippedFilePath = $this->stripPrefixFromFilePath($file);
 
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['class'];
@@ -80,10 +81,10 @@ final class FrameBuilder
 
         return new Frame(
             $functionName,
-            $this->stripPrefixFromFilePath($file),
+            $strippedFilePath,
             $line,
             $rawFunctionName,
-            Frame::INTERNAL_FRAME_FILENAME !== $file ? $file : null,
+            Frame::INTERNAL_FRAME_FILENAME !== $file && $strippedFilePath !== $file ? $file : null,
             $this->getFunctionArguments($backtraceFrame),
             $this->isFrameInApp($file, $functionName)
         );

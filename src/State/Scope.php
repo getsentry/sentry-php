@@ -56,6 +56,8 @@ final class Scope
 
     /**
      * @var callable[] List of event processors
+     *
+     * @psalm-var array<callable(Event, Event|array): ?Event>
      */
     private $eventProcessors = [];
 
@@ -66,6 +68,8 @@ final class Scope
 
     /**
      * @var callable[] List of event processors
+     *
+     * @psalm-var array<callable(Event, Event|array): ?Event>
      */
     private static $globalEventProcessors = [];
 

@@ -9,7 +9,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Stacktrace implements \JsonSerializable
+final class Stacktrace
 {
     /**
      * @var Frame[] The frames that compose the stacktrace
@@ -92,28 +92,5 @@ final class Stacktrace implements \JsonSerializable
         }
 
         array_splice($this->frames, $index, 1);
-    }
-
-    /**
-     * Gets the stacktrace frames (this is the same as calling the getFrames
-     * method).
-     *
-     * @return array<int, array>
-     */
-    public function toArray(): array
-    {
-        return array_map(static function (Frame $frame): array {
-            return $frame->toArray();
-        }, $this->frames);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<int, array>
-     */
-    public function jsonSerialize()
-    {
-        return $this->toArray();
     }
 }

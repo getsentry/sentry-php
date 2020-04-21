@@ -133,7 +133,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => 'path/not/of/app/path/to/file',
                 'line' => 10,
             ],
-            new Frame(null, 'path/not/of/app/path/to/file', 10, null, 'path/not/of/app/path/to/file'),
+            new Frame(null, 'path/not/of/app/path/to/file', 10, null),
         ];
 
         yield [
@@ -147,7 +147,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => 'path/not/of/app/to/file',
                 'line' => 10,
             ],
-            new Frame(null, 'path/not/of/app/to/file', 10, null, 'path/not/of/app/to/file'),
+            new Frame(null, 'path/not/of/app/to/file', 10, null),
         ];
     }
 

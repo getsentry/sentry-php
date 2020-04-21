@@ -11,7 +11,7 @@ use Sentry\Exception\InvalidArgumentException;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Breadcrumb implements \JsonSerializable
+final class Breadcrumb
 {
     /**
      * This constant defines the default breadcrumb type.
@@ -301,23 +301,6 @@ final class Breadcrumb implements \JsonSerializable
     }
 
     /**
-     * Gets the breadcrumb as an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'type' => $this->type,
-            'category' => $this->category,
-            'level' => $this->level,
-            'message' => $this->message,
-            'timestamp' => $this->timestamp,
-            'data' => $this->metadata,
-        ];
-    }
-
-    /**
      * Helper method to create an instance of this class from an array of data.
      *
      * @param array $data Data used to populate the breadcrumb
@@ -339,15 +322,5 @@ final class Breadcrumb implements \JsonSerializable
             $data['message'] ?? null,
             $data['data'] ?? []
         );
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }

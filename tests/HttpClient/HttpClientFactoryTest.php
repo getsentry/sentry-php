@@ -8,7 +8,6 @@ use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Options;
 
@@ -43,9 +42,9 @@ final class HttpClientFactoryTest extends TestCase
             ->withBody($streamFactory->createStream('foo bar'));
 
         $httpClient->sendAsyncRequest($request);
+
         $httpRequest = $mockHttpClient->getLastRequest();
 
-        $this->assertInstanceOf(RequestInterface::class, $httpRequest);
         $this->assertSame('http://example.com/sentry/foo', (string) $httpRequest->getUri());
         $this->assertSame('sentry.php.test/1.2.3', $httpRequest->getHeaderLine('User-Agent'));
         $this->assertSame('Sentry sentry_version=7, sentry_client=sentry.php.test/1.2.3, sentry_key=public', $httpRequest->getHeaderLine('X-Sentry-Auth'));

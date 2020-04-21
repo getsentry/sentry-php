@@ -39,34 +39,4 @@ final class FrameTest extends TestCase
             ['getVars', 'setVars', ['foo' => 'bar']],
         ];
     }
-
-    /**
-     * @dataProvider toArrayAndJsonSerializeDataProvider
-     */
-    public function testToArrayAndJsonSerialize(string $setterMethod, string $expectedDataKey, $expectedData): void
-    {
-        $frame = new Frame('foo', 'bar', 10);
-        $frame->$setterMethod($expectedData);
-
-        $expectedResult = [
-            'function' => 'foo',
-            'filename' => 'bar',
-            'lineno' => 10,
-            $expectedDataKey => $expectedData,
-        ];
-
-        $this->assertArraySubset($expectedResult, $frame->toArray());
-        $this->assertArraySubset($expectedResult, $frame->jsonSerialize());
-    }
-
-    public function toArrayAndJsonSerializeDataProvider(): array
-    {
-        return [
-            ['setPreContext', 'pre_context', ['foo' => 'bar']],
-            ['setContextLine', 'context_line', 'foo bar'],
-            ['setPostContext', 'post_context', ['bar' => 'foo']],
-            ['setIsInApp', 'in_app', true],
-            ['setVars', 'vars', ['baz' => 'bar']],
-        ];
-    }
 }

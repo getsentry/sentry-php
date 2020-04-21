@@ -50,7 +50,7 @@ class EventFactoryTest extends TestCase
     /**
      * @dataProvider createWithPayloadDataProvider
      */
-    public function testCreateWithPayload(array $payload, array $expectedSubset): void
+    public function testCreateWithPayload(array $payload, ?string $expectedLogger, ?string $expectedMessage, array $expectedMessageParams, ?string $expectedFormattedMessage): void
     {
         $eventFactory = new EventFactory(
             $this->createMock(SerializerInterface::class),
@@ -62,47 +62,40 @@ class EventFactoryTest extends TestCase
 
         $event = $eventFactory->create($payload);
 
-        $this->assertArraySubset($expectedSubset, $event->toArray());
+        $this->assertSame($expectedLogger, $event->getLogger());
+        $this->assertSame($expectedMessage, $event->getMessage());
+        $this->assertSame($expectedMessageParams, $event->getMessageParams());
+        $this->assertSame($expectedFormattedMessage, $event->getMessageFormatted());
     }
 
-    public function createWithPayloadDataProvider()
+    public function createWithPayloadDataProvider(): iterable
     {
-        return [
+        yield [
+            ['logger' => 'app.php'],
+            'app.php',
+            null,
+            [],
+            null,
+        ];
+
+        yield [
+            ['message' => 'My raw message with interpreted strings like this'],
+            null,
+            'My raw message with interpreted strings like this',
+            [],
+            null,
+        ];
+
+        yield [
             [
-                ['logger' => 'testLogger'],
-                ['logger' => 'testLogger'],
+                'message' => 'My raw message with interpreted strings like that',
+                'message_params' => ['this'],
+                'message_formatted' => 'My raw message with interpreted strings like %s',
             ],
-            [
-                ['message' => 'testMessage'],
-                ['message' => 'testMessage'],
-            ],
-            [
-                [
-                    'message' => 'testMessage %s',
-                    'message_params' => ['param'],
-                ],
-                [
-                    'message' => [
-                        'message' => 'testMessage %s',
-                        'params' => ['param'],
-                        'formatted' => 'testMessage param',
-                    ],
-                ],
-            ],
-            [
-                [
-                    'message' => 'testMessage %foo',
-                    'message_params' => ['%foo' => 'param'],
-                    'message_formatted' => 'testMessage param',
-                ],
-                [
-                    'message' => [
-                        'message' => 'testMessage %foo',
-                        'params' => ['%foo' => 'param'],
-                        'formatted' => 'testMessage param',
-                    ],
-                ],
-            ],
+            null,
+            'My raw message with interpreted strings like that',
+            ['this'],
+            'My raw message with interpreted strings like %s',
         ];
     }
 

@@ -180,7 +180,7 @@ final class ScopeTest extends TestCase
         $event = $scope->applyToEvent(new Event(), []);
 
         $this->assertNotNull($event);
-        $this->assertEquals(Severity::error(), $event->getLevel());
+        $this->assertNull($event->getLevel());
 
         $scope->setLevel(Severity::debug());
 
@@ -295,7 +295,7 @@ final class ScopeTest extends TestCase
         $event = $scope->applyToEvent(new Event(), []);
 
         $this->assertNotNull($event);
-        $this->assertEquals(Severity::error(), $event->getLevel());
+        $this->assertNull($event->getLevel());
         $this->assertEmpty($event->getBreadcrumbs());
         $this->assertEmpty($event->getFingerprint());
         $this->assertEmpty($event->getExtra());

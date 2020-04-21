@@ -9,7 +9,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Frame implements \JsonSerializable
+final class Frame
 {
     public const INTERNAL_FRAME_FILENAME = '[internal]';
 
@@ -32,7 +32,7 @@ final class Frame implements \JsonSerializable
     private $file;
 
     /**
-     * @var string The absolute path to the source file
+     * @var string|null The absolute path to the source file
      */
     private $absoluteFilePath;
 
@@ -92,7 +92,7 @@ final class Frame implements \JsonSerializable
         $this->file = $file;
         $this->line = $line;
         $this->rawFunctionName = $rawFunctionName;
-        $this->absoluteFilePath = $absoluteFilePath ?? $file;
+        $this->absoluteFilePath = $absoluteFilePath;
         $this->vars = $vars;
         $this->inApp = $inApp;
     }
@@ -125,7 +125,7 @@ final class Frame implements \JsonSerializable
     /**
      * Gets the absolute path to the source file.
      */
-    public function getAbsoluteFilePath(): string
+    public function getAbsoluteFilePath(): ?string
     {
         return $this->absoluteFilePath;
     }
@@ -246,62 +246,5 @@ final class Frame implements \JsonSerializable
     public function isInternal(): bool
     {
         return self::INTERNAL_FRAME_FILENAME === $this->file;
-    }
-
-    /**
-     * Returns an array representation of the data of this frame modeled according
-     * to the specifications of the Sentry SDK Stacktrace Interface.
-     *
-     * @psalm-return array{
-     *     function: string|null,
-     *     raw_function: string|null,
-     *     filename: string,
-     *     lineno: int,
-     *     in_app: bool,
-     *     abs_path: string,
-     *     pre_context?: string[],
-     *     context_line?: string,
-     *     post_context?: string[],
-     *     vars?: array<string, mixed>
-     * }
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'function' => $this->functionName,
-            'raw_function' => $this->rawFunctionName,
-            'filename' => $this->file,
-            'lineno' => $this->line,
-            'in_app' => $this->inApp,
-            'abs_path' => $this->absoluteFilePath,
-        ];
-
-        if (0 !== \count($this->preContext)) {
-            $result['pre_context'] = $this->preContext;
-        }
-
-        if (null !== $this->contextLine) {
-            $result['context_line'] = $this->contextLine;
-        }
-
-        if (0 !== \count($this->postContext)) {
-            $result['post_context'] = $this->postContext;
-        }
-
-        if (!empty($this->vars)) {
-            $result['vars'] = $this->vars;
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }

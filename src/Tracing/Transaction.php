@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\EventType;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 
@@ -49,6 +50,54 @@ final class Transaction extends Span
     }
 
     /**
+     * @return array<string, mixed> Returns the trace context
+     *
+     * @psalm-return array{
+     *     data?: array<string, mixed>,
+     *     description?: string,
+     *     op?: string,
+     *     parent_span_id?: string,
+     *     span_id: string,
+     *     status?: string,
+     *     tags?: array<string, string>,
+     *     trace_id: string
+     * }
+     */
+    public function getTraceContext(): array
+    {
+        $result = [
+            'span_id' => (string) $this->spanId,
+            'trace_id' => (string) $this->traceId,
+        ];
+
+        if (null !== $this->parentSpanId) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
+        }
+
+        if (null !== $this->description) {
+            $result['description'] = $this->description;
+        }
+
+        if (null !== $this->op) {
+            $result['op'] = $this->op;
+        }
+
+        if (null !== $this->status) {
+            $result['status'] = $this->status;
+        }
+
+        if (!empty($this->data)) {
+            $result['data'] = $this->data;
+        }
+
+        if (!empty($this->tags)) {
+            $result['tags'] = $this->tags;
+        }
+
+        return $result;
+    }
+
+    /**
      * Attaches SpanRecorder to the transaction itself.
      */
     public function initSpanRecorder(): void
@@ -64,7 +113,7 @@ final class Transaction extends Span
      *
      * @return EventId|null Finish for a transaction returns the eventId or null in case we didn't send it
      */
-    public function finish($endTimestamp = null): ?EventId
+    public function finish(?float $endTimestamp = null): ?EventId
     {
         if (null !== $this->endTimestamp) {
             // Transaction was already finished once and we don't want to re-flush it
@@ -74,7 +123,6 @@ final class Transaction extends Span
         parent::finish($endTimestamp);
 
         if (true !== $this->sampled) {
-            // At this point if `sampled !== true` we want to discard the transaction.
             return null;
         }
 
@@ -91,7 +139,7 @@ final class Transaction extends Span
     public function toEvent(): Event
     {
         $event = new Event();
-        $event->setType('transaction');
+        $event->setType(EventType::transaction());
         $event->setTags(array_merge($event->getTags(), $this->tags));
         $event->setTransaction($this->name);
         $event->setStartTimestamp($this->startTimestamp);
@@ -113,15 +161,5 @@ final class Transaction extends Span
         }
 
         return $event;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toEvent()->toArray();
     }
 }

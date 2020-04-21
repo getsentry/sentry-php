@@ -25,6 +25,7 @@ More information can be found in our [Performance](https://docs.sentry.io/produc
 - [BC BREAK] Remove the `UserContext`, `ExtraContext` and `Context` classes and refactor the `ServerOsContext` and `RuntimeContext` classes (#1071)
 - [BC BREAK] Remove the `FlushableClientInterface` and the `ClosableTransportInterface` interfaces (#1079)
 - Add the `EnvironmentIntegration` integration to gather data for the `os` and `runtime` contexts (#1071)
+- Refactor how the event data gets serialized to JSON (#1077)
 
 ### 2.4.3 (2020-08-13)
 

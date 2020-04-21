@@ -4,16 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumb;
-use Sentry\Client;
-use Sentry\Context\OsContext;
-use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\Severity;
-use Sentry\Util\PHPVersion;
-use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
  * @group time-sensitive
@@ -26,144 +19,6 @@ final class EventTest extends TestCase
         $event2 = new Event();
 
         $this->assertNotEquals($event1->getId(), $event2->getId());
-    }
-
-    public function testToArray(): void
-    {
-        ClockMock::register(Event::class);
-
-        $event = new Event();
-
-        $expected = [
-            'event_id' => (string) $event->getId(),
-            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'platform' => 'php',
-            'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
-                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
-            ],
-            'level' => 'error',
-        ];
-
-        $this->assertSame($expected, $event->toArray());
-    }
-
-    public function testToArrayMergesCustomContextsWithDefaultContexts(): void
-    {
-        ClockMock::register(Event::class);
-
-        $event = new Event();
-        $event->setOsContext(new OsContext(php_uname('s'), php_uname('r'), php_uname('v'), php_uname('a')));
-        $event->setRuntimeContext(new RuntimeContext('php', PHPVersion::parseVersion()));
-        $event->setContext('foo', ['foo' => 'bar']);
-        $event->setContext('bar', ['bar' => 'foo']);
-        $event->setContext('runtime', ['baz' => 'baz']);
-
-        $expected = [
-            'event_id' => (string) $event->getId(),
-            'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'platform' => 'php',
-            'sdk' => [
-                'name' => Client::SDK_IDENTIFIER,
-                'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
-            ],
-            'level' => 'error',
-            'contexts' => [
-                'os' => [
-                    'name' => php_uname('s'),
-                    'version' => php_uname('r'),
-                    'build' => php_uname('v'),
-                    'kernel_version' => php_uname('a'),
-                ],
-                'runtime' => [
-                    'baz' => 'baz',
-                ],
-                'foo' => [
-                    'foo' => 'bar',
-                ],
-                'bar' => [
-                    'bar' => 'foo',
-                ],
-            ],
-        ];
-
-        $this->assertSame($expected, $event->toArray());
-    }
-
-    /**
-     * @dataProvider toArrayWithMessageDataProvider
-     */
-    public function testToArrayWithMessage(array $setMessageArguments, $expectedValue): void
-    {
-        $event = new Event();
-
-        \call_user_func_array([$event, 'setMessage'], $setMessageArguments);
-
-        $data = $event->toArray();
-
-        $this->assertArrayHasKey('message', $data);
-        $this->assertSame($expectedValue, $data['message']);
-    }
-
-    public function toArrayWithMessageDataProvider(): array
-    {
-        return [
-            [
-                [
-                    'foo bar',
-                ],
-                'foo bar',
-            ],
-            [
-                [
-                    'foo %s',
-                    [
-                        'bar',
-                    ],
-                ],
-                [
-                    'message' => 'foo %s',
-                    'params' => [
-                        'bar',
-                    ],
-                    'formatted' => 'foo bar',
-                ],
-            ],
-            [
-                [
-                    'foo %bar',
-                    [
-                        '%bar' => 'baz',
-                    ],
-                    'foo baz',
-                ],
-                [
-                    'message' => 'foo %bar',
-                    'params' => [
-                        '%bar' => 'baz',
-                    ],
-                    'formatted' => 'foo baz',
-                ],
-            ],
-        ];
-    }
-
-    public function testToArrayWithBreadcrumbs(): void
-    {
-        $breadcrumbs = [
-            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'foo'),
-            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'bar'),
-        ];
-
-        $event = new Event();
-        $event->setBreadcrumb($breadcrumbs);
-
-        $this->assertSame($breadcrumbs, $event->getBreadcrumbs());
-
-        $data = $event->toArray();
-
-        $this->assertArrayHasKey('breadcrumbs', $data);
-        $this->assertSame($breadcrumbs, $data['breadcrumbs']['values']);
     }
 
     /**
@@ -220,7 +75,7 @@ final class EventTest extends TestCase
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
-    public function testGettersAndSetters(string $propertyName, $propertyValue, $expectedValue): void
+    public function testGettersAndSetters(string $propertyName, $propertyValue): void
     {
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'set' . ucfirst($propertyName);
@@ -229,48 +84,21 @@ final class EventTest extends TestCase
         $event->$setterMethod($propertyValue);
 
         $this->assertEquals($event->$getterMethod(), $propertyValue);
-        $this->assertArraySubset($expectedValue, $event->toArray());
     }
 
     public function gettersAndSettersDataProvider(): array
     {
         return [
-            ['sdkIdentifier', 'sentry.sdk.test-identifier', ['sdk' => ['name' => 'sentry.sdk.test-identifier']]],
-            ['sdkVersion', '1.2.3', ['sdk' => ['version' => '1.2.3']]],
-            ['level', Severity::info(), ['level' => Severity::info()]],
-            ['logger', 'ruby', ['logger' => 'ruby']],
-            ['transaction', 'foo', ['transaction' => 'foo']],
-            ['serverName', 'local.host', ['server_name' => 'local.host']],
-            ['release', '0.0.1', ['release' => '0.0.1']],
-            ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2'], ['modules' => ['foo' => '0.0.1', 'bar' => '0.0.2']]],
-            ['fingerprint', ['foo', 'bar'], ['fingerprint' => ['foo', 'bar']]],
-            ['environment', 'foo', ['environment' => 'foo']],
+            ['sdkIdentifier', 'sentry.sdk.test-identifier'],
+            ['sdkVersion', '1.2.3'],
+            ['level', Severity::info()],
+            ['logger', 'ruby'],
+            ['transaction', 'foo'],
+            ['serverName', 'local.host'],
+            ['release', '0.0.1'],
+            ['modules', ['foo' => '0.0.1', 'bar' => '0.0.2']],
+            ['fingerprint', ['foo', 'bar']],
+            ['environment', 'foo'],
         ];
-    }
-
-    public function testEventJsonSerialization(): void
-    {
-        $event = new Event();
-
-        $encodingOfToArray = json_encode($event->toArray());
-        $serializedEvent = json_encode($event);
-
-        $this->assertNotFalse($encodingOfToArray);
-        $this->assertNotFalse($serializedEvent);
-        $this->assertJsonStringEqualsJsonString($encodingOfToArray, $serializedEvent);
-    }
-
-    public function testToEnvelope(): void
-    {
-        $event = new Event();
-
-        $envelope = $event->toEnvelope();
-        $envelopeLines = explode("\n", $envelope);
-
-        $this->assertContains('event_id', $envelopeLines[0]);
-        $this->assertContains('sent_at', $envelopeLines[0]);
-        $this->assertContains('type', $envelopeLines[1]);
-        $this->assertContains('event', $envelopeLines[1]);
-        $this->assertContains($event->getId(false)->__toString(), $envelopeLines[2]);
     }
 }

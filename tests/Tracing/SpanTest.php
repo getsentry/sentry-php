@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
  * @group time-sensitive
@@ -33,31 +34,47 @@ final class SpanTest extends TestCase
         $context->data = $data;
         $context->startTimestamp = microtime(true);
         $context->endTimestamp = microtime(true);
-        $span = new Span($context);
-        $data = $span->jsonSerialize();
 
-        $this->assertEquals($context->op, $data['op']);
-        $this->assertEquals($context->traceId->__toString(), $data['trace_id']);
-        $this->assertEquals($context->spanId->__toString(), $data['span_id']);
-        $this->assertEquals($context->parentSpanId->__toString(), $data['parent_span_id']);
-        $this->assertEquals($context->description, $data['description']);
-        $this->assertEquals($context->status, $data['status']);
-        $this->assertEquals($context->tags, $data['tags']);
-        $this->assertEquals($context->data, $data['data']);
-        $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
-        $this->assertEquals($context->endTimestamp, $data['timestamp']);
+        $span = new Span($context);
+
+        $this->assertEquals($context->traceId, $span->getTraceId());
+        $this->assertEquals($context->spanId, $span->getSpanId());
+        $this->assertEquals($context->parentSpanId, $span->getParentSpanId());
+        $this->assertSame($context->op, $span->getOp());
+        $this->assertSame($context->description, $span->getDescription());
+        $this->assertSame($context->status, $span->getStatus());
+        $this->assertSame($context->tags, $span->getTags());
+        $this->assertSame($context->data, $span->getData());
+        $this->assertSame($context->startTimestamp, $span->getStartTimestamp());
+        $this->assertSame($context->endTimestamp, $span->getEndTimestamp());
     }
 
-    public function testFinish(): void
+    /**
+     * @dataProvider finishDataProvider
+     */
+    public function testFinish(?float $currentTimestamp, ?float $timestamp, float $expectedTimestamp): void
     {
-        $span = new Span();
-        $span->finish();
-        $this->assertIsFloat($span->jsonSerialize()['timestamp']);
+        ClockMock::withClockMock($currentTimestamp);
 
-        $time = microtime(true);
         $span = new Span();
-        $span->finish($time);
-        $this->assertEquals($span->jsonSerialize()['timestamp'], $time);
+        $span->finish($timestamp);
+
+        $this->assertSame($expectedTimestamp, $span->getEndTimestamp());
+    }
+
+    public function finishDataProvider(): iterable
+    {
+        yield [
+            1598660006,
+            null,
+            1598660006,
+        ];
+
+        yield [
+            1598660006,
+            1598660332,
+            1598660332,
+        ];
     }
 
     public function testTraceparentHeader(): void
