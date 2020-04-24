@@ -11,6 +11,8 @@ namespace Sentry;
  */
 final class Frame implements \JsonSerializable
 {
+    private const INTERNAL_FRAME_FILENAME = '[internal]';
+
     /**
      * @var string|null The name of the function being called
      */
@@ -20,6 +22,11 @@ final class Frame implements \JsonSerializable
      * @var string The file where the frame originated
      */
     private $file;
+
+    /**
+     * @var string The absolute path to the source file
+     */
+    private $absoluteFilePath;
 
     /**
      * @var int The line at which the frame originated
@@ -48,26 +55,35 @@ final class Frame implements \JsonSerializable
      * @var bool Flag telling whether the frame is related to the execution of
      *           the relevant code in this stacktrace
      */
-    private $inApp = true;
+    private $inApp;
 
     /**
-     * @var array<string, mixed> A mapping of variables which were available within this
-     *                    frame (usually context-locals)
+     * @var array<string, mixed> A mapping of variables which were available within
+     *                    this frame (usually context-locals)
      */
     private $vars = [];
 
     /**
      * Initializes a new instance of this class using the provided information.
      *
-     * @param string|null $functionName The name of the function being called
-     * @param string      $file         The file where the frame originated
-     * @param int         $line         The line at which the frame originated
+     * @param string|null          $functionName     The name of the function being called
+     * @param string               $file             The file where the frame originated
+     * @param string|null          $absoluteFilePath The absolute path to the source file
+     * @param int                  $line             The line at which the frame originated
+     * @param array<string, mixed> $vars             A mapping of variables which were available
+     *                                               within the frame
+     * @param bool                 $inApp            Whether the frame is related to the
+     *                                               execution of code relevant to the
+     *                                               application
      */
-    public function __construct(?string $functionName, string $file, int $line)
+    public function __construct(?string $functionName, string $file, int $line, ?string $absoluteFilePath = null, array $vars = [], bool $inApp = true)
     {
         $this->functionName = $functionName;
         $this->file = $file;
+        $this->absoluteFilePath = $absoluteFilePath ?? $file;
         $this->line = $line;
+        $this->vars = $vars;
+        $this->inApp = $inApp;
     }
 
     /**
@@ -84,6 +100,14 @@ final class Frame implements \JsonSerializable
     public function getFile(): string
     {
         return $this->file;
+    }
+
+    /**
+     * Gets the absolute path to the source file.
+     */
+    public function getAbsoluteFilePath(): string
+    {
+        return $this->absoluteFilePath;
     }
 
     /**
@@ -197,6 +221,14 @@ final class Frame implements \JsonSerializable
     }
 
     /**
+     * Gets whether the frame is internal.
+     */
+    public function isInternal(): bool
+    {
+        return self::INTERNAL_FRAME_FILENAME === $this->file;
+    }
+
+    /**
      * Returns an array representation of the data of this frame modeled according
      * to the specifications of the Sentry SDK Stacktrace Interface.
      *
@@ -205,6 +237,7 @@ final class Frame implements \JsonSerializable
      *     filename: string,
      *     lineno: int,
      *     in_app: bool,
+     *     abs_path: string,
      *     pre_context?: string[],
      *     context_line?: string,
      *     post_context?: string[],
@@ -218,6 +251,7 @@ final class Frame implements \JsonSerializable
             'filename' => $this->file,
             'lineno' => $this->line,
             'in_app' => $this->inApp,
+            'abs_path' => $this->absoluteFilePath,
         ];
 
         if (0 !== \count($this->preContext)) {

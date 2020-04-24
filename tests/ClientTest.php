@@ -69,7 +69,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrownException): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -88,7 +88,7 @@ class ClientTest extends TestCase
             ->getClient();
 
         SentrySdk::getCurrentHub()->bindClient($client);
-        SentrySdk::getCurrentHub()->captureException($thrown);
+        SentrySdk::getCurrentHub()->captureException($thrownException);
     }
 
     public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array

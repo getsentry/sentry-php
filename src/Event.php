@@ -531,7 +531,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the exception.
      *
-     * @return array<string, mixed>
+     * @return array<int, array<string, mixed>>
      *
      * @psalm-return list<array{
      *     type: class-string,
@@ -545,9 +545,9 @@ final class Event implements \JsonSerializable
     }
 
     /**
-     * Sets the exception.
+     * Sets the exceptions.
      *
-     * @param array<int, array<string, mixed>> $exceptions The exception
+     * @param array<int, array<string, mixed>> $exceptions The exceptions
      *
      * @psalm-param list<array{
      *     type: class-string,

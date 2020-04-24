@@ -61,15 +61,18 @@ final class EventFactory implements EventFactoryInterface
      */
     public function createWithStacktrace(array $payload): Event
     {
-        $event = $this->create($payload);
-
-        if (!$event->getStacktrace()) {
-            $stacktrace = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), __FILE__, __LINE__);
-
-            $event->setStacktrace($stacktrace);
+        if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
+            $payload['stacktrace'] = Stacktrace::createFromBacktrace(
+                $this->options,
+                $this->serializer,
+                $this->representationSerializer,
+                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+                __FILE__,
+                __LINE__ - 6
+            );
         }
 
-        return $event;
+        return $this->create($payload);
     }
 
     /**
@@ -120,8 +123,10 @@ final class EventFactory implements EventFactoryInterface
     /**
      * Stores the given exception in the passed event.
      *
-     * @param Event      $event     The event that will be enriched with the exception
-     * @param \Throwable $exception The exception that will be processed and added to the event
+     * @param Event      $event     The event that will be enriched with the
+     *                              exception
+     * @param \Throwable $exception The exception that will be processed and
+     *                              added to the event
      */
     private function addThrowableToEvent(Event $event, \Throwable $exception): void
     {

@@ -9,6 +9,7 @@ use Sentry\Dsn;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
+use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
@@ -65,8 +66,8 @@ final class OptionsTest extends TestCase
             ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
             ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
             ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
-            ['before_send', function () {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
-            ['before_breadcrumb', function () {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
+            ['before_send', static function (): void {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
+            ['before_breadcrumb', static function (): void {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
             ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
             ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
             ['max_value_length', 50, 'getMaxValueLength', 'setMaxValueLength'],
@@ -319,6 +320,8 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider contextLinesOptionValidatesInputValueDataProvider
      */
     public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
@@ -436,6 +439,7 @@ final class OptionsTest extends TestCase
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
+                new FrameContextifierIntegration(),
                 $integration,
             ],
         ];
@@ -490,6 +494,7 @@ final class OptionsTest extends TestCase
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
+                new FrameContextifierIntegration(),
             ],
         ];
     }

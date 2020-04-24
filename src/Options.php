@@ -7,6 +7,7 @@ namespace Sentry;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
+use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
@@ -21,7 +22,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class Options
 {
     /**
-     * The default maximum number of breadcrumbs that will be sent with an event.
+     * The default maximum number of breadcrumbs that will be sent with an
+     * event.
      */
     public const DEFAULT_MAX_BREADCRUMBS = 100;
 
@@ -142,9 +144,18 @@ final class Options
 
     /**
      * Gets the number of lines of code context to capture, or null if none.
+     *
+     * @param bool $throwDeprecation Whether to throw a deprecation error when
+     *                               this function is called
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
-    public function getContextLines(): ?int
+    public function getContextLines(bool $throwDeprecation = true): ?int
     {
+        if ($throwDeprecation) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the "Sentry\Integration\FrameContextifierIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         return $this->options['context_lines'];
     }
 
@@ -152,6 +163,8 @@ final class Options
      * Sets the number of lines of code context to capture, or null if none.
      *
      * @param int|null $contextLines The number of lines of code
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function setContextLines(?int $contextLines): void
     {
@@ -210,7 +223,7 @@ final class Options
      */
     public function getExcludedExceptions(): array
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         return $this->options['excluded_exceptions'];
     }
@@ -225,7 +238,7 @@ final class Options
      */
     public function setExcludedExceptions(array $exceptions): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -246,7 +259,7 @@ final class Options
     public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
         if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
         }
 
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
@@ -801,7 +814,7 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
             'attach_stacktrace' => false,
-            'context_lines' => 5,
+            'context_lines' => null,
             'enable_compression' => true,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'project_root' => null,
@@ -867,12 +880,13 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('context_lines', \Closure::fromCallable([$this, 'normalizeContextLinesOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, ?string $value) {
             if (null === $value) {
                 return null;
             }
 
-            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', E_USER_DEPRECATED);
 
             return $this->normalizeAbsolutePath($value);
         });
@@ -935,6 +949,24 @@ final class Options
         }
 
         return Dsn::createFromString($value);
+    }
+
+    /**
+     * Normalizes the value of the "context_lines" option and throws a deprecation
+     * warning to favor the integration instead.
+     *
+     * @param SymfonyOptions $options The options
+     * @param int|null       $value   The actual value of the option
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
+     */
+    private function normalizeContextLinesOption(SymfonyOptions $options, ?int $value): ?int
+    {
+        if (null !== $value) {
+            @trigger_error('The "context_lines" option is deprecated since version 2.4 and will be removed in 3.0. Use the "Sentry\Integration\FrameContextifierIntegration" integration instead.', E_USER_DEPRECATED);
+        }
+
+        return $value;
     }
 
     /**
@@ -1040,6 +1072,8 @@ final class Options
      * Validates that the value passed to the "context_lines" option is valid.
      *
      * @param int|null $contextLines The value to validate
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     private function validateContextLinesOption(?int $contextLines): bool
     {
@@ -1064,6 +1098,7 @@ final class Options
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
+                new FrameContextifierIntegration(),
             ];
         }
 

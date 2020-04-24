@@ -51,7 +51,7 @@ class Stacktrace implements \JsonSerializable
     ];
 
     /**
-     * Stacktrace constructor.
+     * Constructor.
      *
      * @param Options                           $options                  The client options
      * @param SerializerInterface               $serializer               The serializer
@@ -103,6 +103,13 @@ class Stacktrace implements \JsonSerializable
         return $this->frames;
     }
 
+    /**
+     * Gets the frame at the given index.
+     *
+     * @param int $index The index from which the frame should be get
+     *
+     * @throws \OutOfBoundsException
+     */
     public function getFrame(int $index): Frame
     {
         if ($index < 0 || $index >= \count($this->frames)) {
@@ -142,8 +149,28 @@ class Stacktrace implements \JsonSerializable
             $functionName = null;
         }
 
-        $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), $line);
-        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines());
+        $frameArguments = $this->getFrameArguments($backtraceFrame);
+
+        foreach ($frameArguments as $argumentName => $argumentValue) {
+            $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
+
+            if (\is_string($argumentValue)) {
+                $frameArguments[(string) $argumentName] = mb_substr($argumentValue, 0, $this->options->getMaxValueLength());
+            } else {
+                $frameArguments[(string) $argumentName] = $argumentValue;
+            }
+        }
+
+        $frame = new Frame(
+            $functionName,
+            $this->stripPrefixFromFilePath($file),
+            $line,
+            $file,
+            $frameArguments,
+            $this->isFrameInApp($file, $functionName)
+        );
+
+        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines(false));
 
         if (isset($sourceCodeExcerpt['pre_context'])) {
             $frame->setPreContext($sourceCodeExcerpt['pre_context']);
@@ -155,24 +182,6 @@ class Stacktrace implements \JsonSerializable
 
         if (isset($sourceCodeExcerpt['post_context'])) {
             $frame->setPostContext($sourceCodeExcerpt['post_context']);
-        }
-
-        $frame->setIsInApp($this->isFrameInApp($file, $functionName));
-
-        $frameArguments = $this->getFrameArguments($backtraceFrame);
-
-        if (!empty($frameArguments)) {
-            foreach ($frameArguments as $argumentName => $argumentValue) {
-                $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
-
-                if (\is_string($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = mb_substr($argumentValue, 0, $this->options->getMaxValueLength());
-                } else {
-                    $frameArguments[(string) $argumentName] = $argumentValue;
-                }
-            }
-
-            $frame->setVars($frameArguments);
         }
 
         array_unshift($this->frames, $frame);
@@ -218,11 +227,13 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets an excerpt of the source code around a given line.
      *
-     * @param string   $path            The file path
-     * @param int      $lineNumber      The line to centre about
-     * @param int|null $maxLinesToFetch The maximum number of lines to fetch
+     * @param string $path            The file path
+     * @param int    $lineNumber      The line to centre about
+     * @param int    $maxLinesToFetch The maximum number of lines to fetch
      *
      * @return array<string, string|string[]>
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      *
      * @psalm-return array{
      *     pre_context?: string[],

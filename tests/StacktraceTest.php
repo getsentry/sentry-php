@@ -296,6 +296,8 @@ final class StacktraceTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider addFrameRespectsContextLinesOptionDataProvider
      */
     public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
