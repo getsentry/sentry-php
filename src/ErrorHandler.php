@@ -436,11 +436,11 @@ final class ErrorHandler
         } catch (\Throwable $previousExceptionHandlerException) {
             // This `catch` statement is here to forcefully override the
             // $previousExceptionHandlerException variable with the exception
-            // we just catched
+            // we just caught
         }
 
         // If the instance of the exception we're handling is the same as the one
-        // catched from the previous exception handler then we give it back to the
+        // caught from the previous exception handler then we give it back to the
         // native PHP handler to prevent an infinite loop
         if ($exception === $previousExceptionHandlerException) {
             // Disable the fatal error handler or the error will be reported twice

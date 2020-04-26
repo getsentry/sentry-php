@@ -7,7 +7,7 @@ namespace Sentry;
 use Sentry\Exception\InvalidArgumentException;
 
 /**
- * This class stores all the informations about a breadcrumb.
+ * This class stores all the information about a breadcrumb.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
