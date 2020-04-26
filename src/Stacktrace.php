@@ -220,7 +220,7 @@ class Stacktrace implements \JsonSerializable
      */
     protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
-        if (@!is_readable($path) || !is_file($path)) {
+        if (0 === $maxLinesToFetch || @!is_readable($path) || !is_file($path)) {
             return [];
         }
 
