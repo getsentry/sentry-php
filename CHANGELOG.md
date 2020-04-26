@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix the reading of the source code when the `context_lines` option is set to 0 and add missing validation (#1003)
+
 ## 2.3.2 (2020-03-06)
 
 - Hard-limit concurrent requests in `HttpTransport` and removed pre-init of promises (fixes "too many open files" errors) (#981)
