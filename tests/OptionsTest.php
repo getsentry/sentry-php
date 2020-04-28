@@ -308,7 +308,7 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider contextLinesOptionValidatesInputValueDataProvider
      */
-    public function testContextLinesOptionValidatesInputValue(int $value, ?string $expectedExceptionMessage): void
+    public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
     {
         if (null !== $expectedExceptionMessage) {
             $this->expectException(InvalidOptionsException::class);
@@ -334,6 +334,11 @@ final class OptionsTest extends TestCase
 
         yield [
             1,
+            null,
+        ];
+
+        yield [
+            null,
             null,
         ];
     }

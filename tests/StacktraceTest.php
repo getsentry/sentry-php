@@ -298,7 +298,7 @@ final class StacktraceTest extends TestCase
     /**
      * @dataProvider addFrameRespectsContextLinesOptionDataProvider
      */
-    public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
+    public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
     {
         $this->options->setContextLines($contextLines);
 
@@ -317,7 +317,7 @@ final class StacktraceTest extends TestCase
             $this->assertSame(rtrim($fileContent[$i + ($lineNumber - $preContextCount - 1)]), $frames[0]->getPreContext()[$i]);
         }
 
-        if (0 === $contextLines) {
+        if (null === $contextLines) {
             $this->assertNull($frames[0]->getContextLine());
         } else {
             $this->assertSame(rtrim($fileContent[$lineNumber - 1]), $frames[0]->getContextLine());
@@ -334,6 +334,14 @@ final class StacktraceTest extends TestCase
             'code/ShortFile.php',
             3,
             0,
+            0,
+            0,
+        ];
+
+        yield 'skip reading pre_context and post_context when context_lines == null' => [
+            'code/ShortFile.php',
+            3,
+            null,
             0,
             0,
         ];

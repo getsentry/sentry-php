@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix the reading of the source code when the `context_lines` option is set to 0 and add missing validation (#1003)
+- Add missing validation for the `context_lines` option and make it possible to disable the reading of the frame context (#1003)
 
 ## 2.3.2 (2020-03-06)
 
