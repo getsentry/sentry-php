@@ -25,6 +25,8 @@ class Stacktrace implements \JsonSerializable
 
     /**
      * @var SerializerInterface The serializer
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     protected $serializer;
 
@@ -68,7 +70,7 @@ class Stacktrace implements \JsonSerializable
      * @param Options                           $options                  The client options
      * @param SerializerInterface               $serializer               The serializer
      * @param RepresentationSerializerInterface $representationSerializer The representation serializer
-     * @param array                             $backtrace                The backtrace
+     * @param array[]                           $backtrace                The backtrace
      * @param string                            $file                     The file that originated the backtrace
      * @param int                               $line                     The line at which the backtrace originated
      *
@@ -113,9 +115,9 @@ class Stacktrace implements \JsonSerializable
     /**
      * Adds a new frame to the stacktrace.
      *
-     * @param string $file           The file where the frame originated
-     * @param int    $line           The line at which the frame originated
-     * @param array  $backtraceFrame The data of the frame to add
+     * @param string               $file           The file where the frame originated
+     * @param int                  $line           The line at which the frame originated
+     * @param array<string, mixed> $backtraceFrame The data of the frame to add
      */
     public function addFrame(string $file, int $line, array $backtraceFrame): void
     {
@@ -163,8 +165,8 @@ class Stacktrace implements \JsonSerializable
             foreach ($frameArguments as $argumentName => $argumentValue) {
                 $argumentValue = $this->representationSerializer->representationSerialize($argumentValue);
 
-                if (is_numeric($argumentValue) || \is_string($argumentValue)) {
-                    $frameArguments[(string) $argumentName] = mb_substr((string) $argumentValue, 0, $this->options->getMaxValueLength());
+                if (\is_string($argumentValue)) {
+                    $frameArguments[(string) $argumentName] = mb_substr($argumentValue, 0, $this->options->getMaxValueLength());
                 } else {
                     $frameArguments[(string) $argumentName] = $argumentValue;
                 }
@@ -205,6 +207,8 @@ class Stacktrace implements \JsonSerializable
 
     /**
      * {@inheritdoc}
+     *
+     * @return Frame[]
      */
     public function jsonSerialize()
     {
@@ -217,6 +221,14 @@ class Stacktrace implements \JsonSerializable
      * @param string $path            The file path
      * @param int    $lineNumber      The line to centre about
      * @param int    $maxLinesToFetch The maximum number of lines to fetch
+     *
+     * @return array<string, string|string[]>
+     *
+     * @psalm-return array{
+     *     pre_context?: string[],
+     *     context_line?: string,
+     *     post_context?: string[]
+     * }
      */
     protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
@@ -263,10 +275,6 @@ class Stacktrace implements \JsonSerializable
             // it's not a drama
         }
 
-        $frame['pre_context'] = $this->serializer->serialize($frame['pre_context']);
-        $frame['context_line'] = $this->serializer->serialize($frame['context_line']);
-        $frame['post_context'] = $this->serializer->serialize($frame['post_context']);
-
         return $frame;
     }
 
@@ -289,7 +297,9 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the values of the arguments of the given stackframe.
      *
-     * @param array $frame The frame from where arguments are retrieved
+     * @param array<string, mixed> $frame The frame from where arguments are retrieved
+     *
+     * @return array<string, mixed>
      */
     protected function getFrameArgumentsValues(array $frame): array
     {
@@ -314,7 +324,9 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets the arguments of the given stackframe.
      *
-     * @param array $frame The frame from where arguments are retrieved
+     * @param array<string, mixed> $frame The frame from where arguments are retrieved
+     *
+     * @return array<string, mixed>
      */
     public function getFrameArguments(array $frame): array
     {
@@ -376,7 +388,7 @@ class Stacktrace implements \JsonSerializable
 
             if (isset($params[$index])) {
                 // Assign the argument by the parameter name
-                $args[$params[$index]->name] = $arg;
+                $args[$params[$index]->getName()] = $arg;
             } else {
                 $args['param' . $index] = $arg;
             }

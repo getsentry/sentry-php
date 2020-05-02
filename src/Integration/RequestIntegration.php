@@ -89,6 +89,8 @@ final class RequestIntegration implements IntegrationInterface
      * @param self                        $self    The current instance of the integration
      * @param Event                       $event   The event that will be enriched with a request
      * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
@@ -217,7 +219,9 @@ final class RequestIntegration implements IntegrationInterface
      * Create an array with the same structure as $uploadedFiles, but replacing
      * each UploadedFileInterface with an array of info.
      *
-     * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
+     * @param array<string, mixed> $uploadedFiles The uploaded files info from a PSR-7 server request
+     *
+     * @return array<string, mixed>
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {

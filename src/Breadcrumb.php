@@ -104,7 +104,7 @@ final class Breadcrumb implements \JsonSerializable
     private $level;
 
     /**
-     * @var array The meta data of the breadcrumb
+     * @var array<string, mixed> The meta data of the breadcrumb
      */
     private $metadata;
 
@@ -116,11 +116,11 @@ final class Breadcrumb implements \JsonSerializable
     /**
      * Constructor.
      *
-     * @param string      $level    The error level of the breadcrumb
-     * @param string      $type     The type of the breadcrumb
-     * @param string      $category The category of the breadcrumb
-     * @param string|null $message  Optional text message
-     * @param array       $metadata Additional information about the breadcrumb
+     * @param string               $level    The error level of the breadcrumb
+     * @param string               $type     The type of the breadcrumb
+     * @param string               $category The category of the breadcrumb
+     * @param string|null          $message  Optional text message
+     * @param array<string, mixed> $metadata Additional information about the breadcrumb
      */
     public function __construct(string $level, string $type, string $category, ?string $message = null, array $metadata = [])
     {
@@ -287,6 +287,8 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb meta data.
+     *
+     * @return array<string, mixed>
      */
     public function getMetadata(): array
     {
@@ -345,6 +347,8 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * Gets the breadcrumb as an array.
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -362,6 +366,14 @@ final class Breadcrumb implements \JsonSerializable
      * Helper method to create an instance of this class from an array of data.
      *
      * @param array $data Data used to populate the breadcrumb
+     *
+     * @psalm-param array{
+     *     level: string,
+     *     type?: string,
+     *     category: string,
+     *     message?: string,
+     *     data?: array<string, mixed>
+     * } $data
      */
     public static function fromArray(array $data): self
     {
@@ -376,6 +388,8 @@ final class Breadcrumb implements \JsonSerializable
 
     /**
      * {@inheritdoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {

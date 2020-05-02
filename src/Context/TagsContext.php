@@ -11,6 +11,8 @@ namespace Sentry\Context;
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
  * @final since version 2.3
+ *
+ * @template-extends Context<string>
  */
 class TagsContext extends Context
 {
@@ -61,7 +63,9 @@ class TagsContext extends Context
     /**
      * Sanitizes the given data by converting numeric values to strings.
      *
-     * @param array $data The data to sanitize
+     * @param array<string, string> $data The data to sanitize
+     *
+     * @return array<string, string>
      *
      * @throws \InvalidArgumentException If any of the values of the input data
      *                                   is not a number or a string

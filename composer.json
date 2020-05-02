@@ -41,8 +41,8 @@
         "monolog/monolog": "^1.3|^2.0",
         "php-http/mock-client": "^1.3",
         "phpstan/extension-installer": "^1.0",
-        "phpstan/phpstan": "^0.11",
-        "phpstan/phpstan-phpunit": "^0.11",
+        "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-phpunit": "^0.12",
         "phpunit/phpunit": "^7.5.18",
         "symfony/phpunit-bridge": "^4.3|^5.0",
         "vimeo/psalm": "^3.4"

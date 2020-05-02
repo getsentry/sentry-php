@@ -165,8 +165,8 @@ final class Client implements FlushableClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array      $payload The payload that will be converted to an Event
-     * @param Scope|null $scope   Optional scope which enriches the Event
+     * @param array<string, mixed> $payload The payload that will be converted to an Event
+     * @param Scope|null           $scope   Optional scope which enriches the Event
      *
      * @return Event|null returns ready to send Event, however depending on options it can be discarded
      */
