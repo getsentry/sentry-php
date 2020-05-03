@@ -1,5 +1,6 @@
 parameters:
     tipsOfTheDay: false
+    treatPhpDocTypesAsCertain: false
     level: 8
     paths:
         - src
