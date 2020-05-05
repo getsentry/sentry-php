@@ -214,13 +214,13 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets an excerpt of the source code around a given line.
      *
-     * @param string $path            The file path
-     * @param int    $lineNumber      The line to centre about
-     * @param int    $maxLinesToFetch The maximum number of lines to fetch
+     * @param string   $path            The file path
+     * @param int      $lineNumber      The line to centre about
+     * @param int|null $maxLinesToFetch The maximum number of lines to fetch
      */
-    protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
+    protected function getSourceCodeExcerpt(string $path, int $lineNumber, ?int $maxLinesToFetch): array
     {
-        if (@!is_readable($path) || !is_file($path)) {
+        if (null === $maxLinesToFetch || @!is_readable($path) || !is_file($path)) {
             return [];
         }
 

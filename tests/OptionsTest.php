@@ -305,6 +305,44 @@ final class OptionsTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider contextLinesOptionValidatesInputValueDataProvider
+     */
+    public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
+    {
+        if (null !== $expectedExceptionMessage) {
+            $this->expectException(InvalidOptionsException::class);
+            $this->expectExceptionMessage($expectedExceptionMessage);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
+
+        new Options(['context_lines' => $value]);
+    }
+
+    public function contextLinesOptionValidatesInputValueDataProvider(): \Generator
+    {
+        yield [
+            -1,
+            'The option "context_lines" with value -1 is invalid.',
+        ];
+
+        yield [
+            0,
+            null,
+        ];
+
+        yield [
+            1,
+            null,
+        ];
+
+        yield [
+            null,
+            null,
+        ];
+    }
+
     public function testDsnOptionSupportsEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
