@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add missing validation for the `context_lines` option and make it possible to disable the reading of the frame context (#1003)
+- Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
 
 ## 2.3.2 (2020-03-06)
 
