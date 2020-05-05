@@ -300,9 +300,7 @@ final class StacktraceTest extends TestCase
      */
     public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
     {
-        if (null !== $contextLines) {
-            $this->options->setContextLines($contextLines);
-        }
+        $this->options->setContextLines($contextLines);
 
         $fileContent = explode("\n", $this->getFixture($fixture));
         $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
@@ -316,25 +314,68 @@ final class StacktraceTest extends TestCase
         $this->assertCount($postContextCount, $frames[0]->getPostContext());
 
         for ($i = 0; $i < $preContextCount; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + ($lineNumber - $preContextCount - 1)]), $frames[0]->getPreContext()[$i]);
+            $this->assertSame(rtrim($fileContent[$i + ($lineNumber - $preContextCount - 1)]), $frames[0]->getPreContext()[$i]);
         }
 
-        $this->assertEquals(rtrim($fileContent[$lineNumber - 1]), $frames[0]->getContextLine());
+        if (null === $contextLines) {
+            $this->assertNull($frames[0]->getContextLine());
+        } else {
+            $this->assertSame(rtrim($fileContent[$lineNumber - 1]), $frames[0]->getContextLine());
+        }
 
         for ($i = 0; $i < $postContextCount; ++$i) {
-            $this->assertEquals(rtrim($fileContent[$i + $lineNumber]), $frames[0]->getPostContext()[$i]);
+            $this->assertSame(rtrim($fileContent[$i + $lineNumber]), $frames[0]->getPostContext()[$i]);
         }
     }
 
-    public function addFrameRespectsContextLinesOptionDataProvider(): array
+    public function addFrameRespectsContextLinesOptionDataProvider(): \Generator
     {
-        return [
-            'read code from short file' => ['code/ShortFile.php', 3, 2, 2, 2],
-            'read code from long file with default context' => ['code/LongFile.php', 8, null, 5, 5],
-            'read code from long file with specified context' => ['code/LongFile.php', 8, 2, 2, 2],
-            'read code from short file with no context' => ['code/ShortFile.php', 3, 0, 0, 0],
-            'read code from long file near end of file' => ['code/LongFile.php', 11, 5, 5, 2],
-            'read code from long file near beginning of file' => ['code/LongFile.php', 3, 5, 2, 5],
+        yield 'skip reading code when context_lines option == 0' => [
+            'code/ShortFile.php',
+            3,
+            0,
+            0,
+            0,
+        ];
+
+        yield 'skip reading pre_context and post_context when context_lines == null' => [
+            'code/ShortFile.php',
+            3,
+            null,
+            0,
+            0,
+        ];
+
+        yield 'read code from short file' => [
+            'code/ShortFile.php',
+            3,
+            2,
+            2,
+            2,
+        ];
+
+        yield 'read code from long file' => [
+            'code/LongFile.php',
+            8,
+            2,
+            2,
+            2,
+        ];
+
+        yield 'read code from long file near end of file' => [
+            'code/LongFile.php',
+            11,
+            5,
+            5,
+            2,
+        ];
+
+        yield 'read code from long file near beginning of file' => [
+            'code/LongFile.php',
+            3,
+            5,
+            2,
+            5,
         ];
     }
 

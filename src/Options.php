@@ -143,7 +143,7 @@ final class Options
     /**
      * Gets the number of lines of code context to capture, or null if none.
      */
-    public function getContextLines(): int
+    public function getContextLines(): ?int
     {
         return $this->options['context_lines'];
     }
@@ -151,9 +151,9 @@ final class Options
     /**
      * Sets the number of lines of code context to capture, or null if none.
      *
-     * @param int $contextLines The number of lines of code
+     * @param int|null $contextLines The number of lines of code
      */
-    public function setContextLines(int $contextLines): void
+    public function setContextLines(?int $contextLines): void
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
 
@@ -833,7 +833,7 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
-        $resolver->setAllowedTypes('context_lines', 'int');
+        $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('excluded_exceptions', 'array');
@@ -864,6 +864,7 @@ final class Options
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('tags', \Closure::fromCallable([$this, 'validateTagsOption']));
+        $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, ?string $value) {
@@ -1033,6 +1034,16 @@ final class Options
         }
 
         return true;
+    }
+
+    /**
+     * Validates that the value passed to the "context_lines" option is valid.
+     *
+     * @param int|null $contextLines The value to validate
+     */
+    private function validateContextLinesOption(?int $contextLines): bool
+    {
+        return null === $contextLines || $contextLines >= 0;
     }
 
     /**

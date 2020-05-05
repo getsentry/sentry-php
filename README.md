@@ -98,7 +98,7 @@ The following integrations are available and maintained by members of the Sentry
 
 ## Contributing
 
-Dependencies are managed through composer:
+Dependencies are managed through `composer`:
 
 ```
 $ composer install
