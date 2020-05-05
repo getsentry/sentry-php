@@ -51,8 +51,8 @@ final class Frame implements \JsonSerializable
     private $inApp = true;
 
     /**
-     * @var array A mapping of variables which were available within this
-     *            frame (usually context-locals)
+     * @var array<string, mixed> A mapping of variables which were available within this
+     *                    frame (usually context-locals)
      */
     private $vars = [];
 
@@ -177,6 +177,8 @@ final class Frame implements \JsonSerializable
     /**
      * Gets a mapping of variables which were available within this frame
      * (usually context-locals).
+     *
+     * @return array<string, mixed>
      */
     public function getVars(): array
     {
@@ -187,7 +189,7 @@ final class Frame implements \JsonSerializable
      * Sets a mapping of variables which were available within this frame
      * (usually context-locals).
      *
-     * @param array $vars The variables
+     * @param array<string, mixed> $vars The variables
      */
     public function setVars(array $vars): void
     {
@@ -197,6 +199,17 @@ final class Frame implements \JsonSerializable
     /**
      * Returns an array representation of the data of this frame modeled according
      * to the specifications of the Sentry SDK Stacktrace Interface.
+     *
+     * @psalm-return array{
+     *     function: string|null,
+     *     filename: string,
+     *     lineno: int,
+     *     in_app: bool,
+     *     pre_context?: string[],
+     *     context_line?: string,
+     *     post_context?: string[],
+     *     vars?: array<string, mixed>
+     * }
      */
     public function toArray(): array
     {
@@ -228,6 +241,8 @@ final class Frame implements \JsonSerializable
 
     /**
      * {@inheritdoc}
+     *
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {

@@ -12,7 +12,6 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -460,50 +459,6 @@ class ClientTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testConvertExceptionThrownInLatin1File(): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $result = $event->getExceptions();
-                $expectedValue = [
-                    [
-                        'type' => \Exception::class,
-                        'value' => 'foo',
-                    ],
-                ];
-
-                $this->assertArraySubset($expectedValue, $result);
-
-                $latin1StringFound = false;
-
-                /** @var \Sentry\Frame $frame */
-                foreach ($result[0]['stacktrace']->getFrames() as $frame) {
-                    if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
-                        $latin1StringFound = true;
-
-                        break;
-                    }
-                }
-
-                $this->assertTrue($latin1StringFound);
-
-                return true;
-            }));
-
-        $serializer = new Serializer(new Options());
-        $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
-
-        $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->setSerializer($serializer)
-            ->getClient();
-
-        $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
     public function testAttachStacktrace(): void

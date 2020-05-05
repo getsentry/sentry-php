@@ -43,7 +43,7 @@ final class Options
     /**
      * Class constructor.
      *
-     * @param array $options The configuration options
+     * @param array<string, mixed> $options The configuration options
      */
     public function __construct(array $options = [])
     {
@@ -89,7 +89,7 @@ final class Options
      * Sets the prefixes which should be stripped from filenames to create
      * relative paths.
      *
-     * @param array $prefixes The prefixes
+     * @param string[] $prefixes The prefixes
      */
     public function setPrefixes(array $prefixes): void
     {
@@ -271,7 +271,7 @@ final class Options
     /**
      * Sets the list of paths to exclude from in_app detection.
      *
-     * @param array $paths The list of paths
+     * @param string[] $paths The list of paths
      */
     public function setInAppExcludedPaths(array $paths): void
     {
@@ -976,7 +976,7 @@ final class Options
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array|callable $integrations The value to validate
+     * @param IntegrationInterface[]|callable $integrations The value to validate
      */
     private function validateIntegrationsOption($integrations): bool
     {
@@ -1006,7 +1006,7 @@ final class Options
     /**
      * Validates that the values passed to the `class_serializers` option are valid.
      *
-     * @param array $serializers The value to validate
+     * @param mixed[] $serializers The value to validate
      */
     private function validateClassSerializersOption(array $serializers): bool
     {
@@ -1022,7 +1022,7 @@ final class Options
     /**
      * Validates that the values passed to the `tags` option are valid.
      *
-     * @param array $tags The value to validate
+     * @param mixed[] $tags The value to validate
      */
     private function validateTagsOption(array $tags): bool
     {

@@ -406,7 +406,7 @@ final class HubTest extends TestCase
 
     public function testGetIntegration(): void
     {
-        /** @var MockObject<IntegrationInterface> $integration */
+        /** @var IntegrationInterface&MockObject $integration */
         $integration = $this->createMock(IntegrationInterface::class);
 
         /** @var ClientInterface&MockObject $client */

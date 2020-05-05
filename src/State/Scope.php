@@ -38,7 +38,7 @@ final class Scope
     private $tags;
 
     /**
-     * @var Context A set of extra data associated to this scope
+     * @var Context<mixed> A set of extra data associated to this scope
      */
     private $extra;
 
@@ -165,8 +165,8 @@ final class Scope
     /**
      * Sets the given data in the user context.
      *
-     * @param array $data  The data
-     * @param bool  $merge If true, $data will be merged into user context instead of replacing it
+     * @param array<string, mixed> $data  The data
+     * @param bool                 $merge If true, $data will be merged into user context instead of replacing it
      *
      * @return $this
      */
@@ -290,8 +290,8 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event $event   The event object that will be enriched with scope data
-     * @param array $payload The raw payload of the event that will be propagated to the event processors
+     * @param Event                $event   The event object that will be enriched with scope data
+     * @param array<string, mixed> $payload The raw payload of the event that will be propagated to the event processors
      */
     public function applyToEvent(Event $event, array $payload): ?Event
     {

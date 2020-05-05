@@ -7,6 +7,8 @@ namespace Sentry\Context;
 /**
  * This class is a specialized version of the base `Context` adapted to work
  * for the user context.
+ *
+ * @template-extends Context<mixed>
  */
 final class UserContext extends Context
 {
