@@ -8,6 +8,7 @@
 - Make `AbstractSerializer` to accept `Traversable` values using `is_iterable` instead of `is_array` (#991)
 - Refactor the `ModulesIntegration` integration to improve its code and its tests (#990)
 - Extract the parsing and validation logic of the DSN into its own value object (#995)
+- Support passing either a Httplug or PSR-17 stream factory to the `GzipEncoderPlugin` class (#1012)
 - Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
 
 ## 2.3.2 (2020-03-06)

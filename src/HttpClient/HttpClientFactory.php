@@ -50,7 +50,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     private $responseFactory;
 
     /**
-     * @var StreamFactoryInterface The PSR-7 stream factory
+     * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
 
