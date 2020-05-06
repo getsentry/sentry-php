@@ -38,9 +38,6 @@ final class EventId
         return new self(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)));
     }
 
-    /**
-     * @see https://www.php.net/manual/en/language.oop5.magic.php#object.tostring
-     */
     public function __toString(): string
     {
         return $this->value;

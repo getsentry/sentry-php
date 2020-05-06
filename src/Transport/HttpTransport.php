@@ -142,7 +142,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             }
         }
 
-        return $event->getId();
+        return (string) $event->getId(false);
     }
 
     /**

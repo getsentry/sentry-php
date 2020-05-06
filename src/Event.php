@@ -169,10 +169,20 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the UUID of this event.
+     *
+     * @return string|EventId
      */
-    public function getId(): string
+    public function getId(bool $returnAsString = true, bool $throwDeprecation = true)
     {
-        return (string) $this->id;
+        if ($returnAsString) {
+            if ($throwDeprecation) {
+                @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+            }
+
+            return (string) $this->id;
+        }
+
+        return $this->id;
     }
 
     /**

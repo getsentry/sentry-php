@@ -23,7 +23,7 @@ final class EventTest extends TestCase
         $event1 = new Event();
         $event2 = new Event();
 
-        $this->assertNotEquals($event1->getId(), $event2->getId());
+        $this->assertNotEquals($event1->getId(false), $event2->getId(false));
     }
 
     public function testToArray(): void
@@ -31,7 +31,7 @@ final class EventTest extends TestCase
         $event = new Event();
 
         $expected = [
-            'event_id' => $event->getId(),
+            'event_id' => $event->getId(true, false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
@@ -64,7 +64,7 @@ final class EventTest extends TestCase
         $event->setContext('runtime', ['baz' => 'baz']);
 
         $expected = [
-            'event_id' => $event->getId(),
+            'event_id' => $event->getId(true, false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
