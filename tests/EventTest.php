@@ -26,12 +26,24 @@ final class EventTest extends TestCase
         $this->assertNotEquals($event1->getId(false), $event2->getId(false));
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Calling the method Sentry\Event::getId() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
+     */
+    public function testGetEventIdThrowsDeprecationErrorIfExpectingStringReturnType(): void
+    {
+        $event = new Event();
+
+        $this->assertSame($event->getId(), (string) $event->getId(false));
+    }
+
     public function testToArray(): void
     {
         $event = new Event();
 
         $expected = [
-            'event_id' => $event->getId(true, false),
+            'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',
@@ -64,7 +76,7 @@ final class EventTest extends TestCase
         $event->setContext('runtime', ['baz' => 'baz']);
 
         $expected = [
-            'event_id' => $event->getId(true, false),
+            'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'level' => 'error',
             'platform' => 'php',

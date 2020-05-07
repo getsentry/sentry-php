@@ -48,7 +48,7 @@ final class SpoolTransportTest extends TestCase
         $eventId = $this->transport->send($event);
 
         if ($isSendingSuccessful) {
-            $this->assertSame($event->getId(true, false), $eventId);
+            $this->assertSame((string) $event->getId(false), $eventId);
         } else {
             $this->assertNull($eventId);
         }
