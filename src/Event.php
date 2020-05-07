@@ -19,7 +19,7 @@ use Sentry\Context\UserContext;
 final class Event implements \JsonSerializable
 {
     /**
-     * @var string The UUID
+     * @var EventId The ID
      */
     private $id;
 
@@ -150,14 +150,13 @@ final class Event implements \JsonSerializable
     private $sdkVersion;
 
     /**
-     * Event constructor.
+     * Class constructor.
      *
-     * @throws \InvalidArgumentException
-     * @throws \Exception
+     * @param EventId|null $eventId The ID of the event
      */
-    public function __construct()
+    public function __construct(?EventId $eventId = null)
     {
-        $this->id = str_replace('-', '', uuid_create(UUID_TYPE_RANDOM));
+        $this->id = $eventId ?? EventId::generate();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
         $this->serverOsContext = new ServerOsContext();
@@ -170,9 +169,17 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the UUID of this event.
+     *
+     * @return string|EventId
      */
-    public function getId(): string
+    public function getId(bool $returnAsString = true)
     {
+        if ($returnAsString) {
+            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
+            return (string) $this->id;
+        }
+
         return $this->id;
     }
 
@@ -579,7 +586,7 @@ final class Event implements \JsonSerializable
     public function toArray(): array
     {
         $data = [
-            'event_id' => $this->id,
+            'event_id' => (string) $this->id,
             'timestamp' => $this->timestamp,
             'level' => (string) $this->level,
             'platform' => 'php',

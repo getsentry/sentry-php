@@ -20,6 +20,6 @@ class NullTransport implements TransportInterface
      */
     public function send(Event $event): ?string
     {
-        return $event->getId();
+        return (string) $event->getId(false);
     }
 }

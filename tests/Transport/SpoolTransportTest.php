@@ -13,7 +13,7 @@ use Sentry\Transport\SpoolTransport;
 final class SpoolTransportTest extends TestCase
 {
     /**
-     * @var SpoolInterface|MockObject
+     * @var SpoolInterface&MockObject
      */
     protected $spool;
 
@@ -48,7 +48,7 @@ final class SpoolTransportTest extends TestCase
         $eventId = $this->transport->send($event);
 
         if ($isSendingSuccessful) {
-            $this->assertSame($event->getId(), $eventId);
+            $this->assertSame((string) $event->getId(false), $eventId);
         } else {
             $this->assertNull($eventId);
         }
