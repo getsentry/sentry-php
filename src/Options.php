@@ -144,18 +144,9 @@ final class Options
 
     /**
      * Gets the number of lines of code context to capture, or null if none.
-     *
-     * @param bool $throwDeprecation Whether to throw a deprecation error when
-     *                               this function is called
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
      */
-    public function getContextLines(bool $throwDeprecation = true): ?int
+    public function getContextLines(): ?int
     {
-        if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the "Sentry\Integration\FrameContextifierIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
-        }
-
         return $this->options['context_lines'];
     }
 
@@ -163,8 +154,6 @@ final class Options
      * Sets the number of lines of code context to capture, or null if none.
      *
      * @param int|null $contextLines The number of lines of code
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function setContextLines(?int $contextLines): void
     {
@@ -814,7 +803,7 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
             'attach_stacktrace' => false,
-            'context_lines' => null,
+            'context_lines' => 5,
             'enable_compression' => true,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'project_root' => null,
@@ -957,15 +946,9 @@ final class Options
      *
      * @param SymfonyOptions $options The options
      * @param int|null       $value   The actual value of the option
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
      */
     private function normalizeContextLinesOption(SymfonyOptions $options, ?int $value): ?int
     {
-        if (null !== $value) {
-            @trigger_error('The "context_lines" option is deprecated since version 2.4 and will be removed in 3.0. Use the "Sentry\Integration\FrameContextifierIntegration" integration instead.', E_USER_DEPRECATED);
-        }
-
         return $value;
     }
 
@@ -1072,8 +1055,6 @@ final class Options
      * Validates that the value passed to the "context_lines" option is valid.
      *
      * @param int|null $contextLines The value to validate
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
      */
     private function validateContextLinesOption(?int $contextLines): bool
     {

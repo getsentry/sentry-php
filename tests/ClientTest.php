@@ -262,6 +262,27 @@ class ClientTest extends TestCase
     /**
      * @group legacy
      *
+     * @dataProvider captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCaptureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsed(array $payload): void
+    {
+        ClientBuilder::create(['attach_stacktrace' => true, 'default_integrations' => false])
+            ->getClient()
+            ->captureEvent($payload);
+    }
+
+    public function captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider(): \Generator
+    {
+        yield [[]];
+
+        yield [['exception' => new \Exception()]];
+    }
+
+    /**
+     * @group legacy
+     *
      * @requires OSFAMILY Linux
      */
     public function testAppPathLinux(): void

@@ -36,14 +36,6 @@ final class FrameContextifierIntegrationTest extends TestCase
         $this->representationSerializer = $this->createMock(RepresentationSerializerInterface::class);
     }
 
-    public function testConstructorThrowsIfMaxLinesToFetchIsNotGreaterThanOrEqualToZero(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The value of the $maxLinesToFetch argument must be greater than or equal to 0. Got: "-1".');
-
-        new FrameContextifierIntegration(-1);
-    }
-
     /**
      * @group legacy
      *
@@ -51,8 +43,8 @@ final class FrameContextifierIntegrationTest extends TestCase
      */
     public function testInvoke(string $fixtureFilePath, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
     {
-        $options = new Options();
-        $integration = new FrameContextifierIntegration($contextLines);
+        $options = new Options(['context_lines' => $contextLines]);
+        $integration = new FrameContextifierIntegration();
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -68,7 +60,7 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace($options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($options, $this->serializer, $this->representationSerializer, false);
         $stacktrace->addFrame($fixtureFilePath, $lineNumber, ['function' => '[unknown]']);
 
         $event = new Event();
@@ -144,7 +136,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             ->with('Failed to get the source code excerpt for the file "file.ext".');
 
         $options = new Options();
-        $integration = new FrameContextifierIntegration(1, $logger);
+        $integration = new FrameContextifierIntegration($logger);
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -160,7 +152,7 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace(new Options(), $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace(new Options(), $this->serializer, $this->representationSerializer, false);
         $stacktrace->addFrame('[internal]', 0, []);
         $stacktrace->addFrame('file.ext', 10, []);
 

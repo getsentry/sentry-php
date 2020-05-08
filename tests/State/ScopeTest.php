@@ -105,7 +105,7 @@ final class ScopeTest extends TestCase
      *
      * @expectedDeprecation Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.
      */
-    public function testSetUserThrowsDeprecation(): void
+    public function testSetUserThrowsDeprecationError(): void
     {
         $scope = new Scope();
 

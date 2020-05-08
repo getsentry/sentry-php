@@ -59,7 +59,7 @@ final class EventFactory implements EventFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createWithStacktrace(array $payload): Event
+    public function createWithStacktrace(array $payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
     {
         if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
             $payload['stacktrace'] = Stacktrace::createFromBacktrace(
@@ -68,7 +68,8 @@ final class EventFactory implements EventFactoryInterface
                 $this->representationSerializer,
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
                 __FILE__,
-                __LINE__ - 6
+                __LINE__ - 6,
+                \func_num_args() > 1 ? func_get_arg(1) : true
             );
         }
 
@@ -78,7 +79,7 @@ final class EventFactory implements EventFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create(array $payload): Event
+    public function create(array $payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
     {
         try {
             $event = new Event();
@@ -106,7 +107,7 @@ final class EventFactory implements EventFactoryInterface
         }
 
         if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-            $this->addThrowableToEvent($event, $payload['exception']);
+            $this->addThrowableToEvent($event, $payload['exception'], \func_num_args() > 1 ? func_get_arg(1) : true);
         }
 
         if (isset($payload['level']) && $payload['level'] instanceof Severity) {
@@ -123,12 +124,15 @@ final class EventFactory implements EventFactoryInterface
     /**
      * Stores the given exception in the passed event.
      *
-     * @param Event      $event     The event that will be enriched with the
-     *                              exception
-     * @param \Throwable $exception The exception that will be processed and
-     *                              added to the event
+     * @param Event      $event                        The event that will be enriched with the
+     *                                                 exception
+     * @param \Throwable $exception                    The exception that will be processed and
+     *                                                 added to the event
+     * @param bool       $shouldReadSourceCodeExcerpts Whether to read the source code excerpts
+     *                                                 using the legacy method instead of using
+     *                                                 the integration
      */
-    private function addThrowableToEvent(Event $event, \Throwable $exception): void
+    private function addThrowableToEvent(Event $event, \Throwable $exception, bool $shouldReadSourceCodeExcerpts): void
     {
         if ($exception instanceof \ErrorException) {
             $event->setLevel(Severity::fromError($exception->getSeverity()));
@@ -147,7 +151,8 @@ final class EventFactory implements EventFactoryInterface
                     $this->representationSerializer,
                     $currentException->getTrace(),
                     $currentException->getFile(),
-                    $currentException->getLine()
+                    $currentException->getLine(),
+                    $shouldReadSourceCodeExcerpts
                 ),
             ];
         } while ($currentException = $currentException->getPrevious());

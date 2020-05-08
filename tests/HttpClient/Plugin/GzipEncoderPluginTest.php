@@ -56,7 +56,7 @@ final class GzipEncoderPluginTest extends TestCase
      *
      * @expectedDeprecation A PSR-17 stream factory is needed as argument of the constructor of the "Sentry\HttpClient\Plugin\GzipEncoderPlugin" class since version 2.1.3 and will be required in 3.0.
      */
-    public function testConstructorThrowsDeprecationIfNoStreamFactoryIsProvided(): void
+    public function testConstructorThrowsDeprecationErrorIfNoStreamFactoryIsProvided(): void
     {
         new GzipEncoderPlugin();
     }

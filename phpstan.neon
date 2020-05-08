@@ -8,43 +8,22 @@ parameters:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         - "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
         -
-            message: /^Cannot assign offset 'os' to array\|string\.$/
-            path: src/Event.php
-        -
-            message: '/^array\|string does not accept array<string, string>\.$/'
-            path: src/Event.php
-        -
             message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
             path: src/Util/JSON.php
         -
             message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
-            message: '/^Parameter #2 \$str of function explode expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #1 \$haystack of function strrpos expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #1 \$str of function substr expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #2 \$host of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #3 \$port of class Sentry\\Dsn constructor expects int, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #5 \$path of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #6 \$publicKey of class Sentry\\Dsn constructor expects string, int\|string given\.$/'
-            path: src/Dsn.php
-        -
-            message: '/^Parameter #7 \$secretKey of class Sentry\\Dsn constructor expects string\|null, int\|string\|null given\.$/'
-            path: src/Dsn.php
-        -
             message: '/^Parameter #1 \$c of function ctype_digit expects int\|string, string\|null given\.$/'
+            path: src/Dsn.php
+        -
+            message: "/^Offset 'scheme' does not exist on array\\(\\?'scheme' => string, \\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string\\)\\.$/"
+            path: src/Dsn.php
+        -
+            message: "/^Offset 'path' does not exist on array\\(\\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string, 'scheme' => 'http'|'https'\\)\\.$/"
+            path: src/Dsn.php
+        -
+            message: "/^Offset 'user' does not exist on array\\('scheme' => 'http'\\|'https', \\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string\\)\\.$/"
             path: src/Dsn.php
         -
             message: '/^Method Sentry\\Monolog\\Handler::write\(\) has parameter \$record with no value type specified in iterable type array\.$/'
@@ -54,6 +33,12 @@ parameters:
             path: src/Serializer/RepresentationSerializer.php
         -
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
+            path: src/Client.php
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::createWithStacktrace\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/Client.php
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::create\(\) invoked with 2 parameters, 1 required\.$/'
             path: src/Client.php
     excludes_analyse:
         - tests/resources

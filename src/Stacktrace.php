@@ -19,6 +19,16 @@ class Stacktrace implements \JsonSerializable
     private const INTERNAL_FRAME_FILENAME = '[internal]';
 
     /**
+     * @var bool Flag indicating whether it's responsibility of this class to
+     *           read the source code excerpts for each frame
+     *
+     * @internal
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
+     */
+    protected $shouldReadSourceCodeExcerpts = false;
+
+    /**
      * @var Options The client options
      */
     protected $options;
@@ -57,8 +67,14 @@ class Stacktrace implements \JsonSerializable
      * @param SerializerInterface               $serializer               The serializer
      * @param RepresentationSerializerInterface $representationSerializer The representation serializer
      */
-    public function __construct(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer)
+    public function __construct(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer/*, bool $shouldReadSourceCodeExcerpts = true*/)
     {
+        if (\func_num_args() <= 3 || false !== func_get_arg(3)) {
+            @trigger_error(sprintf('Relying on the "%s" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.', self::class), E_USER_DEPRECATED);
+
+            $this->shouldReadSourceCodeExcerpts = true;
+        }
+
         $this->options = $options;
         $this->serializer = $serializer;
         $this->representationSerializer = $representationSerializer;
@@ -76,9 +92,9 @@ class Stacktrace implements \JsonSerializable
      *
      * @return static
      */
-    public static function createFromBacktrace(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $backtrace, string $file, int $line)
+    public static function createFromBacktrace(Options $options, SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, array $backtrace, string $file, int $line/*, bool $shouldReadSourceCodeExcerpts = true*/)
     {
-        $stacktrace = new static($options, $serializer, $representationSerializer);
+        $stacktrace = new static($options, $serializer, $representationSerializer, \func_num_args() > 6 ? func_get_arg(6) : true);
 
         foreach ($backtrace as $frame) {
             $stacktrace->addFrame($file, $line, $frame);
@@ -170,18 +186,20 @@ class Stacktrace implements \JsonSerializable
             $this->isFrameInApp($file, $functionName)
         );
 
-        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines(false));
+        if ($this->shouldReadSourceCodeExcerpts && null !== $this->options->getContextLines()) {
+            $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines());
 
-        if (isset($sourceCodeExcerpt['pre_context'])) {
-            $frame->setPreContext($sourceCodeExcerpt['pre_context']);
-        }
+            if (isset($sourceCodeExcerpt['pre_context'])) {
+                $frame->setPreContext($sourceCodeExcerpt['pre_context']);
+            }
 
-        if (isset($sourceCodeExcerpt['context_line'])) {
-            $frame->setContextLine($sourceCodeExcerpt['context_line']);
-        }
+            if (isset($sourceCodeExcerpt['context_line'])) {
+                $frame->setContextLine($sourceCodeExcerpt['context_line']);
+            }
 
-        if (isset($sourceCodeExcerpt['post_context'])) {
-            $frame->setPostContext($sourceCodeExcerpt['post_context']);
+            if (isset($sourceCodeExcerpt['post_context'])) {
+                $frame->setPostContext($sourceCodeExcerpt['post_context']);
+            }
         }
 
         array_unshift($this->frames, $frame);
@@ -241,9 +259,9 @@ class Stacktrace implements \JsonSerializable
      *     post_context?: string[]
      * }
      */
-    protected function getSourceCodeExcerpt(string $path, int $lineNumber, ?int $maxLinesToFetch): array
+    protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
-        if (null === $maxLinesToFetch || @!is_readable($path) || !is_file($path)) {
+        if (@!is_readable($path) || !is_file($path)) {
             return [];
         }
 

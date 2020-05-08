@@ -8,6 +8,7 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -167,13 +168,19 @@ final class Client implements FlushableClientInterface
      *
      * @param array<string, mixed> $payload The payload that will be converted to an Event
      * @param Scope|null           $scope   Optional scope which enriches the Event
+     *
+     * @return Event|null The prepared event object or null if it must be discarded
      */
     private function prepareEvent(array $payload, ?Scope $scope = null): ?Event
     {
+        $shouldReadSourceCodeExcerpts = !isset($this->integrations[FrameContextifierIntegration::class]) && null !== $this->options->getContextLines();
+
         if ($this->options->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
-            $event = $this->eventFactory->createWithStacktrace($payload);
+            /** @psalm-suppress TooManyArguments */
+            $event = $this->eventFactory->createWithStacktrace($payload, $shouldReadSourceCodeExcerpts);
         } else {
-            $event = $this->eventFactory->create($payload);
+            /** @psalm-suppress TooManyArguments */
+            $event = $this->eventFactory->create($payload, $shouldReadSourceCodeExcerpts);
         }
 
         $sampleRate = $this->options->getSampleRate();
