@@ -869,7 +869,6 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
-        $resolver->setNormalizer('context_lines', \Closure::fromCallable([$this, 'normalizeContextLinesOption']));
         $resolver->setNormalizer('project_root', function (SymfonyOptions $options, ?string $value) {
             if (null === $value) {
                 return null;
@@ -938,18 +937,6 @@ final class Options
         }
 
         return Dsn::createFromString($value);
-    }
-
-    /**
-     * Normalizes the value of the "context_lines" option and throws a deprecation
-     * warning to favor the integration instead.
-     *
-     * @param SymfonyOptions $options The options
-     * @param int|null       $value   The actual value of the option
-     */
-    private function normalizeContextLinesOption(SymfonyOptions $options, ?int $value): ?int
-    {
-        return $value;
     }
 
     /**
