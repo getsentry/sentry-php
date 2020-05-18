@@ -141,18 +141,21 @@ class Stacktrace implements \JsonSerializable
         }
 
         $frame = new Frame($functionName, $this->stripPrefixFromFilePath($file), $line);
-        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines());
 
-        if (isset($sourceCodeExcerpt['pre_context'])) {
-            $frame->setPreContext($sourceCodeExcerpt['pre_context']);
-        }
+        if (null !== $this->options->getContextLines()) {
+            $sourceCodeExcerpt = $this->getSourceCodeExcerpt($file, $line, $this->options->getContextLines());
 
-        if (isset($sourceCodeExcerpt['context_line'])) {
-            $frame->setContextLine($sourceCodeExcerpt['context_line']);
-        }
+            if (isset($sourceCodeExcerpt['pre_context'])) {
+                $frame->setPreContext($sourceCodeExcerpt['pre_context']);
+            }
 
-        if (isset($sourceCodeExcerpt['post_context'])) {
-            $frame->setPostContext($sourceCodeExcerpt['post_context']);
+            if (isset($sourceCodeExcerpt['context_line'])) {
+                $frame->setContextLine($sourceCodeExcerpt['context_line']);
+            }
+
+            if (isset($sourceCodeExcerpt['post_context'])) {
+                $frame->setPostContext($sourceCodeExcerpt['post_context']);
+            }
         }
 
         $frame->setIsInApp($this->isFrameInApp($file, $functionName));
@@ -214,13 +217,13 @@ class Stacktrace implements \JsonSerializable
     /**
      * Gets an excerpt of the source code around a given line.
      *
-     * @param string   $path            The file path
-     * @param int      $lineNumber      The line to centre about
-     * @param int|null $maxLinesToFetch The maximum number of lines to fetch
+     * @param string $path            The file path
+     * @param int    $lineNumber      The line to centre about
+     * @param int    $maxLinesToFetch The maximum number of lines to fetch
      */
-    protected function getSourceCodeExcerpt(string $path, int $lineNumber, ?int $maxLinesToFetch): array
+    protected function getSourceCodeExcerpt(string $path, int $lineNumber, int $maxLinesToFetch): array
     {
-        if (null === $maxLinesToFetch || @!is_readable($path) || !is_file($path)) {
+        if (@!is_readable($path) || !is_file($path)) {
             return [];
         }
 
