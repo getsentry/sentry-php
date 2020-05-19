@@ -441,6 +441,7 @@ final class StacktraceTest extends TestCase
     public function testCreateFromBacktraceWithAnonymousClass(): void
     {
         $this->options->setPrefixes(['/path-prefix']);
+
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame_with_memory_address.json');
         $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
@@ -456,6 +457,7 @@ final class StacktraceTest extends TestCase
             '[internal]',
             0
         );
+
         $this->assertFrameEquals(
             $frames[2],
             "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
