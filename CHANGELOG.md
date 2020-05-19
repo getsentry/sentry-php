@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
+- Trim the file path from the anonymous class name in the stacktrace according to the `prefixes` option (#1016)
 
 ## 2.3.2 (2020-03-06)
 

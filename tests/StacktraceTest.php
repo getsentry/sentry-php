@@ -418,7 +418,7 @@ final class StacktraceTest extends TestCase
         ];
     }
 
-    public function testFromBacktrace(): void
+    public function testCreateFromBacktrace(): void
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
         $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
@@ -428,7 +428,7 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
-    public function testFromBacktraceWithAnonymousFrame(): void
+    public function testCreateFromBacktraceWithAnonymousFrame(): void
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
         $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
@@ -438,8 +438,10 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[2], 'TestClass::triggerError', 'path/to/file', 12);
     }
 
-    public function testFromBacktraceWithAnonymousClass(): void
+    public function testCreateFromBacktraceWithAnonymousClass(): void
     {
+        $this->options->setPrefixes(['/path-prefix']);
+
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame_with_memory_address.json');
         $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
 
@@ -451,7 +453,14 @@ final class StacktraceTest extends TestCase
         );
         $this->assertFrameEquals(
             $frames[1],
-            'class@anonymous/path/to/app/consumer.php::messageCallback',
+            "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
+            '[internal]',
+            0
+        );
+
+        $this->assertFrameEquals(
+            $frames[2],
+            "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
             'path/to/file',
             12
         );
