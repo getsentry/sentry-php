@@ -7,6 +7,7 @@ namespace Sentry;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
+use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
@@ -21,7 +22,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class Options
 {
     /**
-     * The default maximum number of breadcrumbs that will be sent with an event.
+     * The default maximum number of breadcrumbs that will be sent with an
+     * event.
      */
     public const DEFAULT_MAX_BREADCRUMBS = 100;
 
@@ -210,7 +212,7 @@ final class Options
      */
     public function getExcludedExceptions(): array
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         return $this->options['excluded_exceptions'];
     }
@@ -225,7 +227,7 @@ final class Options
      */
     public function setExcludedExceptions(array $exceptions): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -246,7 +248,7 @@ final class Options
     public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
         if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
         }
 
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
@@ -872,7 +874,7 @@ final class Options
                 return null;
             }
 
-            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', E_USER_DEPRECATED);
 
             return $this->normalizeAbsolutePath($value);
         });
@@ -1064,6 +1066,7 @@ final class Options
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
+                new FrameContextifierIntegration(),
             ];
         }
 

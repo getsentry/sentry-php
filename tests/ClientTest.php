@@ -69,7 +69,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrownException): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -88,7 +88,7 @@ class ClientTest extends TestCase
             ->getClient();
 
         SentrySdk::getCurrentHub()->bindClient($client);
-        SentrySdk::getCurrentHub()->captureException($thrown);
+        SentrySdk::getCurrentHub()->captureException($thrownException);
     }
 
     public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
@@ -257,6 +257,27 @@ class ClientTest extends TestCase
         $this->clearLastError();
 
         $client->captureLastError();
+    }
+
+    /**
+     * @group legacy
+     *
+     * @dataProvider captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCaptureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsed(array $payload): void
+    {
+        ClientBuilder::create(['attach_stacktrace' => true, 'default_integrations' => false])
+            ->getClient()
+            ->captureEvent($payload);
+    }
+
+    public function captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider(): \Generator
+    {
+        yield [[]];
+
+        yield [['exception' => new \Exception()]];
     }
 
     /**

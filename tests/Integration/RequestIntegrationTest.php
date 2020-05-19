@@ -27,7 +27,7 @@ final class RequestIntegrationTest extends TestCase
      *
      * @expectedDeprecation Passing the options as argument of the constructor of the "Sentry\Integration\RequestIntegration" class is deprecated since version 2.1 and will not work in 3.0.
      */
-    public function testConstructorThrowsDeprecationIfPassingOptions(): void
+    public function testConstructorThrowsDeprecationErrorIfPassingOptions(): void
     {
         new RequestIntegration(new Options([]));
     }

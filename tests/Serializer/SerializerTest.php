@@ -209,16 +209,10 @@ final class SerializerTest extends AbstractSerializerTest
     }
 
     /**
-     * @param Options $options|null
-     *
      * @return Serializer
      */
     protected function createSerializer(?Options $options = null): AbstractSerializer
     {
-        if (null === $options) {
-            $options = new Options();
-        }
-
-        return new Serializer($options);
+        return new Serializer($options ?? new Options());
     }
 }
