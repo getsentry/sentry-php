@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### 2.4.0 (2020-05-21)
+
 - Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
 - Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
 - Log internal debug and error messages to a PSR-3 compatible logger (#989)
