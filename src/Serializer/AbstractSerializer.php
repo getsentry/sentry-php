@@ -90,7 +90,7 @@ abstract class AbstractSerializer
      *
      * @param mixed $value
      *
-     * @return string|bool|float|int|array|null
+     * @return string|bool|float|int|mixed[]|null
      */
     protected function serializeRecursively($value, int $_depth = 0)
     {
@@ -103,7 +103,7 @@ abstract class AbstractSerializer
                 return $this->serializeCallableWithoutTypeHint($value);
             }
 
-            if (\is_array($value)) {
+            if (is_iterable($value)) {
                 $serializedArray = [];
 
                 foreach ($value as $k => $v) {
@@ -154,6 +154,8 @@ abstract class AbstractSerializer
      * objects implementing the `SerializableInterface`.
      *
      * @param object $object
+     *
+     * @return array<int, callable>
      */
     protected function resolveClassSerializers($object): array
     {
@@ -178,7 +180,7 @@ abstract class AbstractSerializer
      * @param object   $object
      * @param string[] $hashes
      *
-     * @return array|string|bool|float|int|null
+     * @return mixed[]|string|bool|float|int|null
      */
     protected function serializeObject($object, int $_depth = 0, array $hashes = [])
     {

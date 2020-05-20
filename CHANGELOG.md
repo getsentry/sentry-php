@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
+- Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
+- Log internal debug and error messages to a PSR-3 compatible logger (#989)
+- Make `AbstractSerializer` to accept `Traversable` values using `is_iterable` instead of `is_array` (#991)
+- Refactor the `ModulesIntegration` integration to improve its code and its tests (#990)
+- Extract the parsing and validation logic of the DSN into its own value object (#995)
+- Support passing either a Httplug or PSR-17 stream factory to the `GzipEncoderPlugin` class (#1012)
+- Add the `FrameContextifierIntegration` integration (#1011)
 - Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
 - Trim the file path from the anonymous class name in the stacktrace according to the `prefixes` option (#1016)
 

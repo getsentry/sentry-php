@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Transport;
 
 use Http\Message\MessageFactory as MessageFactoryInterface;
+use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Options;
 
@@ -25,15 +26,22 @@ final class DefaultTransportFactory implements TransportFactoryInterface
     private $httpClientFactory;
 
     /**
+     * @var LoggerInterface|null A PSR-3 logger
+     */
+    private $logger;
+
+    /**
      * Constructor.
      *
      * @param MessageFactoryInterface    $messageFactory    The PSR-7 message factory
      * @param HttpClientFactoryInterface $httpClientFactory The HTTP client factory
+     * @param LoggerInterface|null       $logger            A PSR-3 logger
      */
-    public function __construct(MessageFactoryInterface $messageFactory, HttpClientFactoryInterface $httpClientFactory)
+    public function __construct(MessageFactoryInterface $messageFactory, HttpClientFactoryInterface $httpClientFactory, ?LoggerInterface $logger = null)
     {
         $this->messageFactory = $messageFactory;
         $this->httpClientFactory = $httpClientFactory;
+        $this->logger = $logger;
     }
 
     /**
@@ -41,7 +49,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
      */
     public function create(Options $options): TransportInterface
     {
-        if (null === $options->getDsn()) {
+        if (null === $options->getDsn(false)) {
             return new NullTransport();
         }
 
@@ -50,7 +58,8 @@ final class DefaultTransportFactory implements TransportFactoryInterface
             $this->httpClientFactory->create($options),
             $this->messageFactory,
             true,
-            false
+            false,
+            $this->logger
         );
     }
 }

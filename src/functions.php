@@ -7,7 +7,7 @@ namespace Sentry;
 /**
  * Creates a new Client and Hub which will be set as current.
  *
- * @param array $options The client options
+ * @param array<string, mixed> $options The client options
  */
 function init(array $options = []): void
 {
@@ -40,7 +40,7 @@ function captureException(\Throwable $exception): ?string
 /**
  * Captures a new event using the provided data.
  *
- * @param array $payload The data of the event being captured
+ * @param array<string, mixed> $payload The data of the event being captured
  */
 function captureEvent(array $payload): ?string
 {

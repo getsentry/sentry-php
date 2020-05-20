@@ -15,6 +15,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
  * @final since version 2.3
+ *
+ * @template-extends Context<string>
  */
 class ServerOsContext extends Context
 {

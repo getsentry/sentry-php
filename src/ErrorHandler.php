@@ -349,12 +349,12 @@ final class ErrorHandler
      * Handles errors by capturing them through the client according to the
      * configured bit field.
      *
-     * @param int        $level      The level of the error raised, represented by
-     *                               one of the E_* constants
-     * @param string     $message    The error message
-     * @param string     $file       The filename the error was raised in
-     * @param int        $line       The line number the error was raised at
-     * @param array|null $errcontext The error context (deprecated since PHP 7.2)
+     * @param int                       $level      The level of the error raised, represented by
+     *                                              one of the E_* constants
+     * @param string                    $message    The error message
+     * @param string                    $file       The filename the error was raised in
+     * @param int                       $line       The line number the error was raised at
+     * @param array<string, mixed>|null $errcontext The error context (deprecated since PHP 7.2)
      *
      * @return bool If the function returns `false` then the PHP native error
      *              handler will be called
@@ -436,11 +436,11 @@ final class ErrorHandler
         } catch (\Throwable $previousExceptionHandlerException) {
             // This `catch` statement is here to forcefully override the
             // $previousExceptionHandlerException variable with the exception
-            // we just catched
+            // we just caught
         }
 
         // If the instance of the exception we're handling is the same as the one
-        // catched from the previous exception handler then we give it back to the
+        // caught from the previous exception handler then we give it back to the
         // native PHP handler to prevent an infinite loop
         if ($exception === $previousExceptionHandlerException) {
             // Disable the fatal error handler or the error will be reported twice
@@ -456,9 +456,11 @@ final class ErrorHandler
      * Cleans and returns the backtrace without the first frames that belong to
      * this error handler.
      *
-     * @param array  $backtrace The backtrace to clear
-     * @param string $file      The filename the backtrace was raised in
-     * @param int    $line      The line number the backtrace was raised at
+     * @param array<int, mixed> $backtrace The backtrace to clear
+     * @param string            $file      The filename the backtrace was raised in
+     * @param int               $line      The line number the backtrace was raised at
+     *
+     * @return array<int, mixed>
      */
     private function cleanBacktraceFromErrorHandlerFrames(array $backtrace, string $file, int $line): array
     {

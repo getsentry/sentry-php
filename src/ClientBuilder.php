@@ -13,6 +13,7 @@ use Http\Message\MessageFactory as MessageFactoryInterface;
 use Http\Message\StreamFactory as StreamFactoryInterface;
 use Http\Message\UriFactory as UriFactoryInterface;
 use Jean85\PrettyVersions;
+use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\PluggableHttpClientFactory;
 use Sentry\Serializer\RepresentationSerializer;
@@ -79,6 +80,11 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var RepresentationSerializerInterface|null The representation serializer to be injected in the client
      */
     private $representationSerializer;
+
+    /**
+     * @var LoggerInterface|null A PSR-3 logger to log internal errors and debug messages
+     */
+    private $logger;
 
     /**
      * @var string The SDK identifier, to be used in {@see Event} and {@see SentryAuth}
@@ -218,6 +224,16 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
+    public function setLogger(LoggerInterface $logger): ClientBuilderInterface
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setSdkIdentifier(string $sdkIdentifier): ClientBuilderInterface
     {
         $this->sdkIdentifier = $sdkIdentifier;
@@ -260,7 +276,7 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        return new Client($this->options, $this->transport, $this->createEventFactory());
+        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->logger);
     }
 
     /**
@@ -324,6 +340,6 @@ final class ClientBuilder implements ClientBuilderInterface
             $httpClientFactory = new PluggableHttpClientFactory($httpClientFactory, $this->httpClientPlugins);
         }
 
-        return new DefaultTransportFactory($this->messageFactory, $httpClientFactory);
+        return new DefaultTransportFactory($this->messageFactory, $httpClientFactory, $this->logger);
     }
 }

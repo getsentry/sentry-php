@@ -7,7 +7,6 @@ namespace Sentry\HttpClient;
 use GuzzleHttp\RequestOptions as GuzzleHttpClientOptions;
 use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
-use Http\Client\Common\Plugin\BaseUriPlugin;
 use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderSetPlugin;
@@ -30,6 +29,17 @@ use Sentry\Options;
 final class HttpClientFactory implements HttpClientFactoryInterface
 {
     /**
+     * @var int The timeout of the request in seconds
+     */
+    private const DEFAULT_HTTP_TIMEOUT = 5;
+
+    /**
+     * @var int The default number of seconds to wait while trying to connect
+     *          to a server
+     */
+    private const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
+
+    /**
      * @var UriFactoryInterface The PSR-7 URI factory
      */
     private $uriFactory;
@@ -40,7 +50,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     private $responseFactory;
 
     /**
-     * @var StreamFactoryInterface The PSR-7 stream factory
+     * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
 
@@ -90,7 +100,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     public function create(Options $options): HttpAsyncClientInterface
     {
-        if (null === $options->getDsn()) {
+        if (null === $options->getDsn(false)) {
             throw new \RuntimeException('Cannot create an HTTP client without the Sentry DSN set in the options.');
         }
 
@@ -105,11 +115,15 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $httpClient = GuzzleHttpClient::createWithConfig([
                     GuzzleHttpClientOptions::PROXY => $options->getHttpProxy(),
+                    GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                    GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ]);
             } elseif (class_exists(CurlHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
                     CURLOPT_PROXY => $options->getHttpProxy(),
+                    CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                    CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ]);
             } else {
                 throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
@@ -121,7 +135,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         }
 
         $httpClientPlugins = [
-            new BaseUriPlugin($this->uriFactory->createUri($options->getDsn())),
             new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->sdkVersion]),
             new AuthenticationPlugin(new SentryAuthentication($options, $this->sdkIdentifier, $this->sdkVersion)),
             new RetryPlugin(['retries' => $options->getSendAttempts()]),

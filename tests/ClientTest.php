@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
@@ -67,7 +69,7 @@ class ClientTest extends TestCase
     /**
      * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
      */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrown): void
+    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrownException): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -86,7 +88,7 @@ class ClientTest extends TestCase
             ->getClient();
 
         SentrySdk::getCurrentHub()->bindClient($client);
-        SentrySdk::getCurrentHub()->captureException($thrown);
+        SentrySdk::getCurrentHub()->captureException($thrownException);
     }
 
     public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
@@ -260,6 +262,27 @@ class ClientTest extends TestCase
     /**
      * @group legacy
      *
+     * @dataProvider captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCaptureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsed(array $payload): void
+    {
+        ClientBuilder::create(['attach_stacktrace' => true, 'default_integrations' => false])
+            ->getClient()
+            ->captureEvent($payload);
+    }
+
+    public function captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider(): \Generator
+    {
+        yield [[]];
+
+        yield [['exception' => new \Exception()]];
+    }
+
+    /**
+     * @group legacy
+     *
      * @requires OSFAMILY Linux
      */
     public function testAppPathLinux(): void
@@ -309,31 +332,91 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider sampleRateAbsoluteDataProvider
+     * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
      */
-    public function testSampleRateAbsolute(float $sampleRate): void
+    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, Invocation $transportCallInvocationMatcher, Invocation $loggerCallInvocationMatcher): void
     {
+        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-        $transport->expects(0 == $sampleRate ? $this->never() : $this->exactly(10))
+        $transport->expects($transportCallInvocationMatcher)
             ->method('send');
 
-        $transportFactory = $this->createTransportFactory($transport);
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($loggerCallInvocationMatcher)
+            ->method('info')
+            ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
 
-        $client = (new ClientBuilder(new Options(['sample_rate' => $sampleRate])))
-            ->setTransportFactory($transportFactory)
+        $client = ClientBuilder::create(['sample_rate' => $sampleRate])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setLogger($logger)
             ->getClient();
 
         for ($i = 0; $i < 10; ++$i) {
-            $client->captureMessage('foobar');
+            $client->captureMessage('foo');
         }
     }
 
-    public function sampleRateAbsoluteDataProvider(): array
+    public function processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider(): \Generator
     {
-        return [
-            'sample rate 0' => [0],
-            'sample rate 1' => [1],
+        yield [
+            0,
+            $this->never(),
+            $this->exactly(10),
         ];
+
+        yield [
+            1,
+            $this->exactly(10),
+            $this->never(),
+        ];
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send" callback returned `null`.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'before_send' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureMessage('foo');
+    }
+
+    public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because one of the event processors returned `null`.', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $client = ClientBuilder::create([])
+            ->setLogger($logger)
+            ->getClient();
+
+        $scope = new Scope();
+        $scope->addEventProcessor(static function () {
+            return null;
+        });
+
+        $client->captureMessage('foo', Severity::debug(), $scope);
     }
 
     /**
@@ -397,50 +480,6 @@ class ClientTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    public function testConvertExceptionThrownInLatin1File(): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $result = $event->getExceptions();
-                $expectedValue = [
-                    [
-                        'type' => \Exception::class,
-                        'value' => 'foo',
-                    ],
-                ];
-
-                $this->assertArraySubset($expectedValue, $result);
-
-                $latin1StringFound = false;
-
-                /** @var \Sentry\Frame $frame */
-                foreach ($result[0]['stacktrace']->getFrames() as $frame) {
-                    if (null !== $frame->getPreContext() && \in_array('// äöü', $frame->getPreContext(), true)) {
-                        $latin1StringFound = true;
-
-                        break;
-                    }
-                }
-
-                $this->assertTrue($latin1StringFound);
-
-                return true;
-            }));
-
-        $serializer = new Serializer(new Options());
-        $serializer->setMbDetectOrder('ISO-8859-1, ASCII, UTF-8');
-
-        $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->setSerializer($serializer)
-            ->getClient();
-
-        $client->captureException(require_once __DIR__ . '/Fixtures/code/Latin1File.php');
     }
 
     public function testAttachStacktrace(): void

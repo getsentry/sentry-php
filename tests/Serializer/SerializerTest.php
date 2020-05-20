@@ -30,6 +30,24 @@ final class SerializerTest extends AbstractSerializerTest
     /**
      * @dataProvider serializeAllObjectsDataProvider
      */
+    public function testTraversablesAreArrays(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $content = [1, 2, 3];
+        $traversable = new \ArrayIterator($content);
+        $result = $this->invokeSerialization($serializer, $traversable);
+
+        $this->assertSame([1, 2, 3], $result);
+    }
+
+    /**
+     * @dataProvider serializeAllObjectsDataProvider
+     */
     public function testIntsAreInts(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();
@@ -191,16 +209,10 @@ final class SerializerTest extends AbstractSerializerTest
     }
 
     /**
-     * @param Options $options|null
-     *
      * @return Serializer
      */
     protected function createSerializer(?Options $options = null): AbstractSerializer
     {
-        if (null === $options) {
-            $options = new Options();
-        }
-
-        return new Serializer($options);
+        return new Serializer($options ?? new Options());
     }
 }

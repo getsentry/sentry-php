@@ -1,40 +1,45 @@
 parameters:
     tipsOfTheDay: false
-    level: 7
+    treatPhpDocTypesAsCertain: false
+    level: 8
     paths:
         - src
-        - tests
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
-        - '/^Parameter #1 \$object of method ReflectionProperty::setValue\(\) expects object, null given\.$/' # https://github.com/phpstan/phpstan/pull/2340
         - "/^Parameter #1 \\$function of function register_shutdown_function expects callable\\(\\): void, 'register_shutdown…' given\\.$/"
-        -
-            message: /^Cannot assign offset 'os' to array\|string\.$/
-            path: src/Event.php
         -
             message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
             path: src/Util/JSON.php
         -
-            message: '/^Class Http\\Client\\Curl\\Client not found\.$/'
+            message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
-            message: '/^Class Http\\Adapter\\Guzzle6\\Client not found\.$/'
-            path: src/HttpClient/HttpClientFactory.php
+            message: '/^Parameter #1 \$c of function ctype_digit expects int\|string, string\|null given\.$/'
+            path: src/Dsn.php
         -
-            message: '/^Instantiated class Http\\Client\\Curl\\Client not found\.$/'
-            path: src/HttpClient/HttpClientFactory.php
+            message: "/^Offset 'scheme' does not exist on array\\(\\?'scheme' => string, \\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string\\)\\.$/"
+            path: src/Dsn.php
         -
-            message: '/^Call to static method createWithConfig\(\) on an unknown class Http\\Adapter\\Guzzle6\\Client\.$/'
-            path: src/HttpClient/HttpClientFactory.php
+            message: "/^Offset 'path' does not exist on array\\(\\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string, 'scheme' => 'http'|'https'\\)\\.$/"
+            path: src/Dsn.php
         -
-            message: '/^Access to constant PROXY on an unknown class GuzzleHttp\\RequestOptions\.$/'
-            path: src/HttpClient/HttpClientFactory.php
+            message: "/^Offset 'user' does not exist on array\\('scheme' => 'http'\\|'https', \\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string\\)\\.$/"
+            path: src/Dsn.php
         -
-            message: '/^Access to an undefined property Sentry\\Integration\\IntegrationInterface::\$options\.$/'
-            path: src/Integration/IgnoreErrorsIntegration.php
+            message: '/^Method Sentry\\Monolog\\Handler::write\(\) has parameter \$record with no value type specified in iterable type array\.$/'
+            path: src/Monolog/Handler.php
         -
-            message: '/^Call to an undefined method Sentry\\Integration\\IntegrationInterface::shouldDropEvent\(\)\.$/'
-            path: src/Integration/IgnoreErrorsIntegration.php
+            message: '/^Cannot cast array\|bool\|float\|int\|string\|null to string\.$/'
+            path: src/Serializer/RepresentationSerializer.php
+        -
+            message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
+            path: src/Client.php
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::createWithStacktrace\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/Client.php
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::create\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/Client.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

@@ -13,12 +13,12 @@ interface RepresentationSerializerInterface
     /**
      * Serialize an object (recursively) into something safe to be sent as a stacktrace frame argument.
      *
-     * The main difference with the {@link Sentry\SerializerInterface} is the fact that even basic types
+     * The main difference with the {@link SerializerInterface} is the fact that even basic types
      * (bool, int, float) are converted into strings, to avoid misrepresentations on the server side.
      *
      * @param mixed $value
      *
-     * @return array|string|null
+     * @return mixed[]|string|null
      */
     public function representationSerialize($value);
 }

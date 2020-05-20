@@ -35,9 +35,19 @@ final class StacktraceTest extends TestCase
         $this->representationSerializer = new RepresentationSerializer($this->options);
     }
 
+    /**
+     * @group legacy
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testConstructorThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(): void
+    {
+        new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+    }
+
     public function testGetFramesAndToArray(): void
     {
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'class' => 'TestClass']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function']);
@@ -54,7 +64,7 @@ final class StacktraceTest extends TestCase
 
     public function testStacktraceJsonSerialization(): void
     {
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
 
         $stacktrace->addFrame('path/to/file', 1, ['file' => 'path/to/file', 'line' => 1, 'function' => 'test_function']);
         $stacktrace->addFrame('path/to/file', 2, ['file' => 'path/to/file', 'line' => 2, 'function' => 'test_function', 'class' => 'TestClass']);
@@ -70,7 +80,7 @@ final class StacktraceTest extends TestCase
 
     public function testAddFrame(): void
     {
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
         $frames = [
             $this->getJsonFixture('frames/eval.json'),
             $this->getJsonFixture('frames/runtime_created.json'),
@@ -93,7 +103,7 @@ final class StacktraceTest extends TestCase
 
     public function testAddFrameSerializesMethodArguments(): void
     {
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
         $stacktrace->addFrame('path/to/file', 12, [
             'file' => 'path/to/file',
             'line' => 12,
@@ -112,7 +122,7 @@ final class StacktraceTest extends TestCase
     {
         $this->options->setPrefixes(['path/to/', 'path/to/app']);
 
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
 
         $stacktrace->addFrame('path/to/app/file', 12, ['function' => 'test_function_parent_parent_parent']);
         $stacktrace->addFrame('path/to/file', 12, ['function' => 'test_function_parent_parent']);
@@ -138,7 +148,8 @@ final class StacktraceTest extends TestCase
         $stacktrace = new Stacktrace(
             $options,
             new Serializer($options),
-            new RepresentationSerializer($options)
+            new RepresentationSerializer($options),
+            false
         );
 
         $stacktrace->addFrame($file, 0, ['function' => $functionName]);
@@ -296,7 +307,11 @@ final class StacktraceTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider addFrameRespectsContextLinesOptionDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
      */
     public function testAddFrameRespectsContextLinesOption(string $fixture, int $lineNumber, ?int $contextLines, int $preContextCount, int $postContextCount): void
     {
@@ -389,8 +404,7 @@ final class StacktraceTest extends TestCase
             $this->expectExceptionMessage('Invalid frame index to remove.');
         }
 
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
-
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
         $stacktrace->addFrame('path/to/file', 12, [
             'function' => 'test_function_parent',
         ]);
@@ -421,7 +435,7 @@ final class StacktraceTest extends TestCase
     public function testCreateFromBacktrace(): void
     {
         $fixture = $this->getJsonFixture('backtraces/exception.json');
-        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'], false)->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 16);
         $this->assertFrameEquals($frames[1], 'TestClass::crashyFunction', 'path/to/file', 7);
@@ -431,7 +445,7 @@ final class StacktraceTest extends TestCase
     public function testCreateFromBacktraceWithAnonymousFrame(): void
     {
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame.json');
-        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'], false)->getFrames();
 
         $this->assertFrameEquals($frames[0], null, 'path/to/file', 7);
         $this->assertFrameEquals($frames[1], 'call_user_func', '[internal]', 0);
@@ -443,7 +457,7 @@ final class StacktraceTest extends TestCase
         $this->options->setPrefixes(['/path-prefix']);
 
         $fixture = $this->getJsonFixture('backtraces/anonymous_frame_with_memory_address.json');
-        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'])->getFrames();
+        $frames = Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, $fixture['backtrace'], $fixture['file'], $fixture['line'], false)->getFrames();
 
         $this->assertFrameEquals(
             $frames[0],
@@ -451,6 +465,7 @@ final class StacktraceTest extends TestCase
             '[internal]',
             0
         );
+
         $this->assertFrameEquals(
             $frames[1],
             "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
@@ -464,6 +479,32 @@ final class StacktraceTest extends TestCase
             'path/to/file',
             12
         );
+    }
+
+    /**
+     * @group legacy
+     *
+     * @dataProvider createFromBacktraceThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCreateFromBacktraceThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(array ...$constructorArguments): void
+    {
+        Stacktrace::createFromBacktrace($this->options, $this->serializer, $this->representationSerializer, [], __FILE__, __LINE__, ...$constructorArguments);
+    }
+
+    public function createFromBacktraceThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider(): \Generator
+    {
+        yield [[true]];
+
+        yield [[1]];
+
+        yield [['foo']];
+
+        yield [[new class() {
+        }]];
+
+        yield [[]];
     }
 
     public function testGetFrameArgumentsDoesNotModifyCapturedArgs(): void
@@ -486,7 +527,7 @@ final class StacktraceTest extends TestCase
             'function' => 'a_test',
         ];
 
-        $stacktrace = new Stacktrace(new Options(['max_value_length' => 5]), $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace(new Options(['max_value_length' => 5]), $this->serializer, $this->representationSerializer, false);
         $result = $stacktrace->getFrameArguments($frame);
 
         // Check we haven't modified our vars.
@@ -510,7 +551,7 @@ final class StacktraceTest extends TestCase
             'function' => 'a_test',
         ];
 
-        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer);
+        $stacktrace = new Stacktrace($this->options, $this->serializer, $this->representationSerializer, false);
         $result = $stacktrace->getFrameArguments($frame);
 
         $this->assertEquals('bar', $result['foo']);

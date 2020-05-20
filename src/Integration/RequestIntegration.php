@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use GuzzleHttp\Psr7\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
@@ -42,17 +41,24 @@ final class RequestIntegration implements IntegrationInterface
     private $options;
 
     /**
+     * @var RequestFetcherInterface PSR-7 request fetcher
+     */
+    private $requestFetcher;
+
+    /**
      * Constructor.
      *
-     * @param Options $options The client options
+     * @param Options|null                 $options        The client options
+     * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      */
-    public function __construct(?Options $options = null)
+    public function __construct(?Options $options = null, ?RequestFetcherInterface $requestFetcher = null)
     {
         if (null !== $options) {
             @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
         }
 
         $this->options = $options;
+        $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
     }
 
     /**
@@ -83,6 +89,8 @@ final class RequestIntegration implements IntegrationInterface
      * @param self                        $self    The current instance of the integration
      * @param Event                       $event   The event that will be enriched with a request
      * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
+     *
+     * @deprecated since version 2.1, to be removed in 3.0
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
@@ -98,7 +106,7 @@ final class RequestIntegration implements IntegrationInterface
     private function processEvent(Event $event, Options $options, ?ServerRequestInterface $request = null): void
     {
         if (null === $request) {
-            $request = isset($_SERVER['REQUEST_METHOD']) && \PHP_SAPI !== 'cli' ? ServerRequest::fromGlobals() : null;
+            $request = $this->requestFetcher->fetchRequest();
         }
 
         if (null === $request) {
@@ -211,7 +219,9 @@ final class RequestIntegration implements IntegrationInterface
      * Create an array with the same structure as $uploadedFiles, but replacing
      * each UploadedFileInterface with an array of info.
      *
-     * @param array $uploadedFiles The uploaded files info from a PSR-7 server request
+     * @param array<string, mixed> $uploadedFiles The uploaded files info from a PSR-7 server request
+     *
+     * @return array<string, mixed>
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {

@@ -7,6 +7,7 @@ namespace Sentry;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
+use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
@@ -21,7 +22,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class Options
 {
     /**
-     * The default maximum number of breadcrumbs that will be sent with an event.
+     * The default maximum number of breadcrumbs that will be sent with an
+     * event.
      */
     public const DEFAULT_MAX_BREADCRUMBS = 100;
 
@@ -29,26 +31,6 @@ final class Options
      * @var array<string, mixed> The configuration options
      */
     private $options = [];
-
-    /**
-     * @var string|null A simple server string, set to the DSN found on your Sentry settings
-     */
-    private $dsn;
-
-    /**
-     * @var string|null The project ID number to send to the Sentry server
-     */
-    private $projectId;
-
-    /**
-     * @var string|null The public key to authenticate the SDK
-     */
-    private $publicKey;
-
-    /**
-     * @var string|null The secret key to authenticate the SDK
-     */
-    private $secretKey;
 
     /**
      * @var OptionsResolver The options resolver
@@ -63,7 +45,7 @@ final class Options
     /**
      * Class constructor.
      *
-     * @param array $options The configuration options
+     * @param array<string, mixed> $options The configuration options
      */
     public function __construct(array $options = [])
     {
@@ -109,7 +91,7 @@ final class Options
      * Sets the prefixes which should be stripped from filenames to create
      * relative paths.
      *
-     * @param array $prefixes The prefixes
+     * @param string[] $prefixes The prefixes
      */
     public function setPrefixes(array $prefixes): void
     {
@@ -230,7 +212,7 @@ final class Options
      */
     public function getExcludedExceptions(): array
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         return $this->options['excluded_exceptions'];
     }
@@ -245,7 +227,7 @@ final class Options
      */
     public function setExcludedExceptions(array $exceptions): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -266,7 +248,7 @@ final class Options
     public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
         if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
         }
 
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
@@ -291,7 +273,7 @@ final class Options
     /**
      * Sets the list of paths to exclude from in_app detection.
      *
-     * @param array $paths The list of paths
+     * @param string[] $paths The list of paths
      */
     public function setInAppExcludedPaths(array $paths): void
     {
@@ -324,10 +306,18 @@ final class Options
 
     /**
      * Gets the project ID number to send to the Sentry server.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getProjectId(): ?string
     {
-        return $this->projectId;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return (string) $this->options['dsn']->getProjectId();
     }
 
     /**
@@ -352,18 +342,34 @@ final class Options
 
     /**
      * Gets the public key to authenticate the SDK.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getPublicKey(): ?string
     {
-        return $this->publicKey;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return $this->options['dsn']->getPublicKey();
     }
 
     /**
      * Gets the secret key to authenticate the SDK.
+     *
+     * @deprecated since version 2.4, to be removed in 3.0
      */
     public function getSecretKey(): ?string
     {
-        return $this->secretKey;
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (null === $this->options['dsn']) {
+            return null;
+        }
+
+        return $this->options['dsn']->getSecretKey();
     }
 
     /**
@@ -410,10 +416,35 @@ final class Options
 
     /**
      * Gets the DSN of the Sentry server the authenticated user is bound to.
+     *
+     * @param bool $returnAsString Whether to return the DSN as a string or as an object
+     *
+     * @return string|Dsn|null
      */
-    public function getDsn(): ?string
+    public function getDsn(bool $returnAsString = true)
     {
-        return $this->dsn;
+        /** @var Dsn|null $dsn */
+        $dsn = $this->options['dsn'];
+
+        if (null === $dsn) {
+            return null;
+        }
+
+        if ($returnAsString) {
+            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+
+            $url = $dsn->getScheme() . '://' . $dsn->getHost();
+
+            if (('http' === $dsn->getScheme() && 80 !== $dsn->getPort()) || ('https' === $dsn->getScheme() && 443 !== $dsn->getPort())) {
+                $url .= ':' . $dsn->getPort();
+            }
+
+            $url .= $dsn->getPath();
+
+            return $url;
+        }
+
+        return $dsn;
     }
 
     /**
@@ -813,7 +844,7 @@ final class Options
         $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
-        $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool']);
+        $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'array');
@@ -843,7 +874,7 @@ final class Options
                 return null;
             }
 
-            @trigger_error('The option "project_root" is deprecated. Please use the "in_app_include" option instead.', E_USER_DEPRECATED);
+            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', E_USER_DEPRECATED);
 
             return $this->normalizeAbsolutePath($value);
         });
@@ -881,16 +912,20 @@ final class Options
      * Normalizes the DSN option by parsing the host, public and secret keys and
      * an optional path.
      *
-     * @param SymfonyOptions$options The configuration options
-     * @param string|null $dsn The actual value of the option to normalize
+     * @param SymfonyOptions       $options The configuration options
+     * @param string|bool|Dsn|null $value   The actual value of the option to normalize
      */
-    private function normalizeDsnOption(SymfonyOptions $options, ?string $dsn): ?string
+    private function normalizeDsnOption(SymfonyOptions $options, $value): ?Dsn
     {
-        if (empty($dsn)) {
+        if (null === $value || \is_bool($value)) {
             return null;
         }
 
-        switch (strtolower($dsn)) {
+        if ($value instanceof Dsn) {
+            return $value;
+        }
+
+        switch (strtolower($value)) {
             case '':
             case 'false':
             case '(false)':
@@ -901,46 +936,23 @@ final class Options
                 return null;
         }
 
-        $parsed = @parse_url($dsn);
-
-        if (false === $parsed || !isset($parsed['scheme'], $parsed['host'], $parsed['path'], $parsed['user'])) {
-            return null;
-        }
-
-        $this->dsn = $parsed['scheme'] . '://' . $parsed['host'];
-
-        if (isset($parsed['port']) && ((80 !== $parsed['port'] && 'http' === $parsed['scheme']) || (443 !== $parsed['port'] && 'https' === $parsed['scheme']))) {
-            $this->dsn .= ':' . $parsed['port'];
-        }
-
-        $lastSlashPosition = strrpos($parsed['path'], '/');
-
-        if (false !== $lastSlashPosition) {
-            $this->dsn .= substr($parsed['path'], 0, $lastSlashPosition);
-        } else {
-            $this->dsn .= $parsed['path'];
-        }
-
-        $this->publicKey = $parsed['user'];
-        $this->secretKey = $parsed['pass'] ?? null;
-
-        $parts = explode('/', $parsed['path']);
-
-        $this->projectId = array_pop($parts);
-
-        return $dsn;
+        return Dsn::createFromString($value);
     }
 
     /**
      * Validates the DSN option ensuring that all required pieces are set and
      * that the URL is valid.
      *
-     * @param string|null $dsn The value of the option
+     * @param string|bool|Dsn|null $dsn The value of the option
      */
-    private function validateDsnOption(?string $dsn): bool
+    private function validateDsnOption($dsn): bool
     {
-        if (null === $dsn) {
+        if (null === $dsn || $dsn instanceof Dsn) {
             return true;
+        }
+
+        if (\is_bool($dsn)) {
+            return false === $dsn;
         }
 
         switch (strtolower($dsn)) {
@@ -954,32 +966,20 @@ final class Options
                 return true;
         }
 
-        $parsed = @parse_url($dsn);
+        try {
+            Dsn::createFromString($dsn);
 
-        if (false === $parsed) {
+            return true;
+        } catch (\InvalidArgumentException $exception) {
             return false;
         }
-
-        if (!isset($parsed['scheme'], $parsed['user'], $parsed['host'], $parsed['path'])) {
-            return false;
-        }
-
-        if (empty($parsed['user']) || (isset($parsed['pass']) && empty($parsed['pass']))) {
-            return false;
-        }
-
-        if (!\in_array(strtolower($parsed['scheme']), ['http', 'https'])) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
      * Validates that the elements of this option are all class instances that
      * implements the {@see IntegrationInterface} interface.
      *
-     * @param array|callable $integrations The value to validate
+     * @param IntegrationInterface[]|callable $integrations The value to validate
      */
     private function validateIntegrationsOption($integrations): bool
     {
@@ -1009,7 +1009,7 @@ final class Options
     /**
      * Validates that the values passed to the `class_serializers` option are valid.
      *
-     * @param array $serializers The value to validate
+     * @param mixed[] $serializers The value to validate
      */
     private function validateClassSerializersOption(array $serializers): bool
     {
@@ -1025,7 +1025,7 @@ final class Options
     /**
      * Validates that the values passed to the `tags` option are valid.
      *
-     * @param array $tags The value to validate
+     * @param mixed[] $tags The value to validate
      */
     private function validateTagsOption(array $tags): bool
     {
@@ -1066,6 +1066,7 @@ final class Options
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
+                new FrameContextifierIntegration(),
             ];
         }
 

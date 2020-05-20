@@ -133,7 +133,7 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->create(['exception' => $exception]);
+        $event = $eventFactory->create(['exception' => $exception], false);
         $expectedData = [
             [
                 'type' => \Exception::class,
@@ -164,7 +164,7 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->create(['exception' => $exception]);
+        $event = $eventFactory->create(['exception' => $exception], false);
 
         $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
     }
@@ -182,7 +182,7 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->createWithStacktrace([]);
+        $event = $eventFactory->createWithStacktrace([], false);
         $stacktrace = $event->getStacktrace();
 
         $this->assertInstanceOf(Stacktrace::class, $stacktrace);
@@ -194,5 +194,63 @@ class EventFactoryTest extends TestCase
             'src' . \DIRECTORY_SEPARATOR . 'EventFactory.php',
             ltrim($lastFrame->getFile(), \DIRECTORY_SEPARATOR)
         );
+    }
+
+    /**
+     * @group legacy
+     *
+     * @dataProvider createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCreateThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(array ...$constructorArguments): void
+    {
+        $options = new Options();
+        $eventFactory = new EventFactory(
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class),
+            $options,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            ...$constructorArguments
+        );
+
+        $eventFactory->create(['exception' => new \Exception()]);
+    }
+
+    /**
+     * @group legacy
+     *
+     * @dataProvider createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider
+     *
+     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
+     */
+    public function testCreateWithStacktraceThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(array ...$constructorArguments): void
+    {
+        $options = new Options();
+        $eventFactory = new EventFactory(
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class),
+            $options,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            ...$constructorArguments
+        );
+
+        $eventFactory->createWithStacktrace([]);
+    }
+
+    public function createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider(): \Generator
+    {
+        yield [[true]];
+
+        yield [[1]];
+
+        yield [['foo']];
+
+        yield [[new class() {
+        }]];
+
+        yield [[]];
     }
 }
