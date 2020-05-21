@@ -744,7 +744,7 @@ final class Options
      *                                   captured. It can be set to one of the
      *                                   following values:
      *
-     *                                    - never: request bodies are never sent
+     *                                    - none: request bodies are never sent
      *                                    - small: only small request bodies will
      *                                      be captured where the cutoff for small
      *                                      depends on the SDK (typically 4KB)
