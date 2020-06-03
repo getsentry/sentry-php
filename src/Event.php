@@ -150,6 +150,11 @@ final class Event implements \JsonSerializable
     private $sdkVersion;
 
     /**
+     * @var string|null The type of the Event "default" | "transaction"
+     */
+    private $type;
+
+    /**
      * Class constructor.
      *
      * @param EventId|null $eventId The ID of the event
@@ -578,6 +583,26 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
+
+    /**
+     * @return string|null
+     */
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string|null $type
+     */
+    public function setType(?string $type): void
+    {
+        if ($type !== "default" || $type !== "transaction") {
+            $type = null;
+        }
+        $this->type = $type;
+    }
+
     /**
      * Gets the event as an array.
      *
@@ -595,6 +620,10 @@ final class Event implements \JsonSerializable
                 'version' => $this->getSdkVersion(),
             ],
         ];
+
+        if (null !== $this->type) {
+            $data['type'] = $this->type;
+        }
 
         if (null !== $this->logger) {
             $data['logger'] = $this->logger;
