@@ -9,12 +9,12 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-class EventId
+final class EventId
 {
     /**
      * @var string The ID
      */
-    protected $value;
+    private $value;
 
     /**
      * Class constructor.

@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use Sentry\EventId;
-
 /**
  * This class represents an span ID.
  */
-final class SpanId extends EventId
+final class SpanId
 {
     /**
-     * {@inheritDoc}
+     * @var string The ID
+     */
+    private $value;
+
+    /**
+     * Class constructor.
+     *
+     * @param string $value The ID
      */
     public function __construct(string $value)
     {
@@ -24,10 +29,15 @@ final class SpanId extends EventId
     }
 
     /**
-     * {@inheritDoc}
+     * Generates a new span ID.
      */
     public static function generate(): self
     {
         return new self(substr(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)), 0, 16));
+    }
+
+    public function __toString(): string
+    {
+        return $this->value;
     }
 }
