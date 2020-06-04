@@ -49,4 +49,16 @@ final class SpanTest extends TestCase
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
     }
+
+    public function testFinish(): void
+    {
+        $span = new Span();
+        $span->finish();
+        $this->assertIsFloat($span->jsonSerialize()['timestamp']);
+
+        $time = microtime(true);
+        $span = new Span();
+        $span->finish($time);
+        $this->assertEquals($span->jsonSerialize()['timestamp'], $time);
+    }
 }

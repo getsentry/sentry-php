@@ -71,9 +71,10 @@ class Span implements \JsonSerializable
      * Span constructor.
      *
      * @param SpanContext|null $context The context to create the span with
+     *
      * @internal
      */
-    public function __construct(?SpanContext $context)
+    public function __construct(?SpanContext $context = null)
     {
         $this->traceId = $context->traceId ?? TraceId::generate();
         $this->spanId = $context->spanId ?? SpanId::generate();
