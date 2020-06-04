@@ -69,8 +69,8 @@ class Span implements \JsonSerializable
 
     /**
      * Span constructor.
+     *
      * @internal
-     * @param SpanContext|null $context
      */
     public function __construct(?SpanContext $context)
     {
@@ -88,7 +88,7 @@ class Span implements \JsonSerializable
     }
 
     /**
-     * Sets the finish timestamp on the current span
+     * Sets the finish timestamp on the current span.
      *
      * @param $endTimestamp|null Takes an endTimestamp if the end should not be the time when you call this function
      */

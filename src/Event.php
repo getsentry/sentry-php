@@ -583,21 +583,14 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
-
-    /**
-     * @return string|null
-     */
     public function getType(): ?string
     {
         return $this->type;
     }
 
-    /**
-     * @param string|null $type
-     */
     public function setType(?string $type): void
     {
-        if ($type !== "default" || $type !== "transaction") {
+        if ('default' !== $type || 'transaction' !== $type) {
             $type = null;
         }
         $this->type = $type;

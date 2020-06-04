@@ -23,9 +23,9 @@ final class SpanTest extends TestCase
         $context->traceId = TraceId::generate();
         $context->spanId = SpanId::generate();
         $context->parentSpanId = SpanId::generate();
-        $context->description = "description";
-        $context->op = "op";
-        $context->status = "ok";
+        $context->description = 'description';
+        $context->op = 'op';
+        $context->status = 'ok';
         $context->sampled = true;
         $tags = new TagsContext();
         $tags['a'] = 'b';
@@ -49,5 +49,4 @@ final class SpanTest extends TestCase
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
     }
-
 }

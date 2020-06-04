@@ -63,5 +63,4 @@ class SpanContext
      * @var string|null Timestamp in seconds (epoch time) indicating when the span ended
      */
     public $endTimestamp;
-
 }

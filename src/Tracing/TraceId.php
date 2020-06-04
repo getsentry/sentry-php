@@ -13,7 +13,7 @@ final class TraceId
      * @var string The ID
      */
     private $value;
-    
+
     /**
      * Class constructor.
      *
