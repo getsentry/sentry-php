@@ -53,10 +53,10 @@ final class EventTest extends TestCase
             ],
             'contexts' => [
                 'os' => [
-                    'name' => php_uname('s'),
-                    'version' => php_uname('r'),
-                    'build' => php_uname('v'),
-                    'kernel_version' => php_uname('a'),
+                    'name' => (string) php_uname('s'),
+                    'version' => (string) php_uname('r'),
+                    'build' => (string) php_uname('v'),
+                    'kernel_version' => (string) php_uname('a'),
                 ],
                 'runtime' => [
                     'name' => 'php',

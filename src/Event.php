@@ -10,6 +10,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
+use Sentry\Tracing\Span;
 
 /**
  * This is the base class for classes containing event data.
@@ -24,9 +25,16 @@ final class Event implements \JsonSerializable
     private $id;
 
     /**
-     * @var string The date and time of when this event was generated
+     * @var string|float The date and time of when this event was generated
      */
     private $timestamp;
+
+    /**
+     * This property is used if it's a Transaction event together with $timestamp it's the duration of the transaction.
+     *
+     * @var string|float|null The date and time of when this event was generated
+     */
+    private $startTimestamp;
 
     /**
      * @var Severity The severity of this event
@@ -122,6 +130,11 @@ final class Event implements \JsonSerializable
      * @var Breadcrumb[] The associated breadcrumbs
      */
     private $breadcrumbs = [];
+
+    /**
+     * @var Span[] The array of spans if it's a transaction
+     */
+    private $spans = [];
 
     /**
      * @var array<int, array<string, mixed>> The exceptions
@@ -230,8 +243,10 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the timestamp of when this event was generated.
+     *
+     * @return string|float
      */
-    public function getTimestamp(): string
+    public function getTimestamp()
     {
         return $this->timestamp;
     }
@@ -597,6 +612,22 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * @param string|float|null $startTimestamp The start time of the event
+     */
+    public function setStartTimestamp($startTimestamp): void
+    {
+        $this->startTimestamp = $startTimestamp;
+    }
+
+    /**
+     * @param Span[] $spans Array of spans
+     */
+    public function setSpans(array $spans): void
+    {
+        $this->spans = $spans;
+    }
+
+    /**
      * Gets the event as an array.
      *
      * @return array<string, mixed>
@@ -613,6 +644,10 @@ final class Event implements \JsonSerializable
                 'version' => $this->getSdkVersion(),
             ],
         ];
+
+        if (null !== $this->startTimestamp) {
+            $data['start_timestamp'] = $this->startTimestamp;
+        }
 
         if (null !== $this->type) {
             $data['type'] = $this->type;
@@ -672,6 +707,12 @@ final class Event implements \JsonSerializable
 
         if (!empty($this->breadcrumbs)) {
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
+        }
+
+        if (!empty($this->spans)) {
+            $data['spans'] = array_map(function ($span) {
+                return $span->toArray();
+            }, $this->spans);
         }
 
         foreach (array_reverse($this->exceptions) as $exception) {
