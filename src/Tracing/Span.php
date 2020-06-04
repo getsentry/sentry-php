@@ -38,7 +38,7 @@ class Span implements \JsonSerializable
     private $status;
 
     /**
-     * @var string|null ID of the parent Span
+     * @var SpanId|null ID of the parent Span
      */
     private $parentSpanId;
 
@@ -58,18 +58,19 @@ class Span implements \JsonSerializable
     private $data;
 
     /**
-     * @var string Timestamp in seconds (epoch time) indicating when the span started
+     * @var float Timestamp in seconds (epoch time) indicating when the span started
      */
     private $startTimestamp;
 
     /**
-     * @var string|null Timestamp in seconds (epoch time) indicating when the span ended
+     * @var float|null Timestamp in seconds (epoch time) indicating when the span ended
      */
     private $endTimestamp;
 
     /**
      * Span constructor.
      *
+     * @param SpanContext|null $context The context to create the span with
      * @internal
      */
     public function __construct(?SpanContext $context)
@@ -90,7 +91,7 @@ class Span implements \JsonSerializable
     /**
      * Sets the finish timestamp on the current span.
      *
-     * @param $endTimestamp|null Takes an endTimestamp if the end should not be the time when you call this function
+     * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function
      */
     public function finish($endTimestamp = null): void
     {

@@ -25,7 +25,7 @@ class SpanContext
     public $status;
 
     /**
-     * @var string|null ID of the parent Span
+     * @var SpanId|null ID of the parent Span
      */
     public $parentSpanId;
 
@@ -35,12 +35,12 @@ class SpanContext
     public $sampled;
 
     /**
-     * @var string|null Span ID
+     * @var SpanId|null Span ID
      */
     public $spanId;
 
     /**
-     * @var string|null Trace ID
+     * @var TraceId|null Trace ID
      */
     public $traceId;
 
@@ -55,12 +55,12 @@ class SpanContext
     public $data;
 
     /**
-     * @var string|null Timestamp in seconds (epoch time) indicating when the span started
+     * @var float|null Timestamp in seconds (epoch time) indicating when the span started
      */
     public $startTimestamp;
 
     /**
-     * @var string|null Timestamp in seconds (epoch time) indicating when the span ended
+     * @var float|null Timestamp in seconds (epoch time) indicating when the span ended
      */
     public $endTimestamp;
 }

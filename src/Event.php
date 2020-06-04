@@ -590,7 +590,7 @@ final class Event implements \JsonSerializable
 
     public function setType(?string $type): void
     {
-        if ('default' !== $type || 'transaction' !== $type) {
+        if ('default' !== $type && 'transaction' !== $type) {
             $type = null;
         }
         $this->type = $type;
