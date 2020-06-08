@@ -7,7 +7,9 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Context\Context;
 use Sentry\Context\TagsContext;
+use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
+use Sentry\Tracing\SpanRecorder;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -50,5 +52,19 @@ final class TransactionTest extends TestCase
         $this->assertEquals($context->data->toArray(), $data['contexts']['trace']['data']);
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
+    }
+
+    public function testShouldContainFinishSpans(): void
+    {
+        $transaction = new Transaction(new TransactionContext());
+        $transaction->spanRecorder = new SpanRecorder();
+        $span1 = $transaction->startChild(new SpanContext());
+        $span2 = $transaction->startChild(new SpanContext());
+        $span3 = $transaction->startChild(new SpanContext());
+        $span1->finish();
+        $span2->finish();
+        $transaction->finish();
+        $data = $transaction->jsonSerialize();
+        $this->assertCount(2, $data['spans']);
     }
 }

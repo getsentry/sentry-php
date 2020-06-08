@@ -35,7 +35,7 @@ final class SpanRecorder
         if (\count($this->spans) > $this->maxSpans) {
             $span->spanRecorder = null;
         } else {
-            array_push($this->spans, $span);
+            $this->spans[] = $span;
         }
     }
 

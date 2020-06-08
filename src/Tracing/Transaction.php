@@ -33,9 +33,9 @@ final class Transaction extends Span
     public function __construct(?TransactionContext $context = null, ?HubInterface $hub = null)
     {
         parent::__construct($context);
-        $this->hub = $hub;
 
-        $this->name = $context->name ?? '<unlabled transaction>';
+        $this->hub = $hub;
+        $this->name = $context->name ?? '<unlabeled transaction>';
     }
 
     /**
@@ -52,6 +52,7 @@ final class Transaction extends Span
     public function getTraceContext(): array
     {
         $data = $this->toArray();
+
         unset($data['start_timestamp']);
         unset($data['timestamp']);
 
@@ -60,6 +61,8 @@ final class Transaction extends Span
 
     /**
      * {@inheritdoc}
+     *
+     * @return string|null Finish for a transaction returns the eventId or null in case we didn't send it
      */
     public function finish($endTimestamp = null): ?string
     {
@@ -75,9 +78,8 @@ final class Transaction extends Span
             return null;
         }
 
-        $hub = $this->hub;
-        if (null !== $hub) {
-            return $hub->captureEvent($this->jsonSerialize());
+        if (null !== $this->hub) {
+            return $this->hub->captureEvent($this->jsonSerialize());
         }
 
         return null;
@@ -96,10 +98,13 @@ final class Transaction extends Span
         $event->setTransaction($this->name);
         $event->setStartTimestamp($this->startTimestamp);
         $event->setContext('trace', $this->getTraceContext());
-        $spanRecorder = $this->spanRecorder;
-        if (null != $spanRecorder) {
-            $event->setSpans($spanRecorder->getSpans());
+
+        if (null != $this->spanRecorder) {
+            $event->setSpans(array_filter($this->spanRecorder->getSpans(), function (Span $span): bool {
+                return $this->spanId != $span->spanId && null != $span->endTimestamp;
+            }));
         }
+
         $data = $event->toArray();
         $data['timestamp'] = $this->endTimestamp;
 

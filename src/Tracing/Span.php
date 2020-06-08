@@ -100,12 +100,38 @@ class Span implements \JsonSerializable
      * Sets the finish timestamp on the current span.
      *
      * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function
+     *
+     * @return string|null Finish for a span always returns null
      */
     public function finish($endTimestamp = null): ?string
     {
         $this->endTimestamp = $endTimestamp ?? microtime(true);
 
         return null;
+    }
+
+    /**
+     * Creates a new `Span` while setting the current `Span.id` as `parentSpanId`.
+     * Also the `sampled` decision will be inherited.
+     *
+     * @param SpanContext $context The Context of the child span
+     *
+     * @return Span Instance of the newly created Span
+     */
+    public function startChild(SpanContext $context): self
+    {
+        $context->sampled = $this->sampled;
+        $context->parentSpanId = $this->spanId;
+        $context->traceId = $this->traceId;
+
+        $span = new self($context);
+
+        $span->spanRecorder = $this->spanRecorder;
+        if (null != $span->spanRecorder) {
+            $span->spanRecorder->add($span);
+        }
+
+        return $span;
     }
 
     /**

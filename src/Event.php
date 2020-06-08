@@ -710,7 +710,7 @@ final class Event implements \JsonSerializable
         }
 
         if (!empty($this->spans)) {
-            $data['spans'] = array_map(function ($span) {
+            $data['spans'] = array_map(function (Span $span): array {
                 return $span->toArray();
             }, $this->spans);
         }
