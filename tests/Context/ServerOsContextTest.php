@@ -83,7 +83,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 UndefinedOptionsException::class,
-                'The option "foo" does not exist. Defined options are: "build", "kernel_version", "name", "version".',
+                '/^The option "foo" does not exist\. Defined options are: "build", "kernel_version", "name", "version"\.$/',
             ],
             [
                 [
@@ -91,7 +91,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "name" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 [
@@ -99,7 +99,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 [
@@ -107,7 +107,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "build" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "build" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 [
@@ -115,7 +115,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "kernel_version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "kernel_version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
         ];
     }
@@ -133,7 +133,7 @@ class ServerOsContextTest extends AbstractContextTest
                 'name',
                 1,
                 InvalidOptionsException::class,
-                'The option "name" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'version',
@@ -145,7 +145,7 @@ class ServerOsContextTest extends AbstractContextTest
                 'version',
                 1,
                 InvalidOptionsException::class,
-                'The option "version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'build',
@@ -157,7 +157,7 @@ class ServerOsContextTest extends AbstractContextTest
                 'build',
                 1,
                 InvalidOptionsException::class,
-                'The option "build" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "build" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'kernel_version',
@@ -169,13 +169,13 @@ class ServerOsContextTest extends AbstractContextTest
                 'kernel_version',
                 1,
                 InvalidOptionsException::class,
-                'The option "kernel_version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "kernel_version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'foo',
                 'bar',
                 UndefinedOptionsException::class,
-                'The option "foo" does not exist. Defined options are: "build", "kernel_version", "name", "version".',
+                '/^The option "foo" does not exist\. Defined options are: "build", "kernel_version", "name", "version"\.$/',
             ],
         ];
     }
