@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
+
 /**
  * Creates a new Client and Hub which will be set as current.
  *
@@ -87,4 +90,26 @@ function configureScope(callable $callback): void
 function withScope(callable $callback): void
 {
     SentrySdk::getCurrentHub()->withScope($callback);
+}
+
+/**
+ * Starts a new `Transaction` and returns it. This is the entry point to manual
+ * tracing instrumentation.
+ *
+ * A tree structure can be built by adding child spans to the transaction, and
+ * child spans to other spans. To start a new child span within the transaction
+ * or any span, call the respective `startChild()` method.
+ *
+ * Every child span must be finished before the transaction is finished,
+ * otherwise the unfinished spans are discarded.
+ *
+ * The transaction must be finished with a call to its `finish()` method, at
+ * which point the transaction with all its finished child spans will be sent to
+ * Sentry.
+ *
+ * @param TransactionContext $context properties of the new `Transaction`
+ */
+function startTransaction(TransactionContext $context): Transaction
+{
+    return SentrySdk::getCurrentHub()->startTransaction($context);
 }

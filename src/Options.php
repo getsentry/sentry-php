@@ -123,6 +123,28 @@ final class Options
     }
 
     /**
+     * Gets the sampling factor to apply to transaction. A value of 0 will deny
+     * sending any transaction, and a value of 1 will send 100% of transaction.
+     */
+    public function getTracesSampleRate(): float
+    {
+        return $this->options['traces_sample_rate'];
+    }
+
+    /**
+     * Sets the sampling factor to apply to transactions. A value of 0 will deny
+     * sending any transactions, and a value of 1 will send 100% of transactions.
+     *
+     * @param float $sampleRate The sampling factor
+     */
+    public function setTracesSampleRate(float $sampleRate): void
+    {
+        $options = array_merge($this->options, ['traces_sample_rate' => $sampleRate]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets whether the stacktrace will be attached on captureMessage.
      */
     public function shouldAttachStacktrace(): bool
@@ -802,6 +824,7 @@ final class Options
             'send_attempts' => 3,
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
+            'traces_sample_rate' => 0,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
@@ -834,6 +857,7 @@ final class Options
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');
