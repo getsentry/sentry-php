@@ -60,6 +60,17 @@ final class Transaction extends Span
     }
 
     /**
+     * Attaches SpanRecorder to the transaction itself.
+     */
+    public function initSpanRecorder(): void
+    {
+        if (null === $this->spanRecorder) {
+            $this->spanRecorder = new SpanRecorder();
+        }
+        $this->spanRecorder->add($this);
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @return string|null Finish for a transaction returns the eventId or null in case we didn't send it
@@ -67,7 +78,7 @@ final class Transaction extends Span
     public function finish($endTimestamp = null): ?string
     {
         if (null !== $this->endTimestamp) {
-            // Transaction was already finished once and we don't want to reflush it
+            // Transaction was already finished once and we don't want to re-flush it
             return null;
         }
 
