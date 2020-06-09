@@ -53,7 +53,7 @@ class RuntimeContextTest extends AbstractContextTest
                 ],
                 [],
                 UndefinedOptionsException::class,
-                'The option "foo" does not exist. Defined options are: "name", "version".',
+                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
             ],
             [
                 [
@@ -61,7 +61,7 @@ class RuntimeContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "name" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 [
@@ -69,7 +69,7 @@ class RuntimeContextTest extends AbstractContextTest
                 ],
                 [],
                 InvalidOptionsException::class,
-                'The option "version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
         ];
     }
@@ -87,19 +87,19 @@ class RuntimeContextTest extends AbstractContextTest
                 'name',
                 1,
                 InvalidOptionsException::class,
-                'The option "name" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'version',
                 1,
                 InvalidOptionsException::class,
-                'The option "version" with value 1 is expected to be of type "string", but is of type "integer".',
+                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
             ],
             [
                 'foo',
                 'bar',
                 UndefinedOptionsException::class,
-                'The option "foo" does not exist. Defined options are: "name", "version".',
+                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
             ],
         ];
     }

@@ -53,8 +53,10 @@ final class FrameContextifierIntegration implements IntegrationInterface
                 return $event;
             }
 
-            if (null !== $event->getStacktrace()) {
-                $integration->addContextToStacktraceFrames($maxContextLines, $event->getStacktrace());
+            $stacktrace = $event->getStacktrace();
+
+            if (null !== $stacktrace) {
+                $integration->addContextToStacktraceFrames($maxContextLines, $stacktrace);
             }
 
             foreach ($event->getExceptions() as $exception) {
