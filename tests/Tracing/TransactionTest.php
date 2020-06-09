@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Context\Context;
 use Sentry\Context\TagsContext;
-use Sentry\Event;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
