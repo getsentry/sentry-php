@@ -53,7 +53,7 @@ class RuntimeContextTest extends AbstractContextTest
                 ],
                 [],
                 UndefinedOptionsException::class,
-                '/^The option "foo" does not exist. Defined options are: "name", "version"\.$/',
+                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
             ],
             [
                 [
@@ -99,7 +99,7 @@ class RuntimeContextTest extends AbstractContextTest
                 'foo',
                 'bar',
                 UndefinedOptionsException::class,
-                '/^The option "foo" does not exist. Defined options are: "name", "version"\.$/',
+                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
             ],
         ];
     }

@@ -83,7 +83,7 @@ class ServerOsContextTest extends AbstractContextTest
                 ],
                 [],
                 UndefinedOptionsException::class,
-                '/^The option "foo" does not exist. Defined options are: "build", "kernel_version", "name", "version"\.$/',
+                '/^The option "foo" does not exist\. Defined options are: "build", "kernel_version", "name", "version"\.$/',
             ],
             [
                 [
@@ -175,7 +175,7 @@ class ServerOsContextTest extends AbstractContextTest
                 'foo',
                 'bar',
                 UndefinedOptionsException::class,
-                '/^The option "foo" does not exist. Defined options are: "build", "kernel_version", "name", "version"\.$/',
+                '/^The option "foo" does not exist\. Defined options are: "build", "kernel_version", "name", "version"\.$/',
             ],
         ];
     }
