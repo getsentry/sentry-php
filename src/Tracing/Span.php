@@ -15,57 +15,64 @@ class Span implements \JsonSerializable
     /**
      * @var SpanId Span ID
      */
-    private $spanId;
+    protected $spanId;
 
     /**
      * @var TraceId Trace ID
      */
-    private $traceId;
+    protected $traceId;
 
     /**
      * @var string|null Description of the Span
      */
-    private $description;
+    protected $description;
 
     /**
      * @var string|null Operation of the Span
      */
-    private $op;
+    protected $op;
 
     /**
      * @var string|null Completion status of the Span
      */
-    private $status;
+    protected $status;
 
     /**
      * @var SpanId|null ID of the parent Span
      */
-    private $parentSpanId;
+    protected $parentSpanId;
 
     /**
      * @var bool|null Has the sample decision been made?
      */
-    private $sampled;
+    protected $sampled;
 
     /**
      * @var TagsContext A List of tags associated to this Span
      */
-    private $tags;
+    protected $tags;
 
     /**
      * @var Context<mixed> An arbitrary mapping of additional metadata
      */
-    private $data;
+    protected $data;
 
     /**
      * @var float Timestamp in seconds (epoch time) indicating when the span started
      */
-    private $startTimestamp;
+    protected $startTimestamp;
 
     /**
      * @var float|null Timestamp in seconds (epoch time) indicating when the span ended
      */
-    private $endTimestamp;
+    protected $endTimestamp;
+
+    /**
+     * @var SpanRecorder|null Reference instance to the SpanRecorder
+     *
+     * @internal
+     */
+    public $spanRecorder;
 
     /**
      * Span constructor.
@@ -93,10 +100,38 @@ class Span implements \JsonSerializable
      * Sets the finish timestamp on the current span.
      *
      * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function
+     *
+     * @return string|null Finish for a span always returns null
      */
-    public function finish($endTimestamp = null): void
+    public function finish($endTimestamp = null): ?string
     {
         $this->endTimestamp = $endTimestamp ?? microtime(true);
+
+        return null;
+    }
+
+    /**
+     * Creates a new `Span` while setting the current `Span.id` as `parentSpanId`.
+     * Also the `sampled` decision will be inherited.
+     *
+     * @param SpanContext $context The Context of the child span
+     *
+     * @return Span Instance of the newly created Span
+     */
+    public function startChild(SpanContext $context): self
+    {
+        $context->sampled = $this->sampled;
+        $context->parentSpanId = $this->spanId;
+        $context->traceId = $this->traceId;
+
+        $span = new self($context);
+
+        $span->spanRecorder = $this->spanRecorder;
+        if (null != $span->spanRecorder) {
+            $span->spanRecorder->add($span);
+        }
+
+        return $span;
     }
 
     /**
