@@ -9,6 +9,8 @@ use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 
 /**
  * An implementation of {@see HubInterface} that uses {@see SentrySdk} internally
@@ -163,6 +165,14 @@ final class HubAdapter implements HubInterface
     public function getIntegration(string $className): ?IntegrationInterface
     {
         return SentrySdk::getCurrentHub()->getIntegration($className);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function startTransaction(TransactionContext $context): Transaction
+    {
+        return SentrySdk::getCurrentHub()->startTransaction($context);
     }
 
     /**
