@@ -11,6 +11,7 @@ use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
 use Sentry\Tracing\Span;
+use Sentry\Util\JSON;
 
 /**
  * This is the base class for classes containing event data.
@@ -763,5 +764,19 @@ final class Event implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * Converts an Event to an Envelope.
+     *
+     * @throws Exception\JsonException
+     */
+    public function toEnvelope(): string
+    {
+        $rawEvent = $this->jsonSerialize();
+        $envelopeHeader = JSON::encode(['event_id' => $rawEvent['event_id'], 'sent_at' => gmdate('Y-m-d\TH:i:s\Z')]);
+        $itemHeader = JSON::encode(['type' => $rawEvent['type'] ?? 'event', 'content_type' => 'application/json']);
+
+        return vsprintf("%s\n%s\n%s", [$envelopeHeader, $itemHeader, JSON::encode($rawEvent)]);
     }
 }
