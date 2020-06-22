@@ -181,7 +181,7 @@ final class Dsn
     }
 
     /**
-     * Gets the URL of the API endpoint to use to post an event to Sentry.
+     * Returns the URL of the API for the store endpoint.
      */
     public function getStoreApiEndpointUrl(): string
     {
@@ -189,7 +189,7 @@ final class Dsn
     }
 
     /**
-     * Returns the URL of the API endpoint for sending envelopes.
+     * Returns the URL of the API for the envelope endpoint.
      */
     public function getEnvelopeApiEndpointUrl(): string
     {
