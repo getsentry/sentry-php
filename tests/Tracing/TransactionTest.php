@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Context\Context;
 use Sentry\Context\TagsContext;
+use Sentry\Options;
+use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\SpanRecorder;
@@ -63,8 +67,56 @@ final class TransactionTest extends TestCase
         $span3 = $transaction->startChild(new SpanContext());
         $span1->finish();
         $span2->finish();
+        // $span3 is not finished and therefore not included
         $transaction->finish();
         $data = $transaction->jsonSerialize();
         $this->assertCount(2, $data['spans']);
+    }
+
+    public function testStartAndSendTransaction(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $span1 = $transaction->startChild(new SpanContext());
+        $span2 = $transaction->startChild(new SpanContext());
+        $span1->finish();
+        $span2->finish();
+        $endTimestamp = microtime(true);
+        $data = $transaction->jsonSerialize();
+
+        // We fake the endtime here
+        $data['timestamp'] = $endTimestamp;
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(function (array $event) use ($data): bool {
+                $this->assertEqualWithIgnore($data, $event, ['event_id']);
+
+                return true;
+            }));
+
+        $transaction->finish($endTimestamp);
+
+        $this->assertCount(2, $data['spans']);
+    }
+
+    private function assertEqualWithIgnore($expected, $actual, $ignoreKeys = [], $currentKey = null): void
+    {
+        if (\is_object($expected)) {
+            foreach ($expected as $key => $value) {
+                $this->assertEqualWithIgnore($expected->$key, $actual->$key, $ignoreKeys, $key);
+            }
+        } elseif (\is_array($expected)) {
+            foreach ($expected as $key => $value) {
+                $this->assertEqualWithIgnore($expected[$key], $actual[$key], $ignoreKeys, $key);
+            }
+        } elseif (null !== $currentKey && !\in_array($currentKey, $ignoreKeys)) {
+            $this->assertEquals($expected, $actual);
+        }
     }
 }
