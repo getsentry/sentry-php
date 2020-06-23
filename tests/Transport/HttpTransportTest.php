@@ -6,12 +6,17 @@ namespace Sentry\Tests\Transport;
 
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Mock\Client as HttpMockClient;
 use Http\Promise\FulfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Sentry\Event;
+use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 
@@ -30,6 +35,43 @@ final class HttpTransportTest extends TestCase
         $this->expectExceptionMessage('The DSN option must be set to use the "Sentry\Transport\HttpTransport" transport.');
 
         $transport->send(new Event());
+    }
+
+    public function testSendTransactionAsEnvelope(): void
+    {
+        $mockHttpClient = new HttpMockClient();
+
+        $httpClientFactory = new HttpClientFactory(
+            UriFactoryDiscovery::find(),
+            MessageFactoryDiscovery::find(),
+            StreamFactoryDiscovery::find(),
+            $mockHttpClient,
+            'sentry.php.test',
+            '1.2.3'
+        );
+
+        $httpClient = $httpClientFactory->create(new Options([
+            'dsn' => 'http://public@example.com/sentry/1',
+            'default_integrations' => false,
+        ]));
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
+            ]),
+            $httpClient,
+            MessageFactoryDiscovery::find(),
+            false
+        );
+
+        $event = new Event();
+        $event->setType('transaction');
+        $transport->send($event);
+
+        /** @var RequestInterface|bool $httpRequest */
+        $httpRequest = $mockHttpClient->getLastRequest();
+
+        $this->assertSame('application/x-sentry-envelope', $httpRequest->getHeaders()['Content-Type'][0]);
     }
 
     /**
