@@ -140,7 +140,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent(array $payload): ?string
+    public function captureEvent($payload): ?string
     {
         $client = $this->getClient();
 

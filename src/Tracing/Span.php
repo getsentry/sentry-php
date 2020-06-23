@@ -135,6 +135,14 @@ class Span implements \JsonSerializable
     }
 
     /**
+     * @return float
+     */
+    public function getStartTimestamp(): float
+    {
+        return $this->startTimestamp;
+    }
+
+    /**
      * Gets the event as an array.
      *
      * @return array<string, mixed>

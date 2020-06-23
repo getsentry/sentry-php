@@ -38,7 +38,7 @@ final class Event implements \JsonSerializable
     private $startTimestamp;
 
     /**
-     * @var Severity The severity of this event
+     * @var Severity|null The severity of this event
      */
     private $level;
 
@@ -253,9 +253,19 @@ final class Event implements \JsonSerializable
     }
 
     /**
+     * Sets the timestamp of when the Event was created.
+     *
+     * @param float|string $timestamp
+     */
+    public function setTimestamp($timestamp): void
+    {
+        $this->timestamp = $timestamp;
+    }
+
+    /**
      * Gets the severity of this event.
      */
-    public function getLevel(): Severity
+    public function getLevel(): ?Severity
     {
         return $this->level;
     }
@@ -263,9 +273,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the severity of this event.
      *
-     * @param Severity $level The severity
+     * @param Severity|null $level The severity
      */
-    public function setLevel(Severity $level): void
+    public function setLevel(?Severity $level): void
     {
         $this->level = $level;
     }
@@ -638,13 +648,16 @@ final class Event implements \JsonSerializable
         $data = [
             'event_id' => (string) $this->id,
             'timestamp' => $this->timestamp,
-            'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
                 'name' => $this->sdkIdentifier,
                 'version' => $this->getSdkVersion(),
             ],
         ];
+
+        if (null !== $this->level) {
+            $data['level'] = (string) $this->level;
+        }
 
         if (null !== $this->startTimestamp) {
             $data['start_timestamp'] = $this->startTimestamp;
@@ -710,10 +723,10 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
-        if (!empty($this->spans)) {
-            $data['spans'] = array_map(function (Span $span): array {
+        if ('transaction' === $this->getType()) {
+            $data['spans'] = array_values(array_map(function (Span $span): array {
                 return $span->toArray();
-            }, $this->spans);
+            }, $this->spans));
         }
 
         foreach (array_reverse($this->exceptions) as $exception) {

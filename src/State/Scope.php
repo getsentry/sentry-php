@@ -10,6 +10,7 @@ use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\Severity;
+use Sentry\Tracing\Span;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -53,6 +54,11 @@ final class Scope
      *                    this scope
      */
     private $level;
+
+    /**
+     * @var Span|null Set a Span on the Scope
+     */
+    private $span;
 
     /**
      * @var callable[] List of event processors
@@ -214,6 +220,28 @@ final class Scope
     }
 
     /**
+     * Returns the Span the is on the Scope.
+     */
+    public function getSpan(): ?Span
+    {
+        return $this->span;
+    }
+
+    /**
+     * Sets the Span on the Scope.
+     *
+     * @param Span|null $span The Span
+     *
+     * @return $this
+     */
+    public function setSpan(?Span $span): self
+    {
+        $this->span = $span;
+
+        return $this;
+    }
+
+    /**
      * Add the given breadcrumb to the scope.
      *
      * @param Breadcrumb $breadcrumb     The breadcrumb to add
@@ -290,10 +318,10 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event                $event   The event object that will be enriched with scope data
-     * @param array<string, mixed> $payload The raw payload of the event that will be propagated to the event processors
+     * @param Event                      $event   The event object that will be enriched with scope data
+     * @param array<string, mixed>|Event $payload The raw payload of the event that will be propagated to the event processors
      */
-    public function applyToEvent(Event $event, array $payload): ?Event
+    public function applyToEvent(Event $event, $payload): ?Event
     {
         if (empty($event->getFingerprint())) {
             $event->setFingerprint($this->fingerprint);
