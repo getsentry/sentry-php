@@ -19,7 +19,7 @@ abstract class AbstractContextTest extends TestCase
         }
 
         if (null !== $expectedExceptionMessage) {
-            $this->expectExceptionMessage($expectedExceptionMessage);
+            $this->expectExceptionMessageRegExp($expectedExceptionMessage);
         }
 
         $context = $this->createContext($initialData);
@@ -37,7 +37,7 @@ abstract class AbstractContextTest extends TestCase
         }
 
         if (null !== $expectedExceptionMessage) {
-            $this->expectExceptionMessage($expectedExceptionMessage);
+            $this->expectExceptionMessageRegExp($expectedExceptionMessage);
         }
 
         $context = $this->createContext();
@@ -56,7 +56,7 @@ abstract class AbstractContextTest extends TestCase
         }
 
         if (null !== $expectedExceptionMessage) {
-            $this->expectExceptionMessage($expectedExceptionMessage);
+            $this->expectExceptionMessageRegExp($expectedExceptionMessage);
         }
 
         $context = $this->createContext();
@@ -75,7 +75,7 @@ abstract class AbstractContextTest extends TestCase
         }
 
         if (null !== $expectedExceptionMessage) {
-            $this->expectExceptionMessage($expectedExceptionMessage);
+            $this->expectExceptionMessageRegExp($expectedExceptionMessage);
         }
 
         $context = $this->createContext();
@@ -94,7 +94,7 @@ abstract class AbstractContextTest extends TestCase
         }
 
         if (null !== $expectedExceptionMessage) {
-            $this->expectExceptionMessage($expectedExceptionMessage);
+            $this->expectExceptionMessageRegExp($expectedExceptionMessage);
         }
 
         $context = $this->createContext();
