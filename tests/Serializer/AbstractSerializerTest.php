@@ -67,27 +67,20 @@ abstract class AbstractSerializerTest extends TestCase
 
     public function traversableDataProvider(): \Generator
     {
-        $getArray = static function (): array {
-            return [
-                'a' => 'foo',
-                'b' => 'bar',
-            ];
-        };
-
-        yield [$getArray(), new \ArrayIterator($getArray())];
+        yield [new \ArrayIterator(['foo', 'bar']), ['foo', 'bar']];
 
         // Also test with a non-rewindable non-cloneable iterator:
         $newGenerator = static function (array $array): \Generator {
             yield from $array;
         };
 
-        yield [$getArray(), $newGenerator($getArray())];
+        yield [$newGenerator(['foo', 'bar']), ['foo', 'bar']];
     }
 
     /**
      * @dataProvider traversableDataProvider
      */
-    public function testTraversablesAreNotConsumed(array $array, \Traversable $traversable): void
+    public function testTraversablesAreNotConsumed(\Traversable $traversable, array $array): void
     {
         $serializer = $this->createSerializer();
 
