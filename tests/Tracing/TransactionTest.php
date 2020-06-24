@@ -94,8 +94,8 @@ final class TransactionTest extends TestCase
         $data['timestamp'] = $endTimestamp;
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (array $event) use ($data): bool {
-                $this->assertEqualWithIgnore($data, $event, ['event_id']);
+            ->with($this->callback(function ($event) use ($data): bool {
+                $this->assertEqualWithIgnore($data, $event->toArray(), ['event_id']);
 
                 return true;
             }));

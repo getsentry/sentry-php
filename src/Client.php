@@ -175,7 +175,7 @@ final class Client implements FlushableClientInterface
     {
         $shouldReadSourceCodeExcerpts = !isset($this->integrations[FrameContextifierIntegration::class]) && null !== $this->options->getContextLines();
 
-        if ($this->options->shouldAttachStacktrace() && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
+        if ($this->options->shouldAttachStacktrace() && !($payload instanceof Event) && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
             /** @psalm-suppress TooManyArguments */
             $event = $this->eventFactory->createWithStacktrace($payload, $shouldReadSourceCodeExcerpts);
         } else {

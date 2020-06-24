@@ -118,7 +118,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent(array $payload): ?string
+    public function captureEvent($payload): ?string
     {
         return SentrySdk::getCurrentHub()->captureEvent($payload);
     }

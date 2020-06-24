@@ -86,7 +86,7 @@ interface HubInterface
     /**
      * Captures a new event using the provided data.
      *
-     * @param array<string, mixed>|Event $payload The data of the event being captured
+     * @param Event|array<string, mixed> $payload The data of the event being captured
      */
     public function captureEvent($payload): ?string;
 

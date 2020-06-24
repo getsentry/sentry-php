@@ -134,9 +134,6 @@ class Span implements \JsonSerializable
         return $span;
     }
 
-    /**
-     * @return float
-     */
     public function getStartTimestamp(): float
     {
         return $this->startTimestamp;
