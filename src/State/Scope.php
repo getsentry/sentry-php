@@ -11,6 +11,7 @@ use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\Transaction;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -220,7 +221,7 @@ final class Scope
     }
 
     /**
-     * Returns the Span the is on the Scope.
+     * Returns the Span that is on the Scope.
      */
     public function getSpan(): ?Span
     {
@@ -239,6 +240,20 @@ final class Scope
         $this->span = $span;
 
         return $this;
+    }
+
+    /**
+     * Returns the Transaction that is on the Scope.
+     */
+    public function getTransaction(): ?Transaction
+    {
+        $span = $this->span;
+        if (null !== $span && null !== $span->spanRecorder) {
+            /** @phpstan-ignore-next-line */
+            return $span->spanRecorder->getSpans()[0];
+        }
+
+        return null;
     }
 
     /**

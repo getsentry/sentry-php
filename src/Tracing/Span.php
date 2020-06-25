@@ -140,6 +140,19 @@ class Span implements \JsonSerializable
     }
 
     /**
+     * Returns `sentry-trace` header content.
+     */
+    public function toTraceparent(): string
+    {
+        $sampled = '';
+        if (null !== $this->sampled) {
+            $sampled = $this->sampled ? '-1' : '-0';
+        }
+
+        return $this->traceId . '-' . $this->spanId . $sampled;
+    }
+
+    /**
      * Gets the event as an array.
      *
      * @return array<string, mixed>
@@ -193,11 +206,70 @@ class Span implements \JsonSerializable
         return $this->toArray();
     }
 
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getOp(): ?string
+    {
+        return $this->op;
+    }
+
+    public function setOp(?string $op): void
+    {
+        $this->op = $op;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getTags(): TagsContext
+    {
+        return $this->tags;
+    }
+
     /**
-     * @param array $data
+     * @param array<string, string> $tags
+     */
+    public function setTags(array $tags): void
+    {
+        $this->tags->merge($tags);
+    }
+
+    /**
+     * @param array<mixed> $data
      */
     public function setData(array $data): void
     {
         $this->data->merge($data);
+    }
+
+    /**
+     * @param float $startTimestamp
+     */
+    public function setStartTimestamp(float $startTimestamp): void
+    {
+        $this->startTimestamp = $startTimestamp;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getEndTimestamp(): ?float
+    {
+        return $this->endTimestamp;
     }
 }
