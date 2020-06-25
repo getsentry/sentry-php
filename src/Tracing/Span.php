@@ -192,4 +192,12 @@ class Span implements \JsonSerializable
     {
         return $this->toArray();
     }
+
+    /**
+     * @param array $data
+     */
+    public function setData(array $data): void
+    {
+        $this->data->merge($data);
+    }
 }
