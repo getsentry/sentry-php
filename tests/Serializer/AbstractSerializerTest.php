@@ -66,6 +66,48 @@ abstract class AbstractSerializerTest extends TestCase
     }
 
     /**
+     * @dataProvider iterableDataProvider
+     */
+    public function testIterablesAreNotConsumed(iterable $iterable, array $input): void
+    {
+        $serializer = $this->createSerializer();
+        $output = [];
+
+        foreach ($iterable as $k => $v) {
+            $output[$k] = $v;
+
+            $this->invokeSerialization($serializer, $iterable);
+        }
+
+        $this->assertSame($input, $output);
+    }
+
+    public function iterableDataProvider(): \Generator
+    {
+        yield [
+            'iterable' => ['value1', 'value2'],
+            'input' => ['value1', 'value2'],
+        ];
+
+        yield [
+            'iterable' => new \ArrayIterator(['value1', 'value2']),
+            'input' => ['value1', 'value2'],
+        ];
+
+        // Also test with a non-rewindable non-cloneable iterator:
+        yield [
+            'iterable' => (static function (): \Generator {
+                yield 'value1';
+                yield 'value2';
+            })(),
+            'input' => [
+                'value1',
+                'value2',
+            ],
+        ];
+    }
+
+    /**
      * @dataProvider serializeAllObjectsDataProvider
      */
     public function testRecursionMaxDepth(bool $serializeAllObjects): void

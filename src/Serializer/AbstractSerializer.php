@@ -103,7 +103,7 @@ abstract class AbstractSerializer
                 return $this->serializeCallableWithoutTypeHint($value);
             }
 
-            if (is_iterable($value)) {
+            if (\is_array($value)) {
                 $serializedArray = [];
 
                 foreach ($value as $k => $v) {
