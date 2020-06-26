@@ -65,32 +65,46 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame(['key' => 'value'], $result);
     }
 
-    public function traversableDataProvider(): \Generator
-    {
-        yield [new \ArrayIterator(['foo', 'bar']), ['foo', 'bar']];
-
-        // Also test with a non-rewindable non-cloneable iterator:
-        $newGenerator = static function (array $array): \Generator {
-            yield from $array;
-        };
-
-        yield [$newGenerator(['foo', 'bar']), ['foo', 'bar']];
-    }
-
     /**
-     * @dataProvider traversableDataProvider
+     * @dataProvider iterableDataProvider
      */
-    public function testTraversablesAreNotConsumed(\Traversable $traversable, array $array): void
+    public function testIterablesAreNotConsumed(iterable $iterable, array $input): void
     {
         $serializer = $this->createSerializer();
+        $output = [];
 
-        $traversed = [];
-        foreach ($traversable as $k => $v) {
-            $traversed[$k] = $v;
-            $this->invokeSerialization($serializer, $traversable);
+        foreach ($iterable as $k => $v) {
+            $output[$k] = $v;
+
+            $this->invokeSerialization($serializer, $iterable);
         }
 
-        $this->assertSame($array, $traversed);
+        $this->assertSame($input, $output);
+    }
+
+    public function iterableDataProvider(): \Generator
+    {
+        yield [
+            'iterable' => ['value1', 'value2'],
+            'input' => ['value1', 'value2'],
+        ];
+
+        yield [
+            'iterable' => new \ArrayIterator(['value1', 'value2']),
+            'input' => ['value1', 'value2'],
+        ];
+
+        // Also test with a non-rewindable non-cloneable iterator:
+        yield [
+            'iterable' => (static function (): \Generator {
+                yield 'value1';
+                yield 'value2';
+            })(),
+            'input' => [
+                'value1',
+                'value2',
+            ],
+        ];
     }
 
     /**
