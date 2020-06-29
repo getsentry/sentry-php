@@ -114,7 +114,9 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             if (class_exists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $guzzleConfig = [
+                    /** @psalm-suppress UndefinedClass */
                     GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                    /** @psalm-suppress UndefinedClass */
                     GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
                 ];
 
