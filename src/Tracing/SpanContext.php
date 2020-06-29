@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
-
 class SpanContext
 {
     private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
@@ -66,16 +63,25 @@ class SpanContext
      */
     public $endTimestamp;
 
-    public static function fromTraceparent(string $header): self {
-        $context = new SpanContext();
+    /**
+     * Returns a context depending on the header given. Containing trace_id, parent_span_id and sampled.
+     *
+     * @param string $header The sentry-trace header from the request
+     *
+     * @return static
+     */
+    public static function fromTraceparent(string $header)
+    {
+        /** @phpstan-ignore-next-line */
+        $context = new static();
         if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
             return $context;
         }
 
         $context->traceId = $matches['trace_id'];
         $context->parentSpanId = $matches['span_id'];
-        if (key_exists('sampled', $matches)) {
-            $context->sampled = $matches['sampled'] === '1';
+        if (\array_key_exists('sampled', $matches)) {
+            $context->sampled = '1' === $matches['sampled'];
         }
 
         return $context;

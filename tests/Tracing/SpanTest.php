@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -64,31 +62,31 @@ final class SpanTest extends TestCase
 
     public function testTraceparentHeader(): void
     {
-        $context = SpanContext::fromTraceparent("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb");
-        $this->assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", $context->traceId);
-        $this->assertNotEquals("bbbbbbbbbbbbbbbb", $context->spanId);
-        $this->assertEquals("bbbbbbbbbbbbbbbb", $context->parentSpanId);
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb');
+        $this->assertEquals('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', $context->traceId);
+        $this->assertNotEquals('bbbbbbbbbbbbbbbb', $context->spanId);
+        $this->assertEquals('bbbbbbbbbbbbbbbb', $context->parentSpanId);
         $this->assertNull($context->sampled);
     }
 
     public function testTraceparentHeaderSampledTrue(): void
     {
-        $context = SpanContext::fromTraceparent("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-1");
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-1');
         $this->assertTrue($context->sampled);
     }
 
     public function testTraceparentHeaderSampledFalse(): void
     {
-        $context = SpanContext::fromTraceparent("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-0");
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-0');
         $this->assertFalse($context->sampled);
     }
 
     public function testTraceparentHeaderJustSampleRate(): void
     {
-        $context = SpanContext::fromTraceparent("1");
+        $context = SpanContext::fromTraceparent('1');
         $this->assertTrue($context->sampled);
 
-        $context = SpanContext::fromTraceparent("0");
+        $context = SpanContext::fromTraceparent('0');
         $this->assertFalse($context->sampled);
     }
 }

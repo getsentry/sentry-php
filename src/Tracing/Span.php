@@ -268,17 +268,11 @@ class Span implements \JsonSerializable
         $this->data->merge($data);
     }
 
-    /**
-     * @param float $startTimestamp
-     */
     public function setStartTimestamp(float $startTimestamp): void
     {
         $this->startTimestamp = $startTimestamp;
     }
 
-    /**
-     * @return float|null
-     */
     public function getEndTimestamp(): ?float
     {
         return $this->endTimestamp;

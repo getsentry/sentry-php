@@ -7,8 +7,6 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
