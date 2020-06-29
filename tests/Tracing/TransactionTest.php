@@ -34,10 +34,10 @@ final class TransactionTest extends TestCase
         $context->op = 'op';
         $context->status = 'ok';
         $context->sampled = true;
-        $tags = new TagsContext();
+        $tags = [];
         $tags['a'] = 'b';
         $context->tags = $tags;
-        $data = new Context();
+        $data = [];
         $data['c'] = 'd';
         $context->data = $data;
         $context->startTimestamp = microtime(true);
@@ -52,8 +52,8 @@ final class TransactionTest extends TestCase
         $this->assertEquals($context->parentSpanId->__toString(), $data['contexts']['trace']['parent_span_id']);
         $this->assertEquals($context->description, $data['contexts']['trace']['description']);
         $this->assertEquals($context->status, $data['contexts']['trace']['status']);
-        $this->assertEquals($context->tags->toArray(), $data['tags']);
-        $this->assertEquals($context->data->toArray(), $data['contexts']['trace']['data']);
+        $this->assertEquals($context->tags, $data['tags']);
+        $this->assertEquals($context->data, $data['contexts']['trace']['data']);
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
     }

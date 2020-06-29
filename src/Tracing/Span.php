@@ -90,8 +90,19 @@ class Span implements \JsonSerializable
         $this->op = $context->op ?? null;
         $this->status = $context->status ?? null;
         $this->sampled = $context->sampled ?? null;
-        $this->tags = $context->tags ?? new TagsContext();
-        $this->data = $context->data ?? new Context();
+
+        if ($context && $context->tags) {
+            $this->tags = new TagsContext($context->tags);
+        } else {
+            $this->tags = new TagsContext();
+        }
+
+        if ($context && $context->data) {
+            $this->data = new Context($context->data);
+        } else {
+            $this->data = new Context();
+        }
+
         $this->startTimestamp = $context->startTimestamp ?? microtime(true);
         $this->endTimestamp = $context->endTimestamp ?? null;
     }
