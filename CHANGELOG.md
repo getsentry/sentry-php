@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix timeouts for connecting to the server and for the requests only being applied if a http proxy was specified (#1033)
+
 ### 2.4.0 (2020-05-21)
 
 - Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
