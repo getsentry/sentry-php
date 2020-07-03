@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- Fix timeouts for connecting to the server and for the requests only being applied if a http proxy was specified (#1033)
+### 2.4.1 (2020-07-03)
+
+- Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)
+- [BC CHANGE] Revert "Add support for iterables in the serializer (#991)" (#1030)
 
 ### 2.4.0 (2020-05-21)
 
