@@ -244,6 +244,9 @@ final class Scope
 
     /**
      * Returns the Transaction that is on the Scope.
+     *
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
      */
     public function getTransaction(): ?Transaction
     {
