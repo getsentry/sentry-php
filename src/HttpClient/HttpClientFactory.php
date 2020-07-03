@@ -110,22 +110,34 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             throw new \RuntimeException('The "http_proxy" option does not work together with a custom HTTP client.');
         }
 
-        if (null === $httpClient && null !== $options->getHttpProxy()) {
+        if (null === $httpClient) {
             if (class_exists(GuzzleHttpClient::class)) {
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $httpClient = GuzzleHttpClient::createWithConfig([
-                    GuzzleHttpClientOptions::PROXY => $options->getHttpProxy(),
+                /** @psalm-suppress UndefinedClass */
+                $guzzleConfig = [
                     GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
                     GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
-                ]);
-            } elseif (class_exists(CurlHttpClient::class)) {
+                ];
+
+                if (null !== $options->getHttpProxy()) {
+                    /** @psalm-suppress UndefinedClass */
+                    $guzzleConfig[GuzzleHttpClientOptions::PROXY] = $options->getHttpProxy();
+                }
+
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, [
-                    CURLOPT_PROXY => $options->getHttpProxy(),
+                $httpClient = GuzzleHttpClient::createWithConfig($guzzleConfig);
+            } elseif (class_exists(CurlHttpClient::class)) {
+                $curlConfig = [
                     CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
                     CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
-                ]);
-            } else {
+                ];
+
+                if (null !== $options->getHttpProxy()) {
+                    $curlConfig[CURLOPT_PROXY] = $options->getHttpProxy();
+                }
+
+                /** @psalm-suppress InvalidPropertyAssignmentValue */
+                $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, $curlConfig);
+            } elseif (null !== $options->getHttpProxy()) {
                 throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
             }
         }
