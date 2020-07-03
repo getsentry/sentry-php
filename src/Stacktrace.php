@@ -18,6 +18,8 @@ class Stacktrace implements \JsonSerializable
 {
     private const INTERNAL_FRAME_FILENAME = '[internal]';
 
+    private const ANONYMOUS_CLASS_PREFIX = "class@anonymous\x00";
+
     /**
      * @var bool Flag indicating whether it's responsibility of this class to
      *           read the source code excerpts for each frame
@@ -154,6 +156,10 @@ class Stacktrace implements \JsonSerializable
         }
 
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
+            if (0 === strpos($backtraceFrame['class'], self::ANONYMOUS_CLASS_PREFIX)) {
+                $backtraceFrame['class'] = self::ANONYMOUS_CLASS_PREFIX . $this->stripPrefixFromFilePath(substr($backtraceFrame['class'], \strlen(self::ANONYMOUS_CLASS_PREFIX)));
+            }
+
             $functionName = sprintf(
                 '%s::%s',
                 preg_replace('/0x[a-fA-F0-9]+$/', '', $backtraceFrame['class']),

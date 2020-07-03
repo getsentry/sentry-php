@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### 2.4.1 (2020-07-03)
+
+- Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)
+- [BC CHANGE] Revert "Add support for iterables in the serializer (#991)" (#1030)
+
+### 2.4.0 (2020-05-21)
+
 - Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
 - Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
 - Log internal debug and error messages to a PSR-3 compatible logger (#989)
@@ -11,6 +18,7 @@
 - Support passing either a Httplug or PSR-17 stream factory to the `GzipEncoderPlugin` class (#1012)
 - Add the `FrameContextifierIntegration` integration (#1011)
 - Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
+- Trim the file path from the anonymous class name in the stacktrace according to the `prefixes` option (#1016)
 
 ## 2.3.2 (2020-03-06)
 
