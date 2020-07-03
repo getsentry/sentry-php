@@ -79,8 +79,13 @@ class SpanContext
             return $context;
         }
 
-        $context->traceId = new TraceId($matches['trace_id']);
-        $context->parentSpanId = new SpanId($matches['span_id']);
+        if (mb_strlen($matches['trace_id']) > 0) {
+            $context->traceId = new TraceId($matches['trace_id']);
+        }
+
+        if (mb_strlen($matches['span_id']) > 0) {
+            $context->parentSpanId = new SpanId($matches['span_id']);
+        }
 
         if (\array_key_exists('sampled', $matches)) {
             $context->sampled = '1' === $matches['sampled'];
