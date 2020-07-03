@@ -59,8 +59,12 @@ final class EventFactory implements EventFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createWithStacktrace(array $payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
+    public function createWithStacktrace($payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
     {
+        if ($payload instanceof Event) {
+            return $this->create($payload);
+        }
+
         if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
             $payload['stacktrace'] = Stacktrace::createFromBacktrace(
                 $this->options,
@@ -79,10 +83,37 @@ final class EventFactory implements EventFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create(array $payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
+    public function create($payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
     {
         try {
-            $event = new Event();
+            if ($payload instanceof Event) {
+                $event = $payload;
+            } else {
+                $event = new Event();
+                if (isset($payload['logger'])) {
+                    $event->setLogger($payload['logger']);
+                }
+
+                $message = isset($payload['message']) ? mb_substr($payload['message'], 0, $this->options->getMaxValueLength()) : null;
+                $messageParams = $payload['message_params'] ?? [];
+                $messageFormatted = isset($payload['message_formatted']) ? mb_substr($payload['message_formatted'], 0, $this->options->getMaxValueLength()) : null;
+
+                if (null !== $message) {
+                    $event->setMessage($message, $messageParams, $messageFormatted);
+                }
+
+                if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
+                    $this->addThrowableToEvent($event, $payload['exception'], \func_num_args() > 1 ? func_get_arg(1) : true);
+                }
+
+                if (isset($payload['level']) && $payload['level'] instanceof Severity) {
+                    $event->setLevel($payload['level']);
+                }
+
+                if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
+                    $event->setStacktrace($payload['stacktrace']);
+                }
+            }
         } catch (\Throwable $exception) {
             throw new EventCreationException($exception);
         }
@@ -93,30 +124,6 @@ final class EventFactory implements EventFactoryInterface
         $event->setRelease($this->options->getRelease());
         $event->getTagsContext()->merge($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
-
-        if (isset($payload['logger'])) {
-            $event->setLogger($payload['logger']);
-        }
-
-        $message = isset($payload['message']) ? mb_substr($payload['message'], 0, $this->options->getMaxValueLength()) : null;
-        $messageParams = $payload['message_params'] ?? [];
-        $messageFormatted = isset($payload['message_formatted']) ? mb_substr($payload['message_formatted'], 0, $this->options->getMaxValueLength()) : null;
-
-        if (null !== $message) {
-            $event->setMessage($message, $messageParams, $messageFormatted);
-        }
-
-        if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-            $this->addThrowableToEvent($event, $payload['exception'], \func_num_args() > 1 ? func_get_arg(1) : true);
-        }
-
-        if (isset($payload['level']) && $payload['level'] instanceof Severity) {
-            $event->setLevel($payload['level']);
-        }
-
-        if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
-            $event->setStacktrace($payload['stacktrace']);
-        }
 
         return $event;
     }

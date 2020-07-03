@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 use Sentry\Tracing\Transaction;
@@ -85,9 +86,9 @@ interface HubInterface
     /**
      * Captures a new event using the provided data.
      *
-     * @param array<string, mixed> $payload The data of the event being captured
+     * @param Event|array<string, mixed> $payload The data of the event being captured
      */
-    public function captureEvent(array $payload): ?string;
+    public function captureEvent($payload): ?string;
 
     /**
      * Captures an event that logs the last occurred error.

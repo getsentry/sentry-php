@@ -7,8 +7,6 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
@@ -34,10 +32,10 @@ final class TransactionTest extends TestCase
         $context->op = 'op';
         $context->status = 'ok';
         $context->sampled = true;
-        $tags = new TagsContext();
+        $tags = [];
         $tags['a'] = 'b';
         $context->tags = $tags;
-        $data = new Context();
+        $data = [];
         $data['c'] = 'd';
         $context->data = $data;
         $context->startTimestamp = microtime(true);
@@ -52,8 +50,8 @@ final class TransactionTest extends TestCase
         $this->assertEquals($context->parentSpanId->__toString(), $data['contexts']['trace']['parent_span_id']);
         $this->assertEquals($context->description, $data['contexts']['trace']['description']);
         $this->assertEquals($context->status, $data['contexts']['trace']['status']);
-        $this->assertEquals($context->tags->toArray(), $data['tags']);
-        $this->assertEquals($context->data->toArray(), $data['contexts']['trace']['data']);
+        $this->assertEquals($context->tags, $data['tags']);
+        $this->assertEquals($context->data, $data['contexts']['trace']['data']);
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
     }
@@ -94,8 +92,8 @@ final class TransactionTest extends TestCase
         $data['timestamp'] = $endTimestamp;
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (array $event) use ($data): bool {
-                $this->assertEqualWithIgnore($data, $event, ['event_id']);
+            ->with($this->callback(function ($event) use ($data): bool {
+                $this->assertEqualWithIgnore($data, $event->toArray(), ['event_id']);
 
                 return true;
             }));

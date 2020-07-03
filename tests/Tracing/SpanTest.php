@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -27,10 +25,10 @@ final class SpanTest extends TestCase
         $context->op = 'op';
         $context->status = 'ok';
         $context->sampled = true;
-        $tags = new TagsContext();
+        $tags = [];
         $tags['a'] = 'b';
         $context->tags = $tags;
-        $data = new Context();
+        $data = [];
         $data['c'] = 'd';
         $context->data = $data;
         $context->startTimestamp = microtime(true);
@@ -44,8 +42,8 @@ final class SpanTest extends TestCase
         $this->assertEquals($context->parentSpanId->__toString(), $data['parent_span_id']);
         $this->assertEquals($context->description, $data['description']);
         $this->assertEquals($context->status, $data['status']);
-        $this->assertEquals($context->tags->toArray(), $data['tags']);
-        $this->assertEquals($context->data->toArray(), $data['data']);
+        $this->assertEquals($context->tags, $data['tags']);
+        $this->assertEquals($context->data, $data['data']);
         $this->assertEquals($context->startTimestamp, $data['start_timestamp']);
         $this->assertEquals($context->endTimestamp, $data['timestamp']);
     }
@@ -60,5 +58,35 @@ final class SpanTest extends TestCase
         $span = new Span();
         $span->finish($time);
         $this->assertEquals($span->jsonSerialize()['timestamp'], $time);
+    }
+
+    public function testTraceparentHeader(): void
+    {
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb');
+        $this->assertEquals('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', $context->traceId);
+        $this->assertNotEquals('bbbbbbbbbbbbbbbb', $context->spanId);
+        $this->assertEquals('bbbbbbbbbbbbbbbb', $context->parentSpanId);
+        $this->assertNull($context->sampled);
+    }
+
+    public function testTraceparentHeaderSampledTrue(): void
+    {
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-1');
+        $this->assertTrue($context->sampled);
+    }
+
+    public function testTraceparentHeaderSampledFalse(): void
+    {
+        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-0');
+        $this->assertFalse($context->sampled);
+    }
+
+    public function testTraceparentHeaderJustSampleRate(): void
+    {
+        $context = SpanContext::fromTraceparent('1');
+        $this->assertTrue($context->sampled);
+
+        $context = SpanContext::fromTraceparent('0');
+        $this->assertFalse($context->sampled);
     }
 }

@@ -45,12 +45,12 @@ final class EventTest extends TestCase
         $expected = [
             'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'level' => 'error',
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
+            'level' => 'error',
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),
@@ -78,12 +78,12 @@ final class EventTest extends TestCase
         $expected = [
             'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'level' => 'error',
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
+            'level' => 'error',
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),

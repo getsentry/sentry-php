@@ -90,8 +90,19 @@ class Span implements \JsonSerializable
         $this->op = $context->op ?? null;
         $this->status = $context->status ?? null;
         $this->sampled = $context->sampled ?? null;
-        $this->tags = $context->tags ?? new TagsContext();
-        $this->data = $context->data ?? new Context();
+
+        if ($context && $context->tags) {
+            $this->tags = new TagsContext($context->tags);
+        } else {
+            $this->tags = new TagsContext();
+        }
+
+        if ($context && $context->data) {
+            $this->data = new Context($context->data);
+        } else {
+            $this->data = new Context();
+        }
+
         $this->startTimestamp = $context->startTimestamp ?? microtime(true);
         $this->endTimestamp = $context->endTimestamp ?? null;
     }
@@ -132,6 +143,24 @@ class Span implements \JsonSerializable
         }
 
         return $span;
+    }
+
+    public function getStartTimestamp(): float
+    {
+        return $this->startTimestamp;
+    }
+
+    /**
+     * Returns `sentry-trace` header content.
+     */
+    public function toTraceparent(): string
+    {
+        $sampled = '';
+        if (null !== $this->sampled) {
+            $sampled = $this->sampled ? '-1' : '-0';
+        }
+
+        return $this->traceId . '-' . $this->spanId . $sampled;
     }
 
     /**
@@ -186,5 +215,66 @@ class Span implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getOp(): ?string
+    {
+        return $this->op;
+    }
+
+    public function setOp(?string $op): void
+    {
+        $this->op = $op;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getTags(): TagsContext
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param array<string, string> $tags
+     */
+    public function setTags(array $tags): void
+    {
+        $this->tags->merge($tags);
+    }
+
+    /**
+     * @param array<mixed> $data
+     */
+    public function setData(array $data): void
+    {
+        $this->data->merge($data);
+    }
+
+    public function setStartTimestamp(float $startTimestamp): void
+    {
+        $this->startTimestamp = $startTimestamp;
+    }
+
+    public function getEndTimestamp(): ?float
+    {
+        return $this->endTimestamp;
     }
 }

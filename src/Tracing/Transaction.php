@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\Event;
+use Sentry\Severity;
 use Sentry\State\HubInterface;
 
 /**
@@ -90,18 +91,16 @@ final class Transaction extends Span
         }
 
         if (null !== $this->hub) {
-            return $this->hub->captureEvent($this->jsonSerialize());
+            return $this->hub->captureEvent($this->toEvent());
         }
 
         return null;
     }
 
     /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
+     * Returns an Event.
      */
-    public function jsonSerialize(): array
+    public function toEvent(): Event
     {
         $event = new Event();
         $event->setType('transaction');
@@ -116,9 +115,25 @@ final class Transaction extends Span
             }));
         }
 
-        $data = $event->toArray();
-        $data['timestamp'] = $this->endTimestamp;
+        $event->setLevel(null);
+        if (null != $this->status && 'ok' != $this->status) {
+            $event->setLevel(Severity::error());
+        }
 
-        return $data;
+        if ($this->endTimestamp) {
+            $event->setTimestamp($this->endTimestamp);
+        }
+
+        return $event;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return array<string, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toEvent()->toArray();
     }
 }
