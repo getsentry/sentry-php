@@ -74,12 +74,14 @@ class SpanContext
     {
         /** @phpstan-ignore-next-line */
         $context = new static();
+
         if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
             return $context;
         }
 
         $context->traceId = $matches['trace_id'];
         $context->parentSpanId = $matches['span_id'];
+
         if (\array_key_exists('sampled', $matches)) {
             $context->sampled = '1' === $matches['sampled'];
         }
