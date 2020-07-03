@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 use Sentry\Tracing\Transaction;
@@ -22,7 +23,7 @@ final class Hub implements HubInterface
     private $stack = [];
 
     /**
-     * @var string|null The ID of the last captured event
+     * @var EventId|null The ID of the last captured event
      */
     private $lastEventId;
 
@@ -48,7 +49,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getLastEventId(): ?string
+    public function getLastEventId(): ?EventId
     {
         return $this->lastEventId;
     }
@@ -111,7 +112,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?string
+    public function captureMessage(string $message, ?Severity $level = null): ?EventId
     {
         $client = $this->getClient();
 
@@ -125,7 +126,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?string
+    public function captureException(\Throwable $exception): ?EventId
     {
         $client = $this->getClient();
 
@@ -139,7 +140,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload): ?string
+    public function captureEvent($payload): ?EventId
     {
         $client = $this->getClient();
 
@@ -153,7 +154,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?string
+    public function captureLastError(): ?EventId
     {
         $client = $this->getClient();
 

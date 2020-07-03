@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 use Sentry\Tracing\Transaction;
@@ -27,7 +28,7 @@ interface HubInterface
     /**
      * Gets the ID of the last captured event.
      */
-    public function getLastEventId(): ?string;
+    public function getLastEventId(): ?EventId;
 
     /**
      * Creates a new scope to store context information that will be layered on
@@ -74,26 +75,26 @@ interface HubInterface
      * @param string   $message The message
      * @param Severity $level   The severity level of the message
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?string;
+    public function captureMessage(string $message, ?Severity $level = null): ?EventId;
 
     /**
      * Captures an exception event and sends it to Sentry.
      *
      * @param \Throwable $exception The exception
      */
-    public function captureException(\Throwable $exception): ?string;
+    public function captureException(\Throwable $exception): ?EventId;
 
     /**
      * Captures a new event using the provided data.
      *
      * @param Event|array<string, mixed> $payload The data of the event being captured
      */
-    public function captureEvent($payload): ?string;
+    public function captureEvent($payload): ?EventId;
 
     /**
      * Captures an event that logs the last occurred error.
      */
-    public function captureLastError(): ?string;
+    public function captureLastError(): ?EventId;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They

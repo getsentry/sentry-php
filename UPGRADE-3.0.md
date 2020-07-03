@@ -9,3 +9,16 @@
 - The signature of the `FatalErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The `ErrorListenerIntegration` integration does not get called anymore when a fatal error occurs
 - The default value of the `error_types` option changed to the value get from `error_reporting()`
+- The signature of the `captureMessage()` global function changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `captureException()` global function changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `captureEvent()` global function changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `captureLastError()` global function changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `ClientInterface::captureMessage()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `ClientInterface::captureException()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `ClientInterface::captureEvent()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `ClientInterface::captureLastError()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `HubInterface::captureMessage()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `HubInterface::captureException()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `HubInterface::captureEvent()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `HubInterface::captureLastError()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `Event::getId()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`

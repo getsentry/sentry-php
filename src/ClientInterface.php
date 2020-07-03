@@ -26,7 +26,7 @@ interface ClientInterface
      * @param Severity   $level   The level of the message to be sent
      * @param Scope|null $scope   An optional scope keeping the state
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string;
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId;
 
     /**
      * Logs an exception.
@@ -34,14 +34,14 @@ interface ClientInterface
      * @param \Throwable $exception The exception object
      * @param Scope|null $scope     An optional scope keeping the state
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string;
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?EventId;
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
      * @param Scope|null $scope An optional scope keeping the state
      */
-    public function captureLastError(?Scope $scope = null): ?string;
+    public function captureLastError(?Scope $scope = null): ?EventId;
 
     /**
      * Captures a new event using the provided data.
@@ -49,7 +49,7 @@ interface ClientInterface
      * @param array<string, mixed>|Event $payload The data of the event being captured
      * @param Scope|null                 $scope   An optional scope keeping the state
      */
-    public function captureEvent($payload, ?Scope $scope = null): ?string;
+    public function captureEvent($payload, ?Scope $scope = null): ?EventId;
 
     /**
      * Returns the integration instance if it is installed on the client.

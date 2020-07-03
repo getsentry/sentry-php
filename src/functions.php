@@ -25,7 +25,7 @@ function init(array $options = []): void
  * @param string   $message The message
  * @param Severity $level   The severity level of the message
  */
-function captureMessage(string $message, ?Severity $level = null): ?string
+function captureMessage(string $message, ?Severity $level = null): ?EventId
 {
     return SentrySdk::getCurrentHub()->captureMessage($message, $level);
 }
@@ -35,7 +35,7 @@ function captureMessage(string $message, ?Severity $level = null): ?string
  *
  * @param \Throwable $exception The exception
  */
-function captureException(\Throwable $exception): ?string
+function captureException(\Throwable $exception): ?EventId
 {
     return SentrySdk::getCurrentHub()->captureException($exception);
 }
@@ -45,7 +45,7 @@ function captureException(\Throwable $exception): ?string
  *
  * @param array<string, mixed> $payload The data of the event being captured
  */
-function captureEvent(array $payload): ?string
+function captureEvent(array $payload): ?EventId
 {
     return SentrySdk::getCurrentHub()->captureEvent($payload);
 }
@@ -53,7 +53,7 @@ function captureEvent(array $payload): ?string
 /**
  * Logs the most recent error (obtained with {@link error_get_last}).
  */
-function captureLastError(): ?string
+function captureLastError(): ?EventId
 {
     return SentrySdk::getCurrentHub()->captureLastError();
 }

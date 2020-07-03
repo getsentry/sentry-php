@@ -88,7 +88,7 @@ final class Client implements FlushableClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?string
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId
     {
         $payload = [
             'message' => $message,
@@ -101,7 +101,7 @@ final class Client implements FlushableClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null): ?string
+    public function captureException(\Throwable $exception, ?Scope $scope = null): ?EventId
     {
         if (!isset($this->integrations[IgnoreErrorsIntegration::class]) && $this->options->isExcludedException($exception, false)) {
             return null;
@@ -113,7 +113,7 @@ final class Client implements FlushableClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload, ?Scope $scope = null): ?string
+    public function captureEvent($payload, ?Scope $scope = null): ?EventId
     {
         $event = $this->prepareEvent($payload, $scope);
 
@@ -127,7 +127,7 @@ final class Client implements FlushableClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(?Scope $scope = null): ?string
+    public function captureLastError(?Scope $scope = null): ?EventId
     {
         $error = error_get_last();
 

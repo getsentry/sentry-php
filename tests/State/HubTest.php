@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Severity;
@@ -43,16 +44,19 @@ final class HubTest extends TestCase
 
     public function testGetLastEventId(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->willReturn('92db40a886c0458288c7c83935a350ef');
+            ->willReturn($eventId);
 
         $hub = new Hub($client);
 
         $this->assertNull($hub->getLastEventId());
-        $this->assertEquals($hub->captureMessage('foo'), $hub->getLastEventId());
+        $this->assertSame($hub->captureMessage('foo'), $hub->getLastEventId());
+        $this->assertSame($eventId, $hub->getLastEventId());
     }
 
     public function testPushScope(): void
@@ -193,12 +197,14 @@ final class HubTest extends TestCase
 
     public function testCaptureMessage(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
             ->with('foo', Severity::debug())
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -206,11 +212,12 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, $hub->captureMessage('foo', Severity::debug()));
     }
 
     public function testCaptureException(): void
     {
+        $eventId = EventId::generate();
         $exception = new \RuntimeException('foo');
 
         /** @var ClientInterface&MockObject $client */
@@ -218,7 +225,7 @@ final class HubTest extends TestCase
         $client->expects($this->once())
             ->method('captureException')
             ->with($exception)
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -226,16 +233,18 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureException($exception));
+        $this->assertSame($eventId, $hub->captureException($exception));
     }
 
     public function testCaptureLastError(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureLastError')
-            ->willReturn('7565e130d1d14e639442110a6dd1cbab');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -243,7 +252,27 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('7565e130d1d14e639442110a6dd1cbab', $hub->captureLastError());
+        $this->assertSame($eventId, $hub->captureLastError());
+    }
+
+    public function testCaptureEvent(): void
+    {
+        $eventId = EventId::generate();
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(['message' => 'test'])
+            ->willReturn($eventId);
+
+        $hub = new Hub();
+
+        $this->assertNull($hub->captureEvent([]));
+
+        $hub->bindClient($client);
+
+        $this->assertSame($eventId, $hub->captureEvent(['message' => 'test']));
     }
 
     public function testAddBreadcrumb(): void
@@ -384,24 +413,6 @@ final class HubTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
-    }
-
-    public function testCaptureEvent(): void
-    {
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with(['message' => 'test'])
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
-
-        $hub = new Hub();
-
-        $this->assertNull($hub->captureEvent([]));
-
-        $hub->bindClient($client);
-
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
     }
 
     public function testGetIntegration(): void

@@ -5,6 +5,7 @@
 - [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton (#1038)
 - [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
 - [BC BREAK] Change the default value for the `error_types` option from `E_ALL` to the value get from `error_reporting()` (#1037)
+- [BC BREAK] Remove deprecated code to return the event ID as a `string` rather than an object instance from the transport, the client and the hub (#1036)
 
 ### 2.4.1 (2020-07-03)
 

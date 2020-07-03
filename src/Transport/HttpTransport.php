@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Dsn;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Util\JSON;
 
@@ -109,7 +110,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event): ?string
+    public function send(Event $event): ?EventId
     {
         $dsn = $this->options->getDsn(false);
 
@@ -151,7 +152,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             }
         }
 
-        return (string) $event->getId(false);
+        return $event->getId();
     }
 
     /**
