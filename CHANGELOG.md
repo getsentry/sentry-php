@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton
+
 ### 2.4.1 (2020-07-03)
 
 - Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)
