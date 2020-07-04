@@ -838,7 +838,7 @@ final class Options
                 return $event;
             },
             'tags' => [],
-            'error_types' => E_ALL,
+            'error_types' => error_reporting(),
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
@@ -1086,7 +1086,7 @@ final class Options
         if (null === $this->defaultIntegrations) {
             $this->defaultIntegrations = [
                 new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
+                new ErrorListenerIntegration(),
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),

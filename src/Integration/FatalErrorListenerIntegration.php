@@ -6,7 +6,6 @@ namespace Sentry\Integration;
 
 use Sentry\ErrorHandler;
 use Sentry\Exception\FatalErrorException;
-use Sentry\Options;
 use Sentry\SentrySdk;
 
 /**
@@ -16,25 +15,6 @@ use Sentry\SentrySdk;
  */
 final class FatalErrorListenerIntegration implements IntegrationInterface
 {
-    /**
-     * @var Options|null The options, to know which error level to use
-     */
-    private $options;
-
-    /**
-     * Constructor.
-     *
-     * @param Options|null $options The options to be used with this integration
-     */
-    public function __construct(?Options $options = null)
-    {
-        if (null !== $options) {
-            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
-        }
-
-        $this->options = $options;
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -52,9 +32,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            $options = $this->options ?? $client->getOptions();
-
-            if (!($options->getErrorTypes() & $exception->getSeverity())) {
+            if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
                 return;
             }
 

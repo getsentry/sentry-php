@@ -23,7 +23,7 @@ set_error_handler(static function () use (&$returnValue) {
     return $returnValue;
 });
 
-ErrorHandler::registerOnce();
+ErrorHandler::registerOnceErrorHandler();
 
 echo 'Triggering error (shouldn\'t be displayed)' . PHP_EOL;
 

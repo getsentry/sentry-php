@@ -3,6 +3,7 @@
 ## Unreleased
 
 - [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton
+- [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
 
 ### 2.4.1 (2020-07-03)
 
