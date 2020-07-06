@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Frame;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Stacktrace;
@@ -53,8 +54,8 @@ class ClientTest extends TestCase
 
                 $exceptionData = $event->getExceptions()[0];
 
-                $this->assertSame(\get_class($exception), $exceptionData['type']);
-                $this->assertSame($exception->getMessage(), $exceptionData['value']);
+                $this->assertSame(\get_class($exception), $exceptionData->getType());
+                $this->assertSame($exception->getMessage(), $exceptionData->getValue());
 
                 return true;
             }));
@@ -157,15 +158,16 @@ class ClientTest extends TestCase
     public function testCaptureEventPrefersExplicitStacktrace(): void
     {
         $eventId = EventId::generate();
-        $explicitStacktrace = $this->createMock(Stacktrace::class);
-        $payload = ['stacktrace' => $explicitStacktrace];
+        $stacktrace = new Stacktrace([
+            new Frame(__METHOD__, __FILE__, __LINE__),
+        ]);
 
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(static function (Event $event) use ($explicitStacktrace): bool {
-                return $explicitStacktrace === $event->getStacktrace();
+            ->with($this->callback(static function (Event $event) use ($stacktrace): bool {
+                return $stacktrace === $event->getStacktrace();
             }))
             ->willReturn($eventId);
 
@@ -173,7 +175,7 @@ class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals($eventId, $client->captureEvent($payload));
+        $this->assertEquals($eventId, $client->captureEvent(['stacktrace' => $stacktrace]));
     }
 
     public function testCaptureLastError(): void
@@ -187,8 +189,8 @@ class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $exception = $event->getExceptions()[0];
 
-                $this->assertEquals('ErrorException', $exception['type']);
-                $this->assertEquals('foo', $exception['value']);
+                $this->assertEquals('ErrorException', $exception->getType());
+                $this->assertEquals('foo', $exception->getValue());
 
                 return true;
             }))
@@ -221,27 +223,6 @@ class ClientTest extends TestCase
         $this->clearLastError();
 
         $this->assertNull($client->captureLastError());
-    }
-
-    /**
-     * @group legacy
-     *
-     * @dataProvider captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider
-     *
-     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
-     */
-    public function testCaptureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsed(array $payload): void
-    {
-        ClientBuilder::create(['attach_stacktrace' => true, 'default_integrations' => false])
-            ->getClient()
-            ->captureEvent($payload);
-    }
-
-    public function captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider(): \Generator
-    {
-        yield [[]];
-
-        yield [['exception' => new \Exception()]];
     }
 
     public function testSendChecksBeforeSendOption(): void
@@ -357,69 +338,6 @@ class ClientTest extends TestCase
         });
 
         $client->captureMessage('foo', Severity::debug(), $scope);
-    }
-
-    /**
-     * @dataProvider convertExceptionDataProvider
-     */
-    public function testConvertException(\Exception $exception, array $expectedResult): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedResult): bool {
-                $this->assertArraySubset($expectedResult, $event->toArray());
-                $this->assertArrayNotHasKey('values', $event->getExceptions());
-                $this->assertArrayHasKey('values', $event->toArray()['exception']);
-
-                foreach ($event->getExceptions() as $exceptionData) {
-                    $this->assertArrayHasKey('stacktrace', $exceptionData);
-                    $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
-                }
-
-                return true;
-            }));
-
-        $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->getClient();
-
-        $client->captureException($exception);
-    }
-
-    public function convertExceptionDataProvider(): array
-    {
-        return [
-            [
-                new \RuntimeException('foo'),
-                [
-                    'level' => Severity::ERROR,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \RuntimeException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                new \ErrorException('foo', 0, E_USER_WARNING),
-                [
-                    'level' => Severity::WARNING,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \ErrorException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
     }
 
     public function testAttachStacktrace(): void

@@ -33,12 +33,6 @@ parameters:
         -
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
-        -
-            message: '/^Method Sentry\\EventFactoryInterface::createWithStacktrace\(\) invoked with 2 parameters, 1 required\.$/'
-            path: src/Client.php
-        -
-            message: '/^Method Sentry\\EventFactoryInterface::create\(\) invoked with 2 parameters, 1 required\.$/'
-            path: src/Client.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

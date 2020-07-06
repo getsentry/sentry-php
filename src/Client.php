@@ -8,7 +8,6 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
@@ -168,14 +167,10 @@ final class Client implements FlushableClientInterface
      */
     private function prepareEvent($payload, ?Scope $scope = null): ?Event
     {
-        $shouldReadSourceCodeExcerpts = !isset($this->integrations[FrameContextifierIntegration::class]) && null !== $this->options->getContextLines();
-
         if ($this->options->shouldAttachStacktrace() && !($payload instanceof Event) && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
-            /** @psalm-suppress TooManyArguments */
-            $event = $this->eventFactory->createWithStacktrace($payload, $shouldReadSourceCodeExcerpts);
+            $event = $this->eventFactory->createWithStacktrace($payload);
         } else {
-            /** @psalm-suppress TooManyArguments */
-            $event = $this->eventFactory->create($payload, $shouldReadSourceCodeExcerpts);
+            $event = $this->eventFactory->create($payload);
         }
 
         $sampleRate = $this->options->getSampleRate();

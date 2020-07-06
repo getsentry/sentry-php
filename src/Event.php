@@ -138,13 +138,7 @@ final class Event implements \JsonSerializable
     private $spans = [];
 
     /**
-     * @var array<int, array<string, mixed>> The exceptions
-     *
-     * @psalm-var list<array{
-     *     type: class-string,
-     *     value: string,
-     *     stacktrace: Stacktrace
-     * }>
+     * @var ExceptionDataBag[] The exceptions
      */
     private $exceptions = [];
 
@@ -554,13 +548,7 @@ final class Event implements \JsonSerializable
     /**
      * Gets the exception.
      *
-     * @return array<int, array<string, mixed>>
-     *
-     * @psalm-return list<array{
-     *     type: class-string,
-     *     value: string,
-     *     stacktrace: Stacktrace
-     * }>
+     * @return ExceptionDataBag[]
      */
     public function getExceptions(): array
     {
@@ -570,16 +558,16 @@ final class Event implements \JsonSerializable
     /**
      * Sets the exceptions.
      *
-     * @param array<int, array<string, mixed>> $exceptions The exceptions
-     *
-     * @psalm-param list<array{
-     *     type: class-string,
-     *     value: string,
-     *     stacktrace: Stacktrace
-     * }> $exceptions
+     * @param ExceptionDataBag[] $exceptions The exceptions
      */
     public function setExceptions(array $exceptions): void
     {
+        foreach ($exceptions as $exception) {
+            if (!$exception instanceof ExceptionDataBag) {
+                throw new \UnexpectedValueException(sprintf('Expected an instance of the "%s" class. Got: "%s".', ExceptionDataBag::class, get_debug_type($exception)));
+            }
+        }
+
         $this->exceptions = $exceptions;
     }
 
@@ -722,18 +710,27 @@ final class Event implements \JsonSerializable
         }
 
         foreach (array_reverse($this->exceptions) as $exception) {
-            $exceptionData = [
-                'type' => $exception['type'],
-                'value' => $exception['value'],
+            $exceptionMechanism = $exception->getMechanism();
+            $exceptionStacktrace = $exception->getStacktrace();
+            $exceptionValue = [
+                'type' => $exception->getType(),
+                'value' => $exception->getValue(),
             ];
 
-            if (isset($exception['stacktrace'])) {
-                $exceptionData['stacktrace'] = [
-                    'frames' => $exception['stacktrace']->toArray(),
+            if (null !== $exceptionStacktrace) {
+                $exceptionValue['stacktrace'] = [
+                    'frames' => $exceptionStacktrace->toArray(),
                 ];
             }
 
-            $data['exception']['values'][] = $exceptionData;
+            if (null !== $exceptionMechanism) {
+                $exceptionValue['mechanism'] = [
+                    'type' => $exceptionMechanism->getType(),
+                    'handled' => $exceptionMechanism->isHandled(),
+                ];
+            }
+
+            $data['exception']['values'][] = $exceptionValue;
         }
 
         if (null !== $this->stacktrace) {
