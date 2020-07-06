@@ -21,7 +21,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
-        $errorHandler->addFatalErrorHandlerListener(function (FatalErrorException $exception): void {
+        $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
             $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
             $client = $currentHub->getClient();

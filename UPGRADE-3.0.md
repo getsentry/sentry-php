@@ -8,3 +8,4 @@
 - The signature of the `ErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The signature of the `FatalErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The `ErrorListenerIntegration` integration does not get called anymore when a fatal error occurs
+- The default value of the `error_types` option changed to the value get from `error_reporting()`

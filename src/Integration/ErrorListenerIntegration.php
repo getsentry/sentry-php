@@ -20,7 +20,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         $errorHandler = ErrorHandler::registerOnceErrorHandler();
-        $errorHandler->addErrorHandlerListener(function (\ErrorException $exception): void {
+        $errorHandler->addErrorHandlerListener(static function (\ErrorException $exception): void {
             $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
             $client = $currentHub->getClient();
