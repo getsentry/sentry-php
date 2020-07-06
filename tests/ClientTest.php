@@ -12,7 +12,6 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
-use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -65,52 +64,6 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureException($exception);
-    }
-
-    /**
-     * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
-     */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrownException): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transportFactory = $this->createTransportFactory($transport);
-
-        $transport->expects($shouldCapture ? $this->once() : $this->never())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNotEmpty($event->getExceptions());
-
-                return true;
-            }));
-
-        $client = ClientBuilder::create(['excluded_exceptions' => [$excluded]])
-            ->setTransportFactory($transportFactory)
-            ->getClient();
-
-        SentrySdk::getCurrentHub()->bindClient($client);
-        SentrySdk::getCurrentHub()->captureException($thrownException);
-    }
-
-    public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
-    {
-        return [
-            [
-                true,
-                \Exception::class,
-                new \Error(),
-            ],
-            [
-                false,
-                \Exception::class,
-                new \LogicException(),
-            ],
-            [
-                false,
-                \Throwable::class,
-                new \Error(),
-            ],
-        ];
     }
 
     public function testCaptureEvent(): void
@@ -289,32 +242,6 @@ class ClientTest extends TestCase
         yield [[]];
 
         yield [['exception' => new \Exception()]];
-    }
-
-    /**
-     * @group legacy
-     *
-     * @requires OSFAMILY Linux
-     */
-    public function testAppPathLinux(): void
-    {
-        $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
-
-        $this->assertEquals('/foo/bar', $client->getOptions()->getProjectRoot());
-
-        $client->getOptions()->setProjectRoot('/foo/baz/');
-
-        $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
-    }
-
-    /**
-     * @group legacy
-     */
-    public function testAppPathWindows(): void
-    {
-        $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
-
-        $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
     }
 
     public function testSendChecksBeforeSendOption(): void

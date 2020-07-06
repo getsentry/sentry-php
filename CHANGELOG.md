@@ -7,6 +7,12 @@
 - [BC BREAK] Change the default value for the `error_types` option from `E_ALL` to the value get from `error_reporting()` (#1037)
 - [BC BREAK] Remove deprecated code to return the event ID as a `string` rather than an object instance from the transport, the client and the hub (#1036)
 - [BC BREAK] Remove some deprecated methods from the `Options` class.
+- [BC BREAK] Remove the deprecated code from the `ModulesIntegration` integration (#1045)
+- [BC BREAK] Remove the deprecated code from the `RequestIntegration` integration (#1045)
+- [BC BREAK] Remove the deprecated code from the `Breadcrumb` class (#1045)
+- [BC BREAK] Remove the deprecated methods from the `ClientBuilderInterface` interface and its implementations
+- [BC BREAK] The `Scope::setUser()` method now always merges the given data with the existing one instead of replacing it as a whole
+- [BC BREAK] Remove the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants
 
 ### 2.4.1 (2020-07-03)
 

@@ -478,15 +478,10 @@ class Stacktrace implements \JsonSerializable
             return false;
         }
 
-        $projectRoot = $this->options->getProjectRoot();
         $excludedAppPaths = $this->options->getInAppExcludedPaths();
         $includedAppPaths = $this->options->getInAppIncludedPaths();
         $absoluteFilePath = @realpath($file) ?: $file;
         $isInApp = true;
-
-        if (null !== $projectRoot) {
-            $isInApp = 0 === mb_strpos($absoluteFilePath, $projectRoot);
-        }
 
         foreach ($excludedAppPaths as $excludedAppPath) {
             if (0 === mb_strpos($absoluteFilePath, $excludedAppPath)) {

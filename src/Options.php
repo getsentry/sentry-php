@@ -225,64 +225,6 @@ final class Options
     }
 
     /**
-     * Gets the list of exception classes that should be ignored when sending
-     * events to Sentry.
-     *
-     * @return string[]
-     *
-     * @deprecated since version 2.3, to be removed in 3.0
-     */
-    public function getExcludedExceptions(): array
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
-
-        return $this->options['excluded_exceptions'];
-    }
-
-    /**
-     * Sets the list of exception classes that should be ignored when sending
-     * events to Sentry.
-     *
-     * @param string[] $exceptions The list of exception classes
-     *
-     * @deprecated since version 2.3, to be removed in 3.0
-     */
-    public function setExcludedExceptions(array $exceptions): void
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
-
-        $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Checks whether the given exception should be ignored when sending events
-     * to Sentry.
-     *
-     * @param \Throwable $exception        The exception
-     * @param bool       $throwDeprecation Flag indicating whether to throw a
-     *                                     deprecation for the usage of this
-     *                                     method
-     *
-     * @deprecated since version 2.3, to be removed in 3.0
-     */
-    public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
-    {
-        if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
-        }
-
-        foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
-            if ($exception instanceof $exceptionClass) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Gets the list of paths to exclude from in_app detection.
      *
      * @return string[]
@@ -322,26 +264,6 @@ final class Options
     public function setInAppIncludedPaths(array $paths): void
     {
         $options = array_merge($this->options, ['in_app_include' => $paths]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the project which the authenticated user is bound to.
-     */
-    public function getProjectRoot(): ?string
-    {
-        return $this->options['project_root'];
-    }
-
-    /**
-     * Sets the project which the authenticated user is bound to.
-     *
-     * @param string|null $path The path to the project root
-     */
-    public function setProjectRoot(?string $path): void
-    {
-        $options = array_merge($this->options, ['project_root' => $path]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -756,7 +678,6 @@ final class Options
             'context_lines' => 5,
             'enable_compression' => true,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
-            'project_root' => null,
             'logger' => 'php',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
@@ -770,7 +691,6 @@ final class Options
             'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
             },
-            'excluded_exceptions' => [],
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
@@ -789,10 +709,8 @@ final class Options
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);
-        $resolver->setAllowedTypes('excluded_exceptions', 'array');
         $resolver->setAllowedTypes('in_app_exclude', 'array');
         $resolver->setAllowedTypes('in_app_include', 'array');
-        $resolver->setAllowedTypes('project_root', ['null', 'string']);
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
@@ -820,15 +738,6 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
-        $resolver->setNormalizer('project_root', function (SymfonyOptions $options, ?string $value) {
-            if (null === $value) {
-                return null;
-            }
-
-            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', E_USER_DEPRECATED);
-
-            return $this->normalizeAbsolutePath($value);
-        });
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);

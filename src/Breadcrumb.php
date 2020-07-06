@@ -59,13 +59,6 @@ final class Breadcrumb implements \JsonSerializable
     public const LEVEL_ERROR = 'error';
 
     /**
-     * This constant defines the critical level for a breadcrumb.
-     *
-     * @deprecated since version 2.2.2, to be removed in 3.0; use fatal instead.
-     */
-    public const LEVEL_CRITICAL = 'critical';
-
-    /**
      * This constant defines the fatal level for a breadcrumb.
      */
     public const LEVEL_FATAL = 'fatal';
@@ -79,7 +72,6 @@ final class Breadcrumb implements \JsonSerializable
         self::LEVEL_INFO,
         self::LEVEL_WARNING,
         self::LEVEL_ERROR,
-        self::LEVEL_CRITICAL,
         self::LEVEL_FATAL,
     ];
 
@@ -134,43 +126,6 @@ final class Breadcrumb implements \JsonSerializable
         $this->message = $message;
         $this->metadata = $metadata;
         $this->timestamp = microtime(true);
-    }
-
-    /**
-     * Maps the severity of the error to one of the levels supported by the
-     * breadcrumbs.
-     *
-     * @param \ErrorException $exception The exception
-     *
-     * @deprecated since version 2.3, to be removed in 3.0
-     */
-    public static function levelFromErrorException(\ErrorException $exception): string
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        switch ($exception->getSeverity()) {
-            case E_DEPRECATED:
-            case E_USER_DEPRECATED:
-            case E_WARNING:
-            case E_USER_WARNING:
-            case E_RECOVERABLE_ERROR:
-                return self::LEVEL_WARNING;
-            case E_ERROR:
-            case E_PARSE:
-            case E_CORE_ERROR:
-            case E_CORE_WARNING:
-            case E_COMPILE_ERROR:
-            case E_COMPILE_WARNING:
-                return self::LEVEL_FATAL;
-            case E_USER_ERROR:
-                return self::LEVEL_ERROR;
-            case E_NOTICE:
-            case E_USER_NOTICE:
-            case E_STRICT:
-                return self::LEVEL_INFO;
-            default:
-                return self::LEVEL_ERROR;
-        }
     }
 
     /**

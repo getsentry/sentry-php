@@ -56,10 +56,8 @@ final class OptionsTest extends TestCase
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
-            ['excluded_exceptions', ['foo', 'bar', 'baz'], 'getExcludedExceptions', 'setExcludedExceptions'],
             ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
             ['in_app_include', ['foo', 'bar'], 'getInAppIncludedPaths', 'setInAppIncludedPaths'],
-            ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
             ['release', 'dev', 'getRelease', 'setRelease'],
             ['server_name', 'foo', 'getServerName', 'setServerName'],
@@ -166,37 +164,6 @@ final class OptionsTest extends TestCase
         yield [
             'foo',
             'The option "dsn" with value "foo" is invalid.',
-        ];
-    }
-
-    /**
-     * @dataProvider excludedExceptionsDataProvider
-     */
-    public function testIsExcludedException(array $excludedExceptions, \Throwable $exception, bool $result): void
-    {
-        $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
-
-        $this->assertSame($result, $configuration->isExcludedException($exception, false));
-    }
-
-    public function excludedExceptionsDataProvider(): \Generator
-    {
-        yield [
-            [\BadFunctionCallException::class, \BadMethodCallException::class],
-            new \BadMethodCallException(),
-            true,
-        ];
-
-        yield [
-            [\BadFunctionCallException::class],
-            new \Exception(),
-            false,
-        ];
-
-        yield [
-            [\Exception::class],
-            new \BadFunctionCallException(),
-            true,
         ];
     }
 
