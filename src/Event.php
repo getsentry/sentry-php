@@ -10,6 +10,8 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Context\ServerOsContext;
 use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
+use Sentry\Tracing\Span;
+use Sentry\Util\JSON;
 
 /**
  * This is the base class for classes containing event data.
@@ -24,12 +26,19 @@ final class Event implements \JsonSerializable
     private $id;
 
     /**
-     * @var string The date and time of when this event was generated
+     * @var string|float The date and time of when this event was generated
      */
     private $timestamp;
 
     /**
-     * @var Severity The severity of this event
+     * This property is used if it's a Transaction event together with $timestamp it's the duration of the transaction.
+     *
+     * @var string|float|null The date and time of when this event was generated
+     */
+    private $startTimestamp;
+
+    /**
+     * @var Severity|null The severity of this event
      */
     private $level;
 
@@ -124,6 +133,11 @@ final class Event implements \JsonSerializable
     private $breadcrumbs = [];
 
     /**
+     * @var Span[] The array of spans if it's a transaction
+     */
+    private $spans = [];
+
+    /**
      * @var array<int, array<string, mixed>> The exceptions
      *
      * @psalm-var list<array{
@@ -148,6 +162,11 @@ final class Event implements \JsonSerializable
      * @var string The Sentry SDK version
      */
     private $sdkVersion;
+
+    /**
+     * @var string|null The type of the Event "default" | "transaction"
+     */
+    private $type;
 
     /**
      * Class constructor.
@@ -225,16 +244,28 @@ final class Event implements \JsonSerializable
 
     /**
      * Gets the timestamp of when this event was generated.
+     *
+     * @return string|float
      */
-    public function getTimestamp(): string
+    public function getTimestamp()
     {
         return $this->timestamp;
     }
 
     /**
+     * Sets the timestamp of when the Event was created.
+     *
+     * @param float|string $timestamp
+     */
+    public function setTimestamp($timestamp): void
+    {
+        $this->timestamp = $timestamp;
+    }
+
+    /**
      * Gets the severity of this event.
      */
-    public function getLevel(): Severity
+    public function getLevel(): ?Severity
     {
         return $this->level;
     }
@@ -242,9 +273,9 @@ final class Event implements \JsonSerializable
     /**
      * Sets the severity of this event.
      *
-     * @param Severity $level The severity
+     * @param Severity|null $level The severity
      */
-    public function setLevel(Severity $level): void
+    public function setLevel(?Severity $level): void
     {
         $this->level = $level;
     }
@@ -578,6 +609,35 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(?string $type): void
+    {
+        if ('default' !== $type && 'transaction' !== $type) {
+            $type = null;
+        }
+        $this->type = $type;
+    }
+
+    /**
+     * @param string|float|null $startTimestamp The start time of the event
+     */
+    public function setStartTimestamp($startTimestamp): void
+    {
+        $this->startTimestamp = $startTimestamp;
+    }
+
+    /**
+     * @param Span[] $spans Array of spans
+     */
+    public function setSpans(array $spans): void
+    {
+        $this->spans = $spans;
+    }
+
     /**
      * Gets the event as an array.
      *
@@ -588,13 +648,24 @@ final class Event implements \JsonSerializable
         $data = [
             'event_id' => (string) $this->id,
             'timestamp' => $this->timestamp,
-            'level' => (string) $this->level,
             'platform' => 'php',
             'sdk' => [
                 'name' => $this->sdkIdentifier,
                 'version' => $this->getSdkVersion(),
             ],
         ];
+
+        if (null !== $this->level) {
+            $data['level'] = (string) $this->level;
+        }
+
+        if (null !== $this->startTimestamp) {
+            $data['start_timestamp'] = $this->startTimestamp;
+        }
+
+        if (null !== $this->type) {
+            $data['type'] = $this->type;
+        }
 
         if (null !== $this->logger) {
             $data['logger'] = $this->logger;
@@ -652,6 +723,12 @@ final class Event implements \JsonSerializable
             $data['breadcrumbs']['values'] = $this->breadcrumbs;
         }
 
+        if ('transaction' === $this->getType()) {
+            $data['spans'] = array_values(array_map(function (Span $span): array {
+                return $span->toArray();
+            }, $this->spans));
+        }
+
         foreach (array_reverse($this->exceptions) as $exception) {
             $exceptionData = [
                 'type' => $exception['type'],
@@ -700,5 +777,19 @@ final class Event implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * Converts an Event to an Envelope.
+     *
+     * @throws Exception\JsonException
+     */
+    public function toEnvelope(): string
+    {
+        $rawEvent = $this->jsonSerialize();
+        $envelopeHeader = JSON::encode(['event_id' => $rawEvent['event_id'], 'sent_at' => gmdate('Y-m-d\TH:i:s\Z')]);
+        $itemHeader = JSON::encode(['type' => $rawEvent['type'] ?? 'event', 'content_type' => 'application/json']);
+
+        return vsprintf("%s\n%s\n%s", [$envelopeHeader, $itemHeader, JSON::encode($rawEvent)]);
     }
 }

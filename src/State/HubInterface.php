@@ -6,8 +6,11 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 
 /**
  * This interface represent the class which is responsible for maintaining a
@@ -83,9 +86,9 @@ interface HubInterface
     /**
      * Captures a new event using the provided data.
      *
-     * @param array<string, mixed> $payload The data of the event being captured
+     * @param Event|array<string, mixed> $payload The data of the event being captured
      */
-    public function captureEvent(array $payload): ?string;
+    public function captureEvent($payload): ?string;
 
     /**
      * Captures an event that logs the last occurred error.
@@ -135,4 +138,23 @@ interface HubInterface
      * @psalm-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
+
+    /**
+     * Starts a new `Transaction` and returns it. This is the entry point to manual
+     * tracing instrumentation.
+     *
+     * A tree structure can be built by adding child spans to the transaction, and
+     * child spans to other spans. To start a new child span within the transaction
+     * or any span, call the respective `startChild()` method.
+     *
+     * Every child span must be finished before the transaction is finished,
+     * otherwise the unfinished spans are discarded.
+     *
+     * The transaction must be finished with a call to its `finish()` method, at
+     * which point the transaction with all its finished child spans will be sent to
+     * Sentry.
+     *
+     * @param TransactionContext $context properties of the new `Transaction`
+     */
+    public function startTransaction(TransactionContext $context): Transaction;
 }

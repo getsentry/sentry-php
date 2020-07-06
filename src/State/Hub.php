@@ -9,6 +9,8 @@ use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
@@ -138,7 +140,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent(array $payload): ?string
+    public function captureEvent($payload): ?string
     {
         $client = $this->getClient();
 
@@ -225,6 +227,39 @@ final class Hub implements HubInterface
         }
 
         return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function startTransaction(TransactionContext $context): Transaction
+    {
+        $client = $this->getClient();
+
+        // Roll the dice for sampling transaction, all child spans inherit the sampling decision.
+        if (null === $context->sampled) {
+            if (null !== $client) {
+                $sampleRate = $client->getOptions()->getTracesSampleRate();
+
+                if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+                    // if true = we want to have the transaction
+                    // if false = we don't want to have it
+                    $context->sampled = false;
+                } else {
+                    $context->sampled = true;
+                }
+            }
+        }
+
+        $transaction = new Transaction($context, $this);
+
+        // We only want to create a span list if we sampled the transaction
+        // If sampled == false, we will discard the span anyway, so we can save memory by not storing child spans
+        if ($context->sampled) {
+            $transaction->initSpanRecorder();
+        }
+
+        return $transaction;
     }
 
     /**

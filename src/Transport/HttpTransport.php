@@ -117,12 +117,21 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             throw new \RuntimeException(sprintf('The DSN option must be set to use the "%s" transport.', self::class));
         }
 
-        $request = $this->requestFactory->createRequest(
-            'POST',
-            $dsn->getStoreApiEndpointUrl(),
-            ['Content-Type' => 'application/json'],
-            JSON::encode($event->toArray())
-        );
+        if ('transaction' === $event->getType()) {
+            $request = $this->requestFactory->createRequest(
+                'POST',
+                $dsn->getEnvelopeApiEndpointUrl(),
+                ['Content-Type' => 'application/x-sentry-envelope'],
+                $event->toEnvelope()
+            );
+        } else {
+            $request = $this->requestFactory->createRequest(
+                'POST',
+                $dsn->getStoreApiEndpointUrl(),
+                ['Content-Type' => 'application/json'],
+                JSON::encode($event->toArray())
+            );
+        }
 
         if ($this->delaySendingUntilShutdown) {
             $this->pendingRequests[] = [$request, $event];

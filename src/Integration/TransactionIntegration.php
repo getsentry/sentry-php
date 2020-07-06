@@ -22,7 +22,7 @@ final class TransactionIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event, array $payload): Event {
+        Scope::addGlobalEventProcessor(static function (Event $event, $payload): Event {
             $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
 
             // The client bound to the current hub, if any, could not have this
@@ -35,7 +35,9 @@ final class TransactionIntegration implements IntegrationInterface
                 return $event;
             }
 
-            if (isset($payload['transaction'])) {
+            if ($payload instanceof Event && $payload->getTransaction()) {
+                $event->setTransaction($payload->getTransaction());
+            } elseif (isset($payload['transaction'])) {
                 $event->setTransaction($payload['transaction']);
             } elseif (isset($_SERVER['PATH_INFO'])) {
                 $event->setTransaction($_SERVER['PATH_INFO']);

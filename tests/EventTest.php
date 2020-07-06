@@ -45,12 +45,12 @@ final class EventTest extends TestCase
         $expected = [
             'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'level' => 'error',
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
+            'level' => 'error',
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),
@@ -78,12 +78,12 @@ final class EventTest extends TestCase
         $expected = [
             'event_id' => (string) $event->getId(false),
             'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
-            'level' => 'error',
             'platform' => 'php',
             'sdk' => [
                 'name' => Client::SDK_IDENTIFIER,
                 'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
+            'level' => 'error',
             'contexts' => [
                 'os' => [
                     'name' => php_uname('s'),
@@ -288,5 +288,19 @@ final class EventTest extends TestCase
         $this->assertNotFalse($encodingOfToArray);
         $this->assertNotFalse($serializedEvent);
         $this->assertJsonStringEqualsJsonString($encodingOfToArray, $serializedEvent);
+    }
+
+    public function testToEnvelope(): void
+    {
+        $event = new Event();
+
+        $envelope = $event->toEnvelope();
+        $envelopeLines = explode("\n", $envelope);
+
+        $this->assertContains('event_id', $envelopeLines[0]);
+        $this->assertContains('sent_at', $envelopeLines[0]);
+        $this->assertContains('type', $envelopeLines[1]);
+        $this->assertContains('event', $envelopeLines[1]);
+        $this->assertContains($event->getId(false)->__toString(), $envelopeLines[2]);
     }
 }

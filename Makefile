@@ -17,10 +17,13 @@ cs-dry-run:
 cs-fix:
 	vendor/bin/php-cs-fixer fix
 
+psalm:
+	vendor/bin/psalm
+
 phpstan:
 	vendor/bin/phpstan analyse
 
-test: cs-fix phpstan
+test: cs-fix phpstan psalm
 	vendor/bin/phpunit --verbose
 
 setup-git:
