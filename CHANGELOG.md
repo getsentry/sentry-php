@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton
+- [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton (#1038)
+- [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
+- [BC BREAK] Change the default value for the `error_types` option from `E_ALL` to the value get from `error_reporting()` (#1037)
 
 ### 2.4.1 (2020-07-03)
 

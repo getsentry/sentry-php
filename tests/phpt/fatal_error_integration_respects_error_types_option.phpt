@@ -1,5 +1,5 @@
 --TEST--
-Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the `error_types` option
+Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the error_types option
 --FILE--
 <?php
 
@@ -29,7 +29,7 @@ $transportFactory = new class implements TransportFactoryInterface {
         return new class implements TransportInterface {
             public function send(Event $event): ?string
             {
-                echo 'Transport called' . PHP_EOL;
+                echo 'Transport called (it should not have been)' . PHP_EOL;
 
                 return null;
             }
@@ -38,6 +38,7 @@ $transportFactory = new class implements TransportFactoryInterface {
 };
 
 $options = new Options([
+    'error_types' => E_ALL & ~E_ERROR,
     'default_integrations' => false,
     'integrations' => [
         new FatalErrorListenerIntegration(),
@@ -53,13 +54,6 @@ SentrySdk::getCurrentHub()->bindClient($client);
 class FooClass implements \Serializable
 {
 }
-
-$options->setErrorTypes(E_ALL & ~E_ERROR);
-
-class BarClass implements \Serializable
-{
-}
 ?>
 --EXPECTF--
 Fatal error: Class Sentry\Tests\FooClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
-Transport called

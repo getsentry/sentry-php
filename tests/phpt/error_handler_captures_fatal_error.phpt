@@ -45,7 +45,7 @@ SentrySdk::getCurrentHub()->bindClient($client);
 
 $errorHandler = ErrorHandler::registerOnceErrorHandler();
 $errorHandler->addErrorHandlerListener(static function (): void {
-    echo 'Error listener called' . PHP_EOL;
+    echo 'Error listener called (it should not have been)' . PHP_EOL;
 });
 
 $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
@@ -64,6 +64,5 @@ class TestClass implements \Serializable
 ?>
 --EXPECTF--
 Fatal error: Class Sentry\Tests\TestClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
-Error listener called
 Transport called
 Fatal error listener called
