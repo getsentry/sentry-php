@@ -9,3 +9,7 @@
 - The signature of the `FatalErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The `ErrorListenerIntegration` integration does not get called anymore when a fatal error occurs
 - The default value of the `error_types` option changed to the value get from `error_reporting()`
+- The signature of the `capture*()` global functions changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `ClientInterface::capture*()` methods changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `HubInterface::capture*e()` methods changed to return an instance of the `Sentry\EventId` class instead of a `string`
+- The signature of the `Event::getId()` method changed to return an instance of the `Sentry\EventId` class instead of a `string`

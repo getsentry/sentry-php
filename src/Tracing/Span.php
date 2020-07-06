@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\Context\Context;
 use Sentry\Context\TagsContext;
+use Sentry\EventId;
 
 /**
  * This class stores all the information about a Span.
@@ -112,9 +113,9 @@ class Span implements \JsonSerializable
      *
      * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function
      *
-     * @return string|null Finish for a span always returns null
+     * @return EventId|null Finish for a span always returns null
      */
-    public function finish($endTimestamp = null): ?string
+    public function finish($endTimestamp = null): ?EventId
     {
         $this->endTimestamp = $endTimestamp ?? microtime(true);
 

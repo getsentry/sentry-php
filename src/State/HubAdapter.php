@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -54,7 +55,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getLastEventId(): ?string
+    public function getLastEventId(): ?EventId
     {
         return SentrySdk::getCurrentHub()->getLastEventId();
     }
@@ -102,7 +103,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?string
+    public function captureMessage(string $message, ?Severity $level = null): ?EventId
     {
         return SentrySdk::getCurrentHub()->captureMessage($message, $level);
     }
@@ -110,7 +111,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?string
+    public function captureException(\Throwable $exception): ?EventId
     {
         return SentrySdk::getCurrentHub()->captureException($exception);
     }
@@ -118,7 +119,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload): ?string
+    public function captureEvent($payload): ?EventId
     {
         return SentrySdk::getCurrentHub()->captureEvent($payload);
     }
@@ -126,7 +127,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?string
+    public function captureLastError(): ?EventId
     {
         return SentrySdk::getCurrentHub()->captureLastError();
     }

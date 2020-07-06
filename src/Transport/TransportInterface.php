@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Transport;
 
 use Sentry\Event;
+use Sentry\EventId;
 
 /**
  * This interface must be implemented by all classes willing to provide a way
@@ -19,7 +20,7 @@ interface TransportInterface
      *
      * @param Event $event The event
      *
-     * @return string|null Returns the ID of the event or `null` if it failed to be sent
+     * @return EventId|null Returns the ID of the event or `null` if it failed to be sent
      */
-    public function send(Event $event): ?string;
+    public function send(Event $event): ?EventId;
 }

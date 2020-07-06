@@ -9,6 +9,7 @@ namespace Sentry\Tests;
 
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -27,7 +28,7 @@ $transportFactory = new class implements TransportFactoryInterface {
     public function create(Options $options): TransportInterface
     {
         return new class implements TransportInterface {
-            public function send(Event $event): ?string
+            public function send(Event $event): ?EventId
             {
                 echo 'Transport called';
 

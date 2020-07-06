@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -114,11 +115,13 @@ class ClientTest extends TestCase
 
     public function testCaptureEvent(): void
     {
+        $eventId = EventId::generate();
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create()
             ->setTransportFactory($this->createTransportFactory($transport))
@@ -133,7 +136,7 @@ class ClientTest extends TestCase
             'user_context' => ['bar' => 'foo'],
         ];
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
+        $this->assertSame($eventId, $client->captureEvent($inputData));
     }
 
     /**
@@ -141,6 +144,8 @@ class ClientTest extends TestCase
      */
     public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, array $payload, bool $shouldAttachStacktrace): void
     {
+        $eventId = EventId::generate();
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -156,13 +161,13 @@ class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
+        $this->assertEquals($eventId, $client->captureEvent($payload));
     }
 
     public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
@@ -198,6 +203,7 @@ class ClientTest extends TestCase
 
     public function testCaptureEventPrefersExplicitStacktrace(): void
     {
+        $eventId = EventId::generate();
         $explicitStacktrace = $this->createMock(Stacktrace::class);
         $payload = ['stacktrace' => $explicitStacktrace];
 
@@ -208,17 +214,19 @@ class ClientTest extends TestCase
             ->with($this->callback(static function (Event $event) use ($explicitStacktrace): bool {
                 return $explicitStacktrace === $event->getStacktrace();
             }))
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
+        $this->assertEquals($eventId, $client->captureEvent($payload));
     }
 
     public function testCaptureLastError(): void
     {
+        $eventId = EventId::generate();
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -230,7 +238,8 @@ class ClientTest extends TestCase
                 $this->assertEquals('foo', $exception['value']);
 
                 return true;
-            }));
+            }))
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransportFactory($this->createTransportFactory($transport))
@@ -238,7 +247,7 @@ class ClientTest extends TestCase
 
         @trigger_error('foo', E_USER_NOTICE);
 
-        $client->captureLastError();
+        $this->assertSame($eventId, $client->captureLastError());
 
         $this->clearLastError();
     }
@@ -248,7 +257,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
-            ->method('send');
+            ->method('send')
+            ->with($this->anything())
+            ->willReturn(null);
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransportFactory($this->createTransportFactory($transport))
@@ -256,7 +267,7 @@ class ClientTest extends TestCase
 
         $this->clearLastError();
 
-        $client->captureLastError();
+        $this->assertNull($client->captureLastError());
     }
 
     /**
@@ -339,7 +350,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($transportCallInvocationMatcher)
-            ->method('send');
+            ->method('send')
+            ->with($this->anything())
+            ->willReturn(null);
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
@@ -484,6 +497,8 @@ class ClientTest extends TestCase
 
     public function testAttachStacktrace(): void
     {
+        $eventId = EventId::generate();
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -492,13 +507,14 @@ class ClientTest extends TestCase
                 $result = $event->getStacktrace();
 
                 return null !== $result;
-            }));
+            }))
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureMessage('test');
+        $this->assertSame($eventId, $client->captureMessage('test'));
     }
 
     /**

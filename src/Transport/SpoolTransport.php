@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Transport;
 
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Spool\SpoolInterface;
 
 /**
@@ -40,10 +41,10 @@ final class SpoolTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event): ?string
+    public function send(Event $event): ?EventId
     {
         if ($this->spool->queueEvent($event)) {
-            return (string) $event->getId(false);
+            return $event->getId();
         }
 
         return null;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 
@@ -74,9 +75,9 @@ final class Transaction extends Span
     /**
      * {@inheritdoc}
      *
-     * @return string|null Finish for a transaction returns the eventId or null in case we didn't send it
+     * @return EventId|null Finish for a transaction returns the eventId or null in case we didn't send it
      */
-    public function finish($endTimestamp = null): ?string
+    public function finish($endTimestamp = null): ?EventId
     {
         if (null !== $this->endTimestamp) {
             // Transaction was already finished once and we don't want to re-flush it

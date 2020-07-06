@@ -17,6 +17,7 @@ use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\FlushableClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
@@ -82,17 +83,19 @@ final class ClientBuilderTest extends TestCase
      */
     public function testSetTransport(): void
     {
+        $eventId = EventId::generate();
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturn('ddb4a0b9ab1941bf92bd2520063663e3');
+            ->willReturn($eventId);
 
         $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
             ->setTransport($transport)
             ->getClient();
 
-        $this->assertSame('ddb4a0b9ab1941bf92bd2520063663e3', $client->captureMessage('foo'));
+        $this->assertSame($eventId, $client->captureMessage('foo'));
     }
 
     /**
