@@ -7,7 +7,6 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -191,28 +190,6 @@ final class Hub implements HubInterface
         }
 
         return null !== $breadcrumb;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getCurrent(): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        return SentrySdk::getCurrentHub();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function setCurrent(HubInterface $hub): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::setCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        SentrySdk::setCurrentHub($hub);
-
-        return $hub;
     }
 
     /**

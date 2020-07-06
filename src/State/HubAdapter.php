@@ -142,26 +142,6 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public static function getCurrent(): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        return SentrySdk::getCurrentHub();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function setCurrent(HubInterface $hub): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        return SentrySdk::setCurrentHub($hub);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getIntegration(string $className): ?IntegrationInterface
     {
         return SentrySdk::getCurrentHub()->getIntegration($className);
