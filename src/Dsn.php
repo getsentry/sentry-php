@@ -197,26 +197,6 @@ final class Dsn
     }
 
     /**
-     * Returns the base url to Sentry from the DSN.
-     */
-    protected function getBaseEndpointUrl(): string
-    {
-        $url = $this->scheme . '://' . $this->host;
-
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
-            $url .= ':' . $this->port;
-        }
-
-        if (null !== $this->path) {
-            $url .= $this->path;
-        }
-
-        $url .= '/api/' . $this->projectId;
-
-        return $url;
-    }
-
-    /**
      * @see https://www.php.net/manual/en/language.oop5.magic.php#object.tostring
      */
     public function __toString(): string
@@ -238,6 +218,26 @@ final class Dsn
         }
 
         $url .= '/' . $this->projectId;
+
+        return $url;
+    }
+
+    /**
+     * Returns the base url to Sentry from the DSN.
+     */
+    private function getBaseEndpointUrl(): string
+    {
+        $url = $this->scheme . '://' . $this->host;
+
+        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+            $url .= ':' . $this->port;
+        }
+
+        if (null !== $this->path) {
+            $url .= $this->path;
+        }
+
+        $url .= '/api/' . $this->projectId;
 
         return $url;
     }

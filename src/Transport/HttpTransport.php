@@ -11,7 +11,6 @@ use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Message\RequestFactory as RequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
@@ -112,9 +111,9 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
      */
     public function send(Event $event): ?EventId
     {
-        $dsn = $this->options->getDsn(false);
+        $dsn = $this->options->getDsn();
 
-        if (!$dsn instanceof Dsn) {
+        if (null === $dsn) {
             throw new \RuntimeException(sprintf('The DSN option must be set to use the "%s" transport.', self::class));
         }
 

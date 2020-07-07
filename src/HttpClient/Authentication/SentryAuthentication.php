@@ -7,7 +7,6 @@ namespace Sentry\HttpClient\Authentication;
 use Http\Message\Authentication as AuthenticationInterface;
 use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
-use Sentry\Dsn;
 use Sentry\Options;
 
 /**
@@ -52,9 +51,9 @@ final class SentryAuthentication implements AuthenticationInterface
      */
     public function authenticate(RequestInterface $request): RequestInterface
     {
-        $dsn = $this->options->getDsn(false);
+        $dsn = $this->options->getDsn();
 
-        if (!$dsn instanceof Dsn) {
+        if (null === $dsn) {
             return $request;
         }
 

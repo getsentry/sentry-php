@@ -49,7 +49,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
      */
     public function create(Options $options): TransportInterface
     {
-        if (null === $options->getDsn(false)) {
+        if (null === $options->getDsn()) {
             return new NullTransport();
         }
 

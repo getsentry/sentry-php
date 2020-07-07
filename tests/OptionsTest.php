@@ -78,48 +78,28 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider dsnOptionDataProvider
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
-    public function testDsnOption($value, ?string $expectedProjectId, ?string $expectedPublicKey, ?string $expectedSecretKey, ?string $expectedDsnAsString, ?Dsn $expectedDsnAsObject): void
+    public function testDsnOption($value, ?Dsn $expectedDsnAsObject): void
     {
         $options = new Options(['dsn' => $value]);
 
-        $this->assertSame($expectedProjectId, $options->getProjectId());
-        $this->assertSame($expectedPublicKey, $options->getPublicKey());
-        $this->assertSame($expectedSecretKey, $options->getSecretKey());
-        $this->assertEquals($expectedDsnAsString, $options->getDsn());
-        $this->assertEquals($expectedDsnAsObject, $options->getDsn(false));
+        $this->assertEquals($expectedDsnAsObject, $options->getDsn());
     }
 
     public function dsnOptionDataProvider(): \Generator
     {
         yield [
             'http://public:secret@example.com/sentry/1',
-            '1',
-            'public',
-            'secret',
-            'http://example.com/sentry',
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
         ];
 
         yield [
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
-            '1',
-            'public',
-            'secret',
-            'http://example.com/sentry',
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
         ];
 
         yield [
-            null,
-            null,
-            null,
-            null,
             null,
             null,
         ];
@@ -127,72 +107,40 @@ final class OptionsTest extends TestCase
         yield [
             'null',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '(null)',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             false,
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             'false',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             '(false)',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             'empty',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '(empty)',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
     }
@@ -360,20 +308,13 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
      * @backupGlobals enabled
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
     public function testDsnOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
 
-        $options = new Options();
-
-        $this->assertSame('http://example.com', $options->getDsn());
-        $this->assertSame('public', $options->getPublicKey());
-        $this->assertSame('1', $options->getProjectId());
+        $this->assertEquals(Dsn::createFromString($_SERVER['SENTRY_DSN']), (new Options())->getDsn());
     }
 
     /**
@@ -383,9 +324,7 @@ final class OptionsTest extends TestCase
     {
         $_SERVER['SENTRY_ENVIRONMENT'] = 'test_environment';
 
-        $options = new Options();
-
-        $this->assertSame('test_environment', $options->getEnvironment());
+        $this->assertSame('test_environment', (new Options())->getEnvironment());
     }
 
     /**
@@ -395,9 +334,7 @@ final class OptionsTest extends TestCase
     {
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
-        $options = new Options();
-
-        $this->assertSame('0.0.1', $options->getRelease());
+        $this->assertSame('0.0.1', (new Options())->getRelease());
     }
 
     /**

@@ -100,7 +100,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     public function create(Options $options): HttpAsyncClientInterface
     {
-        if (null === $options->getDsn(false)) {
+        if (null === $options->getDsn()) {
             throw new \RuntimeException('Cannot create an HTTP client without the Sentry DSN set in the options.');
         }
 

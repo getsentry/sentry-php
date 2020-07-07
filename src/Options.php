@@ -327,22 +327,6 @@ final class Options
     }
 
     /**
-     * Gets the project ID number to send to the Sentry server.
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
-     */
-    public function getProjectId(): ?string
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
-
-        if (null === $this->options['dsn']) {
-            return null;
-        }
-
-        return (string) $this->options['dsn']->getProjectId();
-    }
-
-    /**
      * Gets the project which the authenticated user is bound to.
      */
     public function getProjectRoot(): ?string
@@ -360,38 +344,6 @@ final class Options
         $options = array_merge($this->options, ['project_root' => $path]);
 
         $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
-     * Gets the public key to authenticate the SDK.
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
-     */
-    public function getPublicKey(): ?string
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
-
-        if (null === $this->options['dsn']) {
-            return null;
-        }
-
-        return $this->options['dsn']->getPublicKey();
-    }
-
-    /**
-     * Gets the secret key to authenticate the SDK.
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
-     */
-    public function getSecretKey(): ?string
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
-
-        if (null === $this->options['dsn']) {
-            return null;
-        }
-
-        return $this->options['dsn']->getSecretKey();
     }
 
     /**
@@ -438,35 +390,10 @@ final class Options
 
     /**
      * Gets the DSN of the Sentry server the authenticated user is bound to.
-     *
-     * @param bool $returnAsString Whether to return the DSN as a string or as an object
-     *
-     * @return string|Dsn|null
      */
-    public function getDsn(bool $returnAsString = true)
+    public function getDsn(): ?Dsn
     {
-        /** @var Dsn|null $dsn */
-        $dsn = $this->options['dsn'];
-
-        if (null === $dsn) {
-            return null;
-        }
-
-        if ($returnAsString) {
-            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-            $url = $dsn->getScheme() . '://' . $dsn->getHost();
-
-            if (('http' === $dsn->getScheme() && 80 !== $dsn->getPort()) || ('https' === $dsn->getScheme() && 443 !== $dsn->getPort())) {
-                $url .= ':' . $dsn->getPort();
-            }
-
-            $url .= $dsn->getPath();
-
-            return $url;
-        }
-
-        return $dsn;
+        return $this->options['dsn'];
     }
 
     /**
