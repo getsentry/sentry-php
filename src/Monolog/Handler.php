@@ -70,6 +70,10 @@ final class Handler extends AbstractProcessingHandler
                 }
             }
 
+            if (isset($record['context']['fingerprint']) && \is_array($record['context']['fingerprint'])) {
+                $scope->setFingerprint($record['context']['fingerprint']);
+            }
+
             $this->hub->captureEvent($payload);
         });
     }
