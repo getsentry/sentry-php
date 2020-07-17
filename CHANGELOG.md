@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix typehint errors while instantiating the Httplug cURL client by forcing the usage of PSR-17 complaint factories (#1052)
+
 ### 2.4.1 (2020-07-03)
 
 - Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)
