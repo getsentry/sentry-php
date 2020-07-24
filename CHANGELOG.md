@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### 2.4.2 (2020-07-24)
+
 - Fix typehint errors while instantiating the Httplug cURL client by forcing the usage of PSR-17 complaint factories (#1052)
 
 ### 2.4.1 (2020-07-03)
