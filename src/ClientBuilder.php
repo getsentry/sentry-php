@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Http\Client\HttpAsyncClient;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
@@ -151,21 +149,21 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function getClient(): ClientInterface
-    {
-        $this->transport = $this->transport ?? $this->createTransportInstance();
-
-        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->logger);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setTransportFactory(TransportFactoryInterface $transportFactory): ClientBuilderInterface
     {
         $this->transportFactory = $transportFactory;
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getClient(): ClientInterface
+    {
+        $this->transport = $this->transport ?? $this->createTransportInstance();
+
+        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->logger);
     }
 
     /**
@@ -198,16 +196,16 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createDefaultTransportFactory(): DefaultTransportFactory
     {
-        $messageFactory = MessageFactoryDiscovery::find();
+        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
         $httpClientFactory = new HttpClientFactory(
-            UriFactoryDiscovery::find(),
-            $messageFactory,
-            StreamFactoryDiscovery::find(),
+            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findResponseFactory(),
+            $streamFactory,
             $this->httpClient,
             $this->sdkIdentifier,
             $this->sdkVersion
         );
 
-        return new DefaultTransportFactory($messageFactory, $httpClientFactory, $this->logger);
+        return new DefaultTransportFactory($streamFactory, Psr17FactoryDiscovery::findRequestFactory(), $httpClientFactory, $this->logger);
     }
 }

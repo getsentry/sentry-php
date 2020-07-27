@@ -9,10 +9,13 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\EventId;
 use Sentry\Options;
+use Sentry\Response;
+use Sentry\ResponseStatus;
 use Sentry\SentrySdk;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
@@ -29,11 +32,11 @@ $transportFactory = new class implements TransportFactoryInterface {
     public function create(Options $options): TransportInterface
     {
         return new class implements TransportInterface {
-            public function send(Event $event): ?EventId
+            public function send(Event $event): PromiseInterface
             {
                 echo 'Transport called' . PHP_EOL;
 
-                return null;
+                return new FulfilledPromise(new Response(ResponseStatus::success()));
             }
         };
     }

@@ -115,7 +115,18 @@ final class Client implements FlushableClientInterface
             return null;
         }
 
-        return $this->transport->send($event);
+        try {
+            /** @var Response $response */
+            $response = $this->transport->send($event)->wait();
+            $event = $response->getEvent();
+
+            if (null !== $event) {
+                return $event->getId();
+            }
+        } catch (\Throwable $exception) {
+        }
+
+        return null;
     }
 
     /**

@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
+use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Promise\RejectionException;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
-use Http\Promise\FulfilledPromise;
+use Http\Promise\FulfilledPromise as HttpFullfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Options;
+use Sentry\ResponseStatus;
 use Sentry\Transport\HttpTransport;
 
 final class HttpTransportTest extends TestCase
@@ -27,8 +28,8 @@ final class HttpTransportTest extends TestCase
         $transport = new HttpTransport(
             new Options(),
             $this->createMock(HttpAsyncClientInterface::class),
-            MessageFactoryDiscovery::find(),
-            false
+            Psr17FactoryDiscovery::findStreamFactory(),
+            Psr17FactoryDiscovery::findRequestFactory()
         );
 
         $this->expectException(\RuntimeException::class);
@@ -40,11 +41,10 @@ final class HttpTransportTest extends TestCase
     public function testSendTransactionAsEnvelope(): void
     {
         $mockHttpClient = new HttpMockClient();
-
         $httpClientFactory = new HttpClientFactory(
-            UriFactoryDiscovery::find(),
-            MessageFactoryDiscovery::find(),
-            StreamFactoryDiscovery::find(),
+            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findResponseFactory(),
+            Psr17FactoryDiscovery::findStreamFactory(),
             $mockHttpClient,
             'sentry.php.test',
             '1.2.3'
@@ -56,78 +56,76 @@ final class HttpTransportTest extends TestCase
         ]));
 
         $transport = new HttpTransport(
-            new Options([
-                'dsn' => 'http://public@example.com/sentry/1',
-            ]),
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $httpClient,
-            MessageFactoryDiscovery::find(),
-            false
+            Psr17FactoryDiscovery::findStreamFactory(),
+            Psr17FactoryDiscovery::findRequestFactory()
         );
 
         $event = new Event();
         $event->setType('transaction');
+
         $transport->send($event);
 
-        /** @var RequestInterface|bool $httpRequest */
         $httpRequest = $mockHttpClient->getLastRequest();
 
-        $this->assertSame('application/x-sentry-envelope', $httpRequest->getHeaders()['Content-Type'][0]);
+        $this->assertSame('application/x-sentry-envelope', $httpRequest->getHeaderLine('Content-Type'));
     }
 
     /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
+     * @dataProvider sendDataProvider
      */
-    public function testSendDelaysExecutionUntilShutdown(): void
+    public function testSend(int $httpStatusCode, string $expectedPromiseStatus, ResponseStatus $expectedResponseStatus): void
     {
-        $promise = new FulfilledPromise('foo');
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($httpStatusCode);
+
+        $event = new Event();
 
         /** @var HttpAsyncClientInterface&MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
             ->method('sendAsyncRequest')
-            ->willReturn($promise);
+            ->willReturn(new HttpFullfilledPromise($response));
 
         $transport = new HttpTransport(
             new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $httpClient,
-            MessageFactoryDiscovery::find(),
-            true
+            Psr17FactoryDiscovery::findStreamFactory(),
+            Psr17FactoryDiscovery::findRequestFactory()
         );
 
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $promise = $transport->send($event);
 
-        $transport->send(new Event());
+        try {
+            $promiseResult = $promise->wait();
+        } catch (RejectionException $exception) {
+            $promiseResult = $exception->getReason();
+        }
 
-        $this->assertAttributeNotEmpty('pendingRequests', $transport);
-
-        $transport->close();
-
-        $this->assertAttributeEmpty('pendingRequests', $transport);
+        $this->assertSame($expectedPromiseStatus, $promise->getState());
+        $this->assertSame($expectedResponseStatus, $promiseResult->getStatus());
+        $this->assertSame($event, $promiseResult->getEvent());
     }
 
-    public function testSendDoesNotDelayExecutionUntilShutdownWhenConfiguredToNotDoIt(): void
+    public function sendDataProvider(): iterable
     {
-        $promise = new RejectedPromise(new \Exception());
+        yield [
+            200,
+            PromiseInterface::FULFILLED,
+            ResponseStatus::success(),
+        ];
 
-        /** @var HttpAsyncClientInterface&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->willReturn($promise);
-
-        $transport = new HttpTransport(
-            new Options(['dsn' => 'http://public@example.com/sentry/1']),
-            $httpClient,
-            MessageFactoryDiscovery::find(),
-            false
-        );
-
-        $transport->send(new Event());
+        yield [
+            500,
+            PromiseInterface::REJECTED,
+            ResponseStatus::failed(),
+        ];
     }
 
-    public function testSendLogsErrorMessageIfSendingFailed(): void
+    public function testSendReturnsRejectedPromiseIfSendingFailedDueToHttpClientException(): void
     {
         $exception = new \Exception('foo');
         $event = new Event();
@@ -147,95 +145,21 @@ final class HttpTransportTest extends TestCase
         $transport = new HttpTransport(
             new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $httpClient,
-            MessageFactoryDiscovery::find(),
-            false,
-            true,
+            Psr17FactoryDiscovery::findStreamFactory(),
+            Psr17FactoryDiscovery::findRequestFactory(),
             $logger
         );
 
-        $transport->send($event);
-    }
+        $promise = $transport->send($event);
 
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
-    public function testCloseLogsErrorMessageIfSendingFailed(): void
-    {
-        $exception = new \Exception('foo');
-        $event1 = new Event();
-        $event2 = new Event();
+        try {
+            $promiseResult = $promise->wait();
+        } catch (RejectionException $exception) {
+            $promiseResult = $exception->getReason();
+        }
 
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->exactly(2))
-            ->method('error')
-            ->withConsecutive([
-                'Failed to send the event to Sentry. Reason: "foo".',
-                ['exception' => $exception, 'event' => $event1],
-            ],
-            [
-                'Failed to send the event to Sentry. Reason: "foo".',
-                ['exception' => $exception, 'event' => $event2],
-            ]);
-
-        /** @var HttpAsyncClientInterface&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
-        $httpClient->expects($this->exactly(2))
-            ->method('sendAsyncRequest')
-            ->willReturnOnConsecutiveCalls(
-                new RejectedPromise($exception),
-                new RejectedPromise($exception)
-            );
-
-        $transport = new HttpTransport(
-            new Options(['dsn' => 'http://public@example.com/sentry/1']),
-            $httpClient,
-            MessageFactoryDiscovery::find(),
-            true,
-            true,
-            $logger
-        );
-
-        // Send multiple events to assert that they all gets the chance of
-        // being sent regardless of which fails
-        $transport->send($event1);
-        $transport->send($event2);
-        $transport->close();
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
-    public function testCloseLogsErrorMessageIfExceptionIsThrownWhileProcessingTheHttpRequest(): void
-    {
-        $exception = new \Exception('foo');
-
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-            ->method('error')
-            ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception]);
-
-        /** @var HttpAsyncClientInterface&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->willThrowException($exception);
-
-        $transport = new HttpTransport(
-            new Options(['dsn' => 'http://public@example.com/sentry/1']),
-            $httpClient,
-            MessageFactoryDiscovery::find(),
-            true,
-            true,
-            $logger
-        );
-
-        $transport->send(new Event());
-        $transport->close();
+        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
+        $this->assertSame(ResponseStatus::failed(), $promiseResult->getStatus());
+        $this->assertSame($event, $promiseResult->getEvent());
     }
 }

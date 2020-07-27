@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
+use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Promise\RejectionException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
+use Sentry\ResponseStatus;
 use Sentry\Spool\SpoolInterface;
 use Sentry\Transport\SpoolTransport;
 
@@ -15,12 +18,12 @@ final class SpoolTransportTest extends TestCase
     /**
      * @var SpoolInterface&MockObject
      */
-    protected $spool;
+    private $spool;
 
     /**
      * @var SpoolTransport
      */
-    protected $transport;
+    private $transport;
 
     protected function setUp(): void
     {
@@ -36,27 +39,40 @@ final class SpoolTransportTest extends TestCase
     /**
      * @dataProvider sendDataProvider
      */
-    public function testSend(bool $isSendingSuccessful): void
+    public function testSend(bool $shouldQueueEvent, string $expectedPromiseStatus, ResponseStatus $expectedResponseStatus): void
     {
         $event = new Event();
 
         $this->spool->expects($this->once())
             ->method('queueEvent')
             ->with($event)
-            ->willReturn($isSendingSuccessful);
+            ->willReturn($shouldQueueEvent);
 
-        $eventId = $this->transport->send($event);
+        $promise = $this->transport->send($event);
 
-        if ($isSendingSuccessful) {
-            $this->assertSame($event->getId(), $eventId);
-        } else {
-            $this->assertNull($eventId);
+        try {
+            $promiseResult = $promise->wait();
+        } catch (RejectionException $exception) {
+            $promiseResult = $exception->getReason();
         }
+
+        $this->assertSame($expectedPromiseStatus, $promise->getState());
+        $this->assertSame($expectedResponseStatus, $promiseResult->getStatus());
+        $this->assertSame($event, $promiseResult->getEvent());
     }
 
-    public function sendDataProvider(): \Generator
+    public function sendDataProvider(): iterable
     {
-        yield [true];
-        yield [false];
+        yield [
+            true,
+            PromiseInterface::FULFILLED,
+            ResponseStatus::success(),
+        ];
+
+        yield [
+            false,
+            PromiseInterface::REJECTED,
+            ResponseStatus::skipped(),
+        ];
     }
 }
