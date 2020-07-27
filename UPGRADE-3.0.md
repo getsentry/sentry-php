@@ -17,8 +17,19 @@
 - Removed the `Options::getProjectId`, `Options::getPublicKey` and `Options::getSecretKey` methods, use `Options::getDsn()` instead.
 - Removed the `Breadcrumb::LEVEL_CRITICAL` constant. Use `Breadcrumb::LEVEL_FATAL` instead
 - Removed the `Breadcrumb::levelFromErrorException()` method
-- Removedc the `PluggableHttpClientFactory` class
-- Removed the `ClientBuilderInterface::setUriFactory()`, `ClientBuilderInterface::setMessageFactory()`, `ClientBuilderInterface::setTransport()`, `ClientBuilderInterface::setHttpClient()`, `ClientBuilderInterface::addHttpClientPlugin()` and `ClientBuilderInterface::removeHttpClientPlugin()` methods. Use `ClientBuilderInterface::setTransportFactory()` instead
-- Removed the `Options::getExcludedExceptions()`, `Options::setExcludedExceptions()`, `Options::isExcludedException()`, `Options::getProjectRoot()` and `Options::setProjectRoot()` methods
+- Removed the `PluggableHttpClientFactory` class
+- Removed the following methods from the `ClientBuilderInterface` interface, use `ClientBuilderInterface::setTransportFactory()` instead:
+  - `setUriFactory()`
+  - `setMessageFactory()`
+  - `setTransport()`
+  - `setHttpClient()`
+  - `addHttpClientPlugin()`
+  - `removeHttpClientPlugin()`.
+- Removed the following methods from the `Options` class, use the `IgnoreErrorsIntegration` integration instead:
+  - `getExcludedExceptions()`
+  - `Options::setExcludedExceptions()`
+  - `Options::isExcludedException()`
+  - `Options::getProjectRoot()`
+  - `Options::setProjectRoot()`
 - Removed the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants
 - The signature of the `Scope::setUser()` method changed to not accept anymore the `$merge` parameter
