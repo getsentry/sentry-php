@@ -1,59 +1,94 @@
 {
     "name": "sentry/sentry",
     "type": "library",
-    "description": "A PHP client for Sentry (http://getsentry.com)",
-    "keywords": ["log", "logging"],
-    "homepage": "http://getsentry.com",
+    "description": "A PHP SDK for Sentry (http://sentry.io)",
+    "keywords": [
+        "sentry",
+        "log",
+        "logging",
+        "error-monitoring",
+        "error-handler",
+        "crash-reporting",
+        "crash-reports"
+    ],
+    "homepage": "http://sentry.io",
     "license": "BSD-3-Clause",
     "authors": [
         {
-            "name": "David Cramer",
-            "email": "dcramer@gmail.com"
+            "name": "Sentry",
+            "email": "accounts@sentry.io"
         }
     ],
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^1.8.0",
-        "phpunit/phpunit": "^4.8.35 || ^5.7",
-        "monolog/monolog": "*"
-    },
     "require": {
-        "php": "^5.3|^7.0",
-        "ext-curl": "*"
-    },
-    "suggest": {
-        "ext-hash": "*",
+        "php": "^7.1",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
+        "guzzlehttp/promises": "^1.3",
+        "guzzlehttp/psr7": "^1.6",
+        "jean85/pretty-package-versions": "^1.2",
+        "php-http/async-client-implementation": "^1.0",
+        "php-http/client-common": "^1.5|^2.0",
+        "php-http/discovery": "^1.6.1",
+        "php-http/httplug": "^1.1|^2.0",
+        "php-http/message": "^1.5",
+        "psr/http-factory": "^1.0",
+        "psr/http-message-implementation": "^1.0",
+        "psr/log": "^1.0",
+        "symfony/options-resolver": "^2.7|^3.0|^4.0|^5.0",
+        "symfony/polyfill-uuid": "^1.13.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "monolog/monolog": "^1.3|^2.0",
+        "php-http/mock-client": "^1.3",
+        "phpstan/extension-installer": "^1.0",
+        "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-phpunit": "^0.12",
+        "phpunit/phpunit": "^7.5.18",
+        "symfony/phpunit-bridge": "^4.3|^5.0",
+        "vimeo/psalm": "^3.4"
+    },
+    "suggest": {
+        "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
     },
     "conflict": {
+        "php-http/client-common": "1.8.0",
         "raven/raven": "*"
     },
-    "bin": [
-        "bin/sentry"
-    ],
     "autoload": {
-        "psr-0" : {
-            "Raven_" : "lib/"
+        "files": [
+            "src/functions.php"
+        ],
+        "psr-4": {
+            "Sentry\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sentry\\Tests\\": "tests/"
         }
     },
     "scripts": {
         "tests": [
             "vendor/bin/phpunit --verbose"
         ],
-        "tests-travis": [
-            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-clover test/clover.xml"
-        ],
-        "tests-report": [
-            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html test/html-report"
-        ],
         "phpcs": [
-            "vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run"
+            "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run"
+        ],
+        "phpstan": [
+            "vendor/bin/phpstan analyse"
+        ],
+        "psalm": [
+            "vendor/bin/psalm"
         ]
     },
+    "config": {
+        "sort-packages": true
+    },
+    "prefer-stable": true,
     "extra": {
         "branch-alias": {
-            "dev-master": "1.9.x-dev"
+            "dev-master": "2.4-dev"
         }
     }
 }

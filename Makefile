@@ -1,4 +1,4 @@
-.PHONY: test
+gc -am .PHONY: test
 
 develop: update-submodules
 	composer install --dev
@@ -9,13 +9,19 @@ update-submodules:
 	git submodule update
 
 cs:
-	vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff
+	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff
 
 cs-dry-run:
-	vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run
+	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run
 
-test: cs-dry-run
-	vendor/bin/phpunit
+cs-fix:
+	vendor/bin/php-cs-fixer fix
+
+phpstan:
+	vendor/bin/phpstan analyse
+
+test: cs-fix phpstan
+	vendor/bin/phpunit --verbose
 
 setup-git:
 	git config branch.autosetuprebase always

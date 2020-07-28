@@ -1,0 +1,6 @@
+{
+    "file": "path/to/file",
+    "line": 12,
+    "function": "test_function",
+    "class": "TestClass"
+}

@@ -1,0 +1,15 @@
+{
+    "file": "path/to/file",
+    "line": 12,
+    "backtrace": [
+        {
+            "function": "triggerError",
+            "class": "TestClass"
+        },
+        {
+            "file": "path/to/file",
+            "line": 7,
+            "function": "call_user_func"
+        }
+    ]
+}

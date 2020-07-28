@@ -1,0 +1,80 @@
+version: 2.x-{build}
+build: false
+clone_depth: 2
+clone_folder: c:\projects\sentry-php
+skip_branch_with_pr: true
+image: Visual Studio 2019
+branches:
+    only:
+        - master
+        - develop
+        - /^release\/.+$/
+
+environment:
+    matrix:
+        - PHP_VERSION: 7.1
+          XDEBUG_VERSION: 2.9.2-7.1-vc14-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.1
+          XDEBUG_VERSION: 2.9.2-7.1-vc14-nts
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.2
+          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.2
+          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.3
+          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.3
+          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          DEPENDENCIES: highest
+        - PHP_VERSION: 7.4
+          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 7.4
+          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          DEPENDENCIES: highest
+
+matrix:
+    fast_finish: true
+
+cache:
+    - composer.phar
+    - '%LOCALAPPDATA%\Composer\files'
+    - C:\php -> .appveyor.yml
+
+init:
+    - SET PATH=C:\php;%PATH%
+    - SET ANSICON=121x90 (121x90)
+    - SET INSTALL_PHP=1
+
+install:
+    - IF EXIST C:\php SET INSTALL_PHP=0
+    - ps: choco upgrade chocolatey --confirm --no-progress --allow-downgrade --version 0.10.13
+    - ps: choco install codecov --confirm --no-progress
+    - ps: choco install php --confirm --no-progress --package-parameters '""/InstallDir:C:\php""' --version (choco search php --exact --all-versions --limit-output | Select-String -Pattern $env:PHP_VERSION | ForEach-Object {$_ -Replace "php\|", ""} | Sort {[version] $_} -Descending | Select-Object -First 1)
+    - cd C:\php
+    - ps: if ($env:INSTALL_PHP -imatch 1) { appveyor-retry appveyor DownloadFile "https://xdebug.org/files/php_xdebug-$env:XDEBUG_VERSION-x86_64.dll" -FileName C:\php\ext\php_xdebug.dll }
+    - IF %INSTALL_PHP%==1 copy /Y php.ini-production php.ini
+    - IF %INSTALL_PHP%==1 echo extension_dir=C:\php\ext >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_curl.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo zend_extension=C:\php\ext\php_xdebug.dll >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.overload_var_dump=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.collect_includes=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.dump_globals=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.collect_vars=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.extended_info=0 >> php.ini
+    - cd C:\projects\sentry-php
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.9.3/composer.phar
+    - php composer.phar self-update
+    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
+    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
+
+test_script:
+    - cd C:\projects\sentry-php
+    - vendor\bin\phpunit.bat --coverage-clover=build/coverage-report.xml
+    - codecov -f build/coverage-report.xml

@@ -1,0 +1,16 @@
+{
+    "file": "path/to/file",
+    "line": 12,
+    "backtrace": [
+        {
+            "class": "class@anonymous\u0000/path/to/app/consumer.php0x7fc3bc369418",
+            "function": "messageCallback",
+            "type": "->"
+        },
+        {
+            "class": "class@anonymous\u0000/path-prefix/path/to/app/consumer.php0x7fc3bc369418",
+            "function": "messageCallback",
+            "type": "->"
+        }
+    ]
+}

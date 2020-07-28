@@ -2,7 +2,205 @@
 
 ## Unreleased
 
-- ...
+### 2.4.2 (2020-07-24)
+
+- Fix typehint errors while instantiating the Httplug cURL client by forcing the usage of PSR-17 complaint factories (#1052)
+
+### 2.4.1 (2020-07-03)
+
+- Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)
+- [BC CHANGE] Revert "Add support for iterables in the serializer (#991)" (#1030)
+
+### 2.4.0 (2020-05-21)
+
+- Enforce a timeout for connecting to the server and for the requests instead of waiting indefinitely (#979)
+- Add `RequestFetcherInterface` to allow customizing the request data attached to the logged event (#984)
+- Log internal debug and error messages to a PSR-3 compatible logger (#989)
+- Make `AbstractSerializer` to accept `Traversable` values using `is_iterable` instead of `is_array` (#991)
+- Refactor the `ModulesIntegration` integration to improve its code and its tests (#990)
+- Extract the parsing and validation logic of the DSN into its own value object (#995)
+- Support passing either a Httplug or PSR-17 stream factory to the `GzipEncoderPlugin` class (#1012)
+- Add the `FrameContextifierIntegration` integration (#1011)
+- Add missing validation for the `context_lines` option and fix its behavior when passing `null` to make it working as described in the documentation (#1003)
+- Trim the file path from the anonymous class name in the stacktrace according to the `prefixes` option (#1016)
+
+## 2.3.2 (2020-03-06)
+
+- Hard-limit concurrent requests in `HttpTransport` and removed pre-init of promises (fixes "too many open files" errors) (#981)
+- Fix `http_proxy` option not being applied (#978)
+- Fix the error handler rethrowing the captured exception when previous handler didn't (#974)
+
+## 2.3.1 (2020-01-23)
+
+- Allow unsetting the stack trace on an `Event` by calling `Event::setStacktrace(null)` (#961)
+- Fix sending of both `event.stacktrace` and `event.exceptions` when `attach_stacktrace = true` (#960)
+- Fix regression that set all frames of a stacktrace as not in app by default (#958)
+- Fix issues with memory addresses in anonymous class stack traces (#956)
+- Fix exception thrown regardless of whether the HTTP client was instantiated when using the `http_proxy option` (#951)
+
+## 2.3.0 (2020-01-08)
+
+- Add `in_app_include` option to whitelist paths that should be marked as part of the app (#909)
+- Fix `Client::captureEvent` not considering the `attach_stacktrace` option (#940)
+- Replace `ramsey/uuid` dependency with `uuid_create` from the PECL [`uuid`](https://pecl.php.net/package/uuid) extension or [`symfony/polyfill-uuid`](https://github.com/symfony/polyfill-uuid) (#937)
+- Deprecate `Scope::setUser` behaviour of replacing user data. (#929)
+- Add the `$merge` parameter on `Scope::setUser` to allow merging user context. (#929)
+- Make the `integrations` option accept a `callable` that will receive the list of default integrations and returns a customized list (#919)
+- Add the `IgnoreErrorsIntegration` integration to deprecate and replace the `exclude_exceptions` option (#928)
+- Allow setting custom contexts on the scope and on the event (#839)
+- Replace dependency to `zendframework/zend-diactoros` with `guzzlehttp/psr7` (#945)
+
+## 2.2.6 (2019-12-18)
+
+- Fix remaining PHP 7.4 deprecations (#930)
+- Fix error thrown during JSON encoding if a string contains invalid UTF-8 characters (#934)
+
+## 2.2.5 (2019-11-27)
+
+- Add compatibility with Symfony 5 (#925)
+- Ensure compatibility with PHP 7.4 (#894, #926)
+
+## 2.2.4 (2019-11-04)
+
+- Suggest installing Monolog to send log messages directly to Sentry (#908)
+- Make the `$errcontext` argument of the `ErrorHandler::handleError()` method `nullable` (#917)
+
+## 2.2.3 (2019-10-31)
+
+- Fix deprecation raised when serializing callable in certain circumstances (#821)
+- Fix incorrect `critical` breadcrumb level by replacing it with the `fatal` level (#901)
+- Fix regression on default sending behavior of the `HttpTransport` transport (#905)
+- Fix stacktrace frame inApp detection: all paths outside the project_root are now considered as not in app (#911)
+
+## 2.2.2 (2019-10-10)
+
+- Fix handling of fifth argument in the error handler (#892)
+- Catch exception from vendors in `Sentry\Transport\HttpTransport` (#899)
+
+## 2.2.1 (2019-09-23)
+
+- Disable default deprecation warning `Sentry\Transport\HttpTransport` (#884)
+
+## 2.2.0 (2019-09-23)
+
+- Change type hint for both parameter and return value of `HubInterface::getCurrentHub` and `HubInterface::setCurrentHub()` methods (#849)
+- Add the `setTags`, `setExtras` and `clearBreadcrumbs` methods to the `Scope` class (#852)
+- Silently cast numeric values to strings when trying to set the tags instead of throwing (#858)
+- Support force sending events on-demand and fix sending of events in long-running processes (#813)
+- Update PHPStan and introduce Psalm (#846)
+- Add an integration to set the transaction attribute of the event (#865)
+- Deprecate `Hub::getCurrent` and `Hub::setCurrent` methods to set the current hub instance (#847)
+
+## 2.1.3 (2019-09-06)
+
+- Fix GZIP-compressed requests failing when `exit($code)` was used to terminate the application (#877)
+
+## 2.1.2 (2019-08-22)
+
+- Fix `TypeError` in `Sentry\Monolog\Handler` when the extra data array has numeric keys (#833).
+- Fix sending of GZIP-compressed requests when the `enable_compression` option is `true` (#857)
+- Fix error thrown when trying to set the `transaction` attribute of the event in a CLI environment (#862)
+- Fix integrations that were not skipped if the client bound to the current hub was not using them (#861)
+- Fix undefined index generated by missing function in class (#823)
+
+## 2.1.1 (2019-06-13)
+
+- Fix the behavior of the `excluded_exceptions` option: now it's used to skip capture of exceptions, not to purge the
+  `exception` data of the event, which resulted in broken or empty chains of exceptions in reported events (#822)
+- Fix handling of uploaded files in the `RequestIntegration`, to respect the PSR-7 spec fully (#827)
+- Fix use of `REMOTE_ADDR` server variable rather than HTTP header
+- Fix exception, open_basedir restriction in effect (#824)
+
+## 2.1.0 (2019-05-22)
+
+- Mark Sentry internal frames when using `attach_stacktrace` as `in_app` `false` (#786)
+- Increase default severity of `E_RECOVERABLE_ERROR` to `Severity::ERROR`, instead of warning (#792)
+- Make it possible to register fatal error listeners separately from the error listeners
+  and change the type of the reported exception to `\Sentry\Exception\FatalErrorException` (#788)
+- Add a static factory method to create a breadcrumb from an array of data (#798)
+- Add support for `SENTRY_ENVRIONMENT` and `SENTRY_RELEASE` environment variables (#810)
+- Add the `class_serializers` option to make it possible to customize how objects are serialized in the event payload (#809)
+- Fix the default value of the `$exceptions` property of the Event class (#806)
+- Add a Monolog handler (#808)
+- Allow capturing the body of an HTTP request (#807)
+- Capture exceptions during serialization, to avoid hard failures (#818)
+
+## 2.0.1 (2019-03-01)
+
+- Do no longer report silenced errors by default (#785)
+- New option `capture_silenced_error` to enable reporting of silenced errors, disabled by default (#785)
+
+## 2.0.0 (2019-02-25)
+
+**Version 2.0.0 is a complete rewrite of the existing SDK. Code Changes are needed. Please see [UPGRADE 2.0](https://github.com/getsentry/sentry-php/blob/master/UPGRADE-2.0.md) for more details.**
+
+- Updated .gitattributes to reduce package footprint (#770)
+- Use multibyte functions to handle unicode paths (#774)
+- Remove `Hub::getScope()` to deny direct access to `Scope` instances (#776)
+- Reintroduce `http_proxy` option (#775)
+- Added support for HTTPlug 2 / PSR-18 (#777)
+
+## 2.0.0-beta2 (2019-02-11)
+- Rename `SentryAuth` class to `SentryAuthentication` (#742)
+- `Client` class is now final
+- Fix issue with `ClientBuilder`: factories are not instantiated if transport is set manually (#747)
+- Rename `excluded_paths` to `in_app_exclude` option to follow Unified API spec (#755)
+- Add `max_value_length` option to trim long values during serialization (#754)
+- Lower the default `send_attempts` to 3 (#760)
+- Fix method argument name handling when Xdebug is enabled (#763)
+- Add CI build under Windows with AppVeyor (#758) and fix some bugs
+- Change the `ErrorHandler` and default integrations behavior: the handler is now a singleton,
+  and it's possible to attach a number of callables as listeners for errors and exceptions (#762)
+- The `context_lines` options changed the default to `5` and is properly applied (#743)
+- Add support for "formatted messages" in `captureEvent` as payload (#752)
+- Fix issue when capturing exceptions to remove warning when converting array args (#761)
+
+## 2.0.0-beta1 (2018-12-19)
+
+- Require PHP >= 7.1
+- Refactor the whole codebase to support the Unified API SDK specs
+- See the UPGRADE.md document for more information.
+
+## 1.10.0 (2018-11-09)
+
+- Added passing data from context in monolog breadcrumb handler (#683)
+- Do not return error id if we know we did not send the error (#667)
+- Do not force IPv4 protocol by default (#654)
+
+## 1.9.2 (2018-08-18)
+
+- Remove secret_key from required keys for CLI test command. (#645)
+- Proper case in Raven_Util class name usage. (#642)
+- Support longer credit card numbers. (#635)
+- Use configured message limit when creating serializers. (#634)
+- Do not truncate strings if message limit is set to zero. (#630)
+- Add option to ignore SERVER_PORT getting added to url. (#629)
+- Cleanup the PHP version reported. (#604)
+
+## 1.9.1 (2018-06-19)
+
+- Allow the use of a public DSN (private part of the DSN was deprecated in Sentry 9) (#615)
+- Send transaction as transaction not as culprit (#601)
+
+## 1.9.0 (2018-05-03)
+
+- Fixed undefined variable (#588)
+- Fix for exceptions throwing exceptions when setting event id (#587)
+- Fix monolog handler not accepting Throwable (#586)
+- Add `excluded_exceptions` option to exclude exceptions and their extending exceptions (#583)
+- Fix `HTTP_X_FORWARDED_PROTO` header detection (#578)
+- Fix sending events async in PHP 5 (#576)
+- Avoid double reporting due to `ErrorException`s (#574)
+- Make it possible to overwrite serializer message limit of 1024 (#559)
+- Allow request data to be nested up to 5 levels deep (#554)
+- Update serializer to handle UTF-8 characters correctly (#553)
+
+## 1.8.4 (2018-03-20)
+
+- Revert ignoring fatal errors on PHP 7+ (#571)
+- Add PHP runtime information (#564)
+- Cleanup the `site` value if it's empty (#555)
+- Add `application/json` input handling (#546)
 
 ## 1.8.3 (2018-02-07)
 

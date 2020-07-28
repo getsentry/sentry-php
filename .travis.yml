@@ -1,53 +1,59 @@
 language: php
-sudo: false
+
+branches:
+    only:
+        - master
+        - develop
+        - /^release\/.+$/
 
 php:
-  - 5.4
-  - 5.5
-  - 5.6
-  - 7.0
-  - 7.1
-  - 7.2
-  - nightly
-env:
-  - REMOVE_XDEBUG="0"
-  - REMOVE_XDEBUG="1"
+    - 7.1
+    - 7.2
+    - 7.3
+    - 7.4
 
-matrix:
-  allow_failures:
-    - php: hhvm-3.12
-    - php: nightly
-  fast_finish: true
-  include:
-    - php: hhvm-3.12
-      env: REMOVE_XDEBUG="0" HHVM="1"
-    - php: 5.3
-      env: REMOVE_XDEBUG="0"
-      dist: precise
-    - php: 5.3
-      env: REMOVE_XDEBUG="1"
-      dist: precise
+env:
+    - dependencies=highest
+    - dependencies=lowest
 
 cache:
-  directories:
-    - $HOME/.composer/cache
+    directories:
+        - $HOME/.composer/cache
 
-before_install:
-  - if [ "$REMOVE_XDEBUG" = "1" ]; then phpenv config-rm xdebug.ini; fi
-  - composer self-update
+stages:
+    - Code style & static analysis
+    - Test
 
-install: travis_retry composer install --no-interaction --prefer-dist
+jobs:
+    fast_finish: true
+    include:
+        - &code-style-static-analysis
+          stage: Code style & static analysis
+          name: PHP-CS-Fixer
+          php: 7.4
+          env: dependencies=highest
+          script: composer phpcs
+        - <<: *code-style-static-analysis
+          name: PHPStan
+          script: composer phpstan
+        - <<: *code-style-static-analysis
+          name: Psalm
+          script: composer psalm
 
-script:
-  - composer phpcs
-  - composer tests-travis
+install:
+    - if [ "$dependencies" = "lowest" ]; then composer update --no-interaction --no-suggest --prefer-lowest --prefer-dist; fi;
+    - if [ "$dependencies" = "highest" ]; then composer update --no-interaction --no-suggest --prefer-dist; fi;
 
-after_script:
-  - wget https://scrutinizer-ci.com/ocular.phar
-  - if [ $(phpenv version-name) = "5.3" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "5.4" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "5.5" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "5.6" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.0" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.1" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
-  - if [ $(phpenv version-name) = "7.2" ] && [ "$REMOVE_XDEBUG" = "0" ]; then php ocular.phar code-coverage:upload --format=php-clover test/clover.xml --revision=$TRAVIS_COMMIT; fi
+script: >-
+    vendor/bin/phpunit --coverage-clover=build/coverage-report.xml &&
+    bash <(curl -s https://codecov.io/bash) -f build/coverage-report.xml
+
+notifications:
+    webhooks:
+        urls:
+            - https://zeus.ci/hooks/cf8597c4-ffba-11e7-89c9-0a580a281308/public/provider/travis/webhook
+        on_success: always
+        on_failure: always
+        on_start: always
+        on_cancel: always
+        on_error: always
