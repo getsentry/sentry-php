@@ -193,9 +193,9 @@ final class Options
     /**
      * Sets the environment.
      *
-     * @param string $environment The environment
+     * @param string|null $environment The environment
      */
-    public function setEnvironment(string $environment): void
+    public function setEnvironment(?string $environment): void
     {
         $options = array_merge($this->options, ['environment' => $environment]);
 
