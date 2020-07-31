@@ -1,10 +1,10 @@
 # Upgrade 2.x to 3.0
 
-- Removed the `HubInterface::getCurrentHub()` and `HubInterface::setCurrentHub()` methods. Use `SentrySdk::getCurrentHub()` and `SentrySdk::setCurrentHub()` instead.
-- Removed the `ErrorHandler::registerOnce()` method, use `ErrorHandler::register*Handler()` instead.
-- Removed the `ErrorHandler::addErrorListener` method, use `ErrorHandler::addErrorHandlerListener()` instead.
-- Removed the `ErrorHandler::addFatalErrorListener` method, use `ErrorHandler::addFatalErrorHandlerListener()` instead.
-- Removed the `ErrorHandler::addExceptionListener` method, use `ErrorHandler::addExceptionHandlerListener()` instead.
+- Removed the `HubInterface::getCurrentHub()` and `HubInterface::setCurrentHub()` methods. Use `SentrySdk::getCurrentHub()` and `SentrySdk::setCurrentHub()` instead
+- Removed the `ErrorHandler::registerOnce()` method, use `ErrorHandler::register*Handler()` instead
+- Removed the `ErrorHandler::addErrorListener` method, use `ErrorHandler::addErrorHandlerListener()` instead
+- Removed the `ErrorHandler::addFatalErrorListener` method, use `ErrorHandler::addFatalErrorHandlerListener()` instead
+- Removed the `ErrorHandler::addExceptionListener` method, use `ErrorHandler::addExceptionHandlerListener()` instead
 - The signature of the `ErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The signature of the `FatalErrorListenerIntegration::__construct()` method changed to not accept any parameter
 - The `ErrorListenerIntegration` integration does not get called anymore when a fatal error occurs
@@ -14,4 +14,22 @@
 - The signature of the `HubInterface::capture*e()` methods changed to return an instance of the `EventId` class instead of a `string`
 - The signature of the `Event::getId()` method changed to return an instance of the `EventId` class instead of a `string`
 - The signature of the `Options::getDsn()` method changed to always return an instance of the `Dsn` class instead of a `string`
-- Removed the `Options::getProjectId`, `Options::getPublicKey` and `Options::getSecretKey` methods, use `Options::getDsn()` instead.
+- Removed the `Options::getProjectId`, `Options::getPublicKey` and `Options::getSecretKey` methods, use `Options::getDsn()` instead
+- Removed the `Breadcrumb::LEVEL_CRITICAL` constant, use `Breadcrumb::LEVEL_FATAL` instead
+- Removed the `Breadcrumb::levelFromErrorException()` method
+- Removed the `PluggableHttpClientFactory` class
+- Removed the following methods from the `ClientBuilderInterface` interface, use `ClientBuilderInterface::setTransportFactory()` instead:
+  - `ClientBuilderInterface::setUriFactory()`
+  - `ClientBuilderInterface::setMessageFactory()`
+  - `ClientBuilderInterface::setTransport()`
+  - `ClientBuilderInterface::setHttpClient()`
+  - `ClientBuilderInterface::addHttpClientPlugin()`
+  - `ClientBuilderInterface::removeHttpClientPlugin()`.
+- Removed the following methods from the `Options` class, use the `IgnoreErrorsIntegration` integration instead:
+  - `Options::getExcludedExceptions()`
+  - `Options::setExcludedExceptions()`
+  - `Options::isExcludedException()`
+  - `Options::getProjectRoot()`
+  - `Options::setProjectRoot()`
+- Removed the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants
+- The signature of the `Scope::setUser()` method changed to not accept the `$merge` parameter anymore

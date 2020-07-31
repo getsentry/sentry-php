@@ -36,11 +36,6 @@ final class RequestIntegration implements IntegrationInterface
     private const REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH = 10 ** 4;
 
     /**
-     * @var Options|null The client options
-     */
-    private $options;
-
-    /**
      * @var RequestFetcherInterface PSR-7 request fetcher
      */
     private $requestFetcher;
@@ -48,16 +43,10 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Constructor.
      *
-     * @param Options|null                 $options        The client options
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      */
-    public function __construct(?Options $options = null, ?RequestFetcherInterface $requestFetcher = null)
+    public function __construct(?RequestFetcherInterface $requestFetcher = null)
     {
-        if (null !== $options) {
-            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
-        }
-
-        $this->options = $options;
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
     }
 
@@ -77,37 +66,15 @@ final class RequestIntegration implements IntegrationInterface
                 return $event;
             }
 
-            $this->processEvent($event, $this->options ?? $client->getOptions());
+            $this->processEvent($event, $client->getOptions());
 
             return $event;
         });
     }
 
-    /**
-     * Applies the information gathered by the this integration to the event.
-     *
-     * @param self                        $self    The current instance of the integration
-     * @param Event                       $event   The event that will be enriched with a request
-     * @param ServerRequestInterface|null $request The Request that will be processed and added to the event
-     *
-     * @deprecated since version 2.1, to be removed in 3.0
-     */
-    public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
+    private function processEvent(Event $event, Options $options): void
     {
-        @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        if (null === $self->options) {
-            throw new \BadMethodCallException('The options of the integration must be set.');
-        }
-
-        $self->processEvent($event, $self->options, $request);
-    }
-
-    private function processEvent(Event $event, Options $options, ?ServerRequestInterface $request = null): void
-    {
-        if (null === $request) {
-            $request = $this->requestFetcher->fetchRequest();
-        }
+        $request = $this->requestFetcher->fetchRequest();
 
         if (null === $request) {
             return;
@@ -176,15 +143,15 @@ final class RequestIntegration implements IntegrationInterface
      * the parsing fails then the raw data is returned. If there are submitted
      * fields or files, all of their information are parsed and returned.
      *
-     * @param Options                $options       The options of the client
-     * @param ServerRequestInterface $serverRequest The server request
+     * @param Options                $options The options of the client
+     * @param ServerRequestInterface $request The server request
      *
      * @return mixed
      */
-    private function captureRequestBody(Options $options, ServerRequestInterface $serverRequest)
+    private function captureRequestBody(Options $options, ServerRequestInterface $request)
     {
         $maxRequestBodySize = $options->getMaxRequestBodySize();
-        $requestBody = $serverRequest->getBody();
+        $requestBody = $request->getBody();
 
         if (
             'none' === $maxRequestBodySize ||
@@ -194,9 +161,9 @@ final class RequestIntegration implements IntegrationInterface
             return null;
         }
 
-        $requestData = $serverRequest->getParsedBody();
+        $requestData = $request->getParsedBody();
         $requestData = array_merge(
-            $this->parseUploadedFiles($serverRequest->getUploadedFiles()),
+            $this->parseUploadedFiles($request->getUploadedFiles()),
             \is_array($requestData) ? $requestData : []
         );
 
@@ -204,7 +171,7 @@ final class RequestIntegration implements IntegrationInterface
             return $requestData;
         }
 
-        if ('application/json' === $serverRequest->getHeaderLine('Content-Type')) {
+        if ('application/json' === $request->getHeaderLine('Content-Type')) {
             try {
                 return JSON::decode($requestBody->getContents());
             } catch (JsonException $exception) {

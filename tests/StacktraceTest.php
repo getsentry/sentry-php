@@ -161,7 +161,6 @@ final class StacktraceTest extends TestCase
     {
         yield 'No config specified' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [],
                 'in_app_include' => [],
             ],
@@ -170,46 +169,8 @@ final class StacktraceTest extends TestCase
             false,
         ];
 
-        yield 'project_root specified && file path matching project_root' => [
-            [
-                'project_root' => 'path/to',
-                'in_app_exclude' => [],
-                'in_app_include' => [],
-            ],
-            'path/to/file',
-            'test_function',
-            true,
-        ];
-
-        yield 'project_root specified && file path matching project_root && file path matching in_app_exclude' => [
-            [
-                'project_root' => 'path/to/file',
-                'in_app_exclude' => [
-                    'path/to',
-                ],
-                'in_app_include' => [],
-            ],
-            'path/to/file',
-            'test_function',
-            false,
-        ];
-
-        yield 'project_root specified && file path not maching project_root && file path matching in_app_include' => [
-            [
-                'project_root' => 'nested/path/to',
-                'in_app_exclude' => [],
-                'in_app_include' => [
-                    'path/to',
-                ],
-            ],
-            'path/to/file',
-            'test_function',
-            true,
-        ];
-
         yield 'in_app_include specified && file path not matching' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [],
                 'in_app_include' => [
                     'path/to/nested/file',
@@ -222,7 +183,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include not specified && file path not matching' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [],
                 'in_app_include' => [],
             ],
@@ -233,7 +193,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include specified && file path matching' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [],
                 'in_app_include' => [
                     'path/to/nested/file',
@@ -247,7 +206,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_include' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [
                     'path/to/nested/file',
                 ],
@@ -262,7 +220,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_exclude' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [
                     'path/to/nested/file',
                 ],
@@ -277,7 +234,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_include && in_app_include prioritized over in_app_exclude' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [
                     'path/to/file',
                 ],
@@ -292,7 +248,6 @@ final class StacktraceTest extends TestCase
 
         yield 'in_app_include specified && in_app_exclude specified && file path matching in_app_exclude && in_app_exclude prioritized over in_app_include' => [
             [
-                'project_root' => null,
                 'in_app_exclude' => [
                     'path/to/file',
                 ],

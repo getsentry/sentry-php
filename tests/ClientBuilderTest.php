@@ -4,21 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Http\Client\Common\Plugin as PluginInterface;
-use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Message\MessageFactory as MessageFactoryInterface;
-use Http\Promise\FulfilledPromise;
-use Http\Promise\Promise as PromiseInterface;
 use Jean85\PrettyVersions;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\EventId;
-use Sentry\FlushableClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -29,7 +19,6 @@ use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
-use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
@@ -54,126 +43,6 @@ final class ClientBuilderTest extends TestCase
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
         $this->assertInstanceOf(NullTransport::class, $transport);
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
-    public function testSetMessageFactory(): void
-    {
-        /** @var MessageFactoryInterface&MockObject $messageFactory */
-        $messageFactory = $this->createMock(MessageFactoryInterface::class);
-        $messageFactory->expects($this->once())
-            ->method('createRequest')
-            ->willReturn(MessageFactoryDiscovery::find()->createRequest('POST', 'http://www.example.com'));
-
-        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
-            ->setMessageFactory($messageFactory)
-            ->getClient();
-
-        $client->captureMessage('foo');
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation Method Sentry\ClientBuilder::setTransport() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.
-     */
-    public function testSetTransport(): void
-    {
-        $eventId = EventId::generate();
-
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->willReturn($eventId);
-
-        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
-            ->setTransport($transport)
-            ->getClient();
-
-        $this->assertSame($eventId, $client->captureMessage('foo'));
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
-    public function testSetHttpClient(): void
-    {
-        /** @var HttpAsyncClientInterface&MockObject $httpClient */
-        $httpClient = $this->createMock(HttpAsyncClientInterface::class);
-        $httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->willReturn(new FulfilledPromise(true));
-
-        /** @var FlushableClientInterface $client */
-        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
-            ->setHttpClient($httpClient)
-            ->getClient();
-
-        $client->captureMessage('foo');
-        $client->flush();
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
-     */
-    public function testAddHttpClientPlugin(): void
-    {
-        /** @var PluginInterface&MockObject $plugin */
-        $plugin = $this->createMock(PluginInterface::class);
-        $plugin->expects($this->once())
-            ->method('handleRequest')
-            ->willReturn(new FulfilledPromise(true));
-
-        /** @var FlushableClientInterface $client */
-        $client = ClientBuilder::create(['dsn' => 'http://public@example.com/sentry/1'])
-            ->addHttpClientPlugin($plugin)
-            ->getClient();
-
-        $client->captureMessage('foo');
-        $client->flush();
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
-     * @expectedDeprecation Method Sentry\ClientBuilder::removeHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
-     */
-    public function testRemoveHttpClientPlugin(): void
-    {
-        $plugin = new class() implements PluginInterface {
-            public function handleRequest(RequestInterface $request, callable $next, callable $first): PromiseInterface
-            {
-                return new FulfilledPromise(true);
-            }
-        };
-
-        $plugin2 = new class() implements PluginInterface {
-            public function handleRequest(RequestInterface $request, callable $next, callable $first): PromiseInterface
-            {
-                return new FulfilledPromise(true);
-            }
-        };
-
-        /** @var FlushableClientInterface $client */
-        $client = ClientBuilder::create()
-            ->addHttpClientPlugin($plugin)
-            ->addHttpClientPlugin($plugin)
-            ->addHttpClientPlugin($plugin2)
-            ->removeHttpClientPlugin(\get_class($plugin2))
-            ->getClient();
-
-        $client->captureMessage('foo');
-        $client->flush();
     }
 
     /**

@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Client\Common\Plugin as PluginInterface;
 use Http\Client\HttpAsyncClient;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\MessageFactory as MessageFactoryInterface;
-use Http\Message\StreamFactory as StreamFactoryInterface;
-use Http\Message\UriFactory as UriFactoryInterface;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
-use Sentry\HttpClient\PluggableHttpClientFactory;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
@@ -37,21 +32,6 @@ final class ClientBuilder implements ClientBuilderInterface
     private $options;
 
     /**
-     * @var UriFactoryInterface|null The PSR-7 URI factory
-     */
-    private $uriFactory;
-
-    /**
-     * @var StreamFactoryInterface|null The PSR-17 stream factory
-     */
-    private $streamFactory;
-
-    /**
-     * @var MessageFactoryInterface|null The PSR-7 message factory
-     */
-    private $messageFactory;
-
-    /**
      * @var TransportFactoryInterface|null The transport factory
      */
     private $transportFactory;
@@ -65,11 +45,6 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var HttpAsyncClient|null The HTTP client
      */
     private $httpClient;
-
-    /**
-     * @var PluginInterface[] The list of Httplug plugins
-     */
-    private $httpClientPlugins = [];
 
     /**
      * @var SerializerInterface|null The serializer to be injected in the client
@@ -126,84 +101,6 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setUriFactory(UriFactoryInterface $uriFactory): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->uriFactory = $uriFactory;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setMessageFactory(MessageFactoryInterface $messageFactory): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->messageFactory = $messageFactory;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setTransport(TransportInterface $transport): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->transport = $transport;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setHttpClient(HttpAsyncClient $httpClient): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->httpClient = $httpClient;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addHttpClientPlugin(PluginInterface $plugin): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->httpClientPlugins[] = $plugin;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeHttpClientPlugin(string $className): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
-            if (!$httpClientPlugin instanceof $className) {
-                continue;
-            }
-
-            unset($this->httpClientPlugins[$index]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setSerializer(SerializerInterface $serializer): ClientBuilderInterface
     {
         $this->serializer = $serializer;
@@ -252,24 +149,6 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Sets the version of the SDK package that generated this Event using the Packagist name.
-     *
-     * @param string $packageName The package name that will be used to get the version from (i.e. "sentry/sentry")
-     *
-     * @return $this
-     *
-     * @deprecated since version 2.2, to be removed in 3.0
-     */
-    public function setSdkVersionByPackageName(string $packageName): ClientBuilderInterface
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
-
-        return $this;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function getClient(): ClientInterface
@@ -280,11 +159,7 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * Sets the transport factory.
-     *
-     * @param TransportFactoryInterface $transportFactory The transport factory
-     *
-     * @return $this
+     * {@inheritdoc}
      */
     public function setTransportFactory(TransportFactoryInterface $transportFactory): ClientBuilderInterface
     {
@@ -323,23 +198,16 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createDefaultTransportFactory(): DefaultTransportFactory
     {
-        $this->messageFactory = $this->messageFactory ?? MessageFactoryDiscovery::find();
-        $this->uriFactory = $this->uriFactory ?? UriFactoryDiscovery::find();
-        $this->streamFactory = $this->streamFactory ?? StreamFactoryDiscovery::find();
-
+        $messageFactory = MessageFactoryDiscovery::find();
         $httpClientFactory = new HttpClientFactory(
-            $this->uriFactory,
-            $this->messageFactory,
-            $this->streamFactory,
+            UriFactoryDiscovery::find(),
+            $messageFactory,
+            StreamFactoryDiscovery::find(),
             $this->httpClient,
             $this->sdkIdentifier,
             $this->sdkVersion
         );
 
-        if (!empty($this->httpClientPlugins)) {
-            $httpClientFactory = new PluggableHttpClientFactory($httpClientFactory, $this->httpClientPlugins);
-        }
-
-        return new DefaultTransportFactory($this->messageFactory, $httpClientFactory, $this->logger);
+        return new DefaultTransportFactory($messageFactory, $httpClientFactory, $this->logger);
     }
 }

@@ -100,12 +100,7 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
     }
 
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.
-     */
-    public function testSetUserThrowsDeprecationError(): void
+    public function testSetUser(): void
     {
         $scope = new Scope();
 
@@ -122,30 +117,6 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
 
         $scope->setUser(['bar' => 'baz']);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
-    }
-
-    public function testSetUser(): void
-    {
-        $scope = new Scope();
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame([], $event->getUserContext()->toArray());
-
-        $scope->setUser(['foo' => 'bar'], true);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
-
-        $scope->setUser(['bar' => 'baz'], true);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -284,7 +255,7 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
-        $scope->setUser(['foobar' => 'barfoo'], true);
+        $scope->setUser(['foobar' => 'barfoo']);
 
         $event = $scope->applyToEvent(new Event(), []);
 
@@ -322,7 +293,7 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb);
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
-        $scope->setUser(['foo' => 'baz'], true);
+        $scope->setUser(['foo' => 'baz']);
         $scope->setContext('foocontext', ['foo' => 'bar']);
         $scope->setContext('barcontext', ['bar' => 'foo']);
 

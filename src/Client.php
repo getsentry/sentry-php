@@ -10,7 +10,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\Handler;
-use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\ClosableTransportInterface;
@@ -103,10 +102,6 @@ final class Client implements FlushableClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?EventId
     {
-        if (!isset($this->integrations[IgnoreErrorsIntegration::class]) && $this->options->isExcludedException($exception, false)) {
-            return null;
-        }
-
         return $this->captureEvent(['exception' => $exception], $scope);
     }
 

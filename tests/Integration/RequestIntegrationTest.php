@@ -23,25 +23,14 @@ use function Sentry\withScope;
 final class RequestIntegrationTest extends TestCase
 {
     /**
-     * @group legacy
-     *
-     * @expectedDeprecation Passing the options as argument of the constructor of the "Sentry\Integration\RequestIntegration" class is deprecated since version 2.1 and will not work in 3.0.
+     * @dataProvider invokeDataProvider
      */
-    public function testConstructorThrowsDeprecationErrorIfPassingOptions(): void
-    {
-        new RequestIntegration(new Options([]));
-    }
-
-    /**
-     * @dataProvider applyToEventWithRequestHavingIpAddressDataProvider
-     */
-    public function testInvokeWithRequestHavingIpAddress(bool $shouldSendPii, array $expectedValue): void
+    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, array $expectedUserContextData): void
     {
         $event = new Event();
         $event->getUserContext()->setData(['foo' => 'bar']);
 
-        $request = new ServerRequest('GET', new Uri('http://www.example.com/fo'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']);
-        $integration = new RequestIntegration(null, $this->createRequestFetcher($request));
+        $integration = new RequestIntegration($this->createRequestFetcher($request));
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -53,53 +42,20 @@ final class RequestIntegrationTest extends TestCase
 
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn(new Options(['send_default_pii' => $shouldSendPii]));
+            ->willReturn(new Options($options));
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        withScope(function (Scope $scope) use ($event, $expectedValue): void {
+        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUserContextData): void {
             $event = $scope->applyToEvent($event, []);
 
             $this->assertNotNull($event);
-            $this->assertEquals($expectedValue, $event->getUserContext()->toArray());
+            $this->assertEquals($expectedRequestContextData, $event->getRequest());
+            $this->assertEquals($expectedUserContextData, $event->getUserContext()->toArray());
         });
     }
 
-    public function applyToEventWithRequestHavingIpAddressDataProvider(): array
-    {
-        return [
-            [
-                true,
-                [
-                    'ip_address' => '127.0.0.1',
-                    'foo' => 'bar',
-                ],
-            ],
-            [
-                false,
-                ['foo' => 'bar'],
-            ],
-        ];
-    }
-
-    /**
-     * @group legacy
-     *
-     * @dataProvider applyToEventDataProvider
-     *
-     * @expectedDeprecation The "Sentry\Integration\RequestIntegration::applyToEvent" method is deprecated since version 2.1 and will be removed in 3.0.
-     */
-    public function testApplyToEvent(array $options, ServerRequestInterface $request, array $expectedResult): void
-    {
-        $event = new Event();
-        $integration = new RequestIntegration(new Options($options));
-
-        RequestIntegration::applyToEvent($integration, $event, $request);
-
-        $this->assertEquals($expectedResult, $event->getRequest());
-    }
-
-    public function applyToEventDataProvider(): \Generator
+    public function invokeDataProvider(): \Generator
     {
         yield [
             [
@@ -117,6 +73,9 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -131,6 +90,9 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -147,6 +109,9 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com:1234'],
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -160,6 +125,9 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com:1234'],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -187,6 +155,10 @@ final class RequestIntegrationTest extends TestCase
                     'REMOTE_ADDR' => '127.0.0.1',
                 ],
             ],
+            [
+                'ip_address' => '127.0.0.1',
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -206,6 +178,9 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -224,6 +199,9 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -248,6 +226,9 @@ final class RequestIntegrationTest extends TestCase
                     'bar' => 'bar value',
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -266,6 +247,9 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -290,6 +274,9 @@ final class RequestIntegrationTest extends TestCase
                     'bar' => 'bar value',
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -308,6 +295,9 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -332,6 +322,9 @@ final class RequestIntegrationTest extends TestCase
                         'size' => 123,
                     ],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -366,6 +359,9 @@ final class RequestIntegrationTest extends TestCase
                         ],
                     ],
                 ],
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
 
@@ -405,6 +401,9 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -425,6 +424,9 @@ final class RequestIntegrationTest extends TestCase
                     'foo' => 'bar',
                 ],
             ],
+            [
+                'foo' => 'bar',
+            ],
         ];
 
         yield [
@@ -442,6 +444,9 @@ final class RequestIntegrationTest extends TestCase
                     'Content-Type' => ['application/json'],
                 ],
                 'data' => '{',
+            ],
+            [
+                'foo' => 'bar',
             ],
         ];
     }
