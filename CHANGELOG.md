@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix `Options::setEnvironment` method not accepting `null` values (#1057)
+- Fix the capture of the request body in the `RequestIntegration` integration when the stream size is unknown (#1064)
 
 ### 2.4.2 (2020-07-24)
 
