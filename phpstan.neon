@@ -33,6 +33,9 @@ parameters:
         -
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
+        -
+            message: "/Call to function in_array\\(\\) with arguments callable\\(\\): mixed&string, array\\('{closure}', '__lambda_func'\\) and true will always evaluate to false\\.$/"
+            path: src/FrameBuilder.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

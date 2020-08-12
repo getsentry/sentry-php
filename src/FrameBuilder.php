@@ -8,6 +8,8 @@ use Sentry\Serializer\RepresentationSerializerInterface;
 
 /**
  * This class builds a {@see Frame} object out of a backtrace's raw frame.
+ *
+ * @internal
  */
 final class FrameBuilder
 {

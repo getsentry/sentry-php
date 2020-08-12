@@ -9,6 +9,8 @@ use Sentry\Serializer\RepresentationSerializerInterface;
 /**
  * This class builds {@see Stacktrace} objects from an instance of an exception
  * or from a backtrace.
+ *
+ * @internal
  */
 final class StacktraceBuilder
 {
