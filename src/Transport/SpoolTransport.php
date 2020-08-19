@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Promise\RejectedPromise;
 use Sentry\Event;
-use Sentry\EventId;
+use Sentry\Response;
+use Sentry\ResponseStatus;
 use Sentry\Spool\SpoolInterface;
 
 /**
@@ -41,12 +45,12 @@ final class SpoolTransport implements TransportInterface
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event): ?EventId
+    public function send(Event $event): PromiseInterface
     {
         if ($this->spool->queueEvent($event)) {
-            return $event->getId();
+            return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
         }
 
-        return null;
+        return new RejectedPromise(new Response(ResponseStatus::skipped(), $event));
     }
 }
