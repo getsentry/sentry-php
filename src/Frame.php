@@ -11,12 +11,20 @@ namespace Sentry;
  */
 final class Frame implements \JsonSerializable
 {
-    private const INTERNAL_FRAME_FILENAME = '[internal]';
+    public const INTERNAL_FRAME_FILENAME = '[internal]';
+
+    public const ANONYMOUS_CLASS_PREFIX = "class@anonymous\x00";
 
     /**
      * @var string|null The name of the function being called
      */
     private $functionName;
+
+    /**
+     * @var string|null The original function name, if the function name is
+     *                  shortened or demangled
+     */
+    private $rawFunctionName;
 
     /**
      * @var string The file where the frame originated
@@ -68,6 +76,8 @@ final class Frame implements \JsonSerializable
      *
      * @param string|null          $functionName     The name of the function being called
      * @param string               $file             The file where the frame originated
+     * @param string|null          $rawFunctionName  The original function name, if the function
+     *                                               name is shortened or demangled
      * @param string|null          $absoluteFilePath The absolute path to the source file
      * @param int                  $line             The line at which the frame originated
      * @param array<string, mixed> $vars             A mapping of variables which were available
@@ -76,12 +86,13 @@ final class Frame implements \JsonSerializable
      *                                               execution of code relevant to the
      *                                               application
      */
-    public function __construct(?string $functionName, string $file, int $line, ?string $absoluteFilePath = null, array $vars = [], bool $inApp = true)
+    public function __construct(?string $functionName, string $file, int $line, ?string $rawFunctionName = null, ?string $absoluteFilePath = null, array $vars = [], bool $inApp = true)
     {
         $this->functionName = $functionName;
         $this->file = $file;
-        $this->absoluteFilePath = $absoluteFilePath ?? $file;
         $this->line = $line;
+        $this->rawFunctionName = $rawFunctionName;
+        $this->absoluteFilePath = $absoluteFilePath ?? $file;
         $this->vars = $vars;
         $this->inApp = $inApp;
     }
@@ -92,6 +103,15 @@ final class Frame implements \JsonSerializable
     public function getFunctionName(): ?string
     {
         return $this->functionName;
+    }
+
+    /**
+     * Gets the original function name, if the function name is shortened or
+     * demangled.
+     */
+    public function getRawFunctionName(): ?string
+    {
+        return $this->rawFunctionName;
     }
 
     /**
@@ -234,6 +254,7 @@ final class Frame implements \JsonSerializable
      *
      * @psalm-return array{
      *     function: string|null,
+     *     raw_function: string|null,
      *     filename: string,
      *     lineno: int,
      *     in_app: bool,
@@ -248,6 +269,7 @@ final class Frame implements \JsonSerializable
     {
         $result = [
             'function' => $this->functionName,
+            'raw_function' => $this->rawFunctionName,
             'filename' => $this->file,
             'lineno' => $this->line,
             'in_app' => $this->inApp,

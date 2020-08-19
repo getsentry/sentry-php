@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\ExceptionDataBag;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -45,9 +46,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
     public function invokeDataProvider(): \Generator
     {
         $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'Integration disabled' => [
             new Event(),
@@ -59,9 +58,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         ];
 
         $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'No exceptions to check' => [
             new Event(),
@@ -73,9 +70,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         ];
 
         $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching exactly the "ignore_exceptions" option' => [
             $event,
@@ -89,9 +84,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         ];
 
         $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching the "ignore_exceptions" option' => [
             $event,

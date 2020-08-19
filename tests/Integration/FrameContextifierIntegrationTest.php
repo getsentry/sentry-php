@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Frame;
 use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -60,8 +61,9 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace($options, $this->serializer, $this->representationSerializer, false);
-        $stacktrace->addFrame($fixtureFilePath, $lineNumber, ['function' => '[unknown]']);
+        $stacktrace = new Stacktrace([
+            new Frame('[unknown]', $fixtureFilePath, $lineNumber),
+        ]);
 
         $event = new Event();
         $event->setStacktrace($stacktrace);
@@ -152,9 +154,10 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace(new Options(), $this->serializer, $this->representationSerializer, false);
-        $stacktrace->addFrame('[internal]', 0, []);
-        $stacktrace->addFrame('file.ext', 10, []);
+        $stacktrace = new Stacktrace([
+            new Frame(null, '[internal]', 0),
+            new Frame(null, 'file.ext', 10),
+        ]);
 
         $event = new Event();
         $event->setStacktrace($stacktrace);

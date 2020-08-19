@@ -19,11 +19,6 @@ final class EventFactory implements EventFactoryInterface
     private $serializer;
 
     /**
-     * @var RepresentationSerializerInterface The representation serializer
-     */
-    private $representationSerializer;
-
-    /**
      * @var Options The Sentry options
      */
     private $options;
@@ -39,6 +34,11 @@ final class EventFactory implements EventFactoryInterface
     private $sdkVersion;
 
     /**
+     * @var StacktraceBuilder
+     */
+    private $stacktraceBuilder;
+
+    /**
      * EventFactory constructor.
      *
      * @param SerializerInterface               $serializer               The serializer
@@ -50,30 +50,26 @@ final class EventFactory implements EventFactoryInterface
     public function __construct(SerializerInterface $serializer, RepresentationSerializerInterface $representationSerializer, Options $options, string $sdkIdentifier, string $sdkVersion)
     {
         $this->serializer = $serializer;
-        $this->representationSerializer = $representationSerializer;
         $this->options = $options;
         $this->sdkIdentifier = $sdkIdentifier;
         $this->sdkVersion = $sdkVersion;
+        $this->stacktraceBuilder = new StacktraceBuilder($options, $representationSerializer);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createWithStacktrace($payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
+    public function createWithStacktrace($payload): Event
     {
         if ($payload instanceof Event) {
             return $this->create($payload);
         }
 
         if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
-            $payload['stacktrace'] = Stacktrace::createFromBacktrace(
-                $this->options,
-                $this->serializer,
-                $this->representationSerializer,
+            $payload['stacktrace'] = $this->stacktraceBuilder->buildFromBacktrace(
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
                 __FILE__,
-                __LINE__ - 6,
-                \func_num_args() > 1 ? func_get_arg(1) : true
+                __LINE__ - 3
             );
         }
 
@@ -83,7 +79,7 @@ final class EventFactory implements EventFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create($payload/*, bool $shouldReadSourceCodeExcerpts = true*/): Event
+    public function create($payload): Event
     {
         try {
             if ($payload instanceof Event) {
@@ -103,7 +99,7 @@ final class EventFactory implements EventFactoryInterface
                 }
 
                 if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-                    $this->addThrowableToEvent($event, $payload['exception'], \func_num_args() > 1 ? func_get_arg(1) : true);
+                    $this->addThrowableToEvent($event, $payload['exception']);
                 }
 
                 if (isset($payload['level']) && $payload['level'] instanceof Severity) {
@@ -131,38 +127,26 @@ final class EventFactory implements EventFactoryInterface
     /**
      * Stores the given exception in the passed event.
      *
-     * @param Event      $event                        The event that will be enriched with the
-     *                                                 exception
-     * @param \Throwable $exception                    The exception that will be processed and
-     *                                                 added to the event
-     * @param bool       $shouldReadSourceCodeExcerpts Whether to read the source code excerpts
-     *                                                 using the legacy method instead of using
-     *                                                 the integration
+     * @param Event      $event     The event that will be enriched with the
+     *                              exception
+     * @param \Throwable $exception The exception that will be processed and
+     *                              added to the event
      */
-    private function addThrowableToEvent(Event $event, \Throwable $exception, bool $shouldReadSourceCodeExcerpts): void
+    private function addThrowableToEvent(Event $event, \Throwable $exception): void
     {
         if ($exception instanceof \ErrorException) {
             $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
 
         $exceptions = [];
-        $currentException = $exception;
 
         do {
-            $exceptions[] = [
-                'type' => \get_class($currentException),
-                'value' => $currentException->getMessage(),
-                'stacktrace' => Stacktrace::createFromBacktrace(
-                    $this->options,
-                    $this->serializer,
-                    $this->representationSerializer,
-                    $currentException->getTrace(),
-                    $currentException->getFile(),
-                    $currentException->getLine(),
-                    $shouldReadSourceCodeExcerpts
-                ),
-            ];
-        } while ($currentException = $currentException->getPrevious());
+            $exceptions[] = new ExceptionDataBag(
+                $exception,
+                $this->stacktraceBuilder->buildFromException($exception),
+                new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
+            );
+        } while ($exception = $exception->getPrevious());
 
         $event->setExceptions($exceptions);
     }

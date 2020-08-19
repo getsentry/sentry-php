@@ -10,7 +10,6 @@ use Sentry\Breadcrumb;
 use Sentry\Client;
 use Sentry\Event;
 use Sentry\Severity;
-use Sentry\Stacktrace;
 use Sentry\Util\PHPVersion;
 
 /**
@@ -250,20 +249,6 @@ final class EventTest extends TestCase
             ['fingerprint', ['foo', 'bar'], ['fingerprint' => ['foo', 'bar']]],
             ['environment', 'foo', ['environment' => 'foo']],
         ];
-    }
-
-    public function testSetStacktrace(): void
-    {
-        $stacktrace = $this->createMock(Stacktrace::class);
-
-        $event = new Event();
-        $event->setStacktrace($stacktrace);
-
-        $this->assertSame($stacktrace, $event->getStacktrace());
-
-        $event->setStacktrace(null);
-
-        $this->assertNull($event->getStacktrace());
     }
 
     public function testEventJsonSerialization(): void

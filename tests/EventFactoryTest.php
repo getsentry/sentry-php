@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\EventFactory;
+use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -133,23 +134,19 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->create(['exception' => $exception], false);
-        $expectedData = [
-            [
-                'type' => \Exception::class,
-                'value' => 'testMessage',
-            ],
-            [
-                'type' => \RuntimeException::class,
-                'value' => 'testMessage2',
-            ],
-        ];
+        $event = $eventFactory->create(['exception' => $exception]);
+        $capturedExceptions = $event->getExceptions();
 
-        $this->assertArraySubset($expectedData, $event->getExceptions());
+        $this->assertCount(2, $capturedExceptions);
+        $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+        $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[0]->getMechanism());
+        $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+        $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
 
-        foreach ($event->getExceptions() as $exceptionData) {
-            $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
-        }
+        $this->assertNotNull($capturedExceptions[1]->getStacktrace());
+        $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[1]->getMechanism());
+        $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
+        $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
     }
 
     public function testCreateWithErrorException(): void
@@ -164,7 +161,7 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->create(['exception' => $exception], false);
+        $event = $eventFactory->create(['exception' => $exception]);
 
         $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
     }
@@ -182,7 +179,7 @@ class EventFactoryTest extends TestCase
             '1.2.3'
         );
 
-        $event = $eventFactory->createWithStacktrace([], false);
+        $event = $eventFactory->createWithStacktrace([]);
         $stacktrace = $event->getStacktrace();
 
         $this->assertInstanceOf(Stacktrace::class, $stacktrace);
@@ -194,50 +191,6 @@ class EventFactoryTest extends TestCase
             'src' . \DIRECTORY_SEPARATOR . 'EventFactory.php',
             ltrim($lastFrame->getFile(), \DIRECTORY_SEPARATOR)
         );
-    }
-
-    /**
-     * @group legacy
-     *
-     * @dataProvider createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider
-     *
-     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
-     */
-    public function testCreateThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(array ...$constructorArguments): void
-    {
-        $options = new Options();
-        $eventFactory = new EventFactory(
-            new Serializer($options),
-            $this->createMock(RepresentationSerializerInterface::class),
-            $options,
-            'sentry.sdk.identifier',
-            '1.2.3',
-            ...$constructorArguments
-        );
-
-        $eventFactory->create(['exception' => new \Exception()]);
-    }
-
-    /**
-     * @group legacy
-     *
-     * @dataProvider createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider
-     *
-     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
-     */
-    public function testCreateWithStacktraceThrowsDeprecationErrorIfLastArgumentIsNotSetToFalse(array ...$constructorArguments): void
-    {
-        $options = new Options();
-        $eventFactory = new EventFactory(
-            new Serializer($options),
-            $this->createMock(RepresentationSerializerInterface::class),
-            $options,
-            'sentry.sdk.identifier',
-            '1.2.3',
-            ...$constructorArguments
-        );
-
-        $eventFactory->createWithStacktrace([]);
     }
 
     public function createThrowsDeprecationErrorIfLastArgumentIsNotSetToFalseDataProvider(): \Generator

@@ -13,7 +13,7 @@ use Sentry\SentrySdk;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class FatalErrorListenerIntegration implements IntegrationInterface
+final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegration
 {
     /**
      * {@inheritdoc}
@@ -36,7 +36,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            $currentHub->captureException($exception);
+            $integration->captureException($currentHub, $exception);
         });
     }
 }

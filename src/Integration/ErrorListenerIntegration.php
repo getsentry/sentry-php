@@ -12,7 +12,7 @@ use Sentry\SentrySdk;
  * This integration hooks into the global error handlers and emits events to
  * Sentry.
  */
-final class ErrorListenerIntegration implements IntegrationInterface
+final class ErrorListenerIntegration extends AbstractErrorListenerIntegration
 {
     /**
      * {@inheritdoc}
@@ -39,7 +39,7 @@ final class ErrorListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            $currentHub->captureException($exception);
+            $integration->captureException($currentHub, $exception);
         });
     }
 }
