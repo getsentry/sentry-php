@@ -72,7 +72,7 @@ class SpanContext
      */
     public static function fromTraceparent(string $header)
     {
-        /** @phpstan-ignore-next-line */
+        /** @phpstan-ignore-next-line */ /** @psalm-suppress UnsafeInstantiation */
         $context = new static();
 
         if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {

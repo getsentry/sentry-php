@@ -1,5 +1,7 @@
 --TEST--
 Test that the ErrorListenerIntegration integration captures only the errors allowed by the `error_types` options
+--INI--
+error_reporting=E_ALL
 --FILE--
 <?php
 

@@ -1,5 +1,7 @@
 --TEST--
 Test that the error handler ignores silenced errors by default, but it reports them with the appropriate option enabled.
+--INI--
+error_reporting=E_ALL
 --FILE--
 <?php
 
