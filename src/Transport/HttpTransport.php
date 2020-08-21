@@ -121,7 +121,11 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
             'POST',
             $dsn->getStoreApiEndpointUrl(),
             ['Content-Type' => 'application/json'],
-            JSON::encode($event->toArray())
+            str_replace(
+                $this->options->getFilteredStrings(),
+                $this->options->getFilterReplacementString(),
+                JSON::encode($event->toArray())
+            )
         );
 
         if ($this->delaySendingUntilShutdown) {

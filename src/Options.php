@@ -494,6 +494,50 @@ final class Options
     }
 
     /**
+     * Gets an array of strings to filter out of events.
+     *
+     * @return array<string>
+     */
+    public function getFilteredStrings(): array
+    {
+        return $this->options['filtered_strings'];
+    }
+
+    /**
+     * Sets an array of strings to filter out of events.
+     *
+     * @param array<string> $strings Array of strings to filter out
+     */
+    public function setFilteredStrings(array $strings): void
+    {
+        $options = array_merge($this->options, ['filtered_strings' => $strings]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the string to replace filtered strings with.
+     *
+     * @return string
+     */
+    public function getFilterReplacementString(): string
+    {
+        return $this->options['filter_replacement_string'];
+    }
+
+    /**
+     * Sets the string to replace filtered strings with.
+     *
+     * @param string $replacement String to replace filtered strings with
+     */
+    public function setFilterReplacementString(string $replacement): void
+    {
+        $options = array_merge($this->options, ['filter_replacement_string' => $replacement]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
@@ -829,6 +873,9 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'filtered_strings' => [],
+            'filter_replacement_string' => 'Filtered'
+
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -859,6 +906,9 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('filtered_strings', 'array');
+        $resolver->setAllowedTypes('filter_replacement_string', 'string');
+
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
