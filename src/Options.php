@@ -517,8 +517,6 @@ final class Options
 
     /**
      * Gets the string to replace filtered strings with.
-     *
-     * @return string
      */
     public function getFilterReplacementString(): string
     {
@@ -874,8 +872,7 @@ final class Options
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
             'filtered_strings' => [],
-            'filter_replacement_string' => 'Filtered'
-
+            'filter_replacement_string' => 'Filtered',
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -908,7 +905,6 @@ final class Options
         $resolver->setAllowedTypes('class_serializers', 'array');
         $resolver->setAllowedTypes('filtered_strings', 'array');
         $resolver->setAllowedTypes('filter_replacement_string', 'string');
-
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
