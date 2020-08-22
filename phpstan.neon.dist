@@ -1,0 +1,29 @@
+parameters:
+    tipsOfTheDay: false
+    treatPhpDocTypesAsCertain: false
+    level: 8
+    paths:
+        - src/
+    ignoreErrors:
+        # https://github.com/phpstan/phpstan/issues/3133
+        -
+            message: '/^Cannot cast array\|bool\|float\|int\|string\|null to string\.$/'
+            path: src/Serializer/RepresentationSerializer.php
+            count: 1
+        # Impossible! Reports the expected type as an error.
+        -
+            message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns T of Sentry\\Integration\\IntegrationInterface\|null\.$/'
+            path: src/Client.php
+            count: 1
+        # Hackery in EventFactory::create(WithStacktrace) argument count.
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::createWithStacktrace\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/Client.php
+            count: 1
+        -
+            message: '/^Method Sentry\\EventFactoryInterface::create\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/Client.php
+            count: 1
+    excludes_analyse:
+        - tests/resources/
+        - tests/Fixtures/

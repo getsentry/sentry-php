@@ -191,7 +191,7 @@ abstract class AbstractSerializer
         $hashes[] = spl_object_hash($object);
         $serializedObject = [];
 
-        foreach ($object as $key => &$value) {
+        foreach ((array)$object as $key => &$value) {
             if (\is_object($value)) {
                 $serializedObject[$key] = $this->serializeObject($value, $_depth + 1, $hashes);
             } else {

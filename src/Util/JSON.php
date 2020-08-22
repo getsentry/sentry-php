@@ -88,10 +88,12 @@ final class JSON
 
         if (\is_string($data)) {
             return self::convertStringToUtf8($data);
-        } elseif (\is_array($data) || \is_object($data)) {
+        }
+
+        if (\is_array($data) || \is_object($data)) {
             $output = [];
 
-            foreach ($data as $key => $value) {
+            foreach ((array)$data as $key => $value) {
                 if (\is_string($key)) {
                     $key = self::convertStringToUtf8($key);
                 }
@@ -115,9 +117,9 @@ final class JSON
             }
 
             return \is_array($data) ? $output : (object) $output;
-        } else {
-            return $data;
         }
+
+        return $data;
     }
 
     /**

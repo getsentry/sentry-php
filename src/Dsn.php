@@ -76,6 +76,7 @@ final class Dsn
      */
     public static function createFromString(string $value): self
     {
+        /** @var array{scheme:string, host:string, path:string, user:string}|false */
         $parsedDsn = parse_url($value);
 
         if (false === $parsedDsn) {
@@ -83,25 +84,23 @@ final class Dsn
         }
 
         foreach (['scheme', 'host', 'path', 'user'] as $component) {
-            if (!isset($parsedDsn[$component]) || (isset($parsedDsn[$component]) && empty($parsedDsn[$component]))) {
+            if (empty($parsedDsn[$component])) {
                 throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a scheme, a host, a user and a path component.', $value));
             }
         }
 
-        if (isset($parsedDsn['pass']) && empty($parsedDsn['pass'])) {
+        if (empty($parsedDsn['pass'])) {
             throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a valid secret key.', $value));
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         if (!\in_array($parsedDsn['scheme'], ['http', 'https'], true)) {
             throw new \InvalidArgumentException(sprintf('The scheme of the "%s" DSN must be either "http" or "https".', $value));
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
 
-        if (!ctype_digit($projectId)) {
+        if ($projectId === null || !ctype_digit($projectId)) {
             throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
         }
 
