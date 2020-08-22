@@ -12,12 +12,6 @@ branches:
 
 environment:
     matrix:
-        - PHP_VERSION: 7.1
-          XDEBUG_VERSION: 2.9.2-7.1-vc14-nts
-          DEPENDENCIES: lowest
-        - PHP_VERSION: 7.1
-          XDEBUG_VERSION: 2.9.2-7.1-vc14-nts
-          DEPENDENCIES: highest
         - PHP_VERSION: 7.2
           XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
           DEPENDENCIES: lowest
