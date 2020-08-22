@@ -20,7 +20,7 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
     {
         $value = $this->serializeRecursively($value);
 
-        if (\is_numeric($value)) {
+        if (is_numeric($value)) {
             return (string) $value;
         }
 
