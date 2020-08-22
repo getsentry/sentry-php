@@ -19,17 +19,18 @@ final class HandlerTest extends TestCase
     /**
      * @dataProvider handleDataProvider
      */
-    public function testHandle(array $record, array $expectedPayload, array $expectedExtra): void
+    public function testHandle(array $record, array $expectedPayload, array $expectedExtra, array $expectedTags): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($expectedPayload, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+            ->with($expectedPayload, $this->callback(function (Scope $scopeArg) use ($expectedExtra, $expectedTags): bool {
                 $event = $scopeArg->applyToEvent(new Event(), []);
 
                 $this->assertNotNull($event);
-                $this->assertSame($expectedExtra, $event->getExtraContext()->toArray());
+                $this->assertSame($expectedExtra, $event->getExtra());
+                $this->assertSame($expectedTags, $event->getTags());
 
                 return true;
             }));
@@ -58,6 +59,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::DEBUG),
             ],
+            [],
         ];
 
         yield [
@@ -78,6 +80,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
             ],
+            [],
         ];
 
         yield [
@@ -98,6 +101,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::NOTICE),
             ],
+            [],
         ];
 
         yield [
@@ -118,6 +122,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
             ],
+            [],
         ];
 
         yield [
@@ -138,6 +143,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ERROR),
             ],
+            [],
         ];
 
         yield [
@@ -158,6 +164,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::CRITICAL),
             ],
+            [],
         ];
 
         yield [
@@ -178,6 +185,7 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ALERT),
             ],
+            [],
         ];
 
         yield [
@@ -198,6 +206,43 @@ final class HandlerTest extends TestCase
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::EMERGENCY),
             ],
+            [],
+        ];
+
+        yield [
+            [
+                'message' => 'foo bar',
+                'level' => Logger::WARNING,
+                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'context' => [
+                    'extra' => [
+                        'foo.extra' => 'foo extra value',
+                        'bar.extra' => 'bar extra value',
+                    ],
+                    'tags' => [
+                        'foo.tag' => 'foo tag value',
+                        'bar.tag' => 'bar tag value',
+                    ],
+                ],
+                'channel' => 'channel.foo',
+                'datetime' => new \DateTimeImmutable(),
+                'extra' => [],
+            ],
+            [
+                'level' => Severity::warning(),
+                'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
+            ],
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'foo.extra' => 'foo extra value',
+                'bar.extra' => 'bar extra value',
+            ],
+            [
+                'foo.tag' => 'foo tag value',
+                'bar.tag' => 'bar tag value',
+            ],
         ];
 
         yield [
@@ -207,6 +252,14 @@ final class HandlerTest extends TestCase
                 'level_name' => Logger::getLevelName(Logger::WARNING),
                 'context' => [
                     'exception' => new \Exception('exception message'),
+                    'extra' => [
+                        'foo.extra' => 'foo extra value',
+                        'bar.extra' => 'bar extra value',
+                    ],
+                    'tags' => [
+                        'foo.tag' => 'foo tag value',
+                        'bar.tag' => 'bar tag value',
+                    ],
                 ],
                 'channel' => 'channel.foo',
                 'datetime' => new \DateTimeImmutable(),
@@ -221,7 +274,39 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'foo.extra' => 'foo extra value',
+                'bar.extra' => 'bar extra value',
             ],
+            [
+                'foo.tag' => 'foo tag value',
+                'bar.tag' => 'bar tag value',
+            ],
+        ];
+
+        yield [
+            [
+                'message' => 'foo bar',
+                'level' => Logger::INFO,
+                'level_name' => Logger::getLevelName(Logger::INFO),
+                'channel' => 'channel.foo',
+                'context' => [
+                    'extra' => [
+                        1 => 'numeric key',
+                    ],
+                ],
+                'extra' => [],
+            ],
+            [
+                'level' => Severity::info(),
+                'message' => 'foo bar',
+                'logger' => 'monolog.channel.foo',
+            ],
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::INFO),
+                '0' => 'numeric key',
+            ],
+            [],
         ];
     }
 }

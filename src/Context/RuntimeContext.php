@@ -4,103 +4,37 @@ declare(strict_types=1);
 
 namespace Sentry\Context;
 
-use Sentry\Util\PHPVersion;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
-use Symfony\Component\OptionsResolver\OptionsResolver;
-
 /**
- * This class is a specialized implementation of the {@see Context} class that
- * stores information about the current runtime.
+ * This class stores information about the current runtime.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
- *
- * @final since version 2.3
- *
- * @template-extends Context<string>
  */
-class RuntimeContext extends Context
+final class RuntimeContext
 {
     /**
-     * @var OptionsResolver The options resolver
+     * @var string The name of the runtime
      */
-    private $resolver;
+    private $name;
 
     /**
-     * {@inheritdoc}
-     *
-     * @throws UndefinedOptionsException If any of the options are not supported
-     *                                   by the context
-     * @throws InvalidOptionsException   If any of the options don't fulfill the
-     *                                   specified validation rules
+     * @var string|null The version of the runtime
      */
-    public function __construct(array $data = [])
-    {
-        $this->resolver = new OptionsResolver();
-
-        $this->configureOptions($this->resolver);
-
-        parent::__construct($this->resolver->resolve($data));
-    }
+    private $version;
 
     /**
-     * {@inheritdoc}
+     * Constructor.
      *
-     * @throws UndefinedOptionsException If any of the options are not supported
-     *                                   by the context
-     * @throws InvalidOptionsException   If any of the options don't fulfill the
-     *                                   specified validation rules
+     * @param string      $name    The name of the runtime
+     * @param string|null $version The version of the runtime
      */
-    public function merge(array $data, bool $recursive = false): void
+    public function __construct(string $name, ?string $version = null)
     {
-        $data = $this->resolver->resolve($data);
+        if (0 === \strlen(trim($name))) {
+            throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
+        }
 
-        parent::merge($data, $recursive);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @throws UndefinedOptionsException If any of the options are not supported
-     *                                   by the context
-     * @throws InvalidOptionsException   If any of the options don't fulfill the
-     *                                   specified validation rules
-     */
-    public function setData(array $data): void
-    {
-        $data = $this->resolver->resolve($data);
-
-        parent::setData($data);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @throws UndefinedOptionsException If any of the options are not supported
-     *                                   by the context
-     * @throws InvalidOptionsException   If any of the options don't fulfill the
-     *                                   specified validation rules
-     */
-    public function replaceData(array $data): void
-    {
-        $data = $this->resolver->resolve($data);
-
-        parent::replaceData($data);
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @throws UndefinedOptionsException If any of the options are not supported
-     *                                   by the context
-     * @throws InvalidOptionsException   If any of the options don't fulfill the
-     *                                   specified validation rules
-     */
-    public function offsetSet($offset, $value): void
-    {
-        $data = $this->resolver->resolve([$offset => $value]);
-
-        parent::offsetSet($offset, $data[$offset]);
+        $this->name = $name;
+        $this->version = $version;
     }
 
     /**
@@ -108,7 +42,7 @@ class RuntimeContext extends Context
      */
     public function getName(): string
     {
-        return $this->data['name'];
+        return $this->name;
     }
 
     /**
@@ -118,40 +52,28 @@ class RuntimeContext extends Context
      */
     public function setName(string $name): void
     {
-        $this->offsetSet('name', $name);
+        if (0 === \strlen(trim($name))) {
+            throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
+        }
+
+        $this->name = $name;
     }
 
     /**
      * Gets the version of the runtime.
      */
-    public function getVersion(): string
+    public function getVersion(): ?string
     {
-        return $this->data['version'];
+        return $this->version;
     }
 
     /**
      * Sets the version of the runtime.
      *
-     * @param string $version The version
+     * @param string|null $version The version
      */
-    public function setVersion(string $version): void
+    public function setVersion(?string $version): void
     {
-        $this->offsetSet('version', $version);
-    }
-
-    /**
-     * Configures the options of the context.
-     *
-     * @param OptionsResolver $resolver The resolver for the options
-     */
-    private function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setDefaults([
-            'name' => 'php',
-            'version' => PHPVersion::parseVersion(),
-        ]);
-
-        $resolver->setAllowedTypes('name', 'string');
-        $resolver->setAllowedTypes('version', 'string');
+        $this->version = $version;
     }
 }

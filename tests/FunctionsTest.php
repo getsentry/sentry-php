@@ -23,9 +23,6 @@ use function Sentry\configureScope;
 use function Sentry\init;
 use function Sentry\withScope;
 
-/**
- * @group legacy
- */
 final class FunctionsTest extends TestCase
 {
     public function testInit(): void

@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
+use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -19,8 +20,6 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 final class OptionsTest extends TestCase
 {
     /**
-     * @group legacy
-     *
      * @dataProvider optionsDataProvider
      */
     public function testConstructor($option, $value, $getterMethod): void
@@ -31,8 +30,6 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider optionsDataProvider
      */
     public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
@@ -235,8 +232,6 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider contextLinesOptionValidatesInputValueDataProvider
      */
     public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
@@ -339,11 +334,12 @@ final class OptionsTest extends TestCase
             ],
             [
                 new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
+                new ErrorListenerIntegration(),
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
                 new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
                 $integration,
             ],
         ];
@@ -394,11 +390,12 @@ final class OptionsTest extends TestCase
             },
             [
                 new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
+                new ErrorListenerIntegration(),
                 new FatalErrorListenerIntegration(),
                 new RequestIntegration(),
                 new TransactionIntegration(),
                 new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
             ],
         ];
     }

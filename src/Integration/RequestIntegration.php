@@ -11,6 +11,7 @@ use Sentry\Exception\JsonException;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 use Sentry\Util\JSON;
 
 /**
@@ -93,17 +94,20 @@ final class RequestIntegration implements IntegrationInterface
             $serverParams = $request->getServerParams();
 
             if (isset($serverParams['REMOTE_ADDR'])) {
+                $user = $event->getUser();
                 $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
+
+                if (null === $user) {
+                    $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
+                } elseif (null === $user->getIpAddress()) {
+                    $user->setIpAddress($serverParams['REMOTE_ADDR']);
+                }
+
+                $event->setUser($user);
             }
 
             $requestData['cookies'] = $request->getCookieParams();
             $requestData['headers'] = $request->getHeaders();
-
-            $userContext = $event->getUserContext();
-
-            if (null === $userContext->getIpAddress() && isset($serverParams['REMOTE_ADDR'])) {
-                $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
-            }
         } else {
             $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
         }

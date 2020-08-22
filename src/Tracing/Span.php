@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
 use Sentry\EventId;
 
 /**
@@ -49,14 +47,14 @@ class Span implements \JsonSerializable
     protected $sampled;
 
     /**
-     * @var TagsContext A List of tags associated to this Span
+     * @var array<string, string> A List of tags associated to this Span
      */
-    protected $tags;
+    protected $tags = [];
 
     /**
-     * @var Context<mixed> An arbitrary mapping of additional metadata
+     * @var array<string, mixed> An arbitrary mapping of additional metadata
      */
-    protected $data;
+    protected $data = [];
 
     /**
      * @var float Timestamp in seconds (epoch time) indicating when the span started
@@ -92,16 +90,12 @@ class Span implements \JsonSerializable
         $this->status = $context->status ?? null;
         $this->sampled = $context->sampled ?? null;
 
-        if ($context && $context->tags) {
-            $this->tags = new TagsContext($context->tags);
-        } else {
-            $this->tags = new TagsContext();
+        if (null !== $context && $context->tags) {
+            $this->tags = $context->tags;
         }
 
-        if ($context && $context->data) {
-            $this->data = new Context($context->data);
-        } else {
-            $this->data = new Context();
+        if (null !== $context && $context->data) {
+            $this->data = $context->data;
         }
 
         $this->startTimestamp = $context->startTimestamp ?? microtime(true);
@@ -197,12 +191,12 @@ class Span implements \JsonSerializable
             $data['op'] = $this->op;
         }
 
-        if (!$this->data->isEmpty()) {
-            $data['data'] = $this->data->toArray();
+        if (!empty($this->data)) {
+            $data['data'] = $this->data;
         }
 
-        if (!$this->tags->isEmpty()) {
-            $data['tags'] = $this->tags->toArray();
+        if (!empty($this->tags)) {
+            $data['tags'] = $this->tags;
         }
 
         return $data;
@@ -248,17 +242,24 @@ class Span implements \JsonSerializable
         $this->status = $status;
     }
 
-    public function getTags(): TagsContext
+    /**
+     * Gets a map of tags for this event.
+     *
+     * @return array<string, string>
+     */
+    public function getTags(): array
     {
         return $this->tags;
     }
 
     /**
-     * @param array<string, string> $tags
+     * Sets a map of tags for this event.
+     *
+     * @param array<string, string> $tags The tags
      */
     public function setTags(array $tags): void
     {
-        $this->tags->merge($tags);
+        $this->tags = array_merge($this->tags, $tags);
     }
 
     public function getSpanId(): SpanId
@@ -302,11 +303,11 @@ class Span implements \JsonSerializable
     }
 
     /**
-     * @param array<mixed> $data
+     * @param array<string, mixed> $data
      */
     public function setData(array $data): void
     {
-        $this->data->merge($data);
+        $this->data = array_merge($this->data, $data);
     }
 
     public function setStartTimestamp(float $startTimestamp): void

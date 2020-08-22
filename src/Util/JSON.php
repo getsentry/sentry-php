@@ -10,6 +10,8 @@ use Sentry\Exception\JsonException;
  * This class provides some utility methods to encode/decode JSON data.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @internal
  */
 final class JSON
 {

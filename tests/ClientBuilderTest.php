@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -22,11 +23,6 @@ use Sentry\Transport\NullTransport;
 
 final class ClientBuilderTest extends TestCase
 {
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
     public function testHttpTransportIsUsedWhenServerIsConfigured(): void
     {
         $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
@@ -84,6 +80,7 @@ final class ClientBuilderTest extends TestCase
                     RequestIntegration::class,
                     TransactionIntegration::class,
                     FrameContextifierIntegration::class,
+                    EnvironmentIntegration::class,
                 ],
             ],
             [
@@ -96,6 +93,7 @@ final class ClientBuilderTest extends TestCase
                     RequestIntegration::class,
                     TransactionIntegration::class,
                     FrameContextifierIntegration::class,
+                    EnvironmentIntegration::class,
                     StubIntegration::class,
                 ],
             ],

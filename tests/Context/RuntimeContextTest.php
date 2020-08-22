@@ -4,124 +4,34 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Context;
 
-use Sentry\Context\Context;
+use PHPUnit\Framework\TestCase;
 use Sentry\Context\RuntimeContext;
-use Sentry\Util\PHPVersion;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 
-class RuntimeContextTest extends AbstractContextTest
+final class RuntimeContextTest extends TestCase
 {
-    public function valuesDataProvider(): array
+    public function testConstructor(): void
     {
-        return [
-            [
-                [],
-                [
-                    'name' => 'php',
-                    'version' => PHPVersion::parseVersion(),
-                ],
-                null,
-                null,
-            ],
-            [
-                [
-                    'name' => 'foo',
-                ],
-                [
-                    'name' => 'foo',
-                    'version' => PHPVersion::parseVersion(),
-                ],
-                null,
-                null,
-            ],
-            [
-                [
-                    'name' => 'foo',
-                    'version' => 'bar',
-                ],
-                [
-                    'name' => 'foo',
-                    'version' => 'bar',
-                ],
-                null,
-                null,
-            ],
-            [
-                [
-                    'foo' => 'bar',
-                ],
-                [],
-                UndefinedOptionsException::class,
-                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
-            ],
-            [
-                [
-                    'name' => 1,
-                ],
-                [],
-                InvalidOptionsException::class,
-                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
-            ],
-            [
-                [
-                    'version' => 1,
-                ],
-                [],
-                InvalidOptionsException::class,
-                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
-            ],
-        ];
+        $context = new RuntimeContext('php', '7.4');
+
+        $this->assertSame('php', $context->getName());
+        $this->assertSame('7.4', $context->getVersion());
     }
 
-    public function offsetSetDataProvider(): array
+    public function testConstructorThrowsOnInvalidArgument(): void
     {
-        return [
-            [
-                'name',
-                'foo',
-                null,
-                null,
-            ],
-            [
-                'name',
-                1,
-                InvalidOptionsException::class,
-                '/^The option "name" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
-            ],
-            [
-                'version',
-                1,
-                InvalidOptionsException::class,
-                '/^The option "version" with value 1 is expected to be of type "string", but is of type "(integer|int)"\.$/',
-            ],
-            [
-                'foo',
-                'bar',
-                UndefinedOptionsException::class,
-                '/^The option "foo" does not exist\. Defined options are: "name", "version"\.$/',
-            ],
-        ];
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The $name argument cannot be an empty string.');
+
+        new RuntimeContext('');
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public function testGettersAndSetters(): void
     {
-        return [
-            [
-                'getName',
-                'setName',
-                'foo',
-            ],
-            [
-                'getVersion',
-                'setVersion',
-                'bar',
-            ],
-        ];
-    }
+        $context = new RuntimeContext('php');
+        $context->setName('go');
+        $context->setVersion('1.15');
 
-    protected function createContext(array $initialData = []): Context
-    {
-        return new RuntimeContext($initialData);
+        $this->assertSame('go', $context->getName());
+        $this->assertSame('1.15', $context->getVersion());
     }
 }

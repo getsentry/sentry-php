@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
-use Sentry\Context\Context;
-use Sentry\Context\TagsContext;
-use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\Severity;
+use Sentry\UserDataBag;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -23,7 +21,7 @@ final class Scope
     private $breadcrumbs = [];
 
     /**
-     * @var UserContext The user data associated to this scope
+     * @var UserDataBag|null The user data associated to this scope
      */
     private $user;
 
@@ -33,14 +31,14 @@ final class Scope
     private $contexts = [];
 
     /**
-     * @var TagsContext The list of tags associated to this scope
+     * @var array<string, string> The list of tags associated to this scope
      */
-    private $tags;
+    private $tags = [];
 
     /**
-     * @var Context<mixed> A set of extra data associated to this scope
+     * @var array<string, mixed> A set of extra data associated to this scope
      */
-    private $extra;
+    private $extra = [];
 
     /**
      * @var string[] List of fingerprints used to group events together in
@@ -63,17 +61,6 @@ final class Scope
      * @var callable[] List of event processors
      */
     private static $globalEventProcessors = [];
-
-    /**
-     * Constructor.
-     */
-    public function __construct()
-    {
-        $this->user = new UserContext();
-        $this->tags = new TagsContext();
-        $this->extra = new Context();
-        $this->contexts = [];
-    }
 
     /**
      * Sets a new tag in the tags context.
@@ -99,7 +86,7 @@ final class Scope
      */
     public function setTags(array $tags): self
     {
-        $this->tags->merge($tags);
+        $this->tags = array_merge($this->tags, $tags);
 
         return $this;
     }
@@ -157,7 +144,7 @@ final class Scope
      */
     public function setExtras(array $extras): self
     {
-        $this->extra->merge($extras);
+        $this->extra = array_merge($this->extra, $extras);
 
         return $this;
     }
@@ -165,13 +152,17 @@ final class Scope
     /**
      * Sets the given data in the user context.
      *
-     * @param array<string, mixed> $data The data
+     * @param UserDataBag $user The user data
      *
      * @return $this
      */
-    public function setUser(array $data): self
+    public function setUser(UserDataBag $user): self
     {
-        $this->user->merge($data);
+        if (null === $this->user) {
+            $this->user = $user;
+        } else {
+            $this->user = $this->user->merge($user);
+        }
 
         return $this;
     }
@@ -265,13 +256,12 @@ final class Scope
      */
     public function clear(): self
     {
-        $this->tags->clear();
-        $this->extra->clear();
-        $this->user->clear();
-
+        $this->user = null;
         $this->level = null;
         $this->fingerprint = [];
         $this->breadcrumbs = [];
+        $this->tags = [];
+        $this->extra = [];
         $this->contexts = [];
 
         return $this;
@@ -286,9 +276,7 @@ final class Scope
      */
     public function applyToEvent(Event $event, $payload): ?Event
     {
-        if (empty($event->getFingerprint())) {
-            $event->setFingerprint($this->fingerprint);
-        }
+        $event->setFingerprint(array_merge($event->getFingerprint(), $this->fingerprint));
 
         if (empty($event->getBreadcrumbs())) {
             $event->setBreadcrumb($this->breadcrumbs);
@@ -298,9 +286,25 @@ final class Scope
             $event->setLevel($this->level);
         }
 
-        $event->getTagsContext()->merge($this->tags->toArray());
-        $event->getExtraContext()->merge($this->extra->toArray());
-        $event->getUserContext()->merge($this->user->toArray());
+        if (!empty($this->tags)) {
+            $event->setTags(array_merge($this->tags, $event->getTags()));
+        }
+
+        if (!empty($this->extra)) {
+            $event->setExtra(array_merge($this->extra, $event->getExtra()));
+        }
+
+        if (null !== $this->user) {
+            $user = $event->getUser();
+
+            if (null === $user) {
+                $user = $this->user;
+            } else {
+                $user = $this->user->merge($user);
+            }
+
+            $event->setUser($user);
+        }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
             $event->setContext($name, $data);
@@ -323,8 +327,8 @@ final class Scope
 
     public function __clone()
     {
-        $this->user = clone $this->user;
-        $this->tags = clone $this->tags;
-        $this->extra = clone $this->extra;
+        if (null !== $this->user) {
+            $this->user = clone $this->user;
+        }
     }
 }

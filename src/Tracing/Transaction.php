@@ -105,7 +105,7 @@ final class Transaction extends Span
     {
         $event = new Event();
         $event->setType('transaction');
-        $event->getTagsContext()->merge($this->tags->toArray());
+        $event->setTags(array_merge($event->getTags(), $this->tags));
         $event->setTransaction($this->name);
         $event->setStartTimestamp($this->startTimestamp);
         $event->setContext('trace', $this->getTraceContext());

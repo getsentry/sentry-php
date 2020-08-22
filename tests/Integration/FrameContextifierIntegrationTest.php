@@ -38,8 +38,6 @@ final class FrameContextifierIntegrationTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(string $fixtureFilePath, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
