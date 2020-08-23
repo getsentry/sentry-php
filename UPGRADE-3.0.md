@@ -37,3 +37,50 @@
 - The signature of the `HttpClientFactory::__construct()` method changed to accept instances of the PSR-17 factories in place of Httplug's ones
 - The signature of the `DefaultTransportFactory::__construct()` method changed to accept instances of the PSR-17 factories in place of Httplug's ones
 - The signature of the `GzipEncoderPlugin::__construct()` method changed to accept an instance of the `Psr\Http\Message\StreamFactoryInterface` interface only
+- The Monolog handler does not set anymore the tags and extras on the event by extracting automatically the data from the record payload. You can decorate the
+  class and set such data on the scope as shown below:
+
+  ```php
+  use Monolog\Handler\HandlerInterface;
+  use Sentry\State\Scope;
+  use function Sentry\withScope;
+
+  final class MonologHandler implements HandlerInterface
+  {
+      private $decoratedHandler;
+
+      public function __construct(HandlerInterface $decoratedHandler)
+      {
+          $this->decoratedHandler = $decoratedHandler;
+      }
+
+      public function isHandling(array $record): bool
+      {
+          return $this->decoratedHandler->isHandling($record);
+      }
+
+      public function handle(array $record): bool
+      {
+          $result = false;
+
+          withScope(function (Scope $scope) use ($record, &$result): void {
+              $scope->setTags(...);
+              $scope->setExtras(...);
+
+              $result = $this->decoratedHandler->handle($record);
+          });
+
+          return $result;
+      }
+
+      public function handleBatch(array $records): void
+      {
+          $this->decoratedHandler->handleBatch($records);
+      }
+
+      public function close(): void
+      {
+          $this->decoratedHandler->close();
+      }
+  }
+  ```
