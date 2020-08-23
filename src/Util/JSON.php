@@ -93,7 +93,7 @@ final class JSON
         if (\is_array($data) || \is_object($data)) {
             $output = [];
 
-            foreach ((array) $data as $key => $value) {
+            foreach (\is_object($data) ? get_object_vars($data) : $data as $key => $value) {
                 if (\is_string($key)) {
                     $key = self::convertStringToUtf8($key);
                 }
