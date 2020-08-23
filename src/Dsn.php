@@ -76,7 +76,7 @@ final class Dsn
      */
     public static function createFromString(string $value): self
     {
-        /** @var array{scheme:string, host:string, path:string, user:string, pass:?string}|false */
+        /** @var array{scheme:string, host:string, path:string, user:string, pass?:string}|false */
         $parsedDsn = parse_url($value);
 
         if (false === $parsedDsn) {
