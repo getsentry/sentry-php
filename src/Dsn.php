@@ -89,7 +89,7 @@ final class Dsn
             }
         }
 
-        if (empty($parsedDsn['pass'])) {
+        if (isset($parsedDsn['pass']) && '' === $parsedDsn['pass']) {
             throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a valid secret key.', $value));
         }
 
