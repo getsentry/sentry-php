@@ -100,9 +100,10 @@ final class Dsn
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
 
+        /** @psalm-suppress TypeDoesNotContainNull */
         if (null === $projectId || !ctype_digit($projectId)) {
             throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
-        }
+        } 
 
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
@@ -111,7 +112,6 @@ final class Dsn
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         return new self(
             $parsedDsn['scheme'],
             $parsedDsn['host'],
