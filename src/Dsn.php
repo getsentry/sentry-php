@@ -103,7 +103,7 @@ final class Dsn
         /** @psalm-suppress TypeDoesNotContainNull */
         if (null === $projectId || !ctype_digit($projectId)) {
             throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
-        } 
+        }
 
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
