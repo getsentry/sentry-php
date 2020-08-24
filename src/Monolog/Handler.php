@@ -58,18 +58,6 @@ final class Handler extends AbstractProcessingHandler
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
-            if (isset($record['context']['extra']) && \is_array($record['context']['extra'])) {
-                foreach ($record['context']['extra'] as $key => $value) {
-                    $scope->setExtra((string) $key, $value);
-                }
-            }
-
-            if (isset($record['context']['tags']) && \is_array($record['context']['tags'])) {
-                foreach ($record['context']['tags'] as $key => $value) {
-                    $scope->setTag($key, $value);
-                }
-            }
-
             $this->hub->captureEvent($payload);
         });
     }
@@ -84,9 +72,6 @@ final class Handler extends AbstractProcessingHandler
         switch ($level) {
             case Logger::DEBUG:
                 return Severity::debug();
-            case Logger::INFO:
-            case Logger::NOTICE:
-                return Severity::info();
             case Logger::WARNING:
                 return Severity::warning();
             case Logger::ERROR:
@@ -95,6 +80,8 @@ final class Handler extends AbstractProcessingHandler
             case Logger::ALERT:
             case Logger::EMERGENCY:
                 return Severity::fatal();
+            case Logger::INFO:
+            case Logger::NOTICE:
             default:
                 return Severity::info();
         }

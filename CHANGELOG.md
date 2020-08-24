@@ -14,6 +14,7 @@
 - [BC BREAK] The `Scope::setUser()` method now always merges the given data with the existing one instead of replacing it as a whole (#1047)
 - [BC BREAK] Remove the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants (#1047)
 - [BC BREAK] Use PSR-17 factories in place of the Httplug's ones and return a promise from the transport (#1066)
+- [BC BREAK] The Monolog handler does not set anymore tags and extras on the event object (#1068)
 
 ### 2.4.1 (2020-07-03)
 
