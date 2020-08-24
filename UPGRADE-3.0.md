@@ -87,7 +87,7 @@
 
 - Removed the `TagsContext`, `ExtraContext` and `Context` classes, data is now stored in a plain array
 - Renamed the `ServerOsContext` class to `OsContext`
-- The `OsContext` and `RuntimeContext` classes do not implement anymore the `ArrayAccess`, `IteratorAggregate` and `JsonSerializable` interfaces
+- The `OsContext` and `RuntimeContext` classes do not implement anymore the `ArrayAccess`, `IteratorAggregate` and `JsonSerializable` interfaces and became `final`
 - The following methods have been removed from the `OsContext` and `RuntimeContext` classes:
   - `*Context::merge()`
   - `*Context::setData()`
@@ -96,46 +96,8 @@
   - `*Context::isEmpty()`
   - `*Context::toArray()`
 - Removed the `UserContext` class, use `UserDataBag` instead
-- The signature of the `RuntimeContext` class changed to require a bunch of parameters in place of an array of initial data
-
-  Before:
-
-  ```php
-  public function __construct(array $data = [])
-  {
-      // ...
-  }
-  ```
-
-  After:
-
-  ```php
-  public function __construct(string $name, ?string $version = null)
-  {
-      // ...
-  }
-  ```
-
-- The signature of the `OsContext` class changed to require a bunch of parameters in place of an array of initial data
-
-  Before:
-
-  ```php
-  public function __construct(array $data = [])
-  {
-      // ...
-  }
-  ```
-
-  After:
-
-  ```php
-  public function __construct(string $name, ?string $version = null, ?string $build = null, ?string $kernelVersion = null)
-  {
-      // ...
-  }
-  ```
-
+- The signature of the constructor of the `RuntimeContext` class changed to `RuntimeContext::__construct(string $name, ?string $version = null)`
+- The signature of the constructor of the `OsContext` class changed to `OsContext::__construct(string $name, ?string $version = null, ?string $build = null, ?string $kernelVersion = null)`
 - Removed the `Event::getExtraContext()` method, use `Event::getExtra()` instead
 - Removed the `Event::getTagsContext()` method, use `Event::getTags()` instead
 - Removed the `Event::getUserContext()` method, use `Event::getUser()` instead
