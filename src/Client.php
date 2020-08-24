@@ -143,14 +143,12 @@ final class Client implements FlushableClientInterface
     /**
      * {@inheritdoc}
      *
-     * @template T of IntegrationInterface
+     * @psalm-template T of IntegrationInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
         /** @var T|null */
-        $maybeIntegration = $this->integrations[$className] ?? null;
-
-        return $maybeIntegration;
+        return $this->integrations[$className] ?? null;
     }
 
     /**

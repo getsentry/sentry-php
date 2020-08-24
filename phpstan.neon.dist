@@ -12,7 +12,7 @@ parameters:
             count: 1
         # Impossible! Reports the expected type as an error.
         -
-            message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns T of Sentry\\Integration\\IntegrationInterface\|null\.$/'
+            message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
             count: 1
         # Hackery in EventFactory::create(WithStacktrace) argument count.
