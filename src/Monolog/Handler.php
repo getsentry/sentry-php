@@ -41,6 +41,16 @@ final class Handler extends AbstractProcessingHandler
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
+     * @param array{
+     *     level:int,
+     *     level_name:string,
+     *     message:string,
+     *     channel:string,
+     *     context:mixed
+     * } $record
      */
     protected function write(array $record): void
     {
