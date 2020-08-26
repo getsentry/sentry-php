@@ -449,9 +449,26 @@ final class RequestIntegrationTest extends TestCase
                 'foo' => 'bar',
             ],
         ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($this->getStreamMock(null)),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Type' => ['application/json'],
+                ],
+            ],
+        ];
     }
 
-    private function getStreamMock(int $size, string $content = ''): StreamInterface
+    private function getStreamMock(?int $size, string $content = ''): StreamInterface
     {
         /** @var MockObject|StreamInterface $stream */
         $stream = $this->createMock(StreamInterface::class);
@@ -459,7 +476,7 @@ final class RequestIntegrationTest extends TestCase
             ->method('getSize')
             ->willReturn($size);
 
-        $stream->expects($this->any())
+        $stream->expects(null === $size ? $this->never() : $this->any())
             ->method('getContents')
             ->willReturn($content);
 

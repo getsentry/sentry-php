@@ -16,6 +16,15 @@
 - [BC BREAK] Use PSR-17 factories in place of the Httplug's ones and return a promise from the transport (#1066)
 - [BC BREAK] The Monolog handler does not set anymore tags and extras on the event object (#1068)
 
+### 2.4.3 (2020-08-13)
+
+- Fix `Options::setEnvironment` method not accepting `null` values (#1057)
+- Fix the capture of the request body in the `RequestIntegration` integration when the stream size is unknown (#1064)
+
+### 2.4.2 (2020-07-24)
+
+- Fix typehint errors while instantiating the Httplug cURL client by forcing the usage of PSR-17 complaint factories (#1052)
+
 ### 2.4.1 (2020-07-03)
 
 - Fix HTTP client connection timeouts not being applied if an HTTP proxy is specified (#1033)

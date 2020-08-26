@@ -136,7 +136,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 }
 
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                $httpClient = new CurlHttpClient($this->responseFactory, $this->streamFactory, $curlConfig);
+                $httpClient = new CurlHttpClient(null, null, $curlConfig);
             } elseif (null !== $options->getHttpProxy()) {
                 throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
             }

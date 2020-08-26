@@ -11,6 +11,7 @@ use Sentry\Client;
 use Sentry\Event;
 use Sentry\Severity;
 use Sentry\Util\PHPVersion;
+use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
  * @group time-sensitive
@@ -27,6 +28,8 @@ final class EventTest extends TestCase
 
     public function testToArray(): void
     {
+        ClockMock::register(Event::class);
+
         $event = new Event();
 
         $expected = [
@@ -57,6 +60,8 @@ final class EventTest extends TestCase
 
     public function testToArrayMergesCustomContextsWithDefaultContexts(): void
     {
+        ClockMock::register(Event::class);
+
         $event = new Event();
         $event->setContext('foo', ['foo' => 'bar']);
         $event->setContext('bar', ['bar' => 'foo']);
