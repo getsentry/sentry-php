@@ -30,7 +30,7 @@ This is our "core" SDK, meaning that all the important code regarding error hand
 If you are happy with using the HTTP client we recommend install the SDK like: [`sentry/sdk`](https://github.com/getsentry/sentry-php-sdk)
 
 ```bash
-php composer.phar require sentry/sdk
+composer require sentry/sdk
 ```
 
 This package (`sentry/sentry`) is not tied to any specific library that sends HTTP messages. Instead,
@@ -40,7 +40,7 @@ PSR-7 implementation and HTTP client they want to use.
 If you just want to get started quickly you should run the following command:
 
 ```bash
-php composer.phar require sentry/sentry php-http/curl-client
+composer require sentry/sentry php-http/curl-client
 ```
 
 This is basically what our metapackage (`sentry/sdk`) provides.
