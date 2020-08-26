@@ -152,12 +152,20 @@ final class Scope
     /**
      * Sets the given data in the user context.
      *
-     * @param UserDataBag $user The user data
+     * @param array<string, mixed>|UserDataBag $user The user data
      *
      * @return $this
      */
-    public function setUser(UserDataBag $user): self
+    public function setUser($user): self
     {
+        if (!\is_array($user) && !$user instanceof UserDataBag) {
+            throw new \TypeError(sprintf('The $user argument must be either an array or an instance of the "%s" class. Got: "%s".', UserDataBag::class, get_debug_type($user)));
+        }
+
+        if (\is_array($user)) {
+            $user = UserDataBag::createFromArray($user);
+        }
+
         if (null === $this->user) {
             $this->user = $user;
         } else {

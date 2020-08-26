@@ -23,13 +23,84 @@ final class UserDataBagTest extends TestCase
         $userDataBag->setIpAddress('127.0.0.1');
         $userDataBag->setEmail('foo@example.com');
         $userDataBag->setUsername('my_user');
-        $userDataBag['subscription'] = 'basic';
+        $userDataBag->setMetadata('subscription', 'basic');
 
         $this->assertSame('unique_id', $userDataBag->getId());
         $this->assertSame('127.0.0.1', $userDataBag->getIpAddress());
         $this->assertSame('foo@example.com', $userDataBag->getEmail());
         $this->assertSame('my_user', $userDataBag->getUsername());
         $this->assertSame(['subscription' => 'basic'], $userDataBag->getMetadata());
+    }
+
+    /**
+     * @dataProvider createFromArrayDataProvider
+     */
+    public function testCreateFromArray(array $data, ?string $expectedId, ?string $expectedIpAddress, ?string $expectedEmail, ?string $expectedUsername, array $expectedMetadata): void
+    {
+        $userDataBag = UserDataBag::createFromArray($data);
+
+        $this->assertSame($expectedId, $userDataBag->getId());
+        $this->assertSame($expectedIpAddress, $userDataBag->getIpAddress());
+        $this->assertSame($expectedEmail, $userDataBag->getEmail());
+        $this->assertSame($expectedUsername, $userDataBag->getUsername());
+        $this->assertSame($expectedMetadata, $userDataBag->getMetadata());
+    }
+
+    public function createFromArrayDataProvider(): iterable
+    {
+        yield [
+            ['id' => 'unique_id'],
+            'unique_id',
+            null,
+            null,
+            null,
+            [],
+        ];
+
+        yield [
+            ['ip_address' => '127.0.0.1'],
+            null,
+            '127.0.0.1',
+            null,
+            null,
+            [],
+        ];
+
+        yield [
+            [
+                'id' => 'unique_id',
+                'email' => 'foo@example.com',
+            ],
+            'unique_id',
+            null,
+            'foo@example.com',
+            null,
+            [],
+        ];
+
+        yield [
+            [
+                'id' => 'unique_id',
+                'username' => 'my_user',
+            ],
+            'unique_id',
+            null,
+            null,
+            'my_user',
+            [],
+        ];
+
+        yield [
+            [
+                'id' => 'unique_id',
+                'subscription' => 'basic',
+            ],
+            'unique_id',
+            null,
+            null,
+            null,
+            ['subscription' => 'basic'],
+        ];
     }
 
     public function testSetIdThrowsIfBothArgumentAndIpAddressAreNull(): void
@@ -62,13 +133,13 @@ final class UserDataBagTest extends TestCase
     public function testMerge(): void
     {
         $userDataBag = UserDataBag::createFromUserIdentifier('unique_id');
-        $userDataBag['subscription'] = 'basic';
+        $userDataBag->setMetadata('subscription', 'basic');
 
         $userDataBagToMergeWith = UserDataBag::createFromUserIpAddress('127.0.0.1');
         $userDataBagToMergeWith->setEmail('foo@example.com');
         $userDataBagToMergeWith->setUsername('my_user');
-        $userDataBagToMergeWith['subscription'] = 'lifetime';
-        $userDataBagToMergeWith['subscription_expires_at'] = '2020-08-20';
+        $userDataBagToMergeWith->setMetadata('subscription', 'lifetime');
+        $userDataBagToMergeWith->setMetadata('subscription_expires_at', '2020-08-20');
 
         $userDataBag = $userDataBag->merge($userDataBagToMergeWith);
 

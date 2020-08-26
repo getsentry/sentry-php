@@ -456,9 +456,8 @@ final class RequestIntegrationTest extends TestCase
                     'Content-Type' => ['application/json'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
     }
 

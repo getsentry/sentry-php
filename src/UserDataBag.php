@@ -6,10 +6,8 @@ namespace Sentry;
 
 /**
  * This class stores the information about the authenticated user for a request.
- *
- * @phpstan-implements \ArrayAccess<string, mixed>
  */
-final class UserDataBag implements \ArrayAccess
+final class UserDataBag
 {
     /**
      * @var string|null The unique ID of the user
@@ -40,6 +38,11 @@ final class UserDataBag implements \ArrayAccess
     {
     }
 
+    /**
+     * Creates an instance of this object from a user ID.
+     *
+     * @param string $id The ID of the user
+     */
     public static function createFromUserIdentifier(string $id): self
     {
         $instance = new self();
@@ -48,10 +51,51 @@ final class UserDataBag implements \ArrayAccess
         return $instance;
     }
 
+    /**
+     * Creates an instance of this object from an IP address.
+     *
+     * @param string $ipAddress The IP address of the user
+     */
     public static function createFromUserIpAddress(string $ipAddress): self
     {
         $instance = new self();
         $instance->setIpAddress($ipAddress);
+
+        return $instance;
+    }
+
+    /**
+     * Creates an instance of this object from the given data.
+     *
+     * @param array<string, mixed> $data The raw data
+     */
+    public static function createFromArray(array $data): self
+    {
+        if (!isset($data['id']) && !isset($data['ip_address'])) {
+            throw new \InvalidArgumentException('Either the "id" or the "ip_address" field must be set.');
+        }
+
+        $instance = new self();
+
+        foreach ($data as $field => $value) {
+            switch ($field) {
+                case 'id':
+                    $instance->setId($data['id']);
+                    break;
+                case 'ip_address':
+                    $instance->setIpAddress($data['ip_address']);
+                    break;
+                case 'email':
+                    $instance->setEmail($data['email']);
+                    break;
+                case 'username':
+                    $instance->setUsername($data['username']);
+                    break;
+                default:
+                    $instance->setMetadata($field, $value);
+                    break;
+            }
+        }
 
         return $instance;
     }
@@ -151,6 +195,27 @@ final class UserDataBag implements \ArrayAccess
     }
 
     /**
+     * Sets the given field in the additional metadata.
+     *
+     * @param string $name  The name of the field
+     * @param mixed  $value The value
+     */
+    public function setMetadata(string $name, $value): void
+    {
+        $this->metadata[$name] = $value;
+    }
+
+    /**
+     * Removes the given field from the additional metadata.
+     *
+     * @param string $name The name of the field
+     */
+    public function removeMetadata(string $name): void
+    {
+        unset($this->metadata[$name]);
+    }
+
+    /**
      * Merges the given context with this one.
      *
      * @param UserDataBag $other The context to merge the data with
@@ -166,37 +231,5 @@ final class UserDataBag implements \ArrayAccess
         $this->metadata = array_merge($this->metadata, $other->metadata);
 
         return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetExists($offset)
-    {
-        return \array_key_exists($offset, $this->metadata);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetGet($offset)
-    {
-        return $this->metadata[$offset];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetSet($offset, $value)
-    {
-        $this->metadata[$offset] = $value;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function offsetUnset($offset)
-    {
-        unset($this->metadata[$offset]);
     }
 }

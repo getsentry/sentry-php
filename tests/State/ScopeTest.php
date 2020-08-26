@@ -110,6 +110,7 @@ final class ScopeTest extends TestCase
         $this->assertNull($event->getUser());
 
         $user = UserDataBag::createFromUserIdentifier('unique_id');
+        $user->setMetadata('subscription', 'basic');
 
         $scope->setUser($user);
 
@@ -119,13 +120,24 @@ final class ScopeTest extends TestCase
         $this->assertSame($user, $event->getUser());
 
         $user = UserDataBag::createFromUserIpAddress('127.0.0.1');
+        $user->setMetadata('subscription', 'basic');
+        $user->setMetadata('subscription_expires_at', '2020-08-26');
 
-        $scope->setUser($user);
+        $scope->setUser(['ip_address' => '127.0.0.1', 'subscription_expires_at' => '2020-08-26']);
 
         $event = $scope->applyToEvent($event, []);
 
         $this->assertNotNull($event);
         $this->assertEquals($user, $event->getUser());
+    }
+
+    public function testSetUserThrowsOnInvalidArgument(): void
+    {
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('The $user argument must be either an array or an instance of the "Sentry\UserDataBag" class. Got: "string".');
+
+        $scope = new Scope();
+        $scope->setUser('foo');
     }
 
     public function testSetFingerprint(): void
