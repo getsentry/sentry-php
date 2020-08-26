@@ -153,7 +153,7 @@ final class RequestIntegration implements IntegrationInterface
         $maxRequestBodySize = $options->getMaxRequestBodySize();
 
         $requestBody = $request->getBody();
-        $requestBodySize = $request->getSize();
+        $requestBodySize = $request->getBody()->getSize();
 
         if (
             null === $requestBodySize ||
