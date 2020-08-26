@@ -157,8 +157,6 @@ interface HubInterface
      * Sets the Span on the Hub.
      *
      * @param Span|null $span The Span
-     *
-     * @return $this
      */
-    public function setSpan(?Span $span): self;
+    public function setSpan(?Span $span): HubInterface;
 }

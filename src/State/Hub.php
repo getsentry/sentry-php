@@ -264,6 +264,7 @@ final class Hub implements HubInterface
 
     /**
      * {@inheritdoc}
+     *
      * @psalm-suppress MoreSpecificReturnType
      * @psalm-suppress LessSpecificReturnStatement
      */
@@ -289,7 +290,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function setSpan(?Span $span): self
+    public function setSpan(?Span $span): HubInterface
     {
         $this->span = $span;
 

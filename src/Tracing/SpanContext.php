@@ -63,121 +63,78 @@ class SpanContext
      */
     public $endTimestamp;
 
-
-    /**
-     * @return string|null
-     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * @param string|null $description
-     */
     public function setDescription(?string $description): void
     {
         $this->description = $description;
     }
 
-    /**
-     * @return string|null
-     */
     public function getOp(): ?string
     {
         return $this->op;
     }
 
-    /**
-     * @param string|null $op
-     */
     public function setOp(?string $op): void
     {
         $this->op = $op;
     }
 
-    /**
-     * @return string|null
-     */
     public function getStatus(): ?string
     {
         return $this->status;
     }
 
-    /**
-     * @param string|null $status
-     */
     public function setStatus(?string $status): void
     {
         $this->status = $status;
     }
 
-    /**
-     * @return SpanId|null
-     */
     public function getParentSpanId(): ?SpanId
     {
         return $this->parentSpanId;
     }
 
-    /**
-     * @param SpanId|null $parentSpanId
-     */
     public function setParentSpanId(?SpanId $parentSpanId): void
     {
         $this->parentSpanId = $parentSpanId;
     }
 
-    /**
-     * @return bool|null
-     */
     public function getSampled(): ?bool
     {
         return $this->sampled;
     }
 
-    /**
-     * @param bool|null $sampled
-     */
     public function setSampled(?bool $sampled): void
     {
         $this->sampled = $sampled;
     }
 
-    /**
-     * @return SpanId|null
-     */
     public function getSpanId(): ?SpanId
     {
         return $this->spanId;
     }
 
-    /**
-     * @param SpanId|null $spanId
-     */
     public function setSpanId(?SpanId $spanId): void
     {
         $this->spanId = $spanId;
     }
 
-    /**
-     * @return TraceId|null
-     */
     public function getTraceId(): ?TraceId
     {
         return $this->traceId;
     }
 
-    /**
-     * @param TraceId|null $traceId
-     */
     public function setTraceId(?TraceId $traceId): void
     {
         $this->traceId = $traceId;
     }
 
     /**
-     * @return array|null
+     * @return array<string, string>
      */
     public function getTags(): ?array
     {
@@ -185,7 +142,7 @@ class SpanContext
     }
 
     /**
-     * @param array|null $tags
+     * @param array<string, string>|null $tags
      */
     public function setTags(?array $tags): void
     {
@@ -193,7 +150,7 @@ class SpanContext
     }
 
     /**
-     * @return array|null
+     * @return array<string, mixed>
      */
     public function getData(): ?array
     {
@@ -201,40 +158,28 @@ class SpanContext
     }
 
     /**
-     * @param array|null $data
+     * @param array<string, mixed>|null $data
      */
     public function setData(?array $data): void
     {
         $this->data = $data;
     }
 
-    /**
-     * @return float|null
-     */
     public function getStartTimestamp(): ?float
     {
         return $this->startTimestamp;
     }
 
-    /**
-     * @param float|null $startTimestamp
-     */
     public function setStartTimestamp(?float $startTimestamp): void
     {
         $this->startTimestamp = $startTimestamp;
     }
 
-    /**
-     * @return float|null
-     */
     public function getEndTimestamp(): ?float
     {
         return $this->endTimestamp;
     }
 
-    /**
-     * @param float|null $endTimestamp
-     */
     public function setEndTimestamp(?float $endTimestamp): void
     {
         $this->endTimestamp = $endTimestamp;
