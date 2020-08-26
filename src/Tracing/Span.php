@@ -261,6 +261,46 @@ class Span implements \JsonSerializable
         $this->tags->merge($tags);
     }
 
+    public function getSpanId(): SpanId
+    {
+        return $this->spanId;
+    }
+
+    public function setSpanId(SpanId $spanId): void
+    {
+        $this->spanId = $spanId;
+    }
+
+    public function getTraceId(): TraceId
+    {
+        return $this->traceId;
+    }
+
+    public function setTraceId(TraceId $traceId): void
+    {
+        $this->traceId = $traceId;
+    }
+
+    public function getParentSpanId(): ?SpanId
+    {
+        return $this->parentSpanId;
+    }
+
+    public function setParentSpanId(?SpanId $parentSpanId): void
+    {
+        $this->parentSpanId = $parentSpanId;
+    }
+
+    public function getSampled(): ?bool
+    {
+        return $this->sampled;
+    }
+
+    public function setSampled(?bool $sampled): void
+    {
+        $this->sampled = $sampled;
+    }
+
     /**
      * @param array<mixed> $data
      */

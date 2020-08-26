@@ -10,8 +10,6 @@ use Sentry\Context\TagsContext;
 use Sentry\Context\UserContext;
 use Sentry\Event;
 use Sentry\Severity;
-use Sentry\Tracing\Span;
-use Sentry\Tracing\Transaction;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -55,11 +53,6 @@ final class Scope
      *                    this scope
      */
     private $level;
-
-    /**
-     * @var Span|null Set a Span on the Scope
-     */
-    private $span;
 
     /**
      * @var callable[] List of event processors
@@ -209,45 +202,6 @@ final class Scope
         $this->level = $level;
 
         return $this;
-    }
-
-    /**
-     * Returns the Span that is on the Scope.
-     */
-    public function getSpan(): ?Span
-    {
-        return $this->span;
-    }
-
-    /**
-     * Sets the Span on the Scope.
-     *
-     * @param Span|null $span The Span
-     *
-     * @return $this
-     */
-    public function setSpan(?Span $span): self
-    {
-        $this->span = $span;
-
-        return $this;
-    }
-
-    /**
-     * Returns the Transaction that is on the Scope.
-     *
-     * @psalm-suppress MoreSpecificReturnType
-     * @psalm-suppress LessSpecificReturnStatement
-     */
-    public function getTransaction(): ?Transaction
-    {
-        $span = $this->span;
-        if (null !== $span && null !== $span->spanRecorder) {
-            /** @phpstan-ignore-next-line */
-            return $span->spanRecorder->getSpans()[0];
-        }
-
-        return null;
     }
 
     /**

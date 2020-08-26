@@ -9,6 +9,7 @@ use Sentry\ClientInterface;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -26,6 +27,11 @@ final class Hub implements HubInterface
      * @var EventId|null The ID of the last captured event
      */
     private $lastEventId;
+
+    /**
+     * @var Span|null Set a Span on the Scope
+     */
+    private $span;
 
     /**
      * Hub constructor.
@@ -208,6 +214,22 @@ final class Hub implements HubInterface
     }
 
     /**
+     * Gets the scope bound to the top of the stack.
+     */
+    private function getScope(): Scope
+    {
+        return $this->getStackTop()->getScope();
+    }
+
+    /**
+     * Gets the topmost client/layer pair in the stack.
+     */
+    private function getStackTop(): Layer
+    {
+        return $this->stack[\count($this->stack) - 1];
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function startTransaction(TransactionContext $context): Transaction
@@ -241,18 +263,37 @@ final class Hub implements HubInterface
     }
 
     /**
-     * Gets the scope bound to the top of the stack.
+     * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
      */
-    private function getScope(): Scope
+    public function getTransaction(): ?Transaction
     {
-        return $this->getStackTop()->getScope();
+        $span = $this->span;
+        if (null !== $span && null !== $span->spanRecorder) {
+            /** @phpstan-ignore-next-line */
+            return $span->spanRecorder->getSpans()[0];
+        }
+
+        return null;
     }
 
     /**
-     * Gets the topmost client/layer pair in the stack.
+     * {@inheritdoc}
      */
-    private function getStackTop(): Layer
+    public function getSpan(): ?Span
     {
-        return $this->stack[\count($this->stack) - 1];
+        return $this->span;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSpan(?Span $span): HubInterface
+    {
+        $this->span = $span;
+
+        return $this;
     }
 }

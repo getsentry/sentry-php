@@ -10,6 +10,7 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -138,4 +139,24 @@ interface HubInterface
      * @param TransactionContext $context properties of the new `Transaction`
      */
     public function startTransaction(TransactionContext $context): Transaction;
+
+    /**
+     * Returns the Transaction that is on the Hub.
+     *
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
+     */
+    public function getTransaction(): ?Transaction;
+
+    /**
+     * Returns the Span that is on the Hub.
+     */
+    public function getSpan(): ?Span;
+
+    /**
+     * Sets the Span on the Hub.
+     *
+     * @param Span|null $span The Span
+     */
+    public function setSpan(?Span $span): HubInterface;
 }

@@ -10,6 +10,7 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -154,6 +155,30 @@ final class HubAdapter implements HubInterface
     public function startTransaction(TransactionContext $context): Transaction
     {
         return SentrySdk::getCurrentHub()->startTransaction($context);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getTransaction(): ?Transaction
+    {
+        return SentrySdk::getCurrentHub()->getTransaction();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSpan(): ?Span
+    {
+        return SentrySdk::getCurrentHub()->getSpan();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSpan(?Span $span): HubInterface
+    {
+        return SentrySdk::getCurrentHub()->setSpan($span);
     }
 
     /**

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**Tracing API**
+
+In this version we released API for Tracing. `\Sentry\startTransaction` is your entry point for manual instrumentation.
+More information can be found in our [Performance](https://docs.sentry.io/product/performance/) docs or specific
+[PHP SDK](https://docs.sentry.io/platforms/php/) docs.
+
+
 - [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton (#1038)
 - [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
 - [BC BREAK] Change the default value for the `error_types` option from `E_ALL` to the value get from `error_reporting()` (#1037)
