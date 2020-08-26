@@ -262,6 +262,70 @@ class Span implements \JsonSerializable
     }
 
     /**
+     * @return SpanId
+     */
+    public function getSpanId(): SpanId
+    {
+        return $this->spanId;
+    }
+
+    /**
+     * @param SpanId $spanId
+     */
+    public function setSpanId(SpanId $spanId): void
+    {
+        $this->spanId = $spanId;
+    }
+
+    /**
+     * @return TraceId
+     */
+    public function getTraceId(): TraceId
+    {
+        return $this->traceId;
+    }
+
+    /**
+     * @param TraceId $traceId
+     */
+    public function setTraceId(TraceId $traceId): void
+    {
+        $this->traceId = $traceId;
+    }
+
+    /**
+     * @return SpanId|null
+     */
+    public function getParentSpanId(): ?SpanId
+    {
+        return $this->parentSpanId;
+    }
+
+    /**
+     * @param SpanId|null $parentSpanId
+     */
+    public function setParentSpanId(?SpanId $parentSpanId): void
+    {
+        $this->parentSpanId = $parentSpanId;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function getSampled(): ?bool
+    {
+        return $this->sampled;
+    }
+
+    /**
+     * @param bool|null $sampled
+     */
+    public function setSampled(?bool $sampled): void
+    {
+        $this->sampled = $sampled;
+    }
+
+    /**
      * @param array<mixed> $data
      */
     public function setData(array $data): void
