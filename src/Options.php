@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
@@ -927,6 +928,7 @@ final class Options
                 new RequestIntegration(),
                 new TransactionIntegration(),
                 new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
             ];
         }
 

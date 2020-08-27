@@ -8,6 +8,8 @@ use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Client;
+use Sentry\Context\OsContext;
+use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\Severity;
 use Sentry\Util\PHPVersion;
@@ -41,18 +43,6 @@ final class EventTest extends TestCase
                 'version' => PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion(),
             ],
             'level' => 'error',
-            'contexts' => [
-                'os' => [
-                    'name' => php_uname('s'),
-                    'version' => php_uname('r'),
-                    'build' => php_uname('v'),
-                    'kernel_version' => php_uname('a'),
-                ],
-                'runtime' => [
-                    'name' => 'php',
-                    'version' => PHPVersion::parseVersion(),
-                ],
-            ],
         ];
 
         $this->assertSame($expected, $event->toArray());
@@ -63,6 +53,8 @@ final class EventTest extends TestCase
         ClockMock::register(Event::class);
 
         $event = new Event();
+        $event->setOsContext(new OsContext(php_uname('s'), php_uname('r'), php_uname('v'), php_uname('a')));
+        $event->setRuntimeContext(new RuntimeContext('php', PHPVersion::parseVersion()));
         $event->setContext('foo', ['foo' => 'bar']);
         $event->setContext('bar', ['bar' => 'foo']);
         $event->setContext('runtime', ['baz' => 'baz']);

@@ -42,7 +42,7 @@ class EventFactoryTest extends TestCase
         $this->assertSame('1.2.3', $event->getSdkVersion());
         $this->assertSame($options->getServerName(), $event->getServerName());
         $this->assertSame($options->getRelease(), $event->getRelease());
-        $this->assertSame($options->getTags(), $event->getTagsContext()->toArray());
+        $this->assertSame($options->getTags(), $event->getTags());
         $this->assertSame($options->getEnvironment(), $event->getEnvironment());
         $this->assertNull($event->getStacktrace());
     }

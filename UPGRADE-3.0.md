@@ -32,7 +32,7 @@
   - `Options::getProjectRoot()`
   - `Options::setProjectRoot()`
 - Removed the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants
-- The signature of the `Scope::setUser()` method changed to not accept the `$merge` parameter anymore
+- The signature of the `Scope::setUser()` method changed to `setUser(array|Sentry\UserDataBag $user)`
 - The signature of the `TransportInterface::send()` method changed to return a promise instead of the event ID
 - The signature of the `HttpClientFactory::__construct()` method changed to accept instances of the PSR-17 factories in place of Httplug's ones
 - The signature of the `DefaultTransportFactory::__construct()` method changed to accept instances of the PSR-17 factories in place of Httplug's ones
@@ -84,3 +84,22 @@
       }
   }
   ```
+
+- Removed the `TagsContext`, `ExtraContext` and `Context` classes, data is now stored in a plain array
+- Renamed the `ServerOsContext` class to `OsContext`
+- The `OsContext` and `RuntimeContext` classes do not implement anymore the `ArrayAccess`, `IteratorAggregate` and `JsonSerializable` interfaces and became `final`
+- The following methods have been removed from the `OsContext` and `RuntimeContext` classes:
+  - `*Context::merge()`
+  - `*Context::setData()`
+  - `*Context::replaceData()`
+  - `*Context::clear()`
+  - `*Context::isEmpty()`
+  - `*Context::toArray()`
+- Removed the `UserContext` class, use `UserDataBag` instead
+- The signature of the constructor of the `RuntimeContext` class changed to `RuntimeContext::__construct(string $name, ?string $version = null)`
+- The signature of the constructor of the `OsContext` class changed to `OsContext::__construct(string $name, ?string $version = null, ?string $build = null, ?string $kernelVersion = null)`
+- Removed the `Event::getExtraContext()` method, use `Event::getExtra()` instead
+- Removed the `Event::getTagsContext()` method, use `Event::getTags()` instead
+- Removed the `Event::getUserContext()` method, use `Event::getUser()` instead
+- Renamed the `Event::getServerOsContext()` method to `Event::getOsContext()`
+- The signature of the `Scope::setUser()` method changed ot accept a plain array

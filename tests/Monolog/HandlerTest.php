@@ -29,7 +29,7 @@ final class HandlerTest extends TestCase
                 $event = $scopeArg->applyToEvent(new Event(), []);
 
                 $this->assertNotNull($event);
-                $this->assertSame($expectedExtra, $event->getExtraContext()->toArray());
+                $this->assertSame($expectedExtra, $event->getExtra());
 
                 return true;
             }));
@@ -209,7 +209,6 @@ final class HandlerTest extends TestCase
                     'exception' => new \Exception('exception message'),
                 ],
                 'channel' => 'channel.foo',
-                'datetime' => new \DateTimeImmutable(),
                 'extra' => [],
             ],
             [

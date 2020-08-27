@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Jean85\PrettyVersions;
-use Sentry\Context\Context;
+use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
-use Sentry\Context\ServerOsContext;
-use Sentry\Context\TagsContext;
-use Sentry\Context\UserContext;
 use Sentry\Tracing\Span;
 use Sentry\Util\JSON;
 
@@ -93,19 +90,24 @@ final class Event implements \JsonSerializable
     private $request = [];
 
     /**
-     * @var ServerOsContext The server OS context data
+     * @var array<string, string> A list of tags associated to this event
      */
-    private $serverOsContext;
+    private $tags = [];
 
     /**
-     * @var RuntimeContext The runtime context data
+     * @var OsContext|null The server OS context data
+     */
+    private $osContext;
+
+    /**
+     * @var RuntimeContext|null The runtime context data
      */
     private $runtimeContext;
 
     /**
-     * @var UserContext The user context data
+     * @var UserDataBag|null The user context data
      */
-    private $userContext;
+    private $user;
 
     /**
      * @var array<string, array<string, mixed>> An arbitrary mapping of additional contexts associated to this event
@@ -113,14 +115,9 @@ final class Event implements \JsonSerializable
     private $contexts = [];
 
     /**
-     * @var Context<mixed> An arbitrary mapping of additional metadata
+     * @var array<string, mixed> An arbitrary mapping of additional metadata
      */
-    private $extraContext;
-
-    /**
-     * @var TagsContext A List of tags associated to this event
-     */
-    private $tagsContext;
+    private $extra = [];
 
     /**
      * @var string[] An array of strings used to dictate the deduplication of this event
@@ -172,11 +169,6 @@ final class Event implements \JsonSerializable
         $this->id = $eventId ?? EventId::generate();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->level = Severity::error();
-        $this->serverOsContext = new ServerOsContext();
-        $this->runtimeContext = new RuntimeContext();
-        $this->userContext = new UserContext();
-        $this->extraContext = new Context();
-        $this->tagsContext = new TagsContext();
         $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
@@ -446,43 +438,95 @@ final class Event implements \JsonSerializable
     /**
      * Gets an arbitrary mapping of additional metadata.
      *
-     * @return Context<mixed>
+     * @return array<string, mixed>
      */
-    public function getExtraContext(): Context
+    public function getExtra(): array
     {
-        return $this->extraContext;
+        return $this->extra;
     }
 
     /**
-     * Gets a list of tags.
+     * Sets an arbitrary mapping of additional metadata.
+     *
+     * @param array<string, mixed> $extra The context object
      */
-    public function getTagsContext(): TagsContext
+    public function setExtra(array $extra): void
     {
-        return $this->tagsContext;
+        $this->extra = $extra;
+    }
+
+    /**
+     * Gets a list of tags associated to this event.
+     *
+     * @return array<string, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * Sets a list of tags associated to this event.
+     *
+     * @param array<string, string> $tags The tags to set
+     */
+    public function setTags(array $tags): void
+    {
+        $this->tags = $tags;
     }
 
     /**
      * Gets the user context.
      */
-    public function getUserContext(): UserContext
+    public function getUser(): ?UserDataBag
     {
-        return $this->userContext;
+        return $this->user;
+    }
+
+    /**
+     * Sets the user context.
+     *
+     * @param UserDataBag|null $user The context object
+     */
+    public function setUser(?UserDataBag $user): void
+    {
+        $this->user = $user;
     }
 
     /**
      * Gets the server OS context.
      */
-    public function getServerOsContext(): ServerOsContext
+    public function getOsContext(): ?OsContext
     {
-        return $this->serverOsContext;
+        return $this->osContext;
+    }
+
+    /**
+     * Sets the server OS context.
+     *
+     * @param OsContext|null $osContext The context object
+     */
+    public function setOsContext(?OsContext $osContext): void
+    {
+        $this->osContext = $osContext;
     }
 
     /**
      * Gets the runtime context data.
      */
-    public function getRuntimeContext(): RuntimeContext
+    public function getRuntimeContext(): ?RuntimeContext
     {
         return $this->runtimeContext;
+    }
+
+    /**
+     * Sets the runtime context data.
+     *
+     * @param RuntimeContext|null $runtimeContext The context object
+     */
+    public function setRuntimeContext(?RuntimeContext $runtimeContext): void
+    {
+        $this->runtimeContext = $runtimeContext;
     }
 
     /**
@@ -675,24 +719,37 @@ final class Event implements \JsonSerializable
             $data['modules'] = $this->modules;
         }
 
-        if (!$this->extraContext->isEmpty()) {
-            $data['extra'] = $this->extraContext->toArray();
+        if (!empty($this->extra)) {
+            $data['extra'] = $this->extra;
         }
 
-        if (!$this->tagsContext->isEmpty()) {
-            $data['tags'] = $this->tagsContext->toArray();
+        if (!empty($this->tags)) {
+            $data['tags'] = $this->tags;
         }
 
-        if (!$this->userContext->isEmpty()) {
-            $data['user'] = $this->userContext->toArray();
+        if (null !== $this->user) {
+            $data['user'] = array_merge($this->user->getMetadata(), [
+                'id' => $this->user->getId(),
+                'email' => $this->user->getEmail(),
+                'ip_address' => $this->user->getIpAddress(),
+                'username' => $this->user->getUsername(),
+            ]);
         }
 
-        if (!$this->serverOsContext->isEmpty()) {
-            $data['contexts']['os'] = $this->serverOsContext->toArray();
+        if (null !== $this->osContext) {
+            $data['contexts']['os'] = [
+                'name' => $this->osContext->getName(),
+                'version' => $this->osContext->getVersion(),
+                'build' => $this->osContext->getBuild(),
+                'kernel_version' => $this->osContext->getKernelVersion(),
+            ];
         }
 
-        if (!$this->runtimeContext->isEmpty()) {
-            $data['contexts']['runtime'] = $this->runtimeContext->toArray();
+        if (null !== $this->runtimeContext) {
+            $data['contexts']['runtime'] = [
+                'name' => $this->runtimeContext->getName(),
+                'version' => $this->runtimeContext->getVersion(),
+            ];
         }
 
         if (!empty($this->contexts)) {

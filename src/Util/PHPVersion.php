@@ -8,7 +8,7 @@ namespace Sentry\Util;
  * This class is an helper utility to parse the version of PHP and convert it
  * to a normalized form.
  *
- * @internal since version 2.4
+ * @internal
  */
 final class PHPVersion
 {

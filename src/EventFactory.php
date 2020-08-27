@@ -118,7 +118,7 @@ final class EventFactory implements EventFactoryInterface
         $event->setSdkVersion($this->sdkVersion);
         $event->setServerName($this->options->getServerName());
         $event->setRelease($this->options->getRelease());
-        $event->getTagsContext()->merge($this->options->getTags());
+        $event->setTags($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
 
         return $event;

@@ -18,6 +18,7 @@ use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 use function Sentry\withScope;
 
 final class RequestIntegrationTest extends TestCase
@@ -25,17 +26,16 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, array $expectedUserContextData): void
+    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser): void
     {
         $event = new Event();
-        $event->getUserContext()->setData(['foo' => 'bar']);
+        $event->setUser($initialUser);
 
         $integration = new RequestIntegration($this->createRequestFetcher($request));
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-
         $client->expects($this->once())
             ->method('getIntegration')
             ->willReturn($integration);
@@ -46,16 +46,24 @@ final class RequestIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUserContextData): void {
+        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $initialUser, $expectedUser): void {
             $event = $scope->applyToEvent($event, []);
 
             $this->assertNotNull($event);
-            $this->assertEquals($expectedRequestContextData, $event->getRequest());
-            $this->assertEquals($expectedUserContextData, $event->getUserContext()->toArray());
+            $this->assertSame($expectedRequestContextData, $event->getRequest());
+
+            $user = $event->getUser();
+
+            if (null !== $expectedUser) {
+                $this->assertNotNull($user);
+                $this->assertEquals($expectedUser, $user);
+            } else {
+                $this->assertNull($user);
+            }
         });
     }
 
-    public function invokeDataProvider(): \Generator
+    public function invokeDataProvider(): iterable
     {
         yield [
             [
@@ -73,9 +81,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            UserDataBag::createFromUserIdentifier('unique_id'),
+            UserDataBag::createFromUserIdentifier('unique_id'),
         ];
 
         yield [
@@ -91,9 +98,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -109,9 +115,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com:1234'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -126,9 +131,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com:1234'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -144,6 +148,9 @@ final class RequestIntegrationTest extends TestCase
                 'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                 'method' => 'GET',
                 'query_string' => 'foo=bar&bar=baz',
+                'env' => [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                ],
                 'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
@@ -151,14 +158,9 @@ final class RequestIntegrationTest extends TestCase
                     'Cookie' => ['bar'],
                     'Set-Cookie' => ['baz'],
                 ],
-                'env' => [
-                    'REMOTE_ADDR' => '127.0.0.1',
-                ],
             ],
-            [
-                'ip_address' => '127.0.0.1',
-                'foo' => 'bar',
-            ],
+            null,
+            UserDataBag::createFromUserIpAddress('127.0.0.1'),
         ];
 
         yield [
@@ -178,9 +180,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -200,9 +201,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -226,9 +226,8 @@ final class RequestIntegrationTest extends TestCase
                     'bar' => 'bar value',
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -248,9 +247,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -274,9 +272,8 @@ final class RequestIntegrationTest extends TestCase
                     'bar' => 'bar value',
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -296,9 +293,8 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -323,9 +319,8 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -360,9 +355,8 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -401,9 +395,8 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -424,9 +417,8 @@ final class RequestIntegrationTest extends TestCase
                     'foo' => 'bar',
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -445,9 +437,8 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => '{',
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
 
         yield [
@@ -465,15 +456,14 @@ final class RequestIntegrationTest extends TestCase
                     'Content-Type' => ['application/json'],
                 ],
             ],
-            [
-                'foo' => 'bar',
-            ],
+            null,
+            null,
         ];
     }
 
     private function getStreamMock(?int $size, string $content = ''): StreamInterface
     {
-        /** @var MockObject|StreamInterface $stream */
+        /** @var MockObject&StreamInterface $stream */
         $stream = $this->createMock(StreamInterface::class);
         $stream->expects($this->any())
             ->method('getSize')
