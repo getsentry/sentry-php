@@ -150,7 +150,7 @@ final class Scope
     }
 
     /**
-     * Sets the given data in the user context.
+     * Merges the given data in the user context.
      *
      * @param array<string, mixed>|UserDataBag $user The user data
      *
@@ -171,6 +171,18 @@ final class Scope
         } else {
             $this->user = $this->user->merge($user);
         }
+
+        return $this;
+    }
+
+    /**
+     * Removes all data of the user context.
+     *
+     * @return $this
+     */
+    public function removeUser(): self
+    {
+        $this->user = null;
 
         return $this;
     }

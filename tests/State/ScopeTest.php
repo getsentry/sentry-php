@@ -140,6 +140,24 @@ final class ScopeTest extends TestCase
         $scope->setUser('foo');
     }
 
+    public function testRemoveUser(): void
+    {
+        $scope = new Scope();
+        $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertNotNull($event->getUser());
+
+        $scope->removeUser();
+
+        $event = $scope->applyToEvent(new Event(), []);
+
+        $this->assertNotNull($event);
+        $this->assertNull($event->getUser());
+    }
+
     public function testSetFingerprint(): void
     {
         $scope = new Scope();
