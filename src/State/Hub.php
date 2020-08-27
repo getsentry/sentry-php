@@ -271,7 +271,8 @@ final class Hub implements HubInterface
     public function getTransaction(): ?Transaction
     {
         $span = $this->span;
-        if (null !== $span && null !== $span->spanRecorder) {
+        if (null !== $span && null !== $span->spanRecorder && !empty($span->spanRecorder->getSpans())) {
+            // The first span in the recorder is considered to be a Transaction
             /** @phpstan-ignore-next-line */
             return $span->spanRecorder->getSpans()[0];
         }
