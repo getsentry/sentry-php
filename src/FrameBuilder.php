@@ -169,16 +169,20 @@ final class FrameBuilder
 
         $reflectionFunction = null;
 
-        if (isset($backtraceFrame['class'], $backtraceFrame['function'])) {
-            if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
-                $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
-            } elseif (isset($backtraceFrame['type']) && '::' === $backtraceFrame['type']) {
-                $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__callStatic');
-            } else {
-                $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
+        try {
+            if (isset($backtraceFrame['class'], $backtraceFrame['function'])) {
+                if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
+                    $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
+                } elseif (isset($backtraceFrame['type']) && '::' === $backtraceFrame['type']) {
+                    $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__callStatic');
+                } else {
+                    $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
+                }
+            } elseif (isset($backtraceFrame['function']) && !\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
+                $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
-        } elseif (isset($backtraceFrame['function']) && !\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
-            $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
+        } catch (\ReflectionException $e) {
+            // Reflection failed, we do nothing instead
         }
 
         $argumentValues = [];
