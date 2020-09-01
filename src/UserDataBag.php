@@ -10,7 +10,7 @@ namespace Sentry;
 final class UserDataBag
 {
     /**
-     * @var string|null The unique ID of the user
+     * @var string|int|null The unique ID of the user
      */
     private $id;
 
@@ -41,9 +41,9 @@ final class UserDataBag
     /**
      * Creates an instance of this object from a user ID.
      *
-     * @param string $id The ID of the user
+     * @param string|int $id The ID of the user
      */
-    public static function createFromUserIdentifier(string $id): self
+    public static function createFromUserIdentifier($id): self
     {
         $instance = new self();
         $instance->setId($id);
@@ -102,8 +102,10 @@ final class UserDataBag
 
     /**
      * Gets the ID of the user.
+     *
+     * @return string|int|null
      */
-    public function getId(): ?string
+    public function getId()
     {
         return $this->id;
     }
@@ -111,12 +113,16 @@ final class UserDataBag
     /**
      * Sets the ID of the user.
      *
-     * @param string|null $id The ID
+     * @param string|int|null $id The ID
      */
-    public function setId(?string $id): void
+    public function setId($id): void
     {
         if (null === $id && null === $this->ipAddress) {
             throw new \BadMethodCallException('Either the IP address or the ID must be set.');
+        }
+
+        if (!\is_string($id) && !\is_int($id)) {
+            throw new \UnexpectedValueException(sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
         }
 
         $this->id = $id;

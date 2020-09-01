@@ -35,7 +35,7 @@ final class UserDataBagTest extends TestCase
     /**
      * @dataProvider createFromArrayDataProvider
      */
-    public function testCreateFromArray(array $data, ?string $expectedId, ?string $expectedIpAddress, ?string $expectedEmail, ?string $expectedUsername, array $expectedMetadata): void
+    public function testCreateFromArray(array $data, $expectedId, ?string $expectedIpAddress, ?string $expectedEmail, ?string $expectedUsername, array $expectedMetadata): void
     {
         $userDataBag = UserDataBag::createFromArray($data);
 
@@ -48,6 +48,15 @@ final class UserDataBagTest extends TestCase
 
     public function createFromArrayDataProvider(): iterable
     {
+        yield [
+            ['id' => 1234],
+            1234,
+            null,
+            null,
+            null,
+            [],
+        ];
+
         yield [
             ['id' => 'unique_id'],
             'unique_id',
@@ -100,6 +109,30 @@ final class UserDataBagTest extends TestCase
             null,
             null,
             ['subscription' => 'basic'],
+        ];
+    }
+
+    /**
+     * @dataProvider setIdThrowsIfValueIsUnexpectedValueDataProvider
+     */
+    public function testSetIdThrowsIfValueIsUnexpectedValue($value, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        UserDataBag::createFromUserIdentifier($value);
+    }
+
+    public function setIdThrowsIfValueIsUnexpectedValueDataProvider(): iterable
+    {
+        yield [
+            12.34,
+            'Expected an integer or string value for the $id argument. Got: "float".',
+        ];
+
+        yield [
+            new \stdClass(),
+            'Expected an integer or string value for the $id argument. Got: "stdClass".',
         ];
     }
 
