@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Integration\Handler;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
-use Sentry\Transport\ClosableTransportInterface;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -19,7 +17,7 @@ use Sentry\Transport\TransportInterface;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Client implements FlushableClientInterface
+final class Client implements ClientInterface
 {
     /**
      * The version of the protocol to communicate with the Sentry server.
@@ -161,10 +159,6 @@ final class Client implements FlushableClientInterface
      */
     public function flush(?int $timeout = null): PromiseInterface
     {
-        if (!$this->transport instanceof ClosableTransportInterface) {
-            return new FulfilledPromise(true);
-        }
-
         return $this->transport->close($timeout);
     }
 

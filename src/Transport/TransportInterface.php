@@ -23,4 +23,12 @@ interface TransportInterface
      * @return PromiseInterface Returns the ID of the event or `null` if it failed to be sent
      */
     public function send(Event $event): PromiseInterface;
+
+    /**
+     * Waits until all pending requests have been sent or the timeout expires.
+     *
+     * @param int|null $timeout Maximum time in seconds before the sending
+     *                          operation is interrupted
+     */
+    public function close(?int $timeout = null): PromiseInterface;
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -369,6 +370,25 @@ class ClientTest extends TestCase
             ->getClient();
 
         $this->assertNotNull($client->captureMessage('test'));
+    }
+
+    public function testFlush(): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('close')
+            ->with(10)
+            ->willReturn(new FulfilledPromise(true));
+
+        $client = ClientBuilder::create()
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $promise = $client->flush(10);
+
+        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
+        $this->assertTrue($promise->wait());
     }
 
     /**

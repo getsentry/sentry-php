@@ -116,4 +116,12 @@ final class HttpTransport implements TransportInterface
 
         return new RejectedPromise($sendResponse);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function close(?int $timeout = null): PromiseInterface
+    {
+        return new FulfilledPromise(true);
+    }
 }
