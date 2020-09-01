@@ -21,7 +21,6 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
         $value = $this->serializeRecursively($value);
 
         if (is_numeric($value)) {
-            /** @phpstan-ignore-next-line */
             return (string) $value;
         }
 
