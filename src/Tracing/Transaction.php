@@ -49,19 +49,6 @@ final class Transaction extends Span
     }
 
     /**
-     * @return array<string, mixed> Returns the trace context
-     */
-    public function getTraceContext(): array
-    {
-        $data = $this->toArray();
-
-        unset($data['start_timestamp']);
-        unset($data['timestamp']);
-
-        return $data;
-    }
-
-    /**
      * Attaches SpanRecorder to the transaction itself.
      */
     public function initSpanRecorder(): void

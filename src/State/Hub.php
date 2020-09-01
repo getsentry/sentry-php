@@ -29,11 +29,6 @@ final class Hub implements HubInterface
     private $lastEventId;
 
     /**
-     * @var Span|null Set a Span on the Scope
-     */
-    private $span;
-
-    /**
      * Hub constructor.
      *
      * @param ClientInterface|null $client The client bound to the hub
@@ -270,22 +265,7 @@ final class Hub implements HubInterface
      */
     public function getTransaction(): ?Transaction
     {
-        $span = $this->span;
-        if (null !== $span && null !== $span->spanRecorder && !empty($span->spanRecorder->getSpans())) {
-            // The first span in the recorder is considered to be a Transaction
-            /** @phpstan-ignore-next-line */
-            return $span->spanRecorder->getSpans()[0];
-        }
-
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSpan(): ?Span
-    {
-        return $this->span;
+        return $this->getScope()->getTransaction();
     }
 
     /**
@@ -293,8 +273,16 @@ final class Hub implements HubInterface
      */
     public function setSpan(?Span $span): HubInterface
     {
-        $this->span = $span;
+        $this->getScope()->setSpan($span);
 
         return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSpan(): ?Span
+    {
+        return $this->getScope()->getSpan();
     }
 }

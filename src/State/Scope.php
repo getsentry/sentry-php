@@ -7,6 +7,8 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\Severity;
+use Sentry\Tracing\Span;
+use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
 
 /**
@@ -56,6 +58,11 @@ final class Scope
      * @var callable[] List of event processors
      */
     private $eventProcessors = [];
+
+    /**
+     * @var Span|null Set a Span on the Scope
+     */
+    private $span;
 
     /**
      * @var callable[] List of event processors
@@ -278,6 +285,7 @@ final class Scope
     {
         $this->user = null;
         $this->level = null;
+        $this->span = null;
         $this->fingerprint = [];
         $this->breadcrumbs = [];
         $this->tags = [];
@@ -326,6 +334,11 @@ final class Scope
             $event->setUser($user);
         }
 
+        // We do this here to also apply the trace context to errors if there is a Span on the Scope
+        if (null !== $this->span) {
+            $event->setContext('trace', $this->span->getTraceContext());
+        }
+
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
             $event->setContext($name, $data);
         }
@@ -343,6 +356,47 @@ final class Scope
         }
 
         return $event;
+    }
+
+    /**
+     * Returns the Span that is on the Scope.
+     */
+    public function getSpan(): ?Span
+    {
+        return $this->span;
+    }
+
+    /**
+     * Sets the Span on the Scope.
+     *
+     * @param Span|null $span The Span
+     *
+     * @return $this
+     */
+    public function setSpan(?Span $span): self
+    {
+        $this->span = $span;
+
+        return $this;
+    }
+
+    /**
+     * Returns the Transaction that is on the Scope.
+     *
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
+     */
+    public function getTransaction(): ?Transaction
+    {
+        $span = $this->span;
+
+        if (null !== $span && null !== $span->spanRecorder && !empty($span->spanRecorder->getSpans())) {
+            // The first span in the recorder is considered to be a Transaction
+            /** @phpstan-ignore-next-line */
+            return $span->spanRecorder->getSpans()[0];
+        }
+
+        return null;
     }
 
     public function __clone()

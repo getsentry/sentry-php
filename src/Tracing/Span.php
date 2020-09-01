@@ -203,6 +203,19 @@ class Span implements \JsonSerializable
     }
 
     /**
+     * @return array<string, mixed> Returns the trace context
+     */
+    public function getTraceContext(): array
+    {
+        $data = $this->toArray();
+
+        unset($data['start_timestamp']);
+        unset($data['timestamp']);
+
+        return $data;
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @return array<string, mixed>
