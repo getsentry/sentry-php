@@ -24,6 +24,7 @@ More information can be found in our [Performance](https://docs.sentry.io/produc
 - [BC BREAK] The Monolog handler does not set anymore tags and extras on the event object (#1068)
 - [BC BREAK] Remove the `UserContext`, `ExtraContext` and `Context` classes and refactor the `ServerOsContext` and `RuntimeContext` classes (#1071)
 - [BC BREAK] Remove the `FlushableClientInterface` and the `ClosableTransportInterface` interfaces (#1079)
+- [BC BREAK] Remove the `SpoolTransport` transport and all its related classes (#1080)
 - Add the `EnvironmentIntegration` integration to gather data for the `os` and `runtime` contexts (#1071)
 - Refactor how the event data gets serialized to JSON (#1077)
 
