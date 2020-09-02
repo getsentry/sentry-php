@@ -23,6 +23,7 @@ More information can be found in our [Performance](https://docs.sentry.io/produc
 - [BC BREAK] Use PSR-17 factories in place of the Httplug's ones and return a promise from the transport (#1066)
 - [BC BREAK] The Monolog handler does not set anymore tags and extras on the event object (#1068)
 - [BC BREAK] Remove the `UserContext`, `ExtraContext` and `Context` classes and refactor the `ServerOsContext` and `RuntimeContext` classes (#1071)
+- [BC BREAK] Remove the `FlushableClientInterface` and the `ClosableTransportInterface` interfaces (#1079)
 - Add the `EnvironmentIntegration` integration to gather data for the `os` and `runtime` contexts (#1071)
 
 ### 2.4.3 (2020-08-13)
