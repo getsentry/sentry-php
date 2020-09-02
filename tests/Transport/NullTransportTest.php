@@ -12,16 +12,33 @@ use Sentry\Transport\NullTransport;
 
 final class NullTransportTest extends TestCase
 {
+    /**
+     * @var NullTransport
+     */
+    private $transport;
+
+    protected function setUp(): void
+    {
+        $this->transport = new NullTransport();
+    }
+
     public function testSend(): void
     {
-        $transport = new NullTransport();
         $event = new Event();
 
-        $promise = $transport->send($event);
+        $promise = $this->transport->send($event);
         $promiseResult = $promise->wait();
 
         $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
         $this->assertSame(ResponseStatus::skipped(), $promiseResult->getStatus());
         $this->assertSame($event, $promiseResult->getEvent());
+    }
+
+    public function testClose(): void
+    {
+        $promise = $this->transport->close();
+
+        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
+        $this->assertTrue($promise->wait());
     }
 }

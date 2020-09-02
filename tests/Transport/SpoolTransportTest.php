@@ -75,4 +75,12 @@ final class SpoolTransportTest extends TestCase
             ResponseStatus::skipped(),
         ];
     }
+
+    public function testClose(): void
+    {
+        $promise = $this->transport->close();
+
+        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
+        $this->assertTrue($promise->wait());
+    }
 }

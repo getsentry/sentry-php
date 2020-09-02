@@ -103,3 +103,4 @@
 - Removed the `Event::getUserContext()` method, use `Event::getUser()` instead
 - Renamed the `Event::getServerOsContext()` method to `Event::getOsContext()`
 - The signature of the `Scope::setUser()` method changed ot accept a plain array
+- Removed the `FlushableClientInterface` and `ClosableTransportInterface` interfaces. Their methods have been moved to the corresponding `ClientInterface` and `TransportInterface` interfaces

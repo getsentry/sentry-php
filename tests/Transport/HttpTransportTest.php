@@ -13,7 +13,9 @@ use Http\Promise\FulfilledPromise as HttpFullfilledPromise;
 use Http\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientFactory;
@@ -161,5 +163,20 @@ final class HttpTransportTest extends TestCase
         $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
         $this->assertSame(ResponseStatus::failed(), $promiseResult->getStatus());
         $this->assertSame($event, $promiseResult->getEvent());
+    }
+
+    public function testClose(): void
+    {
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/sentry/1']),
+            $this->createMock(HttpAsyncClientInterface::class),
+            $this->createMock(StreamFactoryInterface::class),
+            $this->createMock(RequestFactoryInterface::class)
+        );
+
+        $promise = $transport->close();
+
+        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
+        $this->assertTrue($promise->wait());
     }
 }

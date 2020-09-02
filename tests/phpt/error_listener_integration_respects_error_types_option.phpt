@@ -39,6 +39,11 @@ $transportFactory = new class implements TransportFactoryInterface {
 
                 return new FulfilledPromise(new Response(ResponseStatus::success()));
             }
+
+            public function close(?int $timeout = null): PromiseInterface
+            {
+                return new FulfilledPromise(true);
+            }
         };
     }
 };
