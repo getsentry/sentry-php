@@ -15,7 +15,7 @@ use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
-use Sentry\Serializer\EventSerializer;
+use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\Tracing\Span;
@@ -27,16 +27,16 @@ use Symfony\Bridge\PhpUnit\ClockMock;
 /**
  * @group time-sensitive
  */
-final class EventSerializerTest extends TestCase
+final class PayloadSerializerTest extends TestCase
 {
     /**
-     * @var EventSerializer
+     * @var PayloadSerializer
      */
     private $serializer;
 
     protected function setUp(): void
     {
-        $this->serializer = new EventSerializer();
+        $this->serializer = new PayloadSerializer();
     }
 
     /**

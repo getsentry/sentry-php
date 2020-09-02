@@ -311,6 +311,56 @@ class Span
     }
 
     /**
+     * Gets the data in a format suitable for storage in the "trace" context.
+     *
+     * @return array<string, mixed>
+     *
+     * @psalm-return array{
+     *     data?: array<string, mixed>,
+     *     description?: string,
+     *     op?: string,
+     *     parent_span_id?: string,
+     *     span_id: string,
+     *     status?: string,
+     *     tags?: array<string, string>,
+     *     trace_id: string
+     * }
+     */
+    public function getTraceContext(): array
+    {
+        $result = [
+            'span_id' => (string) $this->spanId,
+            'trace_id' => (string) $this->traceId,
+        ];
+
+        if (null !== $this->parentSpanId) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
+        }
+
+        if (null !== $this->description) {
+            $result['description'] = $this->description;
+        }
+
+        if (null !== $this->op) {
+            $result['op'] = $this->op;
+        }
+
+        if (null !== $this->status) {
+            $result['status'] = $this->status;
+        }
+
+        if (!empty($this->data)) {
+            $result['data'] = $this->data;
+        }
+
+        if (!empty($this->tags)) {
+            $result['tags'] = $this->tags;
+        }
+
+        return $result;
+    }
+
+    /**
      * Sets the finish timestamp on the current span.
      *
      * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function

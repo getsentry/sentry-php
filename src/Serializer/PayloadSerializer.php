@@ -15,8 +15,10 @@ use Sentry\Util\JSON;
 /**
  * This is a simple implementation of a serializer that takes in input an event
  * object and returns a serialized string ready to be sent off to Sentry.
+ *
+ * @internal
  */
-final class EventSerializer implements EventSerializerInterface
+final class PayloadSerializer implements PayloadSerializerInterface
 {
     /**
      * {@inheritdoc}

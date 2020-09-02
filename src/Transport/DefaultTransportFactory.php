@@ -9,7 +9,7 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Options;
-use Sentry\Serializer\EventSerializer;
+use Sentry\Serializer\PayloadSerializer;
 
 /**
  * This class is the default implementation of the {@see TransportFactoryInterface}
@@ -67,7 +67,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
             $this->httpClientFactory->create($options),
             $this->streamFactory,
             $this->requestFactory,
-            new EventSerializer(),
+            new PayloadSerializer(),
             $this->logger
         );
     }

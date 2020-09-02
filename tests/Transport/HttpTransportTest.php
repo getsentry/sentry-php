@@ -22,7 +22,7 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\ResponseStatus;
-use Sentry\Serializer\EventSerializerInterface;
+use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
 use function GuzzleHttp\Psr7\stream_for;
 
@@ -44,16 +44,16 @@ final class HttpTransportTest extends TestCase
     private $requestFactory;
 
     /**
-     * @var MockObject&EventSerializerInterface
+     * @var MockObject&PayloadSerializerInterface
      */
-    private $eventSerializer;
+    private $payloadSerializer;
 
     protected function setUp(): void
     {
         $this->httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $this->streamFactory = $this->createMock(StreamFactoryInterface::class);
         $this->requestFactory = $this->createMock(RequestFactoryInterface::class);
-        $this->eventSerializer = $this->createMock(EventSerializerInterface::class);
+        $this->payloadSerializer = $this->createMock(PayloadSerializerInterface::class);
     }
 
     public function testSendThrowsIfDsnOptionIsNotSet(): void
@@ -63,7 +63,7 @@ final class HttpTransportTest extends TestCase
             $this->httpClient,
             $this->streamFactory,
             $this->requestFactory,
-            $this->eventSerializer
+            $this->payloadSerializer
         );
 
         $this->expectException(\RuntimeException::class);
@@ -78,7 +78,7 @@ final class HttpTransportTest extends TestCase
         $event = new Event();
         $event->setType(EventType::transaction());
 
-        $this->eventSerializer->expects($this->once())
+        $this->payloadSerializer->expects($this->once())
             ->method('serialize')
             ->with($event)
             ->willReturn('{"foo":"bar"}');
@@ -115,7 +115,7 @@ final class HttpTransportTest extends TestCase
             $this->httpClient,
             $this->streamFactory,
             $this->requestFactory,
-            $this->eventSerializer
+            $this->payloadSerializer
         );
 
         $transport->send($event);
@@ -129,7 +129,7 @@ final class HttpTransportTest extends TestCase
         $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $event = new Event();
 
-        $this->eventSerializer->expects($this->once())
+        $this->payloadSerializer->expects($this->once())
             ->method('serialize')
             ->with($event)
             ->willReturn('{"foo":"bar"}');
@@ -166,7 +166,7 @@ final class HttpTransportTest extends TestCase
             $this->httpClient,
             $this->streamFactory,
             $this->requestFactory,
-            $this->eventSerializer
+            $this->payloadSerializer
         );
 
         $promise = $transport->send($event);
@@ -209,7 +209,7 @@ final class HttpTransportTest extends TestCase
             ->method('error')
             ->with('Failed to send the event to Sentry. Reason: "foo".', ['exception' => $exception, 'event' => $event]);
 
-        $this->eventSerializer->expects($this->once())
+        $this->payloadSerializer->expects($this->once())
             ->method('serialize')
             ->with($event)
             ->willReturn('{"foo":"bar"}');
@@ -235,7 +235,7 @@ final class HttpTransportTest extends TestCase
             $this->httpClient,
             $this->streamFactory,
             $this->requestFactory,
-            $this->eventSerializer,
+            $this->payloadSerializer,
             $logger
         );
 
@@ -258,7 +258,8 @@ final class HttpTransportTest extends TestCase
             new Options(['dsn' => 'http://public@example.com/sentry/1']),
             $this->createMock(HttpAsyncClientInterface::class),
             $this->createMock(StreamFactoryInterface::class),
-            $this->createMock(RequestFactoryInterface::class)
+            $this->createMock(RequestFactoryInterface::class),
+            $this->createMock(PayloadSerializerInterface::class)
         );
 
         $promise = $transport->close();

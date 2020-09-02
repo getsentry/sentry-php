@@ -213,7 +213,8 @@ final class ClientBuilder implements ClientBuilderInterface
         );
 
         return new DefaultTransportFactory(
-            $streamFactory, Psr17FactoryDiscovery::findRequestFactory(),
+            $streamFactory,
+            Psr17FactoryDiscovery::findRequestFactory(),
             $httpClientFactory,
             $this->logger
         );

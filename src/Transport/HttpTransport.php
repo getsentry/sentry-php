@@ -18,7 +18,7 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Response;
 use Sentry\ResponseStatus;
-use Sentry\Serializer\EventSerializerInterface;
+use Sentry\Serializer\PayloadSerializerInterface;
 
 /**
  * This transport sends the events using a syncronous HTTP client that will
@@ -49,9 +49,9 @@ final class HttpTransport implements TransportInterface
     private $requestFactory;
 
     /**
-     * @var EventSerializerInterface The event serializer
+     * @var PayloadSerializerInterface The event serializer
      */
-    private $eventSerializer;
+    private $payloadSerializer;
 
     /**
      * @var LoggerInterface A PSR-3 logger
@@ -61,26 +61,26 @@ final class HttpTransport implements TransportInterface
     /**
      * Constructor.
      *
-     * @param Options                  $options         The Sentry client configuration
-     * @param HttpAsyncClientInterface $httpClient      The HTTP client
-     * @param StreamFactoryInterface   $streamFactory   The PSR-7 stream factory
-     * @param RequestFactoryInterface  $requestFactory  The PSR-7 request factory
-     * @param EventSerializerInterface $eventSerializer The event serializer
-     * @param LoggerInterface|null     $logger          An instance of a PSR-3 logger
+     * @param Options                    $options           The Sentry client configuration
+     * @param HttpAsyncClientInterface   $httpClient        The HTTP client
+     * @param StreamFactoryInterface     $streamFactory     The PSR-7 stream factory
+     * @param RequestFactoryInterface    $requestFactory    The PSR-7 request factory
+     * @param PayloadSerializerInterface $payloadSerializer The event serializer
+     * @param LoggerInterface|null       $logger            An instance of a PSR-3 logger
      */
     public function __construct(
         Options $options,
         HttpAsyncClientInterface $httpClient,
         StreamFactoryInterface $streamFactory,
         RequestFactoryInterface $requestFactory,
-        EventSerializerInterface $eventSerializer,
+        PayloadSerializerInterface $payloadSerializer,
         ?LoggerInterface $logger = null
     ) {
         $this->options = $options;
         $this->httpClient = $httpClient;
         $this->streamFactory = $streamFactory;
         $this->requestFactory = $requestFactory;
-        $this->eventSerializer = $eventSerializer;
+        $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
     }
 
@@ -98,11 +98,11 @@ final class HttpTransport implements TransportInterface
         if (EventType::transaction() === $event->getType()) {
             $request = $this->requestFactory->createRequest('POST', $dsn->getEnvelopeApiEndpointUrl())
                 ->withHeader('Content-Type', 'application/x-sentry-envelope')
-                ->withBody($this->streamFactory->createStream($this->eventSerializer->serialize($event)));
+                ->withBody($this->streamFactory->createStream($this->payloadSerializer->serialize($event)));
         } else {
             $request = $this->requestFactory->createRequest('POST', $dsn->getStoreApiEndpointUrl())
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody($this->streamFactory->createStream($this->eventSerializer->serialize($event)));
+                ->withBody($this->streamFactory->createStream($this->payloadSerializer->serialize($event)));
         }
 
         try {
