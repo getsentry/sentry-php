@@ -149,7 +149,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         }
 
         if (EventType::transaction() === $event->getType()) {
-            $result['spans'] = array_map([$this, 'serializeSpan'], $event->getSpans());
+            $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
         }
 
         return JSON::encode($result);
