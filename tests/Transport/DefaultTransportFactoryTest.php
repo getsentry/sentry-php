@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Sentry\Tests\Transport;
 
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\Psr17FactoryDiscovery;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Options;
 use Sentry\Transport\DefaultTransportFactory;
@@ -19,8 +20,8 @@ final class DefaultTransportFactoryTest extends TestCase
     public function testCreateReturnsNullTransportWhenDsnOptionIsNotConfigured(): void
     {
         $factory = new DefaultTransportFactory(
-            Psr17FactoryDiscovery::findStreamFactory(),
-            Psr17FactoryDiscovery::findRequestFactory(),
+            $this->createMock(StreamFactoryInterface::class),
+            $this->createMock(RequestFactoryInterface::class),
             $this->createMock(HttpClientFactoryInterface::class)
         );
 
@@ -39,8 +40,8 @@ final class DefaultTransportFactoryTest extends TestCase
             ->willReturn($this->createMock(HttpAsyncClientInterface::class));
 
         $factory = new DefaultTransportFactory(
-            Psr17FactoryDiscovery::findStreamFactory(),
-            Psr17FactoryDiscovery::findRequestFactory(),
+            $this->createMock(StreamFactoryInterface::class),
+            $this->createMock(RequestFactoryInterface::class),
             $httpClientFactory
         );
 

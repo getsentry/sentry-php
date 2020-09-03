@@ -35,57 +35,55 @@ final class BreadcrumbTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
 
-        $this->assertEquals('foo', $breadcrumb->getCategory());
-        $this->assertEquals(Breadcrumb::LEVEL_INFO, $breadcrumb->getLevel());
-        $this->assertEquals('foo bar', $breadcrumb->getMessage());
-        $this->assertEquals(Breadcrumb::TYPE_USER, $breadcrumb->getType());
-        $this->assertEquals(['baz'], $breadcrumb->getMetadata());
-        $this->assertEquals(microtime(true), $breadcrumb->getTimestamp());
+        $this->assertSame('foo', $breadcrumb->getCategory());
+        $this->assertSame(Breadcrumb::LEVEL_INFO, $breadcrumb->getLevel());
+        $this->assertSame('foo bar', $breadcrumb->getMessage());
+        $this->assertSame(Breadcrumb::TYPE_USER, $breadcrumb->getType());
+        $this->assertSame(['baz'], $breadcrumb->getMetadata());
+        $this->assertSame(microtime(true), $breadcrumb->getTimestamp());
     }
 
     /**
      * @dataProvider fromArrayDataProvider
      */
-    public function testFromArray(array $requestData, array $expectedResult): void
+    public function testFromArray(array $requestData, string $expectedLevel, string $expectedType, string $expectedCategory, ?string $expectedMessage, array $expectedMetadata): void
     {
-        $expectedResult['timestamp'] = microtime(true);
         $breadcrumb = Breadcrumb::fromArray($requestData);
 
-        $this->assertEquals($expectedResult, $breadcrumb->toArray());
+        $this->assertSame($expectedLevel, $breadcrumb->getLevel());
+        $this->assertSame($expectedType, $breadcrumb->getType());
+        $this->assertSame($expectedCategory, $breadcrumb->getCategory());
+        $this->assertSame($expectedMessage, $breadcrumb->getMessage());
+        $this->assertSame($expectedMetadata, $breadcrumb->getMetadata());
     }
 
-    public function fromArrayDataProvider(): array
+    public function fromArrayDataProvider(): iterable
     {
-        return [
+        yield [
             [
-                [
-                    'level' => Breadcrumb::LEVEL_INFO,
-                    'type' => Breadcrumb::TYPE_USER,
-                    'category' => 'foo',
-                    'message' => 'foo bar',
-                    'data' => ['baz'],
-                ],
-                [
-                    'level' => Breadcrumb::LEVEL_INFO,
-                    'type' => Breadcrumb::TYPE_USER,
-                    'category' => 'foo',
-                    'message' => 'foo bar',
-                    'data' => ['baz'],
-                ],
+                'level' => Breadcrumb::LEVEL_INFO,
+                'type' => Breadcrumb::TYPE_USER,
+                'category' => 'foo',
+                'message' => 'foo bar',
+                'data' => ['baz'],
             ],
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_USER,
+            'foo',
+            'foo bar',
+            ['baz'],
+        ];
+
+        yield [
             [
-                [
-                    'level' => Breadcrumb::LEVEL_INFO,
-                    'category' => 'foo',
-                ],
-                [
-                    'level' => Breadcrumb::LEVEL_INFO,
-                    'type' => Breadcrumb::TYPE_DEFAULT,
-                    'category' => 'foo',
-                    'message' => null,
-                    'data' => [],
-                ],
+                'level' => Breadcrumb::LEVEL_INFO,
+                'category' => 'foo',
             ],
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_DEFAULT,
+            'foo',
+            null,
+            [],
         ];
     }
 
@@ -95,7 +93,7 @@ final class BreadcrumbTest extends TestCase
         $newBreadcrumb = $breadcrumb->withCategory('bar');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
-        $this->assertEquals('bar', $newBreadcrumb->getCategory());
+        $this->assertSame('bar', $newBreadcrumb->getCategory());
         $this->assertSame($newBreadcrumb, $newBreadcrumb->withCategory('bar'));
     }
 
@@ -105,7 +103,7 @@ final class BreadcrumbTest extends TestCase
         $newBreadcrumb = $breadcrumb->withLevel(Breadcrumb::LEVEL_WARNING);
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
-        $this->assertEquals(Breadcrumb::LEVEL_WARNING, $newBreadcrumb->getLevel());
+        $this->assertSame(Breadcrumb::LEVEL_WARNING, $newBreadcrumb->getLevel());
         $this->assertSame($newBreadcrumb, $newBreadcrumb->withLevel(Breadcrumb::LEVEL_WARNING));
     }
 
@@ -115,7 +113,7 @@ final class BreadcrumbTest extends TestCase
         $newBreadcrumb = $breadcrumb->withType(Breadcrumb::TYPE_ERROR);
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
-        $this->assertEquals(Breadcrumb::TYPE_ERROR, $newBreadcrumb->getType());
+        $this->assertSame(Breadcrumb::TYPE_ERROR, $newBreadcrumb->getType());
         $this->assertSame($newBreadcrumb, $newBreadcrumb->withType(Breadcrumb::TYPE_ERROR));
     }
 
@@ -125,7 +123,7 @@ final class BreadcrumbTest extends TestCase
         $newBreadcrumb = $breadcrumb->withMessage('foo bar');
 
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
-        $this->assertEquals('foo bar', $newBreadcrumb->getMessage());
+        $this->assertSame('foo bar', $newBreadcrumb->getMessage());
         $this->assertSame($newBreadcrumb, $newBreadcrumb->withMessage('foo bar'));
     }
 
@@ -147,26 +145,5 @@ final class BreadcrumbTest extends TestCase
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
         $this->assertSame(['foo' => 'bar'], $breadcrumb->getMetadata());
         $this->assertArrayNotHasKey('foo', $newBreadcrumb->getMetadata());
-    }
-
-    public function testJsonSerialize(): void
-    {
-        $type = Breadcrumb::TYPE_USER;
-        $level = Breadcrumb::LEVEL_INFO;
-        $category = 'foo';
-        $data = ['baz' => 'bar'];
-        $message = 'message';
-        $breadcrumb = new Breadcrumb($level, $type, $category, $message, $data);
-
-        $expected = [
-            'type' => $type,
-            'category' => $category,
-            'message' => $message,
-            'level' => $level,
-            'timestamp' => microtime(true),
-            'data' => $data,
-        ];
-
-        $this->assertEquals($expected, $breadcrumb->jsonSerialize());
     }
 }

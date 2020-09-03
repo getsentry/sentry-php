@@ -22,8 +22,8 @@ function init(array $options = []): void
 /**
  * Captures a message event and sends it to Sentry.
  *
- * @param string   $message The message
- * @param Severity $level   The severity level of the message
+ * @param string        $message The message
+ * @param Severity|null $level   The severity level of the message
  */
 function captureMessage(string $message, ?Severity $level = null): ?EventId
 {

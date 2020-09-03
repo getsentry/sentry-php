@@ -54,22 +54,6 @@ final class StacktraceTest extends TestCase
         ];
     }
 
-    public function testStacktraceJsonSerialization(): void
-    {
-        $stacktrace = new Stacktrace([
-            new Frame('test_function', 'path/to/file', 1),
-            new Frame('TestClass::test_function', 'path/to/file', 2),
-            new Frame(null, 'path/to/file', 3),
-        ]);
-
-        $frames = json_encode($stacktrace->getFrames());
-        $serializedStacktrace = json_encode($stacktrace);
-
-        $this->assertNotFalse($frames);
-        $this->assertNotFalse($serializedStacktrace);
-        $this->assertJsonStringEqualsJsonString($frames, $serializedStacktrace);
-    }
-
     public function testAddFrame(): void
     {
         $stacktrace = new Stacktrace([

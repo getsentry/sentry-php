@@ -8,14 +8,13 @@ use Jean85\PrettyVersions;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Tracing\Span;
-use Sentry\Util\JSON;
 
 /**
  * This is the base class for classes containing event data.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Event implements \JsonSerializable
+final class Event
 {
     /**
      * @var EventId The ID
@@ -30,7 +29,7 @@ final class Event implements \JsonSerializable
     /**
      * This property is used if it's a Transaction event together with $timestamp it's the duration of the transaction.
      *
-     * @var string|float|null The date and time of when this event was generated
+     * @var float|null The date and time of when this event was generated
      */
     private $startTimestamp;
 
@@ -155,7 +154,7 @@ final class Event implements \JsonSerializable
     private $sdkVersion;
 
     /**
-     * @var string|null The type of the Event "default" | "transaction"
+     * @var EventType The type of the Event
      */
     private $type;
 
@@ -168,8 +167,8 @@ final class Event implements \JsonSerializable
     {
         $this->id = $eventId ?? EventId::generate();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
-        $this->level = Severity::error();
         $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+        $this->type = EventType::default();
     }
 
     /**
@@ -633,209 +632,51 @@ final class Event implements \JsonSerializable
         $this->stacktrace = $stacktrace;
     }
 
-    public function getType(): ?string
+    public function getType(): EventType
     {
         return $this->type;
     }
 
-    public function setType(?string $type): void
+    public function setType(EventType $type): void
     {
-        if ('default' !== $type && 'transaction' !== $type) {
-            $type = null;
-        }
         $this->type = $type;
     }
 
     /**
-     * @param string|float|null $startTimestamp The start time of the event
+     * Gets a timestamp representing when the measuring of a transaction started.
      */
-    public function setStartTimestamp($startTimestamp): void
+    public function getStartTimestamp(): ?float
+    {
+        return $this->startTimestamp;
+    }
+
+    /**
+     * Sets a timestamp representing when the measuring of a transaction started.
+     *
+     * @param float|null $startTimestamp The start time of the measurement
+     */
+    public function setStartTimestamp(?float $startTimestamp): void
     {
         $this->startTimestamp = $startTimestamp;
     }
 
     /**
-     * @param Span[] $spans Array of spans
+     * A list of timed application events that have a start and end time.
+     *
+     * @return Span[]
+     */
+    public function getSpans(): array
+    {
+        return $this->spans;
+    }
+
+    /**
+     * Sets a list of timed application events that have a start and end time.
+     *
+     * @param Span[] $spans The list of spans
      */
     public function setSpans(array $spans): void
     {
         $this->spans = $spans;
-    }
-
-    /**
-     * Gets the event as an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $data = [
-            'event_id' => (string) $this->id,
-            'timestamp' => $this->timestamp,
-            'platform' => 'php',
-            'sdk' => [
-                'name' => $this->sdkIdentifier,
-                'version' => $this->getSdkVersion(),
-            ],
-        ];
-
-        if (null !== $this->level) {
-            $data['level'] = (string) $this->level;
-        }
-
-        if (null !== $this->startTimestamp) {
-            $data['start_timestamp'] = $this->startTimestamp;
-        }
-
-        if (null !== $this->type) {
-            $data['type'] = $this->type;
-        }
-
-        if (null !== $this->logger) {
-            $data['logger'] = $this->logger;
-        }
-
-        if (null !== $this->transaction) {
-            $data['transaction'] = $this->transaction;
-        }
-
-        if (null !== $this->serverName) {
-            $data['server_name'] = $this->serverName;
-        }
-
-        if (null !== $this->release) {
-            $data['release'] = $this->release;
-        }
-
-        if (null !== $this->environment) {
-            $data['environment'] = $this->environment;
-        }
-
-        if (!empty($this->fingerprint)) {
-            $data['fingerprint'] = $this->fingerprint;
-        }
-
-        if (!empty($this->modules)) {
-            $data['modules'] = $this->modules;
-        }
-
-        if (!empty($this->extra)) {
-            $data['extra'] = $this->extra;
-        }
-
-        if (!empty($this->tags)) {
-            $data['tags'] = $this->tags;
-        }
-
-        if (null !== $this->user) {
-            $data['user'] = array_merge($this->user->getMetadata(), [
-                'id' => $this->user->getId(),
-                'email' => $this->user->getEmail(),
-                'ip_address' => $this->user->getIpAddress(),
-                'username' => $this->user->getUsername(),
-            ]);
-        }
-
-        if (null !== $this->osContext) {
-            $data['contexts']['os'] = [
-                'name' => $this->osContext->getName(),
-                'version' => $this->osContext->getVersion(),
-                'build' => $this->osContext->getBuild(),
-                'kernel_version' => $this->osContext->getKernelVersion(),
-            ];
-        }
-
-        if (null !== $this->runtimeContext) {
-            $data['contexts']['runtime'] = [
-                'name' => $this->runtimeContext->getName(),
-                'version' => $this->runtimeContext->getVersion(),
-            ];
-        }
-
-        if (!empty($this->contexts)) {
-            $data['contexts'] = array_merge($data['contexts'] ?? [], $this->contexts);
-        }
-
-        if (!empty($this->breadcrumbs)) {
-            $data['breadcrumbs']['values'] = $this->breadcrumbs;
-        }
-
-        if ('transaction' === $this->getType()) {
-            $data['spans'] = array_values(array_map(function (Span $span): array {
-                return $span->toArray();
-            }, $this->spans));
-        }
-
-        foreach (array_reverse($this->exceptions) as $exception) {
-            $exceptionMechanism = $exception->getMechanism();
-            $exceptionStacktrace = $exception->getStacktrace();
-            $exceptionValue = [
-                'type' => $exception->getType(),
-                'value' => $exception->getValue(),
-            ];
-
-            if (null !== $exceptionStacktrace) {
-                $exceptionValue['stacktrace'] = [
-                    'frames' => $exceptionStacktrace->toArray(),
-                ];
-            }
-
-            if (null !== $exceptionMechanism) {
-                $exceptionValue['mechanism'] = [
-                    'type' => $exceptionMechanism->getType(),
-                    'handled' => $exceptionMechanism->isHandled(),
-                ];
-            }
-
-            $data['exception']['values'][] = $exceptionValue;
-        }
-
-        if (null !== $this->stacktrace) {
-            $data['stacktrace'] = [
-                'frames' => $this->stacktrace->toArray(),
-            ];
-        }
-
-        if (!empty($this->request)) {
-            $data['request'] = $this->request;
-        }
-
-        if (null !== $this->message) {
-            if (empty($this->messageParams)) {
-                $data['message'] = $this->message;
-            } else {
-                $data['message'] = [
-                    'message' => $this->message,
-                    'params' => $this->messageParams,
-                    'formatted' => $this->messageFormatted ?? vsprintf($this->message, $this->messageParams),
-                ];
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
-    }
-
-    /**
-     * Converts an Event to an Envelope.
-     *
-     * @throws Exception\JsonException
-     */
-    public function toEnvelope(): string
-    {
-        $rawEvent = $this->jsonSerialize();
-        $envelopeHeader = JSON::encode(['event_id' => $rawEvent['event_id'], 'sent_at' => gmdate('Y-m-d\TH:i:s\Z')]);
-        $itemHeader = JSON::encode(['type' => $rawEvent['type'] ?? 'event', 'content_type' => 'application/json']);
-
-        return vsprintf("%s\n%s\n%s", [$envelopeHeader, $itemHeader, JSON::encode($rawEvent)]);
     }
 }

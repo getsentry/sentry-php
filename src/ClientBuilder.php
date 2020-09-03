@@ -188,7 +188,13 @@ final class ClientBuilder implements ClientBuilderInterface
         $this->serializer = $this->serializer ?? new Serializer($this->options);
         $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer($this->options);
 
-        return new EventFactory($this->serializer, $this->representationSerializer, $this->options, $this->sdkIdentifier, $this->sdkVersion);
+        return new EventFactory(
+            $this->serializer,
+            $this->representationSerializer,
+            $this->options,
+            $this->sdkIdentifier,
+            $this->sdkVersion
+        );
     }
 
     /**
@@ -206,6 +212,11 @@ final class ClientBuilder implements ClientBuilderInterface
             $this->sdkVersion
         );
 
-        return new DefaultTransportFactory($streamFactory, Psr17FactoryDiscovery::findRequestFactory(), $httpClientFactory, $this->logger);
+        return new DefaultTransportFactory(
+            $streamFactory,
+            Psr17FactoryDiscovery::findRequestFactory(),
+            $httpClientFactory,
+            $this->logger
+        );
     }
 }

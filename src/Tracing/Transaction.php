@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\EventType;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 
@@ -64,7 +65,7 @@ final class Transaction extends Span
      *
      * @return EventId|null Finish for a transaction returns the eventId or null in case we didn't send it
      */
-    public function finish($endTimestamp = null): ?EventId
+    public function finish(?float $endTimestamp = null): ?EventId
     {
         if (null !== $this->endTimestamp) {
             // Transaction was already finished once and we don't want to re-flush it
@@ -74,7 +75,6 @@ final class Transaction extends Span
         parent::finish($endTimestamp);
 
         if (true !== $this->sampled) {
-            // At this point if `sampled !== true` we want to discard the transaction.
             return null;
         }
 
@@ -91,7 +91,7 @@ final class Transaction extends Span
     public function toEvent(): Event
     {
         $event = new Event();
-        $event->setType('transaction');
+        $event->setType(EventType::transaction());
         $event->setTags(array_merge($event->getTags(), $this->tags));
         $event->setTransaction($this->name);
         $event->setStartTimestamp($this->startTimestamp);
@@ -113,15 +113,5 @@ final class Transaction extends Span
         }
 
         return $event;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toEvent()->toArray();
     }
 }

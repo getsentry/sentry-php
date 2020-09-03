@@ -180,7 +180,7 @@ final class Client implements ClientInterface
 
         $sampleRate = $this->options->getSampleRate();
 
-        if ('transaction' !== $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+        if (EventType::transaction() !== $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
 
             return null;

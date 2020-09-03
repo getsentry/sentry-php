@@ -9,7 +9,7 @@ use Sentry\EventId;
 /**
  * This class stores all the information about a Span.
  */
-class Span implements \JsonSerializable
+class Span
 {
     /**
      * @var SpanId Span ID
@@ -103,13 +103,271 @@ class Span implements \JsonSerializable
     }
 
     /**
+     * Sets the ID of the span.
+     *
+     * @param SpanId $spanId The ID
+     */
+    public function setSpanId(SpanId $spanId): void
+    {
+        $this->spanId = $spanId;
+    }
+
+    /**
+     * Gets the ID that determines which trace the span belongs to.
+     */
+    public function getTraceId(): TraceId
+    {
+        return $this->traceId;
+    }
+
+    /**
+     * Sets the ID that determines which trace the span belongs to.
+     *
+     * @param TraceId $traceId The ID
+     */
+    public function setTraceId(TraceId $traceId): void
+    {
+        $this->traceId = $traceId;
+    }
+
+    /**
+     * Gets the ID that determines which span is the parent of the current one.
+     */
+    public function getParentSpanId(): ?SpanId
+    {
+        return $this->parentSpanId;
+    }
+
+    /**
+     * Sets the ID that determines which span is the parent of the current one.
+     *
+     * @param SpanId|null $parentSpanId The ID
+     */
+    public function setParentSpanId(?SpanId $parentSpanId): void
+    {
+        $this->parentSpanId = $parentSpanId;
+    }
+
+    /**
+     * Gets the timestamp representing when the measuring started.
+     */
+    public function getStartTimestamp(): float
+    {
+        return $this->startTimestamp;
+    }
+
+    /**
+     * Sets the timestamp representing when the measuring started.
+     *
+     * @param float $startTimestamp The timestamp
+     */
+    public function setStartTimestamp(float $startTimestamp): void
+    {
+        $this->startTimestamp = $startTimestamp;
+    }
+
+    /**
+     * Gets the timestamp representing when the measuring finished.
+     */
+    public function getEndTimestamp(): ?float
+    {
+        return $this->endTimestamp;
+    }
+
+    /**
+     * Returns `sentry-trace` header content.
+     */
+    public function toTraceparent(): string
+    {
+        $sampled = '';
+        if (null !== $this->sampled) {
+            $sampled = $this->sampled ? '-1' : '-0';
+        }
+
+        return $this->traceId . '-' . $this->spanId . $sampled;
+    }
+
+    /**
+     * Gets a description of the span's operation, which uniquely identifies
+     * the span but is consistent across instances of the span.
+     */
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * Sets a description of the span's operation, which uniquely identifies
+     * the span but is consistent across instances of the span.
+     *
+     * @param string|null $description The description
+     */
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * Gets a short code identifying the type of operation the span is measuring.
+     */
+    public function getOp(): ?string
+    {
+        return $this->op;
+    }
+
+    /**
+     * Sets a short code identifying the type of operation the span is measuring.
+     *
+     * @param string|null $op The short code
+     */
+    public function setOp(?string $op): void
+    {
+        $this->op = $op;
+    }
+
+    /**
+     * Gets the status of the span/transaction.
+     */
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    /**
+     * Sets the status of the span/transaction.
+     *
+     * @param string|null $status The status
+     */
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+    }
+
+    /**
+     * Gets a map of tags for this event.
+     *
+     * @return array<string, string>
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * Sets a map of tags for this event.
+     *
+     * @param array<string, string> $tags The tags
+     */
+    public function setTags(array $tags): void
+    {
+        $this->tags = array_merge($this->tags, $tags);
+    }
+
+    /**
+     * Gets the ID of the span.
+     */
+    public function getSpanId(): SpanId
+    {
+        return $this->spanId;
+    }
+
+    /**
+     * Gets the flag determining whether this span should be sampled or not.
+     */
+    public function getSampled(): ?bool
+    {
+        return $this->sampled;
+    }
+
+    /**
+     * Sets the flag determining whether this span should be sampled or not.
+     *
+     * @param bool $sampled Whether to sample or not this span
+     */
+    public function setSampled(?bool $sampled): void
+    {
+        $this->sampled = $sampled;
+    }
+
+    /**
+     * Gets a map of arbitrary data.
+     *
+     * @return array<string, mixed>
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * Sets a map of arbitrary data. This method will merge the given data with
+     * the existing one.
+     *
+     * @param array<string, mixed> $data The data
+     */
+    public function setData(array $data): void
+    {
+        $this->data = array_merge($this->data, $data);
+    }
+
+    /**
+     * Gets the data in a format suitable for storage in the "trace" context.
+     *
+     * @return array<string, mixed>
+     *
+     * @psalm-return array{
+     *     data?: array<string, mixed>,
+     *     description?: string,
+     *     op?: string,
+     *     parent_span_id?: string,
+     *     span_id: string,
+     *     status?: string,
+     *     tags?: array<string, string>,
+     *     trace_id: string
+     * }
+     */
+    public function getTraceContext(): array
+    {
+        $result = [
+            'span_id' => (string) $this->spanId,
+            'trace_id' => (string) $this->traceId,
+        ];
+
+        if (null !== $this->parentSpanId) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
+        }
+
+        if (null !== $this->description) {
+            $result['description'] = $this->description;
+        }
+
+        if (null !== $this->op) {
+            $result['op'] = $this->op;
+        }
+
+        if (null !== $this->status) {
+            $result['status'] = $this->status;
+        }
+
+        if (!empty($this->data)) {
+            $result['data'] = $this->data;
+        }
+
+        if (!empty($this->tags)) {
+            $result['tags'] = $this->tags;
+        }
+
+        return $result;
+    }
+
+    /**
      * Sets the finish timestamp on the current span.
      *
      * @param float|null $endTimestamp Takes an endTimestamp if the end should not be the time when you call this function
      *
      * @return EventId|null Finish for a span always returns null
      */
-    public function finish($endTimestamp = null): ?EventId
+    public function finish(?float $endTimestamp = null): ?EventId
     {
         $this->endTimestamp = $endTimestamp ?? microtime(true);
 
@@ -138,198 +396,5 @@ class Span implements \JsonSerializable
         }
 
         return $span;
-    }
-
-    public function getStartTimestamp(): float
-    {
-        return $this->startTimestamp;
-    }
-
-    /**
-     * Returns `sentry-trace` header content.
-     */
-    public function toTraceparent(): string
-    {
-        $sampled = '';
-        if (null !== $this->sampled) {
-            $sampled = $this->sampled ? '-1' : '-0';
-        }
-
-        return $this->traceId . '-' . $this->spanId . $sampled;
-    }
-
-    /**
-     * Gets the event as an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $data = [
-            'span_id' => (string) $this->spanId,
-            'trace_id' => (string) $this->traceId,
-            'start_timestamp' => $this->startTimestamp,
-        ];
-
-        if (null !== $this->parentSpanId) {
-            $data['parent_span_id'] = (string) $this->parentSpanId;
-        }
-
-        if (null !== $this->endTimestamp) {
-            $data['timestamp'] = $this->endTimestamp;
-        }
-
-        if (null !== $this->status) {
-            $data['status'] = $this->status;
-        }
-
-        if (null !== $this->description) {
-            $data['description'] = $this->description;
-        }
-
-        if (null !== $this->op) {
-            $data['op'] = $this->op;
-        }
-
-        if (!empty($this->data)) {
-            $data['data'] = $this->data;
-        }
-
-        if (!empty($this->tags)) {
-            $data['tags'] = $this->tags;
-        }
-
-        return $data;
-    }
-
-    /**
-     * @return array<string, mixed> Returns the trace context
-     */
-    public function getTraceContext(): array
-    {
-        $data = $this->toArray();
-
-        unset($data['start_timestamp']);
-        unset($data['timestamp']);
-
-        return $data;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
-    }
-
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(?string $description): void
-    {
-        $this->description = $description;
-    }
-
-    public function getOp(): ?string
-    {
-        return $this->op;
-    }
-
-    public function setOp(?string $op): void
-    {
-        $this->op = $op;
-    }
-
-    public function getStatus(): ?string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(?string $status): void
-    {
-        $this->status = $status;
-    }
-
-    /**
-     * Gets a map of tags for this event.
-     *
-     * @return array<string, string>
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
-    }
-
-    /**
-     * Sets a map of tags for this event.
-     *
-     * @param array<string, string> $tags The tags
-     */
-    public function setTags(array $tags): void
-    {
-        $this->tags = array_merge($this->tags, $tags);
-    }
-
-    public function getSpanId(): SpanId
-    {
-        return $this->spanId;
-    }
-
-    public function setSpanId(SpanId $spanId): void
-    {
-        $this->spanId = $spanId;
-    }
-
-    public function getTraceId(): TraceId
-    {
-        return $this->traceId;
-    }
-
-    public function setTraceId(TraceId $traceId): void
-    {
-        $this->traceId = $traceId;
-    }
-
-    public function getParentSpanId(): ?SpanId
-    {
-        return $this->parentSpanId;
-    }
-
-    public function setParentSpanId(?SpanId $parentSpanId): void
-    {
-        $this->parentSpanId = $parentSpanId;
-    }
-
-    public function getSampled(): ?bool
-    {
-        return $this->sampled;
-    }
-
-    public function setSampled(?bool $sampled): void
-    {
-        $this->sampled = $sampled;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function setData(array $data): void
-    {
-        $this->data = array_merge($this->data, $data);
-    }
-
-    public function setStartTimestamp(float $startTimestamp): void
-    {
-        $this->startTimestamp = $startTimestamp;
-    }
-
-    public function getEndTimestamp(): ?float
-    {
-        return $this->endTimestamp;
     }
 }

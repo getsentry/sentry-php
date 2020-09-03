@@ -60,7 +60,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         $stacktrace = new Stacktrace([
-            new Frame('[unknown]', $fixtureFilePath, $lineNumber),
+            new Frame('[unknown]', $fixtureFilePath, $lineNumber, null, $fixtureFilePath),
         ]);
 
         $event = new Event();
@@ -154,7 +154,7 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         $stacktrace = new Stacktrace([
             new Frame(null, '[internal]', 0),
-            new Frame(null, 'file.ext', 10),
+            new Frame(null, 'file.ext', 10, null, 'file.ext'),
         ]);
 
         $event = new Event();
