@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 3.0.0-beta1 (2020-09-03)
 
 **Tracing API**
 
@@ -8,6 +8,9 @@ In this version we released API for Tracing. `\Sentry\startTransaction` is your 
 More information can be found in our [Performance](https://docs.sentry.io/product/performance/) docs or specific
 [PHP SDK](https://docs.sentry.io/platforms/php/) docs.
 
+**Breaking Change**: This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are
+using an on-premise installation it requires Sentry version `>= v20.6.0` to work. If you are using
+[sentry.io](https://sentry.io) nothing will change and no action is needed.
 
 - [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton (#1038)
 - [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
