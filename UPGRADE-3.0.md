@@ -108,3 +108,4 @@
 - Removed the `Breadcrumb::toArray()` and `Breadcrumb::jsonSerialize()` methods
 - Removed the `Frame::toArray()` and `Frame::jsonSerialize()` methods
 - Removed the `Stacktrace::toArray()` and `Stacktrace::jsonSerialize()` methods
+- Removed the `SpoolTransport` class and the `SpoolInterface` interface with related implementation
