@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\ErrorListenerIntegration;
-use Sentry\Integration\ExceptionListenerIntegration;
-use Sentry\Integration\FatalErrorListenerIntegration;
-use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\TransactionIntegration;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -37,11 +31,6 @@ final class Options
      * @var OptionsResolver The options resolver
      */
     private $resolver;
-
-    /**
-     * @var IntegrationInterface[]|null The list of default integrations
-     */
-    private $defaultIntegrations;
 
     /**
      * Class constructor.
@@ -460,7 +449,7 @@ final class Options
      * initialized or a function that receives default integrations and returns
      * a new, updated list.
      *
-     * @param IntegrationInterface[]|callable $integrations The list or callable
+     * @param IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[] $integrations The list or callable
      */
     public function setIntegrations($integrations): void
     {
@@ -472,27 +461,11 @@ final class Options
     /**
      * Returns all configured integrations that will be used by the Client.
      *
-     * @return IntegrationInterface[]
+     * @return IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[]
      */
-    public function getIntegrations(): array
+    public function getIntegrations()
     {
-        $defaultIntegrations = $this->getDefaultIntegrations();
-        $userIntegrations = $this->options['integrations'];
-        $integrations = [];
-
-        if (\is_callable($userIntegrations)) {
-            return $userIntegrations($defaultIntegrations);
-        }
-
-        foreach ($defaultIntegrations as $defaultIntegration) {
-            $integrations[\get_class($defaultIntegration)] = $defaultIntegration;
-        }
-
-        foreach ($userIntegrations as $userIntegration) {
-            $integrations[\get_class($userIntegration)] = $userIntegration;
-        }
-
-        return array_values($integrations);
+        return $this->options['integrations'];
     }
 
     /**
@@ -934,31 +907,5 @@ final class Options
     private function validateContextLinesOption(?int $contextLines): bool
     {
         return null === $contextLines || $contextLines >= 0;
-    }
-
-    /**
-     * Gets the list of default integrations.
-     *
-     * @return IntegrationInterface[]
-     */
-    private function getDefaultIntegrations(): array
-    {
-        if (!$this->options['default_integrations']) {
-            return [];
-        }
-
-        if (null === $this->defaultIntegrations) {
-            $this->defaultIntegrations = [
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-                new FrameContextifierIntegration(),
-                new EnvironmentIntegration(),
-            ];
-        }
-
-        return $this->defaultIntegrations;
     }
 }

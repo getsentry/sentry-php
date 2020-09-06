@@ -6,14 +6,6 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
-use Sentry\Integration\EnvironmentIntegration;
-use Sentry\Integration\ErrorListenerIntegration;
-use Sentry\Integration\ExceptionListenerIntegration;
-use Sentry\Integration\FatalErrorListenerIntegration;
-use Sentry\Integration\FrameContextifierIntegration;
-use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
@@ -299,106 +291,5 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
         $this->assertSame('0.0.1', (new Options())->getRelease());
-    }
-
-    /**
-     * @dataProvider integrationsOptionAsCallableDataProvider
-     */
-    public function testIntegrationsOptionAsCallable(bool $useDefaultIntegrations, $integrations, array $expectedResult): void
-    {
-        $options = new Options([
-            'default_integrations' => $useDefaultIntegrations,
-            'integrations' => $integrations,
-        ]);
-
-        $this->assertEquals($expectedResult, $options->getIntegrations());
-    }
-
-    public function integrationsOptionAsCallableDataProvider(): \Generator
-    {
-        yield 'No default integrations && no user integrations' => [
-            false,
-            [],
-            [],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integration added && default integration appearing only once' => [
-            true,
-            [
-                $integration,
-                new ExceptionListenerIntegration(),
-            ],
-            [
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-                new FrameContextifierIntegration(),
-                new EnvironmentIntegration(),
-                $integration,
-            ],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integration added twice' => [
-            false,
-            [
-                $integration,
-                $integration,
-            ],
-            [
-                $integration,
-            ],
-        ];
-
-        yield 'User integrations as callable returning empty list' => [
-            true,
-            static function (): array {
-                return [];
-            },
-            [],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integrations as callable returning custom list' => [
-            true,
-            static function () use ($integration): array {
-                return [$integration];
-            },
-            [$integration],
-        ];
-
-        yield 'User integrations as callable returning $defaultIntegrations argument' => [
-            true,
-            static function (array $defaultIntegrations): array {
-                return $defaultIntegrations;
-            },
-            [
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-                new FrameContextifierIntegration(),
-                new EnvironmentIntegration(),
-            ],
-        ];
     }
 }

@@ -136,27 +136,24 @@ interface HubInterface
      * which point the transaction with all its finished child spans will be sent to
      * Sentry.
      *
-     * @param TransactionContext $context properties of the new `Transaction`
+     * @param TransactionContext $context Properties of the new transaction
      */
     public function startTransaction(TransactionContext $context): Transaction;
 
     /**
-     * Returns the Transaction that is on the Hub.
-     *
-     * @psalm-suppress MoreSpecificReturnType
-     * @psalm-suppress LessSpecificReturnStatement
+     * Returns the transaction that is on the Hub.
      */
     public function getTransaction(): ?Transaction;
 
     /**
-     * Returns the Span that is on the Hub.
+     * Returns the span that is on the Hub.
      */
     public function getSpan(): ?Span;
 
     /**
-     * Sets the Span on the Hub.
+     * Sets the span on the Hub.
      *
-     * @param Span|null $span The Span
+     * @param Span|null $span The span
      */
     public function setSpan(?Span $span): HubInterface;
 }

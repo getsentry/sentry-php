@@ -9,14 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\Integration\EnvironmentIntegration;
-use Sentry\Integration\ErrorListenerIntegration;
-use Sentry\Integration\ExceptionListenerIntegration;
-use Sentry\Integration\FatalErrorListenerIntegration;
-use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
@@ -39,65 +32,6 @@ final class ClientBuilderTest extends TestCase
         $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
 
         $this->assertInstanceOf(NullTransport::class, $transport);
-    }
-
-    /**
-     * @dataProvider integrationsAreAddedToClientCorrectlyDataProvider
-     */
-    public function testIntegrationsAreAddedToClientCorrectly(bool $defaultIntegrations, array $integrations, array $expectedIntegrations): void
-    {
-        $options = new Options();
-        $options->setDefaultIntegrations($defaultIntegrations);
-        $options->setIntegrations($integrations);
-
-        $client = (new ClientBuilder($options))->getClient();
-
-        $actualIntegrationsClassNames = array_map('\get_class', $client->getOptions()->getIntegrations());
-
-        $this->assertEquals($expectedIntegrations, $actualIntegrationsClassNames, '', 0, 10, true);
-    }
-
-    public function integrationsAreAddedToClientCorrectlyDataProvider(): array
-    {
-        return [
-            [
-                false,
-                [],
-                [],
-            ],
-            [
-                false,
-                [new StubIntegration()],
-                [StubIntegration::class],
-            ],
-            [
-                true,
-                [],
-                [
-                    ErrorListenerIntegration::class,
-                    FatalErrorListenerIntegration::class,
-                    ExceptionListenerIntegration::class,
-                    RequestIntegration::class,
-                    TransactionIntegration::class,
-                    FrameContextifierIntegration::class,
-                    EnvironmentIntegration::class,
-                ],
-            ],
-            [
-                true,
-                [new StubIntegration()],
-                [
-                    ErrorListenerIntegration::class,
-                    FatalErrorListenerIntegration::class,
-                    ExceptionListenerIntegration::class,
-                    RequestIntegration::class,
-                    TransactionIntegration::class,
-                    FrameContextifierIntegration::class,
-                    EnvironmentIntegration::class,
-                    StubIntegration::class,
-                ],
-            ],
-        ];
     }
 
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
