@@ -12,6 +12,7 @@ use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
+use Sentry\Tracing\TracesSamplerInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -659,6 +660,35 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked when we sample a Transaction.
+     *
+     * @psalm-return \Sentry\Tracing\TracesSamplerInterface|callable(\Sentry\Tracing\SamplingContext): float
+     */
+    public function getTracesSampler()
+    {
+        if (\is_string($this->options['traces_sampler']) && class_exists($this->options['traces_sampler'])) {
+            return new $this->options['traces_sampler']();
+        }
+
+        return $this->options['traces_sampler'];
+    }
+
+    /**
+     * Sets a callback that will be invoked when we take the sampling decision for Transactions.
+     * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
+     *
+     * @param callable $sampler The sampler
+     *
+     * @psalm-param \Sentry\Tracing\TracesSamplerInterface|callable(\Sentry\Tracing\SamplingContext): float $sampler
+     */
+    public function setTracesSampler($sampler): void
+    {
+        $options = array_merge($this->options, ['traces_sampler' => $sampler]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -675,6 +705,7 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
             'traces_sample_rate' => 0,
+            'traces_sampler' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
