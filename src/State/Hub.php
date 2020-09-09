@@ -239,9 +239,8 @@ final class Hub implements HubInterface
 
             if (null !== $sampler) {
                 if (\is_callable($sampler)) {
-                    $sampleRate = $sampler(SamplingContext::getDefault($context));
-                } elseif ($sampler instanceof TracesSamplerInterface) {
-                    $sampleRate = $sampler->sample(SamplingContext::getDefault($context));
+                    $sampleRate = \call_user_func($sampler, SamplingContext::getDefault($context));
+                    var_dump($sampleRate);
                 }
             }
         }

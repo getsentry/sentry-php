@@ -661,14 +661,10 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return \Sentry\Tracing\TracesSamplerInterface|callable(\Sentry\Tracing\SamplingContext): float
+     * @psalm-return null|callable(\Sentry\Tracing\SamplingContext): float
      */
     public function getTracesSampler()
     {
-        if (\is_string($this->options['traces_sampler']) && class_exists($this->options['traces_sampler'])) {
-            return new $this->options['traces_sampler']();
-        }
-
         return $this->options['traces_sampler'];
     }
 
@@ -676,9 +672,9 @@ final class Options
      * Sets a callback that will be invoked when we take the sampling decision for Transactions.
      * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
      *
-     * @param callable $sampler The sampler
+     * @param null|callable $sampler The sampler
      *
-     * @psalm-param \Sentry\Tracing\TracesSamplerInterface|callable(\Sentry\Tracing\SamplingContext): float $sampler
+     * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler($sampler): void
     {
@@ -736,6 +732,7 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');
