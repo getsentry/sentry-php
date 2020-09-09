@@ -11,7 +11,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
-use Sentry\Tracing\TracesSampler;
 use Sentry\Tracing\TracesSamplerInterface;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -233,11 +232,11 @@ final class Hub implements HubInterface
     public function startTransaction(TransactionContext $context): Transaction
     {
         $client = $this->getClient();
-
         $sampleRate = null;
 
         if (null !== $client) {
             $sampler = $client->getOptions()->getTracesSampler();
+
             if (null !== $sampler) {
                 if (\is_callable($sampler)) {
                     $sampleRate = $sampler(SamplingContext::getDefault($context));
@@ -248,7 +247,8 @@ final class Hub implements HubInterface
         }
 
         // Roll the dice for sampling transaction, all child spans inherit the sampling decision.
-        // And only if $$sampleRate == null because then the traces_sampler wasn't defined and we need to roll the dice
+        // Only if $sampleRate is `null` (which can only be because then the traces_sampler wasn't defined)
+        // we need to roll the dice.
         if (null === $context->sampled && null == $sampleRate) {
             if (null !== $client) {
                 $sampleRate = $client->getOptions()->getTracesSampleRate();

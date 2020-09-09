@@ -1,19 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tracing;
 
-class SamplingContext
+final class SamplingContext
 {
     /**
-     * @var TransactionContext|null TransactionContext
+     * @var TransactionContext|null The context of the transaction
      */
     private $transactionContext;
 
     /**
-     * Returns the default instance of for the SamplingContext
-     *
-     * @param TransactionContext $transactionContext
-     * @return self
+     * Returns the default instance of for the SamplingContext.
      */
     public static function getDefault(TransactionContext $transactionContext): self
     {
@@ -23,20 +22,13 @@ class SamplingContext
         return $context;
     }
 
-    /**
-     * @return TransactionContext|null
-     */
     public function getTransactionContext(): ?TransactionContext
     {
         return $this->transactionContext;
     }
 
-    /**
-     * @param TransactionContext|null $transactionContext
-     */
     public function setTransactionContext(?TransactionContext $transactionContext): void
     {
         $this->transactionContext = $transactionContext;
     }
-
 }
