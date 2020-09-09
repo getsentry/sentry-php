@@ -78,7 +78,7 @@ final class TransactionTest extends TestCase
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->any())
             ->method('getOptions')
             ->willReturn(new Options(['traces_sample_rate' => 1]));
 

@@ -672,7 +672,7 @@ final class Options
      * Sets a callback that will be invoked when we take the sampling decision for Transactions.
      * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
      *
-     * @param null|callable $sampler The sampler
+     * @param callable|null $sampler The sampler
      *
      * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
      */

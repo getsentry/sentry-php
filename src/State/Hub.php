@@ -11,7 +11,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
-use Sentry\Tracing\TracesSamplerInterface;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -240,7 +239,6 @@ final class Hub implements HubInterface
             if (null !== $sampler) {
                 if (\is_callable($sampler)) {
                     $sampleRate = \call_user_func($sampler, SamplingContext::getDefault($context));
-                    var_dump($sampleRate);
                 }
             }
         }
