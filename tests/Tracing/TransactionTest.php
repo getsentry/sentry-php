@@ -11,6 +11,7 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
+use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\SpanRecorder;
@@ -74,20 +75,18 @@ final class TransactionTest extends TestCase
         $this->assertCount(2, $data->getSpans());
     }
 
-    public function testStartAndSendTransaction(): void
+    public function testStartAndSendTransactionSampleRateOne(): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->any())
             ->method('getOptions')
             ->willReturn(new Options(['traces_sample_rate' => 1]));
 
         $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
         $span1 = $transaction->startChild(new SpanContext());
-        $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
-        $span2->finish();
 
         $data = $transaction->toEvent();
 
@@ -97,11 +96,88 @@ final class TransactionTest extends TestCase
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
                 $this->assertSame($data->getStartTimestamp(), $eventArg->getStartTimestamp());
                 $this->assertSame(microtime(true), $eventArg->getTimestamp());
-                $this->assertCount(2, $data->getSpans());
+                $this->assertCount(1, $data->getSpans());
 
                 return true;
             }));
 
-        $transaction->finish(microtime(true));
+        $transaction->finish();
+    }
+
+    public function testStartAndSendTransactionSampleRateZero(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->any())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 0]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $span1 = $transaction->startChild(new SpanContext());
+        $span1->finish();
+
+        $client->expects($this->never())
+            ->method('captureEvent');
+
+        $transaction->finish();
+    }
+
+    public function testStartAndSendTransactionSamplerShouldBeStrongerThanRateOne(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->any())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0,
+                'traces_sampler' => static function (SamplingContext $context): float {
+                    return 1;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $span1 = $transaction->startChild(new SpanContext());
+        $span1->finish();
+
+        $data = $transaction->toEvent();
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(function (Event $eventArg) use ($data): bool {
+                $this->assertSame(EventType::transaction(), $eventArg->getType());
+                $this->assertSame($data->getStartTimestamp(), $eventArg->getStartTimestamp());
+                $this->assertSame(microtime(true), $eventArg->getTimestamp());
+                $this->assertCount(1, $data->getSpans());
+
+                return true;
+            }));
+
+        $transaction->finish();
+    }
+
+    public function testStartAndSendTransactionSamplerShouldBeStrongerThanRateZero(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->any())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1,
+                'traces_sampler' => static function (SamplingContext $context): float {
+                    return 0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $span1 = $transaction->startChild(new SpanContext());
+        $span1->finish();
+
+        $client->expects($this->never())
+            ->method('captureEvent');
+
+        $transaction->finish();
     }
 }

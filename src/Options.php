@@ -659,6 +659,31 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked when we sample a Transaction.
+     *
+     * @psalm-return ?callable(\Sentry\Tracing\SamplingContext): float
+     */
+    public function getTracesSampler(): ?callable
+    {
+        return $this->options['traces_sampler'];
+    }
+
+    /**
+     * Sets a callback that will be invoked when we take the sampling decision for Transactions.
+     * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
+     *
+     * @param ?callable $sampler The sampler
+     *
+     * @psalm-param ?callable(\Sentry\Tracing\SamplingContext): float $sampler
+     */
+    public function setTracesSampler(?callable $sampler): void
+    {
+        $options = array_merge($this->options, ['traces_sampler' => $sampler]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -675,6 +700,7 @@ final class Options
             'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
             'sample_rate' => 1,
             'traces_sample_rate' => 0,
+            'traces_sampler' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
@@ -706,6 +732,7 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'array');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');

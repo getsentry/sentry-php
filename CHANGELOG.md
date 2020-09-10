@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- Add `traces_sampler` option to set custom sample rate callback (#1083)
+
 ## 3.0.0-beta1 (2020-09-03)
 
 **Tracing API**

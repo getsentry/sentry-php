@@ -9,6 +9,7 @@ use Sentry\ClientInterface;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -230,20 +231,31 @@ final class Hub implements HubInterface
     public function startTransaction(TransactionContext $context): Transaction
     {
         $client = $this->getClient();
+        $sampleRate = null;
+
+        if (null !== $client) {
+            $sampler = $client->getOptions()->getTracesSampler();
+
+            if (null !== $sampler) {
+                $sampleRate = $sampler(SamplingContext::getDefault($context));
+            }
+        }
 
         // Roll the dice for sampling transaction, all child spans inherit the sampling decision.
-        if (null === $context->sampled) {
+        // Only if $sampleRate is `null` (which can only be because then the traces_sampler wasn't defined)
+        // we need to roll the dice.
+        if (null === $context->sampled && null === $sampleRate) {
             if (null !== $client) {
                 $sampleRate = $client->getOptions()->getTracesSampleRate();
-
-                if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-                    // if true = we want to have the transaction
-                    // if false = we don't want to have it
-                    $context->sampled = false;
-                } else {
-                    $context->sampled = true;
-                }
             }
+        }
+
+        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            // if true = we want to have the transaction
+            // if false = we don't want to have it
+            $context->sampled = false;
+        } else {
+            $context->sampled = true;
         }
 
         $transaction = new Transaction($context, $this);

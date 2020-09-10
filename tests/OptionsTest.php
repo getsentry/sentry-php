@@ -49,6 +49,8 @@ final class OptionsTest extends TestCase
             ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
+            ['traces_sample_rate', 0.5, 'getTracesSampleRate', 'setTracesSampleRate'],
+            ['traces_sampler', static function (): void {}, 'getTracesSampler', 'setTracesSampler'],
             ['attach_stacktrace', false, 'shouldAttachStacktrace', 'setAttachStacktrace'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
