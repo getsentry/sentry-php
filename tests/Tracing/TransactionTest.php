@@ -86,9 +86,7 @@ final class TransactionTest extends TestCase
         $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
         $span1 = $transaction->startChild(new SpanContext());
-        $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
-        $span2->finish();
 
         $data = $transaction->toEvent();
 
@@ -98,12 +96,12 @@ final class TransactionTest extends TestCase
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
                 $this->assertSame($data->getStartTimestamp(), $eventArg->getStartTimestamp());
                 $this->assertSame(microtime(true), $eventArg->getTimestamp());
-                $this->assertCount(2, $data->getSpans());
+                $this->assertCount(1, $data->getSpans());
 
                 return true;
             }));
 
-        $transaction->finish(microtime(true));
+        $transaction->finish();
     }
 
     public function testStartAndSendTransactionSampleRateZero(): void
@@ -117,14 +115,12 @@ final class TransactionTest extends TestCase
         $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
         $span1 = $transaction->startChild(new SpanContext());
-        $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
-        $span2->finish();
 
         $client->expects($this->never())
             ->method('captureEvent');
 
-        $transaction->finish(microtime(true));
+        $transaction->finish();
     }
 
     public function testStartAndSendTransactionSamplerShouldBeStrongerThanRateOne(): void
@@ -143,9 +139,7 @@ final class TransactionTest extends TestCase
         $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
         $span1 = $transaction->startChild(new SpanContext());
-        $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
-        $span2->finish();
 
         $data = $transaction->toEvent();
 
@@ -155,12 +149,12 @@ final class TransactionTest extends TestCase
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
                 $this->assertSame($data->getStartTimestamp(), $eventArg->getStartTimestamp());
                 $this->assertSame(microtime(true), $eventArg->getTimestamp());
-                $this->assertCount(2, $data->getSpans());
+                $this->assertCount(1, $data->getSpans());
 
                 return true;
             }));
 
-        $transaction->finish(microtime(true));
+        $transaction->finish();
     }
 
     public function testStartAndSendTransactionSamplerShouldBeStrongerThanRateZero(): void
@@ -179,13 +173,11 @@ final class TransactionTest extends TestCase
         $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
         $span1 = $transaction->startChild(new SpanContext());
-        $span2 = $transaction->startChild(new SpanContext());
         $span1->finish();
-        $span2->finish();
 
         $client->expects($this->never())
             ->method('captureEvent');
 
-        $transaction->finish(microtime(true));
+        $transaction->finish();
     }
 }
