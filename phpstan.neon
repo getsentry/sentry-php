@@ -31,9 +31,6 @@ parameters:
             message: '/^Method Sentry\\Monolog\\Handler::write\(\) has parameter \$record with no value type specified in iterable type array\.$/'
             path: src/Monolog/Handler.php
         -
-            message: '/^Cannot cast array\|bool\|float\|int\|string\|null to string\.$/'
-            path: src/Serializer/RepresentationSerializer.php
-        -
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
         -
