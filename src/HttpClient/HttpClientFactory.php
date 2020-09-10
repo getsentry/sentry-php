@@ -115,7 +115,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         if (null === $httpClient) {
             if (class_exists(SymfonyHttplugClient::class)) {
                 $symfonyConfig = [
-                    'timeout' => self::DEFAULT_HTTP_TIMEOUT,
+                    'max_duration' => self::DEFAULT_HTTP_TIMEOUT,
                 ];
 
                 if (null !== $options->getHttpProxy()) {
