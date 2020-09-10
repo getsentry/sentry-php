@@ -13,6 +13,9 @@ parameters:
             message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
+            message: '/^Call to static method create\(\) on an unknown class Symfony\\Component\\HttpClient\\HttpClient\.$/'
+            path: src/HttpClient/HttpClientFactory.php
+        -
             message: '/^Parameter #1 \$c of function ctype_digit expects int\|string, string\|null given\.$/'
             path: src/Dsn.php
         -
