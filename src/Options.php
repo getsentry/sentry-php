@@ -663,7 +663,7 @@ final class Options
      *
      * @psalm-return ?callable(\Sentry\Tracing\SamplingContext): float
      */
-    public function getTracesSampler()
+    public function getTracesSampler(): ?callable
     {
         return $this->options['traces_sampler'];
     }
@@ -676,7 +676,7 @@ final class Options
      *
      * @psalm-param ?callable(\Sentry\Tracing\SamplingContext): float $sampler
      */
-    public function setTracesSampler($sampler): void
+    public function setTracesSampler(?callable $sampler): void
     {
         $options = array_merge($this->options, ['traces_sampler' => $sampler]);
 
