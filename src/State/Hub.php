@@ -210,61 +210,45 @@ final class Hub implements HubInterface
     }
 
     /**
-     * Gets the scope bound to the top of the stack.
-     */
-    private function getScope(): Scope
-    {
-        return $this->getStackTop()->getScope();
-    }
-
-    /**
-     * Gets the topmost client/layer pair in the stack.
-     */
-    private function getStackTop(): Layer
-    {
-        return $this->stack[\count($this->stack) - 1];
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function startTransaction(TransactionContext $context): Transaction
     {
-        $client = $this->getClient();
-        $sampleRate = null;
-
-        if (null !== $client) {
-            $sampler = $client->getOptions()->getTracesSampler();
-
-            if (null !== $sampler) {
-                $sampleRate = $sampler(SamplingContext::getDefault($context));
-            }
-        }
-
-        // Roll the dice for sampling transaction, all child spans inherit the sampling decision.
-        // Only if $sampleRate is `null` (which can only be because then the traces_sampler wasn't defined)
-        // we need to roll the dice.
-        if (null === $context->sampled && null === $sampleRate) {
-            if (null !== $client) {
-                $sampleRate = $client->getOptions()->getTracesSampleRate();
-            }
-        }
-
-        if ($sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-            // if true = we want to have the transaction
-            // if false = we don't want to have it
-            $context->sampled = false;
-        } else {
-            $context->sampled = true;
-        }
-
         $transaction = new Transaction($context, $this);
+        $client = $this->getClient();
+        $options = null !== $client ? $client->getOptions() : null;
 
-        // We only want to create a span list if we sampled the transaction
-        // If sampled == false, we will discard the span anyway, so we can save memory by not storing child spans
-        if ($context->sampled) {
-            $transaction->initSpanRecorder();
+        if (null === $options || !$options->isTracingEnabled()) {
+            $transaction->setSampled(false);
+
+            return $transaction;
         }
+
+        $samplingContext = SamplingContext::getDefault($context);
+        $tracesSampler = $options->getTracesSampler();
+        $sampleRate = null !== $tracesSampler
+            ? $tracesSampler($samplingContext)
+            : $this->getSampleRate($samplingContext->getParentSampled(), $options->getSampleRate());
+
+        if (!$this->isValidSampleRate($sampleRate)) {
+            $transaction->setSampled(false);
+
+            return $transaction;
+        }
+
+        if (0.0 === $sampleRate) {
+            $transaction->setSampled(false);
+
+            return $transaction;
+        }
+
+        $transaction->setSampled(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate);
+
+        if (!$transaction->getSampled()) {
+            return $transaction;
+        }
+
+        $transaction->initSpanRecorder();
 
         return $transaction;
     }
@@ -296,5 +280,43 @@ final class Hub implements HubInterface
     public function getSpan(): ?Span
     {
         return $this->getScope()->getSpan();
+    }
+
+    /**
+     * Gets the scope bound to the top of the stack.
+     */
+    private function getScope(): Scope
+    {
+        return $this->getStackTop()->getScope();
+    }
+
+    /**
+     * Gets the topmost client/layer pair in the stack.
+     */
+    private function getStackTop(): Layer
+    {
+        return $this->stack[\count($this->stack) - 1];
+    }
+
+    private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
+    {
+        if (true === $hasParentBeenSampled) {
+            return 1;
+        }
+
+        if (false === $hasParentBeenSampled) {
+            return 0;
+        }
+
+        return $fallbackSampleRate;
+    }
+
+    private function isValidSampleRate(float $sampleRate): bool
+    {
+        if ($sampleRate < 0 || $sampleRate > 1) {
+            return false;
+        }
+
+        return true;
     }
 }

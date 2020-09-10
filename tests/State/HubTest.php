@@ -15,6 +15,7 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\TransactionContext;
 
 final class HubTest extends TestCase
 {
@@ -434,5 +435,109 @@ final class HubTest extends TestCase
         $hub->bindClient($client);
 
         $this->assertSame($integration, $hub->getIntegration('Foo\\Bar'));
+    }
+
+    /**
+     * @dataProvider startTransactionDataProvider
+     */
+    public function testStartTransactionWithTracesSampler(Options $options, TransactionContext $transactionContext, bool $expectedSampled): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction($transactionContext);
+
+        $this->assertSame($expectedSampled, $transaction->getSampled());
+    }
+
+    public function startTransactionDataProvider(): iterable
+    {
+        yield [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return 1;
+                },
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return 0;
+                },
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): int {
+                    return 1;
+                },
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): int {
+                    return 0;
+                },
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 0.0,
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 0.5,
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, true),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+    }
+
+    public function testStartTransactionDoesNothingIfTracingIsNotEnabled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertFalse($transaction->getSampled());
     }
 }

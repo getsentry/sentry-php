@@ -6,7 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\Severity;
+use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
 /**
@@ -15,7 +15,7 @@ use Sentry\State\HubInterface;
 final class Transaction extends Span
 {
     /**
-     * @var HubInterface|null The hub instance
+     * @var HubInterface The hub instance
      */
     private $hub;
 
@@ -27,21 +27,23 @@ final class Transaction extends Span
     /**
      * Span constructor.
      *
-     * @param TransactionContext|null $context The context to create the transaction with
-     * @param HubInterface|null       $hub     Instance of a hub to flush the transaction
+     * @param TransactionContext $context The context to create the transaction with
+     * @param HubInterface|null  $hub     Instance of a hub to flush the transaction
      *
      * @internal
      */
-    public function __construct(?TransactionContext $context = null, ?HubInterface $hub = null)
+    public function __construct(TransactionContext $context, ?HubInterface $hub = null)
     {
         parent::__construct($context);
 
-        $this->hub = $hub;
-        $this->name = $context->name ?? '<unlabeled transaction>';
+        $this->hub = $hub ?? SentrySdk::getCurrentHub();
+        $this->name = $context->getName();
     }
 
     /**
-     * @param string $name Name of the transaction
+     * Sets the name of this transaction.
+     *
+     * @param string $name The name
      */
     public function setName(string $name): void
     {
@@ -49,20 +51,21 @@ final class Transaction extends Span
     }
 
     /**
-     * Attaches SpanRecorder to the transaction itself.
+     * Attaches a {@see SpanRecorder} to the transaction itself.
+     *
+     * @param int $maxSpans The maximum number of spans that can be recorded
      */
-    public function initSpanRecorder(): void
+    public function initSpanRecorder(int $maxSpans = 1000): void
     {
         if (null === $this->spanRecorder) {
-            $this->spanRecorder = new SpanRecorder();
+            $this->spanRecorder = new SpanRecorder($maxSpans);
         }
+
         $this->spanRecorder->add($this);
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @return EventId|null Finish for a transaction returns the eventId or null in case we didn't send it
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
@@ -77,39 +80,24 @@ final class Transaction extends Span
             return null;
         }
 
-        if (null !== $this->hub) {
-            return $this->hub->captureEvent($this->toEvent());
+        $finishedSpans = [];
+
+        if (null !== $this->spanRecorder) {
+            foreach ($this->spanRecorder->getSpans() as $span) {
+                if ($span->getSpanId() !== $this->getSpanId() && null !== $span->getEndTimestamp()) {
+                    $finishedSpans[] = $span;
+                }
+            }
         }
 
-        return null;
-    }
-
-    /**
-     * Returns an Event.
-     */
-    public function toEvent(): Event
-    {
         $event = Event::createTransaction();
-        $event->setTags(array_merge($event->getTags(), $this->tags));
-        $event->setTransaction($this->name);
+        $event->setSpans($finishedSpans);
         $event->setStartTimestamp($this->startTimestamp);
+        $event->setTimestamp($this->endTimestamp);
+        $event->setTags($this->tags);
+        $event->setTransaction($this->name);
         $event->setContext('trace', $this->getTraceContext());
 
-        if (null != $this->spanRecorder) {
-            $event->setSpans(array_filter($this->spanRecorder->getSpans(), function (Span $span): bool {
-                return $this->spanId != $span->spanId && null != $span->endTimestamp;
-            }));
-        }
-
-        $event->setLevel(null);
-        if (null != $this->status && 'ok' != $this->status) {
-            $event->setLevel(Severity::error());
-        }
-
-        if ($this->endTimestamp) {
-            $event->setTimestamp($this->endTimestamp);
-        }
-
-        return $event;
+        return $this->hub->captureEvent($event);
     }
 }

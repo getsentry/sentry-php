@@ -12,12 +12,18 @@ final class SamplingContext
     private $transactionContext;
 
     /**
-     * Returns the default instance of for the SamplingContext.
+     * @var bool|null Sampling decision from the parent transaction, if any
+     */
+    private $parentSampled;
+
+    /**
+     * Returns an instance populated with the data of the transaction context.
      */
     public static function getDefault(TransactionContext $transactionContext): self
     {
-        $context = new SamplingContext();
-        $context->setTransactionContext($transactionContext);
+        $context = new self();
+        $context->transactionContext = $transactionContext;
+        $context->parentSampled = $transactionContext->getParentSampled();
 
         return $context;
     }
@@ -27,8 +33,19 @@ final class SamplingContext
         return $this->transactionContext;
     }
 
-    public function setTransactionContext(?TransactionContext $transactionContext): void
+    /**
+     * Gets the sampling decision from the parent transaction, if any.
+     */
+    public function getParentSampled(): ?bool
     {
-        $this->transactionContext = $transactionContext;
+        return $this->parentSampled;
+    }
+
+    /**
+     * Sets the sampling decision from the parent transaction, if any.
+     */
+    public function setParentSampled(?bool $parentSampled): void
+    {
+        $this->parentSampled = $parentSampled;
     }
 }

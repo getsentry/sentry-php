@@ -19,6 +19,7 @@ use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanId;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TraceId;
 use Sentry\UserDataBag;
 use Symfony\Bridge\PhpUnit\ClockMock;
@@ -65,7 +66,7 @@ final class PayloadSerializerTest extends TestCase
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
-    "timestamp": "2020-08-18T22:47:15Z",
+    "timestamp": 1597790835,
     "platform": "php",
     "sdk": {
         "name": "sentry.php",
@@ -175,7 +176,7 @@ JSON
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
-    "timestamp": "2020-08-18T22:47:15Z",
+    "timestamp": 1597790835,
     "platform": "php",
     "sdk": {
         "name": "sentry.php",
@@ -323,7 +324,7 @@ JSON
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
-    "timestamp": "2020-08-18T22:47:15Z",
+    "timestamp": 1597790835,
     "platform": "php",
     "sdk": {
         "name": "sentry.php",
@@ -344,7 +345,7 @@ JSON
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
-    "timestamp": "2020-08-18T22:47:15Z",
+    "timestamp": 1597790835,
     "platform": "php",
     "sdk": {
         "name": "sentry.php",
@@ -369,7 +370,7 @@ JSON
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
-    "timestamp": "2020-08-18T22:47:15Z",
+    "timestamp": 1597790835,
     "platform": "php",
     "sdk": {
         "name": "sentry.php",
@@ -396,7 +397,7 @@ JSON
         $span2->setTraceId(new TraceId('1e57b752bc6e4544bbaa246cd1d05dee'));
         $span2->setOp('http');
         $span2->setDescription('GET /sockjs-node/info');
-        $span2->setStatus('ok');
+        $span2->setStatus(SpanStatus::ok());
         $span2->setStartTimestamp(1597790835);
         $span2->setTags(['http.status_code' => '200']);
         $span2->setData([
@@ -416,7 +417,7 @@ JSON
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z"}
 {"type":"transaction","content_type":"application\/json"}
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":"2020-08-18T22:47:15Z","platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
 TEXT
             ,
             false,

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-/**
- * Class SpanRecorder.
- */
 final class SpanRecorder
 {
     /**
@@ -15,12 +12,15 @@ final class SpanRecorder
     private $maxSpans;
 
     /**
-     * @var Span[] Collection of Spans
+     * @var Span[] List of spans managed by this recorder
      */
     private $spans = [];
 
     /**
-     * SpanRecorder constructor.
+     * Constructor.
+     *
+     * @param int $maxSpans The maximum number of spans to record before
+     *                      detaching the recorder from the span
      */
     public function __construct(int $maxSpans = 1000)
     {
@@ -28,18 +28,21 @@ final class SpanRecorder
     }
 
     /**
-     * Adds a span to the array.
+     * Adds a span to the list of recorded spans or detaches the recorder if the
+     * maximum number of spans to store has been reached.
      */
     public function add(Span $span): void
     {
         if (\count($this->spans) > $this->maxSpans) {
-            $span->spanRecorder = null;
+            $span->detachSpanRecorder();
         } else {
             $this->spans[] = $span;
         }
     }
 
     /**
+     * Gets all the spans managed by this recorder.
+     *
      * @return Span[]
      */
     public function getSpans(): array

@@ -16,50 +16,17 @@ use Symfony\Bridge\PhpUnit\ClockMock;
  */
 final class SpanTest extends TestCase
 {
-    public function testConstructor(): void
-    {
-        $context = new SpanContext();
-        $context->traceId = TraceId::generate();
-        $context->spanId = SpanId::generate();
-        $context->parentSpanId = SpanId::generate();
-        $context->description = 'description';
-        $context->op = 'op';
-        $context->status = 'ok';
-        $context->sampled = true;
-        $tags = [];
-        $tags['a'] = 'b';
-        $context->tags = $tags;
-        $data = [];
-        $data['c'] = 'd';
-        $context->data = $data;
-        $context->startTimestamp = microtime(true);
-        $context->endTimestamp = microtime(true);
-
-        $span = new Span($context);
-
-        $this->assertEquals($context->traceId, $span->getTraceId());
-        $this->assertEquals($context->spanId, $span->getSpanId());
-        $this->assertEquals($context->parentSpanId, $span->getParentSpanId());
-        $this->assertSame($context->op, $span->getOp());
-        $this->assertSame($context->description, $span->getDescription());
-        $this->assertSame($context->status, $span->getStatus());
-        $this->assertSame($context->tags, $span->getTags());
-        $this->assertSame($context->data, $span->getData());
-        $this->assertSame($context->startTimestamp, $span->getStartTimestamp());
-        $this->assertSame($context->endTimestamp, $span->getEndTimestamp());
-    }
-
     /**
      * @dataProvider finishDataProvider
      */
-    public function testFinish(?float $currentTimestamp, ?float $timestamp, float $expectedTimestamp): void
+    public function testFinish(?float $currentTimestamp, ?float $endTimestamp, float $expectedEndTimestamp): void
     {
         ClockMock::withClockMock($currentTimestamp);
 
         $span = new Span();
-        $span->finish($timestamp);
+        $span->finish($endTimestamp);
 
-        $this->assertSame($expectedTimestamp, $span->getEndTimestamp());
+        $this->assertSame($expectedEndTimestamp, $span->getEndTimestamp());
     }
 
     public function finishDataProvider(): iterable
@@ -77,33 +44,30 @@ final class SpanTest extends TestCase
         ];
     }
 
-    public function testTraceparentHeader(): void
+    public function testStartChild(): void
     {
-        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb');
-        $this->assertEquals('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', $context->traceId);
-        $this->assertNotEquals('bbbbbbbbbbbbbbbb', $context->spanId);
-        $this->assertEquals('bbbbbbbbbbbbbbbb', $context->parentSpanId);
-        $this->assertNull($context->sampled);
-    }
+        $spanContext2ParentSpanId = SpanId::generate();
+        $spanContext2TraceId = TraceId::generate();
 
-    public function testTraceparentHeaderSampledTrue(): void
-    {
-        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-1');
-        $this->assertTrue($context->sampled);
-    }
+        $spanContext1 = new SpanContext();
+        $spanContext1->setSampled(false);
+        $spanContext1->setSpanId(SpanId::generate());
+        $spanContext1->setTraceId(TraceId::generate());
 
-    public function testTraceparentHeaderSampledFalse(): void
-    {
-        $context = SpanContext::fromTraceparent('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-0');
-        $this->assertFalse($context->sampled);
-    }
+        $spanContext2 = new SpanContext();
+        $spanContext2->setSampled(true);
+        $spanContext2->setParentSpanId($spanContext2ParentSpanId);
+        $spanContext2->setTraceId($spanContext2TraceId);
 
-    public function testTraceparentHeaderJustSampleRate(): void
-    {
-        $context = SpanContext::fromTraceparent('1');
-        $this->assertTrue($context->sampled);
+        $span1 = new Span($spanContext1);
+        $span2 = $span1->startChild($spanContext2);
 
-        $context = SpanContext::fromTraceparent('0');
-        $this->assertFalse($context->sampled);
+        $this->assertSame($spanContext1->getSampled(), $span1->getSampled());
+        $this->assertSame($spanContext1->getSpanId(), $span1->getSpanId());
+        $this->assertSame($spanContext1->getTraceId(), $span1->getTraceId());
+
+        $this->assertSame($spanContext1->getSampled(), $span2->getSampled());
+        $this->assertSame($spanContext1->getSpanId(), $span2->getParentSpanId());
+        $this->assertSame($spanContext1->getTraceId(), $span2->getTraceId());
     }
 }

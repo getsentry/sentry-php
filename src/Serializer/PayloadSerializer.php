@@ -330,7 +330,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         }
 
         if (null !== $span->getStatus()) {
-            $result['status'] = $span->getStatus();
+            $result['status'] = (string) $span->getStatus();
         }
 
         if (null !== $span->getDescription()) {

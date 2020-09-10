@@ -32,7 +32,7 @@ class Span
     protected $op;
 
     /**
-     * @var string|null Completion status of the Span
+     * @var SpanStatus|null Completion status of the Span
      */
     protected $status;
 
@@ -68,13 +68,11 @@ class Span
 
     /**
      * @var SpanRecorder|null Reference instance to the SpanRecorder
-     *
-     * @internal
      */
-    public $spanRecorder;
+    protected $spanRecorder;
 
     /**
-     * Span constructor.
+     * Constructor.
      *
      * @param SpanContext|null $context The context to create the span with
      *
@@ -82,24 +80,34 @@ class Span
      */
     public function __construct(?SpanContext $context = null)
     {
-        $this->traceId = $context->traceId ?? TraceId::generate();
-        $this->spanId = $context->spanId ?? SpanId::generate();
-        $this->parentSpanId = $context->parentSpanId ?? null;
-        $this->description = $context->description ?? null;
-        $this->op = $context->op ?? null;
-        $this->status = $context->status ?? null;
-        $this->sampled = $context->sampled ?? null;
+        $this->traceId = TraceId::generate();
+        $this->spanId = SpanId::generate();
+        $this->startTimestamp = microtime(true);
 
-        if (null !== $context && $context->tags) {
-            $this->tags = $context->tags;
+        if (null === $context) {
+            return;
         }
 
-        if (null !== $context && $context->data) {
-            $this->data = $context->data;
+        if (null !== $context->getTraceId()) {
+            $this->traceId = $context->getTraceId();
         }
 
-        $this->startTimestamp = $context->startTimestamp ?? microtime(true);
-        $this->endTimestamp = $context->endTimestamp ?? null;
+        if (null !== $context->getSpanId()) {
+            $this->spanId = $context->getSpanId();
+        }
+
+        if (null !== $context->getStartTimestamp()) {
+            $this->startTimestamp = $context->getStartTimestamp();
+        }
+
+        $this->parentSpanId = $context->getParentSpanId();
+        $this->description = $context->getDescription();
+        $this->op = $context->getOp();
+        $this->status = $context->getStatus();
+        $this->sampled = $context->getSampled();
+        $this->tags = $context->getTags();
+        $this->data = $context->getData();
+        $this->endTimestamp = $context->getEndTimestamp();
     }
 
     /**
@@ -175,19 +183,6 @@ class Span
     }
 
     /**
-     * Returns `sentry-trace` header content.
-     */
-    public function toTraceparent(): string
-    {
-        $sampled = '';
-        if (null !== $this->sampled) {
-            $sampled = $this->sampled ? '-1' : '-0';
-        }
-
-        return $this->traceId . '-' . $this->spanId . $sampled;
-    }
-
-    /**
      * Gets a description of the span's operation, which uniquely identifies
      * the span but is consistent across instances of the span.
      */
@@ -228,7 +223,7 @@ class Span
     /**
      * Gets the status of the span/transaction.
      */
-    public function getStatus(): ?string
+    public function getStatus(): ?SpanStatus
     {
         return $this->status;
     }
@@ -236,11 +231,27 @@ class Span
     /**
      * Sets the status of the span/transaction.
      *
-     * @param string|null $status The status
+     * @param SpanStatus|null $status The status
      */
-    public function setStatus(?string $status): void
+    public function setStatus(?SpanStatus $status): void
     {
         $this->status = $status;
+    }
+
+    /**
+     * Sets the HTTP status code and the status of the span/transaction.
+     *
+     * @param int $statusCode The HTTP status code
+     */
+    public function setHttpStatus(int $statusCode): void
+    {
+        $this->tags['http.status_code'] = (string) $statusCode;
+
+        $status = SpanStatus::createFromHttpStatusCode($statusCode);
+
+        if ($status !== SpanStatus::unknownError()) {
+            $this->status = $status;
+        }
     }
 
     /**
@@ -346,7 +357,7 @@ class Span
         }
 
         if (null !== $this->status) {
-            $result['status'] = $this->status;
+            $result['status'] = (string) $this->status;
         }
 
         if (!empty($this->data)) {
@@ -375,26 +386,43 @@ class Span
     }
 
     /**
-     * Creates a new `Span` while setting the current `Span.id` as `parentSpanId`.
+     * Creates a new {@see Span} while setting the current ID as `parentSpanId`.
      * Also the `sampled` decision will be inherited.
      *
-     * @param SpanContext $context The Context of the child span
-     *
-     * @return Span Instance of the newly created Span
+     * @param SpanContext $context The context of the child span
      */
     public function startChild(SpanContext $context): self
     {
-        $context->sampled = $this->sampled;
-        $context->parentSpanId = $this->spanId;
-        $context->traceId = $this->traceId;
+        $context = clone $context;
+        $context->setSampled($this->sampled);
+        $context->setParentSpanId($this->spanId);
+        $context->setTraceId($this->traceId);
 
         $span = new self($context);
-
         $span->spanRecorder = $this->spanRecorder;
+
         if (null != $span->spanRecorder) {
             $span->spanRecorder->add($span);
         }
 
         return $span;
+    }
+
+    /**
+     * Gets the span recorder attached to this span.
+     *
+     * @internal
+     */
+    public function getSpanRecorder(): ?SpanRecorder
+    {
+        return $this->spanRecorder;
+    }
+
+    /**
+     * Detaches the span recorder from this instance.
+     */
+    public function detachSpanRecorder(): void
+    {
+        $this->spanRecorder = null;
     }
 }

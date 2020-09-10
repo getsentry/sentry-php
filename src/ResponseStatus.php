@@ -16,7 +16,7 @@ final class ResponseStatus
     private $value;
 
     /**
-     * @var array<string, ResponseStatus>
+     * @var array<string, self>
      */
     private static $instances = [];
 

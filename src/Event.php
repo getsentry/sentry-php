@@ -22,7 +22,7 @@ final class Event
     private $id;
 
     /**
-     * @var string|float The date and time of when this event was generated
+     * @var float|null The date and time of when this event was generated
      */
     private $timestamp;
 
@@ -161,7 +161,7 @@ final class Event
     private function __construct(?EventId $eventId, EventType $eventType)
     {
         $this->id = $eventId ?? EventId::generate();
-        $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
+        $this->timestamp = microtime(true);
         $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
         $this->type = $eventType;
     }
@@ -237,19 +237,17 @@ final class Event
     /**
      * Gets the timestamp of when this event was generated.
      *
-     * @return string|float
+     * @return float
      */
-    public function getTimestamp()
+    public function getTimestamp(): ?float
     {
         return $this->timestamp;
     }
 
     /**
      * Sets the timestamp of when the Event was created.
-     *
-     * @param float|string $timestamp
      */
-    public function setTimestamp($timestamp): void
+    public function setTimestamp(?float $timestamp): void
     {
         $this->timestamp = $timestamp;
     }
