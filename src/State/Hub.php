@@ -237,16 +237,14 @@ final class Hub implements HubInterface
             $sampler = $client->getOptions()->getTracesSampler();
 
             if (null !== $sampler) {
-                if (\is_callable($sampler)) {
-                    $sampleRate = \call_user_func($sampler, SamplingContext::getDefault($context));
-                }
+                $sampleRate = $sampler(SamplingContext::getDefault($context));
             }
         }
 
         // Roll the dice for sampling transaction, all child spans inherit the sampling decision.
         // Only if $sampleRate is `null` (which can only be because then the traces_sampler wasn't defined)
         // we need to roll the dice.
-        if (null === $context->sampled && null == $sampleRate) {
+        if (null === $context->sampled && null === $sampleRate) {
             if (null !== $client) {
                 $sampleRate = $client->getOptions()->getTracesSampleRate();
             }

@@ -661,7 +661,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return null|callable(\Sentry\Tracing\SamplingContext): float
+     * @psalm-return ?callable(\Sentry\Tracing\SamplingContext): float
      */
     public function getTracesSampler()
     {
@@ -674,7 +674,7 @@ final class Options
      *
      * @param callable|null $sampler The sampler
      *
-     * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
+     * @psalm-param ?callable(\Sentry\Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler($sampler): void
     {
