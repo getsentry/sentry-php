@@ -16,7 +16,7 @@ final class ScopeTest extends TestCase
     public function testSetTag(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getTags());
@@ -24,7 +24,7 @@ final class ScopeTest extends TestCase
         $scope->setTag('foo', 'bar');
         $scope->setTag('bar', 'baz');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
@@ -35,14 +35,14 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setTags(['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getTags());
 
         $scope->setTags(['bar' => 'baz']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
@@ -53,14 +53,14 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setContext('foo', ['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => ['foo' => 'bar']], $event->getContexts());
 
         $scope->removeContext('foo');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame([], $event->getContexts());
@@ -69,7 +69,7 @@ final class ScopeTest extends TestCase
     public function testSetExtra(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getExtra());
@@ -77,7 +77,7 @@ final class ScopeTest extends TestCase
         $scope->setExtra('foo', 'bar');
         $scope->setExtra('bar', 'baz');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
@@ -88,14 +88,14 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setExtras(['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getExtra());
 
         $scope->setExtras(['bar' => 'baz']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
@@ -104,7 +104,7 @@ final class ScopeTest extends TestCase
     public function testSetUser(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNull($event->getUser());
@@ -114,7 +114,7 @@ final class ScopeTest extends TestCase
 
         $scope->setUser($user);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame($user, $event->getUser());
@@ -145,14 +145,14 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNotNull($event->getUser());
 
         $scope->removeUser();
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNull($event->getUser());
@@ -161,14 +161,14 @@ final class ScopeTest extends TestCase
     public function testSetFingerprint(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getFingerprint());
 
         $scope->setFingerprint(['foo', 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame(['foo', 'bar'], $event->getFingerprint());
@@ -177,14 +177,14 @@ final class ScopeTest extends TestCase
     public function testSetLevel(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNull($event->getLevel());
 
         $scope->setLevel(Severity::debug());
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEquals(Severity::debug(), $event->getLevel());
@@ -197,7 +197,7 @@ final class ScopeTest extends TestCase
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -205,14 +205,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb1);
         $scope->addBreadcrumb($breadcrumb2);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
 
         $scope->addBreadcrumb($breadcrumb3, 2);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
@@ -225,14 +225,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNotEmpty($event->getBreadcrumbs());
 
         $scope->clearBreadcrumbs();
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -244,7 +244,7 @@ final class ScopeTest extends TestCase
         $callback2Called = false;
         $callback3Called = false;
 
-        $event = new Event();
+        $event = Event::createEvent();
         $scope = new Scope();
 
         $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called, $callback2Called, $callback3Called): ?Event {
@@ -292,7 +292,7 @@ final class ScopeTest extends TestCase
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
         $scope->clear();
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent(), []);
 
         $this->assertNotNull($event);
         $this->assertNull($event->getLevel());
@@ -308,7 +308,7 @@ final class ScopeTest extends TestCase
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $user = UserDataBag::createFromUserIdentifier('unique_id');
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setContext('foocontext', ['foo' => 'foo', 'bar' => 'bar']);
 
         $scope = new Scope();

@@ -46,7 +46,7 @@ final class TransactionIntegrationTest extends TestCase
     public function setupOnceDataProvider(): \Generator
     {
         yield [
-            new Event(),
+            Event::createEvent(),
             true,
             [],
             [],
@@ -54,7 +54,7 @@ final class TransactionIntegrationTest extends TestCase
         ];
 
         yield [
-            new Event(),
+            Event::createEvent(),
             true,
             ['transaction' => '/foo/bar'],
             [],
@@ -62,14 +62,14 @@ final class TransactionIntegrationTest extends TestCase
         ];
 
         yield [
-            new Event(),
+            Event::createEvent(),
             true,
             [],
             ['PATH_INFO' => '/foo/bar'],
             '/foo/bar',
         ];
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setTransaction('/foo/bar');
 
         yield [
@@ -80,7 +80,7 @@ final class TransactionIntegrationTest extends TestCase
             '/foo/bar',
         ];
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setTransaction('/foo/bar');
 
         yield [
@@ -92,7 +92,7 @@ final class TransactionIntegrationTest extends TestCase
         ];
 
         yield [
-            new Event(),
+            Event::createEvent(),
             false,
             ['transaction' => '/foo/bar'],
             [],

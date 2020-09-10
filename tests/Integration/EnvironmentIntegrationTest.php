@@ -35,7 +35,7 @@ final class EnvironmentIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($expectedRuntimeContext, $expectedOsContext, $initialRuntimeContext, $initialOsContext): void {
-            $event = new Event();
+            $event = Event::createEvent();
             $event->setRuntimeContext($initialRuntimeContext);
             $event->setOsContext($initialOsContext);
 

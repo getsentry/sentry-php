@@ -63,7 +63,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             new Frame('[unknown]', $fixtureFilePath, $lineNumber, null, $fixtureFilePath),
         ]);
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {
@@ -157,7 +157,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             new Frame(null, 'file.ext', 10, null, 'file.ext'),
         ]);
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {

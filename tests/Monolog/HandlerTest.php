@@ -26,7 +26,7 @@ final class HandlerTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($expectedPayload, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
-                $event = $scopeArg->applyToEvent(new Event(), []);
+                $event = $scopeArg->applyToEvent(Event::createEvent(), []);
 
                 $this->assertNotNull($event);
                 $this->assertSame($expectedExtra, $event->getExtra());

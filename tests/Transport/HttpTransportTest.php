@@ -19,7 +19,6 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Sentry\Dsn;
 use Sentry\Event;
-use Sentry\EventType;
 use Sentry\Options;
 use Sentry\ResponseStatus;
 use Sentry\Serializer\PayloadSerializerInterface;
@@ -69,14 +68,13 @@ final class HttpTransportTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('The DSN option must be set to use the "Sentry\Transport\HttpTransport" transport.');
 
-        $transport->send(new Event());
+        $transport->send(Event::createEvent());
     }
 
     public function testSendTransactionAsEnvelope(): void
     {
         $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
-        $event = new Event();
-        $event->setType(EventType::transaction());
+        $event = Event::createTransaction();
 
         $this->payloadSerializer->expects($this->once())
             ->method('serialize')
@@ -127,7 +125,7 @@ final class HttpTransportTest extends TestCase
     public function testSend(int $httpStatusCode, string $expectedPromiseStatus, ResponseStatus $expectedResponseStatus): void
     {
         $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
-        $event = new Event();
+        $event = Event::createEvent();
 
         $this->payloadSerializer->expects($this->once())
             ->method('serialize')
@@ -201,7 +199,7 @@ final class HttpTransportTest extends TestCase
     {
         $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $exception = new \Exception('foo');
-        $event = new Event();
+        $event = Event::createEvent();
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);

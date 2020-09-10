@@ -15,8 +15,8 @@ final class EventTest extends TestCase
 {
     public function testEventIsGeneratedWithUniqueIdentifier(): void
     {
-        $event1 = new Event();
-        $event2 = new Event();
+        $event1 = Event::createEvent();
+        $event2 = Event::createEvent();
 
         $this->assertNotEquals($event1->getId(), $event2->getId());
     }
@@ -26,7 +26,7 @@ final class EventTest extends TestCase
      */
     public function testGetMessage(array $setMessageArguments, array $expectedValue): void
     {
-        $event = new Event();
+        $event = Event::createEvent();
 
         \call_user_func_array([$event, 'setMessage'], $setMessageArguments);
 
@@ -80,7 +80,7 @@ final class EventTest extends TestCase
         $getterMethod = 'get' . ucfirst($propertyName);
         $setterMethod = 'set' . ucfirst($propertyName);
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->$setterMethod($propertyValue);
 
         $this->assertEquals($event->$getterMethod(), $propertyValue);

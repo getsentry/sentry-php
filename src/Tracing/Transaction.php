@@ -6,7 +6,6 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\EventType;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 
@@ -90,8 +89,7 @@ final class Transaction extends Span
      */
     public function toEvent(): Event
     {
-        $event = new Event();
-        $event->setType(EventType::transaction());
+        $event = Event::createTransaction();
         $event->setTags(array_merge($event->getTags(), $this->tags));
         $event->setTransaction($this->name);
         $event->setStartTimestamp($this->startTimestamp);

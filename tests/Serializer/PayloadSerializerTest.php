@@ -11,7 +11,6 @@ use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
@@ -62,7 +61,7 @@ final class PayloadSerializerTest extends TestCase
         $sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         yield [
-            new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd')),
+            Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd')),
             <<<JSON
 {
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
@@ -78,7 +77,7 @@ JSON
             true,
         ];
 
-        $event = new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setLevel(Severity::error());
         $event->setLogger('app.php');
         $event->setTransaction('/users/<username>/');
@@ -316,7 +315,7 @@ JSON
             true,
         ];
 
-        $event = new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMessage('My raw message with interpreted strings like this', []);
 
         yield [
@@ -337,7 +336,7 @@ JSON
             true,
         ];
 
-        $event = new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMessage('My raw message with interpreted strings like %s', ['this']);
 
         yield [
@@ -362,7 +361,7 @@ JSON
             true,
         ];
 
-        $event = new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMessage('My raw message with interpreted strings like %s', ['this'], 'My raw message with interpreted strings like that');
 
         yield [
@@ -409,8 +408,7 @@ JSON
 
         $span2->finish(1598659060);
 
-        $event = new Event(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setType(EventType::transaction());
+        $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setSpans([$span1, $span2]);
 
         yield [

@@ -45,11 +45,11 @@ final class IgnoreErrorsIntegrationTest extends TestCase
 
     public function invokeDataProvider(): \Generator
     {
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'Integration disabled' => [
-            new Event(),
+            Event::createEvent(),
             false,
             [
                 'ignore_exceptions' => [],
@@ -57,11 +57,11 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             false,
         ];
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'No exceptions to check' => [
-            new Event(),
+            Event::createEvent(),
             true,
             [
                 'ignore_exceptions' => [],
@@ -69,7 +69,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             false,
         ];
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching exactly the "ignore_exceptions" option' => [
@@ -83,7 +83,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             true,
         ];
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching the "ignore_exceptions" option' => [
