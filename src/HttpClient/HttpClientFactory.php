@@ -21,6 +21,8 @@ use Http\Message\UriFactory as UriFactoryInterface;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Options;
+use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
+use Symfony\Component\HttpClient\HttplugClient as SymfonyHttplugClient;
 
 /**
  * Default implementation of the {@HttpClientFactoryInterface} interface that uses
@@ -111,7 +113,20 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         }
 
         if (null === $httpClient) {
-            if (class_exists(GuzzleHttpClient::class)) {
+            if (class_exists(SymfonyHttplugClient::class)) {
+                $symfonyConfig = [
+                    'max_duration' => self::DEFAULT_HTTP_TIMEOUT,
+                ];
+
+                if (null !== $options->getHttpProxy()) {
+                    $symfonyConfig['proxy'] = $options->getHttpProxy();
+                }
+
+                /** @psalm-suppress UndefinedClass */
+                $httpClient = new SymfonyHttplugClient(
+                    SymfonyHttpClient::create($symfonyConfig)
+                );
+            } elseif (class_exists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress UndefinedClass */
                 $guzzleConfig = [
                     GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
