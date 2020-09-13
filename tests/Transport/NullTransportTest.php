@@ -24,7 +24,7 @@ final class NullTransportTest extends TestCase
 
     public function testSend(): void
     {
-        $event = new Event();
+        $event = Event::createEvent();
 
         $promise = $this->transport->send($event);
         $promiseResult = $promise->wait();

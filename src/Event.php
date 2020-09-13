@@ -158,17 +158,32 @@ final class Event
      */
     private $type;
 
-    /**
-     * Class constructor.
-     *
-     * @param EventId|null $eventId The ID of the event
-     */
-    public function __construct(?EventId $eventId = null)
+    private function __construct(?EventId $eventId, EventType $eventType)
     {
         $this->id = $eventId ?? EventId::generate();
         $this->timestamp = gmdate('Y-m-d\TH:i:s\Z');
         $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
-        $this->type = EventType::default();
+        $this->type = $eventType;
+    }
+
+    /**
+     * Creates a new event.
+     *
+     * @param EventId|null $eventId The ID of the event
+     */
+    public static function createEvent(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::default());
+    }
+
+    /**
+     * Creates a new transaction event.
+     *
+     * @param EventId|null $eventId The ID of the event
+     */
+    public static function createTransaction(EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::transaction());
     }
 
     /**
@@ -635,11 +650,6 @@ final class Event
     public function getType(): EventType
     {
         return $this->type;
-    }
-
-    public function setType(EventType $type): void
-    {
-        $this->type = $type;
     }
 
     /**

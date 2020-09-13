@@ -109,3 +109,4 @@
 - Removed the `Frame::toArray()` and `Frame::jsonSerialize()` methods
 - Removed the `Stacktrace::toArray()` and `Stacktrace::jsonSerialize()` methods
 - Removed the `SpoolTransport` class and the `SpoolInterface` interface with related implementation
+- Made the `Event::__construct()` method `private`, use the named constructors instead

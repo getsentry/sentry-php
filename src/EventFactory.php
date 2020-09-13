@@ -85,7 +85,7 @@ final class EventFactory implements EventFactoryInterface
             if ($payload instanceof Event) {
                 $event = $payload;
             } else {
-                $event = new Event();
+                $event = Event::createEvent();
 
                 if (isset($payload['logger'])) {
                     $event->setLogger($payload['logger']);

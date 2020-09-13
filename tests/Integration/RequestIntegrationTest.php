@@ -28,7 +28,7 @@ final class RequestIntegrationTest extends TestCase
      */
     public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser): void
     {
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setUser($initialUser);
 
         $integration = new RequestIntegration($this->createRequestFetcher($request));
