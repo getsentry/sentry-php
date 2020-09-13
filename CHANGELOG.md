@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## Unreleased
+- PHP 8 support
 
 ### 2.4.3 (2020-08-13)
 
