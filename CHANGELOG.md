@@ -36,6 +36,10 @@ using an on-premise installation it requires Sentry version `>= v20.6.0` to work
 - Add the `EnvironmentIntegration` integration to gather data for the `os` and `runtime` contexts (#1071)
 - Refactor how the event data gets serialized to JSON (#1077)
 
+### 2.5.0 (2020-09-14)
+
+- Support the `timeout` and `proxy` options for the Symfony HTTP Client (#1084)
+
 ### 2.4.3 (2020-08-13)
 
 - Fix `Options::setEnvironment` method not accepting `null` values (#1057)
