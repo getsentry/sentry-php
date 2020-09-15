@@ -231,4 +231,55 @@ final class IntegrationRegistryTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider setupIntegrationsThrowsExceptionIfValueReturnedFromOptionIsNotValidDataProvider
+     */
+    public function testSetupIntegrationsThrowsExceptionIfValueReturnedFromOptionIsNotValid($value, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        IntegrationRegistry::getInstance()->setupIntegrations(
+            new Options([
+                'default_integrations' => false,
+                'integrations' => static function () use ($value) {
+                    return $value;
+                },
+            ]),
+            $this->createMock(LoggerInterface::class)
+        );
+    }
+
+    public function setupIntegrationsThrowsExceptionIfValueReturnedFromOptionIsNotValidDataProvider(): iterable
+    {
+        yield [
+            12.34,
+            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "float".',
+        ];
+
+        yield [
+            new \stdClass(),
+            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "stdClass".',
+        ];
+    }
+
+    public function testSetupIntegrationsIsIdempotent(): void
+    {
+        $integration = $this->createMock(IntegrationInterface::class);
+        $integration->expects($this->once())
+            ->method('setupOnce');
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('debug');
+
+        $options = new Options([
+            'default_integrations' => false,
+            'integrations' => [$integration],
+        ]);
+
+        IntegrationRegistry::getInstance()->setupIntegrations($options, $logger);
+        IntegrationRegistry::getInstance()->setupIntegrations($options, $logger);
+    }
 }

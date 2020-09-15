@@ -34,7 +34,7 @@ final class ClientTest extends TestCase
         $eventFactory = $this->createMock(EventFactoryInterface::class);
         $eventFactory->expects($this->once())
             ->method('create')
-            ->willReturn(new Event());
+            ->willReturn(Event::createEvent());
 
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
