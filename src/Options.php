@@ -729,7 +729,7 @@ final class Options
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
-        $resolver->setAllowedTypes('prefixes', 'array');
+        $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
@@ -737,18 +737,18 @@ final class Options
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);
-        $resolver->setAllowedTypes('in_app_exclude', 'array');
-        $resolver->setAllowedTypes('in_app_include', 'array');
+        $resolver->setAllowedTypes('in_app_exclude', 'string[]');
+        $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
-        $resolver->setAllowedTypes('tags', 'array');
+        $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
-        $resolver->setAllowedTypes('integrations', ['array', 'callable']);
+        $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
@@ -759,10 +759,8 @@ final class Options
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
-        $resolver->setAllowedValues('integrations', \Closure::fromCallable([$this, 'validateIntegrationsOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
-        $resolver->setAllowedValues('tags', \Closure::fromCallable([$this, 'validateTagsOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
@@ -864,27 +862,6 @@ final class Options
     }
 
     /**
-     * Validates that the elements of this option are all class instances that
-     * implements the {@see IntegrationInterface} interface.
-     *
-     * @param IntegrationInterface[]|callable $integrations The value to validate
-     */
-    private function validateIntegrationsOption($integrations): bool
-    {
-        if (\is_callable($integrations)) {
-            return true;
-        }
-
-        foreach ($integrations as $integration) {
-            if (!$integration instanceof IntegrationInterface) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Validates if the value of the max_breadcrumbs option is in range.
      *
      * @param int $value The value to validate
@@ -903,22 +880,6 @@ final class Options
     {
         foreach ($serializers as $class => $serializer) {
             if (!\is_string($class) || !\is_callable($serializer)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Validates that the values passed to the `tags` option are valid.
-     *
-     * @param mixed[] $tags The value to validate
-     */
-    private function validateTagsOption(array $tags): bool
-    {
-        foreach ($tags as $tagName => $tagValue) {
-            if (!\is_string($tagValue)) {
                 return false;
             }
         }
