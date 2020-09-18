@@ -107,7 +107,7 @@ function withScope(callable $callback): void
  * which point the transaction with all its finished child spans will be sent to
  * Sentry.
  *
- * @param TransactionContext $context properties of the new `Transaction`
+ * @param TransactionContext $context Properties of the new transaction
  */
 function startTransaction(TransactionContext $context): Transaction
 {

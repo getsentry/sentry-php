@@ -10,9 +10,12 @@ use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventFactoryInterface;
 use Sentry\Frame;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Response;
 use Sentry\ResponseStatus;
@@ -22,8 +25,58 @@ use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 
-class ClientTest extends TestCase
+final class ClientTest extends TestCase
 {
+    public function testConstructorSetupsIntegrations(): void
+    {
+        $integrationCalled = false;
+
+        $eventFactory = $this->createMock(EventFactoryInterface::class);
+        $eventFactory->expects($this->once())
+            ->method('create')
+            ->willReturn(Event::createEvent());
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('debug');
+
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because one of the event processors returned "null".');
+
+        $integration = new class($integrationCalled) implements IntegrationInterface {
+            private $integrationCalled;
+
+            public function __construct(bool &$integrationCalled)
+            {
+                $this->integrationCalled = &$integrationCalled;
+            }
+
+            public function setupOnce(): void
+            {
+                Scope::addGlobalEventProcessor(function (): ?Event {
+                    $this->integrationCalled = true;
+
+                    return null;
+                });
+            }
+        };
+
+        $client = new Client(
+            new Options([
+                'default_integrations' => false,
+                'integrations' => [$integration],
+            ]),
+            $this->createMock(TransportInterface::class),
+            $eventFactory,
+            $logger
+        );
+
+        $client->captureEvent([], new Scope());
+
+        $this->assertTrue($integrationCalled);
+    }
+
     public function testCaptureMessage(): void
     {
         /** @var TransportInterface&MockObject $transport */
@@ -311,7 +364,7 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because the "before_send" callback returned `null`.', $this->callback(static function (array $context): bool {
+            ->with('The event will be discarded because the "before_send" callback returned "null".', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
@@ -334,7 +387,7 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because one of the event processors returned `null`.', $this->callback(static function (array $context): bool {
+            ->with('The event will be discarded because one of the event processors returned "null".', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
