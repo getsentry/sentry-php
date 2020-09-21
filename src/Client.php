@@ -7,8 +7,13 @@ namespace Sentry;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\Exception\EventCreationException;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
 
@@ -40,11 +45,6 @@ final class Client implements ClientInterface
     private $transport;
 
     /**
-     * @var EventFactoryInterface The factory to create {@see Event} from raw data
-     */
-    private $eventFactory;
-
-    /**
      * @var LoggerInterface The PSR-3 logger
      */
     private $logger;
@@ -57,20 +57,52 @@ final class Client implements ClientInterface
     private $integrations;
 
     /**
+     * @var SerializerInterface|null The serializer of the client
+     */
+    private $serializer;
+
+    /**
+     * @var RepresentationSerializerInterface|null The representation serializer of the client
+     */
+    private $representationSerializer;
+
+    /**
+     * @var StacktraceBuilder
+     */
+    private $stacktraceBuilder;
+
+    /**
+     * @var string The Sentry SDK identifier
+     */
+    private $sdkIdentifier;
+
+    /**
+     * @var string the SDK version of the Client
+     */
+    private $sdkVersion;
+
+    /**
      * Constructor.
      *
-     * @param Options               $options      The client configuration
-     * @param TransportInterface    $transport    The transport
-     * @param EventFactoryInterface $eventFactory The factory for events
-     * @param LoggerInterface|null  $logger       The PSR-3 logger
+     * @param Options                                $options                  The client configuration
+     * @param TransportInterface                     $transport                The transport
+     * @param string|null                            $sdkIdentifier            The Sentry SDK identifier
+     * @param string|null                            $sdkVersion               The Sentry SDK version
+     * @param SerializerInterface|null               $serializer               The serializer
+     * @param RepresentationSerializerInterface|null $representationSerializer The serializer for function arguments
+     * @param LoggerInterface|null                   $logger                   The PSR-3 logger
      */
-    public function __construct(Options $options, TransportInterface $transport, EventFactoryInterface $eventFactory, ?LoggerInterface $logger = null)
+    public function __construct(Options $options, TransportInterface $transport, ?string $sdkIdentifier, ?string $sdkVersion, ?SerializerInterface $serializer, ?RepresentationSerializerInterface $representationSerializer, ?LoggerInterface $logger = null)
     {
         $this->options = $options;
         $this->transport = $transport;
-        $this->eventFactory = $eventFactory;
         $this->logger = $logger ?? new NullLogger();
         $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
+        $this->serializer = $serializer ?? new Serializer($this->options);
+        $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
+        $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
+        $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
+        $this->sdkVersion = $sdkVersion ?? '0.0.0';
     }
 
     /**
@@ -173,9 +205,9 @@ final class Client implements ClientInterface
     private function prepareEvent($payload, ?Scope $scope = null): ?Event
     {
         if ($this->options->shouldAttachStacktrace() && !($payload instanceof Event) && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
-            $event = $this->eventFactory->createWithStacktrace($payload);
+            $event = $this->buildEventWithStacktrace($payload);
         } else {
-            $event = $this->eventFactory->create($payload);
+            $event = $this->buildEvent($payload);
         }
 
         $sampleRate = $this->options->getSampleRate();
@@ -205,5 +237,105 @@ final class Client implements ClientInterface
         }
 
         return $event;
+    }
+
+    /**
+     * Create an {@see Event} with a stacktrace attached to it.
+     *
+     * @param array<string, mixed>|Event $payload The data to be attached to the Event
+     */
+    private function buildEventWithStacktrace($payload): Event
+    {
+        if ($payload instanceof Event) {
+            return $this->buildEvent($payload);
+        }
+
+        if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
+            $payload['stacktrace'] = $this->stacktraceBuilder->buildFromBacktrace(
+                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+                __FILE__,
+                __LINE__ - 3
+            );
+        }
+
+        return $this->buildEvent($payload);
+    }
+
+    /**
+     * Create an {@see Event} from a data payload.
+     *
+     * @param array<string, mixed>|Event $payload The data to be attached to the Event
+     */
+    private function buildEvent($payload): Event
+    {
+        try {
+            if ($payload instanceof Event) {
+                $event = $payload;
+            } else {
+                $event = Event::createEvent();
+
+                if (isset($payload['logger'])) {
+                    $event->setLogger($payload['logger']);
+                }
+
+                $message = isset($payload['message']) ? mb_substr($payload['message'], 0, $this->options->getMaxValueLength()) : null;
+                $messageParams = $payload['message_params'] ?? [];
+                $messageFormatted = isset($payload['message_formatted']) ? mb_substr($payload['message_formatted'], 0, $this->options->getMaxValueLength()) : null;
+
+                if (null !== $message) {
+                    $event->setMessage($message, $messageParams, $messageFormatted);
+                }
+
+                if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
+                    $this->addThrowableToEvent($event, $payload['exception']);
+                }
+
+                if (isset($payload['level']) && $payload['level'] instanceof Severity) {
+                    $event->setLevel($payload['level']);
+                }
+
+                if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
+                    $event->setStacktrace($payload['stacktrace']);
+                }
+            }
+        } catch (\Throwable $exception) {
+            throw new EventCreationException($exception);
+        }
+
+        $event->setSdkIdentifier($this->sdkIdentifier);
+        $event->setSdkVersion($this->sdkVersion);
+        $event->setServerName($this->options->getServerName());
+        $event->setRelease($this->options->getRelease());
+        $event->setTags($this->options->getTags());
+        $event->setEnvironment($this->options->getEnvironment());
+
+        return $event;
+    }
+
+    /**
+     * Stores the given exception in the passed event.
+     *
+     * @param Event      $event     The event that will be enriched with the
+     *                              exception
+     * @param \Throwable $exception The exception that will be processed and
+     *                              added to the event
+     */
+    private function addThrowableToEvent(Event $event, \Throwable $exception): void
+    {
+        if ($exception instanceof \ErrorException) {
+            $event->setLevel(Severity::fromError($exception->getSeverity()));
+        }
+
+        $exceptions = [];
+
+        do {
+            $exceptions[] = new ExceptionDataBag(
+                $exception,
+                $this->stacktraceBuilder->buildFromException($exception),
+                new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
+            );
+        } while ($exception = $exception->getPrevious());
+
+        $event->setExceptions($exceptions);
     }
 }
