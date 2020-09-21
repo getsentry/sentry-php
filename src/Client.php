@@ -92,7 +92,15 @@ final class Client implements ClientInterface
      * @param RepresentationSerializerInterface|null $representationSerializer The serializer for function arguments
      * @param LoggerInterface|null                   $logger                   The PSR-3 logger
      */
-    public function __construct(Options $options, TransportInterface $transport, ?string $sdkIdentifier, ?string $sdkVersion, ?SerializerInterface $serializer, ?RepresentationSerializerInterface $representationSerializer, ?LoggerInterface $logger = null)
+    public function __construct(
+        Options $options,
+        TransportInterface $transport,
+        ?string $sdkIdentifier = null,
+        ?string $sdkVersion = null,
+        ?SerializerInterface $serializer = null,
+        ?RepresentationSerializerInterface $representationSerializer = null,
+        ?LoggerInterface $logger = null
+    )
     {
         $this->options = $options;
         $this->transport = $transport;
