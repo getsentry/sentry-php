@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Exception\EventCreationException;
@@ -109,7 +110,7 @@ final class Client implements ClientInterface
         $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
         $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
-        $this->sdkVersion = $sdkVersion ?? '0.0.0';
+        $this->sdkVersion = $sdkVersion ?? PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
     /**
