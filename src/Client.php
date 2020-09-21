@@ -100,8 +100,7 @@ final class Client implements ClientInterface
         ?SerializerInterface $serializer = null,
         ?RepresentationSerializerInterface $representationSerializer = null,
         ?LoggerInterface $logger = null
-    )
-    {
+    ) {
         $this->options = $options;
         $this->transport = $transport;
         $this->logger = $logger ?? new NullLogger();
