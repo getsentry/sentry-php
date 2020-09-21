@@ -512,7 +512,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent([]);
@@ -542,7 +542,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent($payload);
@@ -597,7 +597,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent([]);
@@ -636,7 +636,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             new Serializer($options),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent(['exception' => $exception]);
@@ -662,7 +662,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             new Serializer($options),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent(['exception' => $exception]);
@@ -699,7 +699,7 @@ final class ClientTest extends TestCase
             'sentry.sdk.identifier',
             '1.2.3',
             new Serializer($options),
-            $this->createMock(RepresentationSerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
         );
 
         $client->captureEvent([]);
