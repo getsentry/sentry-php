@@ -250,14 +250,10 @@ final class Client implements ClientInterface
     /**
      * Create an {@see Event} with a stacktrace attached to it.
      *
-     * @param array<string, mixed>|Event $payload The data to be attached to the Event
+     * @param array<string, mixed> $payload The data to be attached to the Event
      */
     private function buildEventWithStacktrace($payload): Event
     {
-        if ($payload instanceof Event) {
-            return $this->buildEvent($payload);
-        }
-
         if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
             $payload['stacktrace'] = $this->stacktraceBuilder->buildFromBacktrace(
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
