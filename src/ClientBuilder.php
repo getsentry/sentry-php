@@ -9,7 +9,6 @@ use Http\Discovery\Psr17FactoryDiscovery;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
-use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
@@ -163,7 +162,7 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        return new Client($this->options, $this->transport, $this->createEventFactory(), $this->logger);
+        return new Client($this->options, $this->transport, $this->sdkIdentifier, $this->sdkVersion, $this->serializer, $this->representationSerializer, $this->logger);
     }
 
     /**
@@ -178,23 +177,6 @@ final class ClientBuilder implements ClientBuilderInterface
         $transportFactory = $this->transportFactory ?? $this->createDefaultTransportFactory();
 
         return $transportFactory->create($this->options);
-    }
-
-    /**
-     * Instantiate the {@see EventFactory} with the configured serializers.
-     */
-    private function createEventFactory(): EventFactoryInterface
-    {
-        $this->serializer = $this->serializer ?? new Serializer($this->options);
-        $this->representationSerializer = $this->representationSerializer ?? new RepresentationSerializer($this->options);
-
-        return new EventFactory(
-            $this->serializer,
-            $this->representationSerializer,
-            $this->options,
-            $this->sdkIdentifier,
-            $this->sdkVersion
-        );
     }
 
     /**

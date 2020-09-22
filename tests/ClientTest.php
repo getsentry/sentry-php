@@ -13,12 +13,15 @@ use Psr\Log\LoggerInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
-use Sentry\EventFactoryInterface;
+use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Response;
 use Sentry\ResponseStatus;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -30,11 +33,6 @@ final class ClientTest extends TestCase
     public function testConstructorSetupsIntegrations(): void
     {
         $integrationCalled = false;
-
-        $eventFactory = $this->createMock(EventFactoryInterface::class);
-        $eventFactory->expects($this->once())
-            ->method('create')
-            ->willReturn(Event::createEvent());
 
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
@@ -68,7 +66,10 @@ final class ClientTest extends TestCase
                 'integrations' => [$integration],
             ]),
             $this->createMock(TransportInterface::class),
-            $eventFactory,
+            null,
+            null,
+            null,
+            null,
             $logger
         );
 
@@ -476,5 +477,231 @@ final class ClientTest extends TestCase
                 return $this->transport;
             }
         };
+    }
+
+    /**
+     * @backupGlobals
+     */
+    public function testBuildEventWithDefaultValues(): void
+    {
+        $options = new Options();
+        $options->setServerName('testServerName');
+        $options->setRelease('testRelease');
+        $options->setTags(['test' => 'tag']);
+        $options->setEnvironment('testEnvironment');
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($options): bool {
+                $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
+                $this->assertSame('1.2.3', $event->getSdkVersion());
+                $this->assertSame($options->getServerName(), $event->getServerName());
+                $this->assertSame($options->getRelease(), $event->getRelease());
+                $this->assertSame($options->getTags(), $event->getTags());
+                $this->assertSame($options->getEnvironment(), $event->getEnvironment());
+                $this->assertNull($event->getStacktrace());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent([]);
+    }
+
+    /**
+     * @dataProvider buildWithPayloadDataProvider
+     */
+    public function testBuildWithPayload(array $payload, ?string $expectedLogger, ?string $expectedMessage, array $expectedMessageParams, ?string $expectedFormattedMessage): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($expectedLogger, $expectedMessage, $expectedFormattedMessage, $expectedMessageParams): bool {
+                $this->assertSame($expectedLogger, $event->getLogger());
+                $this->assertSame($expectedMessage, $event->getMessage());
+                $this->assertSame($expectedMessageParams, $event->getMessageParams());
+                $this->assertSame($expectedFormattedMessage, $event->getMessageFormatted());
+
+                return true;
+            }));
+
+        $client = new Client(
+            new Options(),
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent($payload);
+    }
+
+    public function buildWithPayloadDataProvider(): iterable
+    {
+        yield [
+            ['logger' => 'app.php'],
+            'app.php',
+            null,
+            [],
+            null,
+        ];
+
+        yield [
+            ['message' => 'My raw message with interpreted strings like this'],
+            null,
+            'My raw message with interpreted strings like this',
+            [],
+            null,
+        ];
+
+        yield [
+            [
+                'message' => 'My raw message with interpreted strings like that',
+                'message_params' => ['this'],
+                'message_formatted' => 'My raw message with interpreted strings like %s',
+            ],
+            null,
+            'My raw message with interpreted strings like that',
+            ['this'],
+            'My raw message with interpreted strings like %s',
+        ];
+    }
+
+    public function testBuildEventInCLIDoesntSetTransaction(): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNull($event->getTransaction());
+
+                return true;
+            }));
+
+        $client = new Client(
+            new Options(),
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent([]);
+    }
+
+    public function testBuildEventWithException(): void
+    {
+        $options = new Options();
+        $previousException = new \RuntimeException('testMessage2');
+        $exception = new \Exception('testMessage', 0, $previousException);
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $capturedExceptions = $event->getExceptions();
+
+                $this->assertCount(2, $capturedExceptions);
+                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[0]->getMechanism());
+                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+
+                $this->assertNotNull($capturedExceptions[1]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[1]->getMechanism());
+                $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
+                $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(['exception' => $exception]);
+    }
+
+    public function testBuildWithErrorException(): void
+    {
+        $options = new Options();
+        $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(['exception' => $exception]);
+    }
+
+    public function testBuildWithStacktrace(): void
+    {
+        $options = new Options();
+        $options->setAttachStacktrace(true);
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $stacktrace = $event->getStacktrace();
+
+                $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+
+                /** @var Frame $lastFrame */
+                $lastFrame = array_reverse($stacktrace->getFrames())[0];
+
+                $this->assertSame(
+                    'Client.php',
+                    basename($lastFrame->getFile())
+                );
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent([]);
     }
 }
