@@ -70,4 +70,35 @@ final class SpanTest extends TestCase
         $this->assertSame($spanContext1->getSpanId(), $span2->getParentSpanId());
         $this->assertSame($spanContext1->getTraceId(), $span2->getTraceId());
     }
+
+    /**
+     * @dataProvider toTraceparentDataProvider
+     */
+    public function testToTraceparent(?bool $sampled, string $expectedValue): void
+    {
+        $span = new Span();
+        $span->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $span->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $span->setSampled($sampled);
+
+        $this->assertSame($expectedValue, $span->toTraceparent());
+    }
+
+    public function toTraceparentDataProvider(): iterable
+    {
+        yield [
+            null,
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8',
+        ];
+
+        yield [
+            false,
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0',
+        ];
+
+        yield [
+            true,
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+        ];
+    }
 }

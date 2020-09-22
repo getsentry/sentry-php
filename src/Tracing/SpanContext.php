@@ -6,6 +6,8 @@ namespace Sentry\Tracing;
 
 class SpanContext
 {
+    private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
+
     /**
      * @var string|null Description of the Span
      */
@@ -181,5 +183,36 @@ class SpanContext
     public function setEndTimestamp(?float $endTimestamp): void
     {
         $this->endTimestamp = $endTimestamp;
+    }
+
+    /**
+     * Returns a context populated with the data of the given header.
+     *
+     * @param string $header The sentry-trace header from the request
+     *
+     * @return static
+     */
+    public static function fromTraceparent(string $header)
+    {
+        /** @phpstan-ignore-next-line */ /** @psalm-suppress UnsafeInstantiation */
+        $context = new static();
+
+        if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
+            return $context;
+        }
+
+        if (!empty($matches['trace_id'])) {
+            $context->traceId = new TraceId($matches['trace_id']);
+        }
+
+        if (!empty($matches['span_id'])) {
+            $context->parentSpanId = new SpanId($matches['span_id']);
+        }
+
+        if (isset($matches['sampled'])) {
+            $context->sampled = '1' === $matches['sampled'];
+        }
+
+        return $context;
     }
 }

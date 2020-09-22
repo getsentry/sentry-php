@@ -425,4 +425,18 @@ class Span
     {
         $this->spanRecorder = null;
     }
+
+    /**
+     * Returns a string that can be used for the `sentry-trace` header.
+     */
+    public function toTraceparent(): string
+    {
+        $sampled = '';
+
+        if (null !== $this->sampled) {
+            $sampled = $this->sampled ? '-1' : '-0';
+        }
+
+        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+    }
 }
