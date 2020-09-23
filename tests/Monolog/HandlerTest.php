@@ -37,7 +37,7 @@ final class HandlerTest extends TestCase
 
                 return true;
             }), $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
-                $event = $scopeArg->applyToEvent(Event::createEvent(), []);
+                $event = $scopeArg->applyToEvent(Event::createEvent());
 
                 $this->assertNotNull($event);
                 $this->assertSame($expectedExtra, $event->getExtra());

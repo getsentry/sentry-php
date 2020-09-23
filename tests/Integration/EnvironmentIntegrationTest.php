@@ -39,7 +39,7 @@ final class EnvironmentIntegrationTest extends TestCase
             $event->setRuntimeContext($initialRuntimeContext);
             $event->setOsContext($initialOsContext);
 
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
 
             $this->assertNotNull($event);
 

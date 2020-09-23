@@ -20,7 +20,7 @@ final class TransactionIntegrationTest extends TestCase
      *
      * @backupGlobals
      */
-    public function testSetupOnce(Event $event, bool $isIntegrationEnabled, array $payload, array $serverGlobals, ?string $expectedTransaction): void
+    public function testSetupOnce(Event $event, bool $isIntegrationEnabled, array $serverGlobals, ?string $expectedTransaction): void
     {
         $_SERVER = array_merge($_SERVER, $serverGlobals);
 
@@ -35,8 +35,8 @@ final class TransactionIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        withScope(function (Scope $scope) use ($event, $payload, $expectedTransaction): void {
-            $event = $scope->applyToEvent($event, $payload);
+        withScope(function (Scope $scope) use ($event, $expectedTransaction): void {
+            $event = $scope->applyToEvent($event);
 
             $this->assertNotNull($event);
             $this->assertSame($event->getTransaction(), $expectedTransaction);
@@ -49,14 +49,18 @@ final class TransactionIntegrationTest extends TestCase
             Event::createEvent(),
             true,
             [],
-            [],
             null,
         ];
 
         yield [
-            Event::createEvent(),
+            (static function () {
+                $event = Event::createEvent();
+
+                $event->setTransaction('/foo/bar');
+
+                return $event;
+            })(),
             true,
-            ['transaction' => '/foo/bar'],
             [],
             '/foo/bar',
         ];
@@ -64,7 +68,6 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             true,
-            [],
             ['PATH_INFO' => '/foo/bar'],
             '/foo/bar',
         ];
@@ -76,7 +79,6 @@ final class TransactionIntegrationTest extends TestCase
             $event,
             true,
             [],
-            [],
             '/foo/bar',
         ];
 
@@ -86,7 +88,6 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             $event,
             true,
-            ['/foo/bar/baz'],
             [],
             '/foo/bar',
         ];
@@ -94,7 +95,6 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             false,
-            ['transaction' => '/foo/bar'],
             [],
             null,
         ];

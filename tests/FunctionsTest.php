@@ -114,7 +114,7 @@ final class FunctionsTest extends TestCase
 
         addBreadcrumb($breadcrumb);
         configureScope(function (Scope $scope) use ($breadcrumb): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());

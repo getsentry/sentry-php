@@ -67,7 +67,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
         });
 
         $this->assertNotNull($event);
@@ -161,7 +161,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
         });
 
         $this->assertNotNull($event);

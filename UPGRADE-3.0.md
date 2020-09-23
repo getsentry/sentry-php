@@ -113,3 +113,5 @@
 - The signature of `ClientInterface::captureEvent` changed to `ClientInterface::captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null)`
 - The signature of `HubInterface::captureEvent` changed to `HubInterface::captureEvent(Event $event, ?EventHint $hint = null)`
 - The signature of `captureEvent` changed to `captureEvent(Event $event, ?EventHint $hint = null)`
+- The signature of `Scope::applyToEvent` changed to `Scope::applyToEvent(Event $event)`
+- Global and scope event processors will no longer receive a second argument, callable should now have the signature `callable(Event $event)`

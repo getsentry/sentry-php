@@ -33,7 +33,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($event, $expectedEventToBeDropped): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
 
             if ($expectedEventToBeDropped) {
                 $this->assertNull($event);

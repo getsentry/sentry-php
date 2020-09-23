@@ -8,7 +8,6 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Sentry\Exception\EventCreationException;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
@@ -126,10 +125,12 @@ final class Client implements ClientInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId
     {
-        return $this->captureEvent($this->buildEvent([
-            'message' => $message,
-            'level' => $level,
-        ]), null, $scope);
+        $event = Event::createEvent();
+
+        $event->setMessage($message);
+        $event->setLevel($level);
+
+        return $this->captureEvent($event, null, $scope);
     }
 
     /**
@@ -205,15 +206,30 @@ final class Client implements ClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param array<string, mixed>|Event $payload The payload that will be converted to an Event
-     * @param EventHint|null             $hint    May contain additional information about the original exception
-     * @param Scope|null                 $scope   Optional scope which enriches the Event
+     * @param Event          $event The payload that will be converted to an Event
+     * @param EventHint|null $hint  May contain additional information about the original exception
+     * @param Scope|null     $scope Optional scope which enriches the Event
      *
      * @return Event|null The prepared event object or null if it must be discarded
      */
-    private function prepareEvent($payload, ?EventHint $hint = null, ?Scope $scope = null): ?Event
+    private function prepareEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?Event
     {
-        $event = $this->buildEvent($payload, $hint);
+        if (null !== $hint) {
+            if (null !== $hint->exception && empty($event->getExceptions())) {
+                $this->addThrowableToEvent($event, $hint->exception);
+            }
+
+            if (null !== $hint->stacktrace && null === $event->getStacktrace()) {
+                $event->setStacktrace($hint->stacktrace);
+            }
+        }
+
+        $event->setSdkIdentifier($this->sdkIdentifier);
+        $event->setSdkVersion($this->sdkVersion);
+        $event->setServerName($this->options->getServerName());
+        $event->setRelease($this->options->getRelease());
+        $event->setTags($this->options->getTags());
+        $event->setEnvironment($this->options->getEnvironment());
 
         $this->addMissingStacktraceToEvent($event, $hint);
 
@@ -227,7 +243,7 @@ final class Client implements ClientInterface
 
         if (null !== $scope) {
             $previousEvent = $event;
-            $event = $scope->applyToEvent($event, $payload);
+            $event = $scope->applyToEvent($event);
 
             if (null === $event) {
                 $this->logger->info('The event will be discarded because one of the event processors returned "null".', ['event' => $previousEvent]);
@@ -264,74 +280,10 @@ final class Client implements ClientInterface
     }
 
     /**
-     * Create an {@see Event} from a data payload.
-     *
-     * @param array<string, mixed>|Event $payload The data to be attached to the Event
-     * @param EventHint|null             $hint    May contain additional information about the original exception
-     */
-    private function buildEvent($payload, ?EventHint $hint = null): Event
-    {
-        try {
-            if ($payload instanceof Event) {
-                $event = $payload;
-            } else {
-                $event = Event::createEvent();
-
-                if (isset($payload['logger'])) {
-                    $event->setLogger($payload['logger']);
-                }
-
-                $message = isset($payload['message']) ? mb_substr($payload['message'], 0, $this->options->getMaxValueLength()) : null;
-                $messageParams = $payload['message_params'] ?? [];
-                $messageFormatted = isset($payload['message_formatted']) ? mb_substr($payload['message_formatted'], 0, $this->options->getMaxValueLength()) : null;
-
-                if (null !== $message) {
-                    $event->setMessage($message, $messageParams, $messageFormatted);
-                }
-
-                if (isset($payload['exception']) && $payload['exception'] instanceof \Throwable) {
-                    $this->addThrowableToEvent($event, $payload['exception']);
-                }
-
-                if (isset($payload['level']) && $payload['level'] instanceof Severity) {
-                    $event->setLevel($payload['level']);
-                }
-
-                if (isset($payload['stacktrace']) && $payload['stacktrace'] instanceof Stacktrace) {
-                    $event->setStacktrace($payload['stacktrace']);
-                }
-            }
-        } catch (\Throwable $exception) {
-            throw new EventCreationException($exception);
-        }
-
-        if (null !== $hint) {
-            if (null !== $hint->exception) {
-                $this->addThrowableToEvent($event, $hint->exception);
-            }
-
-            if (null !== $hint->stacktrace) {
-                $event->setStacktrace($hint->stacktrace);
-            }
-        }
-
-        $event->setSdkIdentifier($this->sdkIdentifier);
-        $event->setSdkVersion($this->sdkVersion);
-        $event->setServerName($this->options->getServerName());
-        $event->setRelease($this->options->getRelease());
-        $event->setTags($this->options->getTags());
-        $event->setEnvironment($this->options->getEnvironment());
-
-        return $event;
-    }
-
-    /**
      * Stores the given exception in the passed event.
      *
-     * @param Event      $event     The event that will be enriched with the
-     *                              exception
-     * @param \Throwable $exception The exception that will be processed and
-     *                              added to the event
+     * @param Event      $event     The event that will be enriched with the exception
+     * @param \Throwable $exception The exception that will be processed and added to the event
      */
     private function addThrowableToEvent(Event $event, \Throwable $exception): void
     {
