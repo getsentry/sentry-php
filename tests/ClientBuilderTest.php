@@ -11,29 +11,9 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
-use Sentry\Transport\HttpTransport;
-use Sentry\Transport\NullTransport;
 
 final class ClientBuilderTest extends TestCase
 {
-    public function testHttpTransportIsUsedWhenServerIsConfigured(): void
-    {
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
-
-        $this->assertInstanceOf(HttpTransport::class, $transport);
-    }
-
-    public function testNullTransportIsUsedWhenNoServerIsConfigured(): void
-    {
-        $clientBuilder = new ClientBuilder();
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
-
-        $this->assertInstanceOf(NullTransport::class, $transport);
-    }
-
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
     {
         $callbackCalled = false;
