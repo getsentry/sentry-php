@@ -215,7 +215,7 @@ final class Client implements ClientInterface
     {
         $event = $this->buildEvent($payload, $hint);
 
-        $this->addMissingStacktraceToEvent($payload, $hint);
+        $this->addMissingStacktraceToEvent($event, $hint);
 
         $sampleRate = $this->options->getSampleRate();
 
