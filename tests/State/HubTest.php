@@ -258,22 +258,24 @@ final class HubTest extends TestCase
 
     public function testCaptureEvent(): void
     {
-        $eventId = EventId::generate();
+        $event = Event::createEvent($eventId = EventId::generate());
+
+        $event->setMessage('test');
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with(['message' => 'test'])
+            ->with($event)
             ->willReturn($eventId);
 
         $hub = new Hub();
 
-        $this->assertNull($hub->captureEvent([]));
+        $this->assertNull($hub->captureEvent(Event::createEvent()));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureEvent(['message' => 'test']));
+        $this->assertSame($eventId, $hub->captureEvent($event));
     }
 
     public function testAddBreadcrumb(): void

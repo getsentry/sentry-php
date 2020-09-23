@@ -6,6 +6,8 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\SentrySdk;
@@ -120,9 +122,9 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload): ?EventId
+    public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureEvent($payload);
+        return SentrySdk::getCurrentHub()->captureEvent($event, $hint);
     }
 
     /**

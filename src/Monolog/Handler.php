@@ -6,6 +6,8 @@ namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
@@ -44,21 +46,23 @@ final class Handler extends AbstractProcessingHandler
      */
     protected function write(array $record): void
     {
-        $payload = [
-            'level' => self::getSeverityFromLevel($record['level']),
-            'message' => $record['message'],
-            'logger' => 'monolog.' . $record['channel'],
-        ];
+        $event = Event::createEvent();
+
+        $event->setLevel(self::getSeverityFromLevel($record['level']));
+        $event->setMessage($record['message']);
+        $event->setLogger(sprintf('monolog.%s', $record['channel']));
+
+        $hint = new EventHint();
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
-            $payload['exception'] = $record['context']['exception'];
+            $hint->exception = $record['context']['exception'];
         }
 
-        $this->hub->withScope(function (Scope $scope) use ($record, $payload): void {
+        $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
-            $this->hub->captureEvent($payload);
+            $this->hub->captureEvent($event, $hint);
         });
     }
 

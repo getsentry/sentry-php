@@ -43,11 +43,12 @@ function captureException(\Throwable $exception): ?EventId
 /**
  * Captures a new event using the provided data.
  *
- * @param array<string, mixed> $payload The data of the event being captured
+ * @param Event                  $event The event being captured
+ * @param \Sentry\EventHint|null $hint  May contain additional information about the original exception
  */
-function captureEvent(array $payload): ?EventId
+function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureEvent($payload);
+    return SentrySdk::getCurrentHub()->captureEvent($event, $hint);
 }
 
 /**

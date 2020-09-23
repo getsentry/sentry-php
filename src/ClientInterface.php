@@ -47,10 +47,11 @@ interface ClientInterface
     /**
      * Captures a new event using the provided data.
      *
-     * @param array<string, mixed>|Event $payload The data of the event being captured
-     * @param Scope|null                 $scope   An optional scope keeping the state
+     * @param Event          $event The event being captured
+     * @param EventHint|null $hint  May contain additional information about the original exception
+     * @param Scope|null     $scope An optional scope keeping the state
      */
-    public function captureEvent($payload, ?Scope $scope = null): ?EventId;
+    public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId;
 
     /**
      * Returns the integration instance if it is installed on the client.

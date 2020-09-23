@@ -126,12 +126,10 @@ final class Client implements ClientInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId
     {
-        $payload = [
+        return $this->captureEvent($this->buildEvent([
             'message' => $message,
             'level' => $level,
-        ];
-
-        return $this->captureEvent($payload, $scope);
+        ]), null, $scope);
     }
 
     /**
@@ -139,15 +137,17 @@ final class Client implements ClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null): ?EventId
     {
-        return $this->captureEvent(['exception' => $exception], $scope);
+        return $this->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+        ]), $scope);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload, ?Scope $scope = null): ?EventId
+    public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId
     {
-        $event = $this->prepareEvent($payload, $scope);
+        $event = $this->prepareEvent($event, $hint, $scope);
 
         if (null === $event) {
             return null;
@@ -206,17 +206,16 @@ final class Client implements ClientInterface
      * Assembles an event and prepares it to be sent of to Sentry.
      *
      * @param array<string, mixed>|Event $payload The payload that will be converted to an Event
+     * @param EventHint|null             $hint    May contain additional information about the original exception
      * @param Scope|null                 $scope   Optional scope which enriches the Event
      *
      * @return Event|null The prepared event object or null if it must be discarded
      */
-    private function prepareEvent($payload, ?Scope $scope = null): ?Event
+    private function prepareEvent($payload, ?EventHint $hint = null, ?Scope $scope = null): ?Event
     {
-        if ($this->options->shouldAttachStacktrace() && !($payload instanceof Event) && !isset($payload['exception']) && !isset($payload['stacktrace'])) {
-            $event = $this->buildEventWithStacktrace($payload);
-        } else {
-            $event = $this->buildEvent($payload);
-        }
+        $event = $this->buildEvent($payload, $hint);
+
+        $this->addMissingStacktraceToEvent($payload, $hint);
 
         $sampleRate = $this->options->getSampleRate();
 
@@ -248,29 +247,29 @@ final class Client implements ClientInterface
     }
 
     /**
-     * Create an {@see Event} with a stacktrace attached to it.
+     * Optionally adds a missing stacktrace to the Event if the client is configured to do so.
      *
-     * @param array<string, mixed> $payload The data to be attached to the Event
+     * @param Event          $event The Event to add the missing stacktrace to
+     * @param EventHint|null $hint  May contain additional information about the original exception
      */
-    private function buildEventWithStacktrace($payload): Event
+    private function addMissingStacktraceToEvent(Event $event, ?EventHint $hint): void
     {
-        if (!isset($payload['stacktrace']) || !$payload['stacktrace'] instanceof Stacktrace) {
-            $payload['stacktrace'] = $this->stacktraceBuilder->buildFromBacktrace(
+        if ($this->options->shouldAttachStacktrace() && (null === $hint || null === $hint->exception) && null === $event->getStacktrace()) {
+            $event->setStacktrace($this->stacktraceBuilder->buildFromBacktrace(
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
                 __FILE__,
                 __LINE__ - 3
-            );
+            ));
         }
-
-        return $this->buildEvent($payload);
     }
 
     /**
      * Create an {@see Event} from a data payload.
      *
      * @param array<string, mixed>|Event $payload The data to be attached to the Event
+     * @param EventHint|null             $hint    May contain additional information about the original exception
      */
-    private function buildEvent($payload): Event
+    private function buildEvent($payload, ?EventHint $hint = null): Event
     {
         try {
             if ($payload instanceof Event) {
@@ -304,6 +303,16 @@ final class Client implements ClientInterface
             }
         } catch (\Throwable $exception) {
             throw new EventCreationException($exception);
+        }
+
+        if (null !== $hint) {
+            if (null !== $hint->exception) {
+                $this->addThrowableToEvent($event, $hint->exception);
+            }
+
+            if (null !== $hint->stacktrace) {
+                $event->setStacktrace($hint->stacktrace);
+            }
         }
 
         $event->setSdkIdentifier($this->sdkIdentifier);
