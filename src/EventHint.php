@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Exception\InvalidArgumentException;
-
 /**
  * This class represents hints on how to process an event.
  */
@@ -39,7 +37,7 @@ final class EventHint
 
         foreach ($hintData as $hintKey => $hintValue) {
             if (!property_exists($hint, $hintKey)) {
-                throw new InvalidArgumentException(sprintf('There is no EventHint attribute called "%s".', $hintKey));
+                throw new \InvalidArgumentException(sprintf('There is no EventHint attribute called "%s".', $hintKey));
             }
 
             $hint->{$hintKey} = $hintValue;

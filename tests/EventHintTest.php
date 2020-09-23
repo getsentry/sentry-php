@@ -6,7 +6,6 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\EventHint;
-use Sentry\Exception\InvalidArgumentException;
 use Sentry\Frame;
 use Sentry\Stacktrace;
 
@@ -30,7 +29,7 @@ final class EventHintTest extends TestCase
 
     public function testThrowsExceptionOnInvalidKeyInArray(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('There is no EventHint attribute called "missing_property".');
 
         EventHint::fromArray([
@@ -40,7 +39,7 @@ final class EventHintTest extends TestCase
 
     public function testThrowsExceptionOnInvalidKeyInArrayWhenValidKeyIsPresent(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('There is no EventHint attribute called "missing_property".');
 
         EventHint::fromArray([
