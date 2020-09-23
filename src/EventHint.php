@@ -28,8 +28,6 @@ final class EventHint
     /**
      * Create a EventHint instance from an array of values.
      *
-     * @param array $hintData
-     *
      * @psalm-param array{
      *     exception?: \Throwable,
      *     stacktrace?: Event
