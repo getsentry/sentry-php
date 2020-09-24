@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use Sentry\SentrySdk;
 use Psr\Http\Message\RequestInterface;
+use Sentry\SentrySdk;
 
 /**
  * This is a GuzzleHttp handler method to provide spans for outgoing requests.
  */
-final class GuzzleHandler {
-
+final class GuzzleHandler
+{
     /**
-     * Returns the actual handler
+     * Returns the actual handler.
+     *
      * @return \Closure
      */
-    static public function getHandler() {
+    public static function getHandler()
+    {
         return function (callable $handler) {
             return function (RequestInterface $request, array $options) use ($handler) {
                 $transaction = SentrySdk::getCurrentHub()->getTransaction();
@@ -31,6 +33,7 @@ final class GuzzleHandler {
                 if (null !== $span) {
                     $span->finish();
                 }
+
                 return $result;
             };
         };
