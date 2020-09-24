@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -22,7 +23,7 @@ final class TransactionIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event): Event {
+        Scope::addGlobalEventProcessor(static function (Event $event, EventHint $hint): Event {
             $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
 
             // The client bound to the current hub, if any, could not have this
@@ -35,7 +36,9 @@ final class TransactionIntegration implements IntegrationInterface
                 return $event;
             }
 
-            if (isset($_SERVER['PATH_INFO'])) {
+            if (isset($hint->extra['transaction'])) {
+                $event->setTransaction($hint->extra['transaction']);
+            } elseif (isset($_SERVER['PATH_INFO'])) {
                 $event->setTransaction($_SERVER['PATH_INFO']);
             }
 
