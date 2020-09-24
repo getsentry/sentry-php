@@ -60,8 +60,7 @@
     },
     "autoload": {
         "files": [
-            "src/functions.php",
-            "src/Tracing/functions.php"
+            "src/functions.php"
         ],
         "psr-4": {
             "Sentry\\": "src/"
