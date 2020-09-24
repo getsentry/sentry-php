@@ -43,8 +43,8 @@ function captureException(\Throwable $exception): ?EventId
 /**
  * Captures a new event using the provided data.
  *
- * @param Event                  $event The event being captured
- * @param \Sentry\EventHint|null $hint  May contain additional information about the original exception
+ * @param Event          $event The event being captured
+ * @param EventHint|null $hint  May contain additional information about the event
  */
 function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {

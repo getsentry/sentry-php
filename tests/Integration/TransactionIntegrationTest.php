@@ -52,14 +52,11 @@ final class TransactionIntegrationTest extends TestCase
             null,
         ];
 
+        $event = Event::createEvent();
+        $event->setTransaction('/foo/bar');
+
         yield [
-            (static function () {
-                $event = Event::createEvent();
-
-                $event->setTransaction('/foo/bar');
-
-                return $event;
-            })(),
+            $event,
             true,
             [],
             '/foo/bar',

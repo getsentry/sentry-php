@@ -147,7 +147,6 @@ final class ClientTest extends TestCase
             ->getClient();
 
         $event = Event::createEvent();
-
         $event->setTransaction('foo bar');
         $event->setLevel(Severity::debug());
         $event->setLogger('foo');

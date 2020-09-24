@@ -47,7 +47,6 @@ final class Handler extends AbstractProcessingHandler
     protected function write(array $record): void
     {
         $event = Event::createEvent();
-
         $event->setLevel(self::getSeverityFromLevel($record['level']));
         $event->setMessage($record['message']);
         $event->setLogger(sprintf('monolog.%s', $record['channel']));

@@ -7,6 +7,7 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
@@ -277,6 +278,27 @@ final class ScopeTest extends TestCase
         $this->assertNull($scope->applyToEvent($event));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
+    }
+
+    public function testEventProcessorRecievesTheEventAndEventHint(): void
+    {
+        $event = Event::createEvent();
+        $scope = new Scope();
+        $hint = new EventHint();
+
+        $processorCalled = false;
+        $processorReceivedHint = null;
+
+        $scope->addEventProcessor(function (Event $eventArg, EventHint $hint) use (&$processorCalled, &$processorReceivedHint): ?Event {
+            $processorCalled = true;
+            $processorReceivedHint = $hint;
+
+            return $eventArg;
+        });
+
+        $this->assertSame($event, $scope->applyToEvent($event, $hint));
+        $this->assertSame($hint, $processorReceivedHint);
+        $this->assertTrue($processorCalled);
     }
 
     public function testClear(): void

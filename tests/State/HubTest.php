@@ -271,7 +271,7 @@ final class HubTest extends TestCase
 
         $hub = new Hub();
 
-        $this->assertNull($hub->captureEvent(Event::createEvent()));
+        $this->assertNull($hub->captureEvent($event));
 
         $hub->bindClient($client);
 

@@ -48,7 +48,7 @@ interface ClientInterface
      * Captures a new event using the provided data.
      *
      * @param Event          $event The event being captured
-     * @param EventHint|null $hint  May contain additional information about the original exception
+     * @param EventHint|null $hint  May contain additional information about the event
      * @param Scope|null     $scope An optional scope keeping the state
      */
     public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId;

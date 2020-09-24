@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
@@ -57,7 +58,7 @@ final class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event): ?Event>
+     * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private $eventProcessors = [];
 
@@ -69,7 +70,7 @@ final class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event): ?Event>
+     * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private static $globalEventProcessors = [];
 
@@ -305,7 +306,7 @@ final class Scope
      *
      * @param Event $event The event object that will be enriched with scope data
      */
-    public function applyToEvent(Event $event): ?Event
+    public function applyToEvent(Event $event, ?EventHint $hint = null): ?Event
     {
         $event->setFingerprint(array_merge($event->getFingerprint(), $this->fingerprint));
 
@@ -346,8 +347,13 @@ final class Scope
             $event->setContext($name, $data);
         }
 
+        // We create a empty `EventHint` instance to allow processors to always recieve a `EventHint` instance even if there wasn't one
+        if (null === $hint) {
+            $hint = new EventHint();
+        }
+
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = $processor($event);
+            $event = $processor($event, $hint);
 
             if (null === $event) {
                 return null;

@@ -126,7 +126,6 @@ final class Client implements ClientInterface
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId
     {
         $event = Event::createEvent();
-
         $event->setMessage($message);
         $event->setLevel($level);
 
@@ -207,7 +206,7 @@ final class Client implements ClientInterface
      * Assembles an event and prepares it to be sent of to Sentry.
      *
      * @param Event          $event The payload that will be converted to an Event
-     * @param EventHint|null $hint  May contain additional information about the original exception
+     * @param EventHint|null $hint  May contain additional information about the event
      * @param Scope|null     $scope Optional scope which enriches the Event
      *
      * @return Event|null The prepared event object or null if it must be discarded
@@ -243,7 +242,7 @@ final class Client implements ClientInterface
 
         if (null !== $scope) {
             $previousEvent = $event;
-            $event = $scope->applyToEvent($event);
+            $event = $scope->applyToEvent($event, $hint);
 
             if (null === $event) {
                 $this->logger->info('The event will be discarded because one of the event processors returned "null".', ['event' => $previousEvent]);
@@ -266,17 +265,29 @@ final class Client implements ClientInterface
      * Optionally adds a missing stacktrace to the Event if the client is configured to do so.
      *
      * @param Event          $event The Event to add the missing stacktrace to
-     * @param EventHint|null $hint  May contain additional information about the original exception
+     * @param EventHint|null $hint  May contain additional information about the event
      */
     private function addMissingStacktraceToEvent(Event $event, ?EventHint $hint): void
     {
-        if ($this->options->shouldAttachStacktrace() && (null === $hint || null === $hint->exception) && null === $event->getStacktrace()) {
-            $event->setStacktrace($this->stacktraceBuilder->buildFromBacktrace(
-                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
-                __FILE__,
-                __LINE__ - 3
-            ));
+        if (!$this->options->shouldAttachStacktrace()) {
+            return;
         }
+
+        // If the hint contains an exception the stacktrace will be generated for that exception
+        if (null !== $hint && null !== $hint->exception) {
+            return;
+        }
+
+        // We should not add a stacktrace when the event already has one or contains exceptions
+        if (null !== $event->getStacktrace() || !empty($event->getExceptions())) {
+            return;
+        }
+
+        $event->setStacktrace($this->stacktraceBuilder->buildFromBacktrace(
+            debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+            __FILE__,
+            __LINE__ - 3
+        ));
     }
 
     /**

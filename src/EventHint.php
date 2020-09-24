@@ -24,11 +24,19 @@ final class EventHint
     public $stacktrace;
 
     /**
+     * Any extra data that might be needed to process the event.
+     *
+     * @var array<string, mixed>
+     */
+    public $extra = [];
+
+    /**
      * Create a EventHint instance from an array of values.
      *
      * @psalm-param array{
      *     exception?: \Throwable,
-     *     stacktrace?: Event
+     *     stacktrace?: Event,
+     *     extra?: array<string, mixed>
      * } $hintData
      */
     public static function fromArray(array $hintData): self
