@@ -5,6 +5,7 @@
 - Add `traces_sampler` option to set custom sample rate callback (#1083)
 - [BC BREAK] Add named constructors to the `Event` class (#1085)
 - Raise the minimum version of PHP to `7.2` and the minimum version of some dependencies (#1088)
+- Add Guzzle middleware to trace performance of HTTP requests (#1096)
 
 ## 3.0.0-beta1 (2020-09-03)
 
