@@ -11,57 +11,57 @@ class SpanContext
     /**
      * @var string|null Description of the Span
      */
-    public $description;
+    private $description;
 
     /**
      * @var string|null Operation of the Span
      */
-    public $op;
+    private $op;
 
     /**
-     * @var string|null Completion status of the Span
+     * @var SpanStatus|null Completion status of the Span
      */
-    public $status;
+    private $status;
 
     /**
      * @var SpanId|null ID of the parent Span
      */
-    public $parentSpanId;
+    private $parentSpanId;
 
     /**
      * @var bool|null Has the sample decision been made?
      */
-    public $sampled;
+    private $sampled;
 
     /**
      * @var SpanId|null Span ID
      */
-    public $spanId;
+    private $spanId;
 
     /**
      * @var TraceId|null Trace ID
      */
-    public $traceId;
+    private $traceId;
 
     /**
-     * @var array<string, string>|null A List of tags associated to this Span
+     * @var array<string, string> A List of tags associated to this Span
      */
-    public $tags;
+    private $tags = [];
 
     /**
-     * @var array<string, mixed>|null An arbitrary mapping of additional metadata
+     * @var array<string, mixed> An arbitrary mapping of additional metadata
      */
-    public $data;
+    private $data = [];
 
     /**
      * @var float|null Timestamp in seconds (epoch time) indicating when the span started
      */
-    public $startTimestamp;
+    private $startTimestamp;
 
     /**
      * @var float|null Timestamp in seconds (epoch time) indicating when the span ended
      */
-    public $endTimestamp;
+    private $endTimestamp;
 
     public function getDescription(): ?string
     {
@@ -83,12 +83,12 @@ class SpanContext
         $this->op = $op;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?SpanStatus
     {
         return $this->status;
     }
 
-    public function setStatus(?string $status): void
+    public function setStatus(?SpanStatus $status): void
     {
         $this->status = $status;
     }
@@ -136,15 +136,15 @@ class SpanContext
     /**
      * @return array<string, string>
      */
-    public function getTags(): ?array
+    public function getTags(): array
     {
         return $this->tags;
     }
 
     /**
-     * @param array<string, string>|null $tags
+     * @param array<string, string> $tags
      */
-    public function setTags(?array $tags): void
+    public function setTags(array $tags): void
     {
         $this->tags = $tags;
     }
@@ -152,15 +152,15 @@ class SpanContext
     /**
      * @return array<string, mixed>
      */
-    public function getData(): ?array
+    public function getData(): array
     {
         return $this->data;
     }
 
     /**
-     * @param array<string, mixed>|null $data
+     * @param array<string, mixed> $data
      */
-    public function setData(?array $data): void
+    public function setData(array $data): void
     {
         $this->data = $data;
     }
@@ -186,7 +186,7 @@ class SpanContext
     }
 
     /**
-     * Returns a context depending on the header given. Containing trace_id, parent_span_id and sampled.
+     * Returns a context populated with the data of the given header.
      *
      * @param string $header The sentry-trace header from the request
      *
@@ -201,15 +201,15 @@ class SpanContext
             return $context;
         }
 
-        if (mb_strlen($matches['trace_id']) > 0) {
+        if (!empty($matches['trace_id'])) {
             $context->traceId = new TraceId($matches['trace_id']);
         }
 
-        if (mb_strlen($matches['span_id']) > 0) {
+        if (!empty($matches['span_id'])) {
             $context->parentSpanId = new SpanId($matches['span_id']);
         }
 
-        if (\array_key_exists('sampled', $matches)) {
+        if (isset($matches['sampled'])) {
             $context->sampled = '1' === $matches['sampled'];
         }
 

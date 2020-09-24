@@ -135,6 +135,16 @@ final class Options
     }
 
     /**
+     * Gets whether tracing is enabled or not. The feature is enabled when at
+     * least one of the `traces_sample_rate` and `traces_sampler` options is
+     * set.
+     */
+    public function isTracingEnabled(): bool
+    {
+        return 0 != $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
+    }
+
+    /**
      * Gets whether the stacktrace will be attached on captureMessage.
      */
     public function shouldAttachStacktrace(): bool

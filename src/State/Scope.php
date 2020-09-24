@@ -363,7 +363,7 @@ final class Scope
     }
 
     /**
-     * Returns the Span that is on the Scope.
+     * Returns the span that is on the scope.
      */
     public function getSpan(): ?Span
     {
@@ -371,9 +371,9 @@ final class Scope
     }
 
     /**
-     * Sets the Span on the Scope.
+     * Sets the span on the scope.
      *
-     * @param Span|null $span The Span
+     * @param Span|null $span The span
      *
      * @return $this
      */
@@ -385,19 +385,16 @@ final class Scope
     }
 
     /**
-     * Returns the Transaction that is on the Scope.
-     *
-     * @psalm-suppress MoreSpecificReturnType
-     * @psalm-suppress LessSpecificReturnStatement
+     * Returns the transaction attached to the scope (if there is one).
      */
     public function getTransaction(): ?Transaction
     {
         $span = $this->span;
 
-        if (null !== $span && null !== $span->spanRecorder && !empty($span->spanRecorder->getSpans())) {
+        if (null !== $span && null !== $span->getSpanRecorder() && !empty($span->getSpanRecorder()->getSpans())) {
             // The first span in the recorder is considered to be a Transaction
-            /** @phpstan-ignore-next-line */
-            return $span->spanRecorder->getSpans()[0];
+            /** @var Transaction */
+            return $span->getSpanRecorder()->getSpans()[0];
         }
 
         return null;

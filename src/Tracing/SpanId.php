@@ -36,6 +36,16 @@ final class SpanId
         return new self(substr(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)), 0, 16));
     }
 
+    /**
+     * Compares whether two objects are equals.
+     *
+     * @param SpanId $other The object to compare
+     */
+    public function isEqualTo(self $other): bool
+    {
+        return $this->value === $other->value;
+    }
+
     public function __toString(): string
     {
         return $this->value;
