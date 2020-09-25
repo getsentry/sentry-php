@@ -6,6 +6,8 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
@@ -142,12 +144,12 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent($payload): ?EventId
+    public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureEvent($payload, $this->getScope());
+            return $this->lastEventId = $client->captureEvent($event, $hint, $this->getScope());
         }
 
         return null;

@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
@@ -88,9 +89,10 @@ interface HubInterface
     /**
      * Captures a new event using the provided data.
      *
-     * @param Event|array<string, mixed> $payload The data of the event being captured
+     * @param Event          $event The event being captured
+     * @param EventHint|null $hint  May contain additional information about the event
      */
-    public function captureEvent($payload): ?EventId;
+    public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures an event that logs the last occurred error.

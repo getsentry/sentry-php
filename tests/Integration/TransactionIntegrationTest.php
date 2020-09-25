@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -20,7 +21,7 @@ final class TransactionIntegrationTest extends TestCase
      *
      * @backupGlobals
      */
-    public function testSetupOnce(Event $event, bool $isIntegrationEnabled, array $payload, array $serverGlobals, ?string $expectedTransaction): void
+    public function testSetupOnce(Event $event, bool $isIntegrationEnabled, ?EventHint $hint, array $serverGlobals, ?string $expectedTransaction): void
     {
         $_SERVER = array_merge($_SERVER, $serverGlobals);
 
@@ -35,8 +36,8 @@ final class TransactionIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        withScope(function (Scope $scope) use ($event, $payload, $expectedTransaction): void {
-            $event = $scope->applyToEvent($event, $payload);
+        withScope(function (Scope $scope) use ($event, $hint, $expectedTransaction): void {
+            $event = $scope->applyToEvent($event, $hint);
 
             $this->assertNotNull($event);
             $this->assertSame($event->getTransaction(), $expectedTransaction);
@@ -48,7 +49,15 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             true,
+            null,
             [],
+            null,
+        ];
+
+        yield [
+            Event::createEvent(),
+            false,
+            null,
             [],
             null,
         ];
@@ -56,7 +65,41 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             true,
-            ['transaction' => '/foo/bar'],
+            null,
+            ['PATH_INFO' => '/foo/bar'],
+            '/foo/bar',
+        ];
+
+        yield [
+            Event::createEvent(),
+            true,
+            EventHint::fromArray([
+                'extra' => [
+                    'transaction' => '/foo/bar',
+                ],
+            ]),
+            [],
+            '/foo/bar',
+        ];
+
+        $event = Event::createEvent();
+        $event->setTransaction('/foo/bar');
+
+        yield [
+            $event,
+            true,
+            null,
+            [],
+            '/foo/bar',
+        ];
+
+        $event = Event::createEvent();
+        $event->setTransaction('/foo/bar');
+
+        yield [
+            $event,
+            false,
+            null,
             [],
             '/foo/bar',
         ];
@@ -64,38 +107,24 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             true,
-            [],
+            EventHint::fromArray([
+                'extra' => [
+                    'transaction' => '/some/other',
+                ],
+            ]),
             ['PATH_INFO' => '/foo/bar'],
-            '/foo/bar',
-        ];
-
-        $event = Event::createEvent();
-        $event->setTransaction('/foo/bar');
-
-        yield [
-            $event,
-            true,
-            [],
-            [],
-            '/foo/bar',
-        ];
-
-        $event = Event::createEvent();
-        $event->setTransaction('/foo/bar');
-
-        yield [
-            $event,
-            true,
-            ['/foo/bar/baz'],
-            [],
-            '/foo/bar',
+            '/some/other',
         ];
 
         yield [
             Event::createEvent(),
             false,
-            ['transaction' => '/foo/bar'],
-            [],
+            EventHint::fromArray([
+                'extra' => [
+                    'transaction' => '/some/other',
+                ],
+            ]),
+            ['PATH_INFO' => '/foo/bar'],
             null,
         ];
     }

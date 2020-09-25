@@ -9,6 +9,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Monolog\Handler;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -19,14 +20,20 @@ final class HandlerTest extends TestCase
     /**
      * @dataProvider handleDataProvider
      */
-    public function testHandle(array $record, array $expectedPayload, array $expectedExtra): void
+    public function testHandle(array $record, Event $expectedEvent, EventHint $expectedHint, array $expectedExtra): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($expectedPayload, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
-                $event = $scopeArg->applyToEvent(Event::createEvent(), []);
+            ->with($this->callback(function (Event $event) use ($expectedEvent): bool {
+                $this->assertEquals($expectedEvent->getLevel(), $event->getLevel());
+                $this->assertEquals($expectedEvent->getMessage(), $event->getMessage());
+                $this->assertEquals($expectedEvent->getLogger(), $event->getLogger());
+
+                return true;
+            }), $expectedHint, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+                $event = $scopeArg->applyToEvent(Event::createEvent());
 
                 $this->assertNotNull($event);
                 $this->assertSame($expectedExtra, $event->getExtra());
@@ -40,6 +47,11 @@ final class HandlerTest extends TestCase
 
     public function handleDataProvider(): iterable
     {
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::debug());
+
         yield [
             [
                 'message' => 'foo bar',
@@ -49,16 +61,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::debug(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::DEBUG),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::info());
 
         yield [
             [
@@ -69,16 +83,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::info(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::info());
 
         yield [
             [
@@ -89,16 +105,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::info(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::NOTICE),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
 
         yield [
             [
@@ -109,16 +127,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::warning(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::error());
 
         yield [
             [
@@ -129,16 +149,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::error(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ERROR),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::fatal());
 
         yield [
             [
@@ -149,16 +171,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::fatal(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::CRITICAL),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::fatal());
 
         yield [
             [
@@ -169,16 +193,18 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::fatal(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ALERT),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::fatal());
 
         yield [
             [
@@ -189,16 +215,20 @@ final class HandlerTest extends TestCase
                 'context' => [],
                 'extra' => [],
             ],
-            [
-                'level' => Severity::fatal(),
-                'message' => 'foo bar',
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::EMERGENCY),
             ],
         ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        $exampleException = new \Exception('exception message');
 
         yield [
             [
@@ -206,17 +236,15 @@ final class HandlerTest extends TestCase
                 'level' => Logger::WARNING,
                 'level_name' => Logger::getLevelName(Logger::WARNING),
                 'context' => [
-                    'exception' => new \Exception('exception message'),
+                    'exception' => $exampleException,
                 ],
                 'channel' => 'channel.foo',
                 'extra' => [],
             ],
-            [
-                'level' => Severity::warning(),
-                'message' => 'foo bar',
-                'exception' => new \Exception('exception message'),
-                'logger' => 'monolog.channel.foo',
-            ],
+            $event,
+            EventHint::fromArray([
+                'exception' => $exampleException,
+            ]),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),

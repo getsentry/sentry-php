@@ -102,7 +102,7 @@
 - Removed the `Event::getTagsContext()` method, use `Event::getTags()` instead
 - Removed the `Event::getUserContext()` method, use `Event::getUser()` instead
 - Renamed the `Event::getServerOsContext()` method to `Event::getOsContext()`
-- The signature of the `Scope::setUser()` method changed ot accept a plain array
+- The signature of the `Scope::setUser()` method changed to accept a plain array
 - Removed the `FlushableClientInterface` and `ClosableTransportInterface` interfaces. Their methods have been moved to the corresponding `ClientInterface` and `TransportInterface` interfaces
 - Removed the `Event::toArray()` and `Event::jsonSerialize()` methods
 - Removed the `Breadcrumb::toArray()` and `Breadcrumb::jsonSerialize()` methods
@@ -110,3 +110,8 @@
 - Removed the `Stacktrace::toArray()` and `Stacktrace::jsonSerialize()` methods
 - Removed the `SpoolTransport` class and the `SpoolInterface` interface with related implementation
 - Made the `Event::__construct()` method `private`, use the named constructors instead
+- The signature of `ClientInterface::captureEvent()` changed to `ClientInterface::captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null)`
+- The signature of `HubInterface::captureEvent()` changed to `HubInterface::captureEvent(Event $event, ?EventHint $hint = null)`
+- The signature of `captureEvent()` changed to `captureEvent(Event $event, ?EventHint $hint = null)`
+- The signature of `Scope::applyToEvent()` changed to `Scope::applyToEvent(Event $event, ?EventHint $hint = null)`
+- Global and scope event processors will now receive a `EventHint` as the second parameter, callable should now have the signature `callable(Event $event, EventHint $hint)`

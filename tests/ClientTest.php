@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
@@ -27,6 +28,7 @@ use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
+use Sentry\UserDataBag;
 
 final class ClientTest extends TestCase
 {
@@ -73,7 +75,7 @@ final class ClientTest extends TestCase
             $logger
         );
 
-        $client->captureEvent([], new Scope());
+        $client->captureEvent(Event::createEvent(), null, new Scope());
 
         $this->assertTrue($integrationCalled);
     }
@@ -144,22 +146,21 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $inputData = [
-            'transaction' => 'foo bar',
-            'level' => Severity::debug(),
-            'logger' => 'foo',
-            'tags_context' => ['foo', 'bar'],
-            'extra_context' => ['foo' => 'bar'],
-            'user_context' => ['bar' => 'foo'],
-        ];
+        $event = Event::createEvent();
+        $event->setTransaction('foo bar');
+        $event->setLevel(Severity::debug());
+        $event->setLogger('foo');
+        $event->setTags(['foo', 'bar']);
+        $event->setExtra(['foo' => 'bar']);
+        $event->setUser(UserDataBag::createFromUserIdentifier('foo'));
 
-        $this->assertNotNull($client->captureEvent($inputData));
+        $this->assertNotNull($client->captureEvent($event));
     }
 
     /**
      * @dataProvider captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider
      */
-    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, array $payload, bool $shouldAttachStacktrace): void
+    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, ?EventHint $hint, bool $shouldAttachStacktrace): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -184,36 +185,36 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertNotNull($client->captureEvent($payload));
+        $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
     }
 
     public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
         yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
             true,
-            [],
+            null,
             true,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = false' => [
             false,
-            [],
+            null,
             false,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = true and payload.exception is set' => [
             true,
-            [
+            EventHint::fromArray([
                 'exception' => new \Exception(),
-            ],
+            ]),
             false,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = false and payload.exception is set' => [
             true,
-            [
+            EventHint::fromArray([
                 'exception' => new \Exception(),
-            ],
+            ]),
             false,
         ];
     }
@@ -239,7 +240,9 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertNotNull($client->captureEvent(['stacktrace' => $stacktrace]));
+        $this->assertNotNull($client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'stacktrace' => $stacktrace,
+        ])));
     }
 
     public function testCaptureLastError(): void
@@ -309,7 +312,7 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureEvent([]);
+        $client->captureEvent(Event::createEvent());
 
         $this->assertTrue($beforeSendCalled);
     }
@@ -515,68 +518,7 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $client->captureEvent([]);
-    }
-
-    /**
-     * @dataProvider buildWithPayloadDataProvider
-     */
-    public function testBuildWithPayload(array $payload, ?string $expectedLogger, ?string $expectedMessage, array $expectedMessageParams, ?string $expectedFormattedMessage): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedLogger, $expectedMessage, $expectedFormattedMessage, $expectedMessageParams): bool {
-                $this->assertSame($expectedLogger, $event->getLogger());
-                $this->assertSame($expectedMessage, $event->getMessage());
-                $this->assertSame($expectedMessageParams, $event->getMessageParams());
-                $this->assertSame($expectedFormattedMessage, $event->getMessageFormatted());
-
-                return true;
-            }));
-
-        $client = new Client(
-            new Options(),
-            $transport,
-            'sentry.sdk.identifier',
-            '1.2.3',
-            $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class)
-        );
-
-        $client->captureEvent($payload);
-    }
-
-    public function buildWithPayloadDataProvider(): iterable
-    {
-        yield [
-            ['logger' => 'app.php'],
-            'app.php',
-            null,
-            [],
-            null,
-        ];
-
-        yield [
-            ['message' => 'My raw message with interpreted strings like this'],
-            null,
-            'My raw message with interpreted strings like this',
-            [],
-            null,
-        ];
-
-        yield [
-            [
-                'message' => 'My raw message with interpreted strings like that',
-                'message_params' => ['this'],
-                'message_formatted' => 'My raw message with interpreted strings like %s',
-            ],
-            null,
-            'My raw message with interpreted strings like that',
-            ['this'],
-            'My raw message with interpreted strings like %s',
-        ];
+        $client->captureEvent(Event::createEvent());
     }
 
     public function testBuildEventInCLIDoesntSetTransaction(): void
@@ -600,7 +542,7 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $client->captureEvent([]);
+        $client->captureEvent(Event::createEvent());
     }
 
     public function testBuildEventWithException(): void
@@ -639,7 +581,9 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $client->captureEvent(['exception' => $exception]);
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+        ]));
     }
 
     public function testBuildWithErrorException(): void
@@ -665,7 +609,9 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $client->captureEvent(['exception' => $exception]);
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+        ]));
     }
 
     public function testBuildWithStacktrace(): void
@@ -702,6 +648,6 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $client->captureEvent([]);
+        $client->captureEvent(Event::createEvent());
     }
 }

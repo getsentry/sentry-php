@@ -32,7 +32,7 @@ final class ModulesIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($expectedEmptyModules): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
 

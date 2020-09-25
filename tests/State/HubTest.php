@@ -258,22 +258,24 @@ final class HubTest extends TestCase
 
     public function testCaptureEvent(): void
     {
-        $eventId = EventId::generate();
+        $event = Event::createEvent($eventId = EventId::generate());
+
+        $event->setMessage('test');
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with(['message' => 'test'])
+            ->with($event)
             ->willReturn($eventId);
 
         $hub = new Hub();
 
-        $this->assertNull($hub->captureEvent([]));
+        $this->assertNull($hub->captureEvent($event));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureEvent(['message' => 'test']));
+        $this->assertSame($eventId, $hub->captureEvent($event));
     }
 
     public function testAddBreadcrumb(): void
@@ -290,7 +292,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb);
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -299,7 +301,7 @@ final class HubTest extends TestCase
         $hub->bindClient($client);
         $hub->addBreadcrumb($breadcrumb);
         $hub->configureScope(function (Scope $scope) use (&$callbackInvoked, $breadcrumb): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
@@ -322,7 +324,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -346,7 +348,7 @@ final class HubTest extends TestCase
         $hub->addBreadcrumb($breadcrumb2);
 
         $hub->configureScope(function (Scope $scope) use ($breadcrumb1, $breadcrumb2): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
@@ -355,7 +357,7 @@ final class HubTest extends TestCase
         $hub->addBreadcrumb($breadcrumb3);
 
         $hub->configureScope(function (Scope $scope) use ($breadcrumb2, $breadcrumb3): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
@@ -378,7 +380,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -405,7 +407,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb1);
         $hub->configureScope(function (Scope $scope) use (&$callbackInvoked, $breadcrumb2): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb2], $event->getBreadcrumbs());

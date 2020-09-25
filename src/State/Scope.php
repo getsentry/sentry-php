@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
@@ -57,7 +58,7 @@ final class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event, Event|array): ?Event>
+     * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private $eventProcessors = [];
 
@@ -69,7 +70,7 @@ final class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event, Event|array): ?Event>
+     * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private static $globalEventProcessors = [];
 
@@ -303,10 +304,9 @@ final class Scope
      * Applies the current context and fingerprint to the event. If the event has
      * already some breadcrumbs on it, the ones from this scope won't get merged.
      *
-     * @param Event                      $event   The event object that will be enriched with scope data
-     * @param array<string, mixed>|Event $payload The raw payload of the event that will be propagated to the event processors
+     * @param Event $event The event object that will be enriched with scope data
      */
-    public function applyToEvent(Event $event, $payload): ?Event
+    public function applyToEvent(Event $event, ?EventHint $hint = null): ?Event
     {
         $event->setFingerprint(array_merge($event->getFingerprint(), $this->fingerprint));
 
@@ -347,8 +347,13 @@ final class Scope
             $event->setContext($name, $data);
         }
 
+        // We create a empty `EventHint` instance to allow processors to always receive a `EventHint` instance even if there wasn't one
+        if (null === $hint) {
+            $hint = new EventHint();
+        }
+
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = $processor($event, $payload);
+            $event = $processor($event, $hint);
 
             if (null === $event) {
                 return null;

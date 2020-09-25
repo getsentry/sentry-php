@@ -67,18 +67,18 @@ final class FunctionsTest extends TestCase
 
     public function testCaptureEvent(): void
     {
-        $eventId = EventId::generate();
+        $event = Event::createEvent();
 
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with(['message' => 'foo'])
-            ->willReturn($eventId);
+            ->with($event)
+            ->willReturn($event->getId());
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertSame($eventId, captureEvent(['message' => 'foo']));
+        $this->assertSame($event->getId(), captureEvent($event));
     }
 
     public function testCaptureLastError()
@@ -112,7 +112,7 @@ final class FunctionsTest extends TestCase
 
         addBreadcrumb($breadcrumb);
         configureScope(function (Scope $scope) use ($breadcrumb): void {
-            $event = $scope->applyToEvent(Event::createEvent(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
