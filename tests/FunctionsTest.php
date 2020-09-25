@@ -67,18 +67,18 @@ final class FunctionsTest extends TestCase
 
     public function testCaptureEvent(): void
     {
-        $event = Event::createEvent($eventId = EventId::generate());
+        $event = Event::createEvent();
 
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($event)
-            ->willReturn($eventId);
+            ->willReturn($event->getId());
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertSame($eventId, captureEvent($event));
+        $this->assertSame($event->getId(), captureEvent($event));
     }
 
     public function testCaptureLastError()

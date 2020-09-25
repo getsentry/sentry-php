@@ -223,14 +223,14 @@ final class Client implements ClientInterface
             }
         }
 
+        $this->addMissingStacktraceToEvent($event);
+
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
         $event->setServerName($this->options->getServerName());
         $event->setRelease($this->options->getRelease());
         $event->setTags($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
-
-        $this->addMissingStacktraceToEvent($event, $hint);
 
         $sampleRate = $this->options->getSampleRate();
 
@@ -264,17 +264,11 @@ final class Client implements ClientInterface
     /**
      * Optionally adds a missing stacktrace to the Event if the client is configured to do so.
      *
-     * @param Event          $event The Event to add the missing stacktrace to
-     * @param EventHint|null $hint  May contain additional information about the event
+     * @param Event $event The Event to add the missing stacktrace to
      */
-    private function addMissingStacktraceToEvent(Event $event, ?EventHint $hint): void
+    private function addMissingStacktraceToEvent(Event $event): void
     {
         if (!$this->options->shouldAttachStacktrace()) {
-            return;
-        }
-
-        // If the hint contains an exception the stacktrace will be generated for that exception
-        if (null !== $hint && null !== $hint->exception) {
             return;
         }
 

@@ -54,15 +54,12 @@ final class TransactionIntegrationTest extends TestCase
             null,
         ];
 
-        $event = Event::createEvent();
-        $event->setTransaction('/foo/bar');
-
         yield [
-            $event,
-            true,
+            Event::createEvent(),
+            false,
             null,
             [],
-            '/foo/bar',
+            null,
         ];
 
         yield [
@@ -101,7 +98,7 @@ final class TransactionIntegrationTest extends TestCase
 
         yield [
             $event,
-            true,
+            false,
             null,
             [],
             '/foo/bar',
@@ -109,9 +106,25 @@ final class TransactionIntegrationTest extends TestCase
 
         yield [
             Event::createEvent(),
+            true,
+            EventHint::fromArray([
+                'extra' => [
+                    'transaction' => '/some/other',
+                ],
+            ]),
+            ['PATH_INFO' => '/foo/bar'],
+            '/some/other',
+        ];
+
+        yield [
+            Event::createEvent(),
             false,
-            null,
-            [],
+            EventHint::fromArray([
+                'extra' => [
+                    'transaction' => '/some/other',
+                ],
+            ]),
+            ['PATH_INFO' => '/foo/bar'],
             null,
         ];
     }
