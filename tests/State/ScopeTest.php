@@ -280,7 +280,7 @@ final class ScopeTest extends TestCase
         $this->assertFalse($callback3Called);
     }
 
-    public function testEventProcessorRecievesTheEventAndEventHint(): void
+    public function testEventProcessorReceivesTheEventAndEventHint(): void
     {
         $event = Event::createEvent();
         $scope = new Scope();

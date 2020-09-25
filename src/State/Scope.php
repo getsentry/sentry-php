@@ -347,7 +347,7 @@ final class Scope
             $event->setContext($name, $data);
         }
 
-        // We create a empty `EventHint` instance to allow processors to always recieve a `EventHint` instance even if there wasn't one
+        // We create a empty `EventHint` instance to allow processors to always receive a `EventHint` instance even if there wasn't one
         if (null === $hint) {
             $hint = new EventHint();
         }
