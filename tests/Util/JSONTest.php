@@ -62,16 +62,14 @@ final class JSONTest extends TestCase
     }
 
     /**
-     * @requires PHP >= 7.2
-     *
-     * @dataProvider encodeSubstitutesInvalidUtf8CharactersOnPhp72OrGreaterDataProvider
+     * @dataProvider encodeSubstitutesInvalidUtf8CharactersDataProvider
      */
-    public function testEncodeSubstitutesInvalidUtf8CharactersOnPhp72OrGreater($value, string $expectedResult): void
+    public function testEncodeSubstitutesInvalidUtf8Characters($value, string $expectedResult): void
     {
         $this->assertSame($expectedResult, JSON::encode($value));
     }
 
-    public function encodeSubstitutesInvalidUtf8CharactersOnPhp72OrGreaterDataProvider(): \Generator
+    public function encodeSubstitutesInvalidUtf8CharactersDataProvider(): \Generator
     {
         yield [
             "\x61\xb0\x62",
@@ -101,45 +99,6 @@ final class JSONTest extends TestCase
     }
 
     /**
-     * @requires PHP < 7.2
-     *
-     * @dataProvider encodeSubstitutesInvalidUtf8CharactersOnPhp71OrLowerDataProvider
-     */
-    public function testEncodeSubstitutesInvalidUtf8CharactersOnPhp71OrLower($value, string $expectedResult): void
-    {
-        $this->assertSame($expectedResult, JSON::encode($value));
-    }
-
-    public function encodeSubstitutesInvalidUtf8CharactersOnPhp71OrLowerDataProvider(): \Generator
-    {
-        yield [
-            "\x61\xb0\x62",
-            '"a�b"',
-        ];
-
-        yield [
-            "\x61\xf0\x80\x80\x41",
-            '"a���A"',
-        ];
-
-        yield [
-            [
-                123.45,
-                'foo',
-                "\x61\xb0\x62",
-                [
-                    'bar' => "\x61\xf0\x80\x80\x41",
-                    "\x61\xf0\x80\x80\x41" => (object) [
-                        "\x61\xb0\x62",
-                        "\x61\xf0\x80\x80\x41" => 'baz',
-                    ],
-                ],
-            ],
-            '[123.45,"foo","a�b",{"bar":"a���A","a���A":{"0":"a�b","a���A":"baz"}}]',
-        ];
-    }
-
-    /**
      * @expectedException \Sentry\Exception\JsonException
      * @expectedExceptionMessage Could not encode value into JSON format. Error was: "Type is not supported".
      */
@@ -157,17 +116,6 @@ final class JSONTest extends TestCase
     public function testEncodeRespectsOptionsArgument(): void
     {
         $this->assertSame('{}', JSON::encode([], JSON_FORCE_OBJECT));
-    }
-
-    /**
-     * @requires PHP < 7.2
-     *
-     * @expectedException \Sentry\Exception\JsonException
-     * @expectedExceptionMessage Reached the maximum depth limit while sanitizing the data.
-     */
-    public function testEncodeThrowsOnPhp71OrLowerWhenSanitizationReachesMaxDepthLimit(): void
-    {
-        JSON::encode([[["\x61\xb0\x62"]]], 0, 2);
     }
 
     /**
