@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## 3.0.0 (2020-09-28)
+
+**Tracing API**
+
+In this version we released API for Tracing. `\Sentry\startTransaction` is your entry point for manual instrumentation.
+More information can be found in our [Performance](https://docs.sentry.io/platforms/php/performance/) docs.
+
+**Breaking Change**: This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are
+using an on-premise installation it requires Sentry version `>= v20.6.0` to work. If you are using
+[sentry.io](https://sentry.io) nothing will change and no action is needed.
+
+- [BC BREAK] Remove the deprecated code that made the `Hub` class a singleton (#1038)
+- [BC BREAK] Remove deprecated code that permitted to register the error, fatal error and exception handlers at once (#1037)
+- [BC BREAK] Change the default value for the `error_types` option from `E_ALL` to the value get from `error_reporting()` (#1037)
+- [BC BREAK] Remove deprecated code to return the event ID as a `string` rather than an object instance from the transport, the client and the hub (#1036)
+- [BC BREAK] Remove some deprecated methods from the `Options` class. (#1047)
+- [BC BREAK] Remove the deprecated code from the `ModulesIntegration` integration (#1047)
+- [BC BREAK] Remove the deprecated code from the `RequestIntegration` integration (#1047)
+- [BC BREAK] Remove the deprecated code from the `Breadcrumb` class (#1047)
+- [BC BREAK] Remove the deprecated methods from the `ClientBuilderInterface` interface and its implementations (#1047)
+- [BC BREAK] The `Scope::setUser()` method now always merges the given data with the existing one instead of replacing it as a whole (#1047)
+- [BC BREAK] Remove the `Context::CONTEXT_USER`, `Context::CONTEXT_RUNTIME`, `Context::CONTEXT_TAGS`, `Context::CONTEXT_EXTRA`, `Context::CONTEXT_SERVER_OS` constants (#1047)
+- [BC BREAK] Use PSR-17 factories in place of the Httplug's ones and return a promise from the transport (#1066)
+- [BC BREAK] The Monolog handler does not set anymore tags and extras on the event object (#1068)
+- [BC BREAK] Remove the `UserContext`, `ExtraContext` and `Context` classes and refactor the `ServerOsContext` and `RuntimeContext` classes (#1071)
+- [BC BREAK] Remove the `FlushableClientInterface` and the `ClosableTransportInterface` interfaces (#1079)
+- [BC BREAK] Remove the `SpoolTransport` transport and all its related classes (#1080)
+- Add the `EnvironmentIntegration` integration to gather data for the `os` and `runtime` contexts (#1071)
+- Refactor how the event data gets serialized to JSON (#1077)
 - Add `traces_sampler` option to set custom sample rate callback (#1083)
 - [BC BREAK] Add named constructors to the `Event` class (#1085)
 - Raise the minimum version of PHP to `7.2` and the minimum version of some dependencies (#1088)
