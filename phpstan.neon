@@ -7,9 +7,6 @@ parameters:
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         -
-            message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
-            path: src/Util/JSON.php
-        -
             message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
