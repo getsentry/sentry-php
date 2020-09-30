@@ -84,7 +84,7 @@ final class FrameBuilder
             $strippedFilePath,
             $line,
             $rawFunctionName,
-            Frame::INTERNAL_FRAME_FILENAME !== $file && $strippedFilePath !== $file ? $file : null,
+            Frame::INTERNAL_FRAME_FILENAME !== $file ? $file : null,
             $this->getFunctionArguments($backtraceFrame),
             $this->isFrameInApp($file, $functionName)
         );
