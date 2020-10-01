@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.0.1 (2020-10-01)
+
 - fix: Use Span on Scope instead of Transaction for GuzzleMiddleware (#1099)
 
 ## 3.0.0 (2020-09-28)
