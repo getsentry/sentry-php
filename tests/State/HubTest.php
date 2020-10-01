@@ -528,6 +528,15 @@ final class HubTest extends TestCase
             new TransactionContext(TransactionContext::DEFAULT_NAME, false),
             false,
         ];
+
+        yield [
+            new Options([
+                'sample_rate' => 0.0,
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
     }
 
     public function testStartTransactionDoesNothingIfTracingIsNotEnabled(): void
