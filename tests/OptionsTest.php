@@ -76,6 +76,17 @@ final class OptionsTest extends TestCase
         $this->assertEquals($expectedDsnAsObject, $options->getDsn());
     }
 
+    /**
+     * @dataProvider dsnOptionDataProvider
+     */
+    public function testDsnOptionSetter($value, ?Dsn $expectedDsnAsObject): void
+    {
+        $options = new Options();
+        $options->setDsn($value);
+
+        $this->assertEquals($expectedDsnAsObject, $options->getDsn());
+    }
+
     public function dsnOptionDataProvider(): \Generator
     {
         yield [

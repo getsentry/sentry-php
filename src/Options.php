@@ -319,6 +319,18 @@ final class Options
     }
 
     /**
+     * Sets the DSN string on the options.
+     *
+     * @param string|bool|null $dsn The DSN string
+     */
+    public function setDsn($dsn): void
+    {
+        $options = array_merge($this->options, ['dsn' => $dsn]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the name of the server the SDK is running on (e.g. the hostname).
      */
     public function getServerName(): string
