@@ -71,8 +71,8 @@ final class UserDataBag
      */
     public static function createFromArray(array $data): self
     {
-        if (!isset($data['id']) && !isset($data['ip_address'])) {
-            throw new \InvalidArgumentException('Either the "id" or the "ip_address" field must be set.');
+        if (!isset($data['id']) && !isset($data['username']) && !isset($data['email']) && !isset($data['ip_address'])) {
+            throw new \InvalidArgumentException('One of the following fields must be set: "id", "username", "email" or "ip_address".');
         }
 
         $instance = new self();
