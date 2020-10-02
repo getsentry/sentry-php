@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.0.2 (2020-10-02)
+
 - fix: Use the traces sample rate for traces instead of the event sample rate (#1106)
 
 ## 3.0.1 (2020-10-01)
