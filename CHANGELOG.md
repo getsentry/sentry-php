@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix stacktrace frames were not contextified (#1104)
+
 ## 3.0.2 (2020-10-02)
 
 - fix: Use the traces sample rate for traces instead of the event sample rate (#1106)
