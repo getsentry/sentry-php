@@ -104,7 +104,7 @@
 - Renamed the `Event::getServerOsContext()` method to `Event::getOsContext()`
 - The signature of the `Scope::setUser()` method changed to accept a plain array
 - Removed the `FlushableClientInterface` and `ClosableTransportInterface` interfaces. Their methods have been moved to the corresponding `ClientInterface` and `TransportInterface` interfaces
-- Removed the `Event::toArray()` and `Event::jsonSerialize()` methods
+- Removed the `Event::toArray()` and `Event::jsonSerialize()` methods, use `PayloadSerializerInterface::serialize()` instead
 - Removed the `Breadcrumb::toArray()` and `Breadcrumb::jsonSerialize()` methods
 - Removed the `Frame::toArray()` and `Frame::jsonSerialize()` methods
 - Removed the `Stacktrace::toArray()` and `Stacktrace::jsonSerialize()` methods
