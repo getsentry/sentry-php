@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix stacktrace frames were not contextified (#1104)
+- Fix missing source code excerpts for stacktrace frames whose absolute file path is equal to the file path (#1104)
 
 ## 3.0.2 (2020-10-02)
 
