@@ -515,6 +515,24 @@ final class HubTest extends TestCase
 
         yield [
             new Options([
+                'sample_rate' => 1.0,
+                'traces_sample_rate' => 0.0,
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'sample_rate' => 0.0,
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
                 'traces_sample_rate' => 0.5,
             ]),
             new TransactionContext(TransactionContext::DEFAULT_NAME, true),
