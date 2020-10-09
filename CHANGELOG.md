@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix criteria for valid user data (#1108)
+
 ## 3.0.2 (2020-10-02)
 
 - fix: Use the traces sample rate for traces instead of the event sample rate (#1106)
