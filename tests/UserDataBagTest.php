@@ -9,7 +9,15 @@ use Sentry\UserDataBag;
 
 final class UserDataBagTest extends TestCase
 {
-    public function testConstructorThrowsIfArgumentIsInvalid(): void
+    public function testCreateFromUserIdentifierThrowsIfArgumentIsInvalid(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Expected an integer or string value for the $id argument. Got: "float".');
+
+        UserDataBag::createFromUserIdentifier(1.1);
+    }
+
+    public function testCreateFromIpAddressThrowsIfArgumentIsInvalid(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
@@ -120,7 +128,8 @@ final class UserDataBagTest extends TestCase
         $this->expectException(\UnexpectedValueException::class);
         $this->expectExceptionMessage($expectedExceptionMessage);
 
-        UserDataBag::createFromUserIdentifier($value);
+        $userDataBag = new UserDataBag();
+        $userDataBag->setId($value);
     }
 
     public function setIdThrowsIfValueIsUnexpectedValueDataProvider(): iterable
@@ -136,30 +145,12 @@ final class UserDataBagTest extends TestCase
         ];
     }
 
-    public function testSetIdThrowsIfBothArgumentAndIpAddressAreNull(): void
-    {
-        $this->expectException(\BadMethodCallException::class);
-        $this->expectExceptionMessage('Either the IP address or the ID must be set.');
-
-        $userDataBag = UserDataBag::createFromUserIdentifier('unique_id');
-        $userDataBag->setId(null);
-    }
-
-    public function testSetIpAddressThrowsIfBothArgumentAndIdAreNull(): void
-    {
-        $this->expectException(\BadMethodCallException::class);
-        $this->expectExceptionMessage('Either the IP address or the ID must be set.');
-
-        $userDataBag = UserDataBag::createFromUserIpAddress('127.0.0.1');
-        $userDataBag->setIpAddress(null);
-    }
-
     public function testSetIpAddressThrowsIfArgumentIsInvalid(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
 
-        $userDataBag = UserDataBag::createFromUserIpAddress('127.0.0.1');
+        $userDataBag = new UserDataBag();
         $userDataBag->setIpAddress('foo');
     }
 
