@@ -70,7 +70,7 @@ final class StacktraceBuilder
         }
 
         // Add a final stackframe for the first method ever of this stacktrace
-        array_unshift($frames, new Frame(null, $file, $line));
+        array_unshift($frames, $this->frameBuilder->buildFromBacktraceFrame($file, $line, []));
 
         return new Stacktrace($frames);
     }

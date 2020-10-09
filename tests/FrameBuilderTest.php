@@ -36,7 +36,7 @@ final class FrameBuilderTest extends TestCase
                 'line' => 20,
                 'function' => 'test_function',
             ],
-            new Frame('test_function', '/path/to/file', 10),
+            new Frame('test_function', '/path/to/file', 10, null, '/path/to/file'),
         ];
 
         yield [
@@ -46,7 +46,7 @@ final class FrameBuilderTest extends TestCase
                 'line' => 20,
                 'function' => 'test_function',
             ],
-            new Frame('test_function', '/path/to/file', 10),
+            new Frame('test_function', '/path/to/file', 10, null, '/path/to/file'),
         ];
 
         yield [
@@ -57,7 +57,7 @@ final class FrameBuilderTest extends TestCase
                 'function' => 'test_function',
                 'class' => 'TestClass',
             ],
-            new Frame('TestClass::test_function', '/path/to/file', 10, 'TestClass::test_function'),
+            new Frame('TestClass::test_function', '/path/to/file', 10, 'TestClass::test_function', '/path/to/file'),
         ];
 
         yield [
@@ -67,7 +67,7 @@ final class FrameBuilderTest extends TestCase
                 'line' => 10,
                 'function' => 'test_function',
             ],
-            new Frame('test_function', '/path/to/file', 10),
+            new Frame('test_function', '/path/to/file', 10, null, '/path/to/file'),
         ];
 
         yield [
@@ -78,7 +78,7 @@ final class FrameBuilderTest extends TestCase
                 'function' => 'test_function',
                 'class' => "class@anonymous\0/path/to/file",
             ],
-            new Frame("class@anonymous\0/path/to/file::test_function", '/path/to/file', 10, "class@anonymous\0/path/to/file::test_function"),
+            new Frame("class@anonymous\0/path/to/file::test_function", '/path/to/file', 10, "class@anonymous\0/path/to/file::test_function", '/path/to/file'),
         ];
 
         yield [
@@ -133,7 +133,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => 'path/not/of/app/path/to/file',
                 'line' => 10,
             ],
-            new Frame(null, 'path/not/of/app/path/to/file', 10, null),
+            new Frame(null, 'path/not/of/app/path/to/file', 10, null, 'path/not/of/app/path/to/file'),
         ];
 
         yield [
@@ -147,7 +147,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => 'path/not/of/app/to/file',
                 'line' => 10,
             ],
-            new Frame(null, 'path/not/of/app/to/file', 10, null),
+            new Frame(null, 'path/not/of/app/to/file', 10, null, 'path/not/of/app/to/file'),
         ];
     }
 

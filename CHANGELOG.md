@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix missing source code excerpts for stacktrace frames whose absolute file path is equal to the file path (#1104)
 - Fix criteria for valid user data (#1108)
 
 ## 3.0.2 (2020-10-02)

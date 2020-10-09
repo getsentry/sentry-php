@@ -38,10 +38,12 @@ final class StacktraceBuilderTest extends TestCase
 
         $this->assertNull($frames[0]->getFunctionName());
         $this->assertSame('/in/jXVmi', $frames[0]->getFile());
+        $this->assertSame('/in/jXVmi', $frames[0]->getAbsoluteFilePath());
         $this->assertSame(5, $frames[0]->getLine());
 
         $this->assertSame('{closure}', $frames[1]->getFunctionName());
         $this->assertSame('/in/jXVmi', $frames[1]->getFile());
+        $this->assertSame('/in/jXVmi', $frames[1]->getAbsoluteFilePath());
         $this->assertSame(9, $frames[1]->getLine());
 
         $this->assertSame('main', $frames[2]->getFunctionName());
