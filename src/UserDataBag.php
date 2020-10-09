@@ -79,16 +79,16 @@ final class UserDataBag
         foreach ($data as $field => $value) {
             switch ($field) {
                 case 'id':
-                    $instance->setId($data['id']);
+                    $instance->setId($value);
                     break;
                 case 'ip_address':
-                    $instance->setIpAddress($data['ip_address']);
+                    $instance->setIpAddress($value);
                     break;
                 case 'email':
-                    $instance->setEmail($data['email']);
+                    $instance->setEmail($value);
                     break;
                 case 'username':
-                    $instance->setUsername($data['username']);
+                    $instance->setUsername($value);
                     break;
                 default:
                     $instance->setMetadata($field, $value);
