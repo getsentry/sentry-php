@@ -99,6 +99,17 @@ final class UserDataBagTest extends TestCase
     /**
      * @dataProvider unexpectedValueForIdFieldDataProvider
      */
+    public function testConstructorThrowsIfIdValueIsUnexpectedValue($value, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        new UserDataBag($value);
+    }
+
+    /**
+     * @dataProvider unexpectedValueForIdFieldDataProvider
+     */
     public function testSetIdThrowsIfValueIsUnexpectedValue($value, string $expectedExceptionMessage): void
     {
         $this->expectException(\UnexpectedValueException::class);
@@ -130,6 +141,14 @@ final class UserDataBagTest extends TestCase
             new \stdClass(),
             'Expected an integer or string value for the $id argument. Got: "stdClass".',
         ];
+    }
+
+    public function testConstructorThrowsIfIpAddressArgumentIsInvalid(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
+
+        new UserDataBag(null, null, 'foo');
     }
 
     public function testSetIpAddressThrowsIfArgumentIsInvalid(): void
