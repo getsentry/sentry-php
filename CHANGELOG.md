@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.0.3 (2020-10-12)
+
 - Fix missing source code excerpts for stacktrace frames whose absolute file path is equal to the file path (#1104)
 - Fix requirements to construct a valid object instance of the `UserDataBag` class (#1108)
 
