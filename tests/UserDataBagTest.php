@@ -9,25 +9,10 @@ use Sentry\UserDataBag;
 
 final class UserDataBagTest extends TestCase
 {
-    public function testCreateFromUserIdentifierThrowsIfArgumentIsInvalid(): void
-    {
-        $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionMessage('Expected an integer or string value for the $id argument. Got: "float".');
-
-        UserDataBag::createFromUserIdentifier(1.1);
-    }
-
-    public function testCreateFromIpAddressThrowsIfArgumentIsInvalid(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
-
-        UserDataBag::createFromUserIpAddress('foo');
-    }
-
     public function testGettersAndSetters(): void
     {
-        $userDataBag = UserDataBag::createFromUserIdentifier('unique_id');
+        $userDataBag = new UserDataBag();
+        $userDataBag->setId('unique_id');
         $userDataBag->setIpAddress('127.0.0.1');
         $userDataBag->setEmail('foo@example.com');
         $userDataBag->setUsername('my_user');
@@ -84,11 +69,8 @@ final class UserDataBagTest extends TestCase
         ];
 
         yield [
-            [
-                'id' => 'unique_id',
-                'email' => 'foo@example.com',
-            ],
-            'unique_id',
+            ['email' => 'foo@example.com'],
+            null,
             null,
             'foo@example.com',
             null,
@@ -96,11 +78,8 @@ final class UserDataBagTest extends TestCase
         ];
 
         yield [
-            [
-                'id' => 'unique_id',
-                'username' => 'my_user',
-            ],
-            'unique_id',
+            ['username' => 'my_user'],
+            null,
             null,
             null,
             'my_user',
@@ -108,11 +87,8 @@ final class UserDataBagTest extends TestCase
         ];
 
         yield [
-            [
-                'id' => 'unique_id',
-                'subscription' => 'basic',
-            ],
-            'unique_id',
+            ['subscription' => 'basic'],
+            null,
             null,
             null,
             null,
@@ -121,7 +97,7 @@ final class UserDataBagTest extends TestCase
     }
 
     /**
-     * @dataProvider setIdThrowsIfValueIsUnexpectedValueDataProvider
+     * @dataProvider unexpectedValueForIdFieldDataProvider
      */
     public function testSetIdThrowsIfValueIsUnexpectedValue($value, string $expectedExceptionMessage): void
     {
@@ -132,7 +108,18 @@ final class UserDataBagTest extends TestCase
         $userDataBag->setId($value);
     }
 
-    public function setIdThrowsIfValueIsUnexpectedValueDataProvider(): iterable
+    /**
+     * @dataProvider unexpectedValueForIdFieldDataProvider
+     */
+    public function testCreateFromUserIdentifierThrowsIfArgumentIsInvalid($value, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        UserDataBag::createFromUserIdentifier($value);
+    }
+
+    public function unexpectedValueForIdFieldDataProvider(): iterable
     {
         yield [
             12.34,
@@ -152,6 +139,14 @@ final class UserDataBagTest extends TestCase
 
         $userDataBag = new UserDataBag();
         $userDataBag->setIpAddress('foo');
+    }
+
+    public function testCreateFromIpAddressThrowsIfArgumentIsInvalid(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
+
+        UserDataBag::createFromUserIpAddress('foo');
     }
 
     public function testMerge(): void
