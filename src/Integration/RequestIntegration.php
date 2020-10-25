@@ -161,6 +161,7 @@ final class RequestIntegration implements IntegrationInterface
 
         if (
             null === $requestBodySize ||
+            0 === $requestBodySize ||
             'none' === $maxRequestBodySize ||
             ('small' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) ||
             ('medium' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH)
