@@ -52,11 +52,14 @@ function getHandlerRegistrationCount(callable $setHandlerCallback, callable $res
     return count($savedErrorHandlers);
 }
 
-var_dump(ErrorHandler::registerOnce(10240, false) === ErrorHandler::registerOnce(10240, false));
+var_dump(ErrorHandler::registerOnceErrorHandler() === ErrorHandler::registerOnceErrorHandler());
 var_dump(1 === getHandlerRegistrationCount('set_error_handler', 'restore_error_handler'));
+
+var_dump(ErrorHandler::registerOnceExceptionHandler() === ErrorHandler::registerOnceExceptionHandler());
 var_dump(1 === getHandlerRegistrationCount('set_exception_handler', 'restore_exception_handler'));
 ?>
 --EXPECT--
+bool(true)
 bool(true)
 bool(true)
 bool(true)

@@ -32,7 +32,7 @@ final class ModulesIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($expectedEmptyModules): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
 
@@ -55,19 +55,5 @@ final class ModulesIntegrationTest extends TestCase
             true,
             false,
         ];
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage The "Sentry\Integration\ModulesIntegration::applyToEvent" method is deprecated since version 2.4 and will be removed in 3.0.
-     */
-    public function testApplyToEvent(): void
-    {
-        $event = new Event();
-        $integration = new ModulesIntegration();
-        $integration->applyToEvent($integration, $event);
-
-        $this->assertNotEmpty($event->getModules());
     }
 }

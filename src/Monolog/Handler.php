@@ -6,6 +6,8 @@ namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
@@ -44,33 +46,22 @@ final class Handler extends AbstractProcessingHandler
      */
     protected function write(array $record): void
     {
-        $payload = [
-            'level' => self::getSeverityFromLevel($record['level']),
-            'message' => $record['message'],
-            'logger' => 'monolog.' . $record['channel'],
-        ];
+        $event = Event::createEvent();
+        $event->setLevel(self::getSeverityFromLevel($record['level']));
+        $event->setMessage($record['message']);
+        $event->setLogger(sprintf('monolog.%s', $record['channel']));
+
+        $hint = new EventHint();
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
-            $payload['exception'] = $record['context']['exception'];
+            $hint->exception = $record['context']['exception'];
         }
 
-        $this->hub->withScope(function (Scope $scope) use ($record, $payload): void {
+        $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
-            if (isset($record['context']['extra']) && \is_array($record['context']['extra'])) {
-                foreach ($record['context']['extra'] as $key => $value) {
-                    $scope->setExtra((string) $key, $value);
-                }
-            }
-
-            if (isset($record['context']['tags']) && \is_array($record['context']['tags'])) {
-                foreach ($record['context']['tags'] as $key => $value) {
-                    $scope->setTag($key, $value);
-                }
-            }
-
-            $this->hub->captureEvent($payload);
+            $this->hub->captureEvent($event, $hint);
         });
     }
 
@@ -84,9 +75,6 @@ final class Handler extends AbstractProcessingHandler
         switch ($level) {
             case Logger::DEBUG:
                 return Severity::debug();
-            case Logger::INFO:
-            case Logger::NOTICE:
-                return Severity::info();
             case Logger::WARNING:
                 return Severity::warning();
             case Logger::ERROR:
@@ -95,6 +83,8 @@ final class Handler extends AbstractProcessingHandler
             case Logger::ALERT:
             case Logger::EMERGENCY:
                 return Severity::fatal();
+            case Logger::INFO:
+            case Logger::NOTICE:
             default:
                 return Severity::info();
         }

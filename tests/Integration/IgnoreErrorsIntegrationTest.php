@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\ExceptionDataBag;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -32,7 +33,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         withScope(function (Scope $scope) use ($event, $expectedEventToBeDropped): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
 
             if ($expectedEventToBeDropped) {
                 $this->assertNull($event);
@@ -44,13 +45,11 @@ final class IgnoreErrorsIntegrationTest extends TestCase
 
     public function invokeDataProvider(): \Generator
     {
-        $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'Integration disabled' => [
-            new Event(),
+            Event::createEvent(),
             false,
             [
                 'ignore_exceptions' => [],
@@ -58,13 +57,11 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             false,
         ];
 
-        $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'No exceptions to check' => [
-            new Event(),
+            Event::createEvent(),
             true,
             [
                 'ignore_exceptions' => [],
@@ -72,10 +69,8 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             false,
         ];
 
-        $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching exactly the "ignore_exceptions" option' => [
             $event,
@@ -88,10 +83,8 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             true,
         ];
 
-        $event = new Event();
-        $event->setExceptions([
-            ['type' => \RuntimeException::class],
-        ]);
+        $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching the "ignore_exceptions" option' => [
             $event,

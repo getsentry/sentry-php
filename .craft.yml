@@ -5,10 +5,11 @@ github:
 changelogPolicy: simple
 statusProvider: 
     name: github
+artifactProvider:
+  name: none
 preReleaseCommand: ""
 targets:
     - name: github
-      includeNames: /none/
     - name: registry
       type: sdk
       config:

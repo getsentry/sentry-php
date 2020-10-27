@@ -6,9 +6,15 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
+use Sentry\Event;
+use Sentry\EventHint;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
-use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\Tracing\SamplingContext;
+use Sentry\Tracing\Span;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
@@ -21,7 +27,7 @@ final class Hub implements HubInterface
     private $stack = [];
 
     /**
-     * @var string|null The ID of the last captured event
+     * @var EventId|null The ID of the last captured event
      */
     private $lastEventId;
 
@@ -47,7 +53,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getLastEventId(): ?string
+    public function getLastEventId(): ?EventId
     {
         return $this->lastEventId;
     }
@@ -110,7 +116,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?string
+    public function captureMessage(string $message, ?Severity $level = null): ?EventId
     {
         $client = $this->getClient();
 
@@ -124,7 +130,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?string
+    public function captureException(\Throwable $exception): ?EventId
     {
         $client = $this->getClient();
 
@@ -138,12 +144,12 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent(array $payload): ?string
+    public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureEvent($payload, $this->getScope());
+            return $this->lastEventId = $client->captureEvent($event, $hint, $this->getScope());
         }
 
         return null;
@@ -152,7 +158,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?string
+    public function captureLastError(): ?EventId
     {
         $client = $this->getClient();
 
@@ -194,28 +200,6 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public static function getCurrent(): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::getCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        return SentrySdk::getCurrentHub();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function setCurrent(HubInterface $hub): HubInterface
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 2.2 and will be removed in 3.0. Use SentrySdk::setCurrentHub() instead.', __METHOD__), E_USER_DEPRECATED);
-
-        SentrySdk::setCurrentHub($hub);
-
-        return $hub;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getIntegration(string $className): ?IntegrationInterface
     {
         $client = $this->getClient();
@@ -225,6 +209,79 @@ final class Hub implements HubInterface
         }
 
         return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function startTransaction(TransactionContext $context): Transaction
+    {
+        $transaction = new Transaction($context, $this);
+        $client = $this->getClient();
+        $options = null !== $client ? $client->getOptions() : null;
+
+        if (null === $options || !$options->isTracingEnabled()) {
+            $transaction->setSampled(false);
+
+            return $transaction;
+        }
+
+        $samplingContext = SamplingContext::getDefault($context);
+        $tracesSampler = $options->getTracesSampler();
+        $sampleRate = null !== $tracesSampler
+            ? $tracesSampler($samplingContext)
+            : $this->getSampleRate($samplingContext->getParentSampled(), $options->getTracesSampleRate());
+
+        if (!$this->isValidSampleRate($sampleRate)) {
+            $transaction->setSampled(false);
+
+            return $transaction;
+        }
+
+        if (0.0 === $sampleRate) {
+            $transaction->setSampled(false);
+
+            return $transaction;
+        }
+
+        $transaction->setSampled(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate);
+
+        if (!$transaction->getSampled()) {
+            return $transaction;
+        }
+
+        $transaction->initSpanRecorder();
+
+        return $transaction;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
+     */
+    public function getTransaction(): ?Transaction
+    {
+        return $this->getScope()->getTransaction();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setSpan(?Span $span): HubInterface
+    {
+        $this->getScope()->setSpan($span);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSpan(): ?Span
+    {
+        return $this->getScope()->getSpan();
     }
 
     /**
@@ -241,5 +298,27 @@ final class Hub implements HubInterface
     private function getStackTop(): Layer
     {
         return $this->stack[\count($this->stack) - 1];
+    }
+
+    private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
+    {
+        if (true === $hasParentBeenSampled) {
+            return 1;
+        }
+
+        if (false === $hasParentBeenSampled) {
+            return 0;
+        }
+
+        return $fallbackSampleRate;
+    }
+
+    private function isValidSampleRate(float $sampleRate): bool
+    {
+        if ($sampleRate < 0 || $sampleRate > 1) {
+            return false;
+        }
+
+        return true;
     }
 }

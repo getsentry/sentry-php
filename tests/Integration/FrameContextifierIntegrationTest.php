@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Frame;
 use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -37,8 +38,6 @@ final class FrameContextifierIntegrationTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider invokeDataProvider
      */
     public function testInvoke(string $fixtureFilePath, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
@@ -60,14 +59,15 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace($options, $this->serializer, $this->representationSerializer, false);
-        $stacktrace->addFrame($fixtureFilePath, $lineNumber, ['function' => '[unknown]']);
+        $stacktrace = new Stacktrace([
+            new Frame('[unknown]', $fixtureFilePath, $lineNumber, null, $fixtureFilePath),
+        ]);
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
         });
 
         $this->assertNotNull($event);
@@ -152,15 +152,16 @@ final class FrameContextifierIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $stacktrace = new Stacktrace(new Options(), $this->serializer, $this->representationSerializer, false);
-        $stacktrace->addFrame('[internal]', 0, []);
-        $stacktrace->addFrame('file.ext', 10, []);
+        $stacktrace = new Stacktrace([
+            new Frame(null, '[internal]', 0),
+            new Frame(null, 'file.ext', 10, null, 'file.ext'),
+        ]);
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
         withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event, []);
+            $event = $scope->applyToEvent($event);
         });
 
         $this->assertNotNull($event);

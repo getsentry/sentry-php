@@ -7,26 +7,28 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
     public function testSetTag(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertTrue($event->getTagsContext()->isEmpty());
+        $this->assertEmpty($event->getTags());
 
         $scope->setTag('foo', 'bar');
         $scope->setTag('bar', 'baz');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
     }
 
     public function testSetTags(): void
@@ -34,17 +36,17 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setTags(['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
+        $this->assertSame(['foo' => 'bar'], $event->getTags());
 
         $scope->setTags(['bar' => 'baz']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTagsContext()->toArray());
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
     }
 
     public function testSetAndRemoveContext(): void
@@ -52,14 +54,14 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setContext('foo', ['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => ['foo' => 'bar']], $event->getContexts());
 
         $scope->removeContext('foo');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([], $event->getContexts());
@@ -68,18 +70,18 @@ final class ScopeTest extends TestCase
     public function testSetExtra(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertTrue($event->getExtraContext()->isEmpty());
+        $this->assertEmpty($event->getExtra());
 
         $scope->setExtra('foo', 'bar');
         $scope->setExtra('bar', 'baz');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
     }
 
     public function testSetExtras(): void
@@ -87,83 +89,87 @@ final class ScopeTest extends TestCase
         $scope = new Scope();
         $scope->setExtras(['foo' => 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getExtraContext()->toArray());
+        $this->assertSame(['foo' => 'bar'], $event->getExtra());
 
         $scope->setExtras(['bar' => 'baz']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtraContext()->toArray());
-    }
-
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecation Replacing the data is deprecated since version 2.3 and will stop working from version 3.0. Set the second argument to `true` to merge the data instead.
-     */
-    public function testSetUserThrowsDeprecationError(): void
-    {
-        $scope = new Scope();
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame([], $event->getUserContext()->toArray());
-
-        $scope->setUser(['foo' => 'bar']);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
-
-        $scope->setUser(['bar' => 'baz']);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame(['bar' => 'baz'], $event->getUserContext()->toArray());
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
     }
 
     public function testSetUser(): void
     {
         $scope = new Scope();
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertSame([], $event->getUserContext()->toArray());
-
-        $scope->setUser(['foo' => 'bar'], true);
-
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar'], $event->getUserContext()->toArray());
+        $this->assertNull($event->getUser());
 
-        $scope->setUser(['bar' => 'baz'], true);
+        $user = UserDataBag::createFromUserIdentifier('unique_id');
+        $user->setMetadata('subscription', 'basic');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $scope->setUser($user);
+
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getUserContext()->toArray());
+        $this->assertSame($user, $event->getUser());
+
+        $user = UserDataBag::createFromUserIpAddress('127.0.0.1');
+        $user->setMetadata('subscription', 'basic');
+        $user->setMetadata('subscription_expires_at', '2020-08-26');
+
+        $scope->setUser(['ip_address' => '127.0.0.1', 'subscription_expires_at' => '2020-08-26']);
+
+        $event = $scope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertEquals($user, $event->getUser());
+    }
+
+    public function testSetUserThrowsOnInvalidArgument(): void
+    {
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('The $user argument must be either an array or an instance of the "Sentry\UserDataBag" class. Got: "string".');
+
+        $scope = new Scope();
+        $scope->setUser('foo');
+    }
+
+    public function testRemoveUser(): void
+    {
+        $scope = new Scope();
+        $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertNotNull($event->getUser());
+
+        $scope->removeUser();
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertNull($event->getUser());
     }
 
     public function testSetFingerprint(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getFingerprint());
 
         $scope->setFingerprint(['foo', 'bar']);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo', 'bar'], $event->getFingerprint());
@@ -172,14 +178,14 @@ final class ScopeTest extends TestCase
     public function testSetLevel(): void
     {
         $scope = new Scope();
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertEquals(Severity::error(), $event->getLevel());
+        $this->assertNull($event->getLevel());
 
         $scope->setLevel(Severity::debug());
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEquals(Severity::debug(), $event->getLevel());
@@ -192,7 +198,7 @@ final class ScopeTest extends TestCase
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -200,14 +206,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb1);
         $scope->addBreadcrumb($breadcrumb2);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
 
         $scope->addBreadcrumb($breadcrumb3, 2);
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
@@ -220,14 +226,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNotEmpty($event->getBreadcrumbs());
 
         $scope->clearBreadcrumbs();
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -239,7 +245,7 @@ final class ScopeTest extends TestCase
         $callback2Called = false;
         $callback3Called = false;
 
-        $event = new Event();
+        $event = Event::createEvent();
         $scope = new Scope();
 
         $scope->addEventProcessor(function (Event $eventArg) use (&$callback1Called, $callback2Called, $callback3Called): ?Event {
@@ -251,7 +257,7 @@ final class ScopeTest extends TestCase
             return $eventArg;
         });
 
-        $this->assertSame($event, $scope->applyToEvent($event, []));
+        $this->assertSame($event, $scope->applyToEvent($event));
         $this->assertTrue($callback1Called);
 
         $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called) {
@@ -269,9 +275,30 @@ final class ScopeTest extends TestCase
             return null;
         });
 
-        $this->assertNull($scope->applyToEvent($event, []));
+        $this->assertNull($scope->applyToEvent($event));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
+    }
+
+    public function testEventProcessorReceivesTheEventAndEventHint(): void
+    {
+        $event = Event::createEvent();
+        $scope = new Scope();
+        $hint = new EventHint();
+
+        $processorCalled = false;
+        $processorReceivedHint = null;
+
+        $scope->addEventProcessor(function (Event $eventArg, EventHint $hint) use (&$processorCalled, &$processorReceivedHint): ?Event {
+            $processorCalled = true;
+            $processorReceivedHint = $hint;
+
+            return $eventArg;
+        });
+
+        $this->assertSame($event, $scope->applyToEvent($event, $hint));
+        $this->assertSame($hint, $processorReceivedHint);
+        $this->assertTrue($processorCalled);
     }
 
     public function testClear(): void
@@ -284,36 +311,26 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
-        $scope->setUser(['foobar' => 'barfoo'], true);
-
-        $event = $scope->applyToEvent(new Event(), []);
-
-        $this->assertNotNull($event);
-        $this->assertEquals(Severity::info(), $event->getLevel());
-        $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
-        $this->assertSame(['foo'], $event->getFingerprint());
-        $this->assertSame(['foo' => 'bar'], $event->getExtraContext()->toArray());
-        $this->assertSame(['bar' => 'foo'], $event->getTagsContext()->toArray());
-        $this->assertSame(['foobar' => 'barfoo'], $event->getUserContext()->toArray());
-
+        $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
         $scope->clear();
 
-        $event = $scope->applyToEvent(new Event(), []);
+        $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertEquals(Severity::error(), $event->getLevel());
+        $this->assertNull($event->getLevel());
         $this->assertEmpty($event->getBreadcrumbs());
         $this->assertEmpty($event->getFingerprint());
-        $this->assertEmpty($event->getExtraContext()->toArray());
-        $this->assertEmpty($event->getTagsContext()->toArray());
-        $this->assertEmpty($event->getUserContext()->toArray());
+        $this->assertEmpty($event->getExtra());
+        $this->assertEmpty($event->getTags());
+        $this->assertEmpty($event->getUser());
     }
 
     public function testApplyToEvent(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $user = UserDataBag::createFromUserIdentifier('unique_id');
 
-        $event = new Event();
+        $event = Event::createEvent();
         $event->setContext('foocontext', ['foo' => 'foo', 'bar' => 'bar']);
 
         $scope = new Scope();
@@ -322,17 +339,17 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb);
         $scope->setTag('foo', 'bar');
         $scope->setExtra('bar', 'foo');
-        $scope->setUser(['foo' => 'baz'], true);
+        $scope->setUser($user);
         $scope->setContext('foocontext', ['foo' => 'bar']);
         $scope->setContext('barcontext', ['bar' => 'foo']);
 
-        $this->assertSame($event, $scope->applyToEvent($event, []));
+        $this->assertSame($event, $scope->applyToEvent($event));
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
         $this->assertSame(['foo'], $event->getFingerprint());
         $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
-        $this->assertSame(['foo' => 'bar'], $event->getTagsContext()->toArray());
-        $this->assertSame(['bar' => 'foo'], $event->getExtraContext()->toArray());
-        $this->assertSame(['foo' => 'baz'], $event->getUserContext()->toArray());
+        $this->assertSame(['foo' => 'bar'], $event->getTags());
+        $this->assertSame(['bar' => 'foo'], $event->getExtra());
+        $this->assertSame($user, $event->getUser());
         $this->assertSame(['foocontext' => ['foo' => 'foo', 'bar' => 'bar'], 'barcontext' => ['bar' => 'foo']], $event->getContexts());
     }
 }

@@ -21,7 +21,7 @@ require $vendor . '/vendor/autoload.php';
 
 $errorHandler = ErrorHandler::registerOnceErrorHandler();
 $errorHandler->addErrorHandlerListener(static function (): void {
-    echo 'Error listener called' . PHP_EOL;
+    echo 'Error listener called (it should not have been)' . PHP_EOL;
 });
 
 $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
@@ -31,12 +31,11 @@ $errorHandler->addFatalErrorHandlerListener(static function (): void {
 
 $errorHandler = ErrorHandler::registerOnceExceptionHandler();
 $errorHandler->addExceptionHandlerListener(static function (): void {
-    echo 'Exception listener called' . PHP_EOL;
+    echo 'Exception listener called (it should not have been)' . PHP_EOL;
 });
 
 $foo = str_repeat('x', 1024 * 1024 * 30);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Error listener called
 Fatal error listener called

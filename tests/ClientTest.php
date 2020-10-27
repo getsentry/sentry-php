@@ -4,22 +4,82 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\EventHint;
+use Sentry\ExceptionMechanism;
+use Sentry\Frame;
+use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
-use Sentry\SentrySdk;
+use Sentry\Response;
+use Sentry\ResponseStatus;
+use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Serializer\Serializer;
+use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
+use Sentry\UserDataBag;
 
-class ClientTest extends TestCase
+final class ClientTest extends TestCase
 {
+    public function testConstructorSetupsIntegrations(): void
+    {
+        $integrationCalled = false;
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('debug');
+
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because one of the event processors returned "null".');
+
+        $integration = new class($integrationCalled) implements IntegrationInterface {
+            private $integrationCalled;
+
+            public function __construct(bool &$integrationCalled)
+            {
+                $this->integrationCalled = &$integrationCalled;
+            }
+
+            public function setupOnce(): void
+            {
+                Scope::addGlobalEventProcessor(function (): ?Event {
+                    $this->integrationCalled = true;
+
+                    return null;
+                });
+            }
+        };
+
+        $client = new Client(
+            new Options([
+                'default_integrations' => false,
+                'integrations' => [$integration],
+            ]),
+            $this->createMock(TransportInterface::class),
+            null,
+            null,
+            null,
+            null,
+            $logger
+        );
+
+        $client->captureEvent(Event::createEvent(), null, new Scope());
+
+        $this->assertTrue($integrationCalled);
+    }
+
     public function testCaptureMessage(): void
     {
         /** @var TransportInterface&MockObject $transport */
@@ -31,13 +91,16 @@ class ClientTest extends TestCase
                 $this->assertEquals(Severity::fatal(), $event->getLevel());
 
                 return true;
-            }));
+            }))
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create()
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureMessage('foo', Severity::fatal());
+        $this->assertNotNull($client->captureMessage('foo', Severity::fatal()));
     }
 
     public function testCaptureException(): void
@@ -53,63 +116,20 @@ class ClientTest extends TestCase
 
                 $exceptionData = $event->getExceptions()[0];
 
-                $this->assertSame(\get_class($exception), $exceptionData['type']);
-                $this->assertSame($exception->getMessage(), $exceptionData['value']);
+                $this->assertSame(\get_class($exception), $exceptionData->getType());
+                $this->assertSame($exception->getMessage(), $exceptionData->getValue());
 
                 return true;
-            }));
+            }))
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create()
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureException($exception);
-    }
-
-    /**
-     * @dataProvider captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider
-     */
-    public function testCaptureExceptionDoesNothingIfExcludedExceptionsOptionMatches(bool $shouldCapture, string $excluded, \Throwable $thrownException): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transportFactory = $this->createTransportFactory($transport);
-
-        $transport->expects($shouldCapture ? $this->once() : $this->never())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNotEmpty($event->getExceptions());
-
-                return true;
-            }));
-
-        $client = ClientBuilder::create(['excluded_exceptions' => [$excluded]])
-            ->setTransportFactory($transportFactory)
-            ->getClient();
-
-        SentrySdk::getCurrentHub()->bindClient($client);
-        SentrySdk::getCurrentHub()->captureException($thrownException);
-    }
-
-    public function captureExceptionDoesNothingIfExcludedExceptionsOptionMatchesDataProvider(): array
-    {
-        return [
-            [
-                true,
-                \Exception::class,
-                new \Error(),
-            ],
-            [
-                false,
-                \Exception::class,
-                new \LogicException(),
-            ],
-            [
-                false,
-                \Throwable::class,
-                new \Error(),
-            ],
-        ];
+        $this->assertNotNull($client->captureException($exception));
     }
 
     public function testCaptureEvent(): void
@@ -118,28 +138,29 @@ class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create()
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $inputData = [
-            'transaction' => 'foo bar',
-            'level' => Severity::debug(),
-            'logger' => 'foo',
-            'tags_context' => ['foo', 'bar'],
-            'extra_context' => ['foo' => 'bar'],
-            'user_context' => ['bar' => 'foo'],
-        ];
+        $event = Event::createEvent();
+        $event->setTransaction('foo bar');
+        $event->setLevel(Severity::debug());
+        $event->setLogger('foo');
+        $event->setTags(['foo', 'bar']);
+        $event->setExtra(['foo' => 'bar']);
+        $event->setUser(UserDataBag::createFromUserIdentifier('foo'));
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($inputData));
+        $this->assertNotNull($client->captureEvent($event));
     }
 
     /**
      * @dataProvider captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider
      */
-    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, array $payload, bool $shouldAttachStacktrace): void
+    public function testCaptureEventAttachesStacktraceAccordingToAttachStacktraceOption(bool $attachStacktraceOption, ?EventHint $hint, bool $shouldAttachStacktrace): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -156,65 +177,72 @@ class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
+        $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
     }
 
     public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
         yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
             true,
-            [],
+            null,
             true,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = false' => [
             false,
-            [],
+            null,
             false,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = true and payload.exception is set' => [
             true,
-            [
+            EventHint::fromArray([
                 'exception' => new \Exception(),
-            ],
+            ]),
             false,
         ];
 
         yield 'No stacktrace attached when attach_stacktrace = false and payload.exception is set' => [
             true,
-            [
+            EventHint::fromArray([
                 'exception' => new \Exception(),
-            ],
+            ]),
             false,
         ];
     }
 
     public function testCaptureEventPrefersExplicitStacktrace(): void
     {
-        $explicitStacktrace = $this->createMock(Stacktrace::class);
-        $payload = ['stacktrace' => $explicitStacktrace];
+        $stacktrace = new Stacktrace([
+            new Frame(__METHOD__, __FILE__, __LINE__),
+        ]);
 
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->with($this->callback(static function (Event $event) use ($explicitStacktrace): bool {
-                return $explicitStacktrace === $event->getStacktrace();
+            ->with($this->callback(static function (Event $event) use ($stacktrace): bool {
+                return $stacktrace === $event->getStacktrace();
             }))
-            ->willReturn('500a339f3ab2450b96dee542adf36ba7');
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->assertEquals('500a339f3ab2450b96dee542adf36ba7', $client->captureEvent($payload));
+        $this->assertNotNull($client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'stacktrace' => $stacktrace,
+        ])));
     }
 
     public function testCaptureLastError(): void
@@ -226,11 +254,14 @@ class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $exception = $event->getExceptions()[0];
 
-                $this->assertEquals('ErrorException', $exception['type']);
-                $this->assertEquals('foo', $exception['value']);
+                $this->assertEquals('ErrorException', $exception->getType());
+                $this->assertEquals('foo', $exception->getValue());
 
                 return true;
-            }));
+            }))
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransportFactory($this->createTransportFactory($transport))
@@ -238,7 +269,7 @@ class ClientTest extends TestCase
 
         @trigger_error('foo', E_USER_NOTICE);
 
-        $client->captureLastError();
+        $this->assertNotNull($client->captureLastError());
 
         $this->clearLastError();
     }
@@ -248,7 +279,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
-            ->method('send');
+            ->method('send')
+            ->with($this->anything())
+            ->willReturn(null);
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
             ->setTransportFactory($this->createTransportFactory($transport))
@@ -256,54 +289,7 @@ class ClientTest extends TestCase
 
         $this->clearLastError();
 
-        $client->captureLastError();
-    }
-
-    /**
-     * @group legacy
-     *
-     * @dataProvider captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider
-     *
-     * @expectedDeprecation Relying on the "Sentry\Stacktrace" class to contexify the frames of the stacktrace is deprecated since version 2.4 and will stop working in 3.0. Set the $shouldReadSourceCodeExcerpts parameter to "false" and use the "Sentry\Integration\FrameContextifierIntegration" integration instead.
-     */
-    public function testCaptureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsed(array $payload): void
-    {
-        ClientBuilder::create(['attach_stacktrace' => true, 'default_integrations' => false])
-            ->getClient()
-            ->captureEvent($payload);
-    }
-
-    public function captureEventThrowsDeprecationErrorIfContextLinesOptionIsNotNullAndFrameContextifierIntegrationIsNotUsedDataProvider(): \Generator
-    {
-        yield [[]];
-
-        yield [['exception' => new \Exception()]];
-    }
-
-    /**
-     * @group legacy
-     *
-     * @requires OSFAMILY Linux
-     */
-    public function testAppPathLinux(): void
-    {
-        $client = ClientBuilder::create(['project_root' => '/foo/bar'])->getClient();
-
-        $this->assertEquals('/foo/bar', $client->getOptions()->getProjectRoot());
-
-        $client->getOptions()->setProjectRoot('/foo/baz/');
-
-        $this->assertEquals('/foo/baz/', $client->getOptions()->getProjectRoot());
-    }
-
-    /**
-     * @group legacy
-     */
-    public function testAppPathWindows(): void
-    {
-        $client = ClientBuilder::create(['project_root' => 'C:\\foo\\bar\\'])->getClient();
-
-        $this->assertEquals('C:\\foo\\bar\\', $client->getOptions()->getProjectRoot());
+        $this->assertNull($client->captureLastError());
     }
 
     public function testSendChecksBeforeSendOption(): void
@@ -326,7 +312,7 @@ class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureEvent([]);
+        $client->captureEvent(Event::createEvent());
 
         $this->assertTrue($beforeSendCalled);
     }
@@ -339,7 +325,9 @@ class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($transportCallInvocationMatcher)
-            ->method('send');
+            ->method('send')
+            ->with($this->anything())
+            ->willReturn(null);
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
@@ -380,7 +368,7 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because the "before_send" callback returned `null`.', $this->callback(static function (array $context): bool {
+            ->with('The event will be discarded because the "before_send" callback returned "null".', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
@@ -403,7 +391,7 @@ class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because one of the event processors returned `null`.', $this->callback(static function (array $context): bool {
+            ->with('The event will be discarded because one of the event processors returned "null".', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
@@ -419,69 +407,6 @@ class ClientTest extends TestCase
         $client->captureMessage('foo', Severity::debug(), $scope);
     }
 
-    /**
-     * @dataProvider convertExceptionDataProvider
-     */
-    public function testConvertException(\Exception $exception, array $expectedResult): void
-    {
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($expectedResult): bool {
-                $this->assertArraySubset($expectedResult, $event->toArray());
-                $this->assertArrayNotHasKey('values', $event->getExceptions());
-                $this->assertArrayHasKey('values', $event->toArray()['exception']);
-
-                foreach ($event->getExceptions() as $exceptionData) {
-                    $this->assertArrayHasKey('stacktrace', $exceptionData);
-                    $this->assertInstanceOf(Stacktrace::class, $exceptionData['stacktrace']);
-                }
-
-                return true;
-            }));
-
-        $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->getClient();
-
-        $client->captureException($exception);
-    }
-
-    public function convertExceptionDataProvider(): array
-    {
-        return [
-            [
-                new \RuntimeException('foo'),
-                [
-                    'level' => Severity::ERROR,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \RuntimeException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                new \ErrorException('foo', 0, E_USER_WARNING),
-                [
-                    'level' => Severity::WARNING,
-                    'exception' => [
-                        'values' => [
-                            [
-                                'type' => \ErrorException::class,
-                                'value' => 'foo',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-    }
-
     public function testAttachStacktrace(): void
     {
         /** @var TransportInterface&MockObject $transport */
@@ -492,13 +417,35 @@ class ClientTest extends TestCase
                 $result = $event->getStacktrace();
 
                 return null !== $result;
-            }));
+            }))
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $client->captureMessage('test');
+        $this->assertNotNull($client->captureMessage('test'));
+    }
+
+    public function testFlush(): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('close')
+            ->with(10)
+            ->willReturn(new FulfilledPromise(true));
+
+        $client = ClientBuilder::create()
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $promise = $client->flush(10);
+
+        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
+        $this->assertTrue($promise->wait());
     }
 
     /**
@@ -533,5 +480,174 @@ class ClientTest extends TestCase
                 return $this->transport;
             }
         };
+    }
+
+    /**
+     * @backupGlobals
+     */
+    public function testBuildEventWithDefaultValues(): void
+    {
+        $options = new Options();
+        $options->setServerName('testServerName');
+        $options->setRelease('testRelease');
+        $options->setTags(['test' => 'tag']);
+        $options->setEnvironment('testEnvironment');
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($options): bool {
+                $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
+                $this->assertSame('1.2.3', $event->getSdkVersion());
+                $this->assertSame($options->getServerName(), $event->getServerName());
+                $this->assertSame($options->getRelease(), $event->getRelease());
+                $this->assertSame($options->getTags(), $event->getTags());
+                $this->assertSame($options->getEnvironment(), $event->getEnvironment());
+                $this->assertNull($event->getStacktrace());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent());
+    }
+
+    public function testBuildEventInCLIDoesntSetTransaction(): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertNull($event->getTransaction());
+
+                return true;
+            }));
+
+        $client = new Client(
+            new Options(),
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent());
+    }
+
+    public function testBuildEventWithException(): void
+    {
+        $options = new Options();
+        $previousException = new \RuntimeException('testMessage2');
+        $exception = new \Exception('testMessage', 0, $previousException);
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $capturedExceptions = $event->getExceptions();
+
+                $this->assertCount(2, $capturedExceptions);
+                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[0]->getMechanism());
+                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+
+                $this->assertNotNull($capturedExceptions[1]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[1]->getMechanism());
+                $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
+                $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+        ]));
+    }
+
+    public function testBuildWithErrorException(): void
+    {
+        $options = new Options();
+        $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+        ]));
+    }
+
+    public function testBuildWithStacktrace(): void
+    {
+        $options = new Options();
+        $options->setAttachStacktrace(true);
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $stacktrace = $event->getStacktrace();
+
+                $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+
+                /** @var Frame $lastFrame */
+                $lastFrame = array_reverse($stacktrace->getFrames())[0];
+
+                $this->assertSame(
+                    'Client.php',
+                    basename($lastFrame->getFile())
+                );
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent());
     }
 }

@@ -1,5 +1,5 @@
 --TEST--
-Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the `error_types` option
+Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the error_types option
 --FILE--
 <?php
 
@@ -7,10 +7,14 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Options;
+use Sentry\Response;
+use Sentry\ResponseStatus;
 use Sentry\SentrySdk;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
@@ -27,17 +31,23 @@ $transportFactory = new class implements TransportFactoryInterface {
     public function create(Options $options): TransportInterface
     {
         return new class implements TransportInterface {
-            public function send(Event $event): ?string
+            public function send(Event $event): PromiseInterface
             {
-                echo 'Transport called' . PHP_EOL;
+                echo 'Transport called (it should not have been)' . PHP_EOL;
 
-                return null;
+                return new FulfilledPromise(new Response(ResponseStatus::success()));
+            }
+
+            public function close(?int $timeout = null): PromiseInterface
+            {
+                return new FulfilledPromise(true);
             }
         };
     }
 };
 
 $options = new Options([
+    'error_types' => E_ALL & ~E_ERROR,
     'default_integrations' => false,
     'integrations' => [
         new FatalErrorListenerIntegration(),
@@ -53,13 +63,6 @@ SentrySdk::getCurrentHub()->bindClient($client);
 class FooClass implements \Serializable
 {
 }
-
-$options->setErrorTypes(E_ALL & ~E_ERROR);
-
-class BarClass implements \Serializable
-{
-}
 ?>
 --EXPECTF--
 Fatal error: Class Sentry\Tests\FooClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
-Transport called

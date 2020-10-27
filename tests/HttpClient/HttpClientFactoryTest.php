@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace Sentry\Tests\HttpClient;
 
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\StreamFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Options;
 
 final class HttpClientFactoryTest extends TestCase
 {
     /**
+     * @requires extension zlib
      * @dataProvider createDataProvider
      */
     public function testCreate(bool $isCompressionEnabled, string $expectedRequestBody): void
     {
+        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
+
         $mockHttpClient = new HttpMockClient();
         $httpClientFactory = new HttpClientFactory(
-            UriFactoryDiscovery::find(),
-            MessageFactoryDiscovery::find(),
-            StreamFactoryDiscovery::find(),
+            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findResponseFactory(),
+            $streamFactory,
             $mockHttpClient,
             'sentry.php.test',
             '1.2.3'
@@ -37,12 +37,14 @@ final class HttpClientFactoryTest extends TestCase
             'enable_compression' => $isCompressionEnabled,
         ]));
 
-        $httpClient->sendAsyncRequest(MessageFactoryDiscovery::find()->createRequest('POST', 'http://example.com/sentry/foo', [], 'foo bar'));
+        $request = Psr17FactoryDiscovery::findRequestFactory()
+            ->createRequest('POST', 'http://example.com/sentry/foo')
+            ->withBody($streamFactory->createStream('foo bar'));
 
-        /** @var RequestInterface|bool $httpRequest */
+        $httpClient->sendAsyncRequest($request);
+
         $httpRequest = $mockHttpClient->getLastRequest();
 
-        $this->assertInstanceOf(RequestInterface::class, $httpRequest);
         $this->assertSame('http://example.com/sentry/foo', (string) $httpRequest->getUri());
         $this->assertSame('sentry.php.test/1.2.3', $httpRequest->getHeaderLine('User-Agent'));
         $this->assertSame('Sentry sentry_version=7, sentry_client=sentry.php.test/1.2.3, sentry_key=public', $httpRequest->getHeaderLine('X-Sentry-Auth'));
@@ -65,9 +67,9 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfDsnOptionIsNotConfigured(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            UriFactoryDiscovery::find(),
-            MessageFactoryDiscovery::find(),
-            StreamFactoryDiscovery::find(),
+            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findResponseFactory(),
+            Psr17FactoryDiscovery::findStreamFactory(),
             null,
             'sentry.php.test',
             '1.2.3'
@@ -82,9 +84,9 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfHttpProxyOptionIsUsedWithCustomHttpClient(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            UriFactoryDiscovery::find(),
-            MessageFactoryDiscovery::find(),
-            StreamFactoryDiscovery::find(),
+            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findResponseFactory(),
+            Psr17FactoryDiscovery::findStreamFactory(),
             $this->createMock(HttpAsyncClientInterface::class),
             'sentry.php.test',
             '1.2.3'

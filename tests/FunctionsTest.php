@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -22,9 +23,6 @@ use function Sentry\configureScope;
 use function Sentry\init;
 use function Sentry\withScope;
 
-/**
- * @group legacy
- */
 final class FunctionsTest extends TestCase
 {
     public function testInit(): void
@@ -36,20 +34,23 @@ final class FunctionsTest extends TestCase
 
     public function testCaptureMessage(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
             ->with('foo', Severity::debug())
-            ->willReturn('92db40a886c0458288c7c83935a350ef');
+            ->willReturn($eventId);
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertEquals('92db40a886c0458288c7c83935a350ef', captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, captureMessage('foo', Severity::debug()));
     }
 
     public function testCaptureException(): void
     {
+        $eventId = EventId::generate();
         $exception = new \RuntimeException('foo');
 
         /** @var ClientInterface|MockObject $client */
@@ -57,39 +58,44 @@ final class FunctionsTest extends TestCase
         $client->expects($this->once())
             ->method('captureException')
             ->with($exception)
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->willReturn($eventId);
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureException($exception));
+        $this->assertSame($eventId, captureException($exception));
     }
 
     public function testCaptureEvent(): void
     {
+        $event = Event::createEvent();
+
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with(['message' => 'foo'])
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->with($event)
+            ->willReturn($event->getId());
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', captureEvent(['message' => 'foo']));
+        $this->assertSame($event->getId(), captureEvent($event));
     }
 
     public function testCaptureLastError()
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface|MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
-            ->method('captureLastError');
+            ->method('captureLastError')
+            ->willReturn($eventId);
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
         @trigger_error('foo', E_USER_NOTICE);
 
-        captureLastError();
+        $this->assertSame($eventId, captureLastError());
     }
 
     public function testAddBreadcrumb(): void
@@ -106,7 +112,7 @@ final class FunctionsTest extends TestCase
 
         addBreadcrumb($breadcrumb);
         configureScope(function (Scope $scope) use ($breadcrumb): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());

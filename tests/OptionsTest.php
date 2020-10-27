@@ -6,21 +6,12 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
-use Sentry\Integration\ErrorListenerIntegration;
-use Sentry\Integration\ExceptionListenerIntegration;
-use Sentry\Integration\FatalErrorListenerIntegration;
-use Sentry\Integration\FrameContextifierIntegration;
-use Sentry\Integration\IntegrationInterface;
-use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
     /**
-     * @group legacy
-     *
      * @dataProvider optionsDataProvider
      */
     public function testConstructor($option, $value, $getterMethod): void
@@ -31,8 +22,6 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider optionsDataProvider
      */
     public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
@@ -52,14 +41,14 @@ final class OptionsTest extends TestCase
             ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
             ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
             ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
+            ['traces_sample_rate', 0.5, 'getTracesSampleRate', 'setTracesSampleRate'],
+            ['traces_sampler', static function (): void {}, 'getTracesSampler', 'setTracesSampler'],
             ['attach_stacktrace', false, 'shouldAttachStacktrace', 'setAttachStacktrace'],
             ['context_lines', 3, 'getContextLines', 'setContextLines'],
             ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
             ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
-            ['excluded_exceptions', ['foo', 'bar', 'baz'], 'getExcludedExceptions', 'setExcludedExceptions'],
             ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
             ['in_app_include', ['foo', 'bar'], 'getInAppIncludedPaths', 'setInAppIncludedPaths'],
-            ['project_root', 'baz', 'getProjectRoot', 'setProjectRoot'],
             ['logger', 'foo', 'getLogger', 'setLogger'],
             ['release', 'dev', 'getRelease', 'setRelease'],
             ['server_name', 'foo', 'getServerName', 'setServerName'],
@@ -78,48 +67,28 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider dsnOptionDataProvider
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
-    public function testDsnOption($value, ?string $expectedProjectId, ?string $expectedPublicKey, ?string $expectedSecretKey, ?string $expectedDsnAsString, ?Dsn $expectedDsnAsObject): void
+    public function testDsnOption($value, ?Dsn $expectedDsnAsObject): void
     {
         $options = new Options(['dsn' => $value]);
 
-        $this->assertSame($expectedProjectId, $options->getProjectId());
-        $this->assertSame($expectedPublicKey, $options->getPublicKey());
-        $this->assertSame($expectedSecretKey, $options->getSecretKey());
-        $this->assertEquals($expectedDsnAsString, $options->getDsn());
-        $this->assertEquals($expectedDsnAsObject, $options->getDsn(false));
+        $this->assertEquals($expectedDsnAsObject, $options->getDsn());
     }
 
     public function dsnOptionDataProvider(): \Generator
     {
         yield [
             'http://public:secret@example.com/sentry/1',
-            '1',
-            'public',
-            'secret',
-            'http://example.com/sentry',
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
         ];
 
         yield [
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
-            '1',
-            'public',
-            'secret',
-            'http://example.com/sentry',
             Dsn::createFromString('http://public:secret@example.com/sentry/1'),
         ];
 
         yield [
-            null,
-            null,
-            null,
-            null,
             null,
             null,
         ];
@@ -127,72 +96,40 @@ final class OptionsTest extends TestCase
         yield [
             'null',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '(null)',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             false,
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             'false',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             '(false)',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
 
         yield [
             'empty',
             null,
-            null,
-            null,
-            null,
-            null,
         ];
 
         yield [
             '(empty)',
-            null,
-            null,
-            null,
-            null,
             null,
         ];
     }
@@ -218,37 +155,6 @@ final class OptionsTest extends TestCase
         yield [
             'foo',
             'The option "dsn" with value "foo" is invalid.',
-        ];
-    }
-
-    /**
-     * @dataProvider excludedExceptionsDataProvider
-     */
-    public function testIsExcludedException(array $excludedExceptions, \Throwable $exception, bool $result): void
-    {
-        $configuration = new Options(['excluded_exceptions' => $excludedExceptions]);
-
-        $this->assertSame($result, $configuration->isExcludedException($exception, false));
-    }
-
-    public function excludedExceptionsDataProvider(): \Generator
-    {
-        yield [
-            [\BadFunctionCallException::class, \BadMethodCallException::class],
-            new \BadMethodCallException(),
-            true,
-        ];
-
-        yield [
-            [\BadFunctionCallException::class],
-            new \Exception(),
-            false,
-        ];
-
-        yield [
-            [\Exception::class],
-            new \BadFunctionCallException(),
-            true,
         ];
     }
 
@@ -320,8 +226,6 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
-     *
      * @dataProvider contextLinesOptionValidatesInputValueDataProvider
      */
     public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
@@ -360,20 +264,13 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @group legacy
      * @backupGlobals enabled
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
     public function testDsnOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
 
-        $options = new Options();
-
-        $this->assertSame('http://example.com', $options->getDsn());
-        $this->assertSame('public', $options->getPublicKey());
-        $this->assertSame('1', $options->getProjectId());
+        $this->assertEquals(Dsn::createFromString($_SERVER['SENTRY_DSN']), (new Options())->getDsn());
     }
 
     /**
@@ -383,9 +280,7 @@ final class OptionsTest extends TestCase
     {
         $_SERVER['SENTRY_ENVIRONMENT'] = 'test_environment';
 
-        $options = new Options();
-
-        $this->assertSame('test_environment', $options->getEnvironment());
+        $this->assertSame('test_environment', (new Options())->getEnvironment());
     }
 
     /**
@@ -395,107 +290,6 @@ final class OptionsTest extends TestCase
     {
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
-        $options = new Options();
-
-        $this->assertSame('0.0.1', $options->getRelease());
-    }
-
-    /**
-     * @dataProvider integrationsOptionAsCallableDataProvider
-     */
-    public function testIntegrationsOptionAsCallable(bool $useDefaultIntegrations, $integrations, array $expectedResult): void
-    {
-        $options = new Options([
-            'default_integrations' => $useDefaultIntegrations,
-            'integrations' => $integrations,
-        ]);
-
-        $this->assertEquals($expectedResult, $options->getIntegrations());
-    }
-
-    public function integrationsOptionAsCallableDataProvider(): \Generator
-    {
-        yield 'No default integrations && no user integrations' => [
-            false,
-            [],
-            [],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integration added && default integration appearing only once' => [
-            true,
-            [
-                $integration,
-                new ExceptionListenerIntegration(),
-            ],
-            [
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-                new FrameContextifierIntegration(),
-                $integration,
-            ],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integration added twice' => [
-            false,
-            [
-                $integration,
-                $integration,
-            ],
-            [
-                $integration,
-            ],
-        ];
-
-        yield 'User integrations as callable returning empty list' => [
-            true,
-            static function (): array {
-                return [];
-            },
-            [],
-        ];
-
-        $integration = new class() implements IntegrationInterface {
-            public function setupOnce(): void
-            {
-            }
-        };
-
-        yield 'User integrations as callable returning custom list' => [
-            true,
-            static function () use ($integration): array {
-                return [$integration];
-            },
-            [$integration],
-        ];
-
-        yield 'User integrations as callable returning $defaultIntegrations argument' => [
-            true,
-            static function (array $defaultIntegrations): array {
-                return $defaultIntegrations;
-            },
-            [
-                new ExceptionListenerIntegration(),
-                new ErrorListenerIntegration(null, false),
-                new FatalErrorListenerIntegration(),
-                new RequestIntegration(),
-                new TransactionIntegration(),
-                new FrameContextifierIntegration(),
-            ],
-        ];
+        $this->assertSame('0.0.1', (new Options())->getRelease());
     }
 }

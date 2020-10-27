@@ -7,10 +7,10 @@ parameters:
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         -
-            message: '/^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$/'
-            path: src/Util/JSON.php
-        -
             message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
+            path: src/HttpClient/HttpClientFactory.php
+        -
+            message: '/^Call to static method create\(\) on an unknown class Symfony\\Component\\HttpClient\\HttpClient\.$/'
             path: src/HttpClient/HttpClientFactory.php
         -
             message: '/^Parameter #1 \$c of function ctype_digit expects int\|string, string\|null given\.$/'
@@ -31,11 +31,8 @@ parameters:
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
         -
-            message: '/^Method Sentry\\EventFactoryInterface::createWithStacktrace\(\) invoked with 2 parameters, 1 required\.$/'
-            path: src/Client.php
-        -
-            message: '/^Method Sentry\\EventFactoryInterface::create\(\) invoked with 2 parameters, 1 required\.$/'
-            path: src/Client.php
+            message: "/Call to function in_array\\(\\) with arguments callable\\(\\): mixed&string, array\\('{closure}', '__lambda_func'\\) and true will always evaluate to false\\.$/"
+            path: src/FrameBuilder.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

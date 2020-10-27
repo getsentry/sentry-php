@@ -11,15 +11,14 @@ use Sentry\SentrySdk;
  * This integration hooks into the global error handlers and emits events to
  * Sentry.
  */
-final class ExceptionListenerIntegration implements IntegrationInterface
+final class ExceptionListenerIntegration extends AbstractErrorListenerIntegration
 {
     /**
      * {@inheritdoc}
      */
     public function setupOnce(): void
     {
-        /** @psalm-suppress DeprecatedMethod */
-        $errorHandler = ErrorHandler::registerOnce(ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE, false);
+        $errorHandler = ErrorHandler::registerOnceExceptionHandler();
         $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
             $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
@@ -30,7 +29,7 @@ final class ExceptionListenerIntegration implements IntegrationInterface
                 return;
             }
 
-            $currentHub->captureException($exception);
+            $integration->captureException($currentHub, $exception);
         });
     }
 }

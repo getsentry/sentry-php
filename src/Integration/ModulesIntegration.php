@@ -19,7 +19,7 @@ final class ModulesIntegration implements IntegrationInterface
     /**
      * @var array<string, string> The list of installed vendors
      */
-    private static $loadedModules = [];
+    private static $packages = [];
 
     /**
      * {@inheritdoc}
@@ -32,7 +32,7 @@ final class ModulesIntegration implements IntegrationInterface
             // The integration could be bound to a client that is not the one
             // attached to the current hub. If this is the case, bail out
             if (null !== $integration) {
-                $integration->processEvent($event);
+                $event->setModules(self::getComposerPackages());
             }
 
             return $event;
@@ -40,34 +40,16 @@ final class ModulesIntegration implements IntegrationInterface
     }
 
     /**
-     * Applies the information gathered by this integration to the event.
-     *
-     * @param self  $self  The instance of this integration
-     * @param Event $event The event that will be enriched with the modules
-     *
-     * @deprecated since version 2.4, to be removed in 3.0
+     * @return array<string, string>
      */
-    public static function applyToEvent(self $self, Event $event): void
+    private static function getComposerPackages(): array
     {
-        @trigger_error(sprintf('The "%s" method is deprecated since version 2.4 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
-
-        $self->processEvent($event);
-    }
-
-    /**
-     * Gathers information about the versions of the installed dependencies of
-     * the application and sets them on the event.
-     *
-     * @param Event $event The event
-     */
-    private function processEvent(Event $event): void
-    {
-        if (empty(self::$loadedModules)) {
+        if (empty(self::$packages)) {
             foreach (Versions::VERSIONS as $package => $rawVersion) {
-                self::$loadedModules[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
             }
         }
 
-        $event->setModules(self::$loadedModules);
+        return self::$packages;
     }
 }

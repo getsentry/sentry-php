@@ -9,9 +9,11 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Frame implements \JsonSerializable
+final class Frame
 {
-    private const INTERNAL_FRAME_FILENAME = '[internal]';
+    public const INTERNAL_FRAME_FILENAME = '[internal]';
+
+    public const ANONYMOUS_CLASS_PREFIX = "class@anonymous\x00";
 
     /**
      * @var string|null The name of the function being called
@@ -19,12 +21,18 @@ final class Frame implements \JsonSerializable
     private $functionName;
 
     /**
+     * @var string|null The original function name, if the function name is
+     *                  shortened or demangled
+     */
+    private $rawFunctionName;
+
+    /**
      * @var string The file where the frame originated
      */
     private $file;
 
     /**
-     * @var string The absolute path to the source file
+     * @var string|null The absolute path to the source file
      */
     private $absoluteFilePath;
 
@@ -68,6 +76,8 @@ final class Frame implements \JsonSerializable
      *
      * @param string|null          $functionName     The name of the function being called
      * @param string               $file             The file where the frame originated
+     * @param string|null          $rawFunctionName  The original function name, if the function
+     *                                               name is shortened or demangled
      * @param string|null          $absoluteFilePath The absolute path to the source file
      * @param int                  $line             The line at which the frame originated
      * @param array<string, mixed> $vars             A mapping of variables which were available
@@ -76,12 +86,13 @@ final class Frame implements \JsonSerializable
      *                                               execution of code relevant to the
      *                                               application
      */
-    public function __construct(?string $functionName, string $file, int $line, ?string $absoluteFilePath = null, array $vars = [], bool $inApp = true)
+    public function __construct(?string $functionName, string $file, int $line, ?string $rawFunctionName = null, ?string $absoluteFilePath = null, array $vars = [], bool $inApp = true)
     {
         $this->functionName = $functionName;
         $this->file = $file;
-        $this->absoluteFilePath = $absoluteFilePath ?? $file;
         $this->line = $line;
+        $this->rawFunctionName = $rawFunctionName;
+        $this->absoluteFilePath = $absoluteFilePath;
         $this->vars = $vars;
         $this->inApp = $inApp;
     }
@@ -95,6 +106,15 @@ final class Frame implements \JsonSerializable
     }
 
     /**
+     * Gets the original function name, if the function name is shortened or
+     * demangled.
+     */
+    public function getRawFunctionName(): ?string
+    {
+        return $this->rawFunctionName;
+    }
+
+    /**
      * Gets the file where the frame originated.
      */
     public function getFile(): string
@@ -105,7 +125,7 @@ final class Frame implements \JsonSerializable
     /**
      * Gets the absolute path to the source file.
      */
-    public function getAbsoluteFilePath(): string
+    public function getAbsoluteFilePath(): ?string
     {
         return $this->absoluteFilePath;
     }
@@ -226,60 +246,5 @@ final class Frame implements \JsonSerializable
     public function isInternal(): bool
     {
         return self::INTERNAL_FRAME_FILENAME === $this->file;
-    }
-
-    /**
-     * Returns an array representation of the data of this frame modeled according
-     * to the specifications of the Sentry SDK Stacktrace Interface.
-     *
-     * @psalm-return array{
-     *     function: string|null,
-     *     filename: string,
-     *     lineno: int,
-     *     in_app: bool,
-     *     abs_path: string,
-     *     pre_context?: string[],
-     *     context_line?: string,
-     *     post_context?: string[],
-     *     vars?: array<string, mixed>
-     * }
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'function' => $this->functionName,
-            'filename' => $this->file,
-            'lineno' => $this->line,
-            'in_app' => $this->inApp,
-            'abs_path' => $this->absoluteFilePath,
-        ];
-
-        if (0 !== \count($this->preContext)) {
-            $result['pre_context'] = $this->preContext;
-        }
-
-        if (null !== $this->contextLine) {
-            $result['context_line'] = $this->contextLine;
-        }
-
-        if (0 !== \count($this->postContext)) {
-            $result['post_context'] = $this->postContext;
-        }
-
-        if (!empty($this->vars)) {
-            $result['vars'] = $this->vars;
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }

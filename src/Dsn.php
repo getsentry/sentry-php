@@ -181,23 +181,19 @@ final class Dsn
     }
 
     /**
-     * Gets the URL of the API endpoint to use to post an event to Sentry.
+     * Returns the URL of the API for the store endpoint.
      */
     public function getStoreApiEndpointUrl(): string
     {
-        $url = $this->scheme . '://' . $this->host;
+        return $this->getBaseEndpointUrl() . '/store/';
+    }
 
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
-            $url .= ':' . $this->port;
-        }
-
-        if (null !== $this->path) {
-            $url .= $this->path;
-        }
-
-        $url .= '/api/' . $this->projectId . '/store/';
-
-        return $url;
+    /**
+     * Returns the URL of the API for the envelope endpoint.
+     */
+    public function getEnvelopeApiEndpointUrl(): string
+    {
+        return $this->getBaseEndpointUrl() . '/envelope/';
     }
 
     /**
@@ -222,6 +218,26 @@ final class Dsn
         }
 
         $url .= '/' . $this->projectId;
+
+        return $url;
+    }
+
+    /**
+     * Returns the base url to Sentry from the DSN.
+     */
+    private function getBaseEndpointUrl(): string
+    {
+        $url = $this->scheme . '://' . $this->host;
+
+        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+            $url .= ':' . $this->port;
+        }
+
+        if (null !== $this->path) {
+            $url .= $this->path;
+        }
+
+        $url .= '/api/' . $this->projectId;
 
         return $url;
     }

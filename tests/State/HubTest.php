@@ -9,11 +9,13 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\TransactionContext;
 
 final class HubTest extends TestCase
 {
@@ -43,16 +45,19 @@ final class HubTest extends TestCase
 
     public function testGetLastEventId(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->willReturn('92db40a886c0458288c7c83935a350ef');
+            ->willReturn($eventId);
 
         $hub = new Hub($client);
 
         $this->assertNull($hub->getLastEventId());
-        $this->assertEquals($hub->captureMessage('foo'), $hub->getLastEventId());
+        $this->assertSame($hub->captureMessage('foo'), $hub->getLastEventId());
+        $this->assertSame($eventId, $hub->getLastEventId());
     }
 
     public function testPushScope(): void
@@ -193,12 +198,14 @@ final class HubTest extends TestCase
 
     public function testCaptureMessage(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
             ->with('foo', Severity::debug())
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -206,11 +213,12 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, $hub->captureMessage('foo', Severity::debug()));
     }
 
     public function testCaptureException(): void
     {
+        $eventId = EventId::generate();
         $exception = new \RuntimeException('foo');
 
         /** @var ClientInterface&MockObject $client */
@@ -218,7 +226,7 @@ final class HubTest extends TestCase
         $client->expects($this->once())
             ->method('captureException')
             ->with($exception)
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -226,16 +234,18 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureException($exception));
+        $this->assertSame($eventId, $hub->captureException($exception));
     }
 
     public function testCaptureLastError(): void
     {
+        $eventId = EventId::generate();
+
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureLastError')
-            ->willReturn('7565e130d1d14e639442110a6dd1cbab');
+            ->willReturn($eventId);
 
         $hub = new Hub();
 
@@ -243,7 +253,29 @@ final class HubTest extends TestCase
 
         $hub->bindClient($client);
 
-        $this->assertEquals('7565e130d1d14e639442110a6dd1cbab', $hub->captureLastError());
+        $this->assertSame($eventId, $hub->captureLastError());
+    }
+
+    public function testCaptureEvent(): void
+    {
+        $event = Event::createEvent($eventId = EventId::generate());
+
+        $event->setMessage('test');
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($event)
+            ->willReturn($eventId);
+
+        $hub = new Hub();
+
+        $this->assertNull($hub->captureEvent($event));
+
+        $hub->bindClient($client);
+
+        $this->assertSame($eventId, $hub->captureEvent($event));
     }
 
     public function testAddBreadcrumb(): void
@@ -260,7 +292,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb);
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -269,7 +301,7 @@ final class HubTest extends TestCase
         $hub->bindClient($client);
         $hub->addBreadcrumb($breadcrumb);
         $hub->configureScope(function (Scope $scope) use (&$callbackInvoked, $breadcrumb): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
@@ -292,7 +324,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -316,7 +348,7 @@ final class HubTest extends TestCase
         $hub->addBreadcrumb($breadcrumb2);
 
         $hub->configureScope(function (Scope $scope) use ($breadcrumb1, $breadcrumb2): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
@@ -325,7 +357,7 @@ final class HubTest extends TestCase
         $hub->addBreadcrumb($breadcrumb3);
 
         $hub->configureScope(function (Scope $scope) use ($breadcrumb2, $breadcrumb3): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
@@ -348,7 +380,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $hub->configureScope(function (Scope $scope): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertEmpty($event->getBreadcrumbs());
@@ -375,7 +407,7 @@ final class HubTest extends TestCase
 
         $hub->addBreadcrumb($breadcrumb1);
         $hub->configureScope(function (Scope $scope) use (&$callbackInvoked, $breadcrumb2): void {
-            $event = $scope->applyToEvent(new Event(), []);
+            $event = $scope->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb2], $event->getBreadcrumbs());
@@ -384,24 +416,6 @@ final class HubTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
-    }
-
-    public function testCaptureEvent(): void
-    {
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with(['message' => 'test'])
-            ->willReturn('2b867534eead412cbdb882fd5d441690');
-
-        $hub = new Hub();
-
-        $this->assertNull($hub->captureEvent([]));
-
-        $hub->bindClient($client);
-
-        $this->assertEquals('2b867534eead412cbdb882fd5d441690', $hub->captureEvent(['message' => 'test']));
     }
 
     public function testGetIntegration(): void
@@ -423,5 +437,127 @@ final class HubTest extends TestCase
         $hub->bindClient($client);
 
         $this->assertSame($integration, $hub->getIntegration('Foo\\Bar'));
+    }
+
+    /**
+     * @dataProvider startTransactionDataProvider
+     */
+    public function testStartTransactionWithTracesSampler(Options $options, TransactionContext $transactionContext, bool $expectedSampled): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction($transactionContext);
+
+        $this->assertSame($expectedSampled, $transaction->getSampled());
+    }
+
+    public function startTransactionDataProvider(): iterable
+    {
+        yield [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return 1;
+                },
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return 0;
+                },
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): int {
+                    return 1;
+                },
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sampler' => static function (): int {
+                    return 0;
+                },
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 0.0,
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'sample_rate' => 1.0,
+                'traces_sample_rate' => 0.0,
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield [
+            new Options([
+                'sample_rate' => 0.0,
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 0.5,
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, true),
+            true,
+        ];
+
+        yield [
+            new Options([
+                'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+    }
+
+    public function testStartTransactionDoesNothingIfTracingIsNotEnabled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertFalse($transaction->getSampled());
     }
 }

@@ -15,12 +15,14 @@ use Http\Client\Common\PluginClient;
 use Http\Client\Curl\Client as CurlHttpClient;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\HttpAsyncClientDiscovery;
-use Http\Message\ResponseFactory as ResponseFactoryInterface;
-use Http\Message\StreamFactory as StreamFactoryInterface;
-use Http\Message\UriFactory as UriFactoryInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Options;
+use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
+use Symfony\Component\HttpClient\HttplugClient as SymfonyHttplugClient;
 
 /**
  * Default implementation of the {@HttpClientFactoryInterface} interface that uses
@@ -100,7 +102,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     public function create(Options $options): HttpAsyncClientInterface
     {
-        if (null === $options->getDsn(false)) {
+        if (null === $options->getDsn()) {
             throw new \RuntimeException('Cannot create an HTTP client without the Sentry DSN set in the options.');
         }
 
@@ -111,7 +113,20 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         }
 
         if (null === $httpClient) {
-            if (class_exists(GuzzleHttpClient::class)) {
+            if (class_exists(SymfonyHttplugClient::class)) {
+                $symfonyConfig = [
+                    'max_duration' => self::DEFAULT_HTTP_TIMEOUT,
+                ];
+
+                if (null !== $options->getHttpProxy()) {
+                    $symfonyConfig['proxy'] = $options->getHttpProxy();
+                }
+
+                /** @psalm-suppress UndefinedClass */
+                $httpClient = new SymfonyHttplugClient(
+                    SymfonyHttpClient::create($symfonyConfig)
+                );
+            } elseif (class_exists(GuzzleHttpClient::class)) {
                 /** @psalm-suppress UndefinedClass */
                 $guzzleConfig = [
                     GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
