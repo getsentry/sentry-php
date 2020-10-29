@@ -5,6 +5,7 @@
          backupGlobals="true"
          colors="true"
          bootstrap="tests/bootstrap.php"
+         cacheResult="false"
 >
     <php>
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0" />
