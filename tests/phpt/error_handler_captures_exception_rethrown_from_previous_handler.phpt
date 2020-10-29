@@ -40,6 +40,5 @@ throw new \Exception('foo bar');
 Exception listener called
 Custom exception handler called
 
-Fatal error: Uncaught Exception: foo bar in %s:%d
-Stack trace:
+Fatal error: Uncaught Exception: foo bar in %s
 %a

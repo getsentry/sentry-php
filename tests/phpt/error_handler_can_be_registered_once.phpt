@@ -24,7 +24,7 @@ function getHandlerRegistrationCount(callable $setHandlerCallback, callable $res
     $previousErrorHandler = null;
 
     while (true) {
-        $errorHandler = call_user_func($setHandlerCallback, 'var_dump');
+        $errorHandler = call_user_func($setHandlerCallback, 'print_r');
 
         // Restore the error handler that has been popped out from the stack with
         // the line above
@@ -52,14 +52,24 @@ function getHandlerRegistrationCount(callable $setHandlerCallback, callable $res
     return count($savedErrorHandlers);
 }
 
-var_dump(ErrorHandler::registerOnceErrorHandler() === ErrorHandler::registerOnceErrorHandler());
-var_dump(1 === getHandlerRegistrationCount('set_error_handler', 'restore_error_handler'));
+if (ErrorHandler::registerOnceErrorHandler() === ErrorHandler::registerOnceErrorHandler()) {
+    echo 'Error handler is a singleton' . PHP_EOL;
+}
 
-var_dump(ErrorHandler::registerOnceExceptionHandler() === ErrorHandler::registerOnceExceptionHandler());
-var_dump(1 === getHandlerRegistrationCount('set_exception_handler', 'restore_exception_handler'));
+if (1 === getHandlerRegistrationCount('set_error_handler', 'restore_error_handler')) {
+    echo 'Only one error handler is registered' . PHP_EOL;
+}
+
+if (ErrorHandler::registerOnceExceptionHandler() === ErrorHandler::registerOnceExceptionHandler()) {
+    echo 'Exception handler is a singleton' . PHP_EOL;
+}
+
+if (1 === getHandlerRegistrationCount('set_exception_handler', 'restore_exception_handler')) {
+    echo 'Only one exception handler is registered' . PHP_EOL;
+}
 ?>
 --EXPECT--
-bool(true)
-bool(true)
-bool(true)
-bool(true)
+Error handler is a singleton
+Only one error handler is registered
+Exception handler is a singleton
+Only one exception handler is registered
