@@ -27,7 +27,7 @@ final class StacktraceTest extends TestCase
     public function testConstructorThrowsIfFramesListContainsUnexpectedValue(array $values, string $expectedExceptionMessage): void
     {
         $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionMessageRegExp($expectedExceptionMessage);
+        $this->expectExceptionMessageMatches($expectedExceptionMessage);
 
         new Stacktrace($values);
     }
