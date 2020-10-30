@@ -7,7 +7,7 @@ namespace Sentry\Tests;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\Rule\InvokedCount;
+use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\Client;
@@ -271,7 +271,7 @@ final class ClientTest extends TestCase
 
         $this->assertNotNull($client->captureLastError());
 
-        $this->clearLastError();
+        error_clear_last();
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void
@@ -286,7 +286,7 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->clearLastError();
+        error_clear_last();
 
         $this->assertNull($client->captureLastError());
     }
@@ -319,7 +319,7 @@ final class ClientTest extends TestCase
     /**
      * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
      */
-    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, InvokedCount $transportCallInvocationMatcher, InvokedCount $loggerCallInvocationMatcher): void
+    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, InvocationOrder $transportCallInvocationMatcher, InvocationOrder $loggerCallInvocationMatcher): void
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -444,20 +444,6 @@ final class ClientTest extends TestCase
 
         $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
         $this->assertTrue($promise->wait());
-    }
-
-    /**
-     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
-     */
-    private function clearLastError(): void
-    {
-        set_error_handler(static function (): bool {
-            return false;
-        });
-
-        @trigger_error('');
-
-        restore_error_handler();
     }
 
     private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
