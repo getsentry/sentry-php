@@ -10,8 +10,6 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  * This class builds {@see Stacktrace} objects from an instance of an exception
  * or from a backtrace.
  *
- * @internal
- *
  * @psalm-import-type StacktraceFrame from FrameBuilder
  */
 final class StacktraceBuilder
