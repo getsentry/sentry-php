@@ -152,6 +152,12 @@ final class PayloadSerializer implements PayloadSerializerInterface
             $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
         }
 
+        if ($stacktrace = $event->getStacktrace()) {
+            $result['stacktrace'] = [
+                'frames' => array_map([$this, 'serializeStacktraceFrame'], $stacktrace->getFrames()),
+            ];
+        }
+
         return JSON::encode($result);
     }
 
