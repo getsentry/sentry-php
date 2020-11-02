@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix stacktrace missing from payload for non-exception events (#1123)
+
 ## 3.0.3 (2020-10-12)
 
 - Fix missing source code excerpts for stacktrace frames whose absolute file path is equal to the file path (#1104)
