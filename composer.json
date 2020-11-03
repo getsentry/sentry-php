@@ -49,7 +49,7 @@
         "phpstan/phpstan-phpunit": "^0.12",
         "phpunit/phpunit": "^8.5.8|^9.4.2",
         "symfony/phpunit-bridge": "^5.1",
-        "vimeo/psalm": "^3.4|^4.0"
+        "vimeo/psalm": "^3.4|^4.1.1"
     },
     "suggest": {
         "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
