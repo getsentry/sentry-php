@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add setter for value on the `ExceptionDataBag` (#1100)
+- Add `Scope::removeTag` method (#1126)
 
 ## 3.0.4 (2020-11-6)
 

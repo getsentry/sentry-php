@@ -49,6 +49,27 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
     }
 
+    public function testRemoveTag(): void
+    {
+        $scope = new Scope();
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $scope->setTag('foo', 'bar');
+        $scope->setTag('bar', 'baz');
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
+
+        $scope->removeTag('foo');
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['bar' => 'baz'], $event->getTags());
+    }
+
     public function testSetAndRemoveContext(): void
     {
         $scope = new Scope();
