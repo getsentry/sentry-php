@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix stacktrace missing from payload for non-exception events (#1123)
+- Fix capturing of the request body in the `RequestIntegration` intergation when the request body stream is empty (#1119)
 
 ## 3.0.3 (2020-10-12)
 
@@ -11,11 +12,11 @@
 
 ## 3.0.2 (2020-10-02)
 
-- fix: Use the traces sample rate for traces instead of the event sample rate (#1106)
+- Fix use of the `sample_rate` option rather than `traces_sample_rate` when capturing a `Transaction` (#1106)
 
 ## 3.0.1 (2020-10-01)
 
-- fix: Use Span on Scope instead of Transaction for GuzzleMiddleware (#1099)
+- Fix use of `Transaction` instead of `Span` in the `GuzzleMiddleware` middleware (#1099)
 
 ## 3.0.0 (2020-09-28)
 
