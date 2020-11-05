@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1129)
+
 ### 2.5.0 (2020-09-14)
 
 - Support the `timeout` and `proxy` options for the Symfony HTTP Client (#1084)
