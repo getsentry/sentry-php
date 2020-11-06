@@ -422,5 +422,34 @@ TEXT
             ,
             false,
         ];
+
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setStacktrace(new Stacktrace([new Frame(null, '', 0)]));
+
+        yield [
+            $event,
+            <<<JSON
+{
+    "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
+    "timestamp": 1597790835,
+    "platform": "php",
+    "sdk": {
+        "name": "sentry.php",
+        "version": "$sdkVersion"
+    },
+    "stacktrace": {
+        "frames": [
+            {
+                "filename": "",
+                "lineno": 0,
+                "in_app": true
+            }
+        ]
+    }
+}
+JSON
+            ,
+            true,
+        ];
     }
 }

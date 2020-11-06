@@ -230,7 +230,7 @@ final class Hub implements HubInterface
         $tracesSampler = $options->getTracesSampler();
         $sampleRate = null !== $tracesSampler
             ? $tracesSampler($samplingContext)
-            : $this->getSampleRate($samplingContext->getParentSampled(), $options->getSampleRate());
+            : $this->getSampleRate($samplingContext->getParentSampled(), $options->getTracesSampleRate());
 
         if (!$this->isValidSampleRate($sampleRate)) {
             $transaction->setSampled(false);

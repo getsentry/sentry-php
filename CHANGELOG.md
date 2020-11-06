@@ -2,8 +2,25 @@
 
 ## Unreleased
 
-- fix: Use Span on Scope instead of Transaction for GuzzleMiddleware (#1099)
 - Add setter for value on the `ExceptionDataBag` (#1100)
+
+## 3.0.4 (2020-11-6)
+
+- Fix stacktrace missing from payload for non-exception events (#1123)
+- Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1119)
+
+## 3.0.3 (2020-10-12)
+
+- Fix missing source code excerpts for stacktrace frames whose absolute file path is equal to the file path (#1104)
+- Fix requirements to construct a valid object instance of the `UserDataBag` class (#1108)
+
+## 3.0.2 (2020-10-02)
+
+- Fix use of the `sample_rate` option rather than `traces_sample_rate` when capturing a `Transaction` (#1106)
+
+## 3.0.1 (2020-10-01)
+
+- Fix use of `Transaction` instead of `Span` in the `GuzzleMiddleware` middleware (#1099)
 
 ## 3.0.0 (2020-09-28)
 

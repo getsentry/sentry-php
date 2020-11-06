@@ -304,7 +304,8 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
                 ->withUploadedFiles([
                     'foo' => new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                ]),
+                ])
+                ->withBody($this->getStreamMock(123 + 321)),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -333,7 +334,8 @@ final class RequestIntegrationTest extends TestCase
                         new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
                         new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
                     ],
-                ]),
+                ])
+                ->withBody($this->getStreamMock(123 + 321)),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -371,7 +373,8 @@ final class RequestIntegrationTest extends TestCase
                             new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
                         ],
                     ],
-                ]),
+                ])
+                ->withBody($this->getStreamMock(123 + 321)),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -448,6 +451,25 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody($this->getStreamMock(null)),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Type' => ['application/json'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($this->getStreamMock(0)),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',

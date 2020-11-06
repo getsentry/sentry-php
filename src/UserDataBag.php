@@ -34,8 +34,17 @@ final class UserDataBag
      */
     private $metadata = [];
 
-    private function __construct()
+    /**
+     * UserDataBag constructor.
+     *
+     * @param string|int|null $id
+     */
+    public function __construct($id = null, ?string $email = null, ?string $ipAddress = null, ?string $username = null)
     {
+        $this->setId($id);
+        $this->setEmail($email);
+        $this->setIpAddress($ipAddress);
+        $this->setUsername($username);
     }
 
     /**
@@ -45,10 +54,7 @@ final class UserDataBag
      */
     public static function createFromUserIdentifier($id): self
     {
-        $instance = new self();
-        $instance->setId($id);
-
-        return $instance;
+        return new self($id);
     }
 
     /**
@@ -58,10 +64,7 @@ final class UserDataBag
      */
     public static function createFromUserIpAddress(string $ipAddress): self
     {
-        $instance = new self();
-        $instance->setIpAddress($ipAddress);
-
-        return $instance;
+        return new self(null, null, $ipAddress);
     }
 
     /**
@@ -71,25 +74,21 @@ final class UserDataBag
      */
     public static function createFromArray(array $data): self
     {
-        if (!isset($data['id']) && !isset($data['ip_address'])) {
-            throw new \InvalidArgumentException('Either the "id" or the "ip_address" field must be set.');
-        }
-
         $instance = new self();
 
         foreach ($data as $field => $value) {
             switch ($field) {
                 case 'id':
-                    $instance->setId($data['id']);
+                    $instance->setId($value);
                     break;
                 case 'ip_address':
-                    $instance->setIpAddress($data['ip_address']);
+                    $instance->setIpAddress($value);
                     break;
                 case 'email':
-                    $instance->setEmail($data['email']);
+                    $instance->setEmail($value);
                     break;
                 case 'username':
-                    $instance->setUsername($data['username']);
+                    $instance->setUsername($value);
                     break;
                 default:
                     $instance->setMetadata($field, $value);
@@ -117,11 +116,7 @@ final class UserDataBag
      */
     public function setId($id): void
     {
-        if (null === $id && null === $this->ipAddress) {
-            throw new \BadMethodCallException('Either the IP address or the ID must be set.');
-        }
-
-        if (!\is_string($id) && !\is_int($id)) {
+        if (null !== $id && !\is_string($id) && !\is_int($id)) {
             throw new \UnexpectedValueException(sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
         }
 
@@ -181,10 +176,6 @@ final class UserDataBag
     {
         if (null !== $ipAddress && false === filter_var($ipAddress, FILTER_VALIDATE_IP)) {
             throw new \InvalidArgumentException(sprintf('The "%s" value is not a valid IP address.', $ipAddress));
-        }
-
-        if (null === $ipAddress && null === $this->id) {
-            throw new \BadMethodCallException('Either the IP address or the ID must be set.');
         }
 
         $this->ipAddress = $ipAddress;
