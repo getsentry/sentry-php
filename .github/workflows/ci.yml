@@ -1,0 +1,71 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+
+jobs:
+  static-analysis:
+    name: Code style and static analysis
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        php: [7.4]
+        script: [phpcs, phpstan, psalm]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@c596331f84de248c01c26db5a184880781e96e36
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Install dependencies
+        run: |
+          composer update --no-interaction --no-suggest --prefer-dist
+
+      - name: Run ${{ matrix.script }}
+        run: |
+          composer ${{ matrix.script }}
+
+
+
+
+  test:
+    name: Test
+    runs-on: ubuntu-18.04
+    needs: [static-analysis]
+    strategy:
+      matrix:
+        php: [7.2, 7.3, 7.4]
+        dependencies: [highest, lowest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@c596331f84de248c01c26db5a184880781e96e36
+        with:
+          php-version: ${{ matrix.php }}
+
+      - if: matrix.dependencies == 'lowest'
+        run: |
+          composer update --no-interaction --no-suggest --prefer-lowest --prefer-dist
+
+      - if: matrix.dependencies == 'highest'
+        run: |
+          composer update --no-interaction --no-suggest --prefer-dist
+
+      - name: Run tests
+        run: |
+          vendor/bin/phpunit --coverage-clover=build/coverage-report.xml
+
+      - name: Codecov
+        run: |
+          bash <(curl -s https://codecov.io/bash) -f build/coverage-report.xml
+
+
