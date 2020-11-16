@@ -11,6 +11,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Severity;
+use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -139,8 +140,9 @@ interface HubInterface
      * Sentry.
      *
      * @param TransactionContext $context Properties of the new transaction
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the SamplingContext
      */
-    public function startTransaction(TransactionContext $context): Transaction;
+    public function startTransaction(TransactionContext $context, ?array $customSamplingContext): Transaction;
 
     /**
      * Returns the transaction that is on the Hub.

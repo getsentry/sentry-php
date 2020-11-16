@@ -214,7 +214,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function startTransaction(TransactionContext $context): Transaction
+    public function startTransaction(TransactionContext $context, ?array $customSamplingContext): Transaction
     {
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
@@ -227,24 +227,28 @@ final class Hub implements HubInterface
         }
 
         $samplingContext = SamplingContext::getDefault($context);
+        $samplingContext->setAdditionalContext($customSamplingContext);
         $tracesSampler = $options->getTracesSampler();
-        $sampleRate = null !== $tracesSampler
-            ? $tracesSampler($samplingContext)
-            : $this->getSampleRate($samplingContext->getParentSampled(), $options->getTracesSampleRate());
 
-        if (!$this->isValidSampleRate($sampleRate)) {
-            $transaction->setSampled(false);
+        if (null === $transaction->getSampled()) {
+            $sampleRate = null !== $tracesSampler
+                ? $tracesSampler($samplingContext)
+                : $this->getSampleRate($samplingContext->getParentSampled(), $options->getTracesSampleRate());
 
-            return $transaction;
+            if (!$this->isValidSampleRate($sampleRate)) {
+                $transaction->setSampled(false);
+
+                return $transaction;
+            }
+
+            if (0.0 === $sampleRate) {
+                $transaction->setSampled(false);
+
+                return $transaction;
+            }
+
+            $transaction->setSampled(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate);
         }
-
-        if (0.0 === $sampleRate) {
-            $transaction->setSampled(false);
-
-            return $transaction;
-        }
-
-        $transaction->setSampled(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate);
 
         if (!$transaction->getSampled()) {
             return $transaction;
@@ -313,8 +317,16 @@ final class Hub implements HubInterface
         return $fallbackSampleRate;
     }
 
-    private function isValidSampleRate(float $sampleRate): bool
+    /**
+     * @param mixed $sampleRate
+     * @return bool
+     */
+    private function isValidSampleRate($sampleRate): bool
     {
+        if (!is_float($sampleRate) && !is_int($sampleRate)) {
+            return false;
+        }
+
         if ($sampleRate < 0 || $sampleRate > 1) {
             return false;
         }
