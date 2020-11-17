@@ -13,10 +13,8 @@ use Http\Client\Common\Plugin\HeaderSetPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\Curl\Client as CurlHttpClient;
-use Http\Client\HttpAsyncClient;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\HttpAsyncClientDiscovery;
-use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
@@ -129,12 +127,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         return new PluginClient($httpClient, $httpClientPlugins);
     }
 
-    /**
-     * @param Options $options
-     *
-     * @return ClientInterface|HttpAsyncClient
-     */
-    protected function resolveClient(Options $options)
+    private function resolveClient(Options $options): HttpAsyncClientInterface
     {
         if (class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
@@ -180,7 +173,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         }
 
         if (null !== $options->getHttpProxy()) {
-            throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client" or the "php-http/guzzle6-adapter" package to be installed.');
+            throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client", the "symfony/http-client" or the "php-http/guzzle6-adapter" package to be installed.');
         }
 
         return HttpAsyncClientDiscovery::find();
