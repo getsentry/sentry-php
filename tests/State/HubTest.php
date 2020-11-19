@@ -571,6 +571,7 @@ final class HubTest extends TestCase
             ->willReturn(new Options([
                 'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
                     $this->assertEquals($samplingContext->getAdditionalContext(), $customSamplingContext);
+
                     return 1.0;
                 },
             ]));
