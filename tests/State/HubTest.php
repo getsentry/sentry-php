@@ -15,6 +15,7 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
 
 final class HubTest extends TestCase
@@ -559,5 +560,22 @@ final class HubTest extends TestCase
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertFalse($transaction->getSampled());
+    }
+
+    public function testStartTransactionWithCustomSamplingContext(): void
+    {
+        $customSamplingContext = ['a' => 'b'];
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
+                    $this->assertEquals($samplingContext->getAdditionalContext(), $customSamplingContext);
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $hub->startTransaction(new TransactionContext(), $customSamplingContext);
     }
 }

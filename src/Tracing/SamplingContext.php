@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use function Sentry\startTransaction;
+
 final class SamplingContext
 {
     /**
@@ -20,7 +22,6 @@ final class SamplingContext
      * @var array<string, mixed>|null Additional context, depending on where the SDK runs
      */
     private $additionalContext;
-
 
     /**
      * Returns an instance populated with the data of the transaction context.
@@ -56,6 +57,8 @@ final class SamplingContext
     }
 
     /**
+     * Anything that will be provided as an second argument in {@link startTransaction()} will be set here.
+     *
      * @param array<string, mixed>|null $additionalContext
      */
     public function setAdditionalContext(?array $additionalContext): void
@@ -64,6 +67,8 @@ final class SamplingContext
     }
 
     /**
+     * Anything that was provided as a second argument by {@link startTransaction()} will be returned here.
+     *
      * @return array<string, mixed>|null
      */
     public function getAdditionalContext(): ?array

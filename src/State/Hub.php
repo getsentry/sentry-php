@@ -214,8 +214,14 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function startTransaction(TransactionContext $context, ?array $customSamplingContext): Transaction
+    public function startTransaction(TransactionContext $context): Transaction
     {
+        $numArgs = \func_num_args();
+        $customSamplingContext = null;
+        if ($numArgs > 1) {
+            $customSamplingContext = func_get_arg(1);
+        }
+
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
         $options = null !== $client ? $client->getOptions() : null;
@@ -228,6 +234,7 @@ final class Hub implements HubInterface
 
         $samplingContext = SamplingContext::getDefault($context);
         $samplingContext->setAdditionalContext($customSamplingContext);
+
         $tracesSampler = $options->getTracesSampler();
 
         if (null === $transaction->getSampled()) {
@@ -319,11 +326,10 @@ final class Hub implements HubInterface
 
     /**
      * @param mixed $sampleRate
-     * @return bool
      */
     private function isValidSampleRate($sampleRate): bool
     {
-        if (!is_float($sampleRate) && !is_int($sampleRate)) {
+        if (!\is_float($sampleRate) && !\is_int($sampleRate)) {
             return false;
         }
 

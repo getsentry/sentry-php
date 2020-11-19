@@ -67,7 +67,6 @@ final class TransactionContext extends SpanContext
         $this->parentSampled = $parentSampled;
     }
 
-
     /**
      * Returns a context populated with the data of the given header.
      *

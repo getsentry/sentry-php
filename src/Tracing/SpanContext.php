@@ -7,6 +7,11 @@ namespace Sentry\Tracing;
 class SpanContext
 {
     /**
+     * @deprecated since version 3.1, to be removed in 4.0
+     */
+    private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
+
+    /**
      * @var string|null Description of the Span
      */
     private $description;
@@ -181,5 +186,39 @@ class SpanContext
     public function setEndTimestamp(?float $endTimestamp): void
     {
         $this->endTimestamp = $endTimestamp;
+    }
+
+    /**
+     * Returns a context populated with the data of the given header.
+     *
+     * @param string $header The sentry-trace header from the request
+     *
+     * @return static
+     *
+     * @deprecated since version 3.1, to be removed in 4.0 use {@link TransactionContext::fromSentryTrace()}
+     */
+    public static function fromTraceparent(string $header)
+    {
+        @trigger_error(sprintf('The %s() method is deprecated since version 3.1 and will be removed in 4.0. Use TransactionContext::fromSentryTrace() instead.', __METHOD__), E_USER_DEPRECATED);
+        /** @phpstan-ignore-next-line */ /** @psalm-suppress UnsafeInstantiation */
+        $context = new static();
+
+        if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
+            return $context;
+        }
+
+        if (!empty($matches['trace_id'])) {
+            $context->traceId = new TraceId($matches['trace_id']);
+        }
+
+        if (!empty($matches['span_id'])) {
+            $context->parentSpanId = new SpanId($matches['span_id']);
+        }
+
+        if (isset($matches['sampled'])) {
+            $context->sampled = '1' === $matches['sampled'];
+        }
+
+        return $context;
     }
 }

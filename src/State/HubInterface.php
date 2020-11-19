@@ -139,10 +139,11 @@ interface HubInterface
      * which point the transaction with all its finished child spans will be sent to
      * Sentry.
      *
-     * @param TransactionContext $context Properties of the new transaction
+     * @param TransactionContext   $context               Properties of the new transaction
      * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the SamplingContext
      */
-    public function startTransaction(TransactionContext $context, ?array $customSamplingContext): Transaction;
+    // @phpstan-ignore-next-line
+    public function startTransaction(TransactionContext $context): Transaction;
 
     /**
      * Returns the transaction that is on the Hub.
