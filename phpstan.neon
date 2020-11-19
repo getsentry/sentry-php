@@ -7,12 +7,6 @@ parameters:
     ignoreErrors:
         - '/Argument of an invalid type object supplied for foreach, only iterables are supported/'
         -
-            message: '/^Access to constant (?:PROXY|TIMEOUT|CONNECT_TIMEOUT) on an unknown class GuzzleHttp\\RequestOptions\.$/'
-            path: src/HttpClient/HttpClientFactory.php
-        -
-            message: '/^Call to static method create\(\) on an unknown class Symfony\\Component\\HttpClient\\HttpClient\.$/'
-            path: src/HttpClient/HttpClientFactory.php
-        -
             message: "/^Offset 'scheme' does not exist on array\\(\\?'scheme' => string, \\?'host' => string, \\?'port' => int, \\?'user' => string, \\?'pass' => string, \\?'path' => string, \\?'query' => string, \\?'fragment' => string\\)\\.$/"
             path: src/Dsn.php
         -
