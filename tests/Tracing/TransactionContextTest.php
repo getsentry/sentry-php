@@ -28,7 +28,7 @@ final class TransactionContextTest extends TestCase
     /**
      * @dataProvider fromSentryTraceDataProvider
      */
-    public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedSampled): void
+    public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled): void
     {
         $spanContext = TransactionContext::fromSentryTrace($header);
 
@@ -40,7 +40,7 @@ final class TransactionContextTest extends TestCase
             $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
         }
 
-        $this->assertSame($expectedSampled, $spanContext->getParentSampled());
+        $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
     }
 
     public function fromSentryTraceDataProvider(): iterable
