@@ -30,6 +30,9 @@ parameters:
         -
             message: "/Call to function in_array\\(\\) with arguments callable\\(\\): mixed&string, array\\('{closure}', '__lambda_func'\\) and true will always evaluate to false\\.$/"
             path: src/FrameBuilder.php
+        -
+            message: "/^PHPDoc tag @param references unknown parameter: \\$customSamplingContext$/"
+            path: src/State/HubInterface.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

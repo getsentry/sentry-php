@@ -142,7 +142,6 @@ interface HubInterface
      * @param TransactionContext   $context               Properties of the new transaction
      * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the SamplingContext
      */
-    // @phpstan-ignore-next-line
     public function startTransaction(TransactionContext $context): Transaction;
 
     /**

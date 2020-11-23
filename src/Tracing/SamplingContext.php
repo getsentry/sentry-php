@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use function Sentry\startTransaction;
-
 final class SamplingContext
 {
     /**
@@ -57,7 +55,7 @@ final class SamplingContext
     }
 
     /**
-     * Anything that will be provided as an second argument in {@link startTransaction()} will be set here.
+     * Sets additional data that will be provided as a second argument to {@link \Sentry\startTransaction()}.
      *
      * @param array<string, mixed>|null $additionalContext
      */
@@ -67,7 +65,7 @@ final class SamplingContext
     }
 
     /**
-     * Anything that was provided as a second argument by {@link startTransaction()} will be returned here.
+     * Gets the additional data that will be provided as a second argument to {@link \Sentry\startTransaction()}.
      *
      * @return array<string, mixed>|null
      */

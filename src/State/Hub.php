@@ -216,9 +216,9 @@ final class Hub implements HubInterface
      */
     public function startTransaction(TransactionContext $context): Transaction
     {
-        $numArgs = \func_num_args();
         $customSamplingContext = null;
-        if ($numArgs > 1) {
+
+        if (\func_num_args() > 1) {
             $customSamplingContext = func_get_arg(1);
         }
 

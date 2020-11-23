@@ -200,6 +200,7 @@ class SpanContext
     public static function fromTraceparent(string $header)
     {
         @trigger_error(sprintf('The %s() method is deprecated since version 3.1 and will be removed in 4.0. Use TransactionContext::fromSentryTrace() instead.', __METHOD__), E_USER_DEPRECATED);
+
         /** @phpstan-ignore-next-line */ /** @psalm-suppress UnsafeInstantiation */
         $context = new static();
 

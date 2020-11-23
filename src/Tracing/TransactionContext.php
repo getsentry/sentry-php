@@ -7,6 +7,7 @@ namespace Sentry\Tracing;
 final class TransactionContext extends SpanContext
 {
     private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
+
     public const DEFAULT_NAME = '<unlabeled transaction>';
 
     /**
@@ -72,11 +73,11 @@ final class TransactionContext extends SpanContext
      *
      * @param string $header The sentry-trace header from the request
      *
-     * @return static
+     * @return self
      */
     public static function fromSentryTrace(string $header)
     {
-        $context = new static();
+        $context = new self();
 
         if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
             return $context;
