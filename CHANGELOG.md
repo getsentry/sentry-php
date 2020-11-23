@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ref: Updates to align with other SDKs (#1134)
+
 ## 3.0.4 (2020-11-6)
 
 - Fix stacktrace missing from payload for non-exception events (#1123)

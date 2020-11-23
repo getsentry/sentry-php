@@ -172,12 +172,12 @@ final class DsnTest extends TestCase
             'The scheme of the "tcp://public:secret@example.com/1" DSN must be either "http" or "https".',
         ];
 
-        yield 'valid project id' => [
+        yield 'invalid project ID (char instead of number)' => [
             'http://public:secret@example.com/j',
             'DSN must contain a valid project ID.',
         ];
 
-        yield 'valid project id' => [
+        yield 'invalid project ID (negative number)' => [
             'http://public:secret@example.com/-2',
             'DSN must contain a valid project ID.',
         ];
