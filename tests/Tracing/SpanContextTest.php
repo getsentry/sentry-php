@@ -13,6 +13,7 @@ final class SpanContextTest extends TestCase
 {
     /**
      * @dataProvider fromTraceparentDataProvider
+     * @group legacy
      */
     public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedSampled): void
     {
