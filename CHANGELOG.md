@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Ref: Updates to align with other SDKs (#1134)
+- Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
+- Allow setting custom data on the sampling context by passing it as 2nd argument of the `startTransaction()` function (#1134)
 - Add setter for value on the `ExceptionDataBag` (#1100)
 - Add `Scope::removeTag` method (#1126)
 

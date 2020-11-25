@@ -140,7 +140,7 @@ interface HubInterface
      * Sentry.
      *
      * @param TransactionContext   $context               Properties of the new transaction
-     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the SamplingContext
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
     public function startTransaction(TransactionContext $context): Transaction;
 

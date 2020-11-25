@@ -156,7 +156,9 @@ final class HubAdapter implements HubInterface
      */
     public function startTransaction(TransactionContext $context): Transaction
     {
-        return SentrySdk::getCurrentHub()->startTransaction($context);
+        $customSamplingContext = \func_num_args() > 1 ? func_get_arg(1) : [];
+
+        return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
     }
 
     /**

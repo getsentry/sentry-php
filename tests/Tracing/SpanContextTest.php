@@ -8,15 +8,21 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class SpanContextTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     /**
      * @dataProvider fromTraceparentDataProvider
+     *
      * @group legacy
      */
     public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedSampled): void
     {
+        $this->expectDeprecation('The Sentry\\Tracing\\SpanContext::fromTraceparent() method is deprecated since version 3.1 and will be removed in 4.0. Use TransactionContext::fromSentryTrace() instead.');
+
         $spanContext = SpanContext::fromTraceparent($header);
 
         if (null !== $expectedSpanId) {

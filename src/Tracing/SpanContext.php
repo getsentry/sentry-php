@@ -195,7 +195,7 @@ class SpanContext
      *
      * @return static
      *
-     * @deprecated since version 3.1, to be removed in 4.0 use {@link TransactionContext::fromSentryTrace()}
+     * @deprecated since version 3.1, to be removed in 4.0
      */
     public static function fromTraceparent(string $header)
     {
