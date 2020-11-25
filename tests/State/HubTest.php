@@ -458,27 +458,27 @@ final class HubTest extends TestCase
 
     public function startTransactionDataProvider(): iterable
     {
-        yield [
+        yield 'Acceptable float value returned from traces_sampler' => [
             new Options([
                 'traces_sampler' => static function (): float {
-                    return 1;
+                    return 1.0;
                 },
             ]),
             new TransactionContext(),
             true,
         ];
 
-        yield [
+        yield 'Acceptable but too low float value returned from traces_sampler' => [
             new Options([
                 'traces_sampler' => static function (): float {
-                    return 0;
+                    return 0.0;
                 },
             ]),
             new TransactionContext(),
             false,
         ];
 
-        yield [
+        yield 'Acceptable integer value returned from traces_sampler' => [
             new Options([
                 'traces_sampler' => static function (): int {
                     return 1;
@@ -488,7 +488,7 @@ final class HubTest extends TestCase
             true,
         ];
 
-        yield [
+        yield 'Acceptable but too low integer value returned from traces_sampler' => [
             new Options([
                 'traces_sampler' => static function (): int {
                     return 0;
@@ -498,7 +498,7 @@ final class HubTest extends TestCase
             false,
         ];
 
-        yield [
+        yield 'Acceptable float value returned from traces_sample_rate' => [
             new Options([
                 'traces_sample_rate' => 1.0,
             ]),
@@ -506,7 +506,7 @@ final class HubTest extends TestCase
             true,
         ];
 
-        yield [
+        yield 'Acceptable but too low float value returned from traces_sample_rate' => [
             new Options([
                 'traces_sample_rate' => 0.0,
             ]),
@@ -514,7 +514,23 @@ final class HubTest extends TestCase
             false,
         ];
 
-        yield [
+        yield 'Acceptable integer value returned from traces_sample_rate' => [
+            new Options([
+                'traces_sample_rate' => 1,
+            ]),
+            new TransactionContext(),
+            true,
+        ];
+
+        yield 'Acceptable but too low integer value returned from traces_sample_rate' => [
+            new Options([
+                'traces_sample_rate' => 0,
+            ]),
+            new TransactionContext(),
+            false,
+        ];
+
+        yield 'Acceptable but too low value returned from traces_sample_rate which is preferred over sample_rate' => [
             new Options([
                 'sample_rate' => 1.0,
                 'traces_sample_rate' => 0.0,
@@ -523,7 +539,7 @@ final class HubTest extends TestCase
             false,
         ];
 
-        yield [
+        yield 'Acceptable value returned from traces_sample_rate which is preferred over sample_rate' => [
             new Options([
                 'sample_rate' => 0.0,
                 'traces_sample_rate' => 1.0,
@@ -532,7 +548,7 @@ final class HubTest extends TestCase
             true,
         ];
 
-        yield [
+        yield 'Acceptable value returned from SamplingContext::getParentSampled() which is preferred over traces_sample_rate (x1)' => [
             new Options([
                 'traces_sample_rate' => 0.5,
             ]),
@@ -540,9 +556,39 @@ final class HubTest extends TestCase
             true,
         ];
 
-        yield [
+        yield 'Acceptable value returned from SamplingContext::getParentSampled() which is preferred over traces_sample_rate (x2)' => [
             new Options([
                 'traces_sample_rate' => 1.0,
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+
+        yield 'Out of range sample rate returned from traces_sampler (lower than minimum)' => [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return -1.0;
+                },
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+
+        yield 'Out of range sample rate returned from traces_sampler (greater than maximum)' => [
+            new Options([
+                'traces_sampler' => static function (): float {
+                    return 1.1;
+                },
+            ]),
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+
+        yield 'Invalid type returned from traces_sampler' => [
+            new Options([
+                'traces_sampler' => static function (): string {
+                    return 'foo';
+                },
             ]),
             new TransactionContext(TransactionContext::DEFAULT_NAME, false),
             false,

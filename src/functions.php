@@ -113,5 +113,6 @@ function withScope(callable $callback): void
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
+    /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
 }
