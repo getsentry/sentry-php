@@ -265,7 +265,7 @@ final class ErrorHandler
      */
     private function handleError(int $level, string $message, string $file, int $line, ?array $errcontext = []): bool
     {
-        if (!(error_reporting() & $level)) {
+        if (0 === (error_reporting() & $level)) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
         } else {
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
