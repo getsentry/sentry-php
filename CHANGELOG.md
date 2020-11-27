@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-## 3.0.4 (2020-11-6)
+- Fix capturing of the request body in the `RequestIntegration` integration (#1139)
+
+## 3.0.4 (2020-11-06)
 
 - Fix stacktrace missing from payload for non-exception events (#1123)
 - Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1119)
