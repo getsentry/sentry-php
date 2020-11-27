@@ -2,6 +2,7 @@
 
 ## Unreleased
 - PHP 8 support
+- Change the error handling for silenced fatal errors using `@` to use a mask check in order to be php 8 compatible (#1141)
 
 ## 3.0.3 (2020-10-12)
 
