@@ -3,8 +3,8 @@
 ## Unreleased
 - PHP 8 support
 - Change the error handling for silenced fatal errors using `@` to use a mask check in order to be php 8 compatible (#1141)
-- Change the dependency of `guzzlehttp/promises` from `^1.3` to `^1.4` since it contains crucial type checks for the `FulfilledPromise` class (#1144)
-- Change the dependency of `symfony/options-resolver` from `^3.4.4|^4.0|^5.0` to `^3.4.43|^4.4.11|^5.0.11` since there were a couple of important php 8 compatibility issues (#1144)
+- Update the `guzzlehttp/promises` package to the minimum required version compatible with PHP 8 (#1144)
+- Update the `symfony/options-resolver` package to the minimum required version compatible with PHP 8 (#1144)
 
 ## 3.0.3 (2020-10-12)
 
