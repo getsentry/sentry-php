@@ -35,7 +35,7 @@
         "psr/http-factory": "^1.0",
         "psr/http-message-implementation": "^1.0",
         "psr/log": "^1.0",
-        "symfony/options-resolver": "^3.4.43|^4.4.11|^5.0.9",
+        "symfony/options-resolver": "^3.4.43|^4.4.11|^5.0.11",
         "symfony/polyfill-php80": "^1.17",
         "symfony/polyfill-uuid": "^1.13.1"
     },
