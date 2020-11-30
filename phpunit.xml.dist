@@ -8,7 +8,7 @@
          beStrictAboutOutputDuringTests="true"
 >
     <php>
-        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0" />
     </php>
 
     <testsuites>
@@ -25,10 +25,10 @@
     </coverage>
 
     <listeners>
-        <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
+        <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
     </listeners>
 
     <extensions>
-        <extension class="Sentry\Tests\SentrySdkExtension"/>
+        <extension class="Sentry\Tests\SentrySdkExtension" />
     </extensions>
 </phpunit>
