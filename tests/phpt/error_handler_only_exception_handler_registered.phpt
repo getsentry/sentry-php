@@ -19,20 +19,15 @@ require $vendor . '/vendor/autoload.php';
 
 ErrorHandler::registerOnceExceptionHandler();
 
-$previousErrorHandler = set_error_handler('print_r');
-$previousExceptionHandler = set_exception_handler('print_r');
+$previousErrorHandler = set_error_handler('var_dump');
+$previousExceptionHandler = set_exception_handler('var_dump');
 
 restore_error_handler();
 restore_exception_handler();
 
-if (null === $previousErrorHandler) {
-    echo 'Previous error handler is NOT present' . PHP_EOL;
-}
-
-if (null !== $previousExceptionHandler) {
-    echo 'Previous exception handler is present' . PHP_EOL;
-}
+var_dump(null !== $previousErrorHandler);
+var_dump(null !== $previousExceptionHandler);
 ?>
 --EXPECT--
-Previous error handler is NOT present
-Previous exception handler is present
+bool(false)
+bool(true)

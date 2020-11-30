@@ -38,5 +38,6 @@ throw new \Exception('foo bar');
 --EXPECTF--
 Exception listener called
 
-Fatal error: Uncaught Exception: foo bar in %s
+Fatal error: Uncaught Exception: foo bar in %s:%d
+Stack trace:
 %a
