@@ -58,11 +58,7 @@ install:
     - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo zend_extension=C:\php\ext\php_xdebug.dll >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.overload_var_dump=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.collect_includes=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.dump_globals=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.collect_vars=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.extended_info=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.mode=coverage >> php.ini
     - cd C:\projects\sentry-php
     - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.7/composer.phar
     - php composer.phar self-update
