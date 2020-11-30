@@ -8,22 +8,28 @@ image: Visual Studio 2019
 environment:
     matrix:
         - PHP_VERSION: 7.2
-          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.2-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.2
-          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.2-vc15-nts
           DEPENDENCIES: highest
         - PHP_VERSION: 7.3
-          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.3-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.3
-          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.3-vc15-nts
           DEPENDENCIES: highest
         - PHP_VERSION: 7.4
-          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.4-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.4
-          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          XDEBUG_VERSION: 3.0.0-7.4-vc15-nts
+          DEPENDENCIES: highest
+        - PHP_VERSION: 8.0
+          XDEBUG_VERSION: 3.0.0-7.4-vc15-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 8.0
+          XDEBUG_VERSION: 3.0.0-7.4-vc15-nts
           DEPENDENCIES: highest
 
 matrix:
@@ -58,7 +64,7 @@ install:
     - IF %INSTALL_PHP%==1 echo xdebug.collect_vars=0 >> php.ini
     - IF %INSTALL_PHP%==1 echo xdebug.extended_info=0 >> php.ini
     - cd C:\projects\sentry-php
-    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.9.3/composer.phar
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.7/composer.phar
     - php composer.phar self-update
     - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
     - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
