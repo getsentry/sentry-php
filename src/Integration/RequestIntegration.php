@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
@@ -35,6 +36,17 @@ final class RequestIntegration implements IntegrationInterface
      * is set to `medium`.
      */
     private const REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH = 10 ** 4;
+
+    /**
+     * This constant is a map of maximum allowed sizes for each value of the
+     * `max_request_body_size` option.
+     */
+    private const MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP = [
+        'none' => 0,
+        'small' => self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH,
+        'medium' => self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH,
+        'always' => -1,
+    ];
 
     /**
      * @var RequestFetcherInterface PSR-7 request fetcher
@@ -155,16 +167,9 @@ final class RequestIntegration implements IntegrationInterface
     private function captureRequestBody(Options $options, ServerRequestInterface $request)
     {
         $maxRequestBodySize = $options->getMaxRequestBodySize();
+        $requestBodySize = (int) $request->getHeaderLine('Content-Length');
 
-        $requestBody = $request->getBody();
-        $requestBodySize = $request->getBody()->getSize();
-
-        if (
-            null === $requestBodySize ||
-            'none' === $maxRequestBodySize ||
-            ('small' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) ||
-            ('medium' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH)
-        ) {
+        if (!$this->isRequestBodySizeWithinReadBounds($requestBodySize, $maxRequestBodySize)) {
             return null;
         }
 
@@ -178,15 +183,17 @@ final class RequestIntegration implements IntegrationInterface
             return $requestData;
         }
 
+        $requestBody = Utils::copyToString($request->getBody(), self::MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP[$maxRequestBodySize]);
+
         if ('application/json' === $request->getHeaderLine('Content-Type')) {
             try {
-                return JSON::decode($requestBody->getContents());
+                return JSON::decode($requestBody);
             } catch (JsonException $exception) {
                 // Fallback to returning the raw data from the request body
             }
         }
 
-        return $requestBody->getContents();
+        return $requestBody;
     }
 
     /**
@@ -216,5 +223,26 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         return $result;
+    }
+
+    private function isRequestBodySizeWithinReadBounds(int $requestBodySize, string $maxRequestBodySize): bool
+    {
+        if ($requestBodySize <= 0) {
+            return false;
+        }
+
+        if ('none' === $maxRequestBodySize) {
+            return false;
+        }
+
+        if ('small' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) {
+            return false;
+        }
+
+        if ('medium' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH) {
+            return false;
+        }
+
+        return true;
     }
 }

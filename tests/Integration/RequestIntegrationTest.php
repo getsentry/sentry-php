@@ -7,10 +7,10 @@ namespace Sentry\Tests\Integration;
 use GuzzleHttp\Psr7\ServerRequest;
 use GuzzleHttp\Psr7\UploadedFile;
 use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\RequestFetcherInterface;
@@ -189,16 +189,14 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'none',
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ])
-                ->withBody($this->getStreamMock(1)),
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
                 'headers' => [
                     'Host' => ['www.example.com'],
+                    'Content-Length' => ['3'],
                 ],
             ],
             null,
@@ -210,21 +208,16 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ])
-                ->withBody($this->getStreamMock(10 ** 3)),
+                ->withHeader('Content-Length', 10 ** 3)
+                ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
                 'headers' => [
                     'Host' => ['www.example.com'],
+                    'Content-Length' => ['1000'],
                 ],
-                'data' => [
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ],
+                'data' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravid',
             ],
             null,
             null,
@@ -235,88 +228,91 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Length', (string) (10 ** 3))
                 ->withParsedBody([
                     'foo' => 'foo value',
                     'bar' => 'bar value',
-                ])
-                ->withBody($this->getStreamMock(10 ** 3 + 1)),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'medium',
-            ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ])
-                ->withBody($this->getStreamMock(10 ** 4)),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                ],
-                'data' => [
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'medium',
-            ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ])
-                ->withBody($this->getStreamMock(10 ** 4 + 1)),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'always',
-            ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withUploadedFiles([
-                    'foo' => new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
                 ]),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
                 'headers' => [
                     'Host' => ['www.example.com'],
+                    'Content-Length' => ['1000'],
                 ],
                 'data' => [
-                    'foo' => [
-                        'client_filename' => 'foo.ext',
-                        'client_media_type' => 'application/text',
-                        'size' => 123,
-                    ],
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'small',
+            ],
+            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Length', (string) (10 ** 3 + 1))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['1001'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'medium',
+            ],
+            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Length', (string) (10 ** 4))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['10000'],
+                ],
+                'data' => [
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'medium',
+            ],
+            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Length', (string) (10 ** 4 + 1))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['10001'],
                 ],
             ],
             null,
@@ -328,6 +324,7 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+                ->withHeader('Content-Length', '444')
                 ->withUploadedFiles([
                     'foo' => [
                         new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
@@ -339,6 +336,7 @@ final class RequestIntegrationTest extends TestCase
                 'method' => 'POST',
                 'headers' => [
                     'Host' => ['www.example.com'],
+                    'Content-Length' => ['444'],
                 ],
                 'data' => [
                     'foo' => [
@@ -364,54 +362,16 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withUploadedFiles([
-                    'foo' => [
-                        'bar' => [
-                            new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                            new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
-                        ],
-                    ],
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                ],
-                'data' => [
-                    'foo' => [
-                        'bar' => [
-                            [
-                                'client_filename' => 'foo.ext',
-                                'client_media_type' => 'application/text',
-                                'size' => 123,
-                            ],
-                            [
-                                'client_filename' => 'bar.ext',
-                                'client_media_type' => 'application/octet-stream',
-                                'size' => 321,
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'always',
-            ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody($this->getStreamMock(13, '{"foo":"bar"}')),
+                ->withHeader('Content-Length', '13')
+                ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Type' => ['application/json'],
+                    'Content-Length' => ['13'],
                 ],
                 'data' => [
                     'foo' => 'bar',
@@ -427,27 +387,7 @@ final class RequestIntegrationTest extends TestCase
             ],
             (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody($this->getStreamMock(1, '{')),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Type' => ['application/json'],
-                ],
-                'data' => '{',
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'always',
-            ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
-                ->withHeader('Content-Type', 'application/json')
-                ->withBody($this->getStreamMock(null)),
+                ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -459,21 +399,6 @@ final class RequestIntegrationTest extends TestCase
             null,
             null,
         ];
-    }
-
-    private function getStreamMock(?int $size, string $content = ''): StreamInterface
-    {
-        /** @var MockObject&StreamInterface $stream */
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->expects($this->any())
-            ->method('getSize')
-            ->willReturn($size);
-
-        $stream->expects(null === $size ? $this->never() : $this->any())
-            ->method('getContents')
-            ->willReturn($content);
-
-        return $stream;
     }
 
     private function createRequestFetcher(ServerRequestInterface $request): RequestFetcherInterface
