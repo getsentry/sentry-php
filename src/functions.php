@@ -108,9 +108,11 @@ function withScope(callable $callback): void
  * which point the transaction with all its finished child spans will be sent to
  * Sentry.
  *
- * @param TransactionContext $context Properties of the new transaction
+ * @param TransactionContext   $context               Properties of the new transaction
+ * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see \Sentry\Tracing\SamplingContext}
  */
-function startTransaction(TransactionContext $context): Transaction
+function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
-    return SentrySdk::getCurrentHub()->startTransaction($context);
+    /** @psalm-suppress TooManyArguments */
+    return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
 }

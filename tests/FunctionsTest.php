@@ -14,6 +14,8 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\Tracing\SamplingContext;
+use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
@@ -21,6 +23,7 @@ use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\init;
+use function Sentry\startTransaction;
 use function Sentry\withScope;
 
 final class FunctionsTest extends TestCase
@@ -130,7 +133,7 @@ final class FunctionsTest extends TestCase
         $this->assertTrue($callbackInvoked);
     }
 
-    public function configureScope(): void
+    public function testConfigureScope(): void
     {
         $callbackInvoked = false;
 
@@ -139,5 +142,28 @@ final class FunctionsTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
+    }
+
+    public function testStartTransaction(): void
+    {
+        $transactionContext = new TransactionContext('foo');
+        $customSamplingContext = ['foo' => 'bar'];
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
+                    $this->assertSame($customSamplingContext, $samplingContext->getAdditionalContext());
+
+                    return 0.0;
+                },
+            ]));
+
+        SentrySdk::getCurrentHub()->bindClient($client);
+
+        $transaction = startTransaction($transactionContext, $customSamplingContext);
+
+        $this->assertSame($transactionContext->getName(), $transaction->getName());
     }
 }
