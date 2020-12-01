@@ -28,9 +28,6 @@ parameters:
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
         -
-            message: "/Call to function in_array\\(\\) with arguments callable\\(\\): mixed&string, array\\('{closure}', '__lambda_func'\\) and true will always evaluate to false\\.$/"
-            path: src/FrameBuilder.php
-        -
             message: "/^PHPDoc tag @param references unknown parameter: \\$customSamplingContext$/"
             path: src/State/HubInterface.php
         -
