@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.1.0 (2020-12-1)
+
 - Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
 - Allow setting custom data on the sampling context by passing it as 2nd argument of the `startTransaction()` function (#1134)
 - Add setter for value on the `ExceptionDataBag` (#1100)
