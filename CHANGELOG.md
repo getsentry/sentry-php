@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 3.1.0 (2020-12-01)
 
 - Fix capturing of the request body in the `RequestIntegration` integration (#1139)
 - Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
