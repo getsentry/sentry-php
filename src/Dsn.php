@@ -101,7 +101,7 @@ final class Dsn
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
 
-        if (!ctype_digit($projectId)) {
+        if ((int) $projectId <= 0) {
             throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
         }
 

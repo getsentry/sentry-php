@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Fix capturing of the request body in the `RequestIntegration` integration (#1139)
+- Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
+- Allow setting custom data on the sampling context by passing it as 2nd argument of the `startTransaction()` function (#1134)
+- Add setter for value on the `ExceptionDataBag` (#1100)
+- Add `Scope::removeTag` method (#1126)
 
 ## 3.0.4 (2020-11-06)
 
