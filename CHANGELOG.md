@@ -1,12 +1,16 @@
 # CHANGELOG
 
-## Unreleased
+## 3.1.0 (2020-12-01)
 
 - Add support for PHP 8.0 (#1087)
 - Change the error handling for silenced fatal errors using `@` to use a mask check in order to be php 8 compatible (#1141)
 - Update the `guzzlehttp/promises` package to the minimum required version compatible with PHP 8 (#1144)
 - Update the `symfony/options-resolver` package to the minimum required version compatible with PHP 8 (#1144)
 - Fix capturing of the request body in the `RequestIntegration` integration (#1139)
+- Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
+- Allow setting custom data on the sampling context by passing it as 2nd argument of the `startTransaction()` function (#1134)
+- Add setter for value on the `ExceptionDataBag` (#1100)
+- Add `Scope::removeTag` method (#1126)
 
 ## 3.0.4 (2020-11-06)
 

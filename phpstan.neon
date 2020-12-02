@@ -27,6 +27,15 @@ parameters:
         -
             message: '/^Method Sentry\\Client::getIntegration\(\) should return T of Sentry\\Integration\\IntegrationInterface\|null but returns Sentry\\Integration\\IntegrationInterface\|null\.$/'
             path: src/Client.php
+        -
+            message: "/^PHPDoc tag @param references unknown parameter: \\$customSamplingContext$/"
+            path: src/State/HubInterface.php
+        -
+            message: '/^Method Sentry\\State\\HubInterface::startTransaction\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/State/HubAdapter.php
+        -
+            message: '/^Method Sentry\\State\\HubInterface::startTransaction\(\) invoked with 2 parameters, 1 required\.$/'
+            path: src/functions.php
     excludes_analyse:
         - tests/resources
         - tests/Fixtures

@@ -6,6 +6,8 @@ namespace Sentry\Tracing;
 
 final class TransactionContext extends SpanContext
 {
+    private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
+
     public const DEFAULT_NAME = '<unlabeled transaction>';
 
     /**
@@ -64,5 +66,35 @@ final class TransactionContext extends SpanContext
     public function setParentSampled(?bool $parentSampled): void
     {
         $this->parentSampled = $parentSampled;
+    }
+
+    /**
+     * Returns a context populated with the data of the given header.
+     *
+     * @param string $header The sentry-trace header from the request
+     *
+     * @return self
+     */
+    public static function fromSentryTrace(string $header)
+    {
+        $context = new self();
+
+        if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
+            return $context;
+        }
+
+        if (!empty($matches['trace_id'])) {
+            $context->traceId = new TraceId($matches['trace_id']);
+        }
+
+        if (!empty($matches['span_id'])) {
+            $context->parentSpanId = new SpanId($matches['span_id']);
+        }
+
+        if (isset($matches['sampled'])) {
+            $context->parentSampled = '1' === $matches['sampled'];
+        }
+
+        return $context;
     }
 }

@@ -41,6 +41,14 @@ final class Transaction extends Span
     }
 
     /**
+     * Gets the name of this transaction.
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
      * Sets the name of this transaction.
      *
      * @param string $name The name

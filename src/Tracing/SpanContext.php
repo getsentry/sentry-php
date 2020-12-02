@@ -6,6 +6,9 @@ namespace Sentry\Tracing;
 
 class SpanContext
 {
+    /**
+     * @deprecated since version 3.1, to be removed in 4.0
+     */
     private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
     /**
@@ -26,7 +29,7 @@ class SpanContext
     /**
      * @var SpanId|null ID of the parent Span
      */
-    private $parentSpanId;
+    protected $parentSpanId;
 
     /**
      * @var bool|null Has the sample decision been made?
@@ -41,7 +44,7 @@ class SpanContext
     /**
      * @var TraceId|null Trace ID
      */
-    private $traceId;
+    protected $traceId;
 
     /**
      * @var array<string, string> A List of tags associated to this Span
@@ -191,9 +194,13 @@ class SpanContext
      * @param string $header The sentry-trace header from the request
      *
      * @return static
+     *
+     * @deprecated since version 3.1, to be removed in 4.0
      */
     public static function fromTraceparent(string $header)
     {
+        @trigger_error(sprintf('The %s() method is deprecated since version 3.1 and will be removed in 4.0. Use TransactionContext::fromSentryTrace() instead.', __METHOD__), E_USER_DEPRECATED);
+
         /** @phpstan-ignore-next-line */ /** @psalm-suppress UnsafeInstantiation */
         $context = new static();
 

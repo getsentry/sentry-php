@@ -104,6 +104,20 @@ final class Scope
     }
 
     /**
+     * Removes a given tag from the tags context.
+     *
+     * @param string $key The key that uniquely identifies the tag
+     *
+     * @return $this
+     */
+    public function removeTag(string $key): self
+    {
+        unset($this->tags[$key]);
+
+        return $this;
+    }
+
+    /**
      * Sets context data with the given name.
      *
      * @param string               $name  The name that uniquely identifies the context
