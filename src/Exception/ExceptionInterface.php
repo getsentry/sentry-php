@@ -9,7 +9,7 @@ namespace Sentry\Exception;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
- * @deprecated since version 3.0, to be removed in 4.0
+ * @deprecated since version 3.1, to be removed in 4.0
  */
 interface ExceptionInterface
 {
