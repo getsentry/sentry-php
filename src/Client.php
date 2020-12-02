@@ -225,12 +225,25 @@ final class Client implements ClientInterface
 
         $this->addMissingStacktraceToEvent($event);
 
+        // Do not overwrite event data if it's already set
+        if (null !== $event->getSdkIdentifier()) {
         $event->setSdkIdentifier($this->sdkIdentifier);
+        }
+        if (null !== $event->getSdkVersion()) {
         $event->setSdkVersion($this->sdkVersion);
+        }
+        if (null !== $event->getServerName()) {
         $event->setServerName($this->options->getServerName());
+        }
+        if (null !== $event->getRelease()) {
         $event->setRelease($this->options->getRelease());
-        $event->setTags($this->options->getTags());
+        }
+        if (null !== $event->getEnvironment()) {
         $event->setEnvironment($this->options->getEnvironment());
+        }
+        
+        // Merge tags from the event and from the main options
+        $event->setTags(array_merge($event->getTags(), $this->options->getTags()));
 
         if (null === $event->getLogger()) {
             $event->setLogger($this->options->getLogger());
