@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### 2.5.1 (2020-12-03)
+
 - Fix regression introduced in #1129 (#1143)
 - Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1129)
 
