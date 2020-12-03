@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use InvalidArgumentException;
+use Sentry\Exception\InvalidArgumentException;
 
 /**
  * This class stores all the information about a breadcrumb.
