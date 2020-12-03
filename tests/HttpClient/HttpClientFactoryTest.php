@@ -173,7 +173,9 @@ final class HttpClientFactoryTest extends TestCase
         class_exists(HttpAsyncClientDiscovery::class);
         $mock = $this->createMock(HttpAsyncClientInterface::class);
         $reflectedClass = new \ReflectionClass(ClassDiscovery::class);
-        $reflectedClass->setStaticPropertyValue('cache', [HttpAsyncClientInterface::class => ['class' => \get_class($mock)]]);
+        $method = $reflectedClass->getMethod('storeInCache');
+        $method->setAccessible(true);
+        $method->invokeArgs(null, [HttpAsyncClientInterface::class, ['class' => \get_class($mock)]]);
         $this->assertClientInstance(\get_class($mock));
     }
 
