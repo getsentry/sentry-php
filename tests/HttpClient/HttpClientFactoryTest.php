@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Tests\HttpClient;
 
 use GuzzleHttp\RequestOptions;
-use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
+use Http\Adapter\Guzzle6\Client as Guzzle6HttpClient;
+use Http\Adapter\Guzzle7\Client as Guzzle7HttpClient;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
@@ -19,6 +20,7 @@ use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
 use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
@@ -129,11 +131,29 @@ final class HttpClientFactoryTest extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testResolveClientWithGuzzleClient()
+    public function testResolveClientWithGuzzle6Client()
     {
-        GuzzleHttpClient::createWithConfig([]);
+        if (!class_exists(Guzzle6HttpClient::class)) {
+            self::markTestSkipped('This test requires Guzzle 6 adapter');
+        }
+        Guzzle6HttpClient::createWithConfig([]);
         class_exists(RequestOptions::class);
-        $this->assertClientInstance(GuzzleHttpClient::class);
+        $this->assertClientInstance(Guzzle6HttpClient::class);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testResolveClientWithGuzzle7Client()
+    {
+        if (!class_exists(Guzzle7HttpClient::class)) {
+            self::markTestSkipped('This test requires Guzzle 7 adapter');
+        }
+
+        self::markTestIncomplete('Factory does not support Guzzle 7 adapter');
+        Guzzle7HttpClient::createWithConfig([]);
+        class_exists(RequestOptions::class);
+        $this->assertClientInstance(Guzzle7HttpClient::class);
     }
 
     /**
@@ -175,6 +195,7 @@ final class HttpClientFactoryTest extends TestCase
         class_exists(GzipEncoderPlugin::class);
         class_exists(DecoderPlugin::class);
         class_exists(PluginClient::class);
+        class_exists(RequestInterface::class);
         $options = new Options(['dsn' => 'http://public@example.com/sentry/1']);
         $autoloaders = spl_autoload_functions();
         array_map('spl_autoload_unregister', $autoloaders);
