@@ -1,8 +1,14 @@
 # CHANGELOG
 
-## Unreleased
+## 3.1.0 (2020-12-01)
 
-## 3.0.4 (2020-11-6)
+- Fix capturing of the request body in the `RequestIntegration` integration (#1139)
+- Deprecate `SpanContext::fromTraceparent()` in favor of `TransactionContext::fromSentryTrace()` (#1134)
+- Allow setting custom data on the sampling context by passing it as 2nd argument of the `startTransaction()` function (#1134)
+- Add setter for value on the `ExceptionDataBag` (#1100)
+- Add `Scope::removeTag` method (#1126)
+
+## 3.0.4 (2020-11-06)
 
 - Fix stacktrace missing from payload for non-exception events (#1123)
 - Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1119)

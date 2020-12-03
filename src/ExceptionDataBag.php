@@ -59,6 +59,14 @@ final class ExceptionDataBag
     }
 
     /**
+     * Sets the value of the exception.
+     */
+    public function setValue(string $value): void
+    {
+        $this->value = $value;
+    }
+
+    /**
      * Gets the stack trace object corresponding to the Stack Trace Interface.
      */
     public function getStacktrace(): ?Stacktrace
