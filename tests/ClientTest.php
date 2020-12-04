@@ -468,7 +468,7 @@ final class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Event $event) use ($options): bool {
-                $this->assertSame('sentry.php', $event->getSdkIdentifier());
+                $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
                 $this->assertSame('1.2.3', $event->getSdkVersion());
                 $this->assertSame($options->getServerName(), $event->getServerName());
                 $this->assertSame($options->getRelease(), $event->getRelease());
