@@ -46,7 +46,7 @@ final class RequestIntegrationTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $initialUser, $expectedUser): void {
+        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
             $event = $scope->applyToEvent($event);
 
             $this->assertNotNull($event);
