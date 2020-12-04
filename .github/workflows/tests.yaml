@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request: null
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental == true }}
+    strategy:
+      matrix:
+        php:
+          - '8.0'
+          - '7.4'
+          - '7.3'
+          - '7.2'
+        composer_option:
+          - ''
+          - '--prefer-lowest'
+    name: PHP ${{ matrix.php }} tests (${{ matrix.description }})
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.composer/cache/files
+          key: ${{ matrix.php }}-${{ matrix.composer_option }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: pcov
+      - run: composer remove --dev friendsofphp/php-cs-fixer --no-update
+        if: matrix.php == '8.0'
+      - run: composer update --no-progress --ansi ${{ matrix.composer_option }}
+      - run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      - uses: codecov/codecov-action@v1
+        with:
+          file: './coverage.xml'
+          fail_ci_if_error: true
+  PHP-CS-Fixer:
+    runs-on: ubuntu-latest
+    name: Code style
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.composer/cache/files
+          key: '7.4'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+      - run: composer install --no-progress --ansi
+      - run: composer phpcs
+  PHPStan:
+    runs-on: ubuntu-latest
+    name: PHPStan
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.composer/cache/files
+          key: '7.4'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+      - run: composer install --no-progress --ansi
+      - run: composer phpstan
+  Psalm:
+    runs-on: ubuntu-latest
+    name: PHPStan
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.composer/cache/files
+          key: '7.4'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+      - run: composer install --no-progress --ansi
+      - run: composer psalm
