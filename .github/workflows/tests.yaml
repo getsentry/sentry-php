@@ -9,10 +9,13 @@ on:
 
 jobs:
   Tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
         php:
           - '8.0'
           - '7.4'
@@ -21,7 +24,7 @@ jobs:
         composer_option:
           - ''
           - '--prefer-lowest'
-    name: PHP ${{ matrix.php }} ${{ matrix.composer_option }}
+    name: PHP ${{ matrix.php }} ${{ matrix.composer_option }} ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
