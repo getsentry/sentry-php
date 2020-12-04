@@ -128,6 +128,8 @@ final class Client implements ClientInterface
         $event = Event::createEvent();
         $event->setMessage($message);
         $event->setLevel($level);
+        $event->setSdkIdentifier($this->sdkIdentifier);
+        $event->setSdkVersion($this->sdkVersion);
 
         return $this->captureEvent($event, null, $scope);
     }
