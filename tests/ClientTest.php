@@ -492,6 +492,50 @@ final class ClientTest extends TestCase
         $client->captureEvent(Event::createEvent());
     }
 
+    public function testBuildEventDontOverwriteEventPropertiesWithDefaultValues(): void
+    {
+        $options = new Options();
+        $options->setServerName('testServerName');
+        $options->setRelease('testRelease');
+        $options->setTags(['test2' => 'tag2']);
+        $options->setEnvironment('testEnvironment');
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event) use ($options): bool {
+                $this->assertSame('sdk.identifier', $event->getSdkIdentifier());
+                $this->assertSame('4.2.0', $event->getSdkVersion());
+                $this->assertSame('Debian', $event->getServerName());
+                $this->assertSame('42', $event->getRelease());
+                $this->assertSame(['test1' => 'tag1', 'test2' => 'tag2'], $event->getTags());
+                $this->assertSame('Production', $event->getEnvironment());
+                $this->assertNull($event->getStacktrace());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+        
+        $event = Event::createEvent();
+        $event->setSdkIdentifier('sdk.identifier');
+        $event->setSdkVersion('4.2.0');
+        $event->setServerName('Debian');
+        $event->setRelease('42');
+        $event->setEnvironment('Production');
+        $event->setTags(['test1' => 'tag1']);
+
+        $client->captureEvent($event);
+    }
+
     public function testBuildEventInCLIDoesntSetTransaction(): void
     {
         /** @var TransportInterface&MockObject $transport */
