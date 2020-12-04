@@ -225,11 +225,11 @@ final class Client implements ClientInterface
 
         $this->addMissingStacktraceToEvent($event);
 
-        if (null === $event->getSdkIdentifier()) {
+        if ('' === $event->getSdkIdentifier()) {
         $event->setSdkIdentifier($this->sdkIdentifier);
         }
         
-        if (null === $event->getSdkVersion()) {
+        if ('' === $event->getSdkVersion()) {
         $event->setSdkVersion($this->sdkVersion);
         }
         
