@@ -21,7 +21,7 @@ jobs:
         composer_option:
           - ''
           - '--prefer-lowest'
-    name: PHP ${{ matrix.php }} tests (${{ matrix.description }})
+    name: PHP ${{ matrix.php }} ${{ matrix.composer_option }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
