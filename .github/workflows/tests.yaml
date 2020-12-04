@@ -34,6 +34,8 @@ jobs:
           coverage: pcov
       - run: composer remove --dev friendsofphp/php-cs-fixer --no-update
         if: matrix.php == '8.0'
+      - run: composer require --dev phpunit/phpunit:^9.4 --no-update
+        if: matrix.php == '8.0'
       - run: composer update --no-progress --ansi ${{ matrix.composer_option }}
       - run: vendor/bin/phpunit --coverage-clover=coverage.xml
       - uses: codecov/codecov-action@v1
