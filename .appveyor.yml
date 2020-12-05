@@ -62,8 +62,8 @@ install:
     - cd C:\projects\sentry-php
     - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.7/composer.phar
     - php composer.phar self-update
-    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
-    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
+    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --ansi --prefer-lowest --prefer-dist
+    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --ansi --prefer-dist
 
 test_script:
     - cd C:\projects\sentry-php
