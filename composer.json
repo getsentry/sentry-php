@@ -48,7 +48,7 @@
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12",
         "phpstan/phpstan-phpunit": "^0.12",
-        "phpunit/phpunit": "^8.5.12|^9.4",
+        "phpunit/phpunit": "^8.5.13|^9.4",
         "symfony/phpunit-bridge": "^5.2",
         "vimeo/psalm": "^3.4|^4.2"
     },
