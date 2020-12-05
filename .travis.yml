@@ -34,6 +34,9 @@ jobs:
           name: Psalm
           script: composer psalm
 
+before_install:
+    - pecl install xdebug-3.0.1
+
 install:
     - if [ "$TRAVIS_PHP_VERSION" = "8.0" ]; then composer remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction; fi;
     - if [ "$dependencies" = "lowest" ]; then composer update --no-interaction --no-suggest --prefer-lowest --prefer-dist; fi;
