@@ -1,6 +1,6 @@
 version: 2.x-{build}
 build: false
-clone_depth: 2
+clone_depth: 50
 clone_folder: c:\projects\sentry-php
 skip_branch_with_pr: true
 image: Visual Studio 2019
@@ -8,22 +8,28 @@ image: Visual Studio 2019
 environment:
     matrix:
         - PHP_VERSION: 7.2
-          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.2-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.2
-          XDEBUG_VERSION: 2.9.2-7.2-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.2-vc15-nts
           DEPENDENCIES: highest
         - PHP_VERSION: 7.3
-          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.3-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.3
-          XDEBUG_VERSION: 2.9.2-7.3-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.3-vc15-nts
           DEPENDENCIES: highest
         - PHP_VERSION: 7.4
-          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.4-vc15-nts
           DEPENDENCIES: lowest
         - PHP_VERSION: 7.4
-          XDEBUG_VERSION: 2.9.2-7.4-vc15-nts
+          XDEBUG_VERSION: 3.0.1-7.4-vc15-nts
+          DEPENDENCIES: highest
+        - PHP_VERSION: 8.0
+          XDEBUG_VERSION: 3.0.1-8.0-vs16-nts
+          DEPENDENCIES: lowest
+        - PHP_VERSION: 8.0
+          XDEBUG_VERSION: 3.0.1-8.0-vs16-nts
           DEPENDENCIES: highest
 
 matrix:
@@ -52,16 +58,13 @@ install:
     - IF %INSTALL_PHP%==1 echo extension=php_mbstring.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo extension=php_openssl.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo zend_extension=C:\php\ext\php_xdebug.dll >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.overload_var_dump=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.collect_includes=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.dump_globals=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.collect_vars=0 >> php.ini
-    - IF %INSTALL_PHP%==1 echo xdebug.extended_info=0 >> php.ini
+    - IF %INSTALL_PHP%==1 echo xdebug.mode=coverage >> php.ini
     - cd C:\projects\sentry-php
-    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/1.9.3/composer.phar
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.8/composer.phar
     - php composer.phar self-update
-    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-lowest --prefer-dist
-    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --no-suggest --ansi --prefer-dist
+    - IF %PHP_VERSION%==8.0 php composer.phar remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction
+    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --ansi --prefer-lowest --prefer-dist
+    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --ansi --prefer-dist
 
 test_script:
     - cd C:\projects\sentry-php
