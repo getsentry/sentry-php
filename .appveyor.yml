@@ -62,7 +62,7 @@ install:
     - cd C:\projects\sentry-php
     - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.8/composer.phar
     - php composer.phar self-update
-    - IF %PHP_VERSION%==8.0 composer remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction
+    - IF %PHP_VERSION%==8.0 php composer.phar remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction
     - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --ansi --prefer-lowest --prefer-dist
     - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --ansi --prefer-dist
 
