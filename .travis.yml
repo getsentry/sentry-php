@@ -1,4 +1,5 @@
 language: php
+dist: focal
 
 php:
     - 7.2
