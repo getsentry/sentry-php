@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          backupGlobals="true"
          colors="true"
          bootstrap="tests/bootstrap.php"
@@ -23,6 +23,12 @@
             <directory suffix=".php">src</directory>
         </include>
     </coverage>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
 
     <listeners>
         <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
