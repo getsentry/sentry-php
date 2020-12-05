@@ -36,6 +36,7 @@ matrix:
     fast_finish: true
 
 cache:
+    - composer.phar
     - '%LOCALAPPDATA%\Composer\files'
     - C:\php -> .appveyor.yml
 
@@ -49,8 +50,6 @@ install:
     - ps: choco upgrade chocolatey --confirm --no-progress --allow-downgrade --version 0.10.13
     - ps: choco install codecov --confirm --no-progress
     - ps: choco install php --confirm --no-progress --package-parameters '""/InstallDir:C:\php""' --version (choco search php --exact --all-versions --limit-output | Select-String -Pattern $env:PHP_VERSION | ForEach-Object {$_ -Replace "php\|", ""} | Sort {[version] $_} -Descending | Select-Object -First 1)
-    - ps: choco install composer --confirm --no-progress --params '"/Dev:C:\tools\composer /Php:C:\php"'
-    - ps: refreshenv
     - cd C:\php
     - ps: if ($env:INSTALL_PHP -imatch 1) { appveyor-retry appveyor DownloadFile "https://xdebug.org/files/php_xdebug-$env:XDEBUG_VERSION-x86_64.dll" -FileName C:\php\ext\php_xdebug.dll }
     - IF %INSTALL_PHP%==1 copy /Y php.ini-production php.ini
@@ -61,10 +60,11 @@ install:
     - IF %INSTALL_PHP%==1 echo zend_extension=C:\php\ext\php_xdebug.dll >> php.ini
     - IF %INSTALL_PHP%==1 echo xdebug.mode=coverage >> php.ini
     - cd C:\projects\sentry-php
-    - composer self-update
+    - IF NOT EXIST composer.phar appveyor-retry appveyor DownloadFile https://github.com/composer/composer/releases/download/2.0.8/composer.phar
+    - php composer.phar self-update
     - IF %PHP_VERSION%==8.0 composer remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction
-    - IF %DEPENDENCIES%==lowest composer update --no-progress --no-interaction --ansi --prefer-lowest --prefer-dist
-    - IF %DEPENDENCIES%==highest composer update --no-progress --no-interaction --ansi --prefer-dist
+    - IF %DEPENDENCIES%==lowest php composer.phar update --no-progress --no-interaction --ansi --prefer-lowest --prefer-dist
+    - IF %DEPENDENCIES%==highest php composer.phar update --no-progress --no-interaction --ansi --prefer-dist
 
 test_script:
     - cd C:\projects\sentry-php
