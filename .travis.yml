@@ -36,7 +36,8 @@ jobs:
           script: composer psalm
 
 before_install:
-    - pecl install xdebug-3.0.1
+    - pecl uninstall xdebug
+    - pecl install xdebug
 
 install:
     - if [ "$TRAVIS_PHP_VERSION" = "8.0" ]; then composer remove --dev friendsofphp/php-cs-fixer --no-update --no-interaction; fi;
