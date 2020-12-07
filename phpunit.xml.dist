@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          backupGlobals="true"
          colors="true"
          bootstrap="tests/bootstrap.php"
+         cacheResult="false"
+         beStrictAboutOutputDuringTests="true"
 >
     <php>
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0" />
@@ -16,6 +17,12 @@
             <directory suffix=".phpt">tests/phpt</directory>
         </testsuite>
     </testsuites>
+
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </coverage>
 
     <filter>
         <whitelist>

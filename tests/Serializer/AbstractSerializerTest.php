@@ -16,7 +16,7 @@ abstract class AbstractSerializerTest extends TestCase
     /**
      * This method is only existed because of testSerializeCallable.
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
     }
 
@@ -331,7 +331,7 @@ abstract class AbstractSerializerTest extends TestCase
             $input = pack('H*', $key);
             $result = $this->invokeSerialization($serializer, $input);
 
-            $this->assertInternalType('string', $result);
+            $this->assertIsString($result);
 
             if (\function_exists('mb_detect_encoding')) {
                 $this->assertContains(mb_detect_encoding($result), ['ASCII', 'UTF-8']);
@@ -354,7 +354,7 @@ abstract class AbstractSerializerTest extends TestCase
             $input = str_repeat('x', $length);
             $result = $this->invokeSerialization($serializer, $input);
 
-            $this->assertInternalType('string', $result);
+            $this->assertIsString($result);
             $this->assertLessThanOrEqual(1024, \strlen($result));
         }
     }
@@ -378,7 +378,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         $result = $this->invokeSerialization($serializer, $resource);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('Resource stream', $result);
     }
 
@@ -449,15 +449,15 @@ abstract class AbstractSerializerTest extends TestCase
             ],
             [
                 'callable' => [TestCase::class, 'setUpBeforeClass'],
-                'expected' => 'Callable PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
+                'expected' => 'Callable void PHPUnit\\Framework\\TestCase::setUpBeforeClass []',
             ],
             [
                 'callable' => [$this, 'setUpBeforeClass'],
-                'expected' => 'Callable ' . __CLASS__ . '::setUpBeforeClass []',
+                'expected' => 'Callable void ' . __CLASS__ . '::setUpBeforeClass []',
             ],
             [
                 'callable' => [self::class, 'setUpBeforeClass'],
-                'expected' => 'Callable ' . __CLASS__ . '::setUpBeforeClass []',
+                'expected' => 'Callable void ' . __CLASS__ . '::setUpBeforeClass []',
             ],
             [
                 'callable' => [SerializerTestObject::class, 'testy'],

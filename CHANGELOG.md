@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.1.1 (2020-12-07)
+
+- Add support for PHP 8.0 (#1087)
+- Change the error handling for silenced fatal errors using `@` to use a mask check in order to be php 8 compatible (#1141)
+- Update the `guzzlehttp/promises` package to the minimum required version compatible with PHP 8 (#1144)
+- Update the `symfony/options-resolver` package to the minimum required version compatible with PHP 8 (#1144)
+
 ## 3.1.0 (2020-12-01)
 
 - Fix capturing of the request body in the `RequestIntegration` integration (#1139)
