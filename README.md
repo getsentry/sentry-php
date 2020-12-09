@@ -20,7 +20,7 @@
 
 | Version | Build Status | Code Coverage |
 |:---------:|:-------------:|:-----:|
-| `2.x`| [![Build Status][Travis 2.x Build Status Image]][Travis Build Status] [![Build Status][AppVeyor 2.x Build Status Image]][AppVeyor Build Status] | [![Coverage Status][2.x Code Coverage Image]][2.x Code Coverage] |
+| `2.x`| ![CI](https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=2.x) ![Static analysis](https://github.com/getsentry/sentry-php/workflows/Code%20style%20and%20static%20analysis/badge.svg?branch=2.x) | [![Coverage Status][2.x Code Coverage Image]][2.x Code Coverage] |
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
