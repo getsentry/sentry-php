@@ -20,7 +20,7 @@
 
 | Version | Build Status | Code Coverage |
 |:---------:|:-------------:|:-----:|
-| `2.x`| [![Build Status][Travis 2.x Build Status Image]][Travis Build Status] [![Build Status][AppVeyor 2.x Build Status Image]][AppVeyor Build Status] | [![Coverage Status][2.x Code Coverage Image]][2.x Code Coverage] |
+| `2.x`| [![CI][2.x Build Status Image]][2.x Build Status] | [![Coverage Status][2.x Code Coverage Image]][2.x Code Coverage] |
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -115,9 +115,7 @@ Tests can then be run via phpunit:
 $ vendor/bin/phpunit
 ```
 
-[Travis Build Status]: http://travis-ci.org/getsentry/sentry-php
-[Travis 2.x Build Status Image]: https://img.shields.io/travis/getsentry/sentry-php/2.x?logo=travis
-[AppVeyor Build Status]: https://ci.appveyor.com/project/sentry/sentry-php
-[AppVeyor 2.x Build Status Image]: https://img.shields.io/appveyor/ci/sentry/sentry-php/2.x?logo=appveyor
+[2.x Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3A2.x
+[2.x Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=2.x
 [2.x Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/2.x
 [2.x Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/2.x?logo=codecov
