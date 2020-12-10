@@ -6,6 +6,7 @@
 
 - Fix regression introduced in #1129 (#1143)
 - Fix capturing of the request body in the `RequestIntegration` integration when the stream is empty (#1129)
+- Fix wrong deprecation message when using the `MissingPublicKeyCredentialException` class (#1155)
 
 ### 2.5.0 (2020-09-14)
 
