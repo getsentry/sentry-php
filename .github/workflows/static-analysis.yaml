@@ -4,8 +4,7 @@ on:
     pull_request:
     push:
         branches:
-            - master
-            - develop
+            - 2.x
 
 jobs:
     php-cs-fixer:
