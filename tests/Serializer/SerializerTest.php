@@ -40,7 +40,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $result = $this->invokeSerialization($serializer, 1);
 
-        $this->assertInternalType('integer', $result);
+        $this->assertIsInt($result);
         $this->assertSame(1, $result);
     }
 
@@ -57,7 +57,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $result = $this->invokeSerialization($serializer, 1.5);
 
-        $this->assertInternalType('double', $result);
+        $this->assertIsFloat($result);
         $this->assertSame(1.5, $result);
     }
 
@@ -174,7 +174,7 @@ final class SerializerTest extends AbstractSerializerTest
             $input = str_repeat('x', $length);
             $result = $this->invokeSerialization($serializer, $input);
 
-            $this->assertInternalType('string', $result);
+            $this->assertIsString($result);
             $this->assertLessThanOrEqual(500, \strlen($result));
         }
     }

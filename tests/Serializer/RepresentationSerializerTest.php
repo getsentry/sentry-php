@@ -39,7 +39,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
 
         $result = $serializer->representationSerialize(1);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('1', $result);
     }
 
@@ -56,7 +56,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
 
         $result = $serializer->representationSerialize(1.5);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('1.5', $result);
     }
 
@@ -77,7 +77,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
 
         $result = $serializer->representationSerialize(false);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('false', $result);
     }
 
@@ -94,7 +94,7 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
 
         $result = $serializer->representationSerialize(null);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('null', $result);
     }
 
@@ -111,17 +111,17 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
 
         $result = $serializer->representationSerialize((float) 1);
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('1.0', $result);
 
         $result = $serializer->representationSerialize(floor(5 / 2));
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('2.0', $result);
 
         $result = $serializer->representationSerialize(floor(12345.678901234));
 
-        $this->assertInternalType('string', $result);
+        $this->assertIsString($result);
         $this->assertSame('12345.0', $result);
     }
 

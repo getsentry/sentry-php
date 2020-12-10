@@ -29,39 +29,37 @@ use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\NullTransport;
 use Sentry\Transport\TransportInterface;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class ClientBuilderTest extends TestCase
 {
-    /**
-     * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
-     */
+    use ExpectDeprecationTrait;
+
     public function testHttpTransportIsUsedWhenServerIsConfigured(): void
     {
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
+        /** @var Client $client */
+        $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1'])->getClient();
+        $transport = $this->getTransport($client);
 
         $this->assertInstanceOf(HttpTransport::class, $transport);
     }
 
     public function testNullTransportIsUsedWhenNoServerIsConfigured(): void
     {
-        $clientBuilder = new ClientBuilder();
-
-        $transport = $this->getObjectAttribute($clientBuilder->getClient(), 'transport');
+        /** @var Client $client */
+        $client = ClientBuilder::create()->getClient();
+        $transport = $this->getTransport($client);
 
         $this->assertInstanceOf(NullTransport::class, $transport);
     }
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testSetMessageFactory(): void
     {
+        $this->expectDeprecation('Method Sentry\ClientBuilder::setMessageFactory() is deprecated since version 2.3 and will be removed in 3.0.');
+
         /** @var MessageFactoryInterface&MockObject $messageFactory */
         $messageFactory = $this->createMock(MessageFactoryInterface::class);
         $messageFactory->expects($this->once())
@@ -77,11 +75,11 @@ final class ClientBuilderTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecation Method Sentry\ClientBuilder::setTransport() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.
      */
     public function testSetTransport(): void
     {
+        $this->expectDeprecation('Method Sentry\ClientBuilder::setTransport() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.');
+
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -97,11 +95,11 @@ final class ClientBuilderTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testSetHttpClient(): void
     {
+        $this->expectDeprecation('Method Sentry\ClientBuilder::setHttpClient() is deprecated since version 2.3 and will be removed in 3.0.');
+
         /** @var HttpAsyncClientInterface&MockObject $httpClient */
         $httpClient = $this->createMock(HttpAsyncClientInterface::class);
         $httpClient->expects($this->once())
@@ -119,11 +117,11 @@ final class ClientBuilderTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
      */
     public function testAddHttpClientPlugin(): void
     {
+        $this->expectDeprecation('Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.');
+
         /** @var PluginInterface&MockObject $plugin */
         $plugin = $this->createMock(PluginInterface::class);
         $plugin->expects($this->once())
@@ -141,12 +139,12 @@ final class ClientBuilderTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecation Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
-     * @expectedDeprecation Method Sentry\ClientBuilder::removeHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.
      */
     public function testRemoveHttpClientPlugin(): void
     {
+        $this->expectDeprecation('Method Sentry\ClientBuilder::addHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.');
+        $this->expectDeprecation('Method Sentry\ClientBuilder::removeHttpClientPlugin() is deprecated since version 2.3 and will be removed in 3.0.');
+
         $plugin = new class() implements PluginInterface {
             public function handleRequest(RequestInterface $request, callable $next, callable $first): PromiseInterface
             {
@@ -279,6 +277,17 @@ final class ClientBuilderTest extends TestCase
             new ClientBuilder(new Options()),
             ClientBuilder::create([])
         );
+    }
+
+    private function getTransport(Client $client): TransportInterface
+    {
+        $property = new \ReflectionProperty(Client::class, 'transport');
+
+        $property->setAccessible(true);
+        $value = $property->getValue($client);
+        $property->setAccessible(false);
+
+        return $value;
     }
 }
 

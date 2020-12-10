@@ -63,7 +63,7 @@ class TagsContext extends Context
     /**
      * Sanitizes the given data by converting numeric values to strings.
      *
-     * @param array<string, string> $data The data to sanitize
+     * @param mixed[] $data The data to sanitize
      *
      * @return array<string, string>
      *
