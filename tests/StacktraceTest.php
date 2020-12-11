@@ -531,12 +531,12 @@ final class StacktraceTest extends TestCase
         $result = $stacktrace->getFrameArguments($frame);
 
         // Check we haven't modified our vars.
-        $this->assertEquals($originalFoo, 'bloopblarp');
-        $this->assertEquals($nestedArray['key'], 'xxxxxxxxxx');
+        $this->assertSame('bloopblarp', $originalFoo);
+        $this->assertSame('xxxxxxxxxx', $nestedArray['key']);
 
         // Check that we did truncate the variable in our output
-        $this->assertEquals($result['param1'], 'bloop');
-        $this->assertEquals($result['param2']['key'], 'xxxxx');
+        $this->assertSame('bloop', $result['param1']);
+        $this->assertSame('xxxxx', $result['param2']['key']);
     }
 
     public function testPreserveXdebugFrameArgumentNames(): void

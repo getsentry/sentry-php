@@ -14,9 +14,12 @@ use Psr\Log\LoggerInterface;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\Transport\HttpTransport;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class HttpTransportTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     public function testSendThrowsIfDsnOptionIsNotSet(): void
     {
         $transport = new HttpTransport(
@@ -34,11 +37,11 @@ final class HttpTransportTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testSendDelaysExecutionUntilShutdown(): void
     {
+        $this->expectDeprecation('Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.');
+
         $promise = new FulfilledPromise('foo');
 
         /** @var HttpAsyncClientInterface&MockObject $httpClient */
@@ -116,11 +119,11 @@ final class HttpTransportTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testCloseLogsErrorMessageIfSendingFailed(): void
     {
+        $this->expectDeprecation('Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.');
+
         $exception = new \Exception('foo');
         $event1 = new Event();
         $event2 = new Event();
@@ -165,11 +168,11 @@ final class HttpTransportTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.
      */
     public function testCloseLogsErrorMessageIfExceptionIsThrownWhileProcessingTheHttpRequest(): void
     {
+        $this->expectDeprecation('Delaying the sending of the events using the "Sentry\Transport\HttpTransport" class is deprecated since version 2.2 and will not work in 3.0.');
+
         $exception = new \Exception('foo');
 
         /** @var LoggerInterface&MockObject $logger */

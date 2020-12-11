@@ -1,7 +1,6 @@
 *.lock
-package.xml
-/vendor
+vendor
 .idea
 .php_cs.cache
-docs/_build
+.phpunit.result.cache
 tests/clover.xml

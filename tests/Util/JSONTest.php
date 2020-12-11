@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Util;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Exception\JsonException;
 use Sentry\Tests\Util\Fixtures\JsonSerializableClass;
 use Sentry\Tests\Util\Fixtures\SimpleClass;
 use Sentry\Util\JSON;
@@ -139,12 +140,11 @@ final class JSONTest extends TestCase
         ];
     }
 
-    /**
-     * @expectedException \Sentry\Exception\JsonException
-     * @expectedExceptionMessage Could not encode value into JSON format. Error was: "Type is not supported".
-     */
     public function testEncodeThrowsIfValueIsResource(): void
     {
+        $this->expectException(JsonException::class);
+        $this->expectExceptionMessage('Could not encode value into JSON format. Error was: "Type is not supported".');
+
         $resource = fopen('php://memory', 'r');
 
         $this->assertNotFalse($resource);
@@ -161,12 +161,12 @@ final class JSONTest extends TestCase
 
     /**
      * @requires PHP < 7.2
-     *
-     * @expectedException \Sentry\Exception\JsonException
-     * @expectedExceptionMessage Reached the maximum depth limit while sanitizing the data.
      */
     public function testEncodeThrowsOnPhp71OrLowerWhenSanitizationReachesMaxDepthLimit(): void
     {
+        $this->expectException(JsonException::class);
+        $this->expectExceptionMessage('Reached the maximum depth limit while sanitizing the data.');
+
         JSON::encode([[["\x61\xb0\x62"]]], 0, 2);
     }
 
@@ -203,12 +203,11 @@ final class JSONTest extends TestCase
         ];
     }
 
-    /**
-     * @expectedException \Sentry\Exception\JsonException
-     * @expectedExceptionMessage Could not decode value from JSON format. Error was: "Syntax error".
-     */
     public function testDecodeThrowsIfValueIsNotValidJson(): void
     {
+        $this->expectException(JsonException::class);
+        $this->expectExceptionMessage('Could not decode value from JSON format. Error was: "Syntax error".');
+
         JSON::decode('foo');
     }
 }

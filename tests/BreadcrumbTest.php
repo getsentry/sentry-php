@@ -6,27 +6,26 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\Exception\InvalidArgumentException;
 
 /**
  * @group time-sensitive
  */
 final class BreadcrumbTest extends TestCase
 {
-    /**
-     * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
-     */
     public function testConstructorThrowsOnInvalidLevel(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+
         new Breadcrumb('foo', 'bar', 'baz');
     }
 
-    /**
-     * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
-     */
     public function testSetLevelThrowsOnInvalidLevel(): void
     {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $breadcrumb->withLevel('bar');
     }

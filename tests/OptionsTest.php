@@ -14,10 +14,13 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     /**
      * @group legacy
      *
@@ -81,11 +84,17 @@ final class OptionsTest extends TestCase
      * @group legacy
      *
      * @dataProvider dsnOptionDataProvider
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
     public function testDsnOption($value, ?string $expectedProjectId, ?string $expectedPublicKey, ?string $expectedSecretKey, ?string $expectedDsnAsString, ?Dsn $expectedDsnAsObject): void
     {
+        $this->expectDeprecation('Method Sentry\\Options::getProjectId() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.');
+        $this->expectDeprecation('Method Sentry\\Options::getPublicKey() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.');
+        $this->expectDeprecation('Method Sentry\\Options::getSecretKey() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.');
+
+        if (null !== $expectedDsnAsString) {
+            $this->expectDeprecation('Calling the method Sentry\\Options::getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.');
+        }
+
         $options = new Options(['dsn' => $value]);
 
         $this->assertSame($expectedProjectId, $options->getProjectId());
@@ -362,11 +371,13 @@ final class OptionsTest extends TestCase
     /**
      * @group legacy
      * @backupGlobals enabled
-     *
-     * @expectedDeprecationMessage Calling the method getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.
      */
     public function testDsnOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
+        $this->expectDeprecation('Calling the method Sentry\\Options::getDsn() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.');
+        $this->expectDeprecation('Method Sentry\\Options::getPublicKey() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.');
+        $this->expectDeprecation('Method Sentry\\Options::getProjectId() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.');
+
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
 
         $options = new Options();

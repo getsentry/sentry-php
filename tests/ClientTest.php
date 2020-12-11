@@ -240,7 +240,7 @@ class ClientTest extends TestCase
 
         $client->captureLastError();
 
-        $this->clearLastError();
+        error_clear_last();
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void
@@ -254,7 +254,7 @@ class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $this->clearLastError();
+        error_clear_last();
 
         $client->captureLastError();
     }
@@ -499,20 +499,6 @@ class ClientTest extends TestCase
             ->getClient();
 
         $client->captureMessage('test');
-    }
-
-    /**
-     * @see https://github.com/symfony/polyfill/blob/52332f49d18c413699d2dccf465234356f8e0b2c/src/Php70/Php70.php#L52-L61
-     */
-    private function clearLastError(): void
-    {
-        set_error_handler(static function (): bool {
-            return false;
-        });
-
-        @trigger_error('');
-
-        restore_error_handler();
     }
 
     private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface

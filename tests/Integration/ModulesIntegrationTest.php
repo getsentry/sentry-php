@@ -11,10 +11,13 @@ use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use function Sentry\withScope;
 
 final class ModulesIntegrationTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     /**
      * @dataProvider invokeDataProvider
      */
@@ -59,11 +62,11 @@ final class ModulesIntegrationTest extends TestCase
 
     /**
      * @group legacy
-     *
-     * @expectedDeprecationMessage The "Sentry\Integration\ModulesIntegration::applyToEvent" method is deprecated since version 2.4 and will be removed in 3.0.
      */
     public function testApplyToEvent(): void
     {
+        $this->expectDeprecation('The "Sentry\Integration\ModulesIntegration::applyToEvent" method is deprecated since version 2.4 and will be removed in 3.0.');
+
         $event = new Event();
         $integration = new ModulesIntegration();
         $integration->applyToEvent($integration, $event);
