@@ -16,7 +16,6 @@
 |:---------:|:-------------:|:-----:|
 | `master`| [![CI][master Build Status Image]][master Build Status] | [![Coverage Status][master Code Coverage Image]][master Code Coverage] |
 | `develop`| [![CI][develop Build Status Image]][develop Build Status] | [![Coverage Status][develop Code Coverage Image]][develop Code Coverage] |
-| `2.x`| [![CI][2.x Build Status Image]][2.x Build Status] | [![Coverage Status][2.x Code Coverage Image]][2.x Code Coverage] |
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -115,11 +114,7 @@ $ vendor/bin/phpunit
 [master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master
 [develop Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Adevelop
 [develop Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=develop
-[2.x Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3A2.x
-[2.x Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=2.x
 [master Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/master
 [master Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov
 [develop Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/develop
 [develop Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/develop?logo=codecov
-[2.x Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/2.x
-[2.x Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/2.x?logo=codecov
