@@ -291,29 +291,37 @@ final class ClientTest extends TestCase
         $this->assertNull($client->captureLastError());
     }
 
-    public function testSendChecksBeforeSendOption(): void
+    /**
+     * @dataProvider processEventChecksBeforeSendOptionDataProvider
+     */
+    public function testProcessEventChecksBeforeSendOption(Event $event, bool $expectedBeforeSendCall): void
     {
         $beforeSendCalled = false;
+        $options = [
+            'before_send' => static function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
 
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->never())
-            ->method('send');
+                return null;
+            },
+        ];
 
-        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
-        $options->setBeforeSendCallback(function () use (&$beforeSendCalled) {
-            $beforeSendCalled = true;
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
 
-            return null;
-        });
+        $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
+    }
 
-        $client = (new ClientBuilder($options))
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->getClient();
+    public function processEventChecksBeforeSendOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            true,
+        ];
 
-        $client->captureEvent(Event::createEvent());
-
-        $this->assertTrue($beforeSendCalled);
+        yield [
+            Event::createTransaction(),
+            false,
+        ];
     }
 
     /**

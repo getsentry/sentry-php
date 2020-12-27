@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- Fix unwanted call to the `before_send` callback with transaction events (#1158)
+
 ## 3.1.1 (2020-12-07)
 
 - Add support for PHP 8.0 (#1087)
