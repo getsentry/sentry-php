@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix unwanted call to the `before_send` callback with transaction events (#1158)
+- Fix unwanted call to the `before_send` callback with transaction events, use `traces_sampler` instead to filter transactions (#1158)
 
 ## 3.1.1 (2020-12-07)
 
