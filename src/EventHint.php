@@ -35,7 +35,7 @@ final class EventHint
      *
      * @psalm-param array{
      *     exception?: \Throwable,
-     *     stacktrace?: Event,
+     *     stacktrace?: Stacktrace|null,
      *     extra?: array<string, mixed>
      * } $hintData
      */
