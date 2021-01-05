@@ -144,13 +144,20 @@ final class RequestIntegration implements IntegrationInterface
     {
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
 
-        return array_filter(
-            $headers,
-            static function (string $key) use ($keysToRemove): bool {
-                return !\in_array(strtolower($key), $keysToRemove, true);
-            },
-            \ARRAY_FILTER_USE_KEY
-        );
+        $newHeaders = $headers;
+        foreach ($newHeaders as $key => $value) {
+            if (in_array(strtolower($key), $keysToRemove)) {
+                if (is_array($value)) {
+                    foreach ($value as $subKey => $subValue) {
+                        $newHeaders[$key][$subKey] = '[Filtered]';
+                    }
+                } else {
+                    $newHeaders[$key] = '[Filtered]';
+                }
+            }
+        }
+
+        return $newHeaders;
     }
 
     /**
