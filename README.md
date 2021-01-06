@@ -82,6 +82,7 @@ The following integrations are available and maintained by members of the Sentry
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [SilverStripe](https://github.com/phptek/silverstripe-sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [Yii2](https://github.com/notamedia/yii2-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 1.x
