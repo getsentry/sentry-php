@@ -7,6 +7,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
 use Sentry\Options;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\StacktraceBuilder;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
@@ -291,5 +293,34 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
         $this->assertSame('0.0.1', (new Options())->getRelease());
+    }
+
+    public function testSlashesInPrefixesArePreserved(): void
+    {
+        // Set up some demo paths. Those have to actually exist in the filesystem when running the test, so we can't
+        // just use strings with paths that we made up.
+        $this_file = __FILE__;
+        $app_dir = dirname($this_file, 2);
+
+        $backtrace = [
+            [
+                'file' => $this_file,
+                'line' => 123,
+                'function' => 'foo',
+                'class' => 'Foo',
+                'type' => '->',
+            ],
+        ];
+
+        $options = new Options();
+        $options->setPrefixes([$app_dir . DIRECTORY_SEPARATOR]); // Note the trailing slash/backslash
+        $stacktrace_builder = new StacktraceBuilder($options, new RepresentationSerializer($options));
+        $stacktrace = $stacktrace_builder->buildFromBacktrace($backtrace, '', 0);
+        $frame_file_path = $stacktrace->getFrame(0)->getFile();
+
+        // Assert that the reported path does not start with a slash/backslash. It should have been cut off because the
+        // prefix ends with one.
+        $this->assertStringStartsNotWith('/', $frame_file_path);
+        $this->assertStringStartsNotWith('\\', $frame_file_path);
     }
 }
