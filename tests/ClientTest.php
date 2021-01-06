@@ -454,29 +454,6 @@ final class ClientTest extends TestCase
         $this->assertTrue($promise->wait());
     }
 
-    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
-    {
-        return new class($transport) implements TransportFactoryInterface {
-            /**
-             * @var TransportInterface
-             */
-            private $transport;
-
-            public function __construct(TransportInterface $transport)
-            {
-                $this->transport = $transport;
-            }
-
-            public function create(Options $options): TransportInterface
-            {
-                return $this->transport;
-            }
-        };
-    }
-
-    /**
-     * @backupGlobals
-     */
     public function testBuildEventWithDefaultValues(): void
     {
         $options = new Options();
@@ -484,6 +461,7 @@ final class ClientTest extends TestCase
         $options->setRelease('testRelease');
         $options->setTags(['test' => 'tag']);
         $options->setEnvironment('testEnvironment');
+        $options->setLogger('app.logger');
 
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -496,6 +474,7 @@ final class ClientTest extends TestCase
                 $this->assertSame($options->getRelease(), $event->getRelease());
                 $this->assertSame($options->getTags(), $event->getTags());
                 $this->assertSame($options->getEnvironment(), $event->getEnvironment());
+                $this->assertSame($options->getLogger(), $event->getLogger());
                 $this->assertNull($event->getStacktrace());
 
                 return true;
@@ -641,5 +620,25 @@ final class ClientTest extends TestCase
         );
 
         $client->captureEvent(Event::createEvent());
+    }
+
+    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
+    {
+        return new class($transport) implements TransportFactoryInterface {
+            /**
+             * @var TransportInterface
+             */
+            private $transport;
+
+            public function __construct(TransportInterface $transport)
+            {
+                $this->transport = $transport;
+            }
+
+            public function create(Options $options): TransportInterface
+            {
+                return $this->transport;
+            }
+        };
     }
 }
