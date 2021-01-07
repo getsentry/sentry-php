@@ -4,6 +4,7 @@
 
 - Fix unwanted call to the `before_send` callback with transaction events, use `traces_sampler` instead to filter transactions (#1158)
 - Fix the `logger` option not being applied to the event object (#1165)
+- Fix Event properties being overwritten when saving Event (#1148)
 
 ## 3.1.1 (2020-12-07)
 
