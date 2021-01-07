@@ -232,6 +232,10 @@ final class Client implements ClientInterface
         $event->setTags($this->options->getTags());
         $event->setEnvironment($this->options->getEnvironment());
 
+        if (null === $event->getLogger()) {
+            $event->setLogger($this->options->getLogger());
+        }
+
         $isTransaction = EventType::transaction() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
 
