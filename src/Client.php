@@ -227,10 +227,19 @@ final class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
-        $event->setServerName($this->options->getServerName());
-        $event->setRelease($this->options->getRelease());
-        $event->setTags($this->options->getTags());
-        $event->setEnvironment($this->options->getEnvironment());
+        $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
+
+        if (null === $event->getServerName()) {
+            $event->setServerName($this->options->getServerName());
+        }
+
+        if (null === $event->getRelease()) {
+            $event->setRelease($this->options->getRelease());
+        }
+
+        if (null === $event->getEnvironment()) {
+            $event->setEnvironment($this->options->getEnvironment());
+        }
 
         if (null === $event->getLogger()) {
             $event->setLogger($this->options->getLogger());
