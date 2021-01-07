@@ -128,8 +128,6 @@ final class Client implements ClientInterface
         $event = Event::createEvent();
         $event->setMessage($message);
         $event->setLevel($level);
-        $event->setSdkIdentifier($this->sdkIdentifier);
-        $event->setSdkVersion($this->sdkVersion);
 
         return $this->captureEvent($event, null, $scope);
     }
@@ -227,27 +225,21 @@ final class Client implements ClientInterface
 
         $this->addMissingStacktraceToEvent($event);
 
-        if ('' === $event->getSdkIdentifier()) {
         $event->setSdkIdentifier($this->sdkIdentifier);
-        }
-        
-        if ('' === $event->getSdkVersion()) {
         $event->setSdkVersion($this->sdkVersion);
-        }
-        
+        $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
+
         if (null === $event->getServerName()) {
-        $event->setServerName($this->options->getServerName());
+            $event->setServerName($this->options->getServerName());
         }
-        
+
         if (null === $event->getRelease()) {
-        $event->setRelease($this->options->getRelease());
+            $event->setRelease($this->options->getRelease());
         }
-        
+
         if (null === $event->getEnvironment()) {
-        $event->setEnvironment($this->options->getEnvironment());
+            $event->setEnvironment($this->options->getEnvironment());
         }
-        
-        $event->setTags(array_merge($event->getTags(), $this->options->getTags()));
 
         if (null === $event->getLogger()) {
             $event->setLogger($this->options->getLogger());
