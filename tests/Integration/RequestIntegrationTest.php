@@ -177,8 +177,8 @@ final class RequestIntegrationTest extends TestCase
                 'method' => 'GET',
                 'query_string' => 'foo=bar&bar=baz',
                 'headers' => [
-                    'Host' => ['www.example.com'],
                     'REMOTE_ADDR' => ['[Filtered]'],
+                    'Host' => ['www.example.com'],
                     'Authorization' => ['[Filtered]'],
                     'Cookie' => ['[Filtered]'],
                     'Set-Cookie' => ['[Filtered]'],
