@@ -144,16 +144,15 @@ final class RequestIntegration implements IntegrationInterface
     {
         $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
 
-        $newHeaders = $headers;
-        foreach ($newHeaders as $key => $value) {
+        foreach ($headers as $key => $value) {
             if (\in_array(strtolower($key), $keysToRemove, true)) {
                 foreach ($value as $subKey => $subValue) {
-                    $newHeaders[$key][$subKey] = '[Filtered]';
+                    $headers[$key][$subKey] = '[Filtered]';
                 }
             }
         }
 
-        return $newHeaders;
+        return $headers;
     }
 
     /**
