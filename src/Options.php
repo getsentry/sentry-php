@@ -688,7 +688,7 @@ final class Options
     }
 
     /**
-     * Array of headers to be sanitized as PII
+     * Array of headers to be sanitized as PII.
      *
      * @return array<string>
      */
