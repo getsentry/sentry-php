@@ -146,7 +146,7 @@ final class RequestIntegration implements IntegrationInterface
 
         $newHeaders = $headers;
         foreach ($newHeaders as $key => $value) {
-            if (\in_array(strtolower($key), $keysToRemove)) {
+            if (\in_array(strtolower($key), $keysToRemove, true)) {
                 foreach ($value as $subKey => $subValue) {
                     $newHeaders[$key][$subKey] = '[Filtered]';
                 }
