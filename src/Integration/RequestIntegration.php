@@ -121,7 +121,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['cookies'] = $request->getCookieParams();
             $requestData['headers'] = $request->getHeaders();
         } else {
-            $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
+            $requestData['headers'] = $this->removePiiFromHeaders($options, $request->getHeaders());
         }
 
         $requestBody = $this->captureRequestBody($options, $request);
@@ -136,13 +136,14 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
+     * @param Options $options The options of the client
      * @param array<string, array<int, string>> $headers Array containing request headers
      *
      * @return array<string, array<int, string>>
      */
-    private function removePiiFromHeaders(array $headers): array
+    private function removePiiFromHeaders(Options $options, array $headers): array
     {
-        $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
+        $keysToRemove = $options->getDefaultPIIHeaders();
 
         foreach ($headers as $key => $value) {
             if (\in_array(strtolower($key), $keysToRemove, true)) {

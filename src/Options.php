@@ -8,6 +8,7 @@ use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use function is_string;
 
 /**
  * Configuration container for the Sentry client.
@@ -687,6 +688,29 @@ final class Options
     }
 
     /**
+     * Array of headers to be sanitized as PII
+     *
+     * @return array<string>
+     */
+    public function getDefaultPIIHeaders()
+    {
+        return $this->options['default_pii_headers'];
+    }
+
+    public function setDefaultPIIHeaders(array $headers)
+    {
+        foreach ($headers as $header) {
+            if (!is_string($header)) {
+                throw new \InvalidArgumentException("Headers must be strings.");
+            }
+        }
+
+        $options = array_merge($this->options, ['default_pii_headers' => $headers]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -729,6 +753,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'default_pii_headers' => ['authorization', 'cookie', 'set-cookie', 'remote_addr'],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
