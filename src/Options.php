@@ -700,8 +700,8 @@ final class Options
     public function setDefaultPIIHeaders(array $headers)
     {
         foreach ($headers as $header) {
-            if (!is_string($header)) {
-                throw new \InvalidArgumentException("Headers must be strings.");
+            if (!\is_string($header)) {
+                throw new \InvalidArgumentException('Headers must be strings.');
             }
         }
 
