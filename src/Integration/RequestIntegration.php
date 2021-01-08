@@ -136,7 +136,7 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
-     * @param Options $options The options of the client
+     * @param Options                           $options The options of the client
      * @param array<string, array<int, string>> $headers Array containing request headers
      *
      * @return array<string, array<int, string>>
