@@ -697,6 +697,11 @@ final class Options
         return $this->options['default_pii_headers'];
     }
 
+    /**
+     * Set the headers to be sanitized when 'send_default_pii' is false.
+     *
+     * @param array<string> $headers
+     */
     public function setDefaultPIIHeaders(array $headers)
     {
         foreach ($headers as $header) {
