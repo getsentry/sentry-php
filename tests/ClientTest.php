@@ -14,6 +14,7 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventId;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
@@ -28,7 +29,6 @@ use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
-use Sentry\UserDataBag;
 
 final class ClientTest extends TestCase
 {
@@ -132,29 +132,59 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureException($exception));
     }
 
-    public function testCaptureEvent(): void
+    /**
+     * @dataProvider captureEventDataProvider
+     */
+    public function testCaptureEvent(array $options, Event $event, Event $expectedEvent): void
     {
-        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
+            ->willReturnCallback(function (Event $event) use ($expectedEvent): FulfilledPromise {
+                $this->assertEquals($expectedEvent, $event);
+
                 return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
             });
 
-        $client = ClientBuilder::create()
+        $client = ClientBuilder::create($options)
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        $event = Event::createEvent();
-        $event->setTransaction('foo bar');
-        $event->setLevel(Severity::debug());
-        $event->setLogger('foo');
-        $event->setTags(['foo', 'bar']);
-        $event->setExtra(['foo' => 'bar']);
-        $event->setUser(UserDataBag::createFromUserIdentifier('foo'));
+        $this->assertSame($event->getId(), $client->captureEvent($event));
+    }
 
-        $this->assertNotNull($client->captureEvent($event));
+    public function captureEventDataProvider(): \Generator
+    {
+        $eventId = EventId::generate();
+        $event = Event::createEvent($eventId);
+
+        yield 'Options set && no event properties set => use options' => [
+            [
+                'server_name' => 'example.com',
+                'release' => '0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33',
+                'environment' => 'development',
+                'tags' => ['context' => 'development'],
+            ],
+            $event,
+            $event,
+        ];
+
+        $event = Event::createEvent($eventId);
+        $event->setServerName('foo.example.com');
+        $event->setRelease('721e41770371db95eee98ca2707686226b993eda');
+        $event->setEnvironment('production');
+        $event->setTags(['context' => 'production']);
+
+        yield 'Options set && event properties set => event properties override options' => [
+            [
+                'server_name' => 'example.com',
+                'release' => '0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33',
+                'environment' => 'development',
+                'tags' => ['context' => 'development', 'ios_version' => '14.0'],
+            ],
+            $event,
+            $event,
+        ];
     }
 
     /**
@@ -291,29 +321,37 @@ final class ClientTest extends TestCase
         $this->assertNull($client->captureLastError());
     }
 
-    public function testSendChecksBeforeSendOption(): void
+    /**
+     * @dataProvider processEventChecksBeforeSendOptionDataProvider
+     */
+    public function testProcessEventChecksBeforeSendOption(Event $event, bool $expectedBeforeSendCall): void
     {
         $beforeSendCalled = false;
+        $options = [
+            'before_send' => static function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
 
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->never())
-            ->method('send');
+                return null;
+            },
+        ];
 
-        $options = new Options(['dsn' => 'http://public:secret@example.com/1']);
-        $options->setBeforeSendCallback(function () use (&$beforeSendCalled) {
-            $beforeSendCalled = true;
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
 
-            return null;
-        });
+        $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
+    }
 
-        $client = (new ClientBuilder($options))
-            ->setTransportFactory($this->createTransportFactory($transport))
-            ->getClient();
+    public function processEventChecksBeforeSendOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            true,
+        ];
 
-        $client->captureEvent(Event::createEvent());
-
-        $this->assertTrue($beforeSendCalled);
+        yield [
+            Event::createTransaction(),
+            false,
+        ];
     }
 
     /**
@@ -446,65 +484,6 @@ final class ClientTest extends TestCase
         $this->assertTrue($promise->wait());
     }
 
-    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
-    {
-        return new class($transport) implements TransportFactoryInterface {
-            /**
-             * @var TransportInterface
-             */
-            private $transport;
-
-            public function __construct(TransportInterface $transport)
-            {
-                $this->transport = $transport;
-            }
-
-            public function create(Options $options): TransportInterface
-            {
-                return $this->transport;
-            }
-        };
-    }
-
-    /**
-     * @backupGlobals
-     */
-    public function testBuildEventWithDefaultValues(): void
-    {
-        $options = new Options();
-        $options->setServerName('testServerName');
-        $options->setRelease('testRelease');
-        $options->setTags(['test' => 'tag']);
-        $options->setEnvironment('testEnvironment');
-
-        /** @var TransportInterface&MockObject $transport */
-        $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($options): bool {
-                $this->assertSame('sentry.sdk.identifier', $event->getSdkIdentifier());
-                $this->assertSame('1.2.3', $event->getSdkVersion());
-                $this->assertSame($options->getServerName(), $event->getServerName());
-                $this->assertSame($options->getRelease(), $event->getRelease());
-                $this->assertSame($options->getTags(), $event->getTags());
-                $this->assertSame($options->getEnvironment(), $event->getEnvironment());
-                $this->assertNull($event->getStacktrace());
-
-                return true;
-            }));
-
-        $client = new Client(
-            $options,
-            $transport,
-            'sentry.sdk.identifier',
-            '1.2.3',
-            $this->createMock(SerializerInterface::class),
-            $this->createMock(RepresentationSerializerInterface::class)
-        );
-
-        $client->captureEvent(Event::createEvent());
-    }
-
     public function testBuildEventInCLIDoesntSetTransaction(): void
     {
         /** @var TransportInterface&MockObject $transport */
@@ -633,5 +612,25 @@ final class ClientTest extends TestCase
         );
 
         $client->captureEvent(Event::createEvent());
+    }
+
+    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
+    {
+        return new class($transport) implements TransportFactoryInterface {
+            /**
+             * @var TransportInterface
+             */
+            private $transport;
+
+            public function __construct(TransportInterface $transport)
+            {
+                $this->transport = $transport;
+            }
+
+            public function create(Options $options): TransportInterface
+            {
+                return $this->transport;
+            }
+        };
     }
 }

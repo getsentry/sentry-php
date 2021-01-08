@@ -227,14 +227,28 @@ final class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
-        $event->setServerName($this->options->getServerName());
-        $event->setRelease($this->options->getRelease());
-        $event->setTags($this->options->getTags());
-        $event->setEnvironment($this->options->getEnvironment());
+        $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
 
+        if (null === $event->getServerName()) {
+            $event->setServerName($this->options->getServerName());
+        }
+
+        if (null === $event->getRelease()) {
+            $event->setRelease($this->options->getRelease());
+        }
+
+        if (null === $event->getEnvironment()) {
+            $event->setEnvironment($this->options->getEnvironment());
+        }
+
+        if (null === $event->getLogger()) {
+            $event->setLogger($this->options->getLogger());
+        }
+
+        $isTransaction = EventType::transaction() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
 
-        if (EventType::transaction() !== $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+        if (!$isTransaction && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
 
             return null;
@@ -251,11 +265,13 @@ final class Client implements ClientInterface
             }
         }
 
-        $previousEvent = $event;
-        $event = ($this->options->getBeforeSendCallback())($event);
+        if (!$isTransaction) {
+            $previousEvent = $event;
+            $event = ($this->options->getBeforeSendCallback())($event);
 
-        if (null === $event) {
-            $this->logger->info('The event will be discarded because the "before_send" callback returned "null".', ['event' => $previousEvent]);
+            if (null === $event) {
+                $this->logger->info('The event will be discarded because the "before_send" callback returned "null".', ['event' => $previousEvent]);
+            }
         }
 
         return $event;

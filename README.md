@@ -14,8 +14,8 @@
 
 | Version | Build Status | Code Coverage |
 |:---------:|:-------------:|:-----:|
-| `master`| [![Build Status][Travis Master Build Status Image]][Travis Build Status] [![Build Status][AppVeyor Master Build Status Image]][AppVeyor Build Status] | [![Coverage Status][Master Code Coverage Image]][Master Code Coverage] |
-| `develop` | [![Build Status][Travis Develop Build Status Image]][Travis Build Status] [![Build Status][AppVeyor Develop Build Status Image]][AppVeyor Build Status] | [![Coverage Status][Develop Code Coverage Image]][Develop Code Coverage] |
+| `master`| [![CI][master Build Status Image]][master Build Status] | [![Coverage Status][master Code Coverage Image]][master Code Coverage] |
+| `develop`| [![CI][develop Build Status Image]][develop Build Status] | [![Coverage Status][develop Code Coverage Image]][develop Code Coverage] |
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -82,6 +82,7 @@ The following integrations are available and maintained by members of the Sentry
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [SilverStripe](https://github.com/phptek/silverstripe-sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [Yii2](https://github.com/notamedia/yii2-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 1.x
@@ -110,13 +111,11 @@ Tests can then be run via phpunit:
 $ vendor/bin/phpunit
 ```
 
-[Travis Build Status]: http://travis-ci.org/getsentry/sentry-php
-[Travis Master Build Status Image]: https://img.shields.io/travis/getsentry/sentry-php/master?logo=travis
-[Travis Develop Build Status Image]: https://img.shields.io/travis/getsentry/sentry-php/develop?logo=travis
-[AppVeyor Build Status]: https://ci.appveyor.com/project/sentry/sentry-php
-[AppVeyor Master Build Status Image]: https://img.shields.io/appveyor/ci/sentry/sentry-php/master?logo=appveyor
-[AppVeyor Develop Build Status Image]: https://img.shields.io/appveyor/ci/sentry/sentry-php/develop?logo=appveyor
-[Master Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/master
-[Master Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov
-[Develop Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/develop
-[Develop Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/develop?logo=codecov
+[master Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster
+[master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master
+[develop Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Adevelop
+[develop Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=develop
+[master Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/master
+[master Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov
+[develop Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/develop
+[develop Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/develop?logo=codecov
