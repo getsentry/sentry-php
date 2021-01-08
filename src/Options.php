@@ -8,7 +8,6 @@ use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use function is_string;
 
 /**
  * Configuration container for the Sentry client.
@@ -702,7 +701,7 @@ final class Options
      *
      * @param array<string> $headers
      */
-    public function setDefaultPIIHeaders(array $headers)
+    public function setDefaultPIIHeaders(array $headers): void
     {
         foreach ($headers as $header) {
             if (!\is_string($header)) {
