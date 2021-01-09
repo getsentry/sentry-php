@@ -270,9 +270,15 @@ final class Options
 
     /**
      * Gets the logger used by Sentry.
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getLogger(): string
+    public function getLogger(/*bool $triggerDeprecation = true*/): string
     {
+        if (0 === \func_num_args() || (\func_num_args() > 0 && false !== func_get_arg(0))) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+        }
+
         return $this->options['logger'];
     }
 
@@ -280,9 +286,13 @@ final class Options
      * Sets the logger used by Sentry.
      *
      * @param string $logger The logger
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
     public function setLogger(string $logger): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['logger' => $logger]);
 
         $this->options = $this->resolver->resolve($options);
@@ -722,7 +732,7 @@ final class Options
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
-        $resolver->setAllowedTypes('logger', 'string');
+        $resolver->setAllowedTypes('logger', ['null', 'string']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
@@ -758,6 +768,14 @@ final class Options
 
         $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
+        });
+
+        $resolver->setNormalizer('logger', function (SymfonyOptions $options, ?string $value): ?string {
+            if ('php' !== $value) {
+                @trigger_error('The option "logger" is deprecated.', E_USER_DEPRECATED);
+            }
+
+            return $value;
         });
     }
 

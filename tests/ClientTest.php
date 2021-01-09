@@ -29,9 +29,12 @@ use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class ClientTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     public function testConstructorSetupsIntegrations(): void
     {
         $integrationCalled = false;
