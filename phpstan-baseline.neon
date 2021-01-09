@@ -96,11 +96,6 @@ parameters:
 			path: src/State/HubInterface.php
 
 		-
-			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
-			count: 3
-			path: src/functions.php
-
-		-
 			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureMessage\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
 			count: 1
 			path: src/functions.php

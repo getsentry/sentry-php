@@ -26,10 +26,8 @@ function init(array $options = []): void
  * @param Severity|null  $level   The severity level of the message
  * @param EventHint|null $hint    Object that can contain additional information about the event
  */
-function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId
+function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    $hint = \func_num_args() > 2 ? func_get_arg(2) : null;
-
     /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
 }
@@ -40,10 +38,8 @@ function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $
  * @param \Throwable     $exception The exception
  * @param EventHint|null $hint      Object that can contain additional information about the event
  */
-function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId
+function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    $hint = \func_num_args() > 1 ? func_get_arg(1) : null;
-
     /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureException($exception, $hint);
 }
@@ -64,10 +60,8 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
  *
  * @param EventHint|null $hint Object that can contain additional information about the event
  */
-function captureLastError(/*?EventHint $hint = null*/): ?EventId
+function captureLastError(?EventHint $hint = null): ?EventId
 {
-    $hint = \func_num_args() > 0 ? func_get_arg(0) : null;
-
     /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureLastError($hint);
 }

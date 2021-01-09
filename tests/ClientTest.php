@@ -128,18 +128,6 @@ final class ClientTest extends TestCase
         $this->assertTrue($beforeSendCallbackCalled);
     }
 
-    /**
-     * @dataProvider invalidEventHintArgumentDataProvider
-     */
-    public function testCaptureMessageThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage($expectedExceptionMessage);
-
-        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
-        $client->captureMessage('foo', null, null, $hint);
-    }
-
     public function testCaptureException(): void
     {
         $exception = new \Exception('Some foo error');
@@ -207,18 +195,6 @@ final class ClientTest extends TestCase
                 'exception' => new \Exception('foo'),
             ]),
         ];
-    }
-
-    /**
-     * @dataProvider invalidEventHintArgumentDataProvider
-     */
-    public function testCaptureExceptionThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage($expectedExceptionMessage);
-
-        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
-        $client->captureException(new \Exception(), null, $hint);
     }
 
     /**
@@ -440,35 +416,6 @@ final class ClientTest extends TestCase
         error_clear_last();
 
         $this->assertTrue($beforeSendCallbackCalled);
-    }
-
-    /**
-     * @dataProvider invalidEventHintArgumentDataProvider
-     */
-    public function testCaptureLastErrorThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage($expectedExceptionMessage);
-
-        @trigger_error('foo', E_USER_NOTICE);
-
-        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
-        $client->captureLastError(null, $hint);
-
-        error_clear_last();
-    }
-
-    public function invalidEventHintArgumentDataProvider(): \Generator
-    {
-        yield [
-            'foo',
-            'The $hint argument must be an instance of the "Sentry\EventHint" class. Got: "string".',
-        ];
-
-        yield [
-            new \stdClass(),
-            'The $hint argument must be an instance of the "Sentry\EventHint" class. Got: "stdClass".',
-        ];
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void

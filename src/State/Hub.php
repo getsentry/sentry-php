@@ -116,9 +116,8 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 2 ? func_get_arg(2) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
@@ -132,9 +131,8 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId
+    public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 1 ? func_get_arg(1) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
@@ -162,9 +160,8 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(/*?EventHint $hint = null*/): ?EventId
+    public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 0 ? func_get_arg(0) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
@@ -219,15 +216,11 @@ final class Hub implements HubInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context/*, array $customSamplingContext = []*/): Transaction
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $customSamplingContext = null;
-
-        if (\func_num_args() > 1) {
-            $customSamplingContext = func_get_arg(1);
-        }
-
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
         $options = null !== $client ? $client->getOptions() : null;

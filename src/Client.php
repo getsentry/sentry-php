@@ -123,14 +123,8 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 3 ? func_get_arg(3) : null;
-
-        if (null !== $hint && !$hint instanceof EventHint) {
-            throw new \InvalidArgumentException(sprintf('The $hint argument must be an instance of the "%s" class. Got: "%s".', EventHint::class, get_debug_type($hint)));
-        }
-
         $event = Event::createEvent();
         $event->setMessage($message);
         $event->setLevel($level);
@@ -141,14 +135,8 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId
+    public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 2 ? func_get_arg(2) : null;
-
-        if (null !== $hint && !$hint instanceof EventHint) {
-            throw new \InvalidArgumentException(sprintf('The $hint argument must be an instance of the "%s" class. Got: "%s".', EventHint::class, get_debug_type($hint)));
-        }
-
         $hint = $hint ?? new EventHint();
 
         if (null === $hint->exception) {
@@ -186,9 +174,8 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId
+    public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        $hint = \func_num_args() > 1 ? func_get_arg(1) : null;
         $error = error_get_last();
 
         if (null === $error || !isset($error['message'][0])) {
