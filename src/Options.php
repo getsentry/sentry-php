@@ -275,7 +275,7 @@ final class Options
      */
     public function getLogger(/*bool $triggerDeprecation = true*/): string
     {
-        if (0 === \func_num_args() || (\func_num_args() > 0 && false !== func_get_arg(0))) {
+        if (0 === \func_num_args() || false !== func_get_arg(0)) {
             @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
         }
 
