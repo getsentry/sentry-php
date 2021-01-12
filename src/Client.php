@@ -242,7 +242,7 @@ final class Client implements ClientInterface
         }
 
         if (null === $event->getLogger()) {
-            $event->setLogger($this->options->getLogger());
+            $event->setLogger($this->options->getLogger(false));
         }
 
         $isTransaction = EventType::transaction() === $event->getType();
