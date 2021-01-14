@@ -109,7 +109,7 @@ final class Client implements ClientInterface
         $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
         $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
-        $this->sdkVersion = $sdkVersion ?? PrettyVersions::getVersion(PrettyVersions::getRootPackageName())->getPrettyVersion();
+        $this->sdkVersion = $sdkVersion ?? PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
     /**
