@@ -18,7 +18,7 @@ use Sentry\State\Scope;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Handler extends AbstractProcessingHandler
+class Handler extends AbstractProcessingHandler
 {
     /**
      * @var HubInterface
