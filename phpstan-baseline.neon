@@ -1,0 +1,77 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return T of Sentry\\\\Integration\\\\IntegrationInterface\\|null but returns Sentry\\\\Integration\\\\IntegrationInterface\\|null\\.$#"
+			count: 1
+			path: src/Client.php
+
+		-
+			message: "#^Offset 'scheme' does not exist on array\\(\\?'scheme' \\=\\> string, \\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string\\)\\.$#"
+			count: 1
+			path: src/Dsn.php
+
+		-
+			message: "#^Offset 'path' does not exist on array\\(\\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string, 'scheme' \\=\\> 'http'\\|'https'\\)\\.$#"
+			count: 4
+			path: src/Dsn.php
+
+		-
+			message: "#^Offset 'host' does not exist on array\\(\\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string, 'scheme' \\=\\> 'http'\\|'https'\\)\\.$#"
+			count: 1
+			path: src/Dsn.php
+
+		-
+			message: "#^Offset 'user' does not exist on array\\('scheme' \\=\\> 'http'\\|'https', \\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string\\)\\.$#"
+			count: 1
+			path: src/Dsn.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 2
+			path: src/EventHint.php
+
+		-
+			message: "#^Call to static method create\\(\\) on an unknown class Symfony\\\\Component\\\\HttpClient\\\\HttpClient\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Access to constant TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Access to constant CONNECT_TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Access to constant PROXY on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\Monolog\\\\Handler\\:\\:write\\(\\) has parameter \\$record with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: "#^Argument of an invalid type object supplied for foreach, only iterables are supported\\.$#"
+			count: 1
+			path: src/Serializer/AbstractSerializer.php
+
+		-
+			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:startTransaction\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: src/State/HubAdapter.php
+
+		-
+			message: "#^PHPDoc tag @param references unknown parameter\\: \\$customSamplingContext$#"
+			count: 1
+			path: src/State/HubInterface.php
+
+		-
+			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:startTransaction\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: src/functions.php
+
