@@ -106,6 +106,40 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureMessage('foo', Severity::fatal()));
     }
 
+    public function testCaptureMessageWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureMessage('foo', null, null, $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
+    }
+
+    /**
+     * @dataProvider invalidEventHintArgumentDataProvider
+     */
+    public function testCaptureMessageThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
+        $client->captureMessage('foo', null, null, $hint);
+    }
+
     public function testCaptureException(): void
     {
         $exception = new \Exception('Some foo error');
@@ -133,6 +167,58 @@ final class ClientTest extends TestCase
             ->getClient();
 
         $this->assertNotNull($client->captureException($exception));
+    }
+
+    /**
+     * @dataProvider captureExceptionWithEventHintDataProvider
+     */
+    public function testCaptureExceptionWithEventHint(EventHint $hint): void
+    {
+        $beforeSendCallbackCalled = false;
+        $exception = $hint->exception ?? new \Exception();
+
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($exception, $hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+                $this->assertSame($exception, $hintArg->exception);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureException($exception, null, $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
+    }
+
+    public function captureExceptionWithEventHintDataProvider(): \Generator
+    {
+        yield [
+            EventHint::fromArray([
+                'extra' => ['foo' => 'bar'],
+            ]),
+        ];
+
+        yield [
+            EventHint::fromArray([
+                'exception' => new \Exception('foo'),
+            ]),
+        ];
+    }
+
+    /**
+     * @dataProvider invalidEventHintArgumentDataProvider
+     */
+    public function testCaptureExceptionThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
+        $client->captureException(new \Exception(), null, $hint);
     }
 
     /**
@@ -188,6 +274,28 @@ final class ClientTest extends TestCase
             $event,
             $event,
         ];
+    }
+
+    public function testCaptureEventWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureEvent(Event::createEvent(), $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
     }
 
     /**
@@ -305,6 +413,62 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureLastError());
 
         error_clear_last();
+    }
+
+    public function testCaptureLastErrorWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+
+        @trigger_error('foo', E_USER_NOTICE);
+
+        $client->captureLastError(null, $hint);
+
+        error_clear_last();
+
+        $this->assertTrue($beforeSendCallbackCalled);
+    }
+
+    /**
+     * @dataProvider invalidEventHintArgumentDataProvider
+     */
+    public function testCaptureLastErrorThrowsIfHintArgumentIsInvalid($hint, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        @trigger_error('foo', E_USER_NOTICE);
+
+        $client = new Client(new Options(), $this->createMock(TransportInterface::class));
+        $client->captureLastError(null, $hint);
+
+        error_clear_last();
+    }
+
+    public function invalidEventHintArgumentDataProvider(): \Generator
+    {
+        yield [
+            'foo',
+            'The $hint argument must be an instance of the "Sentry\EventHint" class. Got: "string".',
+        ];
+
+        yield [
+            new \stdClass(),
+            'The $hint argument must be an instance of the "Sentry\EventHint" class. Got: "stdClass".',
+        ];
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void

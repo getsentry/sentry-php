@@ -22,22 +22,30 @@ function init(array $options = []): void
 /**
  * Captures a message event and sends it to Sentry.
  *
- * @param string        $message The message
- * @param Severity|null $level   The severity level of the message
+ * @param string         $message The message
+ * @param Severity|null  $level   The severity level of the message
+ * @param EventHint|null $hint    Object that can contain additional information about the event
  */
-function captureMessage(string $message, ?Severity $level = null): ?EventId
+function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureMessage($message, $level);
+    $hint = \func_num_args() > 2 ? func_get_arg(2) : null;
+
+    /** @psalm-suppress TooManyArguments */
+    return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
 }
 
 /**
  * Captures an exception event and sends it to Sentry.
  *
- * @param \Throwable $exception The exception
+ * @param \Throwable     $exception The exception
+ * @param EventHint|null $hint      Object that can contain additional information about the event
  */
-function captureException(\Throwable $exception): ?EventId
+function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureException($exception);
+    $hint = \func_num_args() > 1 ? func_get_arg(1) : null;
+
+    /** @psalm-suppress TooManyArguments */
+    return SentrySdk::getCurrentHub()->captureException($exception, $hint);
 }
 
 /**
@@ -52,11 +60,16 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 }
 
 /**
- * Logs the most recent error (obtained with {@link error_get_last}).
+ * Logs the most recent error (obtained with {@see error_get_last()}).
+ *
+ * @param EventHint|null $hint Object that can contain additional information about the event
  */
-function captureLastError(): ?EventId
+function captureLastError(/*?EventHint $hint = null*/): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureLastError();
+    $hint = \func_num_args() > 0 ? func_get_arg(0) : null;
+
+    /** @psalm-suppress TooManyArguments */
+    return SentrySdk::getCurrentHub()->captureLastError($hint);
 }
 
 /**

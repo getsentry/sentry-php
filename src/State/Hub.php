@@ -116,12 +116,14 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId
     {
+        $hint = \func_num_args() > 2 ? func_get_arg(2) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope(), $hint);
         }
 
         return null;
@@ -130,12 +132,14 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?EventId
+    public function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId
     {
+        $hint = \func_num_args() > 1 ? func_get_arg(1) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureException($exception, $this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureException($exception, $this->getScope(), $hint);
         }
 
         return null;
@@ -158,12 +162,14 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?EventId
+    public function captureLastError(/*?EventHint $hint = null*/): ?EventId
     {
+        $hint = \func_num_args() > 0 ? func_get_arg(0) : null;
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureLastError($this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureLastError($this->getScope(), $hint);
         }
 
         return null;
@@ -214,7 +220,7 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function startTransaction(TransactionContext $context): Transaction
+    public function startTransaction(TransactionContext $context/*, array $customSamplingContext = []*/): Transaction
     {
         $customSamplingContext = null;
 
