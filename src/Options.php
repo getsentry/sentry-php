@@ -352,7 +352,7 @@ final class Options
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event): ?Event
+     * @psalm-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -365,7 +365,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event): ?Event $callback
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): void
     {

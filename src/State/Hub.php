@@ -116,12 +116,13 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope(), $hint);
         }
 
         return null;
@@ -130,12 +131,13 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?EventId
+    public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureException($exception, $this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureException($exception, $this->getScope(), $hint);
         }
 
         return null;
@@ -158,12 +160,13 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?EventId
+    public function captureLastError(?EventHint $hint = null): ?EventId
     {
         $client = $this->getClient();
 
         if (null !== $client) {
-            return $this->lastEventId = $client->captureLastError($this->getScope());
+            /** @psalm-suppress TooManyArguments */
+            return $this->lastEventId = $client->captureLastError($this->getScope(), $hint);
         }
 
         return null;
@@ -213,15 +216,11 @@ final class Hub implements HubInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context): Transaction
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $customSamplingContext = null;
-
-        if (\func_num_args() > 1) {
-            $customSamplingContext = func_get_arg(1);
-        }
-
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
         $options = null !== $client ? $client->getOptions() : null;
