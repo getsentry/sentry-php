@@ -198,8 +198,8 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getTags',
             'setTags',
-            null,
-            null,
+            'Method Sentry\\Options::getTags() is deprecated since version 3.2 and will be removed in 4.0.',
+            'Method Sentry\\Options::setTags() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.',
         ];
 
         yield [

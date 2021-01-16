@@ -4,6 +4,7 @@
 
 - Deprecate the `logger` option (#1167)
 - Pass the event hint from the `capture*()` methods down to the `before_send` callback (#1138)
+- Deprecate the `tags` option (#1174)
 
 ## 3.1.2 (2021-01-08)
 
