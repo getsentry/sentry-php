@@ -297,7 +297,7 @@ final class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        @trigger_error('foo', E_USER_NOTICE);
+        @trigger_error('foo', \E_USER_NOTICE);
 
         $this->assertNotNull($client->captureLastError());
 
@@ -552,7 +552,7 @@ final class ClientTest extends TestCase
     public function testBuildWithErrorException(): void
     {
         $options = new Options();
-        $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
+        $exception = new \ErrorException('testMessage', 0, \E_USER_ERROR);
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
