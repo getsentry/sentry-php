@@ -680,7 +680,7 @@ final class Options
             'integrations' => [],
             'default_integrations' => true,
             'send_attempts' => 3,
-            'prefixes' => array_filter(explode(PATH_SEPARATOR, get_include_path() ?: '')),
+            'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
             'traces_sample_rate' => 0,
             'traces_sampler' => null,

@@ -149,7 +149,7 @@ final class RequestIntegration implements IntegrationInterface
             static function (string $key) use ($keysToRemove): bool {
                 return !\in_array(strtolower($key), $keysToRemove, true);
             },
-            ARRAY_FILTER_USE_KEY
+            \ARRAY_FILTER_USE_KEY
         );
     }
 

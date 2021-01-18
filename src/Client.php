@@ -294,7 +294,7 @@ final class Client implements ClientInterface
         }
 
         $event->setStacktrace($this->stacktraceBuilder->buildFromBacktrace(
-            debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+            debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS),
             __FILE__,
             __LINE__ - 3
         ));

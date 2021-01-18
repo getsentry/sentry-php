@@ -50,7 +50,7 @@ final class GzipEncoderPlugin implements PluginInterface
 
         // Instead of using a stream filter we have to compress the whole request
         // body in one go to work around a PHP bug. See https://github.com/getsentry/sentry-php/pull/877
-        $encodedBody = gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP);
+        $encodedBody = gzcompress($requestBody->getContents(), -1, \ZLIB_ENCODING_GZIP);
 
         if (false === $encodedBody) {
             throw new \RuntimeException('Failed to GZIP-encode the request body.');

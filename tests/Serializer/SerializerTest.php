@@ -187,7 +187,7 @@ final class SerializerTest extends AbstractSerializerTest
 
         $this->assertSame('Прекратит {clipped}', $clipped);
         $this->assertNotNull(json_encode($clipped));
-        $this->assertSame(JSON_ERROR_NONE, json_last_error());
+        $this->assertSame(\JSON_ERROR_NONE, json_last_error());
     }
 
     /**
