@@ -378,9 +378,15 @@ final class Options
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getTags(): array
+    public function getTags(/*bool $triggerDeprecation = true*/): array
     {
+        if (0 === \func_num_args() || false !== func_get_arg(0)) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+        }
+
         return $this->options['tags'];
     }
 
@@ -388,9 +394,13 @@ final class Options
      * Sets a list of default tags for events.
      *
      * @param array<string, string> $tags A list of tags
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
     public function setTags(array $tags): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.', __METHOD__), \E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['tags' => $tags]);
 
         $this->options = $this->resolver->resolve($options);
@@ -757,6 +767,13 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('tags', static function (SymfonyOptions $options, array $value): array {
+            if (!empty($value)) {
+                @trigger_error('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.', \E_USER_DEPRECATED);
+            }
+
+            return $value;
+        });
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);

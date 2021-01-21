@@ -198,10 +198,14 @@ final class ClientTest extends TestCase
     }
 
     /**
+     * @group legacy
+     *
      * @dataProvider captureEventDataProvider
      */
     public function testCaptureEvent(array $options, Event $event, Event $expectedEvent): void
     {
+        $this->expectDeprecation('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.');
+
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
