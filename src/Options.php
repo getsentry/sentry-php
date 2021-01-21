@@ -384,7 +384,7 @@ final class Options
     public function getTags(/*bool $triggerDeprecation = true*/): array
     {
         if (0 === \func_num_args() || false !== func_get_arg(0)) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
         }
 
         return $this->options['tags'];
@@ -399,7 +399,7 @@ final class Options
      */
     public function setTags(array $tags): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.', __METHOD__), \E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['tags' => $tags]);
 
@@ -769,7 +769,7 @@ final class Options
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
         $resolver->setNormalizer('tags', static function (SymfonyOptions $options, array $value): array {
             if (!empty($value)) {
-                @trigger_error('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.', E_USER_DEPRECATED);
+                @trigger_error('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.', \E_USER_DEPRECATED);
             }
 
             return $value;
