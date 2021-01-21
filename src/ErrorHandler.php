@@ -91,21 +91,21 @@ final class ErrorHandler
      * @var array List of error levels and their description
      */
     private const ERROR_LEVELS_DESCRIPTION = [
-        E_DEPRECATED => 'Deprecated',
-        E_USER_DEPRECATED => 'User Deprecated',
-        E_NOTICE => 'Notice',
-        E_USER_NOTICE => 'User Notice',
-        E_STRICT => 'Runtime Notice',
-        E_WARNING => 'Warning',
-        E_USER_WARNING => 'User Warning',
-        E_COMPILE_WARNING => 'Compile Warning',
-        E_CORE_WARNING => 'Core Warning',
-        E_USER_ERROR => 'User Error',
-        E_RECOVERABLE_ERROR => 'Catchable Fatal Error',
-        E_COMPILE_ERROR => 'Compile Error',
-        E_PARSE => 'Parse Error',
-        E_ERROR => 'Error',
-        E_CORE_ERROR => 'Core Error',
+        \E_DEPRECATED => 'Deprecated',
+        \E_USER_DEPRECATED => 'User Deprecated',
+        \E_NOTICE => 'Notice',
+        \E_USER_NOTICE => 'User Notice',
+        \E_STRICT => 'Runtime Notice',
+        \E_WARNING => 'Warning',
+        \E_USER_WARNING => 'User Warning',
+        \E_COMPILE_WARNING => 'Compile Warning',
+        \E_CORE_WARNING => 'Core Warning',
+        \E_USER_ERROR => 'User Error',
+        \E_RECOVERABLE_ERROR => 'Catchable Fatal Error',
+        \E_COMPILE_ERROR => 'Compile Error',
+        \E_PARSE => 'Parse Error',
+        \E_ERROR => 'Error',
+        \E_CORE_ERROR => 'Core Error',
     ];
 
     /**
@@ -145,7 +145,7 @@ final class ErrorHandler
             // first call to the set_error_handler method would cause the PHP
             // bug https://bugs.php.net/63206 if the handler is not the first
             // one in the chain of handlers
-            set_error_handler($errorHandlerCallback, E_ALL);
+            set_error_handler($errorHandlerCallback, \E_ALL);
         }
 
         return self::$handlerInstance;
@@ -300,7 +300,7 @@ final class ErrorHandler
         self::$reservedMemory = null;
         $error = error_get_last();
 
-        if (!empty($error) && $error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)) {
+        if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
             $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
 
             $this->exceptionReflection->setValue($errorAsException, []);
