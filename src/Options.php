@@ -276,7 +276,7 @@ final class Options
     public function getLogger(/*bool $triggerDeprecation = true*/): string
     {
         if (0 === \func_num_args() || false !== func_get_arg(0)) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
         }
 
         return $this->options['logger'];
@@ -291,7 +291,7 @@ final class Options
      */
     public function setLogger(string $logger): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['logger' => $logger]);
 
@@ -772,7 +772,7 @@ final class Options
 
         $resolver->setNormalizer('logger', function (SymfonyOptions $options, ?string $value): ?string {
             if ('php' !== $value) {
-                @trigger_error('The option "logger" is deprecated.', E_USER_DEPRECATED);
+                @trigger_error('The option "logger" is deprecated.', \E_USER_DEPRECATED);
             }
 
             return $value;

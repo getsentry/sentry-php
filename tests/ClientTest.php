@@ -409,7 +409,7 @@ final class ClientTest extends TestCase
 
         $client = new Client($options, $this->createMock(TransportInterface::class));
 
-        @trigger_error('foo', E_USER_NOTICE);
+        @trigger_error('foo', \E_USER_NOTICE);
 
         $client->captureLastError(null, $hint);
 
