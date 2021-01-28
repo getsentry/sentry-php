@@ -49,12 +49,12 @@ class TagsContext extends Context
      */
     public function offsetSet($offset, $value): void
     {
-        if (is_numeric($value)) {
-            $value = (string) $value;
-        }
-
         if (!\is_string($value)) {
-            throw new \InvalidArgumentException('The $value argument must be a string.');
+            if (is_numeric($value)) {
+                $value = (string) $value;
+            } else {
+                throw new \InvalidArgumentException('The $value argument must be a string.');
+            }
         }
 
         parent::offsetSet($offset, $value);
