@@ -50,9 +50,7 @@ final class ModulesIntegration implements IntegrationInterface
             foreach (self::getInstalledPackages() as $package) {
                 try {
                     self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
-                } catch (\OutOfBoundsException $exception) {
-                    continue;
-                } catch (VersionMissingExceptionInterface $exception) {
+                } catch (\OutOfBoundsException | VersionMissingExceptionInterface $exception) {
                     continue;
                 }
             }
