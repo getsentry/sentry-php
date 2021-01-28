@@ -82,7 +82,7 @@ final class HttpTransport implements TransportInterface, ClosableTransportInterf
         ?LoggerInterface $logger = null
     ) {
         if ($delaySendingUntilShutdown && $triggerDeprecation) {
-            @trigger_error(sprintf('Delaying the sending of the events using the "%s" class is deprecated since version 2.2 and will not work in 3.0.', __CLASS__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Delaying the sending of the events using the "%s" class is deprecated since version 2.2 and will not work in 3.0.', __CLASS__), \E_USER_DEPRECATED);
         }
 
         $this->options = $options;

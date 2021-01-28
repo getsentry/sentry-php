@@ -128,7 +128,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function setUriFactory(UriFactoryInterface $uriFactory): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->uriFactory = $uriFactory;
 
@@ -140,7 +140,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function setMessageFactory(MessageFactoryInterface $messageFactory): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->messageFactory = $messageFactory;
 
@@ -152,7 +152,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function setTransport(TransportInterface $transport): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the setTransportFactory() method instead.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->transport = $transport;
 
@@ -164,7 +164,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function setHttpClient(HttpAsyncClient $httpClient): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->httpClient = $httpClient;
 
@@ -176,7 +176,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function addHttpClientPlugin(PluginInterface $plugin): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->httpClientPlugins[] = $plugin;
 
@@ -188,7 +188,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function removeHttpClientPlugin(string $className): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         foreach ($this->httpClientPlugins as $index => $httpClientPlugin) {
             if (!$httpClientPlugin instanceof $className) {
@@ -262,7 +262,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function setSdkVersionByPackageName(string $packageName): ClientBuilderInterface
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.2 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $this->sdkVersion = PrettyVersions::getVersion($packageName)->getPrettyVersion();
 

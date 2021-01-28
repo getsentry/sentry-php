@@ -341,8 +341,8 @@ final class RequestIntegrationTest extends TestCase
                 ->withHeader('Content-Length', '444')
                 ->withUploadedFiles([
                     'foo' => [
-                        new UploadedFile('foo content', 123, UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                        new UploadedFile('bar content', 321, UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                        new UploadedFile('foo content', 123, \UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
+                        new UploadedFile('bar content', 321, \UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
                     ],
                 ]),
             [

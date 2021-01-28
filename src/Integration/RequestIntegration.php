@@ -66,7 +66,7 @@ final class RequestIntegration implements IntegrationInterface
     public function __construct(?Options $options = null, ?RequestFetcherInterface $requestFetcher = null)
     {
         if (null !== $options) {
-            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), \E_USER_DEPRECATED);
         }
 
         $this->options = $options;
@@ -106,7 +106,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     public static function applyToEvent(self $self, Event $event, ?ServerRequestInterface $request = null): void
     {
-        @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The "%s" method is deprecated since version 2.1 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         if (null === $self->options) {
             throw new \BadMethodCallException('The options of the integration must be set.');
@@ -178,7 +178,7 @@ final class RequestIntegration implements IntegrationInterface
             static function (string $key) use ($keysToRemove): bool {
                 return !\in_array(strtolower($key), $keysToRemove, true);
             },
-            ARRAY_FILTER_USE_KEY
+            \ARRAY_FILTER_USE_KEY
         );
     }
 

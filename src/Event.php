@@ -175,7 +175,7 @@ final class Event implements \JsonSerializable
     public function getId(bool $returnAsString = true)
     {
         if ($returnAsString) {
-            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
             return (string) $this->id;
         }

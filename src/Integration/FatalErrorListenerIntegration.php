@@ -29,7 +29,7 @@ final class FatalErrorListenerIntegration implements IntegrationInterface
     public function __construct(?Options $options = null)
     {
         if (null !== $options) {
-            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), \E_USER_DEPRECATED);
         }
 
         $this->options = $options;

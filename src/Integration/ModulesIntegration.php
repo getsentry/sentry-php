@@ -49,7 +49,7 @@ final class ModulesIntegration implements IntegrationInterface
      */
     public static function applyToEvent(self $self, Event $event): void
     {
-        @trigger_error(sprintf('The "%s" method is deprecated since version 2.4 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The "%s" method is deprecated since version 2.4 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $self->processEvent($event);
     }

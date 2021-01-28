@@ -37,7 +37,7 @@ final class GzipEncoderPlugin implements PluginInterface
         }
 
         if (null === $streamFactory) {
-            @trigger_error(sprintf('A PSR-17 stream factory is needed as argument of the constructor of the "%s" class since version 2.1.3 and will be required in 3.0.', self::class), E_USER_DEPRECATED);
+            @trigger_error(sprintf('A PSR-17 stream factory is needed as argument of the constructor of the "%s" class since version 2.1.3 and will be required in 3.0.', self::class), \E_USER_DEPRECATED);
         } elseif (!$streamFactory instanceof HttplugStreamFactoryInterface && !$streamFactory instanceof StreamFactoryInterface) {
             throw new \InvalidArgumentException(sprintf('The $streamFactory argument must be an instance of either the "%s" or the "%s" interface.', HttplugStreamFactoryInterface::class, StreamFactoryInterface::class));
         }
@@ -58,7 +58,7 @@ final class GzipEncoderPlugin implements PluginInterface
 
         // Instead of using a stream filter we have to compress the whole request
         // body in one go to work around a PHP bug. See https://github.com/getsentry/sentry-php/pull/877
-        $encodedBody = gzcompress($requestBody->getContents(), -1, ZLIB_ENCODING_GZIP);
+        $encodedBody = gzcompress($requestBody->getContents(), -1, \ZLIB_ENCODING_GZIP);
 
         if (false === $encodedBody) {
             throw new \RuntimeException('Failed to GZIP-encode the request body.');

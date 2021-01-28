@@ -146,27 +146,27 @@ final class Breadcrumb implements \JsonSerializable
      */
     public static function levelFromErrorException(\ErrorException $exception): string
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         switch ($exception->getSeverity()) {
-            case E_DEPRECATED:
-            case E_USER_DEPRECATED:
-            case E_WARNING:
-            case E_USER_WARNING:
-            case E_RECOVERABLE_ERROR:
+            case \E_DEPRECATED:
+            case \E_USER_DEPRECATED:
+            case \E_WARNING:
+            case \E_USER_WARNING:
+            case \E_RECOVERABLE_ERROR:
                 return self::LEVEL_WARNING;
-            case E_ERROR:
-            case E_PARSE:
-            case E_CORE_ERROR:
-            case E_CORE_WARNING:
-            case E_COMPILE_ERROR:
-            case E_COMPILE_WARNING:
+            case \E_ERROR:
+            case \E_PARSE:
+            case \E_CORE_ERROR:
+            case \E_CORE_WARNING:
+            case \E_COMPILE_ERROR:
+            case \E_COMPILE_WARNING:
                 return self::LEVEL_FATAL;
-            case E_USER_ERROR:
+            case \E_USER_ERROR:
                 return self::LEVEL_ERROR;
-            case E_NOTICE:
-            case E_USER_NOTICE:
-            case E_STRICT:
+            case \E_NOTICE:
+            case \E_USER_NOTICE:
+            case \E_STRICT:
                 return self::LEVEL_INFO;
             default:
                 return self::LEVEL_ERROR;

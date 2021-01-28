@@ -79,7 +79,7 @@ final class GzipEncoderPluginTest extends TestCase
                 $request,
                 function (RequestInterface $requestArg) use ($expectedPromise): PromiseInterface {
                     $this->assertSame('gzip', $requestArg->getHeaderLine('Content-Encoding'));
-                    $this->assertSame(gzcompress('foo', -1, ZLIB_ENCODING_GZIP), (string) $requestArg->getBody());
+                    $this->assertSame(gzcompress('foo', -1, \ZLIB_ENCODING_GZIP), (string) $requestArg->getBody());
 
                     return $expectedPromise;
                 },
