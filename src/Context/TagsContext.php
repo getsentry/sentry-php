@@ -49,7 +49,7 @@ class TagsContext extends Context
      */
     public function offsetSet($offset, $value): void
     {
-        if (is_numeric($value)) {
+        if (!\is_string($value) && is_numeric($value)) {
             $value = (string) $value;
         }
 

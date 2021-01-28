@@ -800,7 +800,7 @@ final class Options
             'integrations' => [],
             'default_integrations' => true,
             'send_attempts' => 3,
-            'prefixes' => explode(\PATH_SEPARATOR, get_include_path()),
+            'prefixes' => explode(\PATH_SEPARATOR, get_include_path() ?: ''),
             'sample_rate' => 1,
             'attach_stacktrace' => false,
             'context_lines' => 5,
