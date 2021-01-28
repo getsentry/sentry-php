@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.1.3 (2021-01-25)
+
+- Fix the fetching of the version of the SDK (#1169)
+- Add the `$customSamplingContext` argument to `Hub::startTransaction()` and `HubAdapter::startTransaction()` to fix deprecations thrown in Symfony (#1176)
+
 ## 3.1.2 (2021-01-08)
 
 - Fix unwanted call to the `before_send` callback with transaction events, use `traces_sampler` instead to filter transactions (#1158)

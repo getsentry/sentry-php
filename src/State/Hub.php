@@ -213,15 +213,11 @@ final class Hub implements HubInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context): Transaction
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $customSamplingContext = null;
-
-        if (\func_num_args() > 1) {
-            $customSamplingContext = func_get_arg(1);
-        }
-
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
         $options = null !== $client ? $client->getOptions() : null;

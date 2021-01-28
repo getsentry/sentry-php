@@ -174,7 +174,7 @@ final class UserDataBag
      */
     public function setIpAddress(?string $ipAddress): void
     {
-        if (null !== $ipAddress && false === filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+        if (null !== $ipAddress && false === filter_var($ipAddress, \FILTER_VALIDATE_IP)) {
             throw new \InvalidArgumentException(sprintf('The "%s" value is not a valid IP address.', $ipAddress));
         }
 

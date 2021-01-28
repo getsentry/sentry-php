@@ -60,7 +60,7 @@ final class HttpClientFactoryTest extends TestCase
 
         yield [
             true,
-            gzcompress('foo bar', -1, ZLIB_ENCODING_GZIP),
+            gzcompress('foo bar', -1, \ZLIB_ENCODING_GZIP),
         ];
     }
 
