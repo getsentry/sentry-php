@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## Unreleased
+
 - Allow jean85/pretty-package-versions 2.0 (#?, backport of #1170 from 3.x)
 
 ### 2.5.1 (2020-12-11)
