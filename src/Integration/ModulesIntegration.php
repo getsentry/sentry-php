@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Composer\InstalledVersions;
+use Jean85\Exception\VersionMissingExceptionInterface;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
@@ -47,7 +48,11 @@ final class ModulesIntegration implements IntegrationInterface
     {
         if (empty(self::$packages)) {
             foreach (self::getInstalledPackages() as $package) {
-                self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                try {
+                    self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                } catch (VersionMissingExceptionInterface $exception) {
+                    continue;
+                }
             }
         }
 
