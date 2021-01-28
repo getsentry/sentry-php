@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Composer\InstalledVersions;
+use Jean85\Exception\VersionMissingExceptionInterface;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
@@ -50,7 +51,7 @@ final class ModulesIntegration implements IntegrationInterface
      */
     public static function applyToEvent(self $self, Event $event): void
     {
-        @trigger_error(sprintf('The "%s" method is deprecated since version 2.4 and will be removed in 3.0.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The "%s" method is deprecated since version 2.4 and will be removed in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $self->processEvent($event);
     }
@@ -65,7 +66,13 @@ final class ModulesIntegration implements IntegrationInterface
     {
         if (empty(self::$loadedModules)) {
             foreach (self::getInstalledPackages() as $package) {
-                self::$loadedModules[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                try {
+                    self::$loadedModules[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                } catch (\OutOfBoundsException $exception) {
+                    continue;
+                } catch (VersionMissingExceptionInterface $exception) {
+                    continue;
+                }
             }
         }
 
