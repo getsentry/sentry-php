@@ -7,63 +7,289 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
 use Sentry\Options;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
-    /**
-     * @dataProvider optionsDataProvider
-     */
-    public function testConstructor($option, $value, $getterMethod): void
-    {
-        $configuration = new Options([$option => $value]);
-
-        $this->assertEquals($value, $configuration->$getterMethod());
-    }
+    use ExpectDeprecationTrait;
 
     /**
+     * @group legacy
+     *
      * @dataProvider optionsDataProvider
      */
-    public function testGettersAndSetters(string $option, $value, string $getterMethod, ?string $setterMethod = null): void
-    {
-        $configuration = new Options();
-
-        if (null !== $setterMethod) {
-            $configuration->$setterMethod($value);
+    public function testConstructor(
+        string $option,
+        $value,
+        string $getterMethod,
+        ?string $setterMethod,
+        ?string $expectedGetterDeprecationMessage
+    ): void {
+        if (null !== $expectedGetterDeprecationMessage) {
+            $this->expectDeprecation($expectedGetterDeprecationMessage);
         }
 
-        $this->assertEquals($value, $configuration->$getterMethod());
+        $options = new Options([$option => $value]);
+
+        $this->assertSame($value, $options->$getterMethod());
     }
 
-    public function optionsDataProvider(): array
+    /**
+     * @group legacy
+     *
+     * @dataProvider optionsDataProvider
+     */
+    public function testGettersAndSetters(
+        string $option,
+        $value,
+        string $getterMethod,
+        ?string $setterMethod,
+        ?string $expectedGetterDeprecationMessage,
+        ?string $expectedSetterDeprecationMessage
+    ): void {
+        if (null !== $expectedSetterDeprecationMessage) {
+            $this->expectDeprecation($expectedSetterDeprecationMessage);
+        }
+
+        if (null !== $expectedGetterDeprecationMessage) {
+            $this->expectDeprecation($expectedGetterDeprecationMessage);
+        }
+
+        $options = new Options();
+
+        if (null !== $setterMethod) {
+            $options->$setterMethod($value);
+        }
+
+        $this->assertSame($value, $options->$getterMethod());
+    }
+
+    public function optionsDataProvider(): \Generator
     {
-        return [
-            ['send_attempts', 1, 'getSendAttempts', 'setSendAttempts'],
-            ['prefixes', ['foo', 'bar'], 'getPrefixes', 'setPrefixes'],
-            ['sample_rate', 0.5, 'getSampleRate', 'setSampleRate'],
-            ['traces_sample_rate', 0.5, 'getTracesSampleRate', 'setTracesSampleRate'],
-            ['traces_sampler', static function (): void {}, 'getTracesSampler', 'setTracesSampler'],
-            ['attach_stacktrace', false, 'shouldAttachStacktrace', 'setAttachStacktrace'],
-            ['context_lines', 3, 'getContextLines', 'setContextLines'],
-            ['enable_compression', false, 'isCompressionEnabled', 'setEnableCompression'],
-            ['environment', 'foo', 'getEnvironment', 'setEnvironment'],
-            ['in_app_exclude', ['foo', 'bar'], 'getInAppExcludedPaths', 'setInAppExcludedPaths'],
-            ['in_app_include', ['foo', 'bar'], 'getInAppIncludedPaths', 'setInAppIncludedPaths'],
-            ['logger', 'foo', 'getLogger', 'setLogger'],
-            ['release', 'dev', 'getRelease', 'setRelease'],
-            ['server_name', 'foo', 'getServerName', 'setServerName'],
-            ['tags', ['foo', 'bar'], 'getTags', 'setTags'],
-            ['error_types', 0, 'getErrorTypes', 'setErrorTypes'],
-            ['max_breadcrumbs', 50, 'getMaxBreadcrumbs', 'setMaxBreadcrumbs'],
-            ['before_send', static function (): void {}, 'getBeforeSendCallback', 'setBeforeSendCallback'],
-            ['before_breadcrumb', static function (): void {}, 'getBeforeBreadcrumbCallback', 'setBeforeBreadcrumbCallback'],
-            ['send_default_pii', true, 'shouldSendDefaultPii', 'setSendDefaultPii'],
-            ['default_integrations', false, 'hasDefaultIntegrations', 'setDefaultIntegrations'],
-            ['max_value_length', 50, 'getMaxValueLength', 'setMaxValueLength'],
-            ['http_proxy', '127.0.0.1', 'getHttpProxy', 'setHttpProxy'],
-            ['capture_silenced_errors', true, 'shouldCaptureSilencedErrors', 'setCaptureSilencedErrors'],
-            ['max_request_body_size', 'small', 'getMaxRequestBodySize', 'setMaxRequestBodySize'],
-            ['default_pii_headers', ['foo', 'bar'], 'getDefaultPIIHeaders', 'setDefaultPIIHeaders'],
+        yield [
+            'send_attempts',
+            1,
+            'getSendAttempts',
+            'setSendAttempts',
+            null,
+            null,
+        ];
+
+        yield [
+            'prefixes',
+            ['foo', 'bar'],
+            'getPrefixes',
+            'setPrefixes',
+            null,
+            null,
+        ];
+
+        yield [
+            'sample_rate',
+            0.5,
+            'getSampleRate',
+            'setSampleRate',
+            null,
+            null,
+        ];
+
+        yield [
+            'traces_sample_rate',
+            0.5,
+            'getTracesSampleRate',
+            'setTracesSampleRate',
+            null,
+            null,
+        ];
+
+        yield [
+            'traces_sampler',
+            static function (): void {},
+            'getTracesSampler',
+            'setTracesSampler',
+            null,
+            null,
+        ];
+
+        yield [
+            'attach_stacktrace',
+            false,
+            'shouldAttachStacktrace',
+            'setAttachStacktrace',
+            null,
+            null,
+        ];
+
+        yield [
+            'context_lines',
+            3,
+            'getContextLines',
+            'setContextLines',
+            null,
+            null,
+        ];
+
+        yield [
+            'enable_compression',
+            false,
+            'isCompressionEnabled',
+            'setEnableCompression',
+            null,
+            null,
+        ];
+
+        yield [
+            'environment',
+            'foo',
+            'getEnvironment',
+            'setEnvironment',
+            null,
+            null,
+        ];
+
+        yield [
+            'in_app_exclude',
+            ['foo', 'bar'],
+            'getInAppExcludedPaths',
+            'setInAppExcludedPaths',
+            null,
+            null,
+        ];
+
+        yield [
+            'in_app_include',
+            ['foo', 'bar'],
+            'getInAppIncludedPaths',
+            'setInAppIncludedPaths',
+            null,
+            null,
+        ];
+
+        yield [
+            'logger',
+            'foo',
+            'getLogger',
+            'setLogger',
+            'Method Sentry\\Options::getLogger() is deprecated since version 3.2 and will be removed in 4.0.',
+            'Method Sentry\\Options::setLogger() is deprecated since version 3.2 and will be removed in 4.0.',
+        ];
+
+        yield [
+            'release',
+            'dev',
+            'getRelease',
+            'setRelease',
+            null,
+            null,
+        ];
+
+        yield [
+            'server_name',
+            'foo',
+            'getServerName',
+            'setServerName',
+            null,
+            null,
+        ];
+
+        yield [
+            'tags',
+            ['foo', 'bar'],
+            'getTags',
+            'setTags',
+            'Method Sentry\\Options::getTags() is deprecated since version 3.2 and will be removed in 4.0.',
+            'Method Sentry\\Options::setTags() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.',
+        ];
+
+        yield [
+            'error_types',
+            0,
+            'getErrorTypes',
+            'setErrorTypes',
+            null,
+            null,
+        ];
+
+        yield [
+            'max_breadcrumbs',
+            50,
+            'getMaxBreadcrumbs',
+            'setMaxBreadcrumbs',
+            null,
+            null,
+        ];
+
+        yield [
+            'before_send',
+            static function (): void {},
+            'getBeforeSendCallback',
+            'setBeforeSendCallback',
+            null,
+            null,
+        ];
+
+        yield [
+            'before_breadcrumb',
+            static function (): void {},
+            'getBeforeBreadcrumbCallback',
+            'setBeforeBreadcrumbCallback',
+            null,
+            null,
+        ];
+
+        yield [
+            'send_default_pii',
+            true,
+            'shouldSendDefaultPii',
+            'setSendDefaultPii',
+            null,
+            null,
+        ];
+
+        yield [
+            'default_integrations',
+            false,
+            'hasDefaultIntegrations',
+            'setDefaultIntegrations',
+            null,
+            null,
+        ];
+
+        yield [
+            'max_value_length',
+            50,
+            'getMaxValueLength',
+            'setMaxValueLength',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_proxy',
+            '127.0.0.1',
+            'getHttpProxy',
+            'setHttpProxy',
+            null,
+            null,
+        ];
+
+        yield [
+            'capture_silenced_errors',
+            true,
+            'shouldCaptureSilencedErrors',
+            'setCaptureSilencedErrors',
+            null,
+            null,
+        ];
+
+        yield [
+            'max_request_body_size',
+            'small',
+            'getMaxRequestBodySize',
+            'setMaxRequestBodySize',
+            null,
+            null,
         ];
     }
 

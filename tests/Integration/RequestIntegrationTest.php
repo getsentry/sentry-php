@@ -167,7 +167,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com/foo?foo=bar&bar=baz'), ['REMOTE_ADDR' => '127.0.0.1']))
+            (new ServerRequest('GET', new Uri('http://www.example.com/foo?foo=bar&bar=baz'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withHeader('Host', 'www.example.com')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
@@ -177,7 +177,6 @@ final class RequestIntegrationTest extends TestCase
                 'method' => 'GET',
                 'query_string' => 'foo=bar&bar=baz',
                 'headers' => [
-                    'REMOTE_ADDR' => ['[Filtered]'],
                     'Host' => ['www.example.com'],
                     'Authorization' => ['[Filtered]'],
                     'Cookie' => ['[Filtered]'],

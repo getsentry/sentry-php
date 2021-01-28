@@ -1,14 +1,14 @@
 # CHANGELOG
 
 ## Unreleased
-- Change default PII sanitization to redact value only instead of removing both key as well
-- Moved default PII sanitization headers into options as 'default_pii_headers'
 
+- Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)
 - Deprecate the `logger` option (#1167)
 - Pass the event hint from the `capture*()` methods down to the `before_send` callback (#1138)
 - Deprecate the `tags` option, see the [docs](https://docs.sentry.io/platforms/php/guides/laravel/enriching-events/tags/) for other ways to set tags (#1174)
 
 ## 3.1.2 (2021-01-08)
+
 - Fix unwanted call to the `before_send` callback with transaction events, use `traces_sampler` instead to filter transactions (#1158)
 - Fix the `logger` option not being applied to the event object (#1165)
 - Fix a bug that made some event attributes being overwritten by option config values when calling `captureEvent()` (#1148)

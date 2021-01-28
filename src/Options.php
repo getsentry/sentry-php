@@ -687,34 +687,6 @@ final class Options
     }
 
     /**
-     * Array of headers to be sanitized as PII.
-     *
-     * @return array<string>
-     */
-    public function getDefaultPIIHeaders()
-    {
-        return $this->options['default_pii_headers'];
-    }
-
-    /**
-     * Set the headers to be sanitized when 'send_default_pii' is false.
-     *
-     * @param array<string> $headers
-     */
-    public function setDefaultPIIHeaders(array $headers): void
-    {
-        foreach ($headers as $header) {
-            if (!\is_string($header)) {
-                throw new \InvalidArgumentException('Headers must be strings.');
-            }
-        }
-
-        $options = array_merge($this->options, ['default_pii_headers' => $headers]);
-
-        $this->options = $this->resolver->resolve($options);
-    }
-
-    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -757,7 +729,6 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'default_pii_headers' => ['authorization', 'cookie', 'set-cookie', 'remote_addr'],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
