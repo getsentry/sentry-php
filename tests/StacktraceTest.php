@@ -584,7 +584,7 @@ final class StacktraceTest extends TestCase
     {
         $decodedData = json_decode($this->getFixture($file), true);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new \RuntimeException(sprintf('Could not decode the fixture file at path "%s". Error was: %s', $this->getFixturePath($file), json_last_error_msg()));
         }
 

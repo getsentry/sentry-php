@@ -20,7 +20,7 @@ final class PHPVersion
      *
      * @param string $version The string to parse
      */
-    public static function parseVersion(string $version = PHP_VERSION): string
+    public static function parseVersion(string $version = \PHP_VERSION): string
     {
         if (!preg_match(self::VERSION_PARSING_REGEX, $version, $matches)) {
             return $version;

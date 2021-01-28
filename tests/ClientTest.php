@@ -236,7 +236,7 @@ class ClientTest extends TestCase
             ->setTransportFactory($this->createTransportFactory($transport))
             ->getClient();
 
-        @trigger_error('foo', E_USER_NOTICE);
+        @trigger_error('foo', \E_USER_NOTICE);
 
         $client->captureLastError();
 
@@ -466,7 +466,7 @@ class ClientTest extends TestCase
                 ],
             ],
             [
-                new \ErrorException('foo', 0, E_USER_WARNING),
+                new \ErrorException('foo', 0, \E_USER_WARNING),
                 [
                     'level' => Severity::WARNING,
                     'exception' => [

@@ -35,11 +35,11 @@ final class ErrorListenerIntegration implements IntegrationInterface
     public function __construct(?Options $options = null, bool $handleFatalErrors = true)
     {
         if (null !== $options) {
-            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing the options as argument of the constructor of the "%s" class is deprecated since version 2.1 and will not work in 3.0.', self::class), \E_USER_DEPRECATED);
         }
 
         if ($handleFatalErrors) {
-            @trigger_error(sprintf('Handling fatal errors with the "%s" class is deprecated since version 2.1. Use the "%s" integration instead.', self::class, FatalErrorListenerIntegration::class), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Handling fatal errors with the "%s" class is deprecated since version 2.1. Use the "%s" integration instead.', self::class, FatalErrorListenerIntegration::class), \E_USER_DEPRECATED);
         }
 
         $this->options = $options;

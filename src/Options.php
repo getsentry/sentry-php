@@ -212,7 +212,7 @@ final class Options
      */
     public function getExcludedExceptions(): array
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), \E_USER_DEPRECATED);
 
         return $this->options['excluded_exceptions'];
     }
@@ -227,7 +227,7 @@ final class Options
      */
     public function setExcludedExceptions(array $exceptions): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), \E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['excluded_exceptions' => $exceptions]);
 
@@ -248,7 +248,7 @@ final class Options
     public function isExcludedException(\Throwable $exception, bool $throwDeprecation = true): bool
     {
         if ($throwDeprecation) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Method %s() is deprecated since version 2.3 and will be removed in 3.0. Use the "Sentry\Integration\IgnoreErrorsIntegration" integration instead.', __METHOD__), \E_USER_DEPRECATED);
         }
 
         foreach ($this->options['excluded_exceptions'] as $exceptionClass) {
@@ -311,7 +311,7 @@ final class Options
      */
     public function getProjectId(): ?string
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), \E_USER_DEPRECATED);
 
         if (null === $this->options['dsn']) {
             return null;
@@ -347,7 +347,7 @@ final class Options
      */
     public function getPublicKey(): ?string
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), \E_USER_DEPRECATED);
 
         if (null === $this->options['dsn']) {
             return null;
@@ -363,7 +363,7 @@ final class Options
      */
     public function getSecretKey(): ?string
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('Method %s() is deprecated since version 2.4 and will be removed in 3.0. Use the getDsn() method instead.', __METHOD__), \E_USER_DEPRECATED);
 
         if (null === $this->options['dsn']) {
             return null;
@@ -431,7 +431,7 @@ final class Options
         }
 
         if ($returnAsString) {
-            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), E_USER_DEPRECATED);
+            @trigger_error(sprintf('Calling the method %s() and expecting it to return a string is deprecated since version 2.4 and will stop working in 3.0.', __METHOD__), \E_USER_DEPRECATED);
 
             $url = $dsn->getScheme() . '://' . $dsn->getHost();
 
@@ -800,7 +800,7 @@ final class Options
             'integrations' => [],
             'default_integrations' => true,
             'send_attempts' => 3,
-            'prefixes' => explode(PATH_SEPARATOR, get_include_path()),
+            'prefixes' => explode(\PATH_SEPARATOR, get_include_path() ?: ''),
             'sample_rate' => 1,
             'attach_stacktrace' => false,
             'context_lines' => 5,
@@ -815,7 +815,7 @@ final class Options
                 return $event;
             },
             'tags' => [],
-            'error_types' => E_ALL,
+            'error_types' => \E_ALL,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
@@ -874,7 +874,7 @@ final class Options
                 return null;
             }
 
-            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', E_USER_DEPRECATED);
+            @trigger_error('The option "project_root" is deprecated. Use the "in_app_include" option instead.', \E_USER_DEPRECATED);
 
             return $this->normalizeAbsolutePath($value);
         });

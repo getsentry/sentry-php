@@ -155,7 +155,7 @@ class EventFactoryTest extends TestCase
     public function testCreateWithErrorException(): void
     {
         $options = new Options();
-        $exception = new \ErrorException('testMessage', 0, E_USER_ERROR);
+        $exception = new \ErrorException('testMessage', 0, \E_USER_ERROR);
         $eventFactory = new EventFactory(
             new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class),

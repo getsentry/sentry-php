@@ -36,7 +36,7 @@ final class PluggableHttpClientFactory implements HttpClientFactoryInterface
      */
     public function __construct(HttpClientFactoryInterface $decoratedHttpClientFactory, array $httpClientPlugins)
     {
-        @trigger_error(sprintf('The "%s" class is deprecated since version 2.3 and will be removed in 3.0.', self::class), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The "%s" class is deprecated since version 2.3 and will be removed in 3.0.', self::class), \E_USER_DEPRECATED);
 
         $this->decoratedHttpClientFactory = $decoratedHttpClientFactory;
         $this->httpClientPlugins = $httpClientPlugins;

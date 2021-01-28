@@ -156,7 +156,7 @@ final class JSONTest extends TestCase
 
     public function testEncodeRespectsOptionsArgument(): void
     {
-        $this->assertSame('{}', JSON::encode([], JSON_FORCE_OBJECT));
+        $this->assertSame('{}', JSON::encode([], \JSON_FORCE_OBJECT));
     }
 
     /**

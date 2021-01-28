@@ -26,11 +26,11 @@ final class JSON
      */
     public static function encode($data, int $options = 0, int $maxDepth = 512)
     {
-        $options |= JSON_UNESCAPED_UNICODE;
+        $options |= \JSON_UNESCAPED_UNICODE;
 
         if (\PHP_VERSION_ID >= 70200) {
             /** @psalm-suppress UndefinedConstant */
-            $options |= JSON_INVALID_UTF8_SUBSTITUTE;
+            $options |= \JSON_INVALID_UTF8_SUBSTITUTE;
         }
 
         $encodedData = json_encode($data, $options);
@@ -39,11 +39,11 @@ final class JSON
         // UTF-8 characters is done internally. On lower versions instead, we
         // try to sanitize the data ourselves before retrying encoding. If it
         // fails again we throw an exception as usual.
-        if (JSON_ERROR_UTF8 === json_last_error()) {
+        if (\JSON_ERROR_UTF8 === json_last_error()) {
             $encodedData = json_encode(self::sanitizeData($data, $maxDepth - 1), $options);
         }
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new JsonException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
@@ -63,7 +63,7 @@ final class JSON
     {
         $decodedData = json_decode($data, true);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (\JSON_ERROR_NONE !== json_last_error()) {
             throw new JsonException(sprintf('Could not decode value from JSON format. Error was: "%s".', json_last_error_msg()));
         }
 

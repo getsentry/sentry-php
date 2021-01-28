@@ -66,7 +66,7 @@ final class EventFactory implements EventFactoryInterface
                 $this->options,
                 $this->serializer,
                 $this->representationSerializer,
-                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+                debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS),
                 __FILE__,
                 __LINE__ - 6,
                 \func_num_args() > 1 ? func_get_arg(1) : true
