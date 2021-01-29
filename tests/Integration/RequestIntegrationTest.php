@@ -6,7 +6,6 @@ namespace Sentry\Tests\Integration;
 
 use GuzzleHttp\Psr7\ServerRequest;
 use GuzzleHttp\Psr7\UploadedFile;
-use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -69,7 +68,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('GET', 'http://www.example.com/foo'))
                 ->withCookieParams(['foo' => 'bar']),
             [
                 'url' => 'http://www.example.com/foo',
@@ -89,7 +88,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('GET', 'http://www.example.com/foo'))
                 ->withCookieParams(['foo' => 'bar']),
             [
                 'url' => 'http://www.example.com/foo',
@@ -106,7 +105,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com:1234/foo'))),
+            (new ServerRequest('GET', 'http://www.example.com:1234/foo')),
             [
                 'url' => 'http://www.example.com:1234/foo',
                 'method' => 'GET',
@@ -123,7 +122,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com:1234/foo'))),
+            (new ServerRequest('GET', 'http://www.example.com:1234/foo')),
             [
                 'url' => 'http://www.example.com:1234/foo',
                 'method' => 'GET',
@@ -139,7 +138,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com/foo?foo=bar&bar=baz'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+            (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withHeader('Host', 'www.example.com')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
@@ -167,7 +166,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest('GET', new Uri('http://www.example.com/foo?foo=bar&bar=baz'), [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+            (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withHeader('Host', 'www.example.com')
                 ->withHeader('Authorization', 'foo')
                 ->withHeader('Cookie', 'bar')
@@ -189,9 +188,30 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
+                'integrations' => [
+                    new RequestIntegration(null, ['pii_sanitize_headers' => ['aUthOrIzAtIoN']]),
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withHeader('Authorization', 'foo'),
+            [
+                'url' => 'http://www.example.com',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['[Filtered]'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
                 'max_request_body_size' => 'none',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', '3')
                 ->withBody(Utils::streamFor('foo')),
             [
@@ -210,7 +230,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'small',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', 10 ** 3)
                 ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
             [
@@ -230,7 +250,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'small',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 3))
                 ->withParsedBody([
                     'foo' => 'foo value',
@@ -256,7 +276,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'small',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 3 + 1))
                 ->withParsedBody([
                     'foo' => 'foo value',
@@ -278,7 +298,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'medium',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 4))
                 ->withParsedBody([
                     'foo' => 'foo value',
@@ -304,7 +324,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'medium',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 4 + 1))
                 ->withParsedBody([
                     'foo' => 'foo value',
@@ -326,7 +346,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'always',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', '444')
                 ->withUploadedFiles([
                     'foo' => [
@@ -364,7 +384,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'always',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Type', 'application/json')
                 ->withHeader('Content-Length', '13')
                 ->withBody(Utils::streamFor('{"foo":"bar"}')),
@@ -388,7 +408,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'max_request_body_size' => 'always',
             ],
-            (new ServerRequest('POST', new Uri('http://www.example.com/foo')))
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
