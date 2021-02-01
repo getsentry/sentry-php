@@ -212,7 +212,7 @@ final class StacktraceTest extends TestCase
                 'line' => 12,
                 'backtrace' => [
                     [
-                        'class' => "class@anonymous\x00/path/to/app/consumer.php0x7fc3bc369418",
+                        'class' => "class@anonymous\x00path/to/app/consumer.php0x7fc3bc369418",
                         'function' => 'messageCallback',
                         'type' => '->',
                     ],
@@ -230,12 +230,12 @@ final class StacktraceTest extends TestCase
                     0,
                 ],
                 [
-                    "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
+                    "class@anonymous\x00path/to/app/consumer.php::messageCallback",
                     Frame::INTERNAL_FRAME_FILENAME,
                     0,
                 ],
                 [
-                    "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
+                    "class@anonymous\x00path/to/app/consumer.php::messageCallback",
                     'path/to/file',
                     12,
                 ],
