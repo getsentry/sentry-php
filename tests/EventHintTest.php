@@ -21,30 +21,40 @@ final class EventHintTest extends TestCase
         $hint = EventHint::fromArray([
             'exception' => $exception,
             'stacktrace' => $stacktrace,
+            'extra' => ['foo' => 'bar'],
         ]);
 
-        $this->assertEquals($exception, $hint->exception);
-        $this->assertEquals($stacktrace, $hint->stacktrace);
+        $this->assertSame($exception, $hint->exception);
+        $this->assertSame($stacktrace, $hint->stacktrace);
+        $this->assertSame(['foo' => 'bar'], $hint->extra);
     }
 
-    public function testThrowsExceptionOnInvalidKeyInArray(): void
+    /**
+     * @dataProvider createFromArrayWithInvalidValuesDataProvider
+     */
+    public function testCreateFromArrayWithInvalidValues(array $hintData, string $expectedExceptionMessage): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('There is no EventHint attribute called "missing_property".');
+        $this->expectExceptionMessage($expectedExceptionMessage);
 
-        EventHint::fromArray([
-            'missing_property' => 'some value',
-        ]);
+        EventHint::fromArray($hintData);
     }
 
-    public function testThrowsExceptionOnInvalidKeyInArrayWhenValidKeyIsPresent(): void
+    public function createFromArrayWithInvalidValuesDataProvider(): \Generator
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('There is no EventHint attribute called "missing_property".');
+        yield [
+            ['exception' => 'foo'],
+            'The value of the "exception" field must be an instance of a class implementing the "Throwable" interface. Got: "string".',
+        ];
 
-        EventHint::fromArray([
-            'exception' => new \Exception(),
-            'missing_property' => 'some value',
-        ]);
+        yield [
+            ['stacktrace' => 'foo'],
+            'The value of the "stacktrace" field must be an instance of the "Sentry\\Stacktrace" class. Got: "string".',
+        ];
+
+        yield [
+            ['extra' => 'foo'],
+            'The value of the "extra" field must be an array. Got: "string".',
+        ];
     }
 }

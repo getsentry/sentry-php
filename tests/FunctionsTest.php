@@ -96,7 +96,7 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::getCurrentHub()->bindClient($client);
 
-        @trigger_error('foo', E_USER_NOTICE);
+        @trigger_error('foo', \E_USER_NOTICE);
 
         $this->assertSame($eventId, captureLastError());
     }

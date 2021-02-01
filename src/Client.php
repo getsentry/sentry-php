@@ -109,7 +109,7 @@ final class Client implements ClientInterface
         $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
         $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
-        $this->sdkVersion = $sdkVersion ?? PrettyVersions::getVersion(PrettyVersions::getRootPackageName())->getPrettyVersion();
+        $this->sdkVersion = $sdkVersion ?? PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
     /**
@@ -227,10 +227,23 @@ final class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
-        $event->setServerName($this->options->getServerName());
-        $event->setRelease($this->options->getRelease());
-        $event->setTags($this->options->getTags());
-        $event->setEnvironment($this->options->getEnvironment());
+        $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
+
+        if (null === $event->getServerName()) {
+            $event->setServerName($this->options->getServerName());
+        }
+
+        if (null === $event->getRelease()) {
+            $event->setRelease($this->options->getRelease());
+        }
+
+        if (null === $event->getEnvironment()) {
+            $event->setEnvironment($this->options->getEnvironment());
+        }
+
+        if (null === $event->getLogger()) {
+            $event->setLogger($this->options->getLogger());
+        }
 
         $isTransaction = EventType::transaction() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
@@ -281,7 +294,7 @@ final class Client implements ClientInterface
         }
 
         $event->setStacktrace($this->stacktraceBuilder->buildFromBacktrace(
-            debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
+            debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS),
             __FILE__,
             __LINE__ - 3
         ));
