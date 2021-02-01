@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allow jean85/pretty-package-versions 2.0 (#1170)
+
 ## 3.1.3 (2021-01-25)
 
 - Fix the fetching of the version of the SDK (#1169)
