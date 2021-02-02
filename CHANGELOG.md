@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+### 2.5.2 (2021-02-02)
+
 - Allow jean85/pretty-package-versions 2.0 (#1171, backport of #1170 from 3.x)
 
 ### 2.5.1 (2020-12-11)
