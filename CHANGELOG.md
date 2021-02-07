@@ -6,6 +6,7 @@
 - Deprecate the `logger` option (#1167)
 - Pass the event hint from the `capture*()` methods down to the `before_send` callback (#1138)
 - Deprecate the `tags` option, see the [docs](https://docs.sentry.io/platforms/php/guides/laravel/enriching-events/tags/) for other ways to set tags (#1174)
+- Fix incorrect detection of silenced errors (by the `@` operator) (#1183)
 
 ## 3.1.2 (2021-01-08)
 
