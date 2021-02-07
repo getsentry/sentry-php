@@ -88,7 +88,7 @@ final class ErrorHandler
     private static $reservedMemory;
 
     /**
-     * @var array List of error levels and their description
+     * @var array<string, string> List of error levels and their description
      */
     private const ERROR_LEVELS_DESCRIPTION = [
         \E_DEPRECATED => 'Deprecated',
