@@ -267,8 +267,8 @@ final class ErrorHandler
     {
         // The error reporting `error_reporting()` will have when an error is captured that was silenced with the `@` operator
         // is different on PHP 8 versus earlier versions where it's 0. On PHP 8 it defaults to errors that are not silencable.
-        $expectedSilencedErrorReportingLevel = PHP_MAJOR_VERSION >= 8
-            ? E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR
+        $expectedSilencedErrorReportingLevel = \PHP_MAJOR_VERSION >= 8
+            ? \E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_COMPILE_ERROR | \E_USER_ERROR | \E_RECOVERABLE_ERROR
             : 0;
 
         if ($expectedSilencedErrorReportingLevel === error_reporting()) {
