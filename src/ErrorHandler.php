@@ -23,6 +23,11 @@ final class ErrorHandler
     public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
+     * The error types marked as fatal by PHP 8+ and cannot be silenced by the @ operator.
+     */
+    private const PHP8_ERROR_TYPES_THAT_CANNOT_BE_SILENCED = \E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_COMPILE_ERROR | \E_USER_ERROR | \E_RECOVERABLE_ERROR;
+
+    /**
      * @var self|null The current registered handler (this class is a singleton)
      */
     private static $handlerInstance;
@@ -265,13 +270,24 @@ final class ErrorHandler
      */
     private function handleError(int $level, string $message, string $file, int $line, ?array $errcontext = []): bool
     {
-        // The error reporting `error_reporting()` will have when an error is captured that was silenced with the `@` operator
-        // is different on PHP 8 versus earlier versions where it's 0. On PHP 8 it defaults to errors that are not silencable.
-        $expectedSilencedErrorReportingLevel = \PHP_MAJOR_VERSION >= 8
-            ? \E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_COMPILE_ERROR | \E_USER_ERROR | \E_RECOVERABLE_ERROR
-            : 0;
+        // The value `error_reporting()` returns when an error is captured that was silenced with the `@` operator was changed starting with PHP 8.
+        if (\PHP_MAJOR_VERSION >= 8) {
+            // On PHP 8 and above when an error is silenced with the `@` operator `error_reporting()` will be set to a list of error types
+            // that are now considered fatal and cannot be silenced anymore we subtract that list of the value `error_reporting()` reports
+            // and if we end up with `0` we know the error was silenced
+            $errorWasSilencedByUser = 0 === (error_reporting() & ~self::PHP8_ERROR_TYPES_THAT_CANNOT_BE_SILENCED);
 
-        if ($expectedSilencedErrorReportingLevel === error_reporting()) {
+            // However this will mean we will erroneously mark errors that cannot be silenced as silenced so if the error
+            // level is on the list of error types that cannot be silenced we make sure the error is not marked as silent
+            if ($level === (self::PHP8_ERROR_TYPES_THAT_CANNOT_BE_SILENCED & $level)) {
+                $errorWasSilencedByUser = false;
+            }
+        } else {
+            // On PHP 7 and below when an error is silenced with the `@` operator `error_reporting()` will always return `0`
+            $errorWasSilencedByUser = 0 === error_reporting();
+        }
+
+        if ($errorWasSilencedByUser) {
             $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
         } else {
             $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);

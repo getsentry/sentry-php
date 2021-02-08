@@ -1,5 +1,13 @@
 --TEST--
-Test that the error handler reports errors set by the `error_types` option and not the `error_reporting` level.
+Test that the error handler ignores silenced errors by default, but it reports them with the appropriate option enabled.
+--SKIPIF--
+<?php
+    if (\PHP_MAJOR_VERSION < 8) {
+        echo 'Skip on PHP below version 8 because it\'s not applicable.';
+    }
+?>
+--INI--
+error_reporting=E_ALL
 --FILE--
 <?php
 
@@ -45,30 +53,19 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-error_reporting(E_ALL & ~E_USER_NOTICE & ~E_USER_WARNING & ~E_USER_ERROR);
+error_reporting(E_ALL & ~E_USER_ERROR);
 
-$client = ClientBuilder::create(['error_types' => E_ALL & ~E_USER_WARNING])
+$client = ClientBuilder::create(['error_types' => E_ALL])
     ->setTransportFactory($transportFactory)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);
 
-echo 'Triggering E_USER_NOTICE error' . PHP_EOL;
+echo 'Triggering "silenced" E_USER_ERROR error' . PHP_EOL;
 
-trigger_error('This E_USER_NOTICE which will be reported by Sentry!', E_USER_NOTICE);
-
-echo 'Triggering E_USER_WARNING error' . PHP_EOL;
-
-trigger_error('This E_USER_WARNING won\'t be reported by Sentry because of the error_types option!', E_USER_WARNING);
-
-echo 'Triggering E_USER_ERROR error' . PHP_EOL;
-
-trigger_error('This E_USER_ERROR will be reported by Sentry if on PHP 8 or above!', E_USER_ERROR);
+@trigger_error('This E_USER_ERROR will be reported by Sentry if on PHP 8 or above because it cannot be silenced!', E_USER_ERROR);
 
 ?>
 --EXPECT--
-Triggering E_USER_NOTICE error
-Transport called
-Triggering E_USER_WARNING error
-Triggering E_USER_ERROR error
+Triggering "silenced" E_USER_ERROR error
 Transport called
