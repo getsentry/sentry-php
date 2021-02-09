@@ -55,7 +55,10 @@ $transportFactory = new class implements TransportFactoryInterface {
 
 error_reporting(E_ALL & ~E_USER_ERROR);
 
-$client = ClientBuilder::create(['error_types' => E_ALL])
+$client = ClientBuilder::create([
+    'error_types' => E_ALL,
+    'capture_silenced_errors' => false,
+])
     ->setTransportFactory($transportFactory)
     ->getClient();
 
