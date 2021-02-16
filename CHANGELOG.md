@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix incorrect detection of silenced errors (by the `@` operator) (#1183)
+
 ## 3.1.4 (2021-02-02)
 
 - Allow jean85/pretty-package-versions 2.0 (#1170)
