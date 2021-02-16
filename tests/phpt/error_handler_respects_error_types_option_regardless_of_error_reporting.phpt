@@ -55,20 +55,19 @@ SentrySdk::getCurrentHub()->bindClient($client);
 
 echo 'Triggering E_USER_NOTICE error' . PHP_EOL;
 
-trigger_error('This E_USER_NOTICE which will be reported by Sentry!', E_USER_NOTICE);
+trigger_error('Error thrown', E_USER_NOTICE);
 
-echo 'Triggering E_USER_WARNING error' . PHP_EOL;
+echo 'Triggering E_USER_WARNING error (it should not be reported to Sentry due to error_types option)' . PHP_EOL;
 
-trigger_error('This E_USER_WARNING won\'t be reported by Sentry because of the error_types option!', E_USER_WARNING);
+trigger_error('Error thrown', E_USER_WARNING);
 
-echo 'Triggering E_USER_ERROR error' . PHP_EOL;
+echo 'Triggering E_USER_ERROR error (unsilenceable on PHP8)' . PHP_EOL;
 
-trigger_error('This E_USER_ERROR will be reported by Sentry if on PHP 8 or above!', E_USER_ERROR);
-
+trigger_error('Error thrown', E_USER_ERROR);
 ?>
 --EXPECT--
 Triggering E_USER_NOTICE error
 Transport called
-Triggering E_USER_WARNING error
-Triggering E_USER_ERROR error
+Triggering E_USER_WARNING error (it should not be reported to Sentry due to error_types option)
+Triggering E_USER_ERROR error (unsilenceable on PHP8)
 Transport called

@@ -2,9 +2,9 @@
 Test that the error handler ignores silenced errors by default, but it reports them with the appropriate option enabled.
 --SKIPIF--
 <?php
-    if (\PHP_MAJOR_VERSION < 8) {
-        echo 'Skip on PHP below version 8 because it\'s not applicable.';
-    }
+if (\PHP_MAJOR_VERSION < 8) {
+    die('Skip on PHP < 8 because it\'s not applicable.');
+}
 ?>
 --INI--
 error_reporting=E_ALL
@@ -55,10 +55,7 @@ $transportFactory = new class implements TransportFactoryInterface {
 
 error_reporting(E_ALL & ~E_USER_ERROR);
 
-$client = ClientBuilder::create([
-    'error_types' => E_ALL,
-    'capture_silenced_errors' => false,
-])
+$client = ClientBuilder::create(['error_types' => E_ALL, 'capture_silenced_errors' => false])
     ->setTransportFactory($transportFactory)
     ->getClient();
 
@@ -66,8 +63,7 @@ SentrySdk::getCurrentHub()->bindClient($client);
 
 echo 'Triggering "silenced" E_USER_ERROR error' . PHP_EOL;
 
-@trigger_error('This E_USER_ERROR will be reported by Sentry if on PHP 8 or above because it cannot be silenced!', E_USER_ERROR);
-
+@trigger_error('This E_USER_ERROR cannot be silenced', E_USER_ERROR);
 ?>
 --EXPECT--
 Triggering "silenced" E_USER_ERROR error
