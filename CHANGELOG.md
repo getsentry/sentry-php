@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.1.5 (2021-02-18)
+
 - Fix incorrect detection of silenced errors (by the `@` operator) (#1183)
 
 ## 3.1.4 (2021-02-02)
