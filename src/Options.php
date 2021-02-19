@@ -207,7 +207,7 @@ final class Options
     /**
      * Gets the environment.
      */
-    public function getEnvironment(): ?string
+    public function getEnvironment(): string
     {
         return $this->options['environment'];
     }
@@ -707,7 +707,7 @@ final class Options
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
-            'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
+            'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? Event::DEFAULT_ENVIRONMENT,
             'logger' => 'php',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
@@ -773,6 +773,14 @@ final class Options
             }
 
             return $value;
+        });
+
+        $resolver->setNormalizer('environment', static function (SymfonyOptions $options, ?string $value): string {
+            if (null === $value) {
+                @trigger_error('Setting the "environment" option to a null value is deprecated since version 3.1 and will not work in 4.0.', E_USER_DEPRECATED);
+            }
+
+            return $value ?? Event::DEFAULT_ENVIRONMENT;
         });
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {

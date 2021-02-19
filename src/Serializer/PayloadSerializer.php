@@ -38,6 +38,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'event_id' => (string) $event->getId(),
             'timestamp' => $event->getTimestamp(),
             'platform' => 'php',
+            'environment' => $event->getEnvironment(),
             'sdk' => [
                 'name' => $event->getSdkIdentifier(),
                 'version' => $event->getSdkVersion(),
@@ -66,10 +67,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (null !== $event->getRelease()) {
             $result['release'] = $event->getRelease();
-        }
-
-        if (null !== $event->getEnvironment()) {
-            $result['environment'] = $event->getEnvironment();
         }
 
         if (!empty($event->getFingerprint())) {
