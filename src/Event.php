@@ -16,7 +16,7 @@ use Sentry\Tracing\Span;
  */
 final class Event
 {
-    public const DEFAULT_ENVIRONMENT = 'default';
+    public const DEFAULT_ENVIRONMENT = 'production';
 
     /**
      * @var EventId The ID
@@ -76,9 +76,9 @@ final class Event
     private $messageParams = [];
 
     /**
-     * @var string The environment where this event generated (e.g. production)
+     * @var string|null The environment where this event generated (e.g. production)
      */
-    private $environment = self::DEFAULT_ENVIRONMENT;
+    private $environment;
 
     /**
      * @var array<string, string> A list of relevant modules and their versions
@@ -568,7 +568,7 @@ final class Event
     /**
      * Gets the environment in which this event was generated.
      */
-    public function getEnvironment(): string
+    public function getEnvironment(): ?string
     {
         return $this->environment;
     }
@@ -580,10 +580,6 @@ final class Event
      */
     public function setEnvironment(?string $environment): void
     {
-        if (null === $environment) {
-            @trigger_error('Setting the environment to a null value is deprecated since version 3.1 and will not work in 4.0.', E_USER_DEPRECATED);
-        }
-
         $this->environment = $environment ?? self::DEFAULT_ENVIRONMENT;
     }
 

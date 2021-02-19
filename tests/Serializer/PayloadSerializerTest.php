@@ -68,7 +68,6 @@ final class PayloadSerializerTest extends TestCase
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
     "timestamp": 1597790835,
     "platform": "php",
-    "environment": "default",
     "sdk": {
         "name": "sentry.php",
         "version": "$sdkVersion"
@@ -327,7 +326,6 @@ JSON
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
     "timestamp": 1597790835,
     "platform": "php",
-    "environment": "default",
     "sdk": {
         "name": "sentry.php",
         "version": "$sdkVersion"
@@ -349,7 +347,6 @@ JSON
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
     "timestamp": 1597790835,
     "platform": "php",
-    "environment": "default",
     "sdk": {
         "name": "sentry.php",
         "version": "$sdkVersion"
@@ -375,7 +372,6 @@ JSON
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
     "timestamp": 1597790835,
     "platform": "php",
-    "environment": "default",
     "sdk": {
         "name": "sentry.php",
         "version": "$sdkVersion"
@@ -421,7 +417,7 @@ JSON
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z"}
 {"type":"transaction","content_type":"application\/json"}
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","environment":"default","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
 TEXT
             ,
             false,

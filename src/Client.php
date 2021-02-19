@@ -242,7 +242,7 @@ final class Client implements ClientInterface
         }
 
         if (null === $event->getEnvironment()) {
-            $event->setEnvironment($this->options->getEnvironment());
+            $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
         if (null === $event->getLogger()) {

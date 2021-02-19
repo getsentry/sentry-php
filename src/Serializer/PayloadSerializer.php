@@ -38,12 +38,15 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'event_id' => (string) $event->getId(),
             'timestamp' => $event->getTimestamp(),
             'platform' => 'php',
-            'environment' => $event->getEnvironment(),
             'sdk' => [
                 'name' => $event->getSdkIdentifier(),
                 'version' => $event->getSdkVersion(),
             ],
         ];
+
+        if (null !== $event->getEnvironment()) {
+            $result['environment'] = $event->getEnvironment();
+        }
 
         if (null !== $event->getStartTimestamp()) {
             $result['start_timestamp'] = $event->getStartTimestamp();
