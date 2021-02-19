@@ -1,5 +1,5 @@
 comment: false
 ignore:
-    - tests/data
-    - tests/resources
-    - tests/Fixtures
+  - tests/data
+  - tests/resources
+  - tests/Fixtures
