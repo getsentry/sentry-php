@@ -178,7 +178,6 @@ JSON
     "event_id": "fc9442f5aef34234bb22b9a615e30ccd",
     "timestamp": 1597790835,
     "platform": "php",
-    "environment": "production",
     "sdk": {
         "name": "sentry.php",
         "version": "$sdkVersion"
@@ -189,6 +188,7 @@ JSON
     "transaction": "/users/<username>/",
     "server_name": "foo.example.com",
     "release": "721e41770371db95eee98ca2707686226b993eda",
+    "environment": "production",
     "fingerprint": [
         "myrpc",
         "POST",

@@ -44,10 +44,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
             ],
         ];
 
-        if (null !== $event->getEnvironment()) {
-            $result['environment'] = $event->getEnvironment();
-        }
-
         if (null !== $event->getStartTimestamp()) {
             $result['start_timestamp'] = $event->getStartTimestamp();
         }
@@ -70,6 +66,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (null !== $event->getRelease()) {
             $result['release'] = $event->getRelease();
+        }
+
+        if (null !== $event->getEnvironment()) {
+            $result['environment'] = $event->getEnvironment();
         }
 
         if (!empty($event->getFingerprint())) {

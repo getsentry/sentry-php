@@ -580,7 +580,7 @@ final class Event
      */
     public function setEnvironment(?string $environment): void
     {
-        $this->environment = $environment ?? self::DEFAULT_ENVIRONMENT;
+        $this->environment = $environment;
     }
 
     /**
