@@ -91,7 +91,7 @@ final class FrameBuilderTest extends TestCase
                 'function' => 'test_function',
                 'class' => "class@anonymous\0/path/to/file",
             ],
-            new Frame("class@anonymous\0/file::test_function", '/file', 10, "class@anonymous\0/path/to/file::test_function", '/path/to/file'),
+            new Frame("class@anonymous\0file::test_function", 'file', 10, "class@anonymous\0/path/to/file::test_function", '/path/to/file'),
         ];
 
         yield [
@@ -105,7 +105,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => '/path/to/app/file',
                 'line' => 10,
             ],
-            new Frame(null, '/app/file', 10, null, '/path/to/app/file'),
+            new Frame(null, 'app/file', 10, null, '/path/to/app/file'),
         ];
 
         yield [
@@ -119,7 +119,7 @@ final class FrameBuilderTest extends TestCase
                 'file' => '/path/to/file',
                 'line' => 10,
             ],
-            new Frame(null, '/file', 10, null, '/path/to/file'),
+            new Frame(null, 'file', 10, null, '/path/to/file'),
         ];
 
         yield [

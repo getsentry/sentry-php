@@ -99,7 +99,9 @@ final class FrameBuilder
     {
         foreach ($this->options->getPrefixes() as $prefix) {
             if (str_starts_with($filePath, $prefix)) {
-                return mb_substr($filePath, mb_strlen($prefix));
+                $relativePath = mb_substr($filePath, mb_strlen($prefix));
+
+                return ltrim($relativePath, \DIRECTORY_SEPARATOR);
             }
         }
 

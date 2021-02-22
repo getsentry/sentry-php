@@ -7,6 +7,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
 use Sentry\Options;
+use Sentry\Serializer\RepresentationSerializer;
+use Sentry\StacktraceBuilder;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
@@ -291,5 +293,30 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
         $this->assertSame('0.0.1', (new Options())->getRelease());
+    }
+
+    public function testSlashesAreTrimmedInRelativePathsDueToPrefixes(): void
+    {
+        $fullFilename = __FILE__;
+        $appDir = \dirname($fullFilename, 2);
+
+        $backtrace = [
+            [
+                'file' => $fullFilename,
+                'line' => 123,
+                'function' => 'foo',
+                'class' => 'Foo',
+                'type' => '->',
+            ],
+        ];
+
+        $options = new Options();
+        $options->setPrefixes([$appDir]);
+        $stacktrace_builder = new StacktraceBuilder($options, new RepresentationSerializer($options));
+        $stacktrace = $stacktrace_builder->buildFromBacktrace($backtrace, '', 0);
+        $frameFilePath = $stacktrace->getFrame(0)->getFile();
+
+        $this->assertStringStartsNotWith('/', $frameFilePath);
+        $this->assertStringStartsNotWith('\\', $frameFilePath);
     }
 }
