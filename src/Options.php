@@ -311,7 +311,7 @@ final class Options
     /**
      * Sets the release tag to be passed with every event sent to Sentry.
      *
-     * @param string $release The release
+     * @param string|null $release The release
      */
     public function setRelease(?string $release): void
     {

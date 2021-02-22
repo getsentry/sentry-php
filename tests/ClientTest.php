@@ -14,7 +14,6 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventHint;
-use Sentry\EventId;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
@@ -204,7 +203,9 @@ final class ClientTest extends TestCase
      */
     public function testCaptureEvent(array $options, Event $event, Event $expectedEvent): void
     {
-        $this->expectDeprecation('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.');
+        if (isset($options['tags'])) {
+            $this->expectDeprecation('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.');
+        }
 
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
@@ -224,8 +225,7 @@ final class ClientTest extends TestCase
 
     public function captureEventDataProvider(): \Generator
     {
-        $eventId = EventId::generate();
-        $event = Event::createEvent($eventId);
+        $event = Event::createEvent();
 
         yield 'Options set && no event properties set => use options' => [
             [
@@ -238,7 +238,7 @@ final class ClientTest extends TestCase
             $event,
         ];
 
-        $event = Event::createEvent($eventId);
+        $event = Event::createEvent();
         $event->setServerName('foo.example.com');
         $event->setRelease('721e41770371db95eee98ca2707686226b993eda');
         $event->setEnvironment('production');
@@ -251,6 +251,14 @@ final class ClientTest extends TestCase
                 'environment' => 'development',
                 'tags' => ['context' => 'development', 'ios_version' => '14.0'],
             ],
+            $event,
+            $event,
+        ];
+
+        $event = Event::createEvent();
+
+        yield 'Environment option set to null && no event property set => fallback to default value' => [
+            ['environment' => null],
             $event,
             $event,
         ];
