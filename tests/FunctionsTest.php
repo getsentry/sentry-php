@@ -9,12 +9,14 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
-use Sentry\Tracing\SamplingContext;
+use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
@@ -35,70 +37,141 @@ final class FunctionsTest extends TestCase
         $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
     }
 
-    public function testCaptureMessage(): void
+    /**
+     * @dataProvider captureMessageDataProvider
+     */
+    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', Severity::debug())
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($eventId, captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, captureMessage(...$functionCallArgs));
     }
 
-    public function testCaptureException(): void
+    public function captureMessageDataProvider(): \Generator
+    {
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+            ],
+            [
+                'foo',
+                Severity::debug(),
+                null,
+            ],
+        ];
+
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+                new EventHint(),
+            ],
+            [
+                'foo',
+                Severity::debug(),
+                new EventHint(),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureExceptionDataProvider
+     */
+    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
-        $exception = new \RuntimeException('foo');
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
             ->method('captureException')
-            ->with($exception)
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($eventId, captureException($exception));
+        $this->assertSame($eventId, captureException(...$functionCallArgs));
+    }
+
+    public function captureExceptionDataProvider(): \Generator
+    {
+        yield [
+            [
+                new \Exception('foo'),
+            ],
+            [
+                new \Exception('foo'),
+                null,
+            ],
+        ];
+
+        yield [
+            [
+                new \Exception('foo'),
+                new EventHint(),
+            ],
+            [
+                new \Exception('foo'),
+                new EventHint(),
+            ],
+        ];
     }
 
     public function testCaptureEvent(): void
     {
         $event = Event::createEvent();
+        $hint = new EventHint();
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
             ->method('captureEvent')
-            ->with($event)
+            ->with($event, $hint)
             ->willReturn($event->getId());
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($event->getId(), captureEvent($event));
+        $this->assertSame($event->getId(), captureEvent($event, $hint));
     }
 
-    public function testCaptureLastError()
+    /**
+     * @dataProvider captureLastErrorDataProvider
+     */
+    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
 
-        /** @var ClientInterface|MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
             ->method('captureLastError')
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::setCurrentHub($hub);
 
         @trigger_error('foo', \E_USER_NOTICE);
 
-        $this->assertSame($eventId, captureLastError());
+        $this->assertSame($eventId, captureLastError(...$functionCallArgs));
+    }
+
+    public function captureLastErrorDataProvider(): \Generator
+    {
+        yield [
+            [],
+            [null],
+        ];
+
+        yield [
+            [new EventHint()],
+            [new EventHint()],
+        ];
     }
 
     public function testAddBreadcrumb(): void
@@ -147,23 +220,17 @@ final class FunctionsTest extends TestCase
     public function testStartTransaction(): void
     {
         $transactionContext = new TransactionContext('foo');
+        $transaction = new Transaction($transactionContext);
         $customSamplingContext = ['foo' => 'bar'];
 
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
-                    $this->assertSame($customSamplingContext, $samplingContext->getAdditionalContext());
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
+            ->method('startTransaction')
+            ->with($transactionContext, $customSamplingContext)
+            ->willReturn($transaction);
 
-                    return 0.0;
-                },
-            ]));
+        SentrySdk::setCurrentHub($hub);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
-
-        $transaction = startTransaction($transactionContext, $customSamplingContext);
-
-        $this->assertSame($transactionContext->getName(), $transaction->getName());
+        $this->assertSame($transaction, startTransaction($transactionContext, $customSamplingContext));
     }
 }

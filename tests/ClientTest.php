@@ -14,7 +14,6 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventHint;
-use Sentry\EventId;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
@@ -29,9 +28,12 @@ use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class ClientTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     public function testConstructorSetupsIntegrations(): void
     {
         $integrationCalled = false;
@@ -103,6 +105,28 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureMessage('foo', Severity::fatal()));
     }
 
+    public function testCaptureMessageWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureMessage('foo', null, null, $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
+    }
+
     public function testCaptureException(): void
     {
         $exception = new \Exception('Some foo error');
@@ -133,10 +157,56 @@ final class ClientTest extends TestCase
     }
 
     /**
+     * @dataProvider captureExceptionWithEventHintDataProvider
+     */
+    public function testCaptureExceptionWithEventHint(EventHint $hint): void
+    {
+        $beforeSendCallbackCalled = false;
+        $exception = $hint->exception ?? new \Exception();
+
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($exception, $hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+                $this->assertSame($exception, $hintArg->exception);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureException($exception, null, $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
+    }
+
+    public function captureExceptionWithEventHintDataProvider(): \Generator
+    {
+        yield [
+            EventHint::fromArray([
+                'extra' => ['foo' => 'bar'],
+            ]),
+        ];
+
+        yield [
+            EventHint::fromArray([
+                'exception' => new \Exception('foo'),
+            ]),
+        ];
+    }
+
+    /**
+     * @group legacy
+     *
      * @dataProvider captureEventDataProvider
      */
     public function testCaptureEvent(array $options, Event $event, Event $expectedEvent): void
     {
+        if (isset($options['tags'])) {
+            $this->expectDeprecation('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.');
+        }
+
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
@@ -155,8 +225,7 @@ final class ClientTest extends TestCase
 
     public function captureEventDataProvider(): \Generator
     {
-        $eventId = EventId::generate();
-        $event = Event::createEvent($eventId);
+        $event = Event::createEvent();
 
         yield 'Options set && no event properties set => use options' => [
             [
@@ -169,7 +238,7 @@ final class ClientTest extends TestCase
             $event,
         ];
 
-        $event = Event::createEvent($eventId);
+        $event = Event::createEvent();
         $event->setServerName('foo.example.com');
         $event->setRelease('721e41770371db95eee98ca2707686226b993eda');
         $event->setEnvironment('production');
@@ -185,6 +254,36 @@ final class ClientTest extends TestCase
             $event,
             $event,
         ];
+
+        $event = Event::createEvent();
+
+        yield 'Environment option set to null && no event property set => fallback to default value' => [
+            ['environment' => null],
+            $event,
+            $event,
+        ];
+    }
+
+    public function testCaptureEventWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+        $client->captureEvent(Event::createEvent(), $hint);
+
+        $this->assertTrue($beforeSendCallbackCalled);
     }
 
     /**
@@ -302,6 +401,33 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureLastError());
 
         error_clear_last();
+    }
+
+    public function testCaptureLastErrorWithEventHint(): void
+    {
+        $hint = new EventHint();
+        $hint->extra = ['foo' => 'bar'];
+
+        $beforeSendCallbackCalled = false;
+        $options = new Options([
+            'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
+                $this->assertSame($hint, $hintArg);
+
+                $beforeSendCallbackCalled = true;
+
+                return null;
+            },
+        ]);
+
+        $client = new Client($options, $this->createMock(TransportInterface::class));
+
+        @trigger_error('foo', \E_USER_NOTICE);
+
+        $client->captureLastError(null, $hint);
+
+        error_clear_last();
+
+        $this->assertTrue($beforeSendCallbackCalled);
     }
 
     public function testCaptureLastErrorDoesNothingWhenThereIsNoError(): void

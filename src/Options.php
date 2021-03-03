@@ -270,9 +270,15 @@ final class Options
 
     /**
      * Gets the logger used by Sentry.
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getLogger(): string
+    public function getLogger(/*bool $triggerDeprecation = true*/): string
     {
+        if (0 === \func_num_args() || false !== func_get_arg(0)) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+        }
+
         return $this->options['logger'];
     }
 
@@ -280,9 +286,13 @@ final class Options
      * Sets the logger used by Sentry.
      *
      * @param string $logger The logger
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
     public function setLogger(string $logger): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['logger' => $logger]);
 
         $this->options = $this->resolver->resolve($options);
@@ -301,7 +311,7 @@ final class Options
     /**
      * Sets the release tag to be passed with every event sent to Sentry.
      *
-     * @param string $release The release
+     * @param string|null $release The release
      */
     public function setRelease(?string $release): void
     {
@@ -342,7 +352,7 @@ final class Options
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event): ?Event
+     * @psalm-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -355,7 +365,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event): ?Event $callback
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): void
     {
@@ -368,9 +378,15 @@ final class Options
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getTags(): array
+    public function getTags(/*bool $triggerDeprecation = true*/): array
     {
+        if (0 === \func_num_args() || false !== func_get_arg(0)) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+        }
+
         return $this->options['tags'];
     }
 
@@ -378,9 +394,13 @@ final class Options
      * Sets a list of default tags for events.
      *
      * @param array<string, string> $tags A list of tags
+     *
+     * @deprecated since version 3.2, to be removed in 4.0
      */
     public function setTags(array $tags): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.', __METHOD__), \E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['tags' => $tags]);
 
         $this->options = $this->resolver->resolve($options);
@@ -722,7 +742,7 @@ final class Options
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
-        $resolver->setAllowedTypes('logger', 'string');
+        $resolver->setAllowedTypes('logger', ['null', 'string']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
@@ -747,6 +767,13 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('tags', static function (SymfonyOptions $options, array $value): array {
+            if (!empty($value)) {
+                @trigger_error('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.', \E_USER_DEPRECATED);
+            }
+
+            return $value;
+        });
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -758,6 +785,14 @@ final class Options
 
         $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
+        });
+
+        $resolver->setNormalizer('logger', function (SymfonyOptions $options, ?string $value): ?string {
+            if ('php' !== $value) {
+                @trigger_error('The option "logger" is deprecated.', \E_USER_DEPRECATED);
+            }
+
+            return $value;
         });
     }
 

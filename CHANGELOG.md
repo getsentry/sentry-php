@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)
+- Deprecate the `logger` option (#1167)
+- Pass the event hint from the `capture*()` methods down to the `before_send` callback (#1138)
+- Deprecate the `tags` option, see the [docs](https://docs.sentry.io/platforms/php/guides/laravel/enriching-events/tags/) for other ways to set tags (#1174)
+- Make sure the `environment` field is set to `production` if it has not been overridden explicitly (#1116)
+
 ## 3.1.5 (2021-02-18)
 
 - Fix incorrect detection of silenced errors (by the `@` operator) (#1183)

@@ -16,6 +16,8 @@ use Sentry\Tracing\Span;
  */
 final class Event
 {
+    public const DEFAULT_ENVIRONMENT = 'production';
+
     /**
      * @var EventId The ID
      */

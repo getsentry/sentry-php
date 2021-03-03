@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
@@ -197,86 +198,164 @@ final class HubTest extends TestCase
         $this->assertSame($client2, $hub->getClient());
     }
 
-    public function testCaptureMessage(): void
+    /**
+     * @dataProvider captureMessageDataProvider
+     */
+    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
+        $hub = new Hub();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', Severity::debug())
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
-
-        $hub = new Hub();
 
         $this->assertNull($hub->captureMessage('foo'));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, $hub->captureMessage(...$functionCallArgs));
     }
 
-    public function testCaptureException(): void
+    public function captureMessageDataProvider(): \Generator
+    {
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+            ],
+            [
+                'foo',
+                Severity::debug(),
+                new Scope(),
+            ],
+        ];
+
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+                new EventHint(),
+            ],
+            [
+                'foo',
+                Severity::debug(),
+                new Scope(),
+                new EventHint(),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureExceptionDataProvider
+     */
+    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
-        $exception = new \RuntimeException('foo');
+        $hub = new Hub();
 
-        /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureException')
-            ->with($exception)
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
-
-        $hub = new Hub();
 
         $this->assertNull($hub->captureException(new \RuntimeException()));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureException($exception));
+        $this->assertSame($eventId, $hub->captureException(...$functionCallArgs));
     }
 
-    public function testCaptureLastError(): void
+    public function captureExceptionDataProvider(): \Generator
+    {
+        yield [
+            [
+                new \Exception('foo'),
+            ],
+            [
+                new \Exception('foo'),
+                new Scope(),
+                null,
+            ],
+        ];
+
+        yield [
+            [
+                new \Exception('foo'),
+                new EventHint(),
+            ],
+            [
+                new \Exception('foo'),
+                new Scope(),
+                new EventHint(),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureLastErrorDataProvider
+     */
+    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
+        $hub = new Hub();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureLastError')
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
-        $hub = new Hub();
-
-        $this->assertNull($hub->captureLastError());
+        $this->assertNull($hub->captureLastError(...$functionCallArgs));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureLastError());
+        $this->assertSame($eventId, $hub->captureLastError(...$functionCallArgs));
+    }
+
+    public function captureLastErrorDataProvider(): \Generator
+    {
+        yield [
+            [],
+            [
+                new Scope(),
+                null,
+            ],
+        ];
+
+        yield [
+            [
+                new EventHint(),
+            ],
+            [
+                new Scope(),
+                new EventHint(),
+            ],
+        ];
     }
 
     public function testCaptureEvent(): void
     {
-        $event = Event::createEvent($eventId = EventId::generate());
-
-        $event->setMessage('test');
+        $hub = new Hub();
+        $event = Event::createEvent();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($event)
-            ->willReturn($eventId);
-
-        $hub = new Hub();
+            ->willReturn($event->getId());
 
         $this->assertNull($hub->captureEvent($event));
 
         $hub->bindClient($client);
 
-        $this->assertSame($eventId, $hub->captureEvent($event));
+        $this->assertSame($event->getId(), $hub->captureEvent($event));
     }
 
     public function testAddBreadcrumb(): void
@@ -611,6 +690,7 @@ final class HubTest extends TestCase
     public function testStartTransactionWithCustomSamplingContext(): void
     {
         $customSamplingContext = ['a' => 'b'];
+
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('getOptions')

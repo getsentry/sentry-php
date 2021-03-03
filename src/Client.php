@@ -123,23 +123,27 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $event = Event::createEvent();
         $event->setMessage($message);
         $event->setLevel($level);
 
-        return $this->captureEvent($event, null, $scope);
+        return $this->captureEvent($event, $hint, $scope);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null): ?EventId
+    public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        return $this->captureEvent(Event::createEvent(), EventHint::fromArray([
-            'exception' => $exception,
-        ]), $scope);
+        $hint = $hint ?? new EventHint();
+
+        if (null === $hint->exception) {
+            $hint->exception = $exception;
+        }
+
+        return $this->captureEvent(Event::createEvent(), $hint, $scope);
     }
 
     /**
@@ -170,7 +174,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(?Scope $scope = null): ?EventId
+    public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $error = error_get_last();
 
@@ -180,7 +184,7 @@ final class Client implements ClientInterface
 
         $exception = new \ErrorException(@$error['message'], 0, @$error['type'], @$error['file'], @$error['line']);
 
-        return $this->captureException($exception, $scope);
+        return $this->captureException($exception, $scope, $hint);
     }
 
     /**
@@ -227,7 +231,7 @@ final class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
-        $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
+        $event->setTags(array_merge($this->options->getTags(false), $event->getTags()));
 
         if (null === $event->getServerName()) {
             $event->setServerName($this->options->getServerName());
@@ -238,11 +242,11 @@ final class Client implements ClientInterface
         }
 
         if (null === $event->getEnvironment()) {
-            $event->setEnvironment($this->options->getEnvironment());
+            $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
         if (null === $event->getLogger()) {
-            $event->setLogger($this->options->getLogger());
+            $event->setLogger($this->options->getLogger(false));
         }
 
         $isTransaction = EventType::transaction() === $event->getType();
@@ -267,7 +271,7 @@ final class Client implements ClientInterface
 
         if (!$isTransaction) {
             $previousEvent = $event;
-            $event = ($this->options->getBeforeSendCallback())($event);
+            $event = ($this->options->getBeforeSendCallback())($event, $hint);
 
             if (null === $event) {
                 $this->logger->info('The event will be discarded because the "before_send" callback returned "null".', ['event' => $previousEvent]);

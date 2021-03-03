@@ -14,6 +14,8 @@ use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
 use Sentry\Util\JSON;
+use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * This integration collects information from the request and attaches them to
@@ -49,18 +51,45 @@ final class RequestIntegration implements IntegrationInterface
     ];
 
     /**
+     * This constant defines the default list of headers that may contain
+     * sensitive data and that will be sanitized if sending PII is disabled.
+     */
+    private const DEFAULT_SENSITIVE_HEADERS = [
+        'Authorization',
+        'Cookie',
+        'Set-Cookie',
+        'X-Forwarded-For',
+        'X-Real-IP',
+    ];
+
+    /**
      * @var RequestFetcherInterface PSR-7 request fetcher
      */
     private $requestFetcher;
 
     /**
+     * @var array<string, mixed> The options
+     */
+    private $options;
+
+    /**
      * Constructor.
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
+     * @param array<string, mixed>         $options        The options
+     *
+     * @psalm-param array{
+     *     pii_sanitize_headers?: string[]
+     * } $options
      */
-    public function __construct(?RequestFetcherInterface $requestFetcher = null)
+    public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
     {
+        $resolver = new OptionsResolver();
+
+        $this->configureOptions($resolver);
+
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
+        $this->options = $resolver->resolve($options);
     }
 
     /**
@@ -121,7 +150,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['cookies'] = $request->getCookieParams();
             $requestData['headers'] = $request->getHeaders();
         } else {
-            $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
+            $requestData['headers'] = $this->sanitizeHeaders($request->getHeaders());
         }
 
         $requestBody = $this->captureRequestBody($options, $request);
@@ -136,21 +165,23 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
-     * @param array<string, array<int, string>> $headers Array containing request headers
+     * @param array<string, string[]> $headers Array containing request headers
      *
-     * @return array<string, array<int, string>>
+     * @return array<string, string[]>
      */
-    private function removePiiFromHeaders(array $headers): array
+    private function sanitizeHeaders(array $headers): array
     {
-        $keysToRemove = ['authorization', 'cookie', 'set-cookie', 'remote_addr'];
+        foreach ($headers as $name => $values) {
+            if (!\in_array(strtolower($name), $this->options['pii_sanitize_headers'], true)) {
+                continue;
+            }
 
-        return array_filter(
-            $headers,
-            static function (string $key) use ($keysToRemove): bool {
-                return !\in_array(strtolower($key), $keysToRemove, true);
-            },
-            \ARRAY_FILTER_USE_KEY
-        );
+            foreach ($values as $headerLine => $headerValue) {
+                $headers[$name][$headerLine] = '[Filtered]';
+            }
+        }
+
+        return $headers;
     }
 
     /**
@@ -244,5 +275,19 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         return true;
+    }
+
+    /**
+     * Configures the options of the client.
+     *
+     * @param OptionsResolver $resolver The resolver for the options
+     */
+    private function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
+        $resolver->setAllowedTypes('pii_sanitize_headers', 'string[]');
+        $resolver->setNormalizer('pii_sanitize_headers', static function (SymfonyOptions $options, array $value): array {
+            return array_map('strtolower', $value);
+        });
     }
 }
