@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.2.0 (2021-03-03)
+
 - Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)
 - Deprecate the `logger` option (#1167)
 - Pass the event hint from the `capture*()` methods down to the `before_send` callback (#1138)
