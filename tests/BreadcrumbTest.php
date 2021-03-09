@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
  * @group time-sensitive
@@ -143,5 +144,40 @@ final class BreadcrumbTest extends TestCase
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
         $this->assertSame(['foo' => 'bar'], $breadcrumb->getMetadata());
         $this->assertArrayNotHasKey('foo', $newBreadcrumb->getMetadata());
+    }
+
+    /**
+     * @dataProvider provideTimestampValues
+     */
+    public function testTimestampOnConstructor(?float $constructorValue, float $expected): void
+    {
+        ClockMock::withClockMock($expected);
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar'], $constructorValue);
+
+        $this->assertSame($expected, $breadcrumb->getTimestamp());
+    }
+
+    public function testWithTimestamp(): void
+    {
+        $timestamp = 12345.678;
+        $newTimestamp = 987.654;
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar'], $timestamp);
+
+        // Using same timestamp
+        $newBreadcrumb = $breadcrumb->withTimestamp($timestamp);
+        $this->assertSame($breadcrumb, $newBreadcrumb);
+
+        // Using a different one
+        $newBreadcrumb = $breadcrumb->withTimestamp($newTimestamp);
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+
+        $this->assertSame($timestamp, $breadcrumb->getTimestamp());
+        $this->assertSame($newTimestamp, $newBreadcrumb->getTimestamp());
+    }
+
+    public function provideTimestampValues(): \Generator
+    {
+        yield [null, 12345.678];
+        yield [123.456, 123.456];
     }
 }

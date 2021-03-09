@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Breadcrumb optional timestamp parameter in constructor and Breadcrumb::withTimestamp method (#1193)
+
 ## 3.2.0 (2021-03-03)
 
 - Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)
