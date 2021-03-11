@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `error_reporting()` not being evaluated when handling errors when the `error_types` option is not set (#1196)
+
 ## 3.2.0 (2021-03-03)
 
 - Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)
