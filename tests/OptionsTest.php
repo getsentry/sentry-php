@@ -519,4 +519,34 @@ final class OptionsTest extends TestCase
 
         $this->assertSame('0.0.1', (new Options())->getRelease());
     }
+
+    public function testErrorTypesIsDynamiclyReadingErrorReportingLevelWhenUnset(): void
+    {
+        $options = new Options(['error_types' => null]);
+
+        $errorReportingBeforeTest = error_reporting($currentErrorReporting = E_NOTICE & E_USER_NOTICE);
+
+        $this->assertEquals($currentErrorReporting, $options->getErrorTypes());
+
+        error_reporting($currentErrorReporting = E_WARNING & E_USER_WARNING);
+
+        $this->assertEquals($currentErrorReporting, $options->getErrorTypes());
+
+        error_reporting($errorReportingBeforeTest);
+
+        $this->assertEquals($errorReportingBeforeTest, $options->getErrorTypes());
+    }
+
+    public function testErrorTypesIsNotDynamiclyReadingErrorReportingLevelWhenSet(): void
+    {
+        $errorReportingBeforeTest = error_reporting(E_ERROR);
+
+        $options = new Options(['error_types' => $currentErrorTypes = E_NOTICE & E_USER_NOTICE]);
+
+        $this->assertEquals($currentErrorTypes, $options->getErrorTypes());
+
+        error_reporting($errorReportingBeforeTest);
+
+        $this->assertEquals($currentErrorTypes, $options->getErrorTypes());
+    }
 }
