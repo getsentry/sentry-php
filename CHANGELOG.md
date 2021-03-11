@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix `error_reporting()` not being evaluated when handling errors when the `error_types` option is not set (#1196)
+- Changes behaviour of `error_types` option when not set: before it defaulted to `error_reporting()` statically at SDK initialization; now it will be evaluated each time during error handling to allow silencing errors temporarily (#1196)
 
 ## 3.2.0 (2021-03-03)
 

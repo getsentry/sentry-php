@@ -15,6 +15,27 @@ final class OptionsTest extends TestCase
     use ExpectDeprecationTrait;
 
     /**
+     * @var int
+     */
+    private $errorReportingOnSetup;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // There are tests changing the error reporting level in this class so we store the current value before running the tests
+        $this->errorReportingOnSetup = error_reporting();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        // There are tests changing the error reporting level in this class so we restore it to the value before running the tests
+        error_reporting($this->errorReportingOnSetup);
+    }
+
+    /**
      * @group legacy
      *
      * @dataProvider optionsDataProvider
@@ -520,7 +541,7 @@ final class OptionsTest extends TestCase
         $this->assertSame('0.0.1', (new Options())->getRelease());
     }
 
-    public function testErrorTypesIsDynamiclyReadingErrorReportingLevelWhenUnset(): void
+    public function testErrorTypesIsDynamiclyReadFromErrorReportingLevelWhenUnset(): void
     {
         $options = new Options(['error_types' => null]);
 
@@ -537,7 +558,7 @@ final class OptionsTest extends TestCase
         $this->assertEquals($errorReportingBeforeTest, $options->getErrorTypes());
     }
 
-    public function testErrorTypesIsNotDynamiclyReadingErrorReportingLevelWhenSet(): void
+    public function testErrorTypesIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
     {
         $errorReportingBeforeTest = error_reporting(\E_ERROR);
 
