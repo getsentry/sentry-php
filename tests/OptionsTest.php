@@ -17,22 +17,20 @@ final class OptionsTest extends TestCase
     /**
      * @var int
      */
-    private $errorReportingOnSetup;
+    private $errorReportingOnSetUp;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // There are tests changing the error reporting level in this class so we store the current value before running the tests
-        $this->errorReportingOnSetup = error_reporting();
+        $this->errorReportingOnSetUp = error_reporting();
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
+        error_reporting($this->errorReportingOnSetUp);
 
-        // There are tests changing the error reporting level in this class so we restore it to the value before running the tests
-        error_reporting($this->errorReportingOnSetup);
+        parent::tearDown();
     }
 
     /**
