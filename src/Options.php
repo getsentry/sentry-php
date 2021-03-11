@@ -411,7 +411,7 @@ final class Options
      */
     public function getErrorTypes(): int
     {
-        return $this->options['error_types'];
+        return $this->options['error_types'] ?? error_reporting();
     }
 
     /**
@@ -716,7 +716,7 @@ final class Options
                 return $event;
             },
             'tags' => [],
-            'error_types' => error_reporting(),
+            'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
             'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
@@ -748,7 +748,7 @@ final class Options
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('tags', 'string[]');
-        $resolver->setAllowedTypes('error_types', ['int']);
+        $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
