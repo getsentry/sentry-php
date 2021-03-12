@@ -329,8 +329,9 @@ final class Breadcrumb
      *     level: string,
      *     type?: string,
      *     category: string,
-     *     message?: string,
-     *     data?: array<string, mixed>
+     *     message?: string|null,
+     *     data?: array<string, mixed>,
+     *     timestamp?: float|null
      * } $data
      */
     public static function fromArray(array $data): self

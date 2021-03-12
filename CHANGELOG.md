@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add Breadcrumb optional timestamp parameter in constructor and Breadcrumb::withTimestamp method (#1193)
+- Allow setting a custom timestamp on the breadcrumbs (#1193)
 
 ## 3.2.0 (2021-03-03)
 
