@@ -27,6 +27,7 @@ $errorHandler->addErrorHandlerListener(static function (): void {
 $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
 $errorHandler->addFatalErrorHandlerListener(static function (): void {
     echo 'Fatal error listener called' . PHP_EOL;
+    ini_set('memory_limit', -1);
 });
 
 $errorHandler = ErrorHandler::registerOnceExceptionHandler();
