@@ -44,7 +44,6 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
      *      channel: string,
      *      datetime: \DateTimeImmutable,
      *      message: string,
-     *      formatted?: string,
      *      extra?: array<string, mixed>
      * } $record {@see https://github.com/Seldaek/monolog/blob/main/doc/message-structure.md}
      */
@@ -54,7 +53,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
             $this->getBreadcrumbLevel($record['level']),
             $this->getBreadcrumbType($record['level']),
             $record['channel'],
-            $record['formatted'] ?? $record['message'],
+            $record['message'],
             $record['extra'] ?? [],
             $record['datetime']->getTimestamp()
         );
