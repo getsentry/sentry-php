@@ -35,6 +35,9 @@ final class BreadcrumbHandlerTest extends TestCase
         $handler->handle($record);
     }
 
+    /**
+     * @return iterable<array{array<string, mixed>, Breadcrumb}>
+     */
     public function handleDataProvider(): iterable
     {
         $defaultData = [
@@ -56,9 +59,50 @@ final class BreadcrumbHandlerTest extends TestCase
             $defaultData['datetime']->getTimestamp()
         );
 
-        yield [
-            $defaultData,
-            $defaultBreadcrumb,
+        $levelsToBeTested = [
+            Logger::DEBUG => Breadcrumb::LEVEL_DEBUG,
+            Logger::INFO => Breadcrumb::LEVEL_INFO,
+            Logger::NOTICE => Breadcrumb::LEVEL_INFO,
+            Logger::WARNING => Breadcrumb::LEVEL_WARNING,
+        ];
+
+        foreach ($levelsToBeTested as $loggerLevel => $breadcrumbLevel) {
+            yield 'with level ' . Logger::getLevelName($loggerLevel) => [
+                ['level' => $loggerLevel] + $defaultData,
+                $defaultBreadcrumb->withLevel($breadcrumbLevel),
+            ];
+        }
+
+        yield 'with level ERROR' => [
+            ['level' => Logger::ERROR] + $defaultData,
+            $defaultBreadcrumb->withLevel(Breadcrumb::LEVEL_ERROR)
+                ->withType(Breadcrumb::TYPE_ERROR),
+        ];
+
+        yield 'with level ALERT' => [
+            ['level' => Logger::ALERT] + $defaultData,
+            $defaultBreadcrumb->withLevel(Breadcrumb::LEVEL_FATAL)
+                ->withType(Breadcrumb::TYPE_ERROR),
+        ];
+
+        yield 'with context' => [
+            ['context' => ['foo' => 'bar']] + $defaultData,
+            $defaultBreadcrumb->withMetadata('foo', 'bar'),
+        ];
+
+        yield 'with extra' => [
+            ['extra' => ['foo' => 'bar']] + $defaultData,
+            $defaultBreadcrumb->withMetadata('foo', 'bar'),
+        ];
+
+        yield 'with context + extra' => [
+            [
+                'context' => ['foo' => 'bar', 'context' => 'baz'],
+                'extra' => ['foo' => 'baz', 'extra' => 'baz'],
+            ] + $defaultData,
+            $defaultBreadcrumb->withMetadata('foo', 'bar')
+                ->withMetadata('context', 'baz')
+                ->withMetadata('extra', 'baz'),
         ];
     }
 }

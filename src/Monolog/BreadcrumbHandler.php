@@ -54,7 +54,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
             $this->getBreadcrumbType($record['level']),
             $record['channel'],
             $record['message'],
-            $record['extra'] ?? [],
+            ($record['context'] ?? []) + ($record['extra'] ?? []),
             $record['datetime']->getTimestamp()
         );
 
