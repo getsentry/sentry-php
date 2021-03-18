@@ -30,6 +30,7 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      *
      * @psalm-param array{
      *     ignore_exceptions?: list<class-string<\Throwable>>
+     *     ignore_tags?: array<string, string>
      * } $options
      */
     public function __construct(array $options = [])
@@ -37,9 +38,11 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
             'ignore_exceptions' => [],
+            'ignore_tags' => [],
         ]);
 
         $resolver->setAllowedTypes('ignore_exceptions', ['array']);
+        $resolver->setAllowedTypes('ignore_tags', ['array']);
 
         $this->options = $resolver->resolve($options);
     }
@@ -73,6 +76,10 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
             return true;
         }
 
+        if ($this->isIgnoredTag($event, $options)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -93,6 +100,30 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
 
         foreach ($options['ignore_exceptions'] as $ignoredException) {
             if (is_a($exceptions[0]->getType(), $ignoredException, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks whether the given event should be dropped or not according to the
+     * criteria defined in the integration's options.
+     *
+     * @param Event                $event   The event instance
+     * @param array<string, mixed> $options The options of the integration
+     */
+    private function isIgnoredTag(Event $event, array $options): bool
+    {
+        $tags = $event->getTags();
+
+        if (empty($tags)) {
+            return false;
+        }
+
+        foreach ($options['ignore_tags'] as $key => $value) {
+            if (isset($tags[$key]) && $tags[$key] === $value) {
                 return true;
             }
         }
