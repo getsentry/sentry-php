@@ -1,7 +1,7 @@
 --TEST--
 Test catching out of memory fatal error
 --INI--
-memory_limit=64M
+memory_limit=128M
 --FILE--
 <?php
 
@@ -24,7 +24,7 @@ $errorHandler->addErrorHandlerListener(static function (): void {
     echo 'Error listener called (it should not have been)' . PHP_EOL;
 });
 
-$errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+$errorHandler = ErrorHandler::registerOnceFatalErrorHandler(1024 * 1024);
 $errorHandler->addFatalErrorHandlerListener(static function (): void {
     echo 'Fatal error listener called' . PHP_EOL;
 });
@@ -34,7 +34,7 @@ $errorHandler->addExceptionHandlerListener(static function (): void {
     echo 'Exception listener called (it should not have been)' . PHP_EOL;
 });
 
-$foo = str_repeat('x', 1024 * 1024 * 70);
+$foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
