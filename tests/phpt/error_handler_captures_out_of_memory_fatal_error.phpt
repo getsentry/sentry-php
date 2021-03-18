@@ -34,7 +34,7 @@ $errorHandler->addExceptionHandlerListener(static function (): void {
     echo 'Exception listener called (it should not have been)' . PHP_EOL;
 });
 
-$foo = str_repeat('x', 1024 * 1024 * 70);
+$foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
