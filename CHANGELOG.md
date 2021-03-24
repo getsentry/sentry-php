@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changes behaviour of `error_types` option when not set: before it defaulted to `error_reporting()` statically at SDK initialization; now it will be evaluated each time during error handling to allow silencing errors temporarily (#1196)
+
 ## 3.2.0 (2021-03-03)
 
 - Make the HTTP headers sanitizable in the `RequestIntegration` integration instead of removing them entirely (#1161)

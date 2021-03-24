@@ -15,6 +15,25 @@ final class OptionsTest extends TestCase
     use ExpectDeprecationTrait;
 
     /**
+     * @var int
+     */
+    private $errorReportingOnSetUp;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->errorReportingOnSetUp = error_reporting();
+    }
+
+    protected function tearDown(): void
+    {
+        error_reporting($this->errorReportingOnSetUp);
+
+        parent::tearDown();
+    }
+
+    /**
      * @group legacy
      *
      * @dataProvider optionsDataProvider
@@ -518,5 +537,19 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_RELEASE'] = '0.0.1';
 
         $this->assertSame('0.0.1', (new Options())->getRelease());
+    }
+
+    public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
+    {
+        $errorReportingBeforeTest = error_reporting(\E_ERROR);
+        $errorTypesOptionValue = \E_NOTICE;
+
+        $options = new Options(['error_types' => $errorTypesOptionValue]);
+
+        $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
+
+        error_reporting($errorReportingBeforeTest);
+
+        $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
     }
 }

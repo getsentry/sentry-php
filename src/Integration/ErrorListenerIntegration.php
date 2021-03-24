@@ -35,7 +35,7 @@ final class ErrorListenerIntegration extends AbstractErrorListenerIntegration
                 return;
             }
 
-            if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
+            if (!$exception instanceof SilencedErrorException && !($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
                 return;
             }
 
