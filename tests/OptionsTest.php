@@ -542,15 +542,14 @@ final class OptionsTest extends TestCase
     public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
     {
         $errorReportingBeforeTest = error_reporting(\E_ERROR);
-
         $errorTypesOptionValue = \E_NOTICE;
 
         $options = new Options(['error_types' => $errorTypesOptionValue]);
 
-        $this->assertEquals($errorTypesOptionValue, $options->getErrorTypes());
+        $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
 
         error_reporting($errorReportingBeforeTest);
 
-        $this->assertEquals($errorTypesOptionValue, $options->getErrorTypes());
+        $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
     }
 }
