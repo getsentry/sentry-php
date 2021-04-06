@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### 3.2.1
+## 3.2.1
 
 - Changes behaviour of `error_types` option when not set: before it defaulted to `error_reporting()` statically at SDK initialization; now it will be evaluated each time during error handling to allow silencing errors temporarily (#1196)
 
