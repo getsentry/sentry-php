@@ -1,7 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
-- Fix deprecation triggered by `HubAdapter` due to Symfony's `DebugClassLoader` (#1206)
+
+- Fix missing handling of `EventHint` in the `HubAdapter::capture*()` methods (#1206)
 
 ## 3.2.1
 
