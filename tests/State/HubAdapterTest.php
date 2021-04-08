@@ -131,22 +131,46 @@ final class HubAdapterTest extends TestCase
         HubAdapter::getInstance()->bindClient($client);
     }
 
-    public function testCaptureMessage(): void
+    /**
+     * @dataProvider captureMessageDataProvider
+     */
+    public function testCaptureMessage(array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
 
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', Severity::debug())
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
         SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($eventId, HubAdapter::getInstance()->captureMessage('foo', Severity::debug()));
+        $this->assertSame($eventId, HubAdapter::getInstance()->captureMessage(...$expectedFunctionCallArgs));
     }
 
-    public function testCaptureException(): void
+    public function captureMessageDataProvider(): \Generator
+    {
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+            ],
+        ];
+
+        yield [
+            [
+                'foo',
+                Severity::debug(),
+                new EventHint(),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureExceptionDataProvider
+     */
+    public function testCaptureException(array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
         $exception = new \Exception();
@@ -154,12 +178,28 @@ final class HubAdapterTest extends TestCase
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
             ->method('captureException')
-            ->with($exception)
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
         SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($eventId, HubAdapter::getInstance()->captureException($exception));
+        $this->assertSame($eventId, HubAdapter::getInstance()->captureException(...$expectedFunctionCallArgs));
+    }
+
+    public function captureExceptionDataProvider(): \Generator
+    {
+        yield [
+            [
+                new \Exception('foo'),
+            ],
+        ];
+
+        yield [
+            [
+                new \Exception('foo'),
+                new EventHint(),
+            ],
+        ];
     }
 
     public function testCaptureEvent(): void
@@ -178,18 +218,35 @@ final class HubAdapterTest extends TestCase
         $this->assertSame($event->getId(), HubAdapter::getInstance()->captureEvent($event, $hint));
     }
 
-    public function testCaptureLastError(): void
+    /**
+     * @dataProvider captureLastErrorDataProvider
+     */
+    public function testCaptureLastError(array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
 
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
             ->method('captureLastError')
+            ->with(...$expectedFunctionCallArgs)
             ->willReturn($eventId);
 
         SentrySdk::setCurrentHub($hub);
 
-        $this->assertSame($eventId, HubAdapter::getInstance()->captureLastError());
+        $this->assertSame($eventId, HubAdapter::getInstance()->captureLastError(...$expectedFunctionCallArgs));
+    }
+
+    public function captureLastErrorDataProvider(): \Generator
+    {
+        yield [
+            [],
+        ];
+
+        yield [
+            [
+                new EventHint(),
+            ],
+        ];
     }
 
     public function testAddBreadcrumb(): void
