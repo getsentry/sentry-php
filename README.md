@@ -6,7 +6,7 @@
 
 # Sentry for PHP
 
-> Please note that the `1.x` branch of the Sentry PHP SDK is no longer actively maintained and will only receive bug-fix and security updates.
+> Please note that the `1.x` branch of the Sentry PHP SDK is no longer maintained.
 > 
 > For the most recent Sentry PHP SDK see the [default branch](https://github.com/getsentry/sentry-php).
 
