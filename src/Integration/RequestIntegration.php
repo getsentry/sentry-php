@@ -122,13 +122,13 @@ final class RequestIntegration implements IntegrationInterface
             return;
         }
 
-        $requestData = [
-            'url' => (string) $request->getUri(),
-            'method' => $request->getMethod(),
-        ];
+        $requestData = $event->getRequest();
+
+        $requestData['url'] = $requestData['url'] ?? (string) $request->getUri();
+        $requestData['method'] = $requestData['method'] ?? $request->getMethod();
 
         if ($request->getUri()->getQuery()) {
-            $requestData['query_string'] = $request->getUri()->getQuery();
+            $requestData['query_string'] = $requestData['query_string'] ?? $request->getUri()->getQuery();
         }
 
         if ($options->shouldSendDefaultPii()) {
@@ -136,7 +136,7 @@ final class RequestIntegration implements IntegrationInterface
 
             if (isset($serverParams['REMOTE_ADDR'])) {
                 $user = $event->getUser();
-                $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
+                $requestData['env']['REMOTE_ADDR'] = $requestData['env']['REMOTE_ADDR'] ?? $serverParams['REMOTE_ADDR'];
 
                 if (null === $user) {
                     $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
@@ -147,16 +147,16 @@ final class RequestIntegration implements IntegrationInterface
                 $event->setUser($user);
             }
 
-            $requestData['cookies'] = $request->getCookieParams();
-            $requestData['headers'] = $request->getHeaders();
+            $requestData['cookies'] = $requestData['cookies'] ?? $request->getCookieParams();
+            $requestData['headers'] = $requestData['headers'] ?? $request->getHeaders();
         } else {
-            $requestData['headers'] = $this->sanitizeHeaders($request->getHeaders());
+            $requestData['headers'] = $this->sanitizeHeaders($requestData['headers'] ?? $request->getHeaders());
         }
 
         $requestBody = $this->captureRequestBody($options, $request);
 
         if (!empty($requestBody)) {
-            $requestData['data'] = $requestBody;
+            $requestData['data'] = $requestData['data'] ?? $requestBody;
         }
 
         $event->setRequest($requestData);
