@@ -174,6 +174,18 @@ class Raven_ErrorHandler
                     return false;
                 }
             }
+        } elseif ($this->lastHandledException) {
+            if ($type === E_ERROR) {
+                $expectedMessage = 'Uncaught exception \''
+                    . \get_class($this->lastHandledException)
+                    . '\' with message \''
+                    . $this->lastHandledException->getMessage()
+                    . '\'';
+
+                if (strpos($message, $expectedMessage) === 0) {
+                    return false;
+                }
+            }
         }
 
         return (bool) ($type & $this->fatal_error_types);
