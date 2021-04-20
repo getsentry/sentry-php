@@ -690,7 +690,7 @@ final class Options
      * Gets the amount of memory to reserve in case of a fatal error.
      * The number is in bytes.
      */
-    public function getFatalReservedMemory(): int
+    public function getFatalErrorHandlerReservedMemoryAmount(): int
     {
         return $this->options['fatal_error_handler_reserved_memory_amount'] ?? ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE;
     }
@@ -699,7 +699,7 @@ final class Options
      * Sets the amount of memory to reserve in case of a fatal error.
      * The number is in bytes. Null indicated the default should be used.
      */
-    public function setFatalReservedMemory(?int $reservedMemory): void
+    public function setFatalErrorHandlerReservedMemoryAmount(?int $reservedMemory): void
     {
         $this->options['fatal_error_handler_reserved_memory_amount'] = $reservedMemory;
     }

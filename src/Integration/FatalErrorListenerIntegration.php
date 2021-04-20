@@ -22,7 +22,7 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
     {
         $client = SentrySdk::getCurrentHub()->getClient();
         $reservedMemory = $client
-         ? $client->getOptions()->getFatalReservedMemory()
+         ? $client->getOptions()->getFatalErrorHandlerReservedMemoryAmount()
          : ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE;
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler($reservedMemory);
         $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
