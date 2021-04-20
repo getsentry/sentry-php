@@ -20,7 +20,11 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
      */
     public function setupOnce(): void
     {
-        $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+        $client = SentrySdk::getCurrentHub()->getClient();
+        $reservedMemory = $client
+         ? $client->getOptions()->getFatalReservedMemory() ?? ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE
+         : ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE;
+        $errorHandler = ErrorHandler::registerOnceFatalErrorHandler($reservedMemory);
         $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
             $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
