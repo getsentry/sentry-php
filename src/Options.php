@@ -747,7 +747,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'fatal_error_handler_reserved_memory_amount' => null,
+            'fatal_error_handler_reserved_memory_amount' => ErrorHandler::DEFAULT_RESERVED_MEMORY_SIZE,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -778,7 +778,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
-        $resolver->setAllowedTypes('fatal_error_handler_reserved_memory_amount', ['null', 'int']);
+        $resolver->setAllowedTypes('fatal_error_handler_reserved_memory_amount', 'int');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
