@@ -293,7 +293,7 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'fatal_error_reserved_memory',
+            'fatal_error_handler_reserved_memory_amount',
             null,
             'getFatalReservedMemory',
             'setFatalReservedMemory',
