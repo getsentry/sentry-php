@@ -296,7 +296,7 @@ final class OptionsTest extends TestCase
             'fatal_error_handler_reserved_memory_amount',
             10240,
             'getFatalErrorHandlerReservedMemoryAmount',
-            'setFatalErrorHandlerReservedMemoryAmount',
+            null,
             null,
             null,
         ];

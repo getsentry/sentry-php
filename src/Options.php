@@ -696,15 +696,6 @@ final class Options
     }
 
     /**
-     * Sets the amount of memory to reserve in case of a fatal error.
-     * The number is in bytes. Null indicated the default should be used.
-     */
-    public function setFatalErrorHandlerReservedMemoryAmount(?int $reservedMemory): void
-    {
-        $this->options['fatal_error_handler_reserved_memory_amount'] = $reservedMemory;
-    }
-
-    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
