@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Allow setting a custom amount of memory for the FatalErrorHandler. (#1214)
 - Allow setting a custom timestamp on the breadcrumbs (#1193)
 - Add option `ignore_tags` to `IgnoreErrorsIntegration` in order to ignore exceptions by tags values. (#1201)
 
