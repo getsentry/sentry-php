@@ -2,9 +2,11 @@
 
 ## Unreleased
 
+## 3.2.2 (2020-05-06)
+
 - Fix missing handling of `EventHint` in the `HubAdapter::capture*()` methods (#1206)
 
-## 3.2.1
+## 3.2.1 (2020-04-06)
 
 - Changes behaviour of `error_types` option when not set: before it defaulted to `error_reporting()` statically at SDK initialization; now it will be evaluated each time during error handling to allow silencing errors temporarily (#1196)
 
