@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.3.0 (2021-05-26)
+
 - Allow setting a custom timestamp on the breadcrumbs (#1193)
 - Add option `ignore_tags` to `IgnoreErrorsIntegration` in order to ignore exceptions by tags values. (#1201)
 
