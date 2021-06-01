@@ -9,12 +9,11 @@ use Sentry\Severity;
 
 final class SeverityTest extends TestCase
 {
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage The "foo" is not a valid enum value.
-     */
     public function testConstructorThrowsOnInvalidValue(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The "foo" is not a valid enum value.');
+
         new Severity('foo');
     }
 
@@ -67,24 +66,24 @@ final class SeverityTest extends TestCase
     {
         return [
             // Warning
-            [E_DEPRECATED, 'warning'],
-            [E_USER_DEPRECATED, 'warning'],
-            [E_WARNING, 'warning'],
-            [E_USER_WARNING, 'warning'],
+            [\E_DEPRECATED, 'warning'],
+            [\E_USER_DEPRECATED, 'warning'],
+            [\E_WARNING, 'warning'],
+            [\E_USER_WARNING, 'warning'],
             // Fatal
-            [E_ERROR, 'fatal'],
-            [E_PARSE, 'fatal'],
-            [E_CORE_ERROR, 'fatal'],
-            [E_CORE_WARNING, 'fatal'],
-            [E_COMPILE_ERROR, 'fatal'],
-            [E_COMPILE_WARNING, 'fatal'],
+            [\E_ERROR, 'fatal'],
+            [\E_PARSE, 'fatal'],
+            [\E_CORE_ERROR, 'fatal'],
+            [\E_CORE_WARNING, 'fatal'],
+            [\E_COMPILE_ERROR, 'fatal'],
+            [\E_COMPILE_WARNING, 'fatal'],
             // Error
-            [E_RECOVERABLE_ERROR, 'error'],
-            [E_USER_ERROR, 'error'],
+            [\E_RECOVERABLE_ERROR, 'error'],
+            [\E_USER_ERROR, 'error'],
             // Info
-            [E_NOTICE, 'info'],
-            [E_USER_NOTICE, 'info'],
-            [E_STRICT, 'info'],
+            [\E_NOTICE, 'info'],
+            [\E_USER_NOTICE, 'info'],
+            [\E_STRICT, 'info'],
         ];
     }
 }

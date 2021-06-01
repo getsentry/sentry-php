@@ -96,5 +96,33 @@ final class IgnoreErrorsIntegrationTest extends TestCase
             ],
             true,
         ];
+
+        $event = Event::createEvent();
+        $event->setTags(['route' => 'foo']);
+
+        yield 'The tag is matching the "ignore_tags" option' => [
+            $event,
+            true,
+            [
+                'ignore_tags' => [
+                    'route' => 'foo',
+                ],
+            ],
+            true,
+        ];
+
+        $event = Event::createEvent();
+        $event->setTags(['route' => 'bar']);
+
+        yield 'The tag is not matching the "ignore_tags" option' => [
+            $event,
+            true,
+            [
+                'ignore_tags' => [
+                    'route' => 'foo',
+                ],
+            ],
+            false,
+        ];
     }
 }

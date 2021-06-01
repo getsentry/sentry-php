@@ -106,17 +106,19 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureMessage($message, $level);
+        /** @psalm-suppress TooManyArguments */
+        return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception): ?EventId
+    public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureException($exception);
+        /** @psalm-suppress TooManyArguments */
+        return SentrySdk::getCurrentHub()->captureException($exception, $hint);
     }
 
     /**
@@ -130,9 +132,10 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(): ?EventId
+    public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureLastError();
+        /** @psalm-suppress TooManyArguments */
+        return SentrySdk::getCurrentHub()->captureLastError($hint);
     }
 
     /**
@@ -153,11 +156,11 @@ final class HubAdapter implements HubInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context): Transaction
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $customSamplingContext = \func_num_args() > 1 ? func_get_arg(1) : [];
-
         /** @psalm-suppress TooManyArguments */
         return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
     }

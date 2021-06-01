@@ -6,48 +6,102 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Symfony\Bridge\PhpUnit\ClockMock;
 
-/**
- * @group time-sensitive
- */
 final class BreadcrumbTest extends TestCase
 {
-    /**
-     * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
-     */
     public function testConstructorThrowsOnInvalidLevel(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+
         new Breadcrumb('foo', 'bar', 'baz');
     }
 
-    /**
-     * @expectedException \Sentry\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.
-     */
-    public function testSetLevelThrowsOnInvalidLevel(): void
+    public function testWithLevelThrowsOnInvalidLevel(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo');
         $breadcrumb->withLevel('bar');
     }
 
-    public function testConstructor(): void
+    /**
+     * @dataProvider constructorDataProvider
+     */
+    public function testConstructor(array $constructorArgs, string $expectedLevel, string $expectedType, string $expectedCategory, ?string $expectedMessage, array $expectedMetadata, float $expectedTimestamp): void
     {
-        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', 'foo bar', ['baz']);
+        ClockMock::withClockMock(1615588578.6652);
 
-        $this->assertSame('foo', $breadcrumb->getCategory());
-        $this->assertSame(Breadcrumb::LEVEL_INFO, $breadcrumb->getLevel());
-        $this->assertSame('foo bar', $breadcrumb->getMessage());
-        $this->assertSame(Breadcrumb::TYPE_USER, $breadcrumb->getType());
-        $this->assertSame(['baz'], $breadcrumb->getMetadata());
-        $this->assertSame(microtime(true), $breadcrumb->getTimestamp());
+        $breadcrumb = new Breadcrumb(...$constructorArgs);
+
+        $this->assertSame($expectedCategory, $breadcrumb->getCategory());
+        $this->assertSame($expectedLevel, $breadcrumb->getLevel());
+        $this->assertSame($expectedMessage, $breadcrumb->getMessage());
+        $this->assertSame($expectedType, $breadcrumb->getType());
+        $this->assertSame($expectedMetadata, $breadcrumb->getMetadata());
+        $this->assertSame($expectedTimestamp, $breadcrumb->getTimestamp());
+    }
+
+    public function constructorDataProvider(): \Generator
+    {
+        yield [
+            [
+                Breadcrumb::LEVEL_INFO,
+                Breadcrumb::TYPE_USER,
+                'log',
+            ],
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_USER,
+            'log',
+            null,
+            [],
+            1615588578.6652,
+        ];
+
+        yield [
+            [
+                Breadcrumb::LEVEL_INFO,
+                Breadcrumb::TYPE_USER,
+                'log',
+                'something happened',
+                ['foo' => 'bar'],
+                null,
+            ],
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_USER,
+            'log',
+            'something happened',
+            ['foo' => 'bar'],
+            1615588578.6652,
+        ];
+
+        yield [
+            [
+                Breadcrumb::LEVEL_INFO,
+                Breadcrumb::TYPE_USER,
+                'log',
+                null,
+                [],
+                1615590096.3244,
+            ],
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_USER,
+            'log',
+            null,
+            [],
+            1615590096.3244,
+        ];
     }
 
     /**
      * @dataProvider fromArrayDataProvider
      */
-    public function testFromArray(array $requestData, string $expectedLevel, string $expectedType, string $expectedCategory, ?string $expectedMessage, array $expectedMetadata): void
+    public function testFromArray(array $requestData, string $expectedLevel, string $expectedType, string $expectedCategory, ?string $expectedMessage, array $expectedMetadata, float $expectedTimestamp): void
     {
+        ClockMock::withClockMock(1615588578.6652);
+
         $breadcrumb = Breadcrumb::fromArray($requestData);
 
         $this->assertSame($expectedLevel, $breadcrumb->getLevel());
@@ -55,6 +109,7 @@ final class BreadcrumbTest extends TestCase
         $this->assertSame($expectedCategory, $breadcrumb->getCategory());
         $this->assertSame($expectedMessage, $breadcrumb->getMessage());
         $this->assertSame($expectedMetadata, $breadcrumb->getMetadata());
+        $this->assertSame($expectedTimestamp, $breadcrumb->getTimestamp());
     }
 
     public function fromArrayDataProvider(): iterable
@@ -66,12 +121,14 @@ final class BreadcrumbTest extends TestCase
                 'category' => 'foo',
                 'message' => 'foo bar',
                 'data' => ['baz'],
+                'timestamp' => 1615590096.3244,
             ],
             Breadcrumb::LEVEL_INFO,
             Breadcrumb::TYPE_USER,
             'foo',
             'foo bar',
             ['baz'],
+            1615590096.3244,
         ];
 
         yield [
@@ -84,6 +141,7 @@ final class BreadcrumbTest extends TestCase
             'foo',
             null,
             [],
+            1615588578.6652,
         ];
     }
 
@@ -145,5 +203,21 @@ final class BreadcrumbTest extends TestCase
         $this->assertNotSame($breadcrumb, $newBreadcrumb);
         $this->assertSame(['foo' => 'bar'], $breadcrumb->getMetadata());
         $this->assertArrayNotHasKey('foo', $newBreadcrumb->getMetadata());
+    }
+
+    public function testWithTimestamp(): void
+    {
+        $timestamp = 12345.678;
+        $newTimestamp = 987.654;
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'foo', null, ['foo' => 'bar'], $timestamp);
+        $newBreadcrumb = $breadcrumb->withTimestamp($timestamp);
+
+        $this->assertSame($breadcrumb, $newBreadcrumb);
+
+        $newBreadcrumb = $breadcrumb->withTimestamp($newTimestamp);
+
+        $this->assertNotSame($breadcrumb, $newBreadcrumb);
+        $this->assertSame($timestamp, $breadcrumb->getTimestamp());
+        $this->assertSame($newTimestamp, $newBreadcrumb->getTimestamp());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
+use Composer\InstalledVersions;
 use Jean85\PrettyVersions;
 use PackageVersions\Versions;
 use Sentry\Event;
@@ -45,11 +46,33 @@ final class ModulesIntegration implements IntegrationInterface
     private static function getComposerPackages(): array
     {
         if (empty(self::$packages)) {
-            foreach (Versions::VERSIONS as $package => $rawVersion) {
-                self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+            foreach (self::getInstalledPackages() as $package) {
+                try {
+                    self::$packages[$package] = PrettyVersions::getVersion($package)->getPrettyVersion();
+                } catch (\Throwable $exception) {
+                    continue;
+                }
             }
         }
 
         return self::$packages;
+    }
+
+    /**
+     * @return string[]
+     */
+    private static function getInstalledPackages(): array
+    {
+        if (class_exists(InstalledVersions::class)) {
+            return InstalledVersions::getInstalledPackages();
+        }
+
+        if (class_exists(Versions::class)) {
+            // BC layer for Composer 1, using a transient dependency
+            return array_keys(Versions::VERSIONS);
+        }
+
+        // this should not happen
+        return ['sentry/sentry'];
     }
 }

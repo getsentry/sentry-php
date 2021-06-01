@@ -160,12 +160,12 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
-                CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
-                CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
+                \CURLOPT_TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
+                \CURLOPT_CONNECTTIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             ];
 
             if (null !== $options->getHttpProxy()) {
-                $curlConfig[CURLOPT_PROXY] = $options->getHttpProxy();
+                $curlConfig[\CURLOPT_PROXY] = $options->getHttpProxy();
             }
 
             /** @psalm-suppress InvalidPropertyAssignmentValue */

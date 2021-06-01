@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        php:
+          - '7.2'
+          - '7.3'
+          - '7.4'
+          - '8.0'
+        dependencies:
+          - lowest
+          - highest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: xdebug
+
+      - name: Setup Problem Matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Determine Composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=directory::$(composer config cache-dir)"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.directory }}
+          key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.php }}-${{ matrix.dependencies }}-composer-
+
+      - name: Install highest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Install lowest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
+        if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Run tests
+        run: vendor/bin/phpunit --coverage-clover=build/coverage-report.xml
+
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: build/coverage-report.xml
