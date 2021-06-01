@@ -15,6 +15,7 @@ use Http\Client\Common\PluginClient;
 use Http\Client\Curl\Client as CurlHttpClient;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Discovery\HttpAsyncClientDiscovery;
+use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
@@ -127,7 +128,10 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         return new PluginClient($httpClient, $httpClientPlugins);
     }
 
-    private function resolveClient(Options $options): HttpAsyncClientInterface
+    /**
+     * @return ClientInterface|HttpAsyncClientInterface
+     */
+    private function resolveClient(Options $options)
     {
         if (class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
