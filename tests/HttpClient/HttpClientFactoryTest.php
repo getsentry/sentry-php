@@ -4,29 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\HttpClient;
 
-use GuzzleHttp\RequestOptions;
-use Http\Adapter\Guzzle6\Client as Guzzle6HttpClient;
-use Http\Adapter\Guzzle7\Client as Guzzle7HttpClient;
-use Http\Client\Common\Plugin\AuthenticationPlugin;
-use Http\Client\Common\Plugin\DecoderPlugin;
-use Http\Client\Common\Plugin\ErrorPlugin;
-use Http\Client\Common\Plugin\HeaderSetPlugin;
-use Http\Client\Common\Plugin\RetryPlugin;
-use Http\Client\Common\PluginClient;
-use Http\Client\Curl\Client as CurlHttpClient;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\ClassDiscovery;
-use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
-use Sentry\HttpClient\Authentication\SentryAuthentication;
 use Sentry\HttpClient\HttpClientFactory;
-use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Options;
-use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
-use Symfony\Component\HttpClient\HttplugClient as SymfonyHttplugClient;
 
 final class HttpClientFactoryTest extends TestCase
 {
@@ -117,101 +100,5 @@ final class HttpClientFactoryTest extends TestCase
             'default_integrations' => false,
             'http_proxy' => 'http://example.com',
         ]));
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testResolveClientWithSymfonyClient()
-    {
-        new SymfonyHttplugClient(SymfonyHttpClient::create([]));
-        $this->assertClientInstance(SymfonyHttplugClient::class);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testResolveClientWithGuzzle6Client()
-    {
-        if (!class_exists(Guzzle6HttpClient::class)) {
-            self::markTestSkipped('This test requires Guzzle 6 adapter');
-        }
-        Guzzle6HttpClient::createWithConfig([]);
-        class_exists(RequestOptions::class);
-        $this->assertClientInstance(Guzzle6HttpClient::class);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testResolveClientWithGuzzle7Client()
-    {
-        if (!class_exists(Guzzle7HttpClient::class)) {
-            self::markTestSkipped('This test requires Guzzle 7 adapter');
-        }
-
-        self::markTestIncomplete('Factory does not support Guzzle 7 adapter');
-        Guzzle7HttpClient::createWithConfig([]);
-        class_exists(RequestOptions::class);
-        $this->assertClientInstance(Guzzle7HttpClient::class);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testResolveClientWithCurlClient()
-    {
-        new CurlHttpClient();
-        $this->assertClientInstance(CurlHttpClient::class);
-    }
-
-    /**
-     * @runInSeparateProcess
-     */
-    public function testResolveClientWithDefaultClient()
-    {
-        class_exists(HttpAsyncClientDiscovery::class);
-        $mock = $this->createMock(HttpAsyncClientInterface::class);
-        $reflectedClass = new \ReflectionClass(ClassDiscovery::class);
-        $method = $reflectedClass->getMethod('storeInCache');
-        $method->setAccessible(true);
-        $method->invokeArgs(null, [HttpAsyncClientInterface::class, ['class' => \get_class($mock)]]);
-        $this->assertClientInstance(\get_class($mock));
-    }
-
-    private function assertClientInstance(string $expectedClientClass)
-    {
-        $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
-            Psr17FactoryDiscovery::findStreamFactory(),
-            null,
-            'sentry.php.test',
-            '1.2.3'
-        );
-        class_exists(HeaderSetPlugin::class);
-        class_exists(AuthenticationPlugin::class);
-        class_exists(SentryAuthentication::class);
-        class_exists(RetryPlugin::class);
-        class_exists(ErrorPlugin::class);
-        class_exists(GzipEncoderPlugin::class);
-        class_exists(DecoderPlugin::class);
-        class_exists(PluginClient::class);
-        class_exists(RequestInterface::class);
-        $options = new Options(['dsn' => 'http://public@example.com/sentry/1']);
-        $autoloaders = spl_autoload_functions();
-        array_map('spl_autoload_unregister', $autoloaders);
-
-        try {
-            $client = $httpClientFactory->create($options);
-        } catch (\Throwable $exception) {
-            throw $exception;
-        } finally {
-            array_map('spl_autoload_register', $autoloaders);
-        }
-        $reflectedClient = new \ReflectionClass($client);
-        $clientProperty = $reflectedClient->getProperty('client');
-        $clientProperty->setAccessible(true);
-        self::assertInstanceOf($expectedClientClass, $clientProperty->getValue($client));
     }
 }
