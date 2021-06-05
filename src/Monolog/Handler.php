@@ -61,6 +61,10 @@ final class Handler extends AbstractProcessingHandler
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
+            if (!empty($record['context']['user'])) {
+                $scope->setUser($record['context']['user']);
+            }
+
             $this->hub->captureEvent($event, $hint);
         });
     }

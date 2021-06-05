@@ -14,6 +14,7 @@ use Sentry\Monolog\Handler;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 
 final class HandlerTest extends TestCase
 {
@@ -32,11 +33,12 @@ final class HandlerTest extends TestCase
                 $this->assertEquals($expectedEvent->getLogger(), $event->getLogger());
 
                 return true;
-            }), $expectedHint, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+            }), $expectedHint, $this->callback(function (Scope $scopeArg) use ($expectedEvent, $expectedExtra): bool {
                 $event = $scopeArg->applyToEvent(Event::createEvent());
 
                 $this->assertNotNull($event);
                 $this->assertSame($expectedExtra, $event->getExtra());
+                $this->assertEquals($expectedEvent->getUser(), $event->getUser());
 
                 return true;
             }));
@@ -248,6 +250,33 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::fatal());
+        $event->setUser(UserDataBag::createFromUserIdentifier(123));
+
+        yield [
+            [
+                'message' => 'foo bar',
+                'level' => Logger::EMERGENCY,
+                'level_name' => Logger::getLevelName(Logger::EMERGENCY),
+                'channel' => 'channel.foo',
+                'context' => [
+                    'user' => [
+                        'id' => 123,
+                    ],
+                ],
+                'extra' => [],
+            ],
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::EMERGENCY),
             ],
         ];
     }
