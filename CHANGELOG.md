@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.3.1 (2021-06-21)
+
 - Fix missing collecting of frames's arguments when using `captureEvent()` without expliciting a stacktrace or an exception (#1223)
 
 ## 3.3.0 (2021-05-26)
