@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Allow installation of `guzzlehttp/psr7:^2.0` (#1225)
+
 ## 3.3.1 (2021-06-21)
 
 - Fix missing collecting of frames's arguments when using `captureEvent()` without expliciting a stacktrace or an exception (#1223)
