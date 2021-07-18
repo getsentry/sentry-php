@@ -83,13 +83,13 @@ The following integrations are available and maintained by members of the Sentry
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
+- [Silverstripe](https://github.com/phptek/silverstripe-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 2.x
 
 - [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
-- [SilverStripe](https://github.com/phptek/silverstripe-sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
 
 ### 3rd party integrations using old SDK 1.x
