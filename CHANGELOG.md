@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## 3.3.2 (2021-07-19)
+
 - Allow installation of `guzzlehttp/psr7:^2.0` (#1225)
+- Allow installation of `psr/log:^1.0|^2.0|^3.0` (#1229)
 
 ## 3.3.1 (2021-06-21)
 
