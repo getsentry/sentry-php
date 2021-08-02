@@ -104,7 +104,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'request_body_size' => 0,
                 'status_code' => 200,
                 'response_body_size' => 0,
-            ]
+            ],
         ];
 
         yield [
@@ -116,7 +116,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'request_body_size' => 10,
                 'status_code' => 403,
                 'response_body_size' => 6,
-            ]
+            ],
         ];
 
         yield [
@@ -126,7 +126,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
-            ]
+            ],
         ];
 
         yield [
@@ -136,7 +136,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'POST',
                 'request_body_size' => 6,
-            ]
+            ],
         ];
     }
 }
