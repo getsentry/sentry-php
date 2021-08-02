@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Closure;
+use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
@@ -13,26 +16,52 @@ use Sentry\State\HubInterface;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?HubInterface $hub = null): \Closure
+    public static function trace(?HubInterface $hub = null): Closure
     {
-        return function (callable $handler) use ($hub): \Closure {
-            return function (RequestInterface $request, array $options) use ($hub, $handler) {
+        return static function (callable $handler) use ($hub): Closure {
+            return static function (RequestInterface $request, array $options) use ($hub, $handler) {
                 $hub = $hub ?? SentrySdk::getCurrentHub();
                 $span = $hub->getSpan();
-                $childSpan = null;
 
-                if (null !== $span) {
-                    $spanContext = new SpanContext();
-                    $spanContext->setOp('http.guzzle');
-                    $spanContext->setDescription($request->getMethod() . ' ' . $request->getUri());
-
-                    $childSpan = $span->startChild($spanContext);
+                if (null === $span) {
+                    return $handler($request, $options);
                 }
 
+                $spanContext = new SpanContext();
+                $spanContext->setOp('http.client');
+                $spanContext->setData([
+                    'url' => (string) $request->getUri(),
+                    'method' => $request->getMethod(),
+                    'request_body_size' => $request->getBody()->getSize(),
+                ]);
+                $spanContext->setDescription($request->getMethod() . ' ' . $request->getUri());
+
+                $childSpan = $span->startChild($spanContext);
+
+                $request->withHeader('sentry-trace', $childSpan->toTraceparent());
+
                 $handlerPromiseCallback = static function ($responseOrException) use ($childSpan) {
-                    if (null !== $childSpan) {
-                        $childSpan->finish();
+                    $response = $responseOrException instanceof ResponseInterface ? $responseOrException : null;
+
+                    /** @psalm-suppress UndefinedClass */
+                    if ($responseOrException instanceof GuzzleRequestException) {
+                        $response = $responseOrException->getResponse();
                     }
+
+                    if (null !== $response) {
+                        $spanData = $childSpan->getData();
+
+                        $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($responseOrException->getStatusCode()));
+
+                        $spanData['status_code'] = $responseOrException->getStatusCode();
+                        $spanData['response_body_size'] = $responseOrException->getBody()->getSize();
+
+                        $childSpan->setData($spanData);
+                    } else {
+                        $childSpan->setStatus(SpanStatus::internalError());
+                    }
+
+                    $childSpan->finish();
 
                     if ($responseOrException instanceof \Throwable) {
                         throw $responseOrException;

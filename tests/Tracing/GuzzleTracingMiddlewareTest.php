@@ -16,6 +16,7 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\Tracing\GuzzleTracingMiddleware;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TransactionContext;
 
 final class GuzzleTracingMiddlewareTest extends TestCase
@@ -32,14 +33,34 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg): bool {
+            ->with($this->callback(function (Event $eventArg) use ($expectedPromiseResult): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
                 $spans = $eventArg->getSpans();
 
                 $this->assertCount(1, $spans);
-                $this->assertSame('http.guzzle', $spans[0]->getOp());
-                $this->assertSame('GET http://www.example.com', $spans[0]->getDescription());
+
+                $guzzleSpan = $spans[0];
+
+                $this->assertSame('http.client', $guzzleSpan->getOp());
+                $this->assertSame('GET https://www.example.com', $guzzleSpan->getDescription());
+
+                $expectedSpanData = [
+                    'url' => 'https://www.example.com',
+                    'method' => 'GET',
+                    'request_body_size' => 0,
+                ];
+
+                if ($expectedPromiseResult instanceof Response) {
+                    $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
+
+                    $expectedSpanData['status_code'] = $expectedPromiseResult->getStatusCode();
+                    $expectedSpanData['response_body_size'] = $expectedPromiseResult->getBody()->getSize();
+                } else {
+                    $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
+                }
+
+                $this->assertSame($expectedSpanData, $guzzleSpan->getData());
 
                 return true;
             }));
@@ -59,7 +80,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         });
 
         /** @var PromiseInterface $promise */
-        $promise = $function(new Request('GET', 'http://www.example.com'), []);
+        $promise = $function(new Request('GET', 'https://www.example.com'), []);
 
         try {
             $promiseResult = $promise->wait();
@@ -80,6 +101,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         yield [
             new \Exception(),
+        ];
+
+        yield [
+            new Response(403, [], 'sentry'),
         ];
     }
 }
