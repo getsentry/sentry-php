@@ -8,6 +8,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectionException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
 use Http\Promise\FulfilledPromise as HttpFullfilledPromise;
 use Http\Promise\RejectedPromise as HttpRejectedPromise;
@@ -23,7 +24,6 @@ use Sentry\Options;
 use Sentry\ResponseStatus;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
-use function GuzzleHttp\Psr7\stream_for;
 
 final class HttpTransportTest extends TestCase
 {
@@ -90,7 +90,7 @@ final class HttpTransportTest extends TestCase
             ->method('createStream')
             ->with('{"foo":"bar"}')
             ->willReturnCallback(static function (string $content): StreamInterface {
-                return stream_for($content);
+                return Utils::streamFor($content);
             });
 
         $this->httpClient->expects($this->once())
@@ -136,7 +136,7 @@ final class HttpTransportTest extends TestCase
             ->method('createStream')
             ->with('{"foo":"bar"}')
             ->willReturnCallback(static function (string $content): StreamInterface {
-                return stream_for($content);
+                return Utils::streamFor($content);
             });
 
         $this->requestFactory->expects($this->once())
@@ -221,7 +221,7 @@ final class HttpTransportTest extends TestCase
             ->method('createStream')
             ->with('{"foo":"bar"}')
             ->willReturnCallback(static function (string $content): StreamInterface {
-                return stream_for($content);
+                return Utils::streamFor($content);
             });
 
         $this->httpClient->expects($this->once())
