@@ -15,6 +15,7 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
+use Sentry\State\Scope;
 use Sentry\Tracing\GuzzleTracingMiddleware;
 use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TransactionContext;
@@ -27,25 +28,34 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTrace($expectedPromiseResult): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->exactly(2))
             ->method('getOptions')
             ->willReturn(new Options(['traces_sample_rate' => 1]));
 
+        $hub = new Hub($client);
+
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg) use ($expectedPromiseResult): bool {
+            ->with($this->callback(function (Event $eventArg) use ($hub, $expectedPromiseResult): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
+                $hub->configureScope(function (Scope $scope) use ($eventArg) {
+                    $scope->applyToEvent($eventArg);
+                });
+
                 $spans = $eventArg->getSpans();
+                $breadcrumbs = $eventArg->getBreadcrumbs();
 
                 $this->assertCount(1, $spans);
+                $this->assertCount(1, $breadcrumbs);
 
                 $guzzleSpan = $spans[0];
+                $guzzleBreadcrumb = $breadcrumbs[0];
 
                 $this->assertSame('http.client', $guzzleSpan->getOp());
                 $this->assertSame('GET https://www.example.com', $guzzleSpan->getDescription());
 
-                $expectedSpanData = [
+                $expectedBreadcrumbData = [
                     'url' => 'https://www.example.com',
                     'method' => 'GET',
                     'request_body_size' => 0,
@@ -54,18 +64,17 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 if ($expectedPromiseResult instanceof Response) {
                     $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
 
-                    $expectedSpanData['status_code'] = $expectedPromiseResult->getStatusCode();
-                    $expectedSpanData['response_body_size'] = $expectedPromiseResult->getBody()->getSize();
+                    $expectedBreadcrumbData['status_code'] = $expectedPromiseResult->getStatusCode();
+                    $expectedBreadcrumbData['response_body_size'] = $expectedPromiseResult->getBody()->getSize();
                 } else {
                     $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
                 }
 
-                $this->assertSame($expectedSpanData, $guzzleSpan->getData());
+                $this->assertSame($expectedBreadcrumbData, $guzzleBreadcrumb->getMetadata());
 
                 return true;
             }));
 
-        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $hub->setSpan($transaction);

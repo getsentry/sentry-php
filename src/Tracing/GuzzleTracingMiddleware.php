@@ -8,6 +8,7 @@ use Closure;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Sentry\Breadcrumb;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
@@ -29,18 +30,15 @@ final class GuzzleTracingMiddleware
 
                 $spanContext = new SpanContext();
                 $spanContext->setOp('http.client');
-                $spanContext->setData([
-                    'url' => (string) $request->getUri(),
-                    'method' => $request->getMethod(),
-                    'request_body_size' => $request->getBody()->getSize(),
-                ]);
                 $spanContext->setDescription($request->getMethod() . ' ' . $request->getUri());
 
                 $childSpan = $span->startChild($spanContext);
 
                 $request->withHeader('sentry-trace', $childSpan->toTraceparent());
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($childSpan) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan) {
+                    $childSpan->finish();
+
                     $response = $responseOrException instanceof ResponseInterface ? $responseOrException : null;
 
                     /** @psalm-suppress UndefinedClass */
@@ -48,20 +46,28 @@ final class GuzzleTracingMiddleware
                         $response = $responseOrException->getResponse();
                     }
 
-                    if (null !== $response) {
-                        $spanData = $childSpan->getData();
+                    $breadcrumbData = [
+                        'url' => (string) $request->getUri(),
+                        'method' => $request->getMethod(),
+                        'request_body_size' => $request->getBody()->getSize(),
+                    ];
 
+                    if (null !== $response) {
                         $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($responseOrException->getStatusCode()));
 
-                        $spanData['status_code'] = $responseOrException->getStatusCode();
-                        $spanData['response_body_size'] = $responseOrException->getBody()->getSize();
-
-                        $childSpan->setData($spanData);
+                        $breadcrumbData['status_code'] = $responseOrException->getStatusCode();
+                        $breadcrumbData['response_body_size'] = $responseOrException->getBody()->getSize();
                     } else {
                         $childSpan->setStatus(SpanStatus::internalError());
                     }
 
-                    $childSpan->finish();
+                    $hub->addBreadcrumb(new Breadcrumb(
+                        Breadcrumb::LEVEL_INFO,
+                        'http',
+                        'http',
+                        null,
+                        $breadcrumbData
+                    ));
 
                     if ($responseOrException instanceof \Throwable) {
                         throw $responseOrException;
