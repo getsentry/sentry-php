@@ -26,13 +26,9 @@ final class Handler extends AbstractProcessingHandler
     private $hub;
 
     /**
-     * Constructor.
+     * {@inheritdoc}
      *
-     * @param HubInterface $hub    The hub to which errors are reported
-     * @param int|string   $level  The minimum logging level at which this
-     *                             handler will be triggered
-     * @param bool         $bubble Whether the messages that are handled can
-     *                             bubble up the stack or not
+     * @param HubInterface $hub The hub to which errors are reported
      */
     public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true)
     {
