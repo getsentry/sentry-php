@@ -25,7 +25,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     /**
      * @dataProvider traceDataProvider
      */
-    public function testTrace($expectedPromiseResult): void
+    public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData): void
     {
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->exactly(2))
@@ -36,7 +36,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg) use ($hub, $expectedPromiseResult): bool {
+            ->with($this->callback(function (Event $eventArg) use ($hub, $request, $expectedPromiseResult, $expectedBreadcrumbData): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
                 $hub->configureScope(static function (Scope $scope) use ($eventArg): void {
@@ -53,19 +53,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 $guzzleBreadcrumb = $breadcrumbs[0];
 
                 $this->assertSame('http.client', $guzzleSpan->getOp());
-                $this->assertSame('GET https://www.example.com', $guzzleSpan->getDescription());
-
-                $expectedBreadcrumbData = [
-                    'url' => 'https://www.example.com',
-                    'method' => 'GET',
-                    'request_body_size' => 0,
-                ];
+                $this->assertSame("{$request->getMethod()} {$request->getUri()}", $guzzleSpan->getDescription());
 
                 if ($expectedPromiseResult instanceof Response) {
                     $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
-
-                    $expectedBreadcrumbData['status_code'] = $expectedPromiseResult->getStatusCode();
-                    $expectedBreadcrumbData['response_body_size'] = $expectedPromiseResult->getBody()->getSize();
                 } else {
                     $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
                 }
@@ -89,7 +80,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         });
 
         /** @var PromiseInterface $promise */
-        $promise = $function(new Request('GET', 'https://www.example.com'), []);
+        $promise = $function($request, []);
 
         try {
             $promiseResult = $promise->wait();
@@ -105,15 +96,47 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function traceDataProvider(): iterable
     {
         yield [
+            new Request('GET', 'https://www.example.com'),
             new Response(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'GET',
+                'request_body_size' => 0,
+                'status_code' => 200,
+                'response_body_size' => 0,
+            ]
         ];
 
         yield [
-            new \Exception(),
-        ];
-
-        yield [
+            new Request('POST', 'https://www.example.com', [], 'not-sentry'),
             new Response(403, [], 'sentry'),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'POST',
+                'request_body_size' => 10,
+                'status_code' => 403,
+                'response_body_size' => 6,
+            ]
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new \Exception(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'GET',
+                'request_body_size' => 0,
+            ]
+        ];
+
+        yield [
+            new Request('POST', 'https://www.example.com', [], 'sentry'),
+            new \Exception(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'POST',
+                'request_body_size' => 6,
+            ]
         ];
     }
 }
