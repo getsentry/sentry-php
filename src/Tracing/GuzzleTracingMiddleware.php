@@ -53,17 +53,17 @@ final class GuzzleTracingMiddleware
                     ];
 
                     if (null !== $response) {
-                        $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($responseOrException->getStatusCode()));
+                        $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
 
-                        $breadcrumbData['status_code'] = $responseOrException->getStatusCode();
-                        $breadcrumbData['response_body_size'] = $responseOrException->getBody()->getSize();
+                        $breadcrumbData['status_code'] = $response->getStatusCode();
+                        $breadcrumbData['response_body_size'] = $response->getBody()->getSize();
                     } else {
                         $childSpan->setStatus(SpanStatus::internalError());
                     }
 
                     $hub->addBreadcrumb(new Breadcrumb(
                         Breadcrumb::LEVEL_INFO,
-                        'http',
+                        Breadcrumb::TYPE_HTTP,
                         'http',
                         null,
                         $breadcrumbData

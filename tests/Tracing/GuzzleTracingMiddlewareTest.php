@@ -39,7 +39,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ->with($this->callback(function (Event $eventArg) use ($hub, $expectedPromiseResult): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
-                $hub->configureScope(function (Scope $scope) use ($eventArg) {
+                $hub->configureScope(static function (Scope $scope) use ($eventArg): void {
                     $scope->applyToEvent($eventArg);
                 });
 
