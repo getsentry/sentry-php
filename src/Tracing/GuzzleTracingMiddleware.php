@@ -37,12 +37,16 @@ final class GuzzleTracingMiddleware
                 $request->withHeader('sentry-trace', $childSpan->toTraceparent());
 
                 $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan) {
+                    // We finish the span (which means setting the span end timestamp) first to ensure the measured time
+                    // the span spans is as close to only the HTTP request time and do the data collection afterwards
                     $childSpan->finish();
 
-                    $response = $responseOrException instanceof ResponseInterface ? $responseOrException : null;
+                    $response = null;
 
+                    if ($responseOrException instanceof ResponseInterface) {
+                        $response = $responseOrException;
                     /** @psalm-suppress UndefinedClass */
-                    if ($responseOrException instanceof GuzzleRequestException) {
+                    } elseif ($responseOrException instanceof GuzzleRequestException) {
                         $response = $responseOrException->getResponse();
                     }
 

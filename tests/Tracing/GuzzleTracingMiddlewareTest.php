@@ -22,6 +22,39 @@ use Sentry\Tracing\TransactionContext;
 
 final class GuzzleTracingMiddlewareTest extends TestCase
 {
+    public function testTraceDoesNothingIfSpanIsNotSet(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+
+        $hub = new Hub($client);
+
+        $expectedPromiseResult = new Response();
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(static function () use ($expectedPromiseResult): PromiseInterface {
+            return new FulfilledPromise($expectedPromiseResult);
+        });
+
+        /** @var PromiseInterface $promise */
+        $promise = $function(new Request('GET', 'https://www.example.com'), []);
+
+        try {
+            $promiseResult = $promise->wait();
+        } catch (\Throwable $exception) {
+            $promiseResult = $exception;
+        }
+
+        $this->assertSame($expectedPromiseResult, $promiseResult);
+
+        $hub->configureScope(function (Scope $scope): void {
+            $event = Event::createEvent();
+
+            $scope->applyToEvent($event);
+
+            $this->assertCount(0, $event->getBreadcrumbs());
+        });
+    }
+
     /**
      * @dataProvider traceDataProvider
      */
@@ -126,16 +159,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
-            ],
-        ];
-
-        yield [
-            new Request('POST', 'https://www.example.com', [], 'sentry'),
-            new \Exception(),
-            [
-                'url' => 'https://www.example.com',
-                'method' => 'POST',
-                'request_body_size' => 6,
             ],
         ];
     }
