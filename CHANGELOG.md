@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update the Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
+
 ## 3.3.2 (2021-07-19)
 
 - Allow installation of `guzzlehttp/psr7:^2.0` (#1225)
