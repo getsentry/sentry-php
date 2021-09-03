@@ -51,6 +51,11 @@ final class Handler extends AbstractProcessingHandler
 
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
             $hint->exception = $record['context']['exception'];
+            unset($record['context']['exception']);
+        }
+
+        if (!empty($record['context'])) {
+            $event->setContext('context', $record['context']);
         }
 
         $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
