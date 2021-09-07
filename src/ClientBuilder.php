@@ -186,7 +186,7 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
+            Psr17FactoryDiscovery::findUriFactory(),
             Psr17FactoryDiscovery::findResponseFactory(),
             $streamFactory,
             $this->httpClient,
