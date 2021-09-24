@@ -57,6 +57,15 @@ final class Handler extends AbstractProcessingHandler
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
+            foreach ($record['context'] as $key => $value) {
+                // We skip the `exception` field because it's put in the event's hint
+                if ('exception' === $key) {
+                    continue;
+                }
+
+                $scope->setExtra((string) $key, $value);
+            }
+
             $this->hub->captureEvent($event, $hint);
         });
     }

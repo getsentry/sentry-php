@@ -26,20 +26,24 @@ final class HandlerTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $event) use ($expectedEvent): bool {
-                $this->assertEquals($expectedEvent->getLevel(), $event->getLevel());
-                $this->assertEquals($expectedEvent->getMessage(), $event->getMessage());
-                $this->assertEquals($expectedEvent->getLogger(), $event->getLogger());
+            ->with(
+                $this->callback(function (Event $event) use ($expectedEvent): bool {
+                    $this->assertEquals($expectedEvent->getLevel(), $event->getLevel());
+                    $this->assertEquals($expectedEvent->getMessage(), $event->getMessage());
+                    $this->assertEquals($expectedEvent->getLogger(), $event->getLogger());
 
-                return true;
-            }), $expectedHint, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
-                $event = $scopeArg->applyToEvent(Event::createEvent());
+                    return true;
+                }),
+                $expectedHint,
+                $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+                    $event = $scopeArg->applyToEvent(Event::createEvent());
 
-                $this->assertNotNull($event);
-                $this->assertSame($expectedExtra, $event->getExtra());
+                    $this->assertNotNull($event);
+                    $this->assertSame($expectedExtra, $event->getExtra());
 
-                return true;
-            }));
+                    return true;
+                })
+            );
 
         $handler = new Handler(new Hub($client, new Scope()));
         $handler->handle($record);
@@ -248,6 +252,33 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        yield [
+            [
+                'message' => 'foo bar',
+                'level' => Logger::WARNING,
+                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'context' => [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
+                'channel' => 'channel.foo',
+                'extra' => [],
+            ],
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'foo' => 'bar',
+                'bar' => 'baz',
             ],
         ];
     }
