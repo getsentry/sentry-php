@@ -60,9 +60,14 @@ $client = (new ClientBuilder($options))
 
 SentrySdk::getCurrentHub()->bindClient($client);
 
-class FooClass implements \Serializable
+abstract class AbstractTestClass
+{
+    abstract public function foo(): void;
+}
+
+final class TestClass extends AbstractTestClass
 {
 }
 ?>
 --EXPECTF--
-Fatal error: Class Sentry\Tests\FooClass contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (Serializable::serialize, Serializable::unserialize) in %s on line %d
+Fatal error: Class Sentry\Tests\TestClass contains 1 abstract method and must therefore be declared abstract or implement the remaining methods (Sentry\Tests\AbstractTestClass::foo) in %s on line %d
