@@ -28,7 +28,10 @@ final class EnvironmentIntegration implements IntegrationInterface
 
             if (null !== $integration) {
                 $event->setRuntimeContext($integration->updateRuntimeContext($event->getRuntimeContext()));
-                $event->setOsContext($integration->updateServerOsContext($event->getOsContext()));
+
+                if (function_exists('php_uname')) {
+                    $event->setOsContext($integration->updateServerOsContext($event->getOsContext()));
+                }
             }
 
             return $event;
