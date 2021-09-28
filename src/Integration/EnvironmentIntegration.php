@@ -28,10 +28,7 @@ final class EnvironmentIntegration implements IntegrationInterface
 
             if (null !== $integration) {
                 $event->setRuntimeContext($integration->updateRuntimeContext($event->getRuntimeContext()));
-
-                if (function_exists('php_uname')) {
-                    $event->setOsContext($integration->updateServerOsContext($event->getOsContext()));
-                }
+                $event->setOsContext($integration->updateServerOsContext($event->getOsContext()));
             }
 
             return $event;
@@ -51,8 +48,12 @@ final class EnvironmentIntegration implements IntegrationInterface
         return $runtimeContext;
     }
 
-    private function updateServerOsContext(?OsContext $osContext): OsContext
+    private function updateServerOsContext(?OsContext $osContext): ?OsContext
     {
+        if (!function_exists('php_uname')) {
+            return null;
+        }
+
         if (null === $osContext) {
             $osContext = new OsContext(php_uname('s'));
         }
