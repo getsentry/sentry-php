@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Verify availability of `php_uname` in `EnvironmentIntegration` (#1243)
+
 ## 3.3.2 (2021-07-19)
 
 - Allow installation of `guzzlehttp/psr7:^2.0` (#1225)
