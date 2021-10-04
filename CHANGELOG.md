@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Verify availability of `php_uname` in `EnvironmentIntegration` (#1243)
+## 3.3.3 (2021-10-04)
+
+-  Fix fatal error in the `EnvironmentIntegration` integration if the `php_uname` function is disabled (#1243)
 
 ## 3.3.2 (2021-07-19)
 
