@@ -149,7 +149,7 @@ class Context implements \ArrayAccess, \JsonSerializable, \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->data[$offset];
     }
