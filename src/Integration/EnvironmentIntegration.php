@@ -48,8 +48,12 @@ final class EnvironmentIntegration implements IntegrationInterface
         return $runtimeContext;
     }
 
-    private function updateServerOsContext(?OsContext $osContext): OsContext
+    private function updateServerOsContext(?OsContext $osContext): ?OsContext
     {
+        if (!\function_exists('php_uname')) {
+            return $osContext;
+        }
+
         if (null === $osContext) {
             $osContext = new OsContext(php_uname('s'));
         }
