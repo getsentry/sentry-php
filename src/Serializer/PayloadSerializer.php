@@ -39,6 +39,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
         return JSON::encode($result);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Event $event): array
     {
         $result = [
