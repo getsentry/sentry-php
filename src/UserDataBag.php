@@ -62,7 +62,7 @@ final class UserDataBag
      *
      * @param string $ipAddress The IP address of the user
      */
-    public static function createFromUserIpAddress(string $ipAddress): self
+    public static function createFromUserIpAddress(?string $ipAddress): self
     {
         return new self(null, null, $ipAddress);
     }
