@@ -34,6 +34,16 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
     private function serializeAsEvent(Event $event): string
     {
+        $result = $this->toArray($event);
+
+        return JSON::encode($result);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Event $event): array
+    {
         $result = [
             'event_id' => (string) $event->getId(),
             'timestamp' => $event->getTimestamp(),
@@ -160,7 +170,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             ];
         }
 
-        return JSON::encode($result);
+        return $result;
     }
 
     private function serializeAsEnvelope(Event $event): string

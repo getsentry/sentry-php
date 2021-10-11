@@ -11,6 +11,7 @@ use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
@@ -47,6 +48,11 @@ final class PayloadSerializerTest extends TestCase
         ClockMock::withClockMock(1597790835);
 
         $result = $this->serializer->serialize($event);
+
+        if (EventType::transaction() !== $event->getType()) {
+            $resultArray = $this->serializer->toArray($event);
+            $this->assertJsonStringEqualsJsonString($result, json_encode($resultArray));
+        }
 
         if ($isOutputJson) {
             $this->assertJsonStringEqualsJsonString($expectedResult, $result);
