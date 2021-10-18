@@ -14,6 +14,7 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
@@ -210,9 +211,8 @@ final class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
             ->method('send')
-            ->willReturnCallback(function (Event $event) use ($expectedEvent): FulfilledPromise {
-                $this->assertEquals($expectedEvent, $event);
-
+            ->with($expectedEvent)
+            ->willReturnCallback(static function (Event $event): FulfilledPromise {
                 return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
             });
 
@@ -226,6 +226,12 @@ final class ClientTest extends TestCase
     public function captureEventDataProvider(): \Generator
     {
         $event = Event::createEvent();
+        $expectedEvent = clone $event;
+        $expectedEvent->setLogger('php');
+        $expectedEvent->setServerName('example.com');
+        $expectedEvent->setRelease('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33');
+        $expectedEvent->setEnvironment('development');
+        $expectedEvent->setTags(['context' => 'development']);
 
         yield 'Options set && no event properties set => use options' => [
             [
@@ -235,7 +241,7 @@ final class ClientTest extends TestCase
                 'tags' => ['context' => 'development'],
             ],
             $event,
-            $event,
+            $expectedEvent,
         ];
 
         $event = Event::createEvent();
@@ -243,6 +249,10 @@ final class ClientTest extends TestCase
         $event->setRelease('721e41770371db95eee98ca2707686226b993eda');
         $event->setEnvironment('production');
         $event->setTags(['context' => 'production']);
+
+        $expectedEvent = clone $event;
+        $expectedEvent->setLogger('php');
+        $expectedEvent->setTags(['context' => 'production', 'ios_version' => '14.0']);
 
         yield 'Options set && event properties set => event properties override options' => [
             [
@@ -252,15 +262,35 @@ final class ClientTest extends TestCase
                 'tags' => ['context' => 'development', 'ios_version' => '14.0'],
             ],
             $event,
-            $event,
+            $expectedEvent,
         ];
 
         $event = Event::createEvent();
+        $event->setServerName('example.com');
+
+        $expectedEvent = clone $event;
+        $expectedEvent->setLogger('php');
+        $expectedEvent->setEnvironment('production');
 
         yield 'Environment option set to null && no event property set => fallback to default value' => [
             ['environment' => null],
             $event,
+            $expectedEvent,
+        ];
+
+        $event = Event::createEvent();
+        $event->setServerName('example.com');
+        $event->setLevel(Severity::warning());
+        $event->setExceptions([new ExceptionDataBag(new \ErrorException())]);
+
+        $expectedEvent = clone $event;
+        $expectedEvent->setLogger('php');
+        $expectedEvent->setEnvironment('production');
+
+        yield 'Error level is set && exception is instance of ErrorException => preserve the error level set by the user' => [
+            [],
             $event,
+            $expectedEvent,
         ];
     }
 
