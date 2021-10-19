@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Fix overwriting of the event's error level set by the user when capturing an `ErrorException` exception (#1251)
+- Avoid overwriting the error level set by the user on the event when capturing an `ErrorException` exception (#1251)
 
 ## 3.3.3 (2021-10-04)
 
