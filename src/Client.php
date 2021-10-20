@@ -162,7 +162,7 @@ final class Client implements ClientInterface
             $response = $this->transport->send($event)->wait();
             $event = $response->getEvent();
 
-            if (null !== $event) {
+            if (null !== $event && $response->getStatus() === ResponseStatus::success()) {
                 return $event->getId();
             }
         } catch (\Throwable $exception) {
