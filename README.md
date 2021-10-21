@@ -84,6 +84,7 @@ The following integrations are available and maintained by members of the Sentry
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
+- [CakePHP](https://github.com/Connehito/cake-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 2.x
