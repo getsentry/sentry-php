@@ -92,6 +92,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [CakePHP](https://github.com/Connehito/cake-sentry/tree/3.x)
 
 ### 3rd party integrations using old SDK 1.x
 
