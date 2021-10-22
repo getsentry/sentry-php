@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Avoid overwriting the error level set by the user on the event when capturing an `ErrorException` exception (#1251)
+- Allow installing the project alongside Symfony `6.x` components (#1257)
 
 ## 3.3.3 (2021-10-04)
 
