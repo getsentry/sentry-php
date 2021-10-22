@@ -10,7 +10,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class EventType
+final class EventType implements \Stringable
 {
     /**
      * @var string The value of the enum instance
