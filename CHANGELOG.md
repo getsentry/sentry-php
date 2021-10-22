@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Avoid overwriting the error level set by the user on the event when capturing an `ErrorException` exception (#1251)
+
 ## 3.3.3 (2021-10-04)
 
 -  Fix fatal error in the `EnvironmentIntegration` integration if the `php_uname` function is disabled (#1243)
