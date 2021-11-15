@@ -94,7 +94,8 @@ function configureScope(callable $callback): void
  * is automatically removed once the operation finishes or throws.
  *
  * @param callable $callback The callback to be executed
- * @return mixed|void The callback's return value
+ *
+ * @return mixed|void The callback's return value, upon successful execution
  */
 function withScope(callable $callback)
 {
