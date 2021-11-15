@@ -82,9 +82,9 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function withScope(callable $callback): void
+    public function withScope(callable $callback)
     {
-        SentrySdk::getCurrentHub()->withScope($callback);
+        return SentrySdk::getCurrentHub()->withScope($callback);
     }
 
     /**

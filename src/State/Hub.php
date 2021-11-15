@@ -85,12 +85,12 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function withScope(callable $callback): void
+    public function withScope(callable $callback)
     {
         $scope = $this->pushScope();
 
         try {
-            $callback($scope);
+            return $callback($scope);
         } finally {
             $this->popScope();
         }

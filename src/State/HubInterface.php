@@ -54,8 +54,9 @@ interface HubInterface
      * is automatically removed once the operation finishes or throws.
      *
      * @param callable $callback The callback to be executed
+     * @return mixed|void The callback's return value
      */
-    public function withScope(callable $callback): void;
+    public function withScope(callable $callback);
 
     /**
      * Calls the given callback passing to it the current scope so that any
