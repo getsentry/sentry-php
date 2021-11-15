@@ -4,11 +4,12 @@
 
 ## 3.3.4 (2021-11-08)
 
-- Update the Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
+- Update Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
 - Run the test suite against PHP `8.1` (#1245)
 - Avoid overwriting the error level set by the user on the event when capturing an `ErrorException` exception (#1251)
 - Allow installing the project alongside Symfony `6.x` components (#1257)
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
+- The `withScope` methods now return the callback's return value (#1263)
 
 ## 3.3.3 (2021-10-04)
 
