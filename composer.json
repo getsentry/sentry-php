@@ -34,7 +34,7 @@
         "psr/http-factory": "^1.0",
         "psr/http-message-implementation": "^1.0",
         "psr/log": "^1.0|^2.0|^3.0",
-        "symfony/options-resolver": "^3.4.43|^4.4.11|^5.0.11",
+        "symfony/options-resolver": "^3.4.43|^4.4.30|^5.0.11|^6.0",
         "symfony/polyfill-php80": "^1.17",
         "symfony/polyfill-uuid": "^1.13.1"
     },
@@ -47,8 +47,8 @@
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12",
         "phpstan/phpstan-phpunit": "^0.12",
-        "phpunit/phpunit": "^8.5.13|^9.4",
-        "symfony/phpunit-bridge": "^5.2",
+        "phpunit/phpunit": "^8.5.14|^9.4",
+        "symfony/phpunit-bridge": "^5.2|^6.0",
         "vimeo/psalm": "^4.2"
     },
     "suggest": {

@@ -84,6 +84,7 @@ The following integrations are available and maintained by members of the Sentry
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
+- [CakePHP](https://github.com/Connehito/cake-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ### 3rd party integrations using old SDK 2.x
@@ -91,6 +92,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [CakePHP](https://github.com/Connehito/cake-sentry/tree/3.x)
 
 ### 3rd party integrations using old SDK 1.x
 
