@@ -167,6 +167,33 @@ final class HubTest extends TestCase
         $this->assertTrue($callbackInvoked);
     }
 
+    public function testWithScopeWithReturnValue(): void
+    {
+        $scope1 = new Scope();
+        $hub = new Hub($this->createMock(ClientInterface::class), $scope1);
+        $returned = false;
+        try {
+            $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
+                $this->assertNotSame($scope1, $scope2);
+                throw new \RuntimeException();
+                return true;
+            });
+        } catch (\RuntimeException $ignore) {
+        }
+
+        $this->assertFalse($returned);
+        $returned = false;
+        try {
+            $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
+                $this->assertNotSame($scope1, $scope2);
+                return true;
+            });
+        } catch (\RuntimeException $ignore) {
+        }
+
+        $this->assertTrue($returned);
+    }
+
     public function testConfigureScope(): void
     {
         $scope = new Scope();

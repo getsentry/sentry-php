@@ -206,6 +206,15 @@ final class FunctionsTest extends TestCase
         $this->assertTrue($callbackInvoked);
     }
 
+    public function testWithScopeWithCallback(): void
+    {
+        $callbackReturned = withScope(static function () use (&$callbackReturned): bool {
+            return true;
+        });
+
+        $this->assertTrue($callbackReturned);
+    }
+
     public function testConfigureScope(): void
     {
         $callbackInvoked = false;
