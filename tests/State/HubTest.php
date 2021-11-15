@@ -137,6 +137,30 @@ final class HubTest extends TestCase
     public function testWithScope(): void
     {
         $scope = new Scope();
+        $hub = new Hub(null, $scope);
+
+        $callbackReturn = $hub->withScope(function (Scope $scopeArg) use ($scope): string {
+            $this->assertNotSame($scope, $scopeArg);
+
+            return 'foobarbaz';
+        });
+
+        $this->assertSame('foobarbaz', $callbackReturn);
+
+        $callbackInvoked = false;
+
+        $hub->configureScope(function (Scope $scopeArg) use (&$callbackInvoked, $scope): void {
+            $this->assertSame($scope, $scopeArg);
+
+            $callbackInvoked = true;
+        });
+
+        $this->assertTrue($callbackInvoked);
+    }
+
+    public function testWithScopeWhenExceptionIsThrown(): void
+    {
+        $scope = new Scope();
         $hub = new Hub($this->createMock(ClientInterface::class), $scope);
         $callbackInvoked = false;
 
@@ -171,6 +195,8 @@ final class HubTest extends TestCase
     {
         $scope = new Scope();
         $hub = new Hub(null, $scope);
+
+        $callbackInvoked = false;
 
         $hub->configureScope(function (Scope $scopeArg) use ($scope, &$callbackInvoked): void {
             $this->assertSame($scope, $scopeArg);
