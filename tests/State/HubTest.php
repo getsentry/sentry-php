@@ -155,6 +155,7 @@ final class HubTest extends TestCase
 
         $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
             $this->assertNotSame($scope1, $scope2);
+
             return true;
         });
 

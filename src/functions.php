@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\State\Scope;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -96,6 +97,10 @@ function configureScope(callable $callback): void
  * @param callable $callback The callback to be executed
  *
  * @return mixed|void The callback's return value, upon successful execution
+ *
+ * @phpstan-template T
+ * @phpstan-param callable(Scope): T $callback
+ * @phpstan-return T
  */
 function withScope(callable $callback)
 {
