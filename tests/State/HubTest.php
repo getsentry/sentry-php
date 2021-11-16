@@ -136,42 +136,11 @@ final class HubTest extends TestCase
 
     public function testWithScope(): void
     {
-        $scope = new Scope();
-        $hub = new Hub($this->createMock(ClientInterface::class), $scope);
-        $callbackInvoked = false;
-
-        try {
-            $hub->withScope(function (Scope $scopeArg) use ($scope, &$callbackInvoked): void {
-                $this->assertNotSame($scope, $scopeArg);
-
-                $callbackInvoked = true;
-
-                // We throw to test that the scope is correctly popped form the
-                // stack regardless
-                throw new \RuntimeException();
-            });
-        } catch (\RuntimeException $exception) {
-            // Do nothing, we catch this exception to not make the test fail
-        }
-
-        $this->assertTrue($callbackInvoked);
-
-        $callbackInvoked = false;
-
-        $hub->configureScope(function (Scope $scopeArg) use (&$callbackInvoked, $scope): void {
-            $this->assertSame($scope, $scopeArg);
-
-            $callbackInvoked = true;
-        });
-
-        $this->assertTrue($callbackInvoked);
-    }
-
-    public function testWithScopeWithReturnValue(): void
-    {
         $scope1 = new Scope();
         $hub = new Hub($this->createMock(ClientInterface::class), $scope1);
+
         $returned = false;
+
         try {
             $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
                 $this->assertNotSame($scope1, $scope2);
@@ -183,15 +152,11 @@ final class HubTest extends TestCase
         }
 
         $this->assertFalse($returned);
-        $returned = false;
-        try {
-            $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
-                $this->assertNotSame($scope1, $scope2);
 
-                return true;
-            });
-        } catch (\RuntimeException $ignore) {
-        }
+        $returned = $hub->withScope(function (Scope $scope2) use ($scope1): bool {
+            $this->assertNotSame($scope1, $scope2);
+            return true;
+        });
 
         $this->assertTrue($returned);
     }

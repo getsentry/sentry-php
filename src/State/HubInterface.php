@@ -56,6 +56,10 @@ interface HubInterface
      * @param callable $callback The callback to be executed
      *
      * @return mixed|void The callback's return value, upon successful execution
+     *
+     * @phpstan-template T
+     * @phpstan-param callable(Scope): T $callback
+     * @phpstan-return T
      */
     public function withScope(callable $callback);
 
