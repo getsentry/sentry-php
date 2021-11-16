@@ -243,7 +243,7 @@ class Stacktrace implements \JsonSerializable
      *
      * @return Frame[]
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
