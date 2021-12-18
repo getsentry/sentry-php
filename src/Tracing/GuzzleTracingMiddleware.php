@@ -41,6 +41,8 @@ final class GuzzleTracingMiddleware
                     return $responseOrException;
                 };
 
+                $request = $request->withHeader("sentry-trace",  $childSpan->toTraceparent());
+
                 return $handler($request, $options)->then($handlerPromiseCallback, $handlerPromiseCallback);
             };
         };
