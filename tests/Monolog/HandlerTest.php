@@ -66,6 +66,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::DEBUG),
+                'monolog.context' => [],
             ],
         ];
 
@@ -88,6 +89,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::INFO),
+                'monolog.context' => [],
             ],
         ];
 
@@ -110,6 +112,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::NOTICE),
+                'monolog.context' => [],
             ],
         ];
 
@@ -132,6 +135,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.context' => [],
             ],
         ];
 
@@ -154,6 +158,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ERROR),
+                'monolog.context' => [],
             ],
         ];
 
@@ -176,6 +181,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::CRITICAL),
+                'monolog.context' => [],
             ],
         ];
 
@@ -198,6 +204,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::ALERT),
+                'monolog.context' => [],
             ],
         ];
 
@@ -220,6 +227,7 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::EMERGENCY),
+                'monolog.context' => [],
             ],
         ];
 
@@ -248,6 +256,9 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.context' => [
+                    'exception' => $exampleException,
+                ],
             ],
         ];
     }

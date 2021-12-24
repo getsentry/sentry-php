@@ -56,6 +56,7 @@ final class Handler extends AbstractProcessingHandler
         $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
+            $scope->setExtra('monolog.context', $record['context']);
 
             $this->hub->captureEvent($event, $hint);
         });
