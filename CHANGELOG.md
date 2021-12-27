@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.3.5 (2021-12-27)
+
+- Bump the minimum required version of the `jean85/pretty-package-versions` package (#1267)
+
 ## 3.3.4 (2021-11-08)
 
 - Avoid overwriting the error level set by the user on the event when capturing an `ErrorException` exception (#1251)
