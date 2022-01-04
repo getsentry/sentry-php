@@ -20,21 +20,29 @@ use Sentry\State\Scope;
  */
 final class Handler extends AbstractProcessingHandler
 {
+    private const CONTEXT_EXCEPTION_KEY = 'exception';
+
     /**
      * @var HubInterface
      */
     private $hub;
 
     /**
+     * @var bool
+     */
+    private $fillExtraContext;
+
+    /**
      * {@inheritdoc}
      *
      * @param HubInterface $hub The hub to which errors are reported
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
     {
-        $this->hub = $hub;
-
         parent::__construct($level, $bubble);
+
+        $this->hub = $hub;
+        $this->fillExtraContext = $fillExtraContext;
     }
 
     /**
@@ -57,14 +65,7 @@ final class Handler extends AbstractProcessingHandler
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
-            foreach ($record['context'] as $key => $value) {
-                // We skip the `exception` field because it's put in the event's hint
-                if ('exception' === $key) {
-                    continue;
-                }
-
-                $scope->setExtra((string) $key, $value);
-            }
+            $this->setExtraFromMonologContext($scope, $record['context']);
 
             $this->hub->captureEvent($event, $hint);
         });
@@ -92,6 +93,25 @@ final class Handler extends AbstractProcessingHandler
             case Logger::NOTICE:
             default:
                 return Severity::info();
+        }
+    }
+
+    /**
+     * @param mixed[] $context
+     */
+    private function setExtraFromMonologContext(Scope $scope, array $context): void
+    {
+        if (!$this->fillExtraContext) {
+            return;
+        }
+
+        foreach ($context as $key => $value) {
+            // We skip the `exception` field because it goes in its own context
+            if (self::CONTEXT_EXCEPTION_KEY === $key) {
+                continue;
+            }
+
+            $scope->setExtra((string) $key, $value);
         }
     }
 }
