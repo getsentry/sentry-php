@@ -41,7 +41,7 @@ final class OsContext
      */
     public function __construct(string $name, ?string $version = null, ?string $build = null, ?string $kernelVersion = null)
     {
-        if (0 === \strlen(trim($name))) {
+        if ('' === trim($name)) {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 
@@ -66,7 +66,7 @@ final class OsContext
      */
     public function setName(string $name): void
     {
-        if (0 === \strlen(trim($name))) {
+        if ('' === trim($name)) {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 

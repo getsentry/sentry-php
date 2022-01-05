@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Client\HttpAsyncClient;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
@@ -37,11 +36,6 @@ final class ClientBuilder implements ClientBuilderInterface
      * @var TransportInterface|null The transport
      */
     private $transport;
-
-    /**
-     * @var HttpAsyncClient|null The HTTP client
-     */
-    private $httpClient;
 
     /**
      * @var SerializerInterface|null The serializer to be injected in the client
@@ -84,7 +78,7 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public static function create(array $options = []): ClientBuilderInterface
     {
-        return new static(new Options($options));
+        return new self(new Options($options));
     }
 
     /**
@@ -189,7 +183,7 @@ final class ClientBuilder implements ClientBuilderInterface
             Psr17FactoryDiscovery::findUrlFactory(),
             Psr17FactoryDiscovery::findResponseFactory(),
             $streamFactory,
-            $this->httpClient,
+            null,
             $this->sdkIdentifier,
             $this->sdkVersion
         );

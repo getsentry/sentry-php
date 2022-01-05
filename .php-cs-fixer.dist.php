@@ -1,19 +1,15 @@
 <?php
 
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRules([
-        '@PSR2' => true,
+        '@PHP71Migration' => true,
         '@Symfony' => true,
         '@Symfony:risky' => true,
-        'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
         'ordered_imports' => [
             'imports_order' => ['class', 'function', 'const'],
         ],
         'declare_strict_types' => true,
-        'psr0' => true,
-        'psr4' => true,
-        'random_api_migration' => true,
         'yoda_style' => true,
         'self_accessor' => false,
         'phpdoc_no_useless_inheritdoc' => false,
