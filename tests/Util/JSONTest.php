@@ -113,6 +113,23 @@ final class JSONTest extends TestCase
         JSON::encode($resource);
     }
 
+    /**
+     * @dataProvider encodeThrowsExceptionIfMaxDepthArgumentIsInvalidDataProvider
+     */
+    public function testEncodeThrowsExceptionIfMaxDepthArgumentIsInvalid(int $maxDepth): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The $maxDepth argument must be an integer greater than 0.');
+
+        JSON::encode('foo', 0, $maxDepth);
+    }
+
+    public function encodeThrowsExceptionIfMaxDepthArgumentIsInvalidDataProvider(): \Generator
+    {
+        yield [0];
+        yield [-1];
+    }
+
     public function testEncodeRespectsOptionsArgument(): void
     {
         $this->assertSame('{}', JSON::encode([], \JSON_FORCE_OBJECT));

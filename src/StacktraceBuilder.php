@@ -15,11 +15,6 @@ use Sentry\Serializer\RepresentationSerializerInterface;
 final class StacktraceBuilder
 {
     /**
-     * @var Options The SDK client options
-     */
-    private $options;
-
-    /**
      * @var FrameBuilder An instance of the builder of {@see Frame} objects
      */
     private $frameBuilder;
@@ -32,7 +27,6 @@ final class StacktraceBuilder
      */
     public function __construct(Options $options, RepresentationSerializerInterface $representationSerializer)
     {
-        $this->options = $options;
         $this->frameBuilder = new FrameBuilder($options, $representationSerializer);
     }
 

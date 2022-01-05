@@ -11,22 +11,22 @@ parameters:
 			path: src/ClientInterface.php
 
 		-
-			message: "#^Offset 'host' does not exist on array\\(\\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string, 'scheme' \\=\\> 'http'\\|'https'\\)\\.$#"
+			message: "#^Offset 'host' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'path' does not exist on array\\(\\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string, 'scheme' \\=\\> 'http'\\|'https'\\)\\.$#"
+			message: "#^Offset 'path' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
 			count: 4
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'scheme' does not exist on array\\(\\?'scheme' \\=\\> string, \\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string\\)\\.$#"
+			message: "#^Offset 'scheme' does not exist on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'user' does not exist on array\\('scheme' \\=\\> 'http'\\|'https', \\?'host' \\=\\> string, \\?'port' \\=\\> int, \\?'user' \\=\\> string, \\?'pass' \\=\\> string, \\?'path' \\=\\> string, \\?'query' \\=\\> string, \\?'fragment' \\=\\> string\\)\\.$#"
+			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
 
@@ -56,9 +56,24 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$uriFactory\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
 			message: "#^Argument of an invalid type object supplied for foreach, only iterables are supported\\.$#"
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
+
+		-
+			message: "#^Method Sentry\\\\Serializer\\\\PayloadSerializer\\:\\:serializeAsEvent\\(\\) should return string but returns string\\|false\\.$#"
+			count: 1
+			path: src/Serializer/PayloadSerializer.php
 
 		-
 			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureException\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
@@ -104,6 +119,11 @@ parameters:
 			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
 			count: 3
 			path: src/State/HubInterface.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Tracing/SpanContext.php
 
 		-
 			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureException\\(\\) invoked with 2 parameters, 1 required\\.$#"

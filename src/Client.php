@@ -57,11 +57,6 @@ final class Client implements ClientInterface
     private $integrations;
 
     /**
-     * @var SerializerInterface The serializer of the client
-     */
-    private $serializer;
-
-    /**
      * @var RepresentationSerializerInterface The representation serializer of the client
      */
     private $representationSerializer;
@@ -101,11 +96,14 @@ final class Client implements ClientInterface
         ?RepresentationSerializerInterface $representationSerializer = null,
         ?LoggerInterface $logger = null
     ) {
+        if ($serializer !== null) {
+            @trigger_error('The $serializer argument is deprecated since version 3.3 and will be removed in 4.0.', E_USER_DEPRECATED);
+        }
+
         $this->options = $options;
         $this->transport = $transport;
         $this->logger = $logger ?? new NullLogger();
         $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
-        $this->serializer = $serializer ?? new Serializer($this->options);
         $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
         $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;

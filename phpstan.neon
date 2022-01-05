@@ -7,6 +7,6 @@ parameters:
     level: 8
     paths:
         - src
-    excludes_analyse:
+    excludePaths:
         - tests/resources
         - tests/Fixtures

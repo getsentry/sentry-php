@@ -42,16 +42,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     private const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
 
     /**
-     * @var UriFactoryInterface The PSR-7 URI factory
-     */
-    private $uriFactory;
-
-    /**
-     * @var ResponseFactoryInterface The PSR-7 response factory
-     */
-    private $responseFactory;
-
-    /**
      * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
@@ -89,8 +79,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         string $sdkIdentifier,
         string $sdkVersion
     ) {
-        $this->uriFactory = $uriFactory;
-        $this->responseFactory = $responseFactory;
         $this->streamFactory = $streamFactory;
         $this->httpClient = $httpClient;
         $this->sdkIdentifier = $sdkIdentifier;

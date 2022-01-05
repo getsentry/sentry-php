@@ -9,7 +9,6 @@ use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\DefaultTransportFactory;
 use Sentry\Transport\TransportFactoryInterface;
