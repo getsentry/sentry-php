@@ -11,9 +11,9 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  *
  * @internal
  *
- * @phpstan-type StacktraceFrame array{
- *     function?: callable-string,
- *     line?: integer,
+ * @psalm-type StacktraceFrame array{
+ *     function?: string,
+ *     line?: int,
  *     file?: string,
  *     class?: class-string,
  *     type?: string,
@@ -51,7 +51,7 @@ final class FrameBuilder
      * @param int                  $line           The line at which the frame originated
      * @param array<string, mixed> $backtraceFrame The raw frame
      *
-     * @phpstan-param StacktraceFrame $backtraceFrame
+     * @psalm-param StacktraceFrame $backtraceFrame
      */
     public function buildFromBacktraceFrame(string $file, int $line, array $backtraceFrame): Frame
     {
@@ -155,7 +155,7 @@ final class FrameBuilder
      *
      * @return array<string, mixed>
      *
-     * @phpstan-param StacktraceFrame $backtraceFrame
+     * @psalm-param StacktraceFrame $backtraceFrame
      */
     private function getFunctionArguments(array $backtraceFrame): array
     {

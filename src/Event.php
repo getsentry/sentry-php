@@ -71,7 +71,7 @@ final class Event
     private $messageFormatted;
 
     /**
-     * @var mixed[] The parameters to use to format the message
+     * @var string[] The parameters to use to format the message
      */
     private $messageParams = [];
 
@@ -376,7 +376,7 @@ final class Event
      * Sets the error message.
      *
      * @param string      $message   The message
-     * @param mixed[]     $params    The parameters to use to format the message
+     * @param string[]    $params    The parameters to use to format the message
      * @param string|null $formatted The formatted message
      */
     public function setMessage(string $message, array $params = [], ?string $formatted = null): void

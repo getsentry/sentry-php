@@ -1,6 +1,11 @@
 parameters:
 	ignoreErrors:
 		-
+			message: "#^Constructor of class Sentry\\\\Client has an unused parameter \\$serializer\\.$#"
+			count: 1
+			path: src/Client.php
+
+		-
 			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return T of Sentry\\\\Integration\\\\IntegrationInterface\\|null but returns T of Sentry\\\\Integration\\\\IntegrationInterface\\|null\\.$#"
 			count: 1
 			path: src/Client.php
@@ -29,6 +34,11 @@ parameters:
 			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
+
+		-
+			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\ErrorHandler\\:\\:cleanBacktraceFromErrorHandlerFrames\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
+			count: 1
+			path: src/ErrorHandler.php
 
 		-
 			message: "#^Result of && is always false\\.$#"
@@ -66,7 +76,162 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Property Sentry\\\\Integration\\\\IgnoreErrorsIntegration\\:\\:\\$options \\(array\\{ignore_exceptions\\: array\\<int, class\\-string\\<Throwable\\>\\>, ignore_tags\\: array\\<string, string\\>\\}\\) does not accept array\\.$#"
+			count: 1
+			path: src/Integration/IgnoreErrorsIntegration.php
+
+		-
+			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
+			count: 1
+			path: src/Integration/RequestIntegration.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeBreadcrumbCallback\\(\\) should return callable\\(Sentry\\\\Breadcrumb\\)\\: Sentry\\\\Breadcrumb\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: Sentry\\\\Event\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getClassSerializers\\(\\) should return array\\<string, callable\\(\\)\\: mixed\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getContextLines\\(\\) should return int\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getDsn\\(\\) should return Sentry\\\\Dsn\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getEnvironment\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getErrorTypes\\(\\) should return int but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxy\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getInAppExcludedPaths\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getInAppIncludedPaths\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getIntegrations\\(\\) should return array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\|\\(callable\\(array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\)\\: array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\) but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getLogger\\(\\) should return string but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getMaxBreadcrumbs\\(\\) should return int but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getMaxRequestBodySize\\(\\) should return string but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getMaxValueLength\\(\\) should return int but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getPrefixes\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getRelease\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getSampleRate\\(\\) should return float but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getSendAttempts\\(\\) should return int but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getServerName\\(\\) should return string but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTags\\(\\) should return array\\<string, string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampleRate\\(\\) should return float but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampler\\(\\) should return \\(callable\\(\\)\\: mixed\\)\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:hasDefaultIntegrations\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:isCompressionEnabled\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachStacktrace\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:shouldCaptureSilencedErrors\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:shouldSendDefaultPii\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Argument of an invalid type object supplied for foreach, only iterables are supported\\.$#"
+			count: 1
+			path: src/Serializer/AbstractSerializer.php
+
+		-
+			message: "#^Cannot cast mixed to string\\.$#"
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
 
@@ -74,6 +239,11 @@ parameters:
 			message: "#^Method Sentry\\\\Serializer\\\\PayloadSerializer\\:\\:serializeAsEvent\\(\\) should return string but returns string\\|false\\.$#"
 			count: 1
 			path: src/Serializer/PayloadSerializer.php
+
+		-
+			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
+			count: 1
+			path: src/StacktraceBuilder.php
 
 		-
 			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureException\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
@@ -124,6 +294,26 @@ parameters:
 			message: "#^Unsafe usage of new static\\(\\)\\.$#"
 			count: 1
 			path: src/Tracing/SpanContext.php
+
+		-
+			message: "#^Parameter \\#1 \\$email of method Sentry\\\\UserDataBag\\:\\:setEmail\\(\\) expects string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
+
+		-
+			message: "#^Parameter \\#1 \\$id of method Sentry\\\\UserDataBag\\:\\:setId\\(\\) expects int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
+
+		-
+			message: "#^Parameter \\#1 \\$ipAddress of method Sentry\\\\UserDataBag\\:\\:setIpAddress\\(\\) expects string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
+
+		-
+			message: "#^Parameter \\#1 \\$username of method Sentry\\\\UserDataBag\\:\\:setUsername\\(\\) expects string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
 
 		-
 			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureException\\(\\) invoked with 2 parameters, 1 required\\.$#"

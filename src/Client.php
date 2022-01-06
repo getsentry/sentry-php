@@ -96,10 +96,6 @@ final class Client implements ClientInterface
         ?RepresentationSerializerInterface $representationSerializer = null,
         ?LoggerInterface $logger = null
     ) {
-        if ($serializer !== null) {
-            @trigger_error('The $serializer argument is deprecated since version 3.3 and will be removed in 4.0.', E_USER_DEPRECATED);
-        }
-
         $this->options = $options;
         $this->transport = $transport;
         $this->logger = $logger ?? new NullLogger();

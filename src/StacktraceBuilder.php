@@ -11,6 +11,8 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  * or from a backtrace.
  *
  * @internal
+ *
+ * @psalm-import-type StacktraceFrame from FrameBuilder
  */
 final class StacktraceBuilder
 {
@@ -47,10 +49,7 @@ final class StacktraceBuilder
      * @param string                           $file      The file where the backtrace originated from
      * @param int                              $line      The line from which the backtrace originated from
      *
-     * @phpstan-param list<array{
-     *     line?: integer,
-     *     file?: string,
-     * }> $backtrace
+     * @psalm-param list<StacktraceFrame> $backtrace
      */
     public function buildFromBacktrace(array $backtrace, string $file, int $line): Stacktrace
     {
