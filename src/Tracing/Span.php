@@ -80,25 +80,17 @@ class Span
      */
     public function __construct(?SpanContext $context = null)
     {
-        $this->traceId = TraceId::generate();
-        $this->spanId = SpanId::generate();
-        $this->startTimestamp = microtime(true);
-
         if (null === $context) {
+            $this->traceId = TraceId::generate();
+            $this->spanId = SpanId::generate();
+            $this->startTimestamp = microtime(true);
+
             return;
         }
 
-        if (null !== $context->getTraceId()) {
-            $this->traceId = $context->getTraceId();
-        }
-
-        if (null !== $context->getSpanId()) {
-            $this->spanId = $context->getSpanId();
-        }
-
-        if (null !== $context->getStartTimestamp()) {
-            $this->startTimestamp = $context->getStartTimestamp();
-        }
+        $this->traceId = $context->getTraceId() ?? TraceId::generate();
+        $this->spanId = $context->getSpanId() ?? SpanId::generate();
+        $this->startTimestamp = $context->getStartTimestamp() ?? microtime(true);
 
         $this->parentSpanId = $context->getParentSpanId();
         $this->description = $context->getDescription();
