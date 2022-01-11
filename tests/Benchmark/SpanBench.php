@@ -9,7 +9,7 @@ use Sentry\Tracing\Span;
 class SpanBench
 {
     /**
-     * @Revs(10000)
+     * @Revs(100000)
      * @Iterations(10)
      */
     public function benchConstructor(): void
