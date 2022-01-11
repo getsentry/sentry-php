@@ -12,7 +12,7 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  * @internal
  *
  * @psalm-type StacktraceFrame array{
- *     function: string,
+ *     function?: string,
  *     line?: int,
  *     file?: string,
  *     class?: class-string,
