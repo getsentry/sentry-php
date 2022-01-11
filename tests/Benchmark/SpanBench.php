@@ -11,10 +11,14 @@ class SpanBench
 {
     /** @var TransactionContext */
     private $context;
+    /** @var TransactionContext */
+    private $contextWithTimestamp;
 
     public function __construct()
     {
         $this->context = TransactionContext::fromSentryTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0');
+        $this->contextWithTimestamp = TransactionContext::fromSentryTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0');
+        $this->contextWithTimestamp->setStartTimestamp(microtime(true));
     }
 
     /**
@@ -33,5 +37,14 @@ class SpanBench
     public function benchConstructorWithInjectedContext(): void
     {
         $span = new Span($this->context);
+    }
+
+    /**
+     * @Revs(100000)
+     * @Iterations(10)
+     */
+    public function benchConstructorWithInjectedContextAndStartTimestamp(): void
+    {
+        $span = new Span($this->contextWithTimestamp);
     }
 }
