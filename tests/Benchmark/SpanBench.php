@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tests\Benchmark;
 
 use PhpBench\Benchmark\Metadata\Annotations\Iterations;
@@ -9,9 +11,13 @@ use Sentry\Tracing\TransactionContext;
 
 class SpanBench
 {
-    /** @var TransactionContext */
+    /**
+     * @var TransactionContext
+     */
     private $context;
-    /** @var TransactionContext */
+    /**
+     * @var TransactionContext
+     */
     private $contextWithTimestamp;
 
     public function __construct()
