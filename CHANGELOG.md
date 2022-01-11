@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Optimize `Span` constructor and add benchmarks (#1274)
+
 ## 3.3.5 (2021-12-27)
 
 - Bump the minimum required version of the `jean85/pretty-package-versions` package (#1267)
