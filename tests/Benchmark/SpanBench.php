@@ -10,7 +10,7 @@ class SpanBench
 {
     /**
      * @Revs(10000)
-     * @Iterations(5)
+     * @Iterations(10)
      */
     public function benchConstructor(): void
     {
