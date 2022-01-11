@@ -26,9 +26,6 @@ jobs:
         dependencies:
           - lowest
           - highest
-        include:
-          - php: '8.1'
-            dependencies: lowest
 
     steps:
       - name: Checkout
