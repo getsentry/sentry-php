@@ -12,7 +12,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;

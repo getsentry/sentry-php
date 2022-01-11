@@ -12,7 +12,7 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  * @internal
  *
  * @psalm-type StacktraceFrame array{
- *     function?: string,
+ *     function: string,
  *     line?: int,
  *     file?: string,
  *     class?: class-string,
@@ -174,7 +174,7 @@ final class FrameBuilder
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
                 }
-            } elseif (isset($backtraceFrame['function']) && !\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
+            } elseif (!\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
                 $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
         } catch (\ReflectionException $e) {

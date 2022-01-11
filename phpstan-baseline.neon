@@ -11,6 +11,11 @@ parameters:
 			path: src/Client.php
 
 		-
+			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, args\\?\\: array\\}\\>, array\\<int, array\\> given\\.$#"
+			count: 1
+			path: src/Client.php
+
+		-
 			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
 			count: 3
 			path: src/ClientInterface.php
@@ -36,7 +41,7 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\ErrorHandler\\:\\:cleanBacktraceFromErrorHandlerFrames\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
+			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\ErrorHandler\\:\\:cleanBacktraceFromErrorHandlerFrames\\(\\) expects array\\<int, array\\{function\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
 			count: 1
 			path: src/ErrorHandler.php
 
@@ -236,12 +241,12 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: "#^Method Sentry\\\\Serializer\\\\PayloadSerializer\\:\\:serializeAsEvent\\(\\) should return string but returns string\\|false\\.$#"
+			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
 			count: 1
-			path: src/Serializer/PayloadSerializer.php
+			path: src/StacktraceBuilder.php
 
 		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
+			message: "#^Parameter \\#3 \\$backtraceFrame of method Sentry\\\\FrameBuilder\\:\\:buildFromBacktraceFrame\\(\\) expects array\\{function\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}, array\\{\\} given\\.$#"
 			count: 1
 			path: src/StacktraceBuilder.php
 
@@ -314,6 +319,11 @@ parameters:
 			message: "#^Parameter \\#1 \\$username of method Sentry\\\\UserDataBag\\:\\:setUsername\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
+
+		-
+			message: "#^Method Sentry\\\\Util\\\\JSON\\:\\:encode\\(\\) should return string but returns string\\|false\\.$#"
+			count: 1
+			path: src/Util/JSON.php
 
 		-
 			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureException\\(\\) invoked with 2 parameters, 1 required\\.$#"
