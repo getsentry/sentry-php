@@ -108,7 +108,6 @@ final class HubAdapter implements HubInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        /** @psalm-suppress TooManyArguments */
         return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
     }
 
@@ -117,7 +116,6 @@ final class HubAdapter implements HubInterface
      */
     public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        /** @psalm-suppress TooManyArguments */
         return SentrySdk::getCurrentHub()->captureException($exception, $hint);
     }
 
@@ -134,7 +132,6 @@ final class HubAdapter implements HubInterface
      */
     public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        /** @psalm-suppress TooManyArguments */
         return SentrySdk::getCurrentHub()->captureLastError($hint);
     }
 
@@ -161,7 +158,6 @@ final class HubAdapter implements HubInterface
      */
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        /** @psalm-suppress TooManyArguments */
         return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
     }
 

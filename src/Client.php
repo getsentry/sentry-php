@@ -12,7 +12,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
 use Sentry\Serializer\SerializerInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportInterface;
@@ -55,11 +54,6 @@ final class Client implements ClientInterface
      * @psalm-var array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     private $integrations;
-
-    /**
-     * @var SerializerInterface The serializer of the client
-     */
-    private $serializer;
 
     /**
      * @var RepresentationSerializerInterface The representation serializer of the client
@@ -105,7 +99,6 @@ final class Client implements ClientInterface
         $this->transport = $transport;
         $this->logger = $logger ?? new NullLogger();
         $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
-        $this->serializer = $serializer ?? new Serializer($this->options);
         $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
         $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;

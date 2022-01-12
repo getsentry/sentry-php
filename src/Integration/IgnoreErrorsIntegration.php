@@ -14,11 +14,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * to a series of options that must match with its data.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
+ *
+ * @psalm-type IntegrationOptions array{
+ *     ignore_exceptions: list<class-string<\Throwable>>,
+ *     ignore_tags: array<string, string>
+ * }
  */
 final class IgnoreErrorsIntegration implements IntegrationInterface
 {
     /**
      * @var array<string, mixed> The options
+     *
+     * @psalm-var IntegrationOptions
      */
     private $options;
 
@@ -29,7 +36,7 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      * @param array<string, mixed> $options The options
      *
      * @psalm-param array{
-     *     ignore_exceptions?: list<class-string<\Throwable>>
+     *     ignore_exceptions?: list<class-string<\Throwable>>,
      *     ignore_tags?: array<string, string>
      * } $options
      */
@@ -69,6 +76,8 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      *
      * @param Event                $event   The event to check
      * @param array<string, mixed> $options The options of the integration
+     *
+     * @psalm-param IntegrationOptions $options
      */
     private function shouldDropEvent(Event $event, array $options): bool
     {
@@ -89,6 +98,8 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      *
      * @param Event                $event   The event instance
      * @param array<string, mixed> $options The options of the integration
+     *
+     * @psalm-param IntegrationOptions $options
      */
     private function isIgnoredException(Event $event, array $options): bool
     {
@@ -113,6 +124,8 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      *
      * @param Event                $event   The event instance
      * @param array<string, mixed> $options The options of the integration
+     *
+     * @psalm-param IntegrationOptions $options
      */
     private function isIgnoredTag(Event $event, array $options): bool
     {
