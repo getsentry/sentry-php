@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.17.0@6f4707aa41c9174353a6434bba3fc8840f981d9c">
+<files psalm-version="4.18.1@dda05fa913f4dc6eb3386f2f7ce5a45d37a71bcb">
   <file src="src/Dsn.php">
     <PossiblyUndefinedArrayOffset occurrences="4">
       <code>$parsedDsn['host']</code>
@@ -21,18 +21,6 @@
       <code>$userIntegration</code>
       <code>$userIntegrations</code>
     </PossiblyInvalidArgument>
-  </file>
-  <file src="src/Serializer/PayloadSerializer.php">
-    <FalsableReturnStatement occurrences="1">
-      <code>JSON::encode($result)</code>
-    </FalsableReturnStatement>
-    <InvalidFalsableReturnType occurrences="1">
-      <code>string</code>
-    </InvalidFalsableReturnType>
-    <PossiblyFalseArgument occurrences="2">
-      <code>$envelopeHeader</code>
-      <code>$itemHeader</code>
-    </PossiblyFalseArgument>
   </file>
   <file src="src/Serializer/RepresentationSerializer.php">
     <InvalidReturnStatement occurrences="1">
