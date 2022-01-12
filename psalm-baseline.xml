@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="4.17.0@6f4707aa41c9174353a6434bba3fc8840f981d9c">
+  <file src="src/Dsn.php">
+    <PossiblyUndefinedArrayOffset occurrences="4">
+      <code>$parsedDsn['host']</code>
+      <code>$parsedDsn['path']</code>
+      <code>$parsedDsn['scheme']</code>
+      <code>$parsedDsn['user']</code>
+    </PossiblyUndefinedArrayOffset>
+  </file>
+  <file src="src/HttpClient/HttpClientFactory.php">
+    <UndefinedClass occurrences="4">
+      <code>GuzzleHttpClientOptions</code>
+      <code>GuzzleHttpClientOptions</code>
+      <code>GuzzleHttpClientOptions</code>
+      <code>SymfonyHttpClient</code>
+    </UndefinedClass>
+  </file>
+  <file src="src/Integration/IntegrationRegistry.php">
+    <PossiblyInvalidArgument occurrences="2">
+      <code>$userIntegration</code>
+      <code>$userIntegrations</code>
+    </PossiblyInvalidArgument>
+  </file>
+  <file src="src/Serializer/PayloadSerializer.php">
+    <FalsableReturnStatement occurrences="1">
+      <code>JSON::encode($result)</code>
+    </FalsableReturnStatement>
+    <InvalidFalsableReturnType occurrences="1">
+      <code>string</code>
+    </InvalidFalsableReturnType>
+    <PossiblyFalseArgument occurrences="2">
+      <code>$envelopeHeader</code>
+      <code>$itemHeader</code>
+    </PossiblyFalseArgument>
+  </file>
+  <file src="src/Serializer/RepresentationSerializer.php">
+    <InvalidReturnStatement occurrences="1">
+      <code>$value</code>
+    </InvalidReturnStatement>
+    <InvalidReturnType occurrences="1">
+      <code>representationSerialize</code>
+    </InvalidReturnType>
+  </file>
+  <file src="src/State/Hub.php">
+    <TooManyArguments occurrences="3">
+      <code>captureException</code>
+      <code>captureLastError</code>
+      <code>captureMessage</code>
+    </TooManyArguments>
+  </file>
+  <file src="src/State/HubAdapter.php">
+    <TooManyArguments occurrences="4">
+      <code>captureException</code>
+      <code>captureLastError</code>
+      <code>captureMessage</code>
+      <code>startTransaction</code>
+    </TooManyArguments>
+  </file>
+  <file src="src/Tracing/SpanContext.php">
+    <UnsafeInstantiation occurrences="1">
+      <code>new static()</code>
+    </UnsafeInstantiation>
+  </file>
+  <file src="src/functions.php">
+    <TooManyArguments occurrences="4">
+      <code>captureException</code>
+      <code>captureLastError</code>
+      <code>captureMessage</code>
+      <code>startTransaction</code>
+    </TooManyArguments>
+  </file>
+</files>

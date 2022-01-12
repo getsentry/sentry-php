@@ -10,6 +10,15 @@ use Sentry\Serializer\RepresentationSerializerInterface;
  * This class builds a {@see Frame} object out of a backtrace's raw frame.
  *
  * @internal
+ *
+ * @psalm-type StacktraceFrame array{
+ *     function?: string,
+ *     line?: int,
+ *     file?: string,
+ *     class?: class-string,
+ *     type?: string,
+ *     args?: mixed[]
+ * }
  */
 final class FrameBuilder
 {
@@ -42,14 +51,7 @@ final class FrameBuilder
      * @param int                  $line           The line at which the frame originated
      * @param array<string, mixed> $backtraceFrame The raw frame
      *
-     * @psalm-param array{
-     *     function?: callable-string,
-     *     line?: integer,
-     *     file?: string,
-     *     class?: class-string,
-     *     type?: string,
-     *     args?: array
-     * } $backtraceFrame
+     * @psalm-param StacktraceFrame $backtraceFrame
      */
     public function buildFromBacktraceFrame(string $file, int $line, array $backtraceFrame): Frame
     {
@@ -153,14 +155,7 @@ final class FrameBuilder
      *
      * @return array<string, mixed>
      *
-     * @throws \ReflectionException
-     *
-     * @psalm-param array{
-     *     function?: callable-string,
-     *     class?: class-string,
-     *     type?: string,
-     *     args?: array
-     * } $backtraceFrame
+     * @psalm-param StacktraceFrame $backtraceFrame
      */
     private function getFunctionArguments(array $backtraceFrame): array
     {
@@ -179,7 +174,7 @@ final class FrameBuilder
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
                 }
-            } elseif (isset($backtraceFrame['function']) && !\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
+            } elseif (!\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
                 $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
         } catch (\ReflectionException $e) {

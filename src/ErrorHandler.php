@@ -12,6 +12,8 @@ use Sentry\Exception\SilencedErrorException;
  * error types and relays them to all configured listeners. Registering this
  * error handler more than once is not supported and will lead to nasty
  * problems. The code is based on the Symfony ErrorHandler component.
+ *
+ * @psalm-import-type StacktraceFrame from FrameBuilder
  */
 final class ErrorHandler
 {
@@ -93,7 +95,7 @@ final class ErrorHandler
     private static $reservedMemory;
 
     /**
-     * @var array<string, string> List of error levels and their description
+     * @var string[] List of error levels and their description
      */
     private const ERROR_LEVELS_DESCRIPTION = [
         \E_DEPRECATED => 'Deprecated',
@@ -379,11 +381,13 @@ final class ErrorHandler
      * Cleans and returns the backtrace without the first frames that belong to
      * this error handler.
      *
-     * @param array<int, mixed> $backtrace The backtrace to clear
-     * @param string            $file      The filename the backtrace was raised in
-     * @param int               $line      The line number the backtrace was raised at
+     * @param array<int, array<string, mixed>> $backtrace The backtrace to clear
+     * @param string                           $file      The filename the backtrace was raised in
+     * @param int                              $line      The line number the backtrace was raised at
      *
      * @return array<int, mixed>
+     *
+     * @psalm-param list<StacktraceFrame> $backtrace
      */
     private function cleanBacktraceFromErrorHandlerFrames(array $backtrace, string $file, int $line): array
     {

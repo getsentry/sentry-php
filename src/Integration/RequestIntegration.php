@@ -69,6 +69,10 @@ final class RequestIntegration implements IntegrationInterface
 
     /**
      * @var array<string, mixed> The options
+     *
+     * @psalm-var array{
+     *     pii_sanitize_headers: string[]
+     * }
      */
     private $options;
 

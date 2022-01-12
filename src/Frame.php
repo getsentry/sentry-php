@@ -67,7 +67,7 @@ final class Frame
 
     /**
      * @var array<string, mixed> A mapping of variables which were available within
-     *                    this frame (usually context-locals)
+     *                           this frame (usually context-locals)
      */
     private $vars = [];
 
