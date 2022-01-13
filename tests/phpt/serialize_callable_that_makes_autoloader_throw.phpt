@@ -1,5 +1,5 @@
 --TEST--
-Test that serializing a pseudo-callable that doesn't exist (like an array of 2 strings) doesn't brake,
+Test that serializing a pseudo-callable that doesn't exist (like an array of 2 strings) doesn't brake
 when inside an application with an autoloader that throws, like Yii or Magento (see #1112)
 --FILE--
 <?php
