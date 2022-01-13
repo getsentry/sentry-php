@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Update the Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
-- Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
+- Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serializatio
+- Add `Sentry\Monolog\BreadcrumbHandler`, a Monolog handler to allow registration of logs as breadcrumbs (#1199)
 
 ## 3.3.5 (2021-12-27)
 
