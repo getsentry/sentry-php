@@ -6,6 +6,7 @@ namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Psr\Log\LogLevel;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\State\HubInterface;
@@ -14,6 +15,9 @@ use Sentry\State\Scope;
 /**
  * This Monolog handler logs every message as a {@see Breadcrumb} into the current {@see Scope},
  * to enrich any event sent to Sentry.
+ *
+ * @phpstan-import-type Level from \Monolog\Logger
+ * @phpstan-import-type LevelName from \Monolog\Logger
  */
 final class BreadcrumbHandler extends AbstractProcessingHandler
 {
@@ -23,6 +27,8 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     private $hub;
 
     /**
+     * @phpstan-param Level|LevelName|LogLevel::* $level
+     *
      * @param HubInterface $hub    The hub to which errors are reported
      * @param int|string   $level  The minimum logging level at which this
      *                             handler will be triggered
