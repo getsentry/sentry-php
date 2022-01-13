@@ -9,12 +9,13 @@ use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionContext;
 
-class SpanBench
+final class SpanBench
 {
     /**
      * @var TransactionContext
      */
     private $context;
+
     /**
      * @var TransactionContext
      */

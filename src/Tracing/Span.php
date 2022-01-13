@@ -91,7 +91,6 @@ class Span
         $this->traceId = $context->getTraceId() ?? TraceId::generate();
         $this->spanId = $context->getSpanId() ?? SpanId::generate();
         $this->startTimestamp = $context->getStartTimestamp() ?? microtime(true);
-
         $this->parentSpanId = $context->getParentSpanId();
         $this->description = $context->getDescription();
         $this->op = $context->getOp();
