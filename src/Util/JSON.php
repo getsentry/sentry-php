@@ -22,12 +22,14 @@ final class JSON
      * @param int   $options  Bitmask consisting of JSON_* constants
      * @param int   $maxDepth The maximum depth allowed for serializing $data
      *
-     * @return mixed
-     *
      * @throws JsonException If the encoding failed
      */
-    public static function encode($data, int $options = 0, int $maxDepth = 512)
+    public static function encode($data, int $options = 0, int $maxDepth = 512): string
     {
+        if ($maxDepth < 1) {
+            throw new \InvalidArgumentException('The $maxDepth argument must be an integer greater than 0.');
+        }
+
         $options |= \JSON_UNESCAPED_UNICODE | \JSON_INVALID_UTF8_SUBSTITUTE;
 
         $encodedData = json_encode($data, $options, $maxDepth);

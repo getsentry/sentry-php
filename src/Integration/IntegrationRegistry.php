@@ -86,7 +86,6 @@ final class IntegrationRegistry
         $userIntegrations = $options->getIntegrations();
 
         if (\is_array($userIntegrations)) {
-            /** @psalm-suppress PossiblyInvalidArgument */
             $userIntegrationsClasses = array_map('get_class', $userIntegrations);
             $pickedIntegrationsClasses = [];
 
@@ -100,7 +99,6 @@ final class IntegrationRegistry
             }
 
             foreach ($userIntegrations as $userIntegration) {
-                /** @psalm-suppress PossiblyInvalidArgument */
                 $integrationClassName = \get_class($userIntegration);
 
                 if (!isset($pickedIntegrationsClasses[$integrationClassName])) {

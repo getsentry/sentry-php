@@ -43,16 +43,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     private const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
 
     /**
-     * @var UriFactoryInterface The PSR-7 URI factory
-     */
-    private $uriFactory;
-
-    /**
-     * @var ResponseFactoryInterface The PSR-7 response factory
-     */
-    private $responseFactory;
-
-    /**
      * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
@@ -90,8 +80,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         string $sdkIdentifier,
         string $sdkVersion
     ) {
-        $this->uriFactory = $uriFactory;
-        $this->responseFactory = $responseFactory;
         $this->streamFactory = $streamFactory;
         $this->httpClient = $httpClient;
         $this->sdkIdentifier = $sdkIdentifier;
@@ -142,23 +130,19 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 $symfonyConfig['proxy'] = $options->getHttpProxy();
             }
 
-            /** @psalm-suppress UndefinedClass */
             return new SymfonyHttplugClient(SymfonyHttpClient::create($symfonyConfig));
         }
 
         if (class_exists(GuzzleHttpClient::class)) {
-            /** @psalm-suppress UndefinedClass */
             $guzzleConfig = [
                 GuzzleHttpClientOptions::TIMEOUT => self::DEFAULT_HTTP_TIMEOUT,
                 GuzzleHttpClientOptions::CONNECT_TIMEOUT => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             ];
 
             if (null !== $options->getHttpProxy()) {
-                /** @psalm-suppress UndefinedClass */
                 $guzzleConfig[GuzzleHttpClientOptions::PROXY] = $options->getHttpProxy();
             }
 
-            /** @psalm-suppress InvalidPropertyAssignmentValue */
             return GuzzleHttpClient::createWithConfig($guzzleConfig);
         }
 
@@ -172,7 +156,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 $curlConfig[\CURLOPT_PROXY] = $options->getHttpProxy();
             }
 
-            /** @psalm-suppress InvalidPropertyAssignmentValue */
             return new CurlHttpClient(null, null, $curlConfig);
         }
 

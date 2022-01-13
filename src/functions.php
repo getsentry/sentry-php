@@ -28,7 +28,6 @@ function init(array $options = []): void
  */
 function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
 }
 
@@ -40,7 +39,6 @@ function captureMessage(string $message, ?Severity $level = null, ?EventHint $hi
  */
 function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureException($exception, $hint);
 }
 
@@ -62,7 +60,6 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
  */
 function captureLastError(?EventHint $hint = null): ?EventId
 {
-    /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->captureLastError($hint);
 }
 
@@ -120,6 +117,5 @@ function withScope(callable $callback): void
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
-    /** @psalm-suppress TooManyArguments */
     return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
 }
