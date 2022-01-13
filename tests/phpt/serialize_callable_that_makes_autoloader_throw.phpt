@@ -31,10 +31,14 @@ echo PHP_EOL;
 $brokenAutoloader = function (string $classname): void {
     throw new \RuntimeException('Autoloader throws while loading ' . $classname);
 };
+
 spl_autoload_register($brokenAutoloader, true, true);
 
-testSerialization();
-
+try {
+    testSerialization();
+} finally {
+    spl_autoload_unregister($brokenAutoloader);
+}
 ?>
 --EXPECT--
 ["FakeClass","fakeMethod"]
