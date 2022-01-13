@@ -36,7 +36,7 @@ final class TransactionIntegration implements IntegrationInterface
                 return $event;
             }
 
-            if (isset($hint->extra['transaction'])) {
+            if (isset($hint->extra['transaction']) && \is_string($hint->extra['transaction'])) {
                 $event->setTransaction($hint->extra['transaction']);
             } elseif (isset($_SERVER['PATH_INFO'])) {
                 $event->setTransaction($_SERVER['PATH_INFO']);

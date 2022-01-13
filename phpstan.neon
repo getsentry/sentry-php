@@ -4,9 +4,9 @@ includes:
 parameters:
     tipsOfTheDay: false
     treatPhpDocTypesAsCertain: false
-    level: 8
+    level: 9
     paths:
         - src
-    excludes_analyse:
+    excludePaths:
         - tests/resources
         - tests/Fixtures

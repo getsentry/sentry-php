@@ -92,12 +92,10 @@ final class Dsn implements \Stringable
             throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a valid secret key.', $value));
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         if (!\in_array($parsedDsn['scheme'], ['http', 'https'], true)) {
             throw new \InvalidArgumentException(sprintf('The scheme of the "%s" DSN must be either "http" or "https".', $value));
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
 
@@ -112,7 +110,6 @@ final class Dsn implements \Stringable
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
         return new self(
             $parsedDsn['scheme'],
             $parsedDsn['host'],

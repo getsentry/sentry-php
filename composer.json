@@ -39,18 +39,18 @@
         "symfony/polyfill-uuid": "^1.13.1"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.17",
+        "friendsofphp/php-cs-fixer": "^2.19|^3.4",
         "http-interop/http-factory-guzzle": "^1.0",
         "monolog/monolog": "^1.3|^2.0",
         "nikic/php-parser": "^4.10.3",
         "php-http/mock-client": "^1.3",
         "phpbench/phpbench": "^1.0",
         "phpstan/extension-installer": "^1.0",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-phpunit": "^0.12",
+        "phpstan/phpstan": "^1.3",
+        "phpstan/phpstan-phpunit": "^1.0",
         "phpunit/phpunit": "^8.5.14|^9.4",
         "symfony/phpunit-bridge": "^5.2|^6.0",
-        "vimeo/psalm": "^4.2"
+        "vimeo/psalm": "^4.17"
     },
     "suggest": {
         "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
