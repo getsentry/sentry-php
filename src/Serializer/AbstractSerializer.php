@@ -103,7 +103,8 @@ abstract class AbstractSerializer
                 if (\is_callable($value)) {
                     return $this->serializeCallable($value);
                 }
-            } catch (\Throwable $e) {
+            } catch (\Throwable $exception) {
+                // Do nothing on purpose
             }
 
             if (\is_array($value)) {
