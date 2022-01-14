@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.3.6 (2022-01-14)
+
 - Optimize `Span` constructor and add benchmarks (#1274)
 - Handle autoloader that throws an exception while trying to serialize a possible callable (#1276)
 
