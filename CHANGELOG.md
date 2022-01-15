@@ -5,6 +5,11 @@
 - Update the Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
 
+## 3.3.6 (2022-01-14)
+
+- Optimize `Span` constructor and add benchmarks (#1274)
+- Handle autoloader that throws an exception while trying to serialize a possible callable (#1276)
+
 ## 3.3.5 (2021-12-27)
 
 - Bump the minimum required version of the `jean85/pretty-package-versions` package (#1267)
