@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+- Fix another case of serialization with autoloader that throws exceptions (#1280)
+
 ## 3.3.6 (2022-01-14)
 
 - Optimize `Span` constructor and add benchmarks (#1274)
-- Handle autoloader that throws an exception while trying to serialize a possible callable (#1276, #1280)
+- Handle autoloader that throws an exception while trying to serialize a possible callable (#1276)
 
 ## 3.3.5 (2021-12-27)
 
