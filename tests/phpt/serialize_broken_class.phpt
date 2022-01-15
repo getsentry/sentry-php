@@ -34,5 +34,5 @@ testSerialization([BrokenClass::class, 'brokenMethod']);
 
 ?>
 --EXPECT--
-"Sentry\\Tests\\Fixtures\\code\\BrokenClass::brokenMethod {serialization error}"
+"Sentry\\Tests\\Fixtures\\code\\BrokenClass::brokenMethod"
 ["Sentry\\Tests\\Fixtures\\code\\BrokenClass","brokenMethod"]

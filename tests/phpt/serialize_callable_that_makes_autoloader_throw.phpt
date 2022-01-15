@@ -44,4 +44,4 @@ try {
 --EXPECT--
 ["FakeClass","fakeMethod"]
 ["FakeClass","fakeMethod"]
-["FakeClass","fakeMethod"]
+"Array of length 2"
