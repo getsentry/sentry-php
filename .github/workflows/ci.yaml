@@ -26,9 +26,6 @@ jobs:
         dependencies:
           - lowest
           - highest
-        include:
-          - php: '8.1'
-            dependencies: lowest
 
     steps:
       - name: Checkout
@@ -75,3 +72,7 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: build/coverage-report.xml
+
+      - name: Check benchmarks
+        run: vendor/bin/phpbench run --revs=1 --iterations=1
+        if: ${{ matrix.dependencies == 'highest' && matrix.php == '8.1' }}
