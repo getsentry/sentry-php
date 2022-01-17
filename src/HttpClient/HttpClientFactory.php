@@ -147,8 +147,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         $httpClientPlugins = [
             new HeaderSetPlugin(['User-Agent' => $this->sdkIdentifier . '/' . $this->sdkVersion]),
             new AuthenticationPlugin(new SentryAuthentication($options, $this->sdkIdentifier, $this->sdkVersion)),
-            new RetryPlugin(['retries' => $options->getSendAttempts()]),
             new ErrorPlugin(),
+            new RetryPlugin(['retries' => $options->getSendAttempts()]),
         ];
 
         if ($options->isCompressionEnabled()) {
