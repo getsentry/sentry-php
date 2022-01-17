@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\State\Scope;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -91,10 +92,18 @@ function configureScope(callable $callback): void
  * is automatically removed once the operation finishes or throws.
  *
  * @param callable $callback The callback to be executed
+ *
+ * @return mixed|void The callback's return value, upon successful execution
+ *
+ * @psalm-template T
+ *
+ * @psalm-param callable(Scope): T $callback
+ *
+ * @psalm-return T
  */
-function withScope(callable $callback): void
+function withScope(callable $callback)
 {
-    SentrySdk::getCurrentHub()->withScope($callback);
+    return SentrySdk::getCurrentHub()->withScope($callback);
 }
 
 /**
