@@ -287,8 +287,10 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
-                'foo' => 'bar',
-                'bar' => 'baz',
+                'monolog.context' => [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
             ],
         ];
 

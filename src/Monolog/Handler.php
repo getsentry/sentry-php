@@ -65,7 +65,11 @@ final class Handler extends AbstractProcessingHandler
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
-            $this->setExtraFromMonologContext($scope, $record['context']);
+            $monologContextData = $this->getMonologContextData($record['context']);
+
+            if (!empty($monologContextData)) {
+                $scope->setExtra('monolog.context', $monologContextData);
+            }
 
             $this->hub->captureEvent($event, $hint);
         });
@@ -98,12 +102,16 @@ final class Handler extends AbstractProcessingHandler
 
     /**
      * @param mixed[] $context
+     *
+     * @return mixed[]
      */
-    private function setExtraFromMonologContext(Scope $scope, array $context): void
+    private function getMonologContextData(array $context): array
     {
         if (!$this->fillExtraContext) {
-            return;
+            return [];
         }
+
+        $contextData = [];
 
         foreach ($context as $key => $value) {
             // We skip the `exception` field because it goes in its own context
@@ -111,7 +119,9 @@ final class Handler extends AbstractProcessingHandler
                 continue;
             }
 
-            $scope->setExtra((string) $key, $value);
+            $contextData[$key] = $value;
         }
+
+        return $contextData;
     }
 }
