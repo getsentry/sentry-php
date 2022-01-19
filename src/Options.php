@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\HttpClient\HttpClientFactory;
-use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
@@ -693,7 +692,7 @@ final class Options
      */
     public function getHttpConnectTimeout(): int
     {
-        return $this->options['http_connect_timeout'];
+        return $this->options['http_connect_timeout'] ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT;
     }
 
     /**
@@ -713,7 +712,7 @@ final class Options
      */
     public function getHttpTimeout(): int
     {
-        return $this->options['http_timeout'];
+        return $this->options['http_timeout'] ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT;
     }
 
     /**
@@ -771,8 +770,8 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'http_connect_timeout' => HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
-            'http_timeout' => HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
+            'http_connect_timeout' => null,
+            'http_timeout' => null,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
