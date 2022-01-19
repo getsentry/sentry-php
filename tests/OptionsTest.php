@@ -310,6 +310,24 @@ final class OptionsTest extends TestCase
             null,
             null,
         ];
+
+        yield [
+            'http_timeout',
+            100,
+            'getHttpTimeout',
+            'setHttpTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_connect_timeout',
+            150,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+            null,
+            null,
+        ];
     }
 
     /**

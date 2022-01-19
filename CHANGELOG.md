@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Bump minimum version of `guzzlehttp/psr7` package to avoid [`CVE-2022-24775`](https://github.com/guzzle/psr7/security/advisories/GHSA-q7rv-6hp3-vh96) (#1305)
+- Add `http_connect_timeout` and `http_timeout` options to allow more explicit timeouts
 
 ## 3.4.0 (2022-03-14)
 

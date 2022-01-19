@@ -126,7 +126,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 /*
                  * {@see https://symfony.com/doc/current/http_client.html#dealing-with-network-timeouts}
                  */
-                'max_duration' => $options->getHttpConnectTimeout() + $options->getHttpTimeout(),
+                'max_duration' => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT
+                    + $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -138,8 +139,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(GuzzleHttpClient::class)) {
             $guzzleConfig = [
-                GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout(),
-                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout(),
+                GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
+                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -151,8 +152,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
-                \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
-                \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
+                \CURLOPT_TIMEOUT => $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
+                \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
             ];
 
             if (null !== $options->getHttpProxy()) {

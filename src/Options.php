@@ -692,7 +692,7 @@ final class Options
      */
     public function getHttpConnectTimeout(): int
     {
-        return $this->options['http_connect_timeout'] ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT;
+        return $this->options['http_connect_timeout'];
     }
 
     /**
@@ -712,7 +712,7 @@ final class Options
      */
     public function getHttpTimeout(): int
     {
-        return $this->options['http_timeout'] ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT;
+        return $this->options['http_timeout'];
     }
 
     /**
@@ -802,8 +802,8 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
-        $resolver->setAllowedTypes('http_connect_timeout', 'int');
-        $resolver->setAllowedTypes('http_timeout', 'int');
+        $resolver->setAllowedTypes('http_connect_timeout', ['null', 'int']);
+        $resolver->setAllowedTypes('http_timeout', ['null', 'int']);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
