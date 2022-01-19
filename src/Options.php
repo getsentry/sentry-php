@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\HttpClient\HttpClientFactory;
+use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
@@ -687,6 +689,46 @@ final class Options
     }
 
     /**
+     * Gets the amount of time in seconds that http connections can take to connect.
+     */
+    public function getHttpConnectTimeout(): int
+    {
+        return $this->options['http_connect_timeout'];
+    }
+
+    /**
+     * Gets the amount of time in seconds that http connections can take to connect.
+     *
+     * @param int $httpConnectTimeout The amount of time in seconds.
+     */
+    public function setHttpConnectTimeout(int $httpConnectTimeout): void
+    {
+        $options = array_merge($this->options, ['http_connect_timeout' => $httpConnectTimeout]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     */
+    public function getHttpTimeout(): int
+    {
+        return $this->options['http_timeout'];
+    }
+
+    /**
+     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     *
+     * @param int $httpTimeout The amount of time in seconds.
+     */
+    public function setHttpTimeout(int $httpTimeout): void
+    {
+        $options = array_merge($this->options, ['http_timeout' => $httpTimeout]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -729,6 +771,8 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'http_connect_timeout' => HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
+            'http_timeout' => HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -759,6 +803,8 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('http_connect_timeout', 'int');
+        $resolver->setAllowedTypes('http_timeout', 'int');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
