@@ -690,7 +690,7 @@ final class Options
     /**
      * Gets the amount of time in seconds that http connections can take to connect.
      */
-    public function getHttpConnectTimeout(): int
+    public function getHttpConnectTimeout(): ?int
     {
         return $this->options['http_connect_timeout'];
     }
@@ -710,7 +710,7 @@ final class Options
     /**
      * Gets the amount of time in seconds to wait for the Sentry server to respond.
      */
-    public function getHttpTimeout(): int
+    public function getHttpTimeout(): ?int
     {
         return $this->options['http_timeout'];
     }
