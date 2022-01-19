@@ -6,6 +6,10 @@
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
 - The `withScope` methods now return the callback's return value (#1263)
 
+## 3.3.7 (2022-01-19)
+
+- Fix the serialization of a `callable` when the autoloader throws exceptions (#1280)
+
 ## 3.3.6 (2022-01-14)
 
 - Optimize `Span` constructor and add benchmarks (#1274)

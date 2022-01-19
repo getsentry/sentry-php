@@ -20,14 +20,14 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-function testSerialization() {
-    $serializer = new Serializer(new Options());
+function testSerialization(int $depth = 3) {
+    $serializer = new Serializer(new Options(), $depth);
 
     echo json_encode($serializer->serialize(['FakeClass', 'fakeMethod']));
+    echo PHP_EOL;
 }
 
 testSerialization();
-echo PHP_EOL;
 $brokenAutoloader = function (string $classname): void {
     throw new \RuntimeException('Autoloader throws while loading ' . $classname);
 };
@@ -36,6 +36,7 @@ spl_autoload_register($brokenAutoloader, true, true);
 
 try {
     testSerialization();
+    testSerialization(0);
 } finally {
     spl_autoload_unregister($brokenAutoloader);
 }
@@ -43,3 +44,4 @@ try {
 --EXPECT--
 ["FakeClass","fakeMethod"]
 ["FakeClass","fakeMethod"]
+"Array of length 2"
