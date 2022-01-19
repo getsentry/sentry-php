@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Fix another case of serialization with autoloader that throws exceptions (#1280)
+## 3.3.7 (2022-01-19)
+
+- Fix the serialization of a `callable` when the autoloader throws exceptions (#1280)
 
 ## 3.3.6 (2022-01-14)
 
