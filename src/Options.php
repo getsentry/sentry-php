@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
@@ -708,7 +707,7 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond
+     * Gets the amount of time in seconds to wait for the Sentry server to respond.
      */
     public function getHttpTimeout(): ?int
     {
@@ -716,7 +715,7 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond
+     * Gets the amount of time in seconds to wait for the Sentry server to respond.
      *
      * @param int $httpTimeout The amount of time in seconds
      */
