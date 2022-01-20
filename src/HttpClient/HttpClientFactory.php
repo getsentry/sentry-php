@@ -121,13 +121,15 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     private function resolveClient(Options $options)
     {
+        $httpTimeout = $options->getHttpTimeout() ?? self::DEFAULT_HTTP_TIMEOUT;
+        $httpConnectTimeout = $options->getHttpConnectTimeout() ?? self::DEFAULT_HTTP_CONNECT_TIMEOUT;
+
         if (class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
                 /*
                  * {@see https://symfony.com/doc/current/http_client.html#dealing-with-network-timeouts}
                  */
-                'max_duration' => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT
-                    + $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
+                'max_duration' => $httpConnectTimeout + $httpTimeout
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -139,8 +141,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(GuzzleHttpClient::class)) {
             $guzzleConfig = [
-                GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
-                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
+                GuzzleHttpClientOptions::TIMEOUT => $httpTimeout,
+                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $httpConnectTimeout,
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -152,8 +154,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
-                \CURLOPT_TIMEOUT => $options->getHttpTimeout() ?? HttpClientFactory::DEFAULT_HTTP_TIMEOUT,
-                \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout() ?? HttpClientFactory::DEFAULT_HTTP_CONNECT_TIMEOUT,
+                \CURLOPT_TIMEOUT => $httpTimeout,
+                \CURLOPT_CONNECTTIMEOUT => $httpConnectTimeout,
             ];
 
             if (null !== $options->getHttpProxy()) {
