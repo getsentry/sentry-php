@@ -698,7 +698,7 @@ final class Options
     /**
      * Gets the amount of time in seconds that http connections can take to connect.
      *
-     * @param int $httpConnectTimeout The amount of time in seconds.
+     * @param int $httpConnectTimeout The amount of time in seconds
      */
     public function setHttpConnectTimeout(int $httpConnectTimeout): void
     {
@@ -708,7 +708,7 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     * Gets the amount of time in seconds to wait for the Sentry server to respond
      */
     public function getHttpTimeout(): ?int
     {
@@ -716,9 +716,9 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     * Gets the amount of time in seconds to wait for the Sentry server to respond
      *
-     * @param int $httpTimeout The amount of time in seconds.
+     * @param int $httpTimeout The amount of time in seconds
      */
     public function setHttpTimeout(int $httpTimeout): void
     {
