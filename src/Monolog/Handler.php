@@ -20,21 +20,29 @@ use Sentry\State\Scope;
  */
 final class Handler extends AbstractProcessingHandler
 {
+    private const CONTEXT_EXCEPTION_KEY = 'exception';
+
     /**
      * @var HubInterface
      */
     private $hub;
 
     /**
+     * @var bool
+     */
+    private $fillExtraContext;
+
+    /**
      * {@inheritdoc}
      *
      * @param HubInterface $hub The hub to which errors are reported
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
     {
-        $this->hub = $hub;
-
         parent::__construct($level, $bubble);
+
+        $this->hub = $hub;
+        $this->fillExtraContext = $fillExtraContext;
     }
 
     /**
@@ -56,6 +64,12 @@ final class Handler extends AbstractProcessingHandler
         $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
+
+            $monologContextData = $this->getMonologContextData($record['context']);
+
+            if (!empty($monologContextData)) {
+                $scope->setExtra('monolog.context', $monologContextData);
+            }
 
             $this->hub->captureEvent($event, $hint);
         });
@@ -84,5 +98,30 @@ final class Handler extends AbstractProcessingHandler
             default:
                 return Severity::info();
         }
+    }
+
+    /**
+     * @param mixed[] $context
+     *
+     * @return mixed[]
+     */
+    private function getMonologContextData(array $context): array
+    {
+        if (!$this->fillExtraContext) {
+            return [];
+        }
+
+        $contextData = [];
+
+        foreach ($context as $key => $value) {
+            // We skip the `exception` field because it goes in its own context
+            if (self::CONTEXT_EXCEPTION_KEY === $key) {
+                continue;
+            }
+
+            $contextData[$key] = $value;
+        }
+
+        return $contextData;
     }
 }

@@ -5,6 +5,7 @@
 - Update Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
 - The `withScope` methods now return the callback's return value (#1263)
+- Set the event extras by taking the data from the Monolog record's context (#1244)
 
 ## 3.3.7 (2022-01-19)
 
@@ -41,7 +42,7 @@
 ## 3.3.0 (2021-05-26)
 
 - Allow setting a custom timestamp on the breadcrumbs (#1193)
-- Add option `ignore_tags` to `IgnoreErrorsIntegration` in order to ignore exceptions by tags values. (#1201)
+- Add option `ignore_tags` to `IgnoreErrorsIntegration` in order to ignore exceptions by tags values (#1201)
 
 ## 3.2.2 (2021-05-06)
 
