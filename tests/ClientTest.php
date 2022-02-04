@@ -804,10 +804,10 @@ final class ClientTest extends TestCase
         );
 
         $stacktrace = $client->getStacktraceBuilder()->buildFromBacktrace(debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 1), 'MyApp.php', 42);
-        
+
         $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
-        
+
         $client->captureEvent($event);
     }
 
