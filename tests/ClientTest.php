@@ -770,6 +770,45 @@ final class ClientTest extends TestCase
         $client->captureEvent(Event::createEvent());
     }
 
+    public function testBuildWithCustomStacktrace(): void
+    {
+        $options = new Options();
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $stacktrace = $event->getStacktrace();
+
+                $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+
+                /** @var Frame $lastFrame */
+                $lastFrame = array_reverse($stacktrace->getFrames())[0];
+
+                $this->assertSame(
+                    'MyApp.php',
+                    basename($lastFrame->getFile())
+                );
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $event = Event::createEvent();
+        $stacktrace = $client->getStacktraceBuilder()->buildFromBacktrace(debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 1), 'MyApp.php', 42);
+        $event->setStacktrace($stacktrace);
+        $client->captureEvent($event);
+    }
+
     private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
     {
         return new class($transport) implements TransportFactoryInterface {
