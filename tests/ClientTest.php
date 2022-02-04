@@ -803,9 +803,11 @@ final class ClientTest extends TestCase
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
-        $event = Event::createEvent();
         $stacktrace = $client->getStacktraceBuilder()->buildFromBacktrace(debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 1), 'MyApp.php', 42);
+        
+        $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
+        
         $client->captureEvent($event);
     }
 
