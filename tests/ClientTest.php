@@ -781,14 +781,14 @@ final class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $stacktrace = $event->getStacktrace();
 
-                $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+                $this->assertNotNull($stacktrace);
 
                 /** @var Frame $lastFrame */
                 $lastFrame = array_reverse($stacktrace->getFrames())[0];
 
                 $this->assertSame(
                     'MyApp.php',
-                    basename($lastFrame->getFile())
+                    $lastFrame->getFile()
                 );
 
                 return true;
