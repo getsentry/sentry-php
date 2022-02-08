@@ -36,11 +36,6 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\ErrorHandler\\:\\:cleanBacktraceFromErrorHandlerFrames\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
-			count: 1
-			path: src/ErrorHandler.php
-
-		-
 			message: "#^Result of && is always false\\.$#"
 			count: 2
 			path: src/EventHint.php
@@ -244,11 +239,6 @@ parameters:
 			message: "#^Cannot cast mixed to string\\.$#"
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
-
-		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
-			count: 1
-			path: src/StacktraceBuilder.php
 
 		-
 			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureException\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
