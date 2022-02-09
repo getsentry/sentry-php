@@ -11,6 +11,8 @@ use Sentry\State\Scope;
 /**
  * This interface must be implemented by all Raven client classes.
  *
+ * @method StacktraceBuilder getStacktraceBuilder() Returns the stacktrace builder of the client.
+ *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
 interface ClientInterface

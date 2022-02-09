@@ -6,6 +6,7 @@
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
 - The `withScope` methods now return the callback's return value (#1263)
 - Set the event extras by taking the data from the Monolog record's context (#1244)
+- Make the `StacktraceBuilder` class part of the public API and add the `Client::getStacktraceBuilder()` method to build custom stacktraces (#1124)
 
 ## 3.3.7 (2022-01-19)
 
