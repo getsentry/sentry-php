@@ -35,6 +35,11 @@ final class EventType implements \Stringable
         return self::getInstance('default');
     }
 
+    public static function event(): self
+    {
+        return self::getInstance('event');
+    }
+
     /**
      * Creates an instance of this enum for the "transaction" value.
      */

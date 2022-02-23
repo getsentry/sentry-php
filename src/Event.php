@@ -175,7 +175,7 @@ final class Event
      */
     public static function createEvent(?EventId $eventId = null): self
     {
-        return new self($eventId, EventType::default());
+        return new self($eventId, EventType::event());
     }
 
     /**
