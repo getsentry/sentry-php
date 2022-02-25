@@ -13,10 +13,10 @@ use Sentry\State\HubInterface;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?HubInterface $hub = null): \Closure
+    public static function trace(?HubInterface $hub = null, bool $attachHeader = false): \Closure
     {
-        return function (callable $handler) use ($hub): \Closure {
-            return function (RequestInterface $request, array $options) use ($hub, $handler) {
+        return function (callable $handler) use ($attachHeader, $hub): \Closure {
+            return function (RequestInterface $request, array $options) use ($attachHeader, $hub, $handler) {
                 $hub = $hub ?? SentrySdk::getCurrentHub();
                 $span = $hub->getSpan();
                 $childSpan = null;
@@ -27,6 +27,10 @@ final class GuzzleTracingMiddleware
                     $spanContext->setDescription($request->getMethod() . ' ' . $request->getUri());
 
                     $childSpan = $span->startChild($spanContext);
+                    
+                    if ($attachHeader) {
+                        $request = $request->withAddedHeader('sentry-trace', $childSpan->toTraceparent());
+                    }
                 }
 
                 $handlerPromiseCallback = static function ($responseOrException) use ($childSpan) {
