@@ -55,8 +55,6 @@ final class RateLimiter
             $eventType = $event->getType();
             $disabledUntil = $this->getDisabledUntil($eventType);
 
-            \assert(null !== $disabledUntil);
-
             $this->logger->warning(
                 sprintf('Rate limited exceeded for requests of type "%s", backing off until "%s".', (string) $eventType, gmdate(\DATE_ATOM, $disabledUntil)),
                 ['event' => $event]
@@ -70,10 +68,10 @@ final class RateLimiter
     {
         $disabledUntil = $this->getDisabledUntil($eventType);
 
-        return null !== $disabledUntil && $disabledUntil > time();
+        return $disabledUntil > time();
     }
 
-    private function getDisabledUntil(EventType $eventType): ?int
+    private function getDisabledUntil(EventType $eventType): int
     {
         $category = (string) $eventType;
 
@@ -81,18 +79,7 @@ final class RateLimiter
             $category = 'error';
         }
 
-        $allDeadline = $this->rateLimits['all'] ?? null;
-        $categoryDeadline = $this->rateLimits[$category] ?? null;
-
-        if (null === $allDeadline && null === $categoryDeadline) {
-            return null;
-        }
-
-        if ($categoryDeadline > $allDeadline) {
-            return $categoryDeadline;
-        }
-
-        return $allDeadline;
+        return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
     }
 
     private function handleRateLimit(ResponseInterface $response): bool
