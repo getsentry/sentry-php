@@ -6,9 +6,12 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class DsnTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     /**
      * @dataProvider createFromStringDataProvider
      */
@@ -19,7 +22,7 @@ final class DsnTest extends TestCase
         int $expectedPort,
         string $expectedPublicKey,
         ?string $expectedSecretKey,
-        int $expectedProjectId,
+        string $expectedProjectId,
         string $expectedPath
     ): void {
         $dsn = Dsn::createFromString($value);
@@ -29,7 +32,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedPort, $dsn->getPort());
         $this->assertSame($expectedPublicKey, $dsn->getPublicKey());
         $this->assertSame($expectedSecretKey, $dsn->getSecretKey());
-        $this->assertSame($expectedProjectId, $dsn->getProjectId());
+        $this->assertSame($expectedProjectId, $dsn->getProjectId(true));
         $this->assertSame($expectedPath, $dsn->getPath());
     }
 
@@ -42,7 +45,7 @@ final class DsnTest extends TestCase
             80,
             'public',
             null,
-            1,
+            '1',
             '/sentry',
         ];
 
@@ -53,7 +56,7 @@ final class DsnTest extends TestCase
             80,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
 
@@ -64,7 +67,7 @@ final class DsnTest extends TestCase
             80,
             'public',
             'secret',
-            1,
+            '1',
             '',
         ];
 
@@ -75,7 +78,7 @@ final class DsnTest extends TestCase
             80,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
 
@@ -86,7 +89,7 @@ final class DsnTest extends TestCase
             8080,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
 
@@ -97,7 +100,7 @@ final class DsnTest extends TestCase
             443,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
 
@@ -108,7 +111,7 @@ final class DsnTest extends TestCase
             443,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
 
@@ -119,7 +122,7 @@ final class DsnTest extends TestCase
             4343,
             'public',
             null,
-            1,
+            '1',
             '',
         ];
     }
@@ -239,5 +242,17 @@ final class DsnTest extends TestCase
             ['https://public@example.com/sentry/1'],
             ['https://public@example.com:4343/sentry/1'],
         ];
+    }
+
+    /**
+     * @group legacy
+     */
+    public function testGetProjectIdTriggersDeprecationErrorIfReturningInteger(): void
+    {
+        $dsn = Dsn::createFromString('https://public@example.com/sentry/1');
+
+        $this->expectDeprecation('Calling the method Sentry\\Dsn::getProjectId() and expecting it to return an integer is deprecated since version 3.4 and will stop working in 4.0.');
+
+        $this->assertSame(1, $dsn->getProjectId());
     }
 }
