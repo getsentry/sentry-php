@@ -24,6 +24,7 @@ use Sentry\Options;
 use Sentry\ResponseStatus;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
+use Symfony\Bridge\PhpUnit\ClockMock;
 
 final class HttpTransportTest extends TestCase
 {
@@ -247,6 +248,80 @@ final class HttpTransportTest extends TestCase
 
         $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
         $this->assertSame(ResponseStatus::failed(), $promiseResult->getStatus());
+        $this->assertSame($event, $promiseResult->getEvent());
+    }
+
+    /**
+     * @group time-sensitive
+     */
+    public function testSendReturnsRejectedPromiseIfExceedingRateLimits(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
+        $event = Event::createEvent();
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))
+            ->method('warning')
+            ->withConsecutive(
+                ['Rate limited exceeded for requests of type "event", backing off until "2022-02-06T00:01:00+00:00".', ['event' => $event]],
+                ['Rate limit exceeded for sending requests of type "event".', ['event' => $event]]
+            );
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        $this->requestFactory->expects($this->once())
+            ->method('createRequest')
+            ->with('POST', $dsn->getStoreApiEndpointUrl())
+            ->willReturn(new Request('POST', 'http://www.example.com'));
+
+        $this->streamFactory->expects($this->once())
+            ->method('createStream')
+            ->with('{"foo":"bar"}')
+            ->willReturnCallback([Utils::class, 'streamFor']);
+
+        $this->httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->willReturn(new HttpFullfilledPromise(new Response(429, ['Retry-After' => '60'])));
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => $dsn]),
+            $this->httpClient,
+            $this->streamFactory,
+            $this->requestFactory,
+            $this->payloadSerializer,
+            $logger
+        );
+
+        // Event should be sent, but the server should reply with a HTTP 429
+        $promise = $transport->send($event);
+
+        try {
+            $promiseResult = $promise->wait();
+        } catch (RejectionException $exception) {
+            $promiseResult = $exception->getReason();
+        }
+
+        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
+        $this->assertSame(ResponseStatus::rateLimit(), $promiseResult->getStatus());
+        $this->assertSame($event, $promiseResult->getEvent());
+
+        // Event should not be sent at all because rate-limit is in effect
+        $promise = $transport->send($event);
+
+        try {
+            $promiseResult = $promise->wait();
+        } catch (RejectionException $exception) {
+            $promiseResult = $exception->getReason();
+        }
+
+        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
+        $this->assertSame(ResponseStatus::rateLimit(), $promiseResult->getStatus());
         $this->assertSame($event, $promiseResult->getEvent());
     }
 
