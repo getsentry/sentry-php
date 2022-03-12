@@ -98,11 +98,6 @@ final class Dsn implements \Stringable
 
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
-
-        if (!ctype_digit($projectId)) {
-            throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
-        }
-
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
 
