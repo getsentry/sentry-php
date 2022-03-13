@@ -7,6 +7,7 @@ use Http\Discovery\Strategy\MockClientStrategy;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\Tracing\Span;
+use Sentry\Transport\RateLimiter;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -27,3 +28,4 @@ ClassDiscovery::appendStrategy(MockClientStrategy::class);
 ClockMock::register(Event::class);
 ClockMock::register(Breadcrumb::class);
 ClockMock::register(Span::class);
+ClockMock::register(RateLimiter::class);

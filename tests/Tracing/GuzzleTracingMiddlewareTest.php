@@ -15,36 +15,90 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
+use Sentry\State\Scope;
 use Sentry\Tracing\GuzzleTracingMiddleware;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TransactionContext;
 
 final class GuzzleTracingMiddlewareTest extends TestCase
 {
+    public function testTraceDoesNothingIfSpanIsNotSet(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+
+        $hub = new Hub($client);
+
+        $expectedPromiseResult = new Response();
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(static function () use ($expectedPromiseResult): PromiseInterface {
+            return new FulfilledPromise($expectedPromiseResult);
+        });
+
+        /** @var PromiseInterface $promise */
+        $promise = $function(new Request('GET', 'https://www.example.com'), []);
+
+        try {
+            $promiseResult = $promise->wait();
+        } catch (\Throwable $exception) {
+            $promiseResult = $exception;
+        }
+
+        $this->assertSame($expectedPromiseResult, $promiseResult);
+
+        $hub->configureScope(function (Scope $scope): void {
+            $event = Event::createEvent();
+
+            $scope->applyToEvent($event);
+
+            $this->assertCount(0, $event->getBreadcrumbs());
+        });
+    }
+
     /**
      * @dataProvider traceDataProvider
      */
-    public function testTrace($expectedPromiseResult): void
+    public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->exactly(2))
             ->method('getOptions')
             ->willReturn(new Options(['traces_sample_rate' => 1]));
 
+        $hub = new Hub($client);
+
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg): bool {
+            ->with($this->callback(function (Event $eventArg) use ($hub, $request, $expectedPromiseResult, $expectedBreadcrumbData): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
+                $hub->configureScope(static function (Scope $scope) use ($eventArg): void {
+                    $scope->applyToEvent($eventArg);
+                });
+
                 $spans = $eventArg->getSpans();
+                $breadcrumbs = $eventArg->getBreadcrumbs();
 
                 $this->assertCount(1, $spans);
-                $this->assertSame('http.guzzle', $spans[0]->getOp());
-                $this->assertSame('GET http://www.example.com', $spans[0]->getDescription());
+                $this->assertCount(1, $breadcrumbs);
+
+                $guzzleSpan = $spans[0];
+                $guzzleBreadcrumb = $breadcrumbs[0];
+
+                $this->assertSame('http.client', $guzzleSpan->getOp());
+                $this->assertSame("{$request->getMethod()} {$request->getUri()}", $guzzleSpan->getDescription());
+
+                if ($expectedPromiseResult instanceof Response) {
+                    $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
+                } else {
+                    $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
+                }
+
+                $this->assertSame($expectedBreadcrumbData, $guzzleBreadcrumb->getMetadata());
 
                 return true;
             }));
 
-        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $hub->setSpan($transaction);
@@ -59,7 +113,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         });
 
         /** @var PromiseInterface $promise */
-        $promise = $function(new Request('GET', 'http://www.example.com'), []);
+        $promise = $function($request, []);
 
         try {
             $promiseResult = $promise->wait();
@@ -75,11 +129,37 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function traceDataProvider(): iterable
     {
         yield [
+            new Request('GET', 'https://www.example.com'),
             new Response(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'GET',
+                'request_body_size' => 0,
+                'status_code' => 200,
+                'response_body_size' => 0,
+            ],
         ];
 
         yield [
+            new Request('POST', 'https://www.example.com', [], 'not-sentry'),
+            new Response(403, [], 'sentry'),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'POST',
+                'request_body_size' => 10,
+                'status_code' => 403,
+                'response_body_size' => 6,
+            ],
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
             new \Exception(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'GET',
+                'request_body_size' => 0,
+            ],
         ];
     }
 }

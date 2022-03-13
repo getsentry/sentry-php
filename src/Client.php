@@ -200,6 +200,14 @@ final class Client implements ClientInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getStacktraceBuilder(): StacktraceBuilder
+    {
+        return $this->stacktraceBuilder;
+    }
+
+    /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
      * @param Event          $event The payload that will be converted to an Event

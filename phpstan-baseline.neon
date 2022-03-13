@@ -61,6 +61,16 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
@@ -274,6 +284,16 @@ parameters:
 			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
 			count: 3
 			path: src/State/HubInterface.php
+
+		-
+			message: "#^Call to method getResponse\\(\\) on an unknown class GuzzleHttp\\\\Exception\\\\RequestException\\.$#"
+			count: 1
+			path: src/Tracing/GuzzleTracingMiddleware.php
+
+		-
+			message: "#^Class GuzzleHttp\\\\Exception\\\\RequestException not found\\.$#"
+			count: 1
+			path: src/Tracing/GuzzleTracingMiddleware.php
 
 		-
 			message: "#^Unsafe usage of new static\\(\\)\\.$#"
