@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.4.0 (2022-03-14)
+
 - Update Guzzle tracing middleware to meet the [expected standard](https://develop.sentry.dev/sdk/features/#http-client-integrations) (#1234)
 - Add `toArray` public method in `PayloadSerializer` to be able to re-use Event serialization
 - The `withScope` methods now return the callback's return value (#1263)
