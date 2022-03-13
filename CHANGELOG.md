@@ -8,6 +8,7 @@
 - Set the event extras by taking the data from the Monolog record's context (#1244)
 - Make the `StacktraceBuilder` class part of the public API and add the `Client::getStacktraceBuilder()` method to build custom stacktraces (#1124)
 - Support handling the server rate-limits when sending events to Sentry (#1291)
+- Treat the project ID component of the DSN as a `string` rather than an `integer` (#1293)
 
 ## 3.3.7 (2022-01-19)
 

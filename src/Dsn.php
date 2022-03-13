@@ -38,7 +38,7 @@ final class Dsn implements \Stringable
     private $secretKey;
 
     /**
-     * @var int The ID of the resource to access
+     * @var string The ID of the resource to access
      */
     private $projectId;
 
@@ -53,12 +53,12 @@ final class Dsn implements \Stringable
      * @param string      $scheme    The protocol to be used to access the resource
      * @param string      $host      The host that holds the resource
      * @param int         $port      The port on which the resource is exposed
-     * @param int         $projectId The ID of the resource to access
+     * @param string      $projectId The ID of the resource to access
      * @param string      $path      The specific resource that the web client wants to access
      * @param string      $publicKey The public key to authenticate the SDK
      * @param string|null $secretKey The secret key to authenticate the SDK
      */
-    private function __construct(string $scheme, string $host, int $port, int $projectId, string $path, string $publicKey, ?string $secretKey)
+    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?string $secretKey)
     {
         $this->scheme = $scheme;
         $this->host = $host;
@@ -98,11 +98,6 @@ final class Dsn implements \Stringable
 
         $segmentPaths = explode('/', $parsedDsn['path']);
         $projectId = array_pop($segmentPaths);
-
-        if ((int) $projectId <= 0) {
-            throw new \InvalidArgumentException('"%s" DSN must contain a valid project ID.');
-        }
-
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
 
@@ -114,7 +109,7 @@ final class Dsn implements \Stringable
             $parsedDsn['scheme'],
             $parsedDsn['host'],
             $parsedDsn['port'] ?? ('http' === $parsedDsn['scheme'] ? 80 : 443),
-            (int) $projectId,
+            $projectId,
             $path,
             $parsedDsn['user'],
             $parsedDsn['pass'] ?? null
@@ -155,10 +150,18 @@ final class Dsn implements \Stringable
 
     /**
      * Gets the ID of the resource to access.
+     *
+     * @return int|string
      */
-    public function getProjectId(): int
+    public function getProjectId(bool $returnAsString = false)
     {
-        return $this->projectId;
+        if ($returnAsString) {
+            return $this->projectId;
+        }
+
+        @trigger_error(sprintf('Calling the method %s() and expecting it to return an integer is deprecated since version 3.4 and will stop working in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+
+        return (int) $this->projectId;
     }
 
     /**
