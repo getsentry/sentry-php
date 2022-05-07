@@ -695,7 +695,7 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds that http connections can take to connect.
+     * Sets the amount of time in seconds that http connections can take to connect.
      *
      * @param int $httpConnectTimeout The amount of time in seconds
      */
@@ -707,7 +707,7 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     * Gets the maximum execution time for the request+response as a whole.
      */
     public function getHttpTimeout(): ?int
     {
@@ -715,7 +715,9 @@ final class Options
     }
 
     /**
-     * Gets the amount of time in seconds to wait for the Sentry server to respond.
+     * Sets the maximum execution time for the request+response as a whole. The
+     * value should also include the time for the connect phase, so it should be
+     * greater than the value set for the `http_connect_timeout` option.
      *
      * @param int $httpTimeout The amount of time in seconds
      */

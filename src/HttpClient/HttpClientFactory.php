@@ -126,10 +126,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
-                /*
-                 * {@see https://symfony.com/doc/current/http_client.html#dealing-with-network-timeouts}
-                 */
-                'max_duration' => $httpConnectTimeout + $httpTimeout,
+                'timeout' => $httpConnectTimeout,
+                'max_duration' => $httpTimeout,
             ];
 
             if (null !== $options->getHttpProxy()) {
