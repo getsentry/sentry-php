@@ -16,12 +16,12 @@ parameters:
 			path: src/ClientInterface.php
 
 		-
-			message: "#^Offset 'host' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
+			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'path' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
+			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 4
 			path: src/Dsn.php
 
@@ -61,22 +61,22 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$uriFactory\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
