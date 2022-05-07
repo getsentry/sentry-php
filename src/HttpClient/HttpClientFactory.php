@@ -32,17 +32,6 @@ use Symfony\Component\HttpClient\HttplugClient as SymfonyHttplugClient;
 final class HttpClientFactory implements HttpClientFactoryInterface
 {
     /**
-     * @var int The timeout of the request in seconds
-     */
-    private const DEFAULT_HTTP_TIMEOUT = 5;
-
-    /**
-     * @var int The default number of seconds to wait while trying to connect
-     *          to a server
-     */
-    private const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
-
-    /**
      * @var StreamFactoryInterface The PSR-17 stream factory
      */
     private $streamFactory;
@@ -121,13 +110,10 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     private function resolveClient(Options $options)
     {
-        $httpTimeout = $options->getHttpTimeout() ?? self::DEFAULT_HTTP_TIMEOUT;
-        $httpConnectTimeout = $options->getHttpConnectTimeout() ?? self::DEFAULT_HTTP_CONNECT_TIMEOUT;
-
         if (class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
-                'timeout' => $httpConnectTimeout,
-                'max_duration' => $httpTimeout,
+                'timeout' => $options->getHttpConnectTimeout(),
+                'max_duration' => $options->getHttpTimeout(),
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -139,8 +125,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(GuzzleHttpClient::class)) {
             $guzzleConfig = [
-                GuzzleHttpClientOptions::TIMEOUT => $httpTimeout,
-                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $httpConnectTimeout,
+                GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout(),
+                GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout(),
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -152,8 +138,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
-                \CURLOPT_TIMEOUT => $httpTimeout,
-                \CURLOPT_CONNECTTIMEOUT => $httpConnectTimeout,
+                \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
+                \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
             ];
 
             if (null !== $options->getHttpProxy()) {

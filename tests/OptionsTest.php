@@ -51,7 +51,7 @@ final class OptionsTest extends TestCase
 
         $options = new Options([$option => $value]);
 
-        $this->assertSame($value, $options->$getterMethod());
+        $this->assertEquals($value, $options->$getterMethod());
     }
 
     /**
@@ -81,7 +81,7 @@ final class OptionsTest extends TestCase
             $options->$setterMethod($value);
         }
 
-        $this->assertSame($value, $options->$getterMethod());
+        $this->assertEquals($value, $options->$getterMethod());
     }
 
     public function optionsDataProvider(): \Generator
@@ -294,6 +294,42 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_timeout',
+            1,
+            'getHttpTimeout',
+            'setHttpTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_timeout',
+            1.2,
+            'getHttpTimeout',
+            'setHttpTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_connect_timeout',
+            1,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_connect_timeout',
+            1.2,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+            null,
+            null,
+        ];
+
+        yield [
             'capture_silenced_errors',
             true,
             'shouldCaptureSilencedErrors',
@@ -307,24 +343,6 @@ final class OptionsTest extends TestCase
             'small',
             'getMaxRequestBodySize',
             'setMaxRequestBodySize',
-            null,
-            null,
-        ];
-
-        yield [
-            'http_timeout',
-            100,
-            'getHttpTimeout',
-            'setHttpTimeout',
-            null,
-            null,
-        ];
-
-        yield [
-            'http_connect_timeout',
-            150,
-            'getHttpConnectTimeout',
-            'setHttpConnectTimeout',
             null,
             null,
         ];
