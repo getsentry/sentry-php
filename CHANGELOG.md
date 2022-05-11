@@ -2,8 +2,7 @@
 
 ## Unreleased
 
-- Lower the default `send_attempts` option option to `0`, this disables retries. If you require retries you can increase the `send_attempts` options to the desired value (#1312)
-- Deprecate the `send_attempts` option (#1312)
+- Set the default `send_attempts` to `0` (this disables retries) and deprecate the option. If you require retries you can increase the `send_attempts` option to the desired value. (#1312)
 - Bump minimum version of `guzzlehttp/psr7` package to avoid [`CVE-2022-24775`](https://github.com/guzzle/psr7/security/advisories/GHSA-q7rv-6hp3-vh96) (#1305)
 
 ## 3.4.0 (2022-03-14)
