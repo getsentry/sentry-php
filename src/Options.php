@@ -48,9 +48,15 @@ final class Options
 
     /**
      * Gets the number of attempts to resend an event that failed to be sent.
+     *
+     * @deprecated since version 3.5, to be removed in 4.0
      */
-    public function getSendAttempts(): int
+    public function getSendAttempts(/*bool $triggerDeprecation = true*/): int
     {
+        if (0 === \func_num_args() || false !== func_get_arg(0)) {
+            @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+        }
+
         return $this->options['send_attempts'];
     }
 
@@ -58,9 +64,13 @@ final class Options
      * Sets the number of attempts to resend an event that failed to be sent.
      *
      * @param int $attemptsCount The number of attempts
+     *
+     * @deprecated since version 3.5, to be removed in 4.0
      */
     public function setSendAttempts(int $attemptsCount): void
     {
+        @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
+
         $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
 
         $this->options = $this->resolver->resolve($options);
