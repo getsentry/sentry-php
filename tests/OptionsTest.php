@@ -91,8 +91,8 @@ final class OptionsTest extends TestCase
             1,
             'getSendAttempts',
             'setSendAttempts',
-            null,
-            null,
+            'Method Sentry\\Options::getSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
+            'Method Sentry\\Options::setSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
         ];
 
         yield [
