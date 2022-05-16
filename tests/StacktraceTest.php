@@ -203,7 +203,7 @@ final class StacktraceTest extends TestCase
             ],
         ];
 
-        yield 'Backtrace with frame containing memory address 0x format' => [
+        yield 'Backtrace with frame containing memory address in PHP <7.4.2 format' => [
             new Options([
                 'prefixes' => ['/path-prefix'],
             ]),
@@ -242,7 +242,7 @@ final class StacktraceTest extends TestCase
             ],
         ];
 
-        yield 'Backtrace with frame containing memory address $ format' => [
+        yield 'Backtrace with frame containing memory address in PHP >=7.4.2 format' => [
             new Options([
                 'prefixes' => ['/path-prefix'],
             ]),
@@ -269,12 +269,12 @@ final class StacktraceTest extends TestCase
                     0,
                 ],
                 [
-                    "class@anonymous\x00/path/to/app/consumer.php:12::messageCallback",
+                    "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
                     Frame::INTERNAL_FRAME_FILENAME,
                     0,
                 ],
                 [
-                    "class@anonymous\x00/path/to/app/consumer.php:12::messageCallback",
+                    "class@anonymous\x00/path/to/app/consumer.php::messageCallback",
                     'path/to/file',
                     12,
                 ],
