@@ -23,9 +23,21 @@ final class Options
     public const DEFAULT_MAX_BREADCRUMBS = 100;
 
     /**
+     * The default maximum execution time in seconds for the request+response
+     * as a whole.
+     */
+    public const DEFAULT_HTTP_TIMEOUT = 5;
+
+    /**
+     * The default maximum number of seconds to wait while trying to connect to a
+     * server.
+     */
+    public const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
+
+    /**
      * @var array<string, mixed> The configuration options
      */
-    private $options = [];
+    private $options;
 
     /**
      * @var OptionsResolver The options resolver
@@ -589,6 +601,48 @@ final class Options
     }
 
     /**
+     * Gets the maximum number of seconds to wait while trying to connect to a server.
+     */
+    public function getHttpConnectTimeout(): float
+    {
+        return $this->options['http_connect_timeout'];
+    }
+
+    /**
+     * Sets the maximum number of seconds to wait while trying to connect to a server.
+     *
+     * @param float $httpConnectTimeout The amount of time in seconds
+     */
+    public function setHttpConnectTimeout(float $httpConnectTimeout): void
+    {
+        $options = array_merge($this->options, ['http_connect_timeout' => $httpConnectTimeout]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets the maximum execution time for the request+response as a whole.
+     */
+    public function getHttpTimeout(): float
+    {
+        return $this->options['http_timeout'];
+    }
+
+    /**
+     * Sets the maximum execution time for the request+response as a whole. The
+     * value should also include the time for the connect phase, so it should be
+     * greater than the value set for the `http_connect_timeout` option.
+     *
+     * @param float $httpTimeout The amount of time in seconds
+     */
+    public function setHttpTimeout(float $httpTimeout): void
+    {
+        $options = array_merge($this->options, ['http_timeout' => $httpTimeout]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets whether the silenced errors should be captured or not.
      *
      * @return bool If true, errors silenced through the @ operator will be reported,
@@ -736,6 +790,8 @@ final class Options
             'send_default_pii' => false,
             'max_value_length' => 1024,
             'http_proxy' => null,
+            'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
+            'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
@@ -766,6 +822,8 @@ final class Options
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
+        $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
+        $resolver->setAllowedTypes('http_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
