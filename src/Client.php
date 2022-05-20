@@ -159,6 +159,10 @@ final class Client implements ClientInterface
                 return $event->getId();
             }
         } catch (\Throwable $exception) {
+            $this->logger->error(
+                sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception, 'event' => $event]
+            );
         }
 
         return null;
