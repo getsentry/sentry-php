@@ -21,6 +21,11 @@ parameters:
 			path: src/Dsn.php
 
 		-
+			message: "#^Offset 'host'\\|'path'\\|'scheme'\\|'user' on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: src/Dsn.php
+
+		-
 			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 4
 			path: src/Dsn.php
