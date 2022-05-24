@@ -166,7 +166,7 @@ final class FrameBuilder
         $reflectionFunction = null;
 
         try {
-            if (isset($backtraceFrame['class'], $backtraceFrame['function'])) {
+            if (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
                 } elseif (isset($backtraceFrame['type']) && '::' === $backtraceFrame['type']) {
