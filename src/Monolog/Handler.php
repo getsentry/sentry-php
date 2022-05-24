@@ -6,9 +6,9 @@ namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Sentry\Event;
 use Sentry\EventHint;
-use Sentry\Severity;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
@@ -20,6 +20,8 @@ use Sentry\State\Scope;
  */
 final class Handler extends AbstractProcessingHandler
 {
+    use CompatibilityProcessingHandlerTrait;
+
     private const CONTEXT_EXCEPTION_KEY = 'exception';
 
     /**
@@ -46,9 +48,9 @@ final class Handler extends AbstractProcessingHandler
     }
 
     /**
-     * {@inheritdoc}
+     * @param array<string, mixed>|LogRecord $record
      */
-    protected function write(array $record): void
+    protected function doWrite($record): void
     {
         $event = Event::createEvent();
         $event->setLevel(self::getSeverityFromLevel($record['level']));
@@ -73,31 +75,6 @@ final class Handler extends AbstractProcessingHandler
 
             $this->hub->captureEvent($event, $hint);
         });
-    }
-
-    /**
-     * Translates the Monolog level into the Sentry severity.
-     *
-     * @param int $level The Monolog log level
-     */
-    private static function getSeverityFromLevel(int $level): Severity
-    {
-        switch ($level) {
-            case Logger::DEBUG:
-                return Severity::debug();
-            case Logger::WARNING:
-                return Severity::warning();
-            case Logger::ERROR:
-                return Severity::error();
-            case Logger::CRITICAL:
-            case Logger::ALERT:
-            case Logger::EMERGENCY:
-                return Severity::fatal();
-            case Logger::INFO:
-            case Logger::NOTICE:
-            default:
-                return Severity::info();
-        }
     }
 
     /**

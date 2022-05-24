@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add support for `monolog/monolog:^3.0` (#1321)
+
 ## 3.5.0 (2022-05-19)
 
 - Bump minimum version of `guzzlehttp/psr7` package to avoid [`CVE-2022-24775`](https://github.com/guzzle/psr7/security/advisories/GHSA-q7rv-6hp3-vh96) (#1305)

@@ -10,3 +10,5 @@ parameters:
     excludePaths:
         - tests/resources
         - tests/Fixtures
+    dynamicConstantNames:
+        - Monolog\Logger::API
