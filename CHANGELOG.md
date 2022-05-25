@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add support for `monolog/monolog:^3.0` (#1321)
+- Add `setTag` and `removeTag` public methods to `Event` for easier manipulation of tags (#1324)
 
 ## 3.5.0 (2022-05-19)
 
