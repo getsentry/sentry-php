@@ -20,7 +20,7 @@ final class HandlerTest extends TestCase
     /**
      * @dataProvider handleDataProvider
      */
-    public function testHandle(bool $fillExtraContext, array $record, Event $expectedEvent, EventHint $expectedHint, array $expectedExtra): void
+    public function testHandle(bool $fillExtraContext, $record, Event $expectedEvent, EventHint $expectedHint, array $expectedExtra): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -58,14 +58,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::DEBUG,
-                'level_name' => Logger::getLevelName(Logger::DEBUG),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::DEBUG,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -81,14 +80,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::INFO,
-                'level_name' => Logger::getLevelName(Logger::INFO),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::INFO,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -104,14 +102,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::NOTICE,
-                'level_name' => Logger::getLevelName(Logger::NOTICE),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::NOTICE,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -127,14 +124,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -150,14 +146,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::ERROR,
-                'level_name' => Logger::getLevelName(Logger::ERROR),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::ERROR,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -173,14 +168,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::CRITICAL,
-                'level_name' => Logger::getLevelName(Logger::CRITICAL),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::CRITICAL,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -196,14 +190,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::ALERT,
-                'level_name' => Logger::getLevelName(Logger::ALERT),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::ALERT,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -219,14 +212,13 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::EMERGENCY,
-                'level_name' => Logger::getLevelName(Logger::EMERGENCY),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            RecordFactory::create(
+                'foo bar',
+                Logger::EMERGENCY,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -244,16 +236,15 @@ final class HandlerTest extends TestCase
 
         yield [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'context' => [
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
                     'exception' => $exampleException,
                 ],
-                'channel' => 'channel.foo',
-                'extra' => [],
-            ],
+                []
+            ),
             $event,
             EventHint::fromArray([
                 'exception' => $exampleException,
@@ -271,17 +262,16 @@ final class HandlerTest extends TestCase
 
         yield 'Monolog\'s context is filled and the handler should fill the "extra" context' => [
             true,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'context' => [
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
                     'foo' => 'bar',
                     'bar' => 'baz',
                 ],
-                'channel' => 'channel.foo',
-                'extra' => [],
-            ],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -301,16 +291,15 @@ final class HandlerTest extends TestCase
 
         yield 'Monolog\'s context is filled with "exception" field and the handler should fill the "extra" context' => [
             true,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'context' => [
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
                     'exception' => new \Exception('exception message'),
                 ],
-                'channel' => 'channel.foo',
-                'extra' => [],
-            ],
+                []
+            ),
             $event,
             EventHint::fromArray([
                 'exception' => $exampleException,
@@ -328,17 +317,16 @@ final class HandlerTest extends TestCase
 
         yield 'Monolog\'s context is filled but handler should not fill the "extra" context' => [
             false,
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'context' => [
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
                     'foo' => 'bar',
                     'bar' => 'baz',
                 ],
-                'channel' => 'channel.foo',
-                'extra' => [],
-            ],
+                []
+            ),
             $event,
             new EventHint(),
             [
