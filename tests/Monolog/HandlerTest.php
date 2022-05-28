@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Monolog;
 
+use DateTimeImmutable;
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
@@ -45,8 +48,18 @@ final class HandlerTest extends TestCase
                 })
             );
 
-        $handler = new Handler(new Hub($client, new Scope()), Logger::DEBUG, true, $fillExtraContext);
-        $handler->handle($record);
+        $handler = new Handler(new Hub($client, new Scope()), Level::Debug, true, $fillExtraContext);
+        $handler->handle(
+            new LogRecord(
+                $record['time'],
+                $record['channel'],
+                $record['level'],
+                $record['message'],
+                $record['context'],
+                $record['extra'],
+                $record['extra']
+            )
+        );
     }
 
     public function handleDataProvider(): iterable
@@ -59,9 +72,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::DEBUG,
-                'level_name' => Logger::getLevelName(Logger::DEBUG),
+                'level' => Level::Debug,
+                'level_name' => Level::Debug->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -70,7 +84,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::DEBUG),
+                'monolog.level' => Logger::getLevelName(Level::Debug),
             ],
         ];
 
@@ -82,9 +96,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::INFO,
-                'level_name' => Logger::getLevelName(Logger::INFO),
+                'level' => Level::Info,
+                'level_name' => Level::Info->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -93,7 +108,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::INFO),
+                'monolog.level' => Level::Info->getName(),
             ],
         ];
 
@@ -105,9 +120,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::NOTICE,
-                'level_name' => Logger::getLevelName(Logger::NOTICE),
+                'level' => Level::Notice,
+                'level_name' => Level::Notice->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -116,7 +132,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::NOTICE),
+                'monolog.level' => Level::Notice->getName(),
             ],
         ];
 
@@ -128,9 +144,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'level' => Level::Warning,
+                'level_name' => Level::Warning->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -139,7 +156,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.level' => Level::Warning->getName(),
             ],
         ];
 
@@ -151,9 +168,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::ERROR,
-                'level_name' => Logger::getLevelName(Logger::ERROR),
+                'level' => Level::Error,
+                'level_name' => Level::Error->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -162,7 +180,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::ERROR),
+                'monolog.level' => Level::Error->getName(),
             ],
         ];
 
@@ -174,9 +192,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::CRITICAL,
-                'level_name' => Logger::getLevelName(Logger::CRITICAL),
+                'level' => Level::Critical,
+                'level_name' => Level::Critical->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -185,7 +204,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::CRITICAL),
+                'monolog.level' => Level::Critical->getName(),
             ],
         ];
 
@@ -197,9 +216,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::ALERT,
-                'level_name' => Logger::getLevelName(Logger::ALERT),
+                'level' => Level::Alert,
+                'level_name' => Level::Alert->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -208,7 +228,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::ALERT),
+                'monolog.level' => Level::Alert->getName(),
             ],
         ];
 
@@ -220,9 +240,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::EMERGENCY,
-                'level_name' => Logger::getLevelName(Logger::EMERGENCY),
+                'level' => Level::Emergency,
+                'level_name' => Level::Emergency->getName(),
                 'channel' => 'channel.foo',
                 'context' => [],
                 'extra' => [],
@@ -231,7 +252,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::EMERGENCY),
+                'monolog.level' => Level::Emergency->getName(),
             ],
         ];
 
@@ -245,9 +266,10 @@ final class HandlerTest extends TestCase
         yield [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'level' => Level::Warning,
+                'level_name' => Level::Warning->getName(),
                 'context' => [
                     'exception' => $exampleException,
                 ],
@@ -260,7 +282,7 @@ final class HandlerTest extends TestCase
             ]),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.level' => Level::Warning->getName(),
             ],
         ];
 
@@ -272,9 +294,10 @@ final class HandlerTest extends TestCase
         yield 'Monolog\'s context is filled and the handler should fill the "extra" context' => [
             true,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'level' => Level::Warning,
+                'level_name' => Level::Warning->getName(),
                 'context' => [
                     'foo' => 'bar',
                     'bar' => 'baz',
@@ -286,7 +309,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.level' => Level::Warning->getName(),
                 'monolog.context' => [
                     'foo' => 'bar',
                     'bar' => 'baz',
@@ -302,9 +325,10 @@ final class HandlerTest extends TestCase
         yield 'Monolog\'s context is filled with "exception" field and the handler should fill the "extra" context' => [
             true,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'level' => Level::Warning,
+                'level_name' => Level::Warning->getName(),
                 'context' => [
                     'exception' => new \Exception('exception message'),
                 ],
@@ -317,7 +341,7 @@ final class HandlerTest extends TestCase
             ]),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.level' => Level::Warning->getName(),
             ],
         ];
 
@@ -329,9 +353,10 @@ final class HandlerTest extends TestCase
         yield 'Monolog\'s context is filled but handler should not fill the "extra" context' => [
             false,
             [
+                'time' => new DateTimeImmutable('2022-05-28 18:00:00'),
                 'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'level' => Level::Warning,
+                'level_name' => Level::Warning->getName(),
                 'context' => [
                     'foo' => 'bar',
                     'bar' => 'baz',
@@ -343,7 +368,7 @@ final class HandlerTest extends TestCase
             new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
-                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.level' => Level::Warning->getName(),
             ],
         ];
     }

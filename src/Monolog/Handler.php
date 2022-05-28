@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
-use Monolog\Logger;
+use Monolog\Level;
+use Monolog\LogRecord;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Severity;
@@ -37,7 +38,7 @@ final class Handler extends AbstractProcessingHandler
      *
      * @param HubInterface $hub The hub to which errors are reported
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
+    public function __construct(HubInterface $hub, $level = Level::Debug, bool $bubble = true, bool $fillExtraContext = false)
     {
         parent::__construct($level, $bubble);
 
@@ -48,24 +49,24 @@ final class Handler extends AbstractProcessingHandler
     /**
      * {@inheritdoc}
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $event = Event::createEvent();
-        $event->setLevel(self::getSeverityFromLevel($record['level']));
-        $event->setMessage($record['message']);
-        $event->setLogger(sprintf('monolog.%s', $record['channel']));
+        $event->setLevel(self::getSeverityFromLevel($record->level));
+        $event->setMessage($record->message);
+        $event->setLogger(sprintf('monolog.%s', $record->channel));
 
         $hint = new EventHint();
 
-        if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
-            $hint->exception = $record['context']['exception'];
+        if (isset($record->context['exception']) && $record->context['exception'] instanceof \Throwable) {
+            $hint->exception = $record->context['exception'];
         }
 
         $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
-            $scope->setExtra('monolog.channel', $record['channel']);
-            $scope->setExtra('monolog.level', $record['level_name']);
+            $scope->setExtra('monolog.channel', $record->channel);
+            $scope->setExtra('monolog.level', $record->level->getName());
 
-            $monologContextData = $this->getMonologContextData($record['context']);
+            $monologContextData = $this->getMonologContextData($record->context);
 
             if (!empty($monologContextData)) {
                 $scope->setExtra('monolog.context', $monologContextData);
@@ -78,23 +79,23 @@ final class Handler extends AbstractProcessingHandler
     /**
      * Translates the Monolog level into the Sentry severity.
      *
-     * @param int $level The Monolog log level
+     * @param Level $level The Monolog log level
      */
-    private static function getSeverityFromLevel(int $level): Severity
+    private static function getSeverityFromLevel(Level $level): Severity
     {
         switch ($level) {
-            case Logger::DEBUG:
+            case Level::Debug:
                 return Severity::debug();
-            case Logger::WARNING:
+            case Level::Warning:
                 return Severity::warning();
-            case Logger::ERROR:
+            case Level::Error:
                 return Severity::error();
-            case Logger::CRITICAL:
-            case Logger::ALERT:
-            case Logger::EMERGENCY:
+            case Level::Critical:
+            case Level::Alert:
+            case Level::Emergency:
                 return Severity::fatal();
-            case Logger::INFO:
-            case Logger::NOTICE:
+            case Level::Info:
+            case Level::Notice:
             default:
                 return Severity::info();
         }
