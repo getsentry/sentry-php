@@ -16,12 +16,17 @@ parameters:
 			path: src/ClientInterface.php
 
 		-
-			message: "#^Offset 'host' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
+			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'path' does not exist on array\\{host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string, scheme\\: 'http'\\|'https'\\}\\.$#"
+			message: "#^Offset 'host'\\|'path'\\|'scheme'\\|'user' on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: src/Dsn.php
+
+		-
+			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 4
 			path: src/Dsn.php
 
@@ -34,11 +39,6 @@ parameters:
 			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
-
-		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\ErrorHandler\\:\\:cleanBacktraceFromErrorHandlerFrames\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
-			count: 1
-			path: src/ErrorHandler.php
 
 		-
 			message: "#^Result of && is always false\\.$#"
@@ -66,22 +66,22 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$uriFactory\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
@@ -131,7 +131,17 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpConnectTimeout\\(\\) should return float but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxy\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpTimeout\\(\\) should return float but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -244,11 +254,6 @@ parameters:
 			message: "#^Cannot cast mixed to string\\.$#"
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
-
-		-
-			message: "#^Parameter \\#1 \\$backtrace of method Sentry\\\\StacktraceBuilder\\:\\:buildFromBacktrace\\(\\) expects array\\<int, array\\{function\\?\\: string, line\\?\\: int, file\\?\\: string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array\\}\\>, array\\<int, array\\<string, mixed\\>\\> given\\.$#"
-			count: 1
-			path: src/StacktraceBuilder.php
 
 		-
 			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureException\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"

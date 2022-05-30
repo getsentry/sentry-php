@@ -20,28 +20,32 @@ final class HandlerTest extends TestCase
     /**
      * @dataProvider handleDataProvider
      */
-    public function testHandle(array $record, Event $expectedEvent, EventHint $expectedHint, array $expectedExtra): void
+    public function testHandle(bool $fillExtraContext, $record, Event $expectedEvent, EventHint $expectedHint, array $expectedExtra): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $event) use ($expectedEvent): bool {
-                $this->assertEquals($expectedEvent->getLevel(), $event->getLevel());
-                $this->assertEquals($expectedEvent->getMessage(), $event->getMessage());
-                $this->assertEquals($expectedEvent->getLogger(), $event->getLogger());
+            ->with(
+                $this->callback(function (Event $event) use ($expectedEvent): bool {
+                    $this->assertEquals($expectedEvent->getLevel(), $event->getLevel());
+                    $this->assertSame($expectedEvent->getMessage(), $event->getMessage());
+                    $this->assertSame($expectedEvent->getLogger(), $event->getLogger());
 
-                return true;
-            }), $expectedHint, $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
-                $event = $scopeArg->applyToEvent(Event::createEvent());
+                    return true;
+                }),
+                $expectedHint,
+                $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+                    $event = $scopeArg->applyToEvent(Event::createEvent());
 
-                $this->assertNotNull($event);
-                $this->assertSame($expectedExtra, $event->getExtra());
+                    $this->assertNotNull($event);
+                    $this->assertSame($expectedExtra, $event->getExtra());
 
-                return true;
-            }));
+                    return true;
+                })
+            );
 
-        $handler = new Handler(new Hub($client, new Scope()));
+        $handler = new Handler(new Hub($client, new Scope()), Logger::DEBUG, true, $fillExtraContext);
         $handler->handle($record);
     }
 
@@ -53,14 +57,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::debug());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::DEBUG,
-                'level_name' => Logger::getLevelName(Logger::DEBUG),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::DEBUG,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -75,14 +79,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::info());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::INFO,
-                'level_name' => Logger::getLevelName(Logger::INFO),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::INFO,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -97,14 +101,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::info());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::NOTICE,
-                'level_name' => Logger::getLevelName(Logger::NOTICE),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::NOTICE,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -119,14 +123,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::warning());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -141,14 +145,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::error());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::ERROR,
-                'level_name' => Logger::getLevelName(Logger::ERROR),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::ERROR,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -163,14 +167,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::fatal());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::CRITICAL,
-                'level_name' => Logger::getLevelName(Logger::CRITICAL),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::CRITICAL,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -185,14 +189,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::fatal());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::ALERT,
-                'level_name' => Logger::getLevelName(Logger::ALERT),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::ALERT,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -207,14 +211,14 @@ final class HandlerTest extends TestCase
         $event->setLevel(Severity::fatal());
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::EMERGENCY,
-                'level_name' => Logger::getLevelName(Logger::EMERGENCY),
-                'channel' => 'channel.foo',
-                'context' => [],
-                'extra' => [],
-            ],
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::EMERGENCY,
+                'channel.foo',
+                [],
+                []
+            ),
             $event,
             new EventHint(),
             [
@@ -231,20 +235,100 @@ final class HandlerTest extends TestCase
         $exampleException = new \Exception('exception message');
 
         yield [
-            [
-                'message' => 'foo bar',
-                'level' => Logger::WARNING,
-                'level_name' => Logger::getLevelName(Logger::WARNING),
-                'context' => [
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
                     'exception' => $exampleException,
                 ],
-                'channel' => 'channel.foo',
-                'extra' => [],
-            ],
+                []
+            ),
             $event,
             EventHint::fromArray([
                 'exception' => $exampleException,
             ]),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        yield 'Monolog\'s context is filled and the handler should fill the "extra" context' => [
+            true,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
+                []
+            ),
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.context' => [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        yield 'Monolog\'s context is filled with "exception" field and the handler should fill the "extra" context' => [
+            true,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
+                    'exception' => new \Exception('exception message'),
+                ],
+                []
+            ),
+            $event,
+            EventHint::fromArray([
+                'exception' => $exampleException,
+            ]),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        yield 'Monolog\'s context is filled but handler should not fill the "extra" context' => [
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
+                []
+            ),
+            $event,
+            new EventHint(),
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),

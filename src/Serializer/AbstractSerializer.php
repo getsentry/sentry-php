@@ -99,8 +99,12 @@ abstract class AbstractSerializer
                 return $this->serializeValue($value);
             }
 
-            if (\is_callable($value)) {
-                return $this->serializeCallable($value);
+            try {
+                if (\is_callable($value)) {
+                    return $this->serializeCallable($value);
+                }
+            } catch (\Throwable $exception) {
+                // Do nothing on purpose
             }
 
             if (\is_array($value)) {
@@ -244,8 +248,12 @@ abstract class AbstractSerializer
             return 'Resource ' . get_resource_type($value);
         }
 
-        if (\is_callable($value)) {
-            return $this->serializeCallable($value);
+        try {
+            if (\is_callable($value)) {
+                return $this->serializeCallable($value);
+            }
+        } catch (\Throwable $exception) {
+            // Do nothing on purpose
         }
 
         if (\is_array($value)) {

@@ -94,15 +94,21 @@ final class HubAdapterTest extends TestCase
 
     public function testWithScope(): void
     {
-        $callback = static function () {};
+        $callback = static function (): string {
+            return 'foobarbaz';
+        };
 
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
             ->method('withScope')
-            ->with($callback);
+            ->with($callback)
+            ->willReturnCallback($callback);
 
         SentrySdk::setCurrentHub($hub);
-        HubAdapter::getInstance()->withScope($callback);
+
+        $returnValue = HubAdapter::getInstance()->withScope($callback);
+
+        $this->assertSame('foobarbaz', $returnValue);
     }
 
     public function testConfigureScope(): void

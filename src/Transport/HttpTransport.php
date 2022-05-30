@@ -59,6 +59,11 @@ final class HttpTransport implements TransportInterface
     private $logger;
 
     /**
+     * @var RateLimiter The rate limiter
+     */
+    private $rateLimiter;
+
+    /**
      * Constructor.
      *
      * @param Options                    $options           The Sentry client configuration
@@ -82,6 +87,7 @@ final class HttpTransport implements TransportInterface
         $this->requestFactory = $requestFactory;
         $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
+        $this->rateLimiter = new RateLimiter($this->logger);
     }
 
     /**
@@ -95,7 +101,18 @@ final class HttpTransport implements TransportInterface
             throw new \RuntimeException(sprintf('The DSN option must be set to use the "%s" transport.', self::class));
         }
 
-        if (EventType::transaction() === $event->getType()) {
+        $eventType = $event->getType();
+
+        if ($this->rateLimiter->isRateLimited($eventType)) {
+            $this->logger->warning(
+                sprintf('Rate limit exceeded for sending requests of type "%s".', (string) $eventType),
+                ['event' => $event]
+            );
+
+            return new RejectedPromise(new Response(ResponseStatus::rateLimit(), $event));
+        }
+
+        if (EventType::transaction() === $eventType) {
             $request = $this->requestFactory->createRequest('POST', $dsn->getEnvelopeApiEndpointUrl())
                 ->withHeader('Content-Type', 'application/x-sentry-envelope')
                 ->withBody($this->streamFactory->createStream($this->payloadSerializer->serialize($event)));
@@ -117,7 +134,7 @@ final class HttpTransport implements TransportInterface
             return new RejectedPromise(new Response(ResponseStatus::failed(), $event));
         }
 
-        $sendResponse = new Response(ResponseStatus::createFromHttpStatusCode($response->getStatusCode()), $event);
+        $sendResponse = $this->rateLimiter->handleResponse($event, $response);
 
         if (ResponseStatus::success() === $sendResponse->getStatus()) {
             return new FulfilledPromise($sendResponse);

@@ -76,7 +76,7 @@ final class FrameBuilder
             }
 
             $rawFunctionName = sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);
-            $functionName = sprintf('%s::%s', preg_replace('/0x[a-fA-F0-9]+$/', '', $functionName), $backtraceFrame['function']);
+            $functionName = sprintf('%s::%s', preg_replace('/(?::\d+\$|0x)[a-fA-F0-9]+$/', '', $functionName), $backtraceFrame['function']);
         } elseif (isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['function'];
         }
@@ -166,7 +166,7 @@ final class FrameBuilder
         $reflectionFunction = null;
 
         try {
-            if (isset($backtraceFrame['class'], $backtraceFrame['function'])) {
+            if (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
                 } elseif (isset($backtraceFrame['type']) && '::' === $backtraceFrame['type']) {

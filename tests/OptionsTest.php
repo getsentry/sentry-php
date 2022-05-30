@@ -51,7 +51,7 @@ final class OptionsTest extends TestCase
 
         $options = new Options([$option => $value]);
 
-        $this->assertSame($value, $options->$getterMethod());
+        $this->assertEquals($value, $options->$getterMethod());
     }
 
     /**
@@ -81,7 +81,7 @@ final class OptionsTest extends TestCase
             $options->$setterMethod($value);
         }
 
-        $this->assertSame($value, $options->$getterMethod());
+        $this->assertEquals($value, $options->$getterMethod());
     }
 
     public function optionsDataProvider(): \Generator
@@ -91,8 +91,8 @@ final class OptionsTest extends TestCase
             1,
             'getSendAttempts',
             'setSendAttempts',
-            null,
-            null,
+            'Method Sentry\\Options::getSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
+            'Method Sentry\\Options::setSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
         ];
 
         yield [
@@ -289,6 +289,42 @@ final class OptionsTest extends TestCase
             '127.0.0.1',
             'getHttpProxy',
             'setHttpProxy',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_timeout',
+            1,
+            'getHttpTimeout',
+            'setHttpTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_timeout',
+            1.2,
+            'getHttpTimeout',
+            'setHttpTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_connect_timeout',
+            1,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_connect_timeout',
+            1.2,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
             null,
             null,
         ];

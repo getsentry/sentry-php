@@ -25,7 +25,7 @@ require $vendor . '/vendor/autoload.php';
 function testSerialization($value) {
     $serializer = new Serializer(new Options());
 
-    echo $serializer->serialize($value);
+    echo json_encode($serializer->serialize($value));
 }
 
 testSerialization(BrokenClass::class . '::brokenMethod');
@@ -34,5 +34,5 @@ testSerialization([BrokenClass::class, 'brokenMethod']);
 
 ?>
 --EXPECT--
-Sentry\Tests\Fixtures\code\BrokenClass::brokenMethod {serialization error}
-{serialization error}
+"Sentry\\Tests\\Fixtures\\code\\BrokenClass::brokenMethod"
+["Sentry\\Tests\\Fixtures\\code\\BrokenClass","brokenMethod"]

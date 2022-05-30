@@ -197,13 +197,11 @@ final class FunctionsTest extends TestCase
 
     public function testWithScope(): void
     {
-        $callbackInvoked = false;
-
-        withScope(static function () use (&$callbackInvoked): void {
-            $callbackInvoked = true;
+        $returnValue = withScope(static function (): string {
+            return 'foobarbaz';
         });
 
-        $this->assertTrue($callbackInvoked);
+        $this->assertSame('foobarbaz', $returnValue);
     }
 
     public function testConfigureScope(): void
