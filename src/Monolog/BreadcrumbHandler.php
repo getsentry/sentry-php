@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Psr\Log\LogLevel;
 use Sentry\Breadcrumb;
 use Sentry\Event;
@@ -15,9 +17,6 @@ use Sentry\State\Scope;
 /**
  * This Monolog handler logs every message as a {@see Breadcrumb} into the current {@see Scope},
  * to enrich any event sent to Sentry.
- *
- * @phpstan-import-type Level from \Monolog\Logger
- * @phpstan-import-type LevelName from \Monolog\Logger
  */
 final class BreadcrumbHandler extends AbstractProcessingHandler
 {
@@ -27,7 +26,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     private $hub;
 
     /**
-     * @phpstan-param Level|LevelName|LogLevel::* $level
+     * @phpstan-param int|string|Level|LogLevel::* $level
      *
      * @param HubInterface $hub    The hub to which errors are reported
      * @param int|string   $level  The minimum logging level at which this
@@ -45,7 +44,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     /**
      * @psalm-suppress MoreSpecificImplementedParamType
      *
-     * @param array{
+     * @param LogRecord|array{
      *      level: int,
      *      channel: string,
      *      datetime: \DateTimeImmutable,
@@ -53,7 +52,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
      *      extra?: array<string, mixed>
      * } $record {@see https://github.com/Seldaek/monolog/blob/main/doc/message-structure.md}
      */
-    protected function write(array $record): void
+    protected function write($record): void
     {
         $breadcrumb = new Breadcrumb(
             $this->getBreadcrumbLevel($record['level']),
@@ -67,8 +66,15 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
         $this->hub->addBreadcrumb($breadcrumb);
     }
 
-    private function getBreadcrumbLevel(int $level): string
+    /**
+     * @param Level|int $level
+     */
+    private function getBreadcrumbLevel($level): string
     {
+        if ($level instanceof Level) {
+            $level = $level->value;
+        }
+
         switch ($level) {
             case Logger::DEBUG:
                 return Breadcrumb::LEVEL_DEBUG;
