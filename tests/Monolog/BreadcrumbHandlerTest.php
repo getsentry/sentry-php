@@ -21,11 +21,11 @@ final class BreadcrumbHandlerTest extends TestCase
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
             ->method('addBreadcrumb')
-            ->with($this->callback(function (Breadcrumb $breadcrumb) use ($expectedBreadcrumb): bool {
+            ->with($this->callback(function (Breadcrumb $breadcrumb) use ($expectedBreadcrumb, $record): bool {
                 $this->assertSame($expectedBreadcrumb->getMessage(), $breadcrumb->getMessage());
                 $this->assertSame($expectedBreadcrumb->getLevel(), $breadcrumb->getLevel());
                 $this->assertSame($expectedBreadcrumb->getType(), $breadcrumb->getType());
-                $this->assertSame($expectedBreadcrumb->getTimestamp(), $breadcrumb->getTimestamp());
+                $this->assertEquals($record['datetime']->getTimestamp(), $breadcrumb->getTimestamp());
                 $this->assertSame($expectedBreadcrumb->getCategory(), $breadcrumb->getCategory());
                 $this->assertEquals($expectedBreadcrumb->getMetadata(), $breadcrumb->getMetadata());
 
@@ -41,15 +41,12 @@ final class BreadcrumbHandlerTest extends TestCase
      */
     public function handleDataProvider(): iterable
     {
-        $defaultData = RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', [], []);
-
         $defaultBreadcrumb = new Breadcrumb(
             Breadcrumb::LEVEL_DEBUG,
             Breadcrumb::TYPE_DEFAULT,
             'channel.foo',
             'foo bar',
-            [],
-            $defaultData['datetime']->getTimestamp()
+            []
         );
 
         $levelsToBeTested = [
