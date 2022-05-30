@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Monolog;
 
 use Monolog\Logger;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Monolog\BreadcrumbHandler;
@@ -15,7 +16,7 @@ final class BreadcrumbHandlerTest extends TestCase
     /**
      * @dataProvider handleDataProvider
      */
-    public function testHandle(array $record, Breadcrumb $expectedBreadcrumb): void
+    public function testHandle($record, Breadcrumb $expectedBreadcrumb): void
     {
         $hub = $this->createMock(HubInterface::class);
         $hub->expects($this->once())
@@ -36,19 +37,11 @@ final class BreadcrumbHandlerTest extends TestCase
     }
 
     /**
-     * @return iterable<array{array<string, mixed>, Breadcrumb}>
+     * @return iterable<LogRecord|array{array<string, mixed>, Breadcrumb}>
      */
     public function handleDataProvider(): iterable
     {
-        $defaultData = [
-            'message' => 'foo bar',
-            'level' => Logger::DEBUG,
-            'level_name' => Logger::getLevelName(Logger::DEBUG),
-            'channel' => 'channel.foo',
-            'context' => [],
-            'extra' => [],
-            'datetime' => new \DateTimeImmutable(),
-        ];
+        $defaultData = RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', [], []);
 
         $defaultBreadcrumb = new Breadcrumb(
             Breadcrumb::LEVEL_DEBUG,
@@ -68,41 +61,31 @@ final class BreadcrumbHandlerTest extends TestCase
 
         foreach ($levelsToBeTested as $loggerLevel => $breadcrumbLevel) {
             yield 'with level ' . Logger::getLevelName($loggerLevel) => [
-                ['level' => $loggerLevel] + $defaultData,
+                RecordFactory::create('foo bar', $loggerLevel, 'channel.foo', [], []),
                 $defaultBreadcrumb->withLevel($breadcrumbLevel),
             ];
         }
 
         yield 'with level ERROR' => [
-            ['level' => Logger::ERROR] + $defaultData,
+            RecordFactory::create('foo bar', Logger::ERROR, 'channel.foo', [], []),
             $defaultBreadcrumb->withLevel(Breadcrumb::LEVEL_ERROR)
                 ->withType(Breadcrumb::TYPE_ERROR),
         ];
 
         yield 'with level ALERT' => [
-            ['level' => Logger::ALERT] + $defaultData,
+            RecordFactory::create('foo bar', Logger::ALERT, 'channel.foo', [], []),
             $defaultBreadcrumb->withLevel(Breadcrumb::LEVEL_FATAL)
                 ->withType(Breadcrumb::TYPE_ERROR),
         ];
 
         yield 'with context' => [
-            ['context' => ['foo' => 'bar']] + $defaultData,
-            $defaultBreadcrumb->withMetadata('foo', 'bar'),
+                RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', ['context' => ['foo' => 'bar']], []),
+            $defaultBreadcrumb->withMetadata('context', ['foo' => 'bar']),
         ];
 
         yield 'with extra' => [
-            ['extra' => ['foo' => 'bar']] + $defaultData,
-            $defaultBreadcrumb->withMetadata('foo', 'bar'),
-        ];
-
-        yield 'with context + extra' => [
-            [
-                'context' => ['foo' => 'bar', 'context' => 'baz'],
-                'extra' => ['foo' => 'baz', 'extra' => 'baz'],
-            ] + $defaultData,
-            $defaultBreadcrumb->withMetadata('foo', 'bar')
-                ->withMetadata('context', 'baz')
-                ->withMetadata('extra', 'baz'),
+            RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', [], ['extra' => ['foo' => 'bar']]),
+            $defaultBreadcrumb->withMetadata('extra', ['foo' => 'bar']),
         ];
     }
 }
