@@ -101,4 +101,19 @@ final class EventTest extends TestCase
             ['environment', 'foo'],
         ];
     }
+
+    public function testSetAndRemoveTag(): void
+    {
+        $tagName = 'tag';
+        $tagValue = 'value';
+
+        $event = Event::createEvent();
+        $event->setTag($tagName, $tagValue);
+
+        $this->assertSame([$tagName => $tagValue], $event->getTags());
+
+        $event->removeTag($tagName);
+
+        $this->assertEmpty($event->getTags());
+    }
 }
