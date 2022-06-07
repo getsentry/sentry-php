@@ -795,6 +795,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'use_local_relay' => false,
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
@@ -827,6 +828,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('use_local_relay', 'bool');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -908,7 +910,13 @@ final class Options
                 return null;
         }
 
-        return Dsn::createFromString($value);
+        $dsn = Dsn::createFromString($value);
+
+        if ($options['use_local_relay']) {
+            $dsn->useLocalRelay();
+        }
+
+        return $dsn;
     }
 
     /**

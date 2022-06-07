@@ -117,6 +117,18 @@ final class Dsn implements \Stringable
     }
 
     /**
+     * Overwrite parts of the DSN to point to a local Relay instance.
+     *
+     * @return void
+     */
+    public function useLocalRelay(): void
+    {
+        $this->scheme = 'http';
+        $this->host = 'localhost';
+        $this->port = 3000;
+    }
+
+    /**
      * Gets the protocol to be used to access the resource.
      */
     public function getScheme(): string

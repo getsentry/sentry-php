@@ -441,6 +441,31 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * @dataProvider dsnOptionInteractionWithLocalRelayDataProvider
+     */
+    public function testDsnInteractionWithLocalRelayOption($value, ?Dsn $expectedDsnAsObject, bool $useLocalRelay): void
+    {
+        $options = new Options(['dsn' => $value, 'use_local_relay' => $useLocalRelay]);
+
+        $this->assertEquals($expectedDsnAsObject, $options->getDsn());
+    }
+
+    public function dsnOptionInteractionWithLocalRelayDataProvider(): \Generator
+    {
+        yield [
+            'https://public:secret@example.com/sentry/1',
+            Dsn::createFromString('https://public:secret@example.com/sentry/1'),
+            false,
+        ];
+
+        yield [
+            'https://public:secret@example.com/sentry/1',
+            Dsn::createFromString('http://public:secret@localhost:3000/sentry/1'),
+            true,
+        ];
+    }
+
+    /**
      * @dataProvider excludedPathProviders
      */
     public function testExcludedAppPathsPathRegressionWithFileName(string $value, string $expected): void
