@@ -216,7 +216,7 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampler\\(\\) should return \\(callable\\(\\)\\: mixed\\)\\|null but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampler\\(\\) should return \\(callable\\(Sentry\\\\Tracing\\\\SamplingContext\\)\\: float\\)\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
