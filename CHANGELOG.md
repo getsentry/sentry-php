@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Set the event extras by taking the data from the Monolog record's extra (#1330)
+
 ## 3.6.0 (2022-06-10)
 
 - Add support for `monolog/monolog:^3.0` (#1321)

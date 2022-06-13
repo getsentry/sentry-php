@@ -334,5 +334,53 @@ final class HandlerTest extends TestCase
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
             ],
         ];
+        yield 'Monolog\'s extra is filled and the handler should fill the "extra" context' => [
+            true,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [],
+                [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ]
+            ),
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.extra' => [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ],
+            ],
+        ];
+
+        $event = Event::createEvent();
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+
+        yield 'Monolog\'s extra is filled but handler should not fill the "extra" context' => [
+            false,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [],
+                [
+                    'foo' => 'bar',
+                    'bar' => 'baz',
+                ]
+            ),
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
     }
 }
