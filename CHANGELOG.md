@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Set the `sentry-trace` header when using the tracing middleware (#1331)
+
 ## 3.6.0 (2022-06-10)
 
 - Add support for `monolog/monolog:^3.0` (#1321)
