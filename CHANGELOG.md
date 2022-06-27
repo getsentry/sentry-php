@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.6.1 (2022-06-27)
+
 - Set the `sentry-trace` header when using the tracing middleware (#1331)
 
 ## 3.6.0 (2022-06-10)
