@@ -38,6 +38,7 @@ final class Transaction extends Span
 
         $this->hub = $hub ?? SentrySdk::getCurrentHub();
         $this->name = $context->getName();
+        $this->transaction = $this;
     }
 
     /**
