@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `Scope::getTransaction()` so that it returns also unsampled transactions (#1334)
+
 ## 3.6.1 (2022-06-27)
 
 - Set the `sentry-trace` header when using the tracing middleware (#1331)
