@@ -75,12 +75,10 @@ jobs:
         if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.2' }}
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-clover=build/coverage-report.xml
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Upload code coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: build/coverage-report.xml
+        uses: codecov/codecov-action@v3
 
       - name: Check benchmarks
         run: vendor/bin/phpbench run --revs=1 --iterations=1
