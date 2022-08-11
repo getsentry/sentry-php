@@ -538,7 +538,7 @@ abstract class AbstractSerializerTest extends TestCase
         $utf8String = 'äöü';
 
         return [
-            [utf8_decode($utf8String), $utf8String, 'ISO-8859-1, ASCII, UTF-8'],
+            [mb_convert_encoding($utf8String, 'ISO-8859-1', 'UTF-8'), $utf8String, 'ISO-8859-1, ASCII, UTF-8'],
             ["\xC2\xA2\xC2", "\xC2\xA2\x3F"], // ill-formed 2-byte character U+00A2 (CENT SIGN)
         ];
     }
@@ -563,11 +563,7 @@ abstract class AbstractSerializerTest extends TestCase
     }
 }
 
-/**
- * Class SerializerTestObject.
- *
- * @property mixed $keys
- */
+#[\AllowDynamicProperties]
 class SerializerTestObject
 {
     private $foo = 'bar';
