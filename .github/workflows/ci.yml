@@ -23,6 +23,7 @@ jobs:
           - '7.4'
           - '8.0'
           - '8.1'
+          - '8.2'
         dependencies:
           - lowest
           - highest
@@ -55,15 +56,23 @@ jobs:
 
       - name: Install highest dependencies
         run: composer update --no-progress --no-interaction --prefer-dist
-        if: ${{ matrix.dependencies == 'highest' }}
+        if: ${{ matrix.dependencies == 'highest' && matrix.php != '8.2' }}
 
-      - name: Restrict lowest Symfony version on PHP 8.1
+      - name: Install highest PHP 8.2 dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --ignore-platform-req=php
+        if: ${{ matrix.dependencies == 'highest' && matrix.php == '8.2' }}
+
+      - name: Restrict lowest Symfony version on PHP 8.1 & 8.2
         run: composer require symfony/options-resolver:^4.4.30 --no-update
-        if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.1' }}
+        if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.1' || matrix.php == '8.2' }}
 
       - name: Install lowest dependencies
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
-        if: ${{ matrix.dependencies == 'lowest' }}
+        if: ${{ matrix.dependencies == 'lowest' && matrix.php != '8.2' }}
+
+      - name: Install lowest PHP 8.2 dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --ignore-platform-req=php
+        if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.2' }}
 
       - name: Run tests
         run: vendor/bin/phpunit --coverage-clover=build/coverage-report.xml
