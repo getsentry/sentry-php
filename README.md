@@ -107,17 +107,7 @@ The following integrations are available and maintained by members of the Sentry
 
 ## Contributing
 
-Dependencies are managed through `composer`:
-
-```
-$ composer install
-```
-
-Tests can then be run via phpunit:
-
-```
-$ vendor/bin/phpunit
-```
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [master Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster
 [master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master
