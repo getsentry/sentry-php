@@ -111,7 +111,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
 - [Code](http://github.com/getsentry/sentry-php)
 
-## Contributing
+## Contributing to the SDK
 
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
