@@ -6,13 +6,11 @@
 
 # Contributing to the Sentry PHP SDK
 
-We welcome contributions to sentry-php by the community. See the [Contributing to Docs](https://docs.sentry.io/contributing/) page if you want to fix or update the documentation on the website.
-
-## How to report a problem
+We welcome contributions to `sentry-php` by the community.
 
 Please search the [issue tracker](https://github.com/getsentry/sentry-php/issues) before creating a new issue (a problem or an improvement request). Please also ask in our [Sentry Community on Discord](https://discord.com/invite/Ww9hbqr) before submitting a new issue. There is a ton of great people in our Discord community ready to help you!
 
-If you feel that you can fix or implement it yourself, please read a few paragraphs below to learn how to submit your changes.
+If you feel that you can fix or implement it yourself, please read on to learn how to submit your changes.
 
 ## Submitting changes
 
