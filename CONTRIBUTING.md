@@ -17,7 +17,7 @@ If you feel that you can fix or implement it yourself, please read a few paragra
 ## Submitting changes
 
 - Setup the development environment.
-- Clone the sentry-php repository and prepare necessary changes.
+- Clone the `sentry-php` repository and prepare necessary changes.
 - Add tests for your changes to `tests/`.
 - Run tests and make sure all of them pass.
 - Submit a pull request, targeting the `develop` branch if you added any new features. For bug fixes of the current release, please target the `master` branch instead.
