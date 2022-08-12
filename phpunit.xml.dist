@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit
-    backupGlobals="true"
-    colors="true"
-    bootstrap="tests/bootstrap.php"
-    cacheResult="false"
-    beStrictAboutOutputDuringTests="true"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         backupGlobals="true"
+         colors="true"
+         bootstrap="tests/bootstrap.php"
+         cacheResult="false"
+         beStrictAboutOutputDuringTests="true"
 >
     <php>
-        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0" />
     </php>
 
     <testsuites>
@@ -17,11 +18,23 @@
         </testsuite>
     </testsuites>
 
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </coverage>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
     <listeners>
-        <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
+        <listener class="\Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
     </listeners>
 
     <extensions>
-        <extension class="Sentry\Tests\SentrySdkExtension"/>
+        <extension class="Sentry\Tests\SentrySdkExtension" />
     </extensions>
 </phpunit>
