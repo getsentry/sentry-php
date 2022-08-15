@@ -51,6 +51,16 @@ final class ExceptionDataBag
     }
 
     /**
+     * Sets the type of the exception.
+     *
+     * @param string $type The exception type
+     */
+    public function setType(string $type): void
+    {
+        $this->type = $type;
+    }
+
+    /**
      * Gets the value of the exception.
      */
     public function getValue(): string
