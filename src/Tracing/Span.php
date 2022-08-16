@@ -444,4 +444,9 @@ class Span
 
         return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
+
+    public function toBaggage(): string
+    {
+        $baggage = $this->getTraceContext();
+    }
 }

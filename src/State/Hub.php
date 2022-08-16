@@ -15,6 +15,7 @@ use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionSamplingMethod;
 
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
@@ -35,7 +36,7 @@ final class Hub implements HubInterface
      * Hub constructor.
      *
      * @param ClientInterface|null $client The client bound to the hub
-     * @param Scope|null           $scope  The scope bound to the hub
+     * @param Scope|null $scope The scope bound to the hub
      */
     public function __construct(?ClientInterface $client = null, ?Scope $scope = null)
     {
@@ -223,10 +224,14 @@ final class Hub implements HubInterface
         $options = null !== $client ? $client->getOptions() : null;
 
         if (null === $options || !$options->isTracingEnabled()) {
+            $transaction->getMetadata()->setSamplingMethod(TransactionSamplingMethod::explicitlySet());
             $transaction->setSampled(false);
 
             return $transaction;
         }
+
+        // Default to inheritance, we overwrite this later if we use another sampling method
+        $transaction->getMetadata()->setSamplingMethod(TransactionSamplingMethod::inheritance());
 
         $samplingContext = SamplingContext::getDefault($context);
         $samplingContext->setAdditionalContext($customSamplingContext);
@@ -234,15 +239,28 @@ final class Hub implements HubInterface
         $tracesSampler = $options->getTracesSampler();
 
         if (null === $transaction->getSampled()) {
-            $sampleRate = null !== $tracesSampler
-                ? $tracesSampler($samplingContext)
-                : $this->getSampleRate($samplingContext->getParentSampled(), $options->getTracesSampleRate());
+            if (null !== $tracesSampler) {
+                $transaction->getMetadata()->setSamplingMethod(TransactionSamplingMethod::clientSampler());
+
+                $sampleRate = $tracesSampler($samplingContext);
+            } else {
+                if (!$samplingContext->getParentSampled()) {
+                    $transaction->getMetadata()->setSamplingMethod(TransactionSamplingMethod::clientRate());
+                }
+
+                $sampleRate = $this->getSampleRate(
+                    $samplingContext->getParentSampled(),
+                    $options->getTracesSampleRate()
+                );
+            }
 
             if (!$this->isValidSampleRate($sampleRate)) {
                 $transaction->setSampled(false);
 
                 return $transaction;
             }
+
+            $transaction->getMetadata()->setSamplingRate($sampleRate);
 
             if (0.0 === $sampleRate) {
                 $transaction->setSampled(false);

@@ -21,15 +21,25 @@ final class TransactionContext extends SpanContext
     private $parentSampled;
 
     /**
+     * @var TransactionMetadata The transaction metadata
+     */
+    private $metadata;
+
+    /**
      * Constructor.
      *
-     * @param string    $name          The name of the transaction
-     * @param bool|null $parentSampled The parent's sampling decision
+     * @param string                   $name          The name of the transaction
+     * @param bool|null                $parentSampled The parent's sampling decision
+     * @param TransactionMetadata|null $metadata      The transaction metadata
      */
-    public function __construct(string $name = self::DEFAULT_NAME, ?bool $parentSampled = null)
-    {
+    public function __construct(
+        string $name = self::DEFAULT_NAME,
+        ?bool $parentSampled = null,
+        ?TransactionMetadata $metadata = null
+    ) {
         $this->name = $name;
         $this->parentSampled = $parentSampled;
+        $this->metadata = $metadata ?? new TransactionMetadata();
     }
 
     /**
@@ -66,6 +76,24 @@ final class TransactionContext extends SpanContext
     public function setParentSampled(?bool $parentSampled): void
     {
         $this->parentSampled = $parentSampled;
+    }
+
+    /**
+     * Gets the transaction metadata.
+     */
+    public function getMetadata(): TransactionMetadata
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * Sets the transaction metadata.
+     *
+     * @param TransactionMetadata $metadata The transaction metadata
+     */
+    public function setMetadata(TransactionMetadata $metadata): void
+    {
+        $this->metadata = $metadata;
     }
 
     /**

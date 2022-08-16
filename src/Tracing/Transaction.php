@@ -25,6 +25,11 @@ final class Transaction extends Span
     private $name;
 
     /**
+     * @var TransactionMetadata
+     */
+    protected $metadata;
+
+    /**
      * Span constructor.
      *
      * @param TransactionContext $context The context to create the transaction with
@@ -38,6 +43,7 @@ final class Transaction extends Span
 
         $this->hub = $hub ?? SentrySdk::getCurrentHub();
         $this->name = $context->getName();
+        $this->metadata = $context->getMetadata();
         $this->transaction = $this;
     }
 
@@ -57,6 +63,14 @@ final class Transaction extends Span
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    /**
+     * Gets the transaction metadata.
+     */
+    public function getMetadata(): TransactionMetadata
+    {
+        return $this->metadata;
     }
 
     /**
