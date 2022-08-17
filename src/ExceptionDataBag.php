@@ -13,7 +13,7 @@ namespace Sentry;
 final class ExceptionDataBag
 {
     /**
-     * @var class-string<\Throwable> The type of exception, e.g. RuntimeException
+     * @var string The type of exception, e.g. RuntimeException
      */
     private $type;
 
@@ -42,8 +42,6 @@ final class ExceptionDataBag
 
     /**
      * Gets the type of exception, e.g. RuntimeException.
-     *
-     * @return class-string<\Throwable>
      */
     public function getType(): string
     {
