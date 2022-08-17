@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\Util\SentryUid;
+
 /**
  * This class represents an trace ID.
  */
@@ -33,7 +35,7 @@ final class TraceId implements \Stringable
      */
     public static function generate(): self
     {
-        return new self(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)));
+        return new self(SentryUid::generate());
     }
 
     public function __toString(): string
