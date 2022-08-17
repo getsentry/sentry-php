@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add setter for type on the `ExceptionDataBag` (#1347)
 - Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
 
 ## 3.7.0 (2022-07-18)
