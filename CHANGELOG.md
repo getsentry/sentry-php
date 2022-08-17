@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
+- Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
 
 ## 3.7.0 (2022-07-18)
 
