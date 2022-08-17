@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add setter for type on the `ExceptionDataBag`
+- Add setter for type on the `ExceptionDataBag` (#1347)
 
 ## 3.7.0 (2022-07-18)
 
