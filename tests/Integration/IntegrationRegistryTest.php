@@ -67,6 +67,7 @@ final class IntegrationRegistryTest extends TestCase
 
         yield 'No default integrations and no user integrations' => [
             new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => false,
             ]),
             [],
@@ -75,6 +76,7 @@ final class IntegrationRegistryTest extends TestCase
 
         yield 'Default integrations and no user integrations' => [
             new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
             ]),
             [
@@ -117,6 +119,7 @@ final class IntegrationRegistryTest extends TestCase
 
         yield 'Default integrations and some user integrations' => [
             new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => [
                     $integration1,
@@ -149,6 +152,7 @@ final class IntegrationRegistryTest extends TestCase
 
         yield 'Default integrations and some user integrations, one of which is also a default integration' => [
             new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => [
                     new TransactionIntegration(),
@@ -206,6 +210,7 @@ final class IntegrationRegistryTest extends TestCase
 
         yield 'Default integrations and a callable as user integrations' => [
             new Options([
+                'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => static function (array $defaultIntegrations): array {
                     return $defaultIntegrations;
@@ -224,6 +229,28 @@ final class IntegrationRegistryTest extends TestCase
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
                 ErrorListenerIntegration::class => new ErrorListenerIntegration(),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
+                RequestIntegration::class => new RequestIntegration(),
+                TransactionIntegration::class => new TransactionIntegration(),
+                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
+                EnvironmentIntegration::class => new EnvironmentIntegration(),
+            ],
+        ];
+
+        yield 'Default integrations with DSN set to null' => [
+            new Options([
+                'dsn' => null,
+                'default_integrations' => true,
+                'integrations' => static function (array $defaultIntegrations): array {
+                    return $defaultIntegrations;
+                },
+            ]),
+            [
+                'The "Sentry\\Integration\\RequestIntegration" integration has been installed.',
+                'The "Sentry\\Integration\\TransactionIntegration" integration has been installed.',
+                'The "Sentry\\Integration\\FrameContextifierIntegration" integration has been installed.',
+                'The "Sentry\\Integration\\EnvironmentIntegration" integration has been installed.',
+            ],
+            [
                 RequestIntegration::class => new RequestIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),

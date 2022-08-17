@@ -126,6 +126,20 @@ final class IntegrationRegistry
             return [];
         }
 
+        /**
+         * If the DSN is null, we do not want to register any eror handler.
+         * Hence, we do not setup the ExceptionListenerIntegration, ErrorListenerIntegration and
+         * FatalErrorListenerIntegration in this case.
+         */
+        if (null === $options->getDsn()) {
+            return [
+                new RequestIntegration(),
+                new TransactionIntegration(),
+                new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
+            ];
+        }
+
         return [
             new ExceptionListenerIntegration(),
             new ErrorListenerIntegration(),

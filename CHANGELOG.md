@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Do not setup any error handlers if the DSN is null (#1349)
+- Add setter for type on the `ExceptionDataBag` (#1347)
+- Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
+
 ## 3.7.0 (2022-07-18)
 
 - Fix `Scope::getTransaction()` so that it returns also unsampled transactions (#1334)

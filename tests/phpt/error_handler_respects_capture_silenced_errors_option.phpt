@@ -47,9 +47,10 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-$client = ClientBuilder::create(['capture_silenced_errors' => true])
-    ->setTransportFactory($transportFactory)
-    ->getClient();
+$client = ClientBuilder::create([
+    'dsn' => 'http://public@example.com/sentry/1',
+    'capture_silenced_errors' => true
+])->setTransportFactory($transportFactory)->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);
 
