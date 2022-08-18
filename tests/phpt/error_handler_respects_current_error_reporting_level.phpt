@@ -46,7 +46,7 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-$client = ClientBuilder::create([
+$options = [
     'dsn' => 'http://public@example.com/sentry/1',
     'error_types' => null,
     'before_send' => static function () {
@@ -54,7 +54,11 @@ $client = ClientBuilder::create([
 
         return null;
     },
-])->setTransportFactory($transportFactory)->getClient();
+];
+
+$client = ClientBuilder::create($options)
+    ->setTransportFactory($transportFactory)
+    ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);
 

@@ -47,10 +47,14 @@ $transportFactory = new class implements TransportFactoryInterface {
 
 error_reporting(E_ALL & ~E_USER_NOTICE & ~E_USER_WARNING & ~E_USER_ERROR);
 
-$client = ClientBuilder::create([
+$options = [
     'dsn' => 'http://public@example.com/sentry/1',
     'error_types' => E_ALL & ~E_USER_WARNING,
-])->setTransportFactory($transportFactory)->getClient();
+];
+
+$client = ClientBuilder::create($options)
+    ->setTransportFactory($transportFactory)
+    ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);
 
