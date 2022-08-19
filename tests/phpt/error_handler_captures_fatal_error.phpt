@@ -46,7 +46,11 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-$client = ClientBuilder::create([])
+$options = [
+    'dsn' => 'http://public@example.com/sentry/1',
+];
+
+$client = ClientBuilder::create($options)
     ->setTransportFactory($transportFactory)
     ->getClient();
 

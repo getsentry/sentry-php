@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Do not setup any error handlers if the DSN is null (#1349)
 - Add setter for type on the `ExceptionDataBag` (#1347)
 - Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
 
