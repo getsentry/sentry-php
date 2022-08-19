@@ -146,6 +146,14 @@ final class Event
     private $stacktrace;
 
     /**
+     * A place to stash data which is needed at some point in the SDK's
+     * event processing pipeline but which shouldn't get sent to Sentry.
+     *
+     * @var array<string, mixed>
+     */
+    private $sdkMetadata = [];
+
+    /**
      * @var string The Sentry SDK identifier
      */
     private $sdkIdentifier = Client::SDK_IDENTIFIER;
@@ -671,6 +679,31 @@ final class Event
     public function getType(): EventType
     {
         return $this->type;
+    }
+
+    /**
+     * Sets the SDK metadata with the given name.
+     *
+     * @param string $name The name that uniquely identifies the SDK metadata
+     * @param mixed  $data The data of the SDK metadata
+     */
+    public function setSdkMetadata(string $name, $data): void
+    {
+        $this->sdkMetadata[$name] = $data;
+    }
+
+    /**
+     * Gets the SDK metadata.
+     *
+     * @return mixed
+     */
+    public function getSdkMetadata(?string $name = null)
+    {
+        if (null !== $name) {
+            return $this->sdkMetadata[$name] ?? null;
+        }
+
+        return $this->sdkMetadata;
     }
 
     /**

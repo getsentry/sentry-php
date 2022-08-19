@@ -16,19 +16,21 @@ final class UserDataBagTest extends TestCase
         $userDataBag->setIpAddress('127.0.0.1');
         $userDataBag->setEmail('foo@example.com');
         $userDataBag->setUsername('my_user');
+        $userDataBag->setSegment('my_segment');
         $userDataBag->setMetadata('subscription', 'basic');
 
         $this->assertSame('unique_id', $userDataBag->getId());
         $this->assertSame('127.0.0.1', $userDataBag->getIpAddress());
         $this->assertSame('foo@example.com', $userDataBag->getEmail());
         $this->assertSame('my_user', $userDataBag->getUsername());
+        $this->assertSame('my_segment', $userDataBag->getSegment());
         $this->assertSame(['subscription' => 'basic'], $userDataBag->getMetadata());
     }
 
     /**
      * @dataProvider createFromArrayDataProvider
      */
-    public function testCreateFromArray(array $data, $expectedId, ?string $expectedIpAddress, ?string $expectedEmail, ?string $expectedUsername, array $expectedMetadata): void
+    public function testCreateFromArray(array $data, $expectedId, ?string $expectedIpAddress, ?string $expectedEmail, ?string $expectedUsername, ?string $expectedSegment, array $expectedMetadata): void
     {
         $userDataBag = UserDataBag::createFromArray($data);
 
@@ -36,6 +38,7 @@ final class UserDataBagTest extends TestCase
         $this->assertSame($expectedIpAddress, $userDataBag->getIpAddress());
         $this->assertSame($expectedEmail, $userDataBag->getEmail());
         $this->assertSame($expectedUsername, $userDataBag->getUsername());
+        $this->assertSame($expectedSegment, $userDataBag->getSegment());
         $this->assertSame($expectedMetadata, $userDataBag->getMetadata());
     }
 
@@ -44,6 +47,7 @@ final class UserDataBagTest extends TestCase
         yield [
             ['id' => 1234],
             1234,
+            null,
             null,
             null,
             null,
@@ -56,6 +60,7 @@ final class UserDataBagTest extends TestCase
             null,
             null,
             null,
+            null,
             [],
         ];
 
@@ -63,6 +68,7 @@ final class UserDataBagTest extends TestCase
             ['ip_address' => '127.0.0.1'],
             null,
             '127.0.0.1',
+            null,
             null,
             null,
             [],
@@ -74,6 +80,7 @@ final class UserDataBagTest extends TestCase
             null,
             'foo@example.com',
             null,
+            null,
             [],
         ];
 
@@ -83,11 +90,23 @@ final class UserDataBagTest extends TestCase
             null,
             null,
             'my_user',
+            null,
+            [],
+        ];
+
+        yield [
+            ['segment' => 'my_segment'],
+            null,
+            null,
+            null,
+            null,
+            'my_segment',
             [],
         ];
 
         yield [
             ['subscription' => 'basic'],
+            null,
             null,
             null,
             null,
@@ -176,6 +195,7 @@ final class UserDataBagTest extends TestCase
         $userDataBagToMergeWith = UserDataBag::createFromUserIpAddress('127.0.0.1');
         $userDataBagToMergeWith->setEmail('foo@example.com');
         $userDataBagToMergeWith->setUsername('my_user');
+        $userDataBagToMergeWith->setSegment('my_segment');
         $userDataBagToMergeWith->setMetadata('subscription', 'lifetime');
         $userDataBagToMergeWith->setMetadata('subscription_expires_at', '2020-08-20');
 
@@ -185,6 +205,7 @@ final class UserDataBagTest extends TestCase
         $this->assertSame('127.0.0.1', $userDataBag->getIpAddress());
         $this->assertSame('foo@example.com', $userDataBag->getEmail());
         $this->assertSame('my_user', $userDataBag->getUsername());
+        $this->assertSame('my_segment', $userDataBag->getSegment());
         $this->assertSame(['subscription' => 'lifetime', 'subscription_expires_at' => '2020-08-20'], $userDataBag->getMetadata());
     }
 }

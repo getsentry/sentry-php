@@ -47,7 +47,12 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-$client = ClientBuilder::create(['capture_silenced_errors' => true])
+$options = [
+    'dsn' => 'http://public@example.com/sentry/1',
+    'capture_silenced_errors' => true
+];
+
+$client = ClientBuilder::create($options)
     ->setTransportFactory($transportFactory)
     ->getClient();
 

@@ -176,6 +176,14 @@ final class Scope
     }
 
     /**
+     * Get the user context.
+     */
+    public function getUser(): ?UserDataBag
+    {
+        return $this->user;
+    }
+
+    /**
      * Merges the given data in the user context.
      *
      * @param array<string, mixed>|UserDataBag $user The user data

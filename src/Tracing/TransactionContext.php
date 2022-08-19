@@ -102,6 +102,8 @@ final class TransactionContext extends SpanContext
      * @param string $header The sentry-trace header from the request
      *
      * @return self
+     *
+     * @deprecated since version 3.9, to be removed in 4.0
      */
     public static function fromSentryTrace(string $header)
     {
@@ -121,6 +123,59 @@ final class TransactionContext extends SpanContext
 
         if (isset($matches['sampled'])) {
             $context->parentSampled = '1' === $matches['sampled'];
+        }
+
+        return $context;
+    }
+
+    /**
+     * Returns a context populated with the data of the given headers.
+     *
+     * @param string $sentryTraceHeader The sentry-trace header from an incoming request
+     * @param string $baggageHeader     The baggage header from an incoming request
+     *
+     * @return self
+     */
+    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader)
+    {
+        $context = new self();
+
+        $hasSentryTrace = false;
+
+        if (preg_match(self::TRACEPARENT_HEADER_REGEX, $sentryTraceHeader, $matches)) {
+            if (!empty($matches['trace_id'])) {
+                $context->traceId = new TraceId($matches['trace_id']);
+                $hasSentryTrace = true;
+            }
+
+            if (!empty($matches['span_id'])) {
+                $context->parentSpanId = new SpanId($matches['span_id']);
+                $hasSentryTrace = true;
+            }
+
+            if (isset($matches['sampled'])) {
+                $context->parentSampled = '1' === $matches['sampled'];
+                $hasSentryTrace = true;
+            }
+        }
+
+        $dsc = DynamicSamplingContext::fromHeader($baggageHeader);
+
+        if (true === $hasSentryTrace && false === $dsc->hasEntries()) {
+            /**
+             * The request comes from an old SDK which does not support Dynamic Sampling.
+             * Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
+             */
+            $dsc->freeze();
+            $context->getMetadata()->setDynamicSamplingContext($dsc);
+        }
+
+        if (true === $hasSentryTrace && true === $dsc->hasEntries()) {
+            /**
+             * The baggage header contains Dynamic Sampling Context data from an upstream SDK.
+             * Propagate this Dynamic Sampling Context.
+             */
+            $context->getMetadata()->setDynamicSamplingContext($dsc);
         }
 
         return $context;

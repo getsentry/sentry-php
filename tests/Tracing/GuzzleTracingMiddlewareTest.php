@@ -61,7 +61,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(2))
+        $client->expects($this->exactly(3))
             ->method('getOptions')
             ->willReturn(new Options(['traces_sample_rate' => 1]));
 
@@ -106,6 +106,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $middleware = GuzzleTracingMiddleware::trace($hub);
         $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
             $this->assertNotEmpty($request->getHeader('sentry-trace'));
+            $this->assertNotEmpty($request->getHeader('baggage'));
             if ($expectedPromiseResult instanceof \Throwable) {
                 return new RejectedPromise($expectedPromiseResult);
             }

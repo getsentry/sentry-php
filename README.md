@@ -6,12 +6,12 @@
 
 _Bad software is everywhere, and we're tired of it. Sentry is on a mission to help developers write better software faster, so we can get back to enjoying technology. If you want to join us [<kbd>**Check out our open positions**</kbd>](https://sentry.io/careers/)_
 
-# Sentry SDK for PHP
+# Official Sentry SDK for PHP
 
-[![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
-[![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
 [![License](https://poser.pugx.org/sentry/sentry/license)](https://packagist.org/packages/sentry/sentry)
+[![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
+[![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/cWnMQeA)
 
 | Version | Build Status | Code Coverage |
@@ -23,7 +23,9 @@ The Sentry PHP error reporter tracks errors and exceptions that happen during th
 execution of your application and provides instant notification with detailed
 information needed to prioritize, identify, reproduce and fix each issue.
 
-## Install
+## Getting started
+
+### Install
 
 To install the SDK you will need to be using [Composer]([https://getcomposer.org/)
 in your project. To install it please see the [docs](https://getcomposer.org/download/).
@@ -54,11 +56,15 @@ you want to use because it's an implementation detail of your application. You m
 use any package that provides [`php-http/async-client-implementation`](https://packagist.org/providers/php-http/async-client-implementation)
 and [`http-message-implementation`](https://packagist.org/providers/psr/http-message-implementation).
 
-## Usage
+### Configuration
 
 ```php
 \Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+```
 
+### Usage
+
+```php
 try {
     thisFunctionThrows(); // -> throw new \Exception('foo bar');
 } catch (\Exception $exception) {
@@ -66,14 +72,14 @@ try {
 }
 ```
 
-### Official integrations
+## Official integrations
 
 The following integrations are fully supported and maintained by the Sentry team.
 
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
 
-### 3rd party integrations
+## 3rd party integrations
 
 The following integrations are available and maintained by members of the Sentry community.
 
@@ -86,14 +92,14 @@ The following integrations are available and maintained by members of the Sentry
 - [CakePHP](https://github.com/Connehito/cake-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
-### 3rd party integrations using old SDK 2.x
+## 3rd party integrations using old SDK 2.x
 
 - [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client)
 - [CakePHP](https://github.com/Connehito/cake-sentry/tree/3.x)
 
-### 3rd party integrations using old SDK 1.x
+## 3rd party integrations using old SDK 1.x
 
 - [Neos CMS](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
@@ -105,19 +111,24 @@ The following integrations are available and maintained by members of the Sentry
 - [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
 - [Code](http://github.com/getsentry/sentry-php)
 
-## Contributing
+## Contributing to the SDK
 
-Dependencies are managed through `composer`:
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
-```
-$ composer install
-```
+## Getting help/support
 
-Tests can then be run via phpunit:
+If you need help setting up or configuring the PHP SDK (or anything else in the Sentry universe) please head over to the [Sentry Community on Discord](https://discord.com/invite/Ww9hbqr). There is a ton of great people in our Discord community ready to help you!
 
-```
-$ vendor/bin/phpunit
-```
+## Resources
+
+- [![Documentation](https://img.shields.io/badge/documentation-sentry.io-green.svg)](https://docs.sentry.io/quickstart/)
+- [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/Ww9hbqr)
+- [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-sentry-green.svg)](http://stackoverflow.com/questions/tagged/sentry)
+- [![Twitter Follow](https://img.shields.io/twitter/follow/getsentry?label=getsentry&style=social)](https://twitter.com/intent/follow?screen_name=getsentry)
+
+## License
+
+Licensed under the BSD license, see [`LICENSE`](LICENSE)
 
 [master Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster
 [master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master

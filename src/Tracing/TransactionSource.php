@@ -6,6 +6,8 @@ namespace Sentry\Tracing;
 
 /**
  * This enum represents all the possible types of transaction sources.
+ *
+ * @see https://develop.sentry.dev/sdk/event-payloads/transaction/#transaction-annotations
  */
 final class TransactionSource implements \Stringable
 {
@@ -35,9 +37,9 @@ final class TransactionSource implements \Stringable
     /**
      * Raw URL, potentially containing identifiers.
      */
-    public static function raw(): self
+    public static function url(): self
     {
-        return self::getInstance('raw');
+        return self::getInstance('url');
     }
 
     /**

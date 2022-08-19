@@ -74,6 +74,21 @@ final class Transaction extends Span
     }
 
     /**
+     * Gets the transaction dynamic sampling context.
+     */
+    public function getDynamicSamplingContext(): DynamicSamplingContext
+    {
+        if (null !== $this->getMetadata()->getDynamicSamplingContext()) {
+            return $this->getMetadata()->getDynamicSamplingContext();
+        }
+
+        $dsc = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $this->getMetadata()->setDynamicSamplingContext($dsc);
+
+        return $dsc;
+    }
+
+    /**
      * Attaches a {@see SpanRecorder} to the transaction itself.
      *
      * @param int $maxSpans The maximum number of spans that can be recorded
@@ -120,6 +135,8 @@ final class Transaction extends Span
         $event->setTags($this->tags);
         $event->setTransaction($this->name);
         $event->setContext('trace', $this->getTraceContext());
+        $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
+        $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
         return $this->hub->captureEvent($event);
     }

@@ -57,11 +57,6 @@ class SpanContext
     private $data = [];
 
     /**
-     * @var Baggage|null
-     */
-    private $baggage;
-
-    /**
      * @var float|null Timestamp in seconds (epoch time) indicating when the span started
      */
     private $startTimestamp;
@@ -171,26 +166,6 @@ class SpanContext
     public function setData(array $data): void
     {
         $this->data = $data;
-    }
-
-    /**
-     * Get the baggage for dynamic sampling and trace propagation.
-     *
-     * @return Baggage|null
-     */
-    public function getBaggage(): ?Baggage
-    {
-        return $this->baggage;
-    }
-
-    /**
-     * Set the baggage for dynamic sampling and trace propagation.
-     *
-     * @param Baggage|null $baggage
-     */
-    public function setBaggage(?Baggage $baggage): void
-    {
-        $this->baggage = $baggage;
     }
 
     public function getStartTimestamp(): ?float

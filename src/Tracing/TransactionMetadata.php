@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tracing;
 
 final class TransactionMetadata
@@ -10,24 +12,31 @@ final class TransactionMetadata
     private $samplingRate;
 
     /**
-     * @var TransactionSamplingMethod|null
+     * @var DynamicSamplingContext|null
      */
-    private $samplingMethod;
-
-    /**
-     * @var Baggage|null
-     */
-    private $baggage;
-
-    /**
-     * @var string|null
-     */
-    private $requestPath;
+    private $dynamicSamplingContext;
 
     /**
      * @var TransactionSource|null
      */
     private $source;
+
+    /**
+     * Constructor.
+     *
+     * @param float|int|null              $samplingRate           The sampling rate
+     * @param DynamicSamplingContext|null $dynamicSamplingContext The Dynamic Sampling Context
+     * @param TransactionSource|null      $source                 The transaction source
+     */
+    public function __construct(
+        $samplingRate = null,
+        ?DynamicSamplingContext $dynamicSamplingContext = null,
+        ?TransactionSource $source = null
+    ) {
+        $this->samplingRate = $samplingRate;
+        $this->dynamicSamplingContext = $dynamicSamplingContext;
+        $this->source = $source ?? TransactionSource::custom();
+    }
 
     /**
      * @return float|int|null
@@ -45,65 +54,21 @@ final class TransactionMetadata
         $this->samplingRate = $samplingRate;
     }
 
-    /**
-     * @return TransactionSamplingMethod|null
-     */
-    public function getSamplingMethod(): ?TransactionSamplingMethod
+    public function getDynamicSamplingContext(): ?DynamicSamplingContext
     {
-        return $this->samplingMethod;
+        return $this->dynamicSamplingContext;
     }
 
-    /**
-     * @param TransactionSamplingMethod|null $samplingMethod
-     */
-    public function setSamplingMethod(?TransactionSamplingMethod $samplingMethod): void
+    public function setDynamicSamplingContext(?DynamicSamplingContext $dynamicSamplingContext): void
     {
-        $this->samplingMethod = $samplingMethod;
+        $this->dynamicSamplingContext = $dynamicSamplingContext;
     }
 
-    /**
-     * @return Baggage|null
-     */
-    public function getBaggage(): ?Baggage
-    {
-        return $this->baggage;
-    }
-
-    /**
-     * @param Baggage|null $baggage
-     */
-    public function setBaggage(?Baggage $baggage): void
-    {
-        $this->baggage = $baggage;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getRequestPath(): ?string
-    {
-        return $this->requestPath;
-    }
-
-    /**
-     * @param string|null $requestPath
-     */
-    public function setRequestPath(?string $requestPath): void
-    {
-        $this->requestPath = $requestPath;
-    }
-
-    /**
-     * @return TransactionSource|null
-     */
     public function getSource(): ?TransactionSource
     {
         return $this->source;
     }
 
-    /**
-     * @param TransactionSource|null $source
-     */
     public function setSource(?TransactionSource $source): void
     {
         $this->source = $source;
