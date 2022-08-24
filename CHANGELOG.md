@@ -2,8 +2,24 @@
 
 ## Unreleased
 
-- Add support for `monolog/monolog:^3.0` (#1321)
 - Add `Sentry\Monolog\BreadcrumbHandler`, a Monolog handler to allow registration of logs as breadcrumbs (#1199)
+- Do not setup any error handlers if the DSN is null (#1349)
+- Add setter for type on the `ExceptionDataBag` (#1347)
+- Drop symfony/polyfill-uuid in favour of a standalone implementation (#1346)
+
+## 3.7.0 (2022-07-18)
+
+- Fix `Scope::getTransaction()` so that it returns also unsampled transactions (#1334)
+- Set the event extras by taking the data from the Monolog record's extra (#1330)
+
+## 3.6.1 (2022-06-27)
+
+- Set the `sentry-trace` header when using the tracing middleware (#1331)
+
+## 3.6.0 (2022-06-10)
+
+- Add support for `monolog/monolog:^3.0` (#1321)
+- Add `setTag` and `removeTag` public methods to `Event` for easier manipulation of tags (#1324)
 
 ## 3.5.0 (2022-05-19)
 

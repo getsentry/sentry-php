@@ -104,7 +104,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $hub->setSpan($transaction);
 
         $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(static function () use ($expectedPromiseResult): PromiseInterface {
+        $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
+            $this->assertNotEmpty($request->getHeader('sentry-trace'));
             if ($expectedPromiseResult instanceof \Throwable) {
                 return new RejectedPromise($expectedPromiseResult);
             }

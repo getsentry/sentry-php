@@ -490,6 +490,27 @@ final class Event
     }
 
     /**
+     * Sets or updates a tag in this event.
+     *
+     * @param string $key   The key that uniquely identifies the tag
+     * @param string $value The value
+     */
+    public function setTag(string $key, string $value): void
+    {
+        $this->tags[$key] = $value;
+    }
+
+    /**
+     * Removes a given tag from the event.
+     *
+     * @param string $key The key that uniquely identifies the tag
+     */
+    public function removeTag(string $key): void
+    {
+        unset($this->tags[$key]);
+    }
+
+    /**
      * Gets the user context.
      */
     public function getUser(): ?UserDataBag

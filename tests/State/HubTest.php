@@ -731,4 +731,51 @@ final class HubTest extends TestCase
         $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
     }
+
+    public function testGetTransactionReturnsInstanceSetOnTheScopeIfTransactionIsNotSampled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, false));
+
+        $hub->configureScope(static function (Scope $scope) use ($transaction): void {
+            $scope->setSpan($transaction);
+        });
+
+        $this->assertSame($transaction, $hub->getTransaction());
+    }
+
+    public function testGetTransactionReturnsInstanceSetOnTheScopeIfTransactionIsSampled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, true));
+
+        $hub->configureScope(static function (Scope $scope) use ($transaction): void {
+            $scope->setSpan($transaction);
+        });
+
+        $this->assertSame($transaction, $hub->getTransaction());
+    }
+
+    public function testGetTransactionReturnsNullIfNoTransactionIsSetOnTheScope(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
+        $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, true));
+
+        $this->assertNull($hub->getTransaction());
+    }
 }

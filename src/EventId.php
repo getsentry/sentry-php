@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Util\SentryUid;
+
 /**
  * This class represents an event ID.
  *
@@ -32,10 +34,12 @@ final class EventId implements \Stringable
 
     /**
      * Generates a new event ID.
+     *
+     * @copyright Matt Farina MIT License https://github.com/lootils/uuid/blob/master/LICENSE
      */
     public static function generate(): self
     {
-        return new self(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)));
+        return new self(SentryUid::generate());
     }
 
     public function __toString(): string
