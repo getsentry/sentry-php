@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.23.0@f1fe6ff483bf325c803df9f510d09a03fd796f88">
+<files psalm-version="4.26.0@6998fabb2bf528b65777bf9941920888d23c03ac">
   <file src="src/Dsn.php">
     <PossiblyUndefinedArrayOffset occurrences="4">
       <code>$parsedDsn['host']</code>
@@ -21,6 +21,21 @@
       <code>$userIntegration</code>
       <code>$userIntegrations</code>
     </PossiblyInvalidArgument>
+  </file>
+  <file src="src/Monolog/BreadcrumbHandler.php">
+    <PossiblyInvalidArgument occurrences="4">
+      <code>$record['channel']</code>
+      <code>$record['level']</code>
+      <code>$record['level']</code>
+      <code>$record['message']</code>
+    </PossiblyInvalidArgument>
+    <PossiblyInvalidMethodCall occurrences="1">
+      <code>getTimestamp</code>
+    </PossiblyInvalidMethodCall>
+    <UndefinedDocblockClass occurrences="2">
+      <code>Level|int</code>
+      <code>int|string|Level|LogLevel::*</code>
+    </UndefinedDocblockClass>
   </file>
   <file src="src/Monolog/CompatibilityProcessingHandlerTrait.php">
     <DuplicateClass occurrences="1">
@@ -79,33 +94,5 @@
       <code>captureMessage</code>
       <code>startTransaction</code>
     </TooManyArguments>
-  </file>
-  <file src="vendor/monolog/monolog/src/Monolog/Level.php">
-    <ParseError occurrences="12">
-      <code>$name</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>,</code>
-      <code>Level</code>
-      <code>case</code>
-    </ParseError>
-  </file>
-  <file src="vendor/monolog/monolog/src/Monolog/LogRecord.php">
-    <ParseError occurrences="1">
-      <code>\DateTimeImmutable</code>
-    </ParseError>
-  </file>
-  <file src="vendor/monolog/monolog/src/Monolog/Utils.php">
-    <ParseError occurrences="3">
-      <code>:</code>
-      <code>=&gt;</code>
-      <code>}</code>
-    </ParseError>
   </file>
 </files>
