@@ -96,6 +96,11 @@ parameters:
 			path: src/Integration/RequestIntegration.php
 
 		-
+			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getBeforeBreadcrumbCallback\\(\\) should return callable\\(Sentry\\\\Breadcrumb\\)\\: Sentry\\\\Breadcrumb\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
