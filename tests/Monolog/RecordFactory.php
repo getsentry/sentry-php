@@ -40,6 +40,7 @@ final class RecordFactory
             'level_name' => Logger::getLevelName($level),
             'channel' => $channel,
             'extra' => $extra,
+            'datetime' => new \DateTimeImmutable(),
         ];
     }
 }
