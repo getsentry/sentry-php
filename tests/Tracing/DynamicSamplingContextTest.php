@@ -103,8 +103,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('public', $dsc->get('public_key'));
         $this->assertSame('1.0.0', $dsc->get('release'));
         $this->assertSame('test', $dsc->get('environment'));
-        // @FIXME-michi Mock the scope
-        // $this->assertSame('my_segment', $dsc->get('user_segment'));
+        $this->assertSame('my_segment', $dsc->get('user_segment'));
         $this->assertTrue($dsc->isFrozen());
     }
 
