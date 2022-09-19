@@ -28,13 +28,9 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out
-            if (null === $integration || null === $client) {
-                return;
-            }
+            if (is_null( $integration) || is_null($client)) return;
 
-            if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
-                return;
-            }
+            if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) return;
 
             $integration->captureException($currentHub, $exception);
         });
