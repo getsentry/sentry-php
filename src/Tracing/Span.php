@@ -452,8 +452,8 @@ class Span
     {
         $transaction = $this->getTransaction();
 
-        if (null !== $transaction && null !== $transaction->getMetaData()) {
-            return (string) $transaction->getMetaData()->getDynamicSamplingContext();
+        if (null !== $transaction) {
+            return (string) $transaction->getDynamicSamplingContext();
         }
 
         return '';

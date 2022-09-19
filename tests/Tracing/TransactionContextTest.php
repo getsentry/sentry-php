@@ -161,7 +161,7 @@ final class TransactionContextTest extends TestCase
 
         yield [
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
-            'sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1',
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
             new SpanId('566e3688a61d4bc8'),
             new TraceId('566e3688a61d4bc888951642d6f14a19'),
             true,
