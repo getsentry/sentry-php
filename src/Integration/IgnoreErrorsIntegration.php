@@ -81,11 +81,7 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
      */
     private function shouldDropEvent(Event $event, array $options): bool
     {
-        if ($this->isIgnoredException($event, $options)) {
-            return true;
-        }
-
-        if ($this->isIgnoredTag($event, $options)) {
+        if ($this->isIgnoredException($event, $options) || $this->isIgnoredTag($event, $options)) {
             return true;
         }
 
