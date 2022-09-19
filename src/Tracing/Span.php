@@ -450,6 +450,12 @@ class Span
      */
     public function toBaggage(): string
     {
-        return (string) $this->getTransaction()->getMetaData()->getDynamicSamplingContext();
+        $transaction = $this->getTransaction();
+
+        if (null !== $transaction && null !== $transaction->getMetaData()) {
+            return (string) $transaction->getMetaData()->getDynamicSamplingContext();
+        }
+
+        return '';
     }
 }

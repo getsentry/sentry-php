@@ -27,7 +27,7 @@ final class Transaction extends Span
     /**
      * @var TransactionMetadata
      */
-    protected $metadata;
+    private $metadata;
 
     /**
      * Span constructor.

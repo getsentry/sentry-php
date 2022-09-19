@@ -158,16 +158,18 @@ final class DynamicSamplingContext
         $dsc->set('sample_rate', (string) $transaction->getMetaData()->getSamplingRate());
         $dsc->set('transaction', $transaction->getName());
 
-        $options = $hub->getClient()->getOptions();
+        $client = $hub->getClient();
 
-        if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
-            $dsc->set('public_key', $options->getDsn()->getPublicKey());
-        }
-        if (null !== $options->getRelease()) {
-            $dsc->set('release', $options->getRelease());
-        }
-        if (null !== $options->getEnvironment()) {
-            $dsc->set('environment', $options->getEnvironment());
+        if (null !== $client && null !== $options = $client->getOptions()) {
+            if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
+                $dsc->set('public_key', $options->getDsn()->getPublicKey());
+            }
+            if (null !== $options->getRelease()) {
+                $dsc->set('release', $options->getRelease());
+            }
+            if (null !== $options->getEnvironment()) {
+                $dsc->set('environment', $options->getEnvironment());
+            }
         }
 
         $hub->configureScope(function (Scope $scope) use ($dsc) {

@@ -10,7 +10,9 @@ use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\Frame;
 use Sentry\Options;
+use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\TransactionMetadata;
 use Sentry\Util\JSON;
 
 /**
@@ -172,7 +174,11 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (EventType::transaction() === $event->getType()) {
             $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
-            $result['transaction_info']['source'] = (string) $event->getSdkMetadata('transaction_metadata')->getSource();
+
+            $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
+            if ($transactionMetadata instanceof TransactionMetadata) {
+                $result['transaction_info']['source'] = (string) $transactionMetadata->getSource();
+            }
         }
 
         $stacktrace = $event->getStacktrace();
@@ -201,9 +207,13 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'dsn' => (string) $this->options->getDsn(),
         ];
 
-        $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context')->getEntries();
-        if (!empty($dynamicSamplingContext)) {
-            $envelopeHeader['trace'] = $dynamicSamplingContext;
+        $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+        if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+            $entries = $dynamicSamplingContext->getEntries();
+
+            if (!empty($entries)) {
+                $envelopeHeader['trace'] = $entries;
+            }
         }
 
         $itemHeader = [
