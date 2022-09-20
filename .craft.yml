@@ -7,7 +7,6 @@ statusProvider:
   name: github
 artifactProvider:
   name: none
-preReleaseCommand: ""
 targets:
   - name: github
   - name: registry
