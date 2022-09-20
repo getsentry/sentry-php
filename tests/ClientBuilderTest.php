@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
@@ -38,14 +37,13 @@ final class ClientBuilderTest extends TestCase
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
     {
         $callbackCalled = false;
-        $expectedVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
 
         $options = new Options();
-        $options->setBeforeSendCallback(function (Event $event) use ($expectedVersion, &$callbackCalled) {
+        $options->setBeforeSendCallback(function (Event $event) use (&$callbackCalled) {
             $callbackCalled = true;
 
             $this->assertSame(Client::SDK_IDENTIFIER, $event->getSdkIdentifier());
-            $this->assertSame($expectedVersion, $event->getSdkVersion());
+            $this->assertSame(Client::SDK_VERSION, $event->getSdkVersion());
 
             return null;
         });

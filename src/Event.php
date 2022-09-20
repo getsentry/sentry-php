@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Jean85\PrettyVersions;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Tracing\Span;
@@ -153,7 +152,7 @@ final class Event
     /**
      * @var string The Sentry SDK version
      */
-    private $sdkVersion;
+    private $sdkVersion = Client::SDK_VERSION;
 
     /**
      * @var EventType The type of the Event
@@ -164,7 +163,6 @@ final class Event
     {
         $this->id = $eventId ?? EventId::generate();
         $this->timestamp = microtime(true);
-        $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
         $this->type = $eventType;
     }
 
