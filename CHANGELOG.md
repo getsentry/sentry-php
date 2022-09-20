@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make transaction context take priority over scope context in event payload.
+
 ## 3.8.0 (2022-09-05)
 
 - Add `Sentry\Monolog\BreadcrumbHandler`, a Monolog handler to allow registration of logs as breadcrumbs (#1199)
