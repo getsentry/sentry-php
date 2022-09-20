@@ -91,6 +91,11 @@ parameters:
 			path: src/Integration/IgnoreErrorsIntegration.php
 
 		-
+			message: "#^Method Sentry\\\\Integration\\\\RequestIntegration\\:\\:sanitizeHeaders\\(\\) should return array\\<string, array\\<string\\>\\> but returns array\\<int\\|string, array\\<string\\>\\>\\.$#"
+			count: 1
+			path: src/Integration/RequestIntegration.php
+
+		-
 			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/RequestIntegration.php
