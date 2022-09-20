@@ -169,13 +169,16 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
-     * @param array<string, string[]> $headers Array containing request headers
+     * @param array<array-key, string[]> $headers Array containing request headers
      *
      * @return array<string, string[]>
      */
     private function sanitizeHeaders(array $headers): array
     {
         foreach ($headers as $name => $values) {
+            // Cast the header name into a string, to avoid errors on numeric headers
+            $name = (string) $name;
+
             if (!\in_array(strtolower($name), $this->options['pii_sanitize_headers'], true)) {
                 continue;
             }

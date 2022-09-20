@@ -422,6 +422,22 @@ final class RequestIntegrationTest extends TestCase
             null,
             null,
         ];
+
+        yield [
+            [],
+            (new ServerRequest('GET', 'http://www.example.com/foo'))
+                ->withHeader('123', 'test'),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    '123' => ['test'],
+                ],
+            ],
+            null,
+            null,
+        ];
     }
 
     private function createRequestFetcher(ServerRequestInterface $request): RequestFetcherInterface
