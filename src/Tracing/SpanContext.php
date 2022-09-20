@@ -149,7 +149,7 @@ class SpanContext
      */
     public function setTags(array $tags): void
     {
-        $this->tags = $tags;
+        $this->tags = array_merge($this->tags, $tags);
     }
 
     /**
