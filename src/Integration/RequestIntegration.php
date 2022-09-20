@@ -169,7 +169,7 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Removes headers containing potential PII.
      *
-     * @param array<mixed, string[]> $headers Array containing request headers
+     * @param array<array-key, string[]> $headers Array containing request headers
      *
      * @return array<string, string[]>
      */
