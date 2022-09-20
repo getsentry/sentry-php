@@ -354,7 +354,7 @@ final class Scope
 
         // We do this here to also apply the trace context to errors if there is a Span on the Scope
         if (null !== $this->span) {
-            $event->setContext('trace', $this->span->getTraceContext());
+            $this->setContext('trace', $this->span->getTraceContext());
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
