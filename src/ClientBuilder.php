@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Http\Discovery\Psr17FactoryDiscovery;
-use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -59,7 +58,7 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * @var string The SDK version of the Client
      */
-    private $sdkVersion;
+    private $sdkVersion = Client::SDK_VERSION;
 
     /**
      * Class constructor.
@@ -69,7 +68,6 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(Options $options = null)
     {
         $this->options = $options ?? new Options();
-        $this->sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
     }
 
     /**

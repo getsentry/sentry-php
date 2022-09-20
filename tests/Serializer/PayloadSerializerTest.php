@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Serializer;
 
-use Jean85\PrettyVersions;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\Client;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
@@ -65,7 +65,7 @@ final class PayloadSerializerTest extends TestCase
     {
         ClockMock::withClockMock(1597790835);
 
-        $sdkVersion = PrettyVersions::getVersion('sentry/sentry')->getPrettyVersion();
+        $sdkVersion = Client::SDK_VERSION;
 
         yield [
             Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd')),

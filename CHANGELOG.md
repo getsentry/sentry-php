@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use constant for the SDK version (#1367)
+
 ## 3.8.1 (2022-09-21)
 
 - fix: Do not throw an TypeError on numeric HTTP headers (#1370)
