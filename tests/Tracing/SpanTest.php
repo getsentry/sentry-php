@@ -111,7 +111,7 @@ final class SpanTest extends TestCase
     {
         $context = TransactionContext::fromHeaders(
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
-            $baggageHeader,
+            $baggageHeader
         );
         $transaction = new Transaction($context);
 
