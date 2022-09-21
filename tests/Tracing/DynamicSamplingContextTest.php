@@ -7,10 +7,12 @@ namespace Sentry\Tests\Tracing;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Options;
-use Sentry\State\HubInterface;
+use Sentry\State\Hub;
+use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\UserDataBag;
 
 final class DynamicSamplingContextTest extends TestCase
 {
@@ -85,10 +87,13 @@ final class DynamicSamplingContextTest extends TestCase
                 'environment' => 'test',
             ]));
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('getClient')
-            ->willReturn($client);
+        $user = new UserDataBag();
+        $user->setSegment('my_segment');
+
+        $scope = new Scope();
+        $scope->setUser($user);
+
+        $hub = new Hub($client, $scope);
 
         $transactionContext = new TransactionContext();
         $transactionContext->setName('foo');
