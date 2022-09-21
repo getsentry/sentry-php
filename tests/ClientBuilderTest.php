@@ -16,6 +16,14 @@ use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
+    public function testGetOptions()
+    {
+        $options = new Options();
+        $clientBuilder = new ClientBuilder($options);
+
+        $this->assertSame($options, $clientBuilder->getOptions());
+    }
+
     public function testHttpTransportIsUsedWhenServerIsConfigured(): void
     {
         $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
