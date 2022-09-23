@@ -24,11 +24,11 @@ final class DynamicSamplingContext
     private $entries;
 
     /**
-     * Indicates that the dsc is frozen and cannot be mutated.
+     * Indicates if the dsc is mutalbe or immutable.
      *
      * @var bool
      */
-    private $frozen = false;
+    private $isFrozen = false;
 
     /**
      * Construct a new dsc object.
@@ -46,7 +46,7 @@ final class DynamicSamplingContext
      */
     public function set(string $key, string $value): void
     {
-        if ($this->frozen) {
+        if ($this->isFrozen) {
             return;
         }
 
@@ -79,7 +79,7 @@ final class DynamicSamplingContext
      */
     public function freeze(): void
     {
-        $this->frozen = true;
+        $this->isFrozen = true;
     }
 
     /**
@@ -87,7 +87,7 @@ final class DynamicSamplingContext
      */
     public function isFrozen(): bool
     {
-        return $this->frozen;
+        return $this->isFrozen;
     }
 
     /**
@@ -140,7 +140,7 @@ final class DynamicSamplingContext
         // Once we receive a baggage header with Sentry entries from an upstream SDK,
         // we freeze the contents so it cannot be mutated anymore by this SDK.
         // It should only be propagated to the next downstream SDK or the Sentry server itself.
-        $dsc->frozen = $dsc->hasEntries();
+        $dsc->isFrozen = $dsc->hasEntries();
 
         return $dsc;
     }
