@@ -160,15 +160,19 @@ final class DynamicSamplingContext
 
         $client = $hub->getClient();
 
-        if (null !== $client && null !== $options = $client->getOptions()) {
-            if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
-                $dsc->set('public_key', $options->getDsn()->getPublicKey());
-            }
-            if (null !== $options->getRelease()) {
-                $dsc->set('release', $options->getRelease());
-            }
-            if (null !== $options->getEnvironment()) {
-                $dsc->set('environment', $options->getEnvironment());
+        if (null !== $client) {
+            $options = $client->getOptions();
+
+            if (null !== $options) {
+                if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
+                    $dsc->set('public_key', $options->getDsn()->getPublicKey());
+                }
+                if (null !== $options->getRelease()) {
+                    $dsc->set('release', $options->getRelease());
+                }
+                if (null !== $options->getEnvironment()) {
+                    $dsc->set('environment', $options->getEnvironment());
+                }
             }
         }
 
