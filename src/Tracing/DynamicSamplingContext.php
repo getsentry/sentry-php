@@ -133,7 +133,7 @@ final class DynamicSamplingContext
             [$key, $value] = explode('=', $keyValue, 2);
 
             if (0 === strpos($key, self::SENTRY_ENTRY_PREFIX)) {
-                $dsc->set(urldecode(str_replace(self::SENTRY_ENTRY_PREFIX, '', $key)), urldecode($value));
+                $dsc->set(rawurldecode(str_replace(self::SENTRY_ENTRY_PREFIX, '', $key)), rawurldecode($value));
             }
         }
 
@@ -195,7 +195,7 @@ final class DynamicSamplingContext
         $string = '';
 
         foreach ($this->entries as $key => $value) {
-            $string .= urlencode(self::SENTRY_ENTRY_PREFIX . $key) . '=' . urlencode($value);
+            $string .= rawurlencode(self::SENTRY_ENTRY_PREFIX . $key) . '=' . rawurlencode($value);
 
             $string .= ',';
         }
