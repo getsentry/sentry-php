@@ -811,6 +811,62 @@ final class ClientTest extends TestCase
         $client->captureEvent($event);
     }
 
+    /**
+     * @dataProvider getCspReportUrlDataProvider
+     */
+    public function testGetCspReportUrl(array $options, ?string $expectedUrl): void
+    {
+        $client = new Client(
+            new Options($options),
+            $this->createMock(TransportInterface::class),
+            'sentry.sdk.identifier',
+            '1.2.3',
+            $this->createMock(SerializerInterface::class),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $this->assertSame($expectedUrl, $client->getCspReportUrl());
+    }
+
+    public function getCspReportUrlDataProvider(): \Generator
+    {
+        yield [
+            ['dsn' => null],
+            null,
+            null,
+        ];
+
+        yield [
+            ['dsn' => 'https://public:secret@example.com/1'],
+            'https://example.com/api/1/security/?sentry_key=public',
+        ];
+
+        yield [
+            [
+                'dsn' => 'https://public:secret@example.com/1',
+                'release' => 'dev-release',
+            ],
+            'https://example.com/api/1/security/?sentry_key=public&sentry_release=dev-release',
+        ];
+
+        yield [
+            [
+                'dsn' => 'https://public:secret@example.com/1',
+                'environment' => 'development',
+            ],
+            'https://example.com/api/1/security/?sentry_key=public&sentry_environment=development',
+        ];
+
+        yield [
+            [
+                'dsn' => 'https://public:secret@example.com/1',
+                'release' => 'dev-release',
+                'environment' => 'development',
+            ],
+            'https://example.com/api/1/security/?sentry_key=public&sentry_release=dev-release&sentry_environment=development',
+        ];
+    }
+
     private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
     {
         return new class($transport) implements TransportFactoryInterface {
