@@ -186,7 +186,7 @@ final class UserDataBag
     /**
      * Sets the segment of the user.
      *
-     * @param string|null $segment The email
+     * @param string|null $segment The segment
      */
     public function setSegment(?string $segment): void
     {
