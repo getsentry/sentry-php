@@ -40,7 +40,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedTransaction, $dsc->get('transaction'));
     }
 
-    public function fromHeaderDataProvider()
+    public function fromHeaderDataProvider(): \Generator
     {
         yield [
             '',
