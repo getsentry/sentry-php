@@ -120,6 +120,30 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
+    public function getCspReportUrl(): ?string
+    {
+        $dsn = $this->options->getDsn();
+
+        if (null === $dsn) {
+            return null;
+        }
+
+        $endpoint = $dsn->getCspReportEndpointUrl();
+        $query = array_filter([
+            'sentry_release' => $this->options->getRelease(),
+            'sentry_environment' => $this->options->getEnvironment(),
+        ]);
+
+        if (!empty($query)) {
+            $endpoint .= '&' . http_build_query($query, '', '&');
+        }
+
+        return $endpoint;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $event = Event::createEvent();
