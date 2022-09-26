@@ -184,14 +184,12 @@ final class DynamicSamplingContext
      */
     public function __toString(): string
     {
-        $string = '';
+        $result = [];
 
         foreach ($this->entries as $key => $value) {
-            $string .= rawurlencode(self::SENTRY_ENTRY_PREFIX . $key) . '=' . rawurlencode($value);
-
-            $string .= ',';
+            $result[] = rawurlencode(self::SENTRY_ENTRY_PREFIX . $key) . '=' . rawurlencode($value);
         }
 
-        return rtrim($string, ',');
+        return implode(',', $result);
     }
 }
