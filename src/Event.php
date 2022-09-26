@@ -694,6 +694,12 @@ final class Event
      * Gets the SDK metadata.
      *
      * @return mixed
+     *
+	 * @psalm-template T of string|null
+	 *
+	 * @psalm-param T $name
+	 *
+	 * @psalm-return (T is string ? mixed : array<string, mixed>)
      */
     public function getSdkMetadata(?string $name = null)
     {
