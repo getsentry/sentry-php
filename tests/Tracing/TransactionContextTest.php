@@ -93,16 +93,9 @@ final class TransactionContextTest extends TestCase
     {
         $spanContext = TransactionContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
-        if (null !== $expectedSpanId) {
-            $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
-        }
-
-        if (null !== $expectedTraceId) {
-            $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
-        }
-
+        $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
+        $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
         $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
-
         $this->assertInstanceOf($expectedDynamicSamplingContextClass, $spanContext->getMetadata()->getDynamicSamplingContext());
         $this->assertSame($expectedDynamicSamplingContextFrozen, $spanContext->getMetadata()->getDynamicSamplingContext()->isFrozen());
     }
