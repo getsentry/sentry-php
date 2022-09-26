@@ -156,7 +156,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedString, (string) $dsc);
     }
 
-    public function toStringDataProvider()
+    public function toStringDataProvider(): \Generator
     {
         yield [
             '',
