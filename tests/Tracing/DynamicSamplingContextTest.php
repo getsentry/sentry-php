@@ -115,21 +115,20 @@ final class DynamicSamplingContextTest extends TestCase
     /**
      * @dataProvider getEntriesDataProvider
      */
-    public function testGetEntries(string $header, array $expectedDynamicSamplingContext): void
+    public function testGetEntries(DynamicSamplingContext $samplingContext, array $expectedDynamicSamplingContext): void
     {
-        $samplingContext = DynamicSamplingContext::fromHeader($header);
         $this->assertSame($expectedDynamicSamplingContext, $samplingContext->getEntries());
     }
 
     public function getEntriesDataProvider(): \Generator
     {
         yield [
-            '',
+            DynamicSamplingContext::fromHeader(''),
             [],
         ];
 
         yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1',
+            DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1'),
             [
                 'trace_id' => 'd49d9bf66f13450b81f65bc51cf49c03',
                 'public_key' => 'public',
@@ -138,7 +137,7 @@ final class DynamicSamplingContextTest extends TestCase
         ];
 
         yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,foo=bar;foo;bar;bar=baz',
+            DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,foo=bar;foo;bar;bar=baz'),
             [
                 'trace_id' => 'd49d9bf66f13450b81f65bc51cf49c03',
                 'public_key' => 'public',
