@@ -17,16 +17,12 @@ final class DynamicSamplingContext
     private const SENTRY_ENTRY_PREFIX = 'sentry-';
 
     /**
-     * The dsc entries.
-     *
-     * @var array<string, string>
+     * @var array<string, string> The dsc entries
      */
     private $entries = [];
 
     /**
-     * Indicates if the dsc is mutalbe or immutable.
-     *
-     * @var bool
+     * @var bool Indicates if the dsc is mutable or immutable
      */
     private $isFrozen = false;
 
