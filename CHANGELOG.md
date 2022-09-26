@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Expose a function to retrieve the URL of the CSP endpoint (#1378)
+- feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
+- feat: Add support for Dynamic Sampling (#1360)
 
 ## 3.8.1 (2022-09-21)
 
