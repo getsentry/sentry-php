@@ -208,7 +208,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
         ];
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+
         if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+
             $entries = $dynamicSamplingContext->getEntries();
 
             if (!empty($entries)) {
