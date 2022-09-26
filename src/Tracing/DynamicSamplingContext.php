@@ -14,14 +14,14 @@ use Sentry\State\Scope;
  */
 final class DynamicSamplingContext
 {
-    public const SENTRY_ENTRY_PREFIX = 'sentry-';
+    private const SENTRY_ENTRY_PREFIX = 'sentry-';
 
     /**
      * The dsc entries.
      *
      * @var array<string, string>
      */
-    private $entries;
+    private $entries = [];
 
     /**
      * Indicates if the dsc is mutalbe or immutable.
@@ -35,7 +35,6 @@ final class DynamicSamplingContext
      */
     private function __construct()
     {
-        $this->entries = [];
     }
 
     /**
