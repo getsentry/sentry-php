@@ -174,8 +174,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (EventType::transaction() === $event->getType()) {
             $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
-
             $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
+
             if ($transactionMetadata instanceof TransactionMetadata) {
                 $result['transaction_info']['source'] = (string) $transactionMetadata->getSource();
             }
