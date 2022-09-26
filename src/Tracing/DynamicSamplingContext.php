@@ -147,7 +147,6 @@ final class DynamicSamplingContext
     public static function fromTransaction(Transaction $transaction, HubInterface $hub): self
     {
         $samplingContext = new self();
-
         $samplingContext->set('trace_id', (string) $transaction->getTraceId());
         $samplingContext->set('sample_rate', (string) $transaction->getMetaData()->getSamplingRate());
         $samplingContext->set('transaction', $transaction->getName());
@@ -160,9 +159,11 @@ final class DynamicSamplingContext
             if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
                 $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
+
             if (null !== $options->getRelease()) {
                 $samplingContext->set('release', $options->getRelease());
             }
+
             if (null !== $options->getEnvironment()) {
                 $samplingContext->set('environment', $options->getEnvironment());
             }

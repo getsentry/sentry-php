@@ -135,7 +135,6 @@ final class TransactionContext extends SpanContext
     public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader): self
     {
         $context = new self();
-
         $hasSentryTrace = false;
 
         if (preg_match(self::TRACEPARENT_HEADER_REGEX, $sentryTraceHeader, $matches)) {

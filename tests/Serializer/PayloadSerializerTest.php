@@ -40,10 +40,9 @@ final class PayloadSerializerTest extends TestCase
 
     protected function setUp(): void
     {
-        $options = new Options([
+        $this->serializer = new PayloadSerializer(new Options([
             'dsn' => 'http://public@example.com/sentry/1',
-        ]);
-        $this->serializer = new PayloadSerializer($options);
+        ]));
     }
 
     /**
@@ -438,9 +437,7 @@ TEXT
         ];
 
         $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-
-        $samplingContext = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
-        $event->setSdkMetadata('dynamic_sampling_context', $samplingContext);
+        $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1'));
         $event->setSdkMetadata('transaction_metadata', new TransactionMetadata());
 
         yield [
