@@ -30,20 +30,20 @@ final class TransactionMetadataTest extends TestCase
             new TransactionMetadata(),
             null,
             null,
-            $source,
+            $source
         ];
 
         yield [
             new TransactionMetadata(1),
             1,
             null,
-            $source,
+            $source
         ];
 
         yield [
             new TransactionMetadata(
                 null,
-                $samplingContext,
+                $samplingContext
             ),
             null,
             $samplingContext,
