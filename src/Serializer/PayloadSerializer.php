@@ -194,9 +194,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
     private function serializeAsEnvelope(Event $event): string
     {
-        /**
-         * @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
-         */
+        /** @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers */
         $envelopeHeader = [
             'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
