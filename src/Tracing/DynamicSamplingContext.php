@@ -118,10 +118,9 @@ final class DynamicSamplingContext
             }
 
             $keyValueAndProperties = explode(';', $listMember, 2);
-
             $keyValue = trim($keyValueAndProperties[0]);
 
-            if (empty($keyValue) || !str_contains($keyValue, '=')) {
+            if (!str_contains($keyValue, '=')) {
                 continue;
             }
 
