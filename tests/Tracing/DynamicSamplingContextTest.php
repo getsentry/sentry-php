@@ -150,31 +150,30 @@ final class DynamicSamplingContextTest extends TestCase
     /**
      * @dataProvider toStringDataProvider
      */
-    public function testToString(string $header, string $expectedString): void
+    public function testToString(DynamicSamplingContext $samplingContext, string $expectedString): void
     {
-        $samplingContext = DynamicSamplingContext::fromHeader($header);
         $this->assertSame($expectedString, (string) $samplingContext);
     }
 
     public function toStringDataProvider(): \Generator
     {
         yield [
+            DynamicSamplingContext::fromHeader(''),
             '',
-            '',
         ];
 
         yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1',
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1',
-        ];
-
-        yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,foo=bar;foo;bar;bar=baz',
+            DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1'),
             'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1',
         ];
 
         yield [
-            'foo=bar;foo;bar;bar=baz',
+            DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,foo=bar;foo;bar;bar=baz'),
+            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1',
+        ];
+
+        yield [
+            DynamicSamplingContext::fromHeader('foo=bar;foo;bar;bar=baz'),
             '',
         ];
     }
