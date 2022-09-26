@@ -176,7 +176,7 @@ final class DynamicSamplingContext
             }
         }
 
-        $hub->configureScope(function (Scope $scope) use ($dsc) {
+        $hub->configureScope(static function (Scope $scope) use ($dsc): void {
             if (null !== $scope->getUser() && null !== $scope->getUser()->getSegment()) {
                 $dsc->set('user_segment', $scope->getUser()->getSegment());
             }
