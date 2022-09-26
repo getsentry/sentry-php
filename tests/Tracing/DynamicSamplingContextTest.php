@@ -121,7 +121,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedDynamicSamplingContext, $dsc->getEntries());
     }
 
-    public function getEntriesDataProvider()
+    public function getEntriesDataProvider(): \Generator
     {
         yield [
             '',
