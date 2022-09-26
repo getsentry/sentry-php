@@ -14,10 +14,8 @@ final class TransactionMetadataTest extends TestCase
     /**
      * @dataProvider constructorDataProvider
      */
-    public function testConstructor(array $constructorArgs, $expectedSamplingRate, ?DynamicSamplingContext $expectedDynamicSamplingContext, ?TransactionSource $expectedSource): void
+    public function testConstructor(TransactionMetadata $transactionMetadata, $expectedSamplingRate, ?DynamicSamplingContext $expectedDynamicSamplingContext, ?TransactionSource $expectedSource): void
     {
-        $transactionMetadata = new TransactionMetadata(...$constructorArgs);
-
         $this->assertSame($expectedSamplingRate, $transactionMetadata->getSamplingRate());
         $this->assertSame($expectedDynamicSamplingContext, $transactionMetadata->getDynamicSamplingContext());
         $this->assertSame($expectedSource, $transactionMetadata->getSource());
@@ -29,48 +27,46 @@ final class TransactionMetadataTest extends TestCase
         $source = TransactionSource::custom();
 
         yield [
-            [],
+            new TransactionMetadata(),
             null,
             null,
             $source,
         ];
 
         yield [
-            [
-                1,
-            ],
+            new TransactionMetadata(1),
             1,
             null,
             $source,
         ];
 
         yield [
-            [
+            new TransactionMetadata(
                 null,
                 $samplingContext,
-            ],
+            ),
             null,
             $samplingContext,
             $source,
         ];
 
         yield [
-            [
+            new TransactionMetadata(
                 null,
                 null,
-                $source,
-            ],
+                $source
+            ),
             null,
             null,
             $source,
         ];
 
         yield [
-            [
+            new TransactionMetadata(
                 0.5,
                 $samplingContext,
-                $source,
-            ],
+                $source
+            ),
             0.5,
             $samplingContext,
             TransactionSource::custom(),
