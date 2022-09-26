@@ -101,11 +101,9 @@ final class TransactionContext extends SpanContext
      *
      * @param string $header The sentry-trace header from the request
      *
-     * @return self
-     *
      * @deprecated since version 3.9, to be removed in 4.0
      */
-    public static function fromSentryTrace(string $header)
+    public static function fromSentryTrace(string $header): self
     {
         $context = new self();
 
@@ -133,10 +131,8 @@ final class TransactionContext extends SpanContext
      *
      * @param string $sentryTraceHeader The sentry-trace header from an incoming request
      * @param string $baggageHeader     The baggage header from an incoming request
-     *
-     * @return self
      */
-    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader)
+    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader): self
     {
         $context = new self();
 
