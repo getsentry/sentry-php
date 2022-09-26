@@ -10,9 +10,12 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionMetadata;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class TransactionContextTest extends TestCase
 {
+    use ExpectDeprecationTrait;
+
     public function testGettersAndSetters(): void
     {
         $transactionContext = new TransactionContext();
@@ -32,19 +35,17 @@ final class TransactionContextTest extends TestCase
 
     /**
      * @dataProvider fromSentryTraceDataProvider
+     *
+     * @group legacy
      */
     public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled): void
     {
+        $this->expectDeprecation('Method Sentry\\Tracing\\TransactionContext::fromSentryTrace() is deprecated since version 3.9 and will be removed in 4.0. Use TransactionContext::fromHeaders() instead.');
+
         $spanContext = TransactionContext::fromSentryTrace($header);
 
-        if (null !== $expectedSpanId) {
-            $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
-        }
-
-        if (null !== $expectedTraceId) {
-            $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
-        }
-
+        $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
+        $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
         $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
     }
 
