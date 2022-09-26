@@ -29,15 +29,15 @@ final class DynamicSamplingContextTest extends TestCase
         ?string $expectedUserSegment,
         ?string $expectedTransaction
     ): void {
-        $dsc = DynamicSamplingContext::fromHeader($header);
+        $samplingContext = DynamicSamplingContext::fromHeader($header);
 
-        $this->assertSame($expectedTraceId, $dsc->get('trace_id'));
-        $this->assertSame($expectedPublicKey, $dsc->get('public_key'));
-        $this->assertSame($expectedSampleRate, $dsc->get('sample_rate'));
-        $this->assertSame($expectedRelease, $dsc->get('release'));
-        $this->assertSame($expectedEnvironment, $dsc->get('environment'));
-        $this->assertSame($expectedUserSegment, $dsc->get('user_segment'));
-        $this->assertSame($expectedTransaction, $dsc->get('transaction'));
+        $this->assertSame($expectedTraceId, $samplingContext->get('trace_id'));
+        $this->assertSame($expectedPublicKey, $samplingContext->get('public_key'));
+        $this->assertSame($expectedSampleRate, $samplingContext->get('sample_rate'));
+        $this->assertSame($expectedRelease, $samplingContext->get('release'));
+        $this->assertSame($expectedEnvironment, $samplingContext->get('environment'));
+        $this->assertSame($expectedUserSegment, $samplingContext->get('user_segment'));
+        $this->assertSame($expectedTransaction, $samplingContext->get('transaction'));
     }
 
     public function fromHeaderDataProvider(): \Generator
@@ -100,16 +100,16 @@ final class DynamicSamplingContextTest extends TestCase
 
         $transaction = new Transaction($transactionContext, $hub);
 
-        $dsc = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
 
-        $this->assertSame((string) $transaction->getTraceId(), $dsc->get('trace_id'));
-        $this->assertSame((string) $transaction->getMetaData()->getSamplingRate(), $dsc->get('sample_rate'));
-        $this->assertSame('foo', $dsc->get('transaction'));
-        $this->assertSame('public', $dsc->get('public_key'));
-        $this->assertSame('1.0.0', $dsc->get('release'));
-        $this->assertSame('test', $dsc->get('environment'));
-        $this->assertSame('my_segment', $dsc->get('user_segment'));
-        $this->assertTrue($dsc->isFrozen());
+        $this->assertSame((string) $transaction->getTraceId(), $samplingContext->get('trace_id'));
+        $this->assertSame((string) $transaction->getMetaData()->getSamplingRate(), $samplingContext->get('sample_rate'));
+        $this->assertSame('foo', $samplingContext->get('transaction'));
+        $this->assertSame('public', $samplingContext->get('public_key'));
+        $this->assertSame('1.0.0', $samplingContext->get('release'));
+        $this->assertSame('test', $samplingContext->get('environment'));
+        $this->assertSame('my_segment', $samplingContext->get('user_segment'));
+        $this->assertTrue($samplingContext->isFrozen());
     }
 
     /**
@@ -117,8 +117,8 @@ final class DynamicSamplingContextTest extends TestCase
      */
     public function testGetEntries(string $header, array $expectedDynamicSamplingContext): void
     {
-        $dsc = DynamicSamplingContext::fromHeader($header);
-        $this->assertSame($expectedDynamicSamplingContext, $dsc->getEntries());
+        $samplingContext = DynamicSamplingContext::fromHeader($header);
+        $this->assertSame($expectedDynamicSamplingContext, $samplingContext->getEntries());
     }
 
     public function getEntriesDataProvider(): \Generator
@@ -152,8 +152,8 @@ final class DynamicSamplingContextTest extends TestCase
      */
     public function testToString(string $header, string $expectedString): void
     {
-        $dsc = DynamicSamplingContext::fromHeader($header);
-        $this->assertSame($expectedString, (string) $dsc);
+        $samplingContext = DynamicSamplingContext::fromHeader($header);
+        $this->assertSame($expectedString, (string) $samplingContext);
     }
 
     public function toStringDataProvider(): \Generator

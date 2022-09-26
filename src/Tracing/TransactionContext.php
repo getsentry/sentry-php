@@ -155,23 +155,19 @@ final class TransactionContext extends SpanContext
             }
         }
 
-        $dsc = DynamicSamplingContext::fromHeader($baggageHeader);
+        $samplingContext = DynamicSamplingContext::fromHeader($baggageHeader);
 
-        if ($hasSentryTrace && !$dsc->hasEntries()) {
-            /**
-             * The request comes from an old SDK which does not support Dynamic Sampling.
-             * Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
-             */
-            $dsc->freeze();
-            $context->getMetadata()->setDynamicSamplingContext($dsc);
+        if ($hasSentryTrace && !$samplingContext->hasEntries()) {
+             // The request comes from an old SDK which does not support Dynamic Sampling.
+             // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
+            $samplingContext->freeze();
+            $context->getMetadata()->setDynamicSamplingContext($samplingContext);
         }
 
-        if ($hasSentryTrace && $dsc->hasEntries()) {
-            /**
-             * The baggage header contains Dynamic Sampling Context data from an upstream SDK.
-             * Propagate this Dynamic Sampling Context.
-             */
-            $context->getMetadata()->setDynamicSamplingContext($dsc);
+        if ($hasSentryTrace && $samplingContext->hasEntries()) {
+             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
+             // Propagate this Dynamic Sampling Context.
+            $context->getMetadata()->setDynamicSamplingContext($samplingContext);
         }
 
         return $context;

@@ -25,7 +25,7 @@ final class TransactionMetadataTest extends TestCase
 
     public function constructorDataProvider(): \Generator
     {
-        $dsc = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
+        $samplingContext = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
         $source = TransactionSource::custom();
 
         yield [
@@ -47,10 +47,10 @@ final class TransactionMetadataTest extends TestCase
         yield [
             [
                 null,
-                $dsc,
+                $samplingContext,
             ],
             null,
-            $dsc,
+            $samplingContext,
             $source,
         ];
 
@@ -68,27 +68,27 @@ final class TransactionMetadataTest extends TestCase
         yield [
             [
                 0.5,
-                $dsc,
+                $samplingContext,
                 $source,
             ],
             0.5,
-            $dsc,
+            $samplingContext,
             TransactionSource::custom(),
         ];
     }
 
     public function testGettersAndSetters(): void
     {
-        $dsc = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
+        $samplingContext = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
         $source = TransactionSource::task();
 
         $transactionMetadata = new TransactionMetadata();
         $transactionMetadata->setSamplingRate(0);
-        $transactionMetadata->setDynamicSamplingContext($dsc);
+        $transactionMetadata->setDynamicSamplingContext($samplingContext);
         $transactionMetadata->setSource($source);
 
         $this->assertSame(0, $transactionMetadata->getSamplingRate());
-        $this->assertSame($dsc, $transactionMetadata->getDynamicSamplingContext());
+        $this->assertSame($samplingContext, $transactionMetadata->getDynamicSamplingContext());
         $this->assertSame($source, $transactionMetadata->getSource());
     }
 }

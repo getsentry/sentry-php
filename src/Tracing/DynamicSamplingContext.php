@@ -110,7 +110,7 @@ final class DynamicSamplingContext
      */
     public static function fromHeader(string $header): self
     {
-        $dsc = new self();
+        $samplingContext = new self();
 
         foreach (explode(',', $header) as $listMember) {
             if (empty(trim($listMember))) {
@@ -128,16 +128,16 @@ final class DynamicSamplingContext
             [$key, $value] = explode('=', $keyValue, 2);
 
             if (0 === strpos($key, self::SENTRY_ENTRY_PREFIX)) {
-                $dsc->set(rawurldecode(str_replace(self::SENTRY_ENTRY_PREFIX, '', $key)), rawurldecode($value));
+                $samplingContext->set(rawurldecode(str_replace(self::SENTRY_ENTRY_PREFIX, '', $key)), rawurldecode($value));
             }
         }
 
         // Once we receive a baggage header with Sentry entries from an upstream SDK,
         // we freeze the contents so it cannot be mutated anymore by this SDK.
         // It should only be propagated to the next downstream SDK or the Sentry server itself.
-        $dsc->isFrozen = $dsc->hasEntries();
+        $samplingContext->isFrozen = $samplingContext->hasEntries();
 
-        return $dsc;
+        return $samplingContext;
     }
 
     /**
@@ -147,11 +147,11 @@ final class DynamicSamplingContext
      */
     public static function fromTransaction(Transaction $transaction, HubInterface $hub): self
     {
-        $dsc = new self();
+        $samplingContext = new self();
 
-        $dsc->set('trace_id', (string) $transaction->getTraceId());
-        $dsc->set('sample_rate', (string) $transaction->getMetaData()->getSamplingRate());
-        $dsc->set('transaction', $transaction->getName());
+        $samplingContext->set('trace_id', (string) $transaction->getTraceId());
+        $samplingContext->set('sample_rate', (string) $transaction->getMetaData()->getSamplingRate());
+        $samplingContext->set('transaction', $transaction->getName());
 
         $client = $hub->getClient();
 
@@ -159,25 +159,25 @@ final class DynamicSamplingContext
             $options = $client->getOptions();
 
             if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
-                $dsc->set('public_key', $options->getDsn()->getPublicKey());
+                $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
             if (null !== $options->getRelease()) {
-                $dsc->set('release', $options->getRelease());
+                $samplingContext->set('release', $options->getRelease());
             }
             if (null !== $options->getEnvironment()) {
-                $dsc->set('environment', $options->getEnvironment());
+                $samplingContext->set('environment', $options->getEnvironment());
             }
         }
 
-        $hub->configureScope(static function (Scope $scope) use ($dsc): void {
+        $hub->configureScope(static function (Scope $scope) use ($samplingContext): void {
             if (null !== $scope->getUser() && null !== $scope->getUser()->getSegment()) {
-                $dsc->set('user_segment', $scope->getUser()->getSegment());
+                $samplingContext->set('user_segment', $scope->getUser()->getSegment());
             }
         });
 
-        $dsc->freeze();
+        $samplingContext->freeze();
 
-        return $dsc;
+        return $samplingContext;
     }
 
     /**

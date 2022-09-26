@@ -87,10 +87,10 @@ final class Transaction extends Span
             return $this->metadata->getDynamicSamplingContext();
         }
 
-        $dsc = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
-        $this->getMetadata()->setDynamicSamplingContext($dsc);
+        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $this->getMetadata()->setDynamicSamplingContext($samplingContext);
 
-        return $dsc;
+        return $samplingContext;
     }
 
     /**
