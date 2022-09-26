@@ -695,11 +695,11 @@ final class Event
      *
      * @return mixed
      *
-	 * @psalm-template T of string|null
-	 *
-	 * @psalm-param T $name
-	 *
-	 * @psalm-return (T is string ? mixed : array<string, mixed>|null)
+     * @psalm-template T of string|null
+     *
+     * @psalm-param T $name
+     *
+     * @psalm-return (T is string ? mixed : array<string, mixed>|null)
      */
     public function getSdkMetadata(?string $name = null)
     {
