@@ -157,7 +157,7 @@ final class TransactionContext extends SpanContext
 
         $dsc = DynamicSamplingContext::fromHeader($baggageHeader);
 
-        if (true === $hasSentryTrace && false === $dsc->hasEntries()) {
+        if ($hasSentryTrace && !$dsc->hasEntries()) {
             /**
              * The request comes from an old SDK which does not support Dynamic Sampling.
              * Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
@@ -166,7 +166,7 @@ final class TransactionContext extends SpanContext
             $context->getMetadata()->setDynamicSamplingContext($dsc);
         }
 
-        if (true === $hasSentryTrace && true === $dsc->hasEntries()) {
+        if ($hasSentryTrace && $dsc->hasEntries()) {
             /**
              * The baggage header contains Dynamic Sampling Context data from an upstream SDK.
              * Propagate this Dynamic Sampling Context.
