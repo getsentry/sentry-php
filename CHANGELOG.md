@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Expose a function to retrieve the URL of the CSP endpoint (#1378)
+
 ## 3.8.1 (2022-09-21)
 
 - fix: Use constant for the SDK version (#1374)
