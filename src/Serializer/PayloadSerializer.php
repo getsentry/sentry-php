@@ -200,11 +200,11 @@ final class PayloadSerializer implements PayloadSerializerInterface
         $envelopeHeader = [
             'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
+            'dsn' => (string) $this->options->getDsn(),
             'sdk' => [
                 'name' => $event->getSdkIdentifier(),
                 'version' => $event->getSdkVersion(),
             ],
-            'dsn' => (string) $this->options->getDsn(),
         ];
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
