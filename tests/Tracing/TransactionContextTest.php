@@ -40,8 +40,6 @@ final class TransactionContextTest extends TestCase
      */
     public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled): void
     {
-        $this->expectDeprecation('Method Sentry\\Tracing\\TransactionContext::fromSentryTrace() is deprecated since version 3.9 and will be removed in 4.0. Use TransactionContext::fromHeaders() instead.');
-
         $spanContext = TransactionContext::fromSentryTrace($header);
 
         $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());

@@ -105,8 +105,6 @@ final class TransactionContext extends SpanContext
      */
     public static function fromSentryTrace(string $header): self
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.9 and will be removed in 4.0. Use TransactionContext::fromHeaders() instead.', __METHOD__), \E_USER_DEPRECATED);
-
         $context = new self();
 
         if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
