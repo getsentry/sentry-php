@@ -71,9 +71,11 @@ class SpanContext
         return $this->description;
     }
 
-    public function setDescription(?string $description): void
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
     }
 
     public function getOp(): ?string
@@ -81,9 +83,11 @@ class SpanContext
         return $this->op;
     }
 
-    public function setOp(?string $op): void
+    public function setOp(?string $op): self
     {
         $this->op = $op;
+
+        return $this;
     }
 
     public function getStatus(): ?SpanStatus
@@ -91,9 +95,11 @@ class SpanContext
         return $this->status;
     }
 
-    public function setStatus(?SpanStatus $status): void
+    public function setStatus(?SpanStatus $status): self
     {
         $this->status = $status;
+
+        return $this;
     }
 
     public function getParentSpanId(): ?SpanId
@@ -101,9 +107,11 @@ class SpanContext
         return $this->parentSpanId;
     }
 
-    public function setParentSpanId(?SpanId $parentSpanId): void
+    public function setParentSpanId(?SpanId $parentSpanId): self
     {
         $this->parentSpanId = $parentSpanId;
+
+        return $this;
     }
 
     public function getSampled(): ?bool
@@ -111,9 +119,11 @@ class SpanContext
         return $this->sampled;
     }
 
-    public function setSampled(?bool $sampled): void
+    public function setSampled(?bool $sampled): self
     {
         $this->sampled = $sampled;
+
+        return $this;
     }
 
     public function getSpanId(): ?SpanId
@@ -121,9 +131,11 @@ class SpanContext
         return $this->spanId;
     }
 
-    public function setSpanId(?SpanId $spanId): void
+    public function setSpanId(?SpanId $spanId): self
     {
         $this->spanId = $spanId;
+
+        return $this;
     }
 
     public function getTraceId(): ?TraceId
@@ -131,9 +143,11 @@ class SpanContext
         return $this->traceId;
     }
 
-    public function setTraceId(?TraceId $traceId): void
+    public function setTraceId(?TraceId $traceId): self
     {
         $this->traceId = $traceId;
+
+        return $this;
     }
 
     /**
@@ -147,9 +161,11 @@ class SpanContext
     /**
      * @param array<string, string> $tags
      */
-    public function setTags(array $tags): void
+    public function setTags(array $tags): self
     {
         $this->tags = $tags;
+
+        return $this;
     }
 
     /**
@@ -163,9 +179,11 @@ class SpanContext
     /**
      * @param array<string, mixed> $data
      */
-    public function setData(array $data): void
+    public function setData(array $data): self
     {
         $this->data = $data;
+
+        return $this;
     }
 
     public function getStartTimestamp(): ?float
@@ -173,9 +191,11 @@ class SpanContext
         return $this->startTimestamp;
     }
 
-    public function setStartTimestamp(?float $startTimestamp): void
+    public function setStartTimestamp(?float $startTimestamp): self
     {
         $this->startTimestamp = $startTimestamp;
+
+        return $this;
     }
 
     public function getEndTimestamp(): ?float
@@ -183,9 +203,11 @@ class SpanContext
         return $this->endTimestamp;
     }
 
-    public function setEndTimestamp(?float $endTimestamp): void
+    public function setEndTimestamp(?float $endTimestamp): self
     {
         $this->endTimestamp = $endTimestamp;
+
+        return $this;
     }
 
     /**

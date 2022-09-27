@@ -39,13 +39,15 @@ final class DynamicSamplingContext
      * @param string $key   the list member key
      * @param string $value the list member value
      */
-    public function set(string $key, string $value): void
+    public function set(string $key, string $value): self
     {
         if ($this->isFrozen) {
-            return;
+            return $this;
         }
 
         $this->entries[$key] = $value;
+
+        return $this;
     }
 
     /**
@@ -72,9 +74,11 @@ final class DynamicSamplingContext
     /**
      * Mark the dsc as frozen.
      */
-    public function freeze(): void
+    public function freeze(): self
     {
         $this->isFrozen = true;
+
+        return $this;
     }
 
     /**

@@ -65,9 +65,11 @@ final class Transaction extends Span
      *
      * @param string $name The name
      */
-    public function setName(string $name): void
+    public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
     }
 
     /**
