@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Merge hint extra's from captureMessage in event extra's when preparing event (#1380)
+
 ## 3.8.1 (2022-09-21)
 
 - fix: Use constant for the SDK version (#1374)
