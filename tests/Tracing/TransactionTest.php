@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
+use Sentry\Options;
 use Sentry\State\HubInterface;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -30,7 +32,15 @@ final class TransactionTest extends TestCase
         $transactionContext->setSampled(true);
         $transactionContext->setStartTimestamp(1600640865);
 
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+
         $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
+            ->method('getClient')
+            ->willReturn($client);
 
         $transaction = new Transaction($transactionContext, $hub);
         $transaction->initSpanRecorder();

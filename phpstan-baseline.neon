@@ -341,6 +341,11 @@ parameters:
 			path: src/UserDataBag.php
 
 		-
+			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
+
+		-
 			message: "#^Method Sentry\\\\Util\\\\JSON\\:\\:encode\\(\\) should return string but returns string\\|false\\.$#"
 			count: 1
 			path: src/Util/JSON.php

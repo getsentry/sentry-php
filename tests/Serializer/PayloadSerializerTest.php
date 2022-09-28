@@ -15,13 +15,16 @@ use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TraceId;
+use Sentry\Tracing\TransactionMetadata;
 use Sentry\UserDataBag;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
@@ -37,7 +40,9 @@ final class PayloadSerializerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->serializer = new PayloadSerializer();
+        $this->serializer = new PayloadSerializer(new Options([
+            'dsn' => 'http://public@example.com/sentry/1',
+        ]));
     }
 
     /**
@@ -104,6 +109,7 @@ JSON
             'username' => 'my_user',
             'email' => 'foo@example.com',
             'ip_address' => '127.0.0.1',
+            'segment' => 'my_segment',
         ]));
 
         $event->setTags([
@@ -215,7 +221,8 @@ JSON
         "id": "unique_id",
         "username": "my_user",
         "email": "foo@example.com",
-        "ip_address": "127.0.0.1"
+        "ip_address": "127.0.0.1",
+        "segment": "my_segment"
     },
     "contexts": {
         "os": {
@@ -421,9 +428,24 @@ JSON
         yield [
             $event,
             <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z"}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"transaction","content_type":"application\/json"}
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
+TEXT
+            ,
+            false,
+        ];
+
+        $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1'));
+        $event->setSdkMetadata('transaction_metadata', new TransactionMetadata());
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"},"trace":{"public_key":"public","trace_id":"d49d9bf66f13450b81f65bc51cf49c03","sample_rate":"1"}}
+{"type":"transaction","content_type":"application\/json"}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[],"transaction_info":{"source":"custom"}}
 TEXT
             ,
             false,

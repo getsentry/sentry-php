@@ -25,6 +25,16 @@ final class Transaction extends Span
     private $name;
 
     /**
+     * @var Transaction The transaction
+     */
+    protected $transaction;
+
+    /**
+     * @var TransactionMetadata
+     */
+    protected $metadata;
+
+    /**
      * Span constructor.
      *
      * @param TransactionContext $context The context to create the transaction with
@@ -38,6 +48,7 @@ final class Transaction extends Span
 
         $this->hub = $hub ?? SentrySdk::getCurrentHub();
         $this->name = $context->getName();
+        $this->metadata = $context->getMetadata();
         $this->transaction = $this;
     }
 
@@ -57,6 +68,29 @@ final class Transaction extends Span
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    /**
+     * Gets the transaction metadata.
+     */
+    public function getMetadata(): TransactionMetadata
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * Gets the transaction dynamic sampling context.
+     */
+    public function getDynamicSamplingContext(): DynamicSamplingContext
+    {
+        if (null !== $this->metadata->getDynamicSamplingContext()) {
+            return $this->metadata->getDynamicSamplingContext();
+        }
+
+        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $this->getMetadata()->setDynamicSamplingContext($samplingContext);
+
+        return $samplingContext;
     }
 
     /**
@@ -106,6 +140,8 @@ final class Transaction extends Span
         $event->setTags($this->tags);
         $event->setTransaction($this->name);
         $event->setContext('trace', $this->getTraceContext());
+        $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
+        $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
         return $this->hub->captureEvent($event);
     }

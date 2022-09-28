@@ -116,4 +116,13 @@ final class EventTest extends TestCase
 
         $this->assertEmpty($event->getTags());
     }
+
+    public function testSetGetSdkMetadata(): void
+    {
+        $event = Event::createEvent();
+        $event->setSdkMetadata('foo', ['bar', 'baz']);
+
+        $this->assertSame(['bar', 'baz'], $event->getSdkMetadata('foo'));
+        $this->assertSame(['foo' => ['bar', 'baz']], $event->getSdkMetadata());
+    }
 }

@@ -9,6 +9,8 @@ use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
@@ -99,6 +101,43 @@ final class SpanTest extends TestCase
         yield [
             true,
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+        ];
+    }
+
+    /**
+     * @dataProvider toBaggageDataProvider
+     */
+    public function testToBaggage(string $baggageHeader, string $expectedValue): void
+    {
+        $context = TransactionContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            $baggageHeader
+        );
+        $transaction = new Transaction($context);
+
+        $this->assertSame($expectedValue, $transaction->toBaggage());
+    }
+
+    public function toBaggageDataProvider(): iterable
+    {
+        yield [
+            '',
+            '',
+        ];
+
+        yield [
+            'foo=bar,bar=baz',
+            '',
+        ];
+
+        yield [
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
+        ];
+
+        yield [
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,foo=bar,bar=baz',
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
         ];
     }
 }

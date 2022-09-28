@@ -432,7 +432,7 @@ class Span
     }
 
     /**
-     * Returns a string that can be used for the `sentry-trace` header.
+     * Returns a string that can be used for the `sentry-trace` header & meta tag.
      */
     public function toTraceparent(): string
     {
@@ -443,5 +443,19 @@ class Span
         }
 
         return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+    }
+
+    /**
+     * Returns a string that can be used for the `baggage` header & meta tag.
+     */
+    public function toBaggage(): string
+    {
+        $transaction = $this->getTransaction();
+
+        if (null !== $transaction) {
+            return (string) $transaction->getDynamicSamplingContext();
+        }
+
+        return '';
     }
 }
