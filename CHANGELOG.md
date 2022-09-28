@@ -4,6 +4,9 @@
 
 - feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
 - feat: Add support for Dynamic Sampling (#1360)
+  - Add `segment` to `UserDataBag`
+  - Add `TransactionSource`, to set information about the transaction name
+  - Deprecate `TransactionContext::fromSentryTrace()` in favor of `TransactionContext::fromHeaders()`
 
 ## 3.8.1 (2022-09-21)
 
