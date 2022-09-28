@@ -10,6 +10,7 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionMetadata;
+use Sentry\Tracing\TransactionSource;
 use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class TransactionContextTest extends TestCase
@@ -20,6 +21,7 @@ final class TransactionContextTest extends TestCase
     {
         $transactionContext = new TransactionContext();
         $transactionMetadata = new TransactionMetadata();
+        $transactionSource = TransactionSource::custom();
 
         $this->assertSame('<unlabeled transaction>', $transactionContext->getName());
         $this->assertNull($transactionContext->getParentSampled());
@@ -27,10 +29,12 @@ final class TransactionContextTest extends TestCase
         $transactionContext->setName('foo');
         $transactionContext->setParentSampled(true);
         $transactionContext->setMetadata($transactionMetadata);
+        $transactionContext->setSource($transactionSource);
 
         $this->assertSame('foo', $transactionContext->getName());
         $this->assertTrue($transactionContext->getParentSampled());
         $this->assertSame($transactionMetadata, $transactionContext->getMetadata());
+        $this->assertSame($transactionSource, $transactionContext->getMetadata()->getSource());
     }
 
     /**
