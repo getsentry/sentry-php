@@ -97,6 +97,16 @@ final class TransactionContext extends SpanContext
     }
 
     /**
+     * Sets the transaction source.
+     *
+     * @param TransactionSource $transactionSource The transaction source
+     */
+    public function setSource(TransactionSource $transactionSource): void
+    {
+        $this->metadata->setSource($transactionSource);
+    }
+
+    /**
      * Returns a context populated with the data of the given header.
      *
      * @param string $header The sentry-trace header from the request
