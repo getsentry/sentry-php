@@ -155,13 +155,13 @@ final class PayloadSerializer implements PayloadSerializerInterface
         }
 
         if (null !== $event->getMessage()) {
-            if (empty($event->getMessageParams())) {
+            if (empty($event->getMessageParams()) && is_null($event->getMessageFormatted())) {
                 $result['message'] = $event->getMessage();
             } else {
                 $result['message'] = [
                     'message' => $event->getMessage(),
                     'params' => $event->getMessageParams(),
-                    'formatted' => $event->getMessageFormatted() ?? vsprintf($event->getMessage(), $event->getMessageParams()),
+                    'formatted' => $event->getMessageFormatted() ?? (empty($event->getMessageParams()) ? $event->getMessage() : vsprintf($event->getMessage(), $event->getMessageParams())),
                 ];
             }
         }
