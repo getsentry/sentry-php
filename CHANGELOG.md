@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.0 (2022-10-04)
+
 - feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
 - feat: Add support for Dynamic Sampling (#1360)
   - Add `segment` to `UserDataBag`
