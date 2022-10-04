@@ -397,6 +397,28 @@ final class Options
     }
 
     /**
+     * Gets an allow list of trace propagation targets.
+     *
+     * @return string[]
+     */
+    public function getTracePropagationTargets(): array
+    {
+        return $this->options['trace_propagation_targets'];
+    }
+
+    /**
+     * Set an allow list of trace propagation targets.
+     *
+     * @param string[] $tracePropagationTargets Trace propagation targets
+     */
+    public function setTracePropagationTargets(array $tracePropagationTargets): void
+    {
+        $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
@@ -779,6 +801,7 @@ final class Options
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
+            'trace_propagation_targets' => [],
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -813,6 +836,7 @@ final class Options
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
+        $resolver->setAllowedTypes('trace_propagation_targets', 'string[]');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
