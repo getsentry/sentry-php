@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.9.0 (2022-10-04)
+## 3.9.0 (2022-10-05)
 
 - feat: Add tracePropagationTargets option (#1396)
 - feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
