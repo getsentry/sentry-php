@@ -10,6 +10,9 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanId;
+use Sentry\Tracing\TraceId;
 use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
@@ -354,6 +357,10 @@ final class ScopeTest extends TestCase
         $event = Event::createEvent();
         $event->setContext('foocontext', ['foo' => 'foo', 'bar' => 'bar']);
 
+        $span = new Span();
+        $span->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $span->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+
         $scope = new Scope();
         $scope->setLevel(Severity::warning());
         $scope->setFingerprint(['foo']);
@@ -363,6 +370,7 @@ final class ScopeTest extends TestCase
         $scope->setUser($user);
         $scope->setContext('foocontext', ['foo' => 'bar']);
         $scope->setContext('barcontext', ['bar' => 'foo']);
+        $scope->setSpan($span);
 
         $this->assertSame($event, $scope->applyToEvent($event));
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
@@ -371,6 +379,18 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $event->getTags());
         $this->assertSame(['bar' => 'foo'], $event->getExtra());
         $this->assertSame($user, $event->getUser());
-        $this->assertSame(['foocontext' => ['foo' => 'foo', 'bar' => 'bar'], 'barcontext' => ['bar' => 'foo']], $event->getContexts());
+        $this->assertSame([
+            'foocontext' => [
+                'foo' => 'foo',
+                'bar' => 'bar',
+            ],
+            'trace' => [
+                'span_id' => '566e3688a61d4bc8',
+                'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+            ],
+            'barcontext' => [
+                'bar' => 'foo',
+            ],
+        ], $event->getContexts());
     }
 }

@@ -12,6 +12,7 @@ use Sentry\State\Scope;
  * This interface must be implemented by all Raven client classes.
  *
  * @method StacktraceBuilder getStacktraceBuilder() Returns the stacktrace builder of the client.
+ * @method string|null getCspReportUrl() Returns an URL for security policy reporting that's generated from the given DSN
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */

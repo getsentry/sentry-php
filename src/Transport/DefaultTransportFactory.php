@@ -67,7 +67,7 @@ final class DefaultTransportFactory implements TransportFactoryInterface
             $this->httpClientFactory->create($options),
             $this->streamFactory,
             $this->requestFactory,
-            new PayloadSerializer(),
+            new PayloadSerializer($options),
             $this->logger
         );
     }

@@ -197,6 +197,14 @@ final class Dsn implements \Stringable
     }
 
     /**
+     * Returns the URL of the API for the CSP report endpoint.
+     */
+    public function getCspReportEndpointUrl(): string
+    {
+        return $this->getBaseEndpointUrl() . '/security/?sentry_key=' . $this->publicKey;
+    }
+
+    /**
      * @see https://www.php.net/manual/en/language.oop5.magic.php#object.tostring
      */
     public function __toString(): string

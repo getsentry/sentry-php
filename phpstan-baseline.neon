@@ -216,6 +216,11 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTracePropagationTargets\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampleRate\\(\\) should return float but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -332,6 +337,11 @@ parameters:
 
 		-
 			message: "#^Parameter \\#1 \\$ipAddress of method Sentry\\\\UserDataBag\\:\\:setIpAddress\\(\\) expects string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/UserDataBag.php
+
+		-
+			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
 

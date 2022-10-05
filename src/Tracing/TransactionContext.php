@@ -21,15 +21,25 @@ final class TransactionContext extends SpanContext
     private $parentSampled;
 
     /**
+     * @var TransactionMetadata The transaction metadata
+     */
+    private $metadata;
+
+    /**
      * Constructor.
      *
-     * @param string    $name          The name of the transaction
-     * @param bool|null $parentSampled The parent's sampling decision
+     * @param string                   $name          The name of the transaction
+     * @param bool|null                $parentSampled The parent's sampling decision
+     * @param TransactionMetadata|null $metadata      The transaction metadata
      */
-    public function __construct(string $name = self::DEFAULT_NAME, ?bool $parentSampled = null)
-    {
+    public function __construct(
+        string $name = self::DEFAULT_NAME,
+        ?bool $parentSampled = null,
+        ?TransactionMetadata $metadata = null
+    ) {
         $this->name = $name;
         $this->parentSampled = $parentSampled;
+        $this->metadata = $metadata ?? new TransactionMetadata();
     }
 
     /**
@@ -69,13 +79,41 @@ final class TransactionContext extends SpanContext
     }
 
     /**
+     * Gets the transaction metadata.
+     */
+    public function getMetadata(): TransactionMetadata
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * Sets the transaction metadata.
+     *
+     * @param TransactionMetadata $metadata The transaction metadata
+     */
+    public function setMetadata(TransactionMetadata $metadata): void
+    {
+        $this->metadata = $metadata;
+    }
+
+    /**
+     * Sets the transaction source.
+     *
+     * @param TransactionSource $transactionSource The transaction source
+     */
+    public function setSource(TransactionSource $transactionSource): void
+    {
+        $this->metadata->setSource($transactionSource);
+    }
+
+    /**
      * Returns a context populated with the data of the given header.
      *
      * @param string $header The sentry-trace header from the request
      *
-     * @return self
+     * @deprecated since version 3.9, to be removed in 4.0
      */
-    public static function fromSentryTrace(string $header)
+    public static function fromSentryTrace(string $header): self
     {
         $context = new self();
 
@@ -93,6 +131,52 @@ final class TransactionContext extends SpanContext
 
         if (isset($matches['sampled'])) {
             $context->parentSampled = '1' === $matches['sampled'];
+        }
+
+        return $context;
+    }
+
+    /**
+     * Returns a context populated with the data of the given headers.
+     *
+     * @param string $sentryTraceHeader The sentry-trace header from an incoming request
+     * @param string $baggageHeader     The baggage header from an incoming request
+     */
+    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader): self
+    {
+        $context = new self();
+        $hasSentryTrace = false;
+
+        if (preg_match(self::TRACEPARENT_HEADER_REGEX, $sentryTraceHeader, $matches)) {
+            if (!empty($matches['trace_id'])) {
+                $context->traceId = new TraceId($matches['trace_id']);
+                $hasSentryTrace = true;
+            }
+
+            if (!empty($matches['span_id'])) {
+                $context->parentSpanId = new SpanId($matches['span_id']);
+                $hasSentryTrace = true;
+            }
+
+            if (isset($matches['sampled'])) {
+                $context->parentSampled = '1' === $matches['sampled'];
+                $hasSentryTrace = true;
+            }
+        }
+
+        $samplingContext = DynamicSamplingContext::fromHeader($baggageHeader);
+
+        if ($hasSentryTrace && !$samplingContext->hasEntries()) {
+            // The request comes from an old SDK which does not support Dynamic Sampling.
+            // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
+            $samplingContext->freeze();
+            $context->getMetadata()->setDynamicSamplingContext($samplingContext);
+        }
+
+        if ($hasSentryTrace && $samplingContext->hasEntries()) {
+            // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
+            // Propagate this Dynamic Sampling Context.
+            $context->getMetadata()->setDynamicSamplingContext($samplingContext);
         }
 
         return $context;

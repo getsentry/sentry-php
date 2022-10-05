@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 3.9.0 (2022-10-05)
+
+- feat: Add tracePropagationTargets option (#1396)
+- feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
+- feat: Add support for Dynamic Sampling (#1360)
+  - Add `segment` to `UserDataBag`
+  - Add `TransactionSource`, to set information about the transaction name via `TransactionContext::setSource()` (#1382)
+  - Deprecate `TransactionContext::fromSentryTrace()` in favor of `TransactionContext::fromHeaders()`
+
 ## 3.8.1 (2022-09-21)
 
 - fix: Use constant for the SDK version (#1374)

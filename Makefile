@@ -1,7 +1,7 @@
 gc -am .PHONY: test
 
 develop: update-submodules
-	composer install --dev
+	composer install
 	make setup-git
 
 update-submodules:
@@ -9,10 +9,10 @@ update-submodules:
 	git submodule update
 
 cs:
-	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff
+	vendor/bin/php-cs-fixer fix --verbose --diff
 
 cs-dry-run:
-	vendor/bin/php-cs-fixer fix --config=.php_cs --verbose --diff --dry-run
+	vendor/bin/php-cs-fixer fix --verbose --diff --dry-run
 
 cs-fix:
 	vendor/bin/php-cs-fixer fix
