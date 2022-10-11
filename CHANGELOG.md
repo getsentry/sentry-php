@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.9.1 (2022-10-11)
+
 - fix: Suppress errors on is_callable (#1401)
 
 ## 3.9.0 (2022-10-05)
