@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Suppress errors on is_callable (#1401)
+
 ## 3.9.0 (2022-10-05)
 
 - feat: Add tracePropagationTargets option (#1396)
