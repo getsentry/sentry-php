@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- ref: Add correct `never` option for `max_request_body_size` (#1397)
+  - Deprecate `max_request_body_size.none` in favour of `max_request_body_size.never`
+
+## 3.9.0 (2022-10-05)
+
+- feat: Add tracePropagationTargets option (#1396)
 - feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
 - feat: Add support for Dynamic Sampling (#1360)
   - Add `segment` to `UserDataBag`

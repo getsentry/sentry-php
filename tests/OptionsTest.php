@@ -249,6 +249,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'trace_propagation_targets',
+            ['www.example.com'],
+            'getTracePropagationTargets',
+            'setTracePropagationTargets',
+            null,
+            null,
+        ];
+
+        yield [
             'before_breadcrumb',
             static function (): void {},
             'getBeforeBreadcrumbCallback',

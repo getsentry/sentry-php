@@ -61,9 +61,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(3))
+        $client->expects($this->exactly(4))
             ->method('getOptions')
-            ->willReturn(new Options(['traces_sample_rate' => 1]));
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => [
+                    'www.example.com',
+                ],
+            ]));
 
         $hub = new Hub($client);
 

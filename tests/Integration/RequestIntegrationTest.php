@@ -228,6 +228,25 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'max_request_body_size' => 'never',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['3'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))

@@ -24,6 +24,23 @@ If you feel that you can fix or implement it yourself, please read on to learn h
 We will review your pull request as soon as possible.
 Thank you for contributing!
 
+## PR reviews
+
+For feedback in PRs, we use the [LOGAF scale](https://blog.danlew.net/2020/04/15/the-logaf-scale/) to specify how important a comment is:
+
+* `l`: low - nitpick. You may address this comment, but you don't have to.
+* `m`: medium - normal comment. Worth addressing and fixing.
+* `h`: high - Very important. We must not merge this PR without addressing this issue.
+
+You only need one approval from a maintainer to be able to merge. For some PRs, asking specific or multiple people for review might be adequate.
+
+Our different types of reviews:
+  
+  1. **LGTM without any comments.** You can merge immediately.
+  2. **LGTM with low and medium comments.** The reviewer trusts you to resolve these comments yourself, and you don't need to wait for another approval. 
+  3. **Only comments.** You must address all the comments and need another review until you merge.
+  4. **Request changes.** Only use if something critical is in the PR that absolutely must be addressed. We usually use `h` comments for that. When someone requests changes, the same person must approve the changes to allow merging. Use this sparingly.
+
 ## Development environment
 
 ### Clone the repository
