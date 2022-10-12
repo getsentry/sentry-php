@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventId;
 use Sentry\Monolog\Handler;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -307,6 +308,35 @@ final class HandlerTest extends TestCase
             [
                 'monolog.channel' => 'channel.foo',
                 'monolog.level' => Logger::getLevelName(Logger::WARNING),
+            ],
+        ];
+
+        $eventId = EventId::generate();
+        $event = Event::createEvent($eventId);
+        $event->setMessage('foo bar');
+        $event->setLogger('monolog.channel.foo');
+        $event->setLevel(Severity::warning());
+        $event->setContext('context', ['event_id' => (string) $eventId]);
+
+        yield 'Monolog\'s context eventId is filled and the event should have the same Id' => [
+            true,
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [
+                    'event_id' => (string) $eventId,
+                ],
+                []
+            ),
+            $event,
+            new EventHint(),
+            [
+                'monolog.channel' => 'channel.foo',
+                'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                'monolog.context' => [
+                    'event_id' => (string) $eventId,
+                ],
             ],
         ];
 

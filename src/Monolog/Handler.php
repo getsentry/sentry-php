@@ -9,6 +9,7 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventId;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
@@ -52,7 +53,12 @@ final class Handler extends AbstractProcessingHandler
      */
     protected function doWrite($record): void
     {
-        $event = Event::createEvent();
+        $eventId = null;
+        if (isset($record['context']['event_id'])) {
+            $eventId = new EventId($record['context']['event_id']);
+        }
+
+        $event = Event::createEvent($eventId);
         $event->setLevel(self::getSeverityFromLevel($record['level']));
         $event->setMessage($record['message']);
         $event->setLogger(sprintf('monolog.%s', $record['channel']));

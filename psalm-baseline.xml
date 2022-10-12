@@ -51,10 +51,13 @@
       <code>$record['level']</code>
       <code>$record['message']</code>
     </PossiblyInvalidArgument>
-    <PossiblyInvalidArrayOffset occurrences="1">
+    <PossiblyInvalidArrayOffset occurrences="2">
+      <code>$record['context']['event_id']</code>
       <code>$record['context']['exception']</code>
     </PossiblyInvalidArrayOffset>
-    <PossiblyUndefinedMethod occurrences="2">
+    <PossiblyUndefinedMethod occurrences="4">
+      <code>$record['context']</code>
+      <code>$record['context']</code>
       <code>$record['context']</code>
       <code>$record['context']</code>
     </PossiblyUndefinedMethod>
