@@ -10,6 +10,7 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -83,5 +84,39 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext(), $hub);
         $transaction->finish();
+    }
+
+    public function testTransactionIsSampledIfParentIsSampledWhenTracingIsDisabledInOptions(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(
+                new Options([
+                    'traces_sampler' => null,
+                    'traces_sample_rate' => 0,
+                ])
+            );
+
+        $transaction = (new Hub($client))->startTransaction(new TransactionContext('name', true));
+
+        $this->assertTrue($transaction->getSampled());
+    }
+
+    public function testTransactionIsNotSampledIfParentIsSampledWhenTracingIsDisabledInOptions(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(
+                new Options([
+                    'traces_sampler' => null,
+                    'traces_sample_rate' => 0,
+                ])
+            );
+
+        $transaction = (new Hub($client))->startTransaction(new TransactionContext('name', false));
+
+        $this->assertFalse($transaction->getSampled());
     }
 }
