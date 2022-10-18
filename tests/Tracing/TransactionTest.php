@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Tracing;
 
+use Generator;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -86,7 +87,10 @@ final class TransactionTest extends TestCase
         $transaction->finish();
     }
 
-    public function testTransactionIsSampledIfParentIsSampledWhenTracingIsDisabledInOptions(): void
+    /**
+     * @dataProvider parentTransactionContextDataProvider
+     */
+    public function testTransactionIsSampledCorrectlyWhenTracingIsDisabledInOptions(TransactionContext $context, bool $expectedSampled): void
     {
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
@@ -98,25 +102,31 @@ final class TransactionTest extends TestCase
                 ])
             );
 
-        $transaction = (new Hub($client))->startTransaction(new TransactionContext('name', true));
+        $transaction = (new Hub($client))->startTransaction($context);
 
-        $this->assertTrue($transaction->getSampled());
+        $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public function testTransactionIsNotSampledIfParentIsSampledWhenTracingIsDisabledInOptions(): void
+    public function parentTransactionContextDataProvider(): Generator
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(
-                new Options([
-                    'traces_sampler' => null,
-                    'traces_sample_rate' => 0,
-                ])
-            );
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, true),
+            true,
+        ];
 
-        $transaction = (new Hub($client))->startTransaction(new TransactionContext('name', false));
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
 
-        $this->assertFalse($transaction->getSampled());
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1', ''),
+            true,
+        ];
+
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', ''),
+            false,
+        ];
     }
 }
