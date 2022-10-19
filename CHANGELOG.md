@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Sampling now correctly takes in account the parent sampling decision if available instead of always being `false` when tracing is disabled (#1407)
+
 ## 3.9.1 (2022-10-11)
 
 - fix: Suppress errors on is_callable (#1401)
