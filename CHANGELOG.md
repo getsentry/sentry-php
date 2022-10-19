@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.10.0 (2022-10-19)
+
 - ref: Add correct `never` option for `max_request_body_size` (#1397)
   - Deprecate `max_request_body_size.none` in favour of `max_request_body_size.never`
 - fix: Sampling now correctly takes in account the parent sampling decision if available instead of always being `false` when tracing is disabled (#1407)
