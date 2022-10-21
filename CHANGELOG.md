@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+ref: Enable the ModulesIntegration by default (#1415)
+
 ## 3.10.0 (2022-10-19)
 
 - ref: Add correct `never` option for `max_request_body_size` (#1397)
