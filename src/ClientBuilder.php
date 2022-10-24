@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Discovery\Psr17FactoryDiscovery;
+use FriendsOfPHP\WellKnownImplementations\WellKnownPsr17Factory;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Serializer\RepresentationSerializerInterface;
@@ -175,19 +175,19 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     private function createDefaultTransportFactory(): DefaultTransportFactory
     {
-        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
+        $psr17Factory = new WellKnownPsr17Factory();
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUriFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
-            $streamFactory,
+            null,
+            null,
+            $psr17Factory,
             null,
             $this->sdkIdentifier,
             $this->sdkVersion
         );
 
         return new DefaultTransportFactory(
-            $streamFactory,
-            Psr17FactoryDiscovery::findRequestFactory(),
+            $psr17Factory,
+            $psr17Factory,
             $httpClientFactory,
             $this->logger
         );

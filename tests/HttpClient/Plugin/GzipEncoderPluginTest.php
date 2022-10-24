@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\HttpClient\Plugin;
 
-use Http\Discovery\Psr17FactoryDiscovery;
+use FriendsOfPHP\WellKnownImplementations\WellKnownPsr17Factory;
 use Http\Promise\Promise as PromiseInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -17,11 +17,12 @@ final class GzipEncoderPluginTest extends TestCase
 {
     public function testHandleRequest(): void
     {
-        $plugin = new GzipEncoderPlugin(Psr17FactoryDiscovery::findStreamFactory());
+        $psr17Factory = new WellKnownPsr17Factory();
+        $plugin = new GzipEncoderPlugin($psr17Factory);
         $expectedPromise = $this->createMock(PromiseInterface::class);
-        $request = Psr17FactoryDiscovery::findRequestFactory()
+        $request = $psr17Factory
             ->createRequest('POST', 'http://www.example.com')
-            ->withBody(Psr17FactoryDiscovery::findStreamFactory()->createStream('foo'));
+            ->withBody($psr17Factory->createStream('foo'));
 
         $this->assertSame('foo', (string) $request->getBody());
         $this->assertSame($expectedPromise, $plugin->handleRequest(

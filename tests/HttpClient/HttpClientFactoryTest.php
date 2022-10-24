@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\HttpClient;
 
+use FriendsOfPHP\WellKnownImplementations\WellKnownPsr17Factory;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Mock\Client as HttpMockClient;
 use PHPUnit\Framework\TestCase;
 use Sentry\HttpClient\HttpClientFactory;
@@ -19,13 +19,13 @@ final class HttpClientFactoryTest extends TestCase
      */
     public function testCreate(bool $isCompressionEnabled, string $expectedRequestBody): void
     {
-        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
+        $psr17Factory = new WellKnownPsr17Factory();
 
         $mockHttpClient = new HttpMockClient();
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
-            $streamFactory,
+            null,
+            null,
+            $psr17Factory,
             $mockHttpClient,
             'sentry.php.test',
             '1.2.3'
@@ -37,9 +37,9 @@ final class HttpClientFactoryTest extends TestCase
             'enable_compression' => $isCompressionEnabled,
         ]));
 
-        $request = Psr17FactoryDiscovery::findRequestFactory()
+        $request = $psr17Factory
             ->createRequest('POST', 'http://example.com/sentry/foo')
-            ->withBody($streamFactory->createStream('foo bar'));
+            ->withBody($psr17Factory->createStream('foo bar'));
 
         $httpClient->sendAsyncRequest($request);
 
@@ -67,9 +67,9 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfDsnOptionIsNotConfigured(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
-            Psr17FactoryDiscovery::findStreamFactory(),
+            null,
+            null,
+            new WellKnownPsr17Factory(),
             null,
             'sentry.php.test',
             '1.2.3'
@@ -84,9 +84,9 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfHttpProxyOptionIsUsedWithCustomHttpClient(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
-            Psr17FactoryDiscovery::findStreamFactory(),
+            null,
+            null,
+            new WellKnownPsr17Factory(),
             $this->createMock(HttpAsyncClientInterface::class),
             'sentry.php.test',
             '1.2.3'

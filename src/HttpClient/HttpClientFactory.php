@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\HttpClient;
 
+use FriendsOfPHP\WellKnownImplementations\ConcreteImplementation;
+use FriendsOfPHP\WellKnownImplementations\WellKnownHttplugClient;
 use GuzzleHttp\RequestOptions as GuzzleHttpClientOptions;
 use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
@@ -14,7 +16,6 @@ use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\Curl\Client as CurlHttpClient;
 use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Discovery\HttpAsyncClientDiscovery;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -54,16 +55,16 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     /**
      * Constructor.
      *
-     * @param UriFactoryInterface           $uriFactory      The PSR-7 URI factory
-     * @param ResponseFactoryInterface      $responseFactory The PSR-7 response factory
+     * @param UriFactoryInterface|null      $uriFactory      The PSR-7 URI factory
+     * @param ResponseFactoryInterface|null $responseFactory The PSR-7 response factory
      * @param StreamFactoryInterface        $streamFactory   The PSR-17 stream factory
      * @param HttpAsyncClientInterface|null $httpClient      The HTTP client
      * @param string                        $sdkIdentifier   The SDK identifier
      * @param string                        $sdkVersion      The SDK version
      */
     public function __construct(
-        UriFactoryInterface $uriFactory,
-        ResponseFactoryInterface $responseFactory,
+        ?UriFactoryInterface $uriFactory,
+        ?ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
         ?HttpAsyncClientInterface $httpClient,
         string $sdkIdentifier,
@@ -110,7 +111,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     private function resolveClient(Options $options)
     {
-        if (class_exists(SymfonyHttplugClient::class)) {
+        if (ConcreteImplementation::VENDOR_SYMFONY === ConcreteImplementation::HTTPLUG_VENDOR) {
             $symfonyConfig = [
                 'timeout' => $options->getHttpConnectTimeout(),
                 'max_duration' => $options->getHttpTimeout(),
@@ -123,7 +124,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             return new SymfonyHttplugClient(SymfonyHttpClient::create($symfonyConfig));
         }
 
-        if (class_exists(GuzzleHttpClient::class)) {
+        if (ConcreteImplementation::VENDOR_HTTPLUG_GUZZLE6 === ConcreteImplementation::HTTPLUG_VENDOR) {
             $guzzleConfig = [
                 GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout(),
                 GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout(),
@@ -136,7 +137,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             return GuzzleHttpClient::createWithConfig($guzzleConfig);
         }
 
-        if (class_exists(CurlHttpClient::class)) {
+        if (ConcreteImplementation::VENDOR_HTTPLUG_CURL === ConcreteImplementation::HTTPLUG_VENDOR) {
             $curlConfig = [
                 \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
                 \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
@@ -153,6 +154,6 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             throw new \RuntimeException('The "http_proxy" option requires either the "php-http/curl-client", the "symfony/http-client" or the "php-http/guzzle6-adapter" package to be installed.');
         }
 
-        return HttpAsyncClientDiscovery::find();
+        return new WellKnownHttplugClient();
     }
 }
