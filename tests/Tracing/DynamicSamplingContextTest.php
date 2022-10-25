@@ -12,6 +12,7 @@ use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionSource;
 use Sentry\UserDataBag;
 
 final class DynamicSamplingContextTest extends TestCase
@@ -110,6 +111,21 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('test', $samplingContext->get('environment'));
         $this->assertSame('my_segment', $samplingContext->get('user_segment'));
         $this->assertTrue($samplingContext->isFrozen());
+    }
+
+    public function testFromTransactionSourceUrl(): void
+    {
+        $hub = new Hub();
+
+        $transactionContext = new TransactionContext();
+        $transactionContext->setName('/foo/bar/123');
+        $transactionContext->setSource(TransactionSource::url());
+
+        $transaction = new Transaction($transactionContext, $hub);
+
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+
+        $this->assertNull($samplingContext->get('transaction'));
     }
 
     /**
