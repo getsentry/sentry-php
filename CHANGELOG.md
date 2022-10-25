@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.11.0 (2022-10-25)
+
+fix: Only include the transaction name to the DSC if it has good quality (#1410)
 ref: Enable the ModulesIntegration by default (#1415)
 ref: Expose the ExceptionMechanism through the event hint (#1416)
 
