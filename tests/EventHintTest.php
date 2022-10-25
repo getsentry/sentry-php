@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\EventHint;
+use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Stacktrace;
 
@@ -14,17 +15,20 @@ final class EventHintTest extends TestCase
     public function testCreateFromArray(): void
     {
         $exception = new \Exception();
+        $mechanism = new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false);
         $stacktrace = new Stacktrace([
             new Frame('function_1', 'path/to/file_1', 10),
         ]);
 
         $hint = EventHint::fromArray([
             'exception' => $exception,
+            'mechanism' => $mechanism,
             'stacktrace' => $stacktrace,
             'extra' => ['foo' => 'bar'],
         ]);
 
         $this->assertSame($exception, $hint->exception);
+        $this->assertSame($mechanism, $hint->mechanism);
         $this->assertSame($stacktrace, $hint->stacktrace);
         $this->assertSame(['foo' => 'bar'], $hint->extra);
     }
@@ -45,6 +49,11 @@ final class EventHintTest extends TestCase
         yield [
             ['exception' => 'foo'],
             'The value of the "exception" field must be an instance of a class implementing the "Throwable" interface. Got: "string".',
+        ];
+
+        yield [
+            ['mechanism' => 'foo'],
+            'The value of the "mechanism" field must be an instance of the "Sentry\\ExceptionMechanism" class. Got: "string".',
         ];
 
         yield [
