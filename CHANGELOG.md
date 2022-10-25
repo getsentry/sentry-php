@@ -3,6 +3,7 @@
 ## Unreleased
 
 ref: Enable the ModulesIntegration by default (#1415)
+ref: Expose the ExceptionMechanism through the event hint (#1416)
 
 ## 3.10.0 (2022-10-19)
 

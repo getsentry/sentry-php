@@ -17,6 +17,13 @@ final class EventHint
     public $exception;
 
     /**
+     * An object describing the mechanism of the original exception.
+     *
+     * @var ExceptionMechanism|null
+     */
+    public $mechanism;
+
+    /**
      * The stacktrace to set on the event.
      *
      * @var Stacktrace|null
@@ -43,11 +50,16 @@ final class EventHint
     {
         $hint = new self();
         $exception = $hintData['exception'] ?? null;
+        $mechanism = $hintData['mechanism'] ?? null;
         $stacktrace = $hintData['stacktrace'] ?? null;
         $extra = $hintData['extra'] ?? [];
 
         if (null !== $exception && !$exception instanceof \Throwable) {
             throw new \InvalidArgumentException(sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, get_debug_type($exception)));
+        }
+
+        if (null !== $mechanism && !$mechanism instanceof ExceptionMechanism) {
+            throw new \InvalidArgumentException(sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, get_debug_type($mechanism)));
         }
 
         if (null !== $stacktrace && !$stacktrace instanceof Stacktrace) {
@@ -59,6 +71,7 @@ final class EventHint
         }
 
         $hint->exception = $exception;
+        $hint->mechanism = $mechanism;
         $hint->stacktrace = $stacktrace;
         $hint->extra = $extra;
 
