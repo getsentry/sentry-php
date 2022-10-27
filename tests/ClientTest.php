@@ -705,6 +705,42 @@ final class ClientTest extends TestCase
         ]));
     }
 
+    public function testBuildEventWithExceptionAndMechansim(): void
+    {
+        $options = new Options();
+        $exception = new \Exception('testMessage');
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $capturedExceptions = $event->getExceptions();
+
+                $this->assertCount(1, $capturedExceptions);
+                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false), $capturedExceptions[0]->getMechanism());
+                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+            'mechanism' => new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false),
+        ]));
+    }
+
     public function testBuildWithErrorException(): void
     {
         $options = new Options();
