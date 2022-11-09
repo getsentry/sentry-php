@@ -511,6 +511,39 @@ final class ClientTest extends TestCase
     }
 
     /**
+     * @dataProvider processEventChecksBeforeSendTransactionOptionDataProvider
+     */
+    public function testProcessEventChecksBeforeSendTransactionOption(Event $event, bool $expectedBeforeSendCall): void
+    {
+        $beforeSendTransactionCalled = false;
+        $options = [
+            'before_send_transaction' => static function () use (&$beforeSendTransactionCalled) {
+                $beforeSendTransactionCalled = true;
+
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
+
+        $this->assertSame($expectedBeforeSendCall, $beforeSendTransactionCalled);
+    }
+
+    public function processEventChecksBeforeSendTransactionOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            false,
+        ];
+
+        yield [
+            Event::createTransaction(),
+            true,
+        ];
+    }
+
+    /**
      * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
      */
     public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, InvocationOrder $transportCallInvocationMatcher, InvocationOrder $loggerCallInvocationMatcher): void
@@ -574,7 +607,30 @@ final class ClientTest extends TestCase
             ->setLogger($logger)
             ->getClient();
 
-        $client->captureMessage('foo');
+        $client->captureEvent(Event::createEvent());
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendTransactionCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send_transaction" callback returned "null".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'before_send_transaction' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent(Event::createTransaction());
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void
