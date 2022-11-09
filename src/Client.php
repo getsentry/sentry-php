@@ -335,7 +335,7 @@ final class Client implements ClientInterface
         $beforeSendCallbackName = 'before_send';
 
         if ($event->getType() === EventType::transaction()) {
-            $beforeSendCallbackName = 'before_send_transction';
+            $beforeSendCallbackName = 'before_send_transaction';
         }
 
         return $beforeSendCallbackName;
