@@ -298,12 +298,32 @@ final class Client implements ClientInterface
             }
         }
 
-        if (!$isTransaction) {
+        $beforeSendCallback = null;
+        $beforeSendCallbackName = null;
+
+        switch ($event->getType()) {
+            case EventType::event():
+                $beforeSendCallback = $this->options->getBeforeSendCallback();
+                $beforeSendCallbackName = 'before_send';
+                break;
+            case EventType::transaction():
+                $beforeSendCallback = $this->options->getBeforeSendTransactionCallback();
+                $beforeSendCallbackName = 'before_send_transaction';
+                break;
+        }
+
+        if (null !== $beforeSendCallback) {
             $previousEvent = $event;
-            $event = ($this->options->getBeforeSendCallback())($event, $hint);
+            $event = $beforeSendCallback($event, $hint);
 
             if (null === $event) {
-                $this->logger->info('The event will be discarded because the "before_send" callback returned "null".', ['event' => $previousEvent]);
+                $this->logger->info(
+                    sprintf(
+                        'The event will be discarded because the "%s" callback returned "null".',
+                        $beforeSendCallbackName
+                    ),
+                    ['event' => $previousEvent]
+                );
             }
         }
 
