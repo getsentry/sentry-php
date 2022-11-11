@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- fix: Set `traces_sample_rate` to `null` by default
+- fix: Set `traces_sample_rate` to `null` by default (#1428)
 
 ## 3.11.0 (2022-10-25)
 
