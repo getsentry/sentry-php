@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Set `traces_sample_rate` to `null` by default
+
 ## 3.11.0 (2022-10-25)
 
 - fix: Only include the transaction name to the DSC if it has good quality (#1410)
