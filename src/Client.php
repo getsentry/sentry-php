@@ -288,26 +288,57 @@ final class Client implements ClientInterface
         }
 
         if (null !== $scope) {
-            $previousEvent = $event;
+            $beforeEventProcessors = $event;
             $event = $scope->applyToEvent($event, $hint);
 
             if (null === $event) {
-                $this->logger->info('The event will be discarded because one of the event processors returned "null".', ['event' => $previousEvent]);
+                $this->logger->info(
+                    'The event will be discarded because one of the event processors returned "null".',
+                    ['event' => $beforeEventProcessors]
+                );
 
                 return null;
             }
         }
 
-        if (!$isTransaction) {
-            $previousEvent = $event;
-            $event = ($this->options->getBeforeSendCallback())($event, $hint);
+        $beforeSendCallback = $event;
+        $event = $this->applyBeforeSendCallback($event, $hint);
 
-            if (null === $event) {
-                $this->logger->info('The event will be discarded because the "before_send" callback returned "null".', ['event' => $previousEvent]);
-            }
+        if (null === $event) {
+            $this->logger->info(
+                sprintf(
+                    'The event will be discarded because the "%s" callback returned "null".',
+                    $this->getBeforeSendCallbackName($beforeSendCallback)
+                ),
+                ['event' => $beforeSendCallback]
+            );
         }
 
         return $event;
+    }
+
+    private function applyBeforeSendCallback(Event $event, ?EventHint $hint): ?Event
+    {
+        if ($event->getType() === EventType::event()) {
+            return ($this->options->getBeforeSendCallback())($event, $hint);
+        }
+
+        if ($event->getType() === EventType::transaction()) {
+            return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+        }
+
+        return $event;
+    }
+
+    private function getBeforeSendCallbackName(Event $event): string
+    {
+        $beforeSendCallbackName = 'before_send';
+
+        if ($event->getType() === EventType::transaction()) {
+            $beforeSendCallbackName = 'before_send_transaction';
+        }
+
+        return $beforeSendCallbackName;
     }
 
     /**

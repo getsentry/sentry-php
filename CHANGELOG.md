@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+- feat: Add `before_send_transaction` option (#1424)
+
 ## 3.11.0 (2022-10-25)
 
-fix: Only include the transaction name to the DSC if it has good quality (#1410)
-ref: Enable the ModulesIntegration by default (#1415)
-ref: Expose the ExceptionMechanism through the event hint (#1416)
+- fix: Only include the transaction name to the DSC if it has good quality (#1410)
+- ref: Enable the ModulesIntegration by default (#1415)
+- ref: Expose the ExceptionMechanism through the event hint (#1416)
 
 ## 3.10.0 (2022-10-19)
 
@@ -20,7 +22,7 @@ ref: Expose the ExceptionMechanism through the event hint (#1416)
 
 ## 3.9.0 (2022-10-05)
 
-- feat: Add tracePropagationTargets option (#1396)
+- feat: Add `trace_propagation_targets` option (#1396)
 - feat: Expose a function to retrieve the URL of the CSP endpoint (#1378)
 - feat: Add support for Dynamic Sampling (#1360)
   - Add `segment` to `UserDataBag`
