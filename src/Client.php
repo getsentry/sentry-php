@@ -35,7 +35,7 @@ final class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '3.10.0';
+    public const SDK_VERSION = '3.11.0';
 
     /**
      * @var Options The client options
@@ -248,7 +248,7 @@ final class Client implements ClientInterface
     {
         if (null !== $hint) {
             if (null !== $hint->exception && empty($event->getExceptions())) {
-                $this->addThrowableToEvent($event, $hint->exception);
+                $this->addThrowableToEvent($event, $hint->exception, $hint);
             }
 
             if (null !== $hint->stacktrace && null === $event->getStacktrace()) {
@@ -338,8 +338,9 @@ final class Client implements ClientInterface
      *
      * @param Event      $event     The event that will be enriched with the exception
      * @param \Throwable $exception The exception that will be processed and added to the event
+     * @param EventHint  $hint      Contains additional information about the event
      */
-    private function addThrowableToEvent(Event $event, \Throwable $exception): void
+    private function addThrowableToEvent(Event $event, \Throwable $exception, EventHint $hint): void
     {
         if ($exception instanceof \ErrorException && null === $event->getLevel()) {
             $event->setLevel(Severity::fromError($exception->getSeverity()));
@@ -351,7 +352,7 @@ final class Client implements ClientInterface
             $exceptions[] = new ExceptionDataBag(
                 $exception,
                 $this->stacktraceBuilder->buildFromException($exception),
-                new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
+                $hint->mechanism ?? new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
             );
         } while ($exception = $exception->getPrevious());
 

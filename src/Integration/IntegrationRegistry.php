@@ -131,6 +131,7 @@ final class IntegrationRegistry
             new TransactionIntegration(),
             new FrameContextifierIntegration(),
             new EnvironmentIntegration(),
+            new ModulesIntegration(),
         ];
 
         if (null !== $options->getDsn()) {
