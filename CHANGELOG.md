@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Add missing array key from docblock (#1430)
+
 ## 3.11.0 (2022-10-25)
 
 - fix: Only include the transaction name to the DSC if it has good quality (#1410)
