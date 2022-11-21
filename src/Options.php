@@ -163,7 +163,7 @@ final class Options
      */
     public function isTracingEnabled(): bool
     {
-        return 0 != $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
+        return null !== $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
     }
 
     /**
@@ -814,7 +814,7 @@ final class Options
             'send_attempts' => 0,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
-            'traces_sample_rate' => 0,
+            'traces_sample_rate' => null,
             'traces_sampler' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
@@ -852,7 +852,7 @@ final class Options
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
