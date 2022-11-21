@@ -397,6 +397,32 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked before an transaction is sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Event, ?EventHint): ?Event
+     */
+    public function getBeforeSendTransactionCallback(): callable
+    {
+        return $this->options['before_send_transaction'];
+    }
+
+    /**
+     * Sets a callable to be called to decide whether an transaction should
+     * be captured or not.
+     *
+     * @param callable $callback The callable
+     *
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     */
+    public function setBeforeSendTransactionCallback(callable $callback): void
+    {
+        $options = array_merge($this->options, ['before_send_transaction' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets an allow list of trace propagation targets.
      *
      * @return string[]
@@ -801,6 +827,9 @@ final class Options
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
+            'before_send_transaction' => static function (Event $transaction): Event {
+                return $transaction;
+            },
             'trace_propagation_targets' => [],
             'tags' => [],
             'error_types' => null,
@@ -836,6 +865,7 @@ final class Options
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
+        $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('trace_propagation_targets', 'string[]');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);

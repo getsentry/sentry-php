@@ -249,6 +249,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'before_send_transaction',
+            static function (): void {},
+            'getBeforeSendTransactionCallback',
+            'setBeforeSendTransactionCallback',
+            null,
+            null,
+        ];
+
+        yield [
             'trace_propagation_targets',
             ['www.example.com'],
             'getTracePropagationTargets',
