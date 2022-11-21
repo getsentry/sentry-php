@@ -42,6 +42,7 @@ final class EventHint
      *
      * @psalm-param array{
      *     exception?: \Throwable|null,
+     *     mechanism?: ExceptionMechanism|null,
      *     stacktrace?: Stacktrace|null,
      *     extra?: array<string, mixed>
      * } $hintData
