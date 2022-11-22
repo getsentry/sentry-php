@@ -163,7 +163,7 @@ final class Options
      */
     public function isTracingEnabled(): bool
     {
-        return 0 != $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
+        return null !== $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
     }
 
     /**
@@ -392,6 +392,32 @@ final class Options
     public function setBeforeSendCallback(callable $callback): void
     {
         $options = array_merge($this->options, ['before_send' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets a callback that will be invoked before an transaction is sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Event, ?EventHint): ?Event
+     */
+    public function getBeforeSendTransactionCallback(): callable
+    {
+        return $this->options['before_send_transaction'];
+    }
+
+    /**
+     * Sets a callable to be called to decide whether an transaction should
+     * be captured or not.
+     *
+     * @param callable $callback The callable
+     *
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     */
+    public function setBeforeSendTransactionCallback(callable $callback): void
+    {
+        $options = array_merge($this->options, ['before_send_transaction' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -788,7 +814,7 @@ final class Options
             'send_attempts' => 0,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
-            'traces_sample_rate' => 0,
+            'traces_sample_rate' => null,
             'traces_sampler' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
@@ -800,6 +826,9 @@ final class Options
             'server_name' => gethostname(),
             'before_send' => static function (Event $event): Event {
                 return $event;
+            },
+            'before_send_transaction' => static function (Event $transaction): Event {
+                return $transaction;
             },
             'trace_propagation_targets' => [],
             'tags' => [],
@@ -823,7 +852,7 @@ final class Options
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('traces_sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
@@ -836,6 +865,7 @@ final class Options
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
+        $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('trace_propagation_targets', 'string[]');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
