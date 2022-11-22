@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.12.0 (2022-11-22)
+
 - feat: Add `before_send_transaction` option (#1424)
 - fix: Set `traces_sample_rate` to `null` by default (#1428)
 
