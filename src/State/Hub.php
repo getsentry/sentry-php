@@ -222,7 +222,7 @@ final class Hub implements HubInterface
         $client = $this->getClient();
         $options = null !== $client ? $client->getOptions() : null;
 
-        if (null === $options || !$options->isTracingEnabled()) {
+        if (null === $options || (!$options->isTracingEnabled() && true !== $context->getParentSampled())) {
             $transaction->setSampled(false);
 
             return $transaction;
