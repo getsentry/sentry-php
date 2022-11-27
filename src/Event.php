@@ -167,6 +167,11 @@ final class Event
      */
     private $type;
 
+    /**
+     * @var Attachment[] The attachments associated with this event
+     */
+    private $attachments = [];
+
     private function __construct(?EventId $eventId, EventType $eventType)
     {
         $this->id = $eventId ?? EventId::generate();
@@ -746,5 +751,25 @@ final class Event
     public function setSpans(array $spans): void
     {
         $this->spans = $spans;
+    }
+
+    public function hasAttachments(): bool
+    {
+        return [] !== $this->attachments;
+    }
+
+    /**
+     * A list of attachments associated with this event.
+     *
+     * @return Attachment[]
+     */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    public function addAttachment(Attachment $attachment): void
+    {
+        $this->attachments[] = $attachment;
     }
 }

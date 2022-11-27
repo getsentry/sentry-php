@@ -38,7 +38,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
      */
     public function serialize(Event $event): string
     {
-        if (EventType::transaction() === $event->getType()) {
+        if (EventType::transaction() === $event->getType() || $event->hasAttachments()) {
             return $this->serializeAsEnvelope($event);
         }
 
@@ -215,12 +215,32 @@ final class PayloadSerializer implements PayloadSerializerInterface
             }
         }
 
-        $itemHeader = [
+        $eventItemHeader = [
             'type' => (string) $event->getType(),
             'content_type' => 'application/json',
         ];
 
-        return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $this->serializeAsEvent($event));
+        $items = [
+            JSON::encode($envelopeHeader),
+            JSON::encode($eventItemHeader),
+            $this->serializeAsEvent($event),
+        ];
+
+        foreach ($event->getAttachments() as $attachment) {
+            $data = $attachment->getData();
+
+            $attachmentItemHeader = [
+                'type' => 'attachment',
+                'filename' => $attachment->getFilename(),
+                'content_type' => $attachment->getContentType(),
+                'length' => \strlen($data),
+            ];
+
+            $items[] = JSON::encode($attachmentItemHeader);
+            $items[] = $data;
+        }
+
+        return implode("\n", $items);
     }
 
     /**

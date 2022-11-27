@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -263,6 +264,49 @@ final class ScopeTest extends TestCase
         $this->assertEmpty($event->getBreadcrumbs());
     }
 
+    public function testAddAttachment(): void
+    {
+        $scope = new Scope();
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getAttachments());
+
+        $scope->addAttachment($attachment1 = new Attachment('data', 'filename.ext'));
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$attachment1], $event->getAttachments());
+
+        $scope->addAttachment($attachment2 = new Attachment('data', 'filename2.ext'));
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$attachment1, $attachment2], $event->getAttachments());
+    }
+
+    public function testClearAttachments(): void
+    {
+        $scope = new Scope();
+
+        $scope->addAttachment(new Attachment('data', 'filename.ext'));
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertNotEmpty($event->getAttachments());
+
+        $scope->clearAttachments();
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertEmpty($event->getAttachments());
+    }
+
     public function testAddEventProcessor(): void
     {
         $callback1Called = false;
@@ -336,6 +380,7 @@ final class ScopeTest extends TestCase
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
+        $scope->addAttachment(new Attachment('data', 'filename.ext'));
         $scope->clear();
 
         $event = $scope->applyToEvent(Event::createEvent());
@@ -347,6 +392,7 @@ final class ScopeTest extends TestCase
         $this->assertEmpty($event->getExtra());
         $this->assertEmpty($event->getTags());
         $this->assertEmpty($event->getUser());
+        $this->assertEmpty($event->getAttachments());
     }
 
     public function testApplyToEvent(): void
@@ -371,6 +417,7 @@ final class ScopeTest extends TestCase
         $scope->setContext('foocontext', ['foo' => 'bar']);
         $scope->setContext('barcontext', ['bar' => 'foo']);
         $scope->setSpan($span);
+        $scope->addAttachment($attachment = new Attachment('data', 'filename.ext'));
 
         $this->assertSame($event, $scope->applyToEvent($event));
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
@@ -379,6 +426,7 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $event->getTags());
         $this->assertSame(['bar' => 'foo'], $event->getExtra());
         $this->assertSame($user, $event->getUser());
+        $this->assertSame([$attachment], $event->getAttachments());
         $this->assertSame([
             'foocontext' => [
                 'foo' => 'foo',

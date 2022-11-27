@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -42,6 +43,11 @@ final class Scope
      * @var array<string, mixed> A set of extra data associated to this scope
      */
     private $extra = [];
+
+    /**
+     * @var Attachment[] A set of attachments associated to this scope
+     */
+    private $attachments = [];
 
     /**
      * @var string[] List of fingerprints used to group events together in
@@ -222,6 +228,38 @@ final class Scope
     }
 
     /**
+     * Adds the attachment to this scope.
+     *
+     * @return $this
+     */
+    public function addAttachment(Attachment $attachment): self
+    {
+        $this->attachments[] = $attachment;
+
+        return $this;
+    }
+
+    /**
+     * @return Attachment[]
+     */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /**
+     * Clears all attachments from this scope.
+     *
+     * @return $this
+     */
+    public function clearAttachments(): self
+    {
+        $this->attachments = [];
+
+        return $this;
+    }
+
+    /**
      * Sets the list of strings used to dictate the deduplication of this event.
      *
      * @param string[] $fingerprint The fingerprint values
@@ -318,6 +356,7 @@ final class Scope
         $this->tags = [];
         $this->extra = [];
         $this->contexts = [];
+        $this->attachments = [];
 
         return $this;
     }
@@ -367,6 +406,10 @@ final class Scope
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
             $event->setContext($name, $data);
+        }
+
+        foreach ($this->attachments as $attachment) {
+            $event->addAttachment($attachment);
         }
 
         // We create a empty `EventHint` instance to allow processors to always receive a `EventHint` instance even if there wasn't one

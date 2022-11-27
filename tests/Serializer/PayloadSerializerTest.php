@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Serializer;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Client;
 use Sentry\Context\OsContext;
@@ -54,7 +55,7 @@ final class PayloadSerializerTest extends TestCase
 
         $result = $this->serializer->serialize($event);
 
-        if (EventType::transaction() !== $event->getType()) {
+        if (EventType::transaction() !== $event->getType() && !$event->hasAttachments()) {
             $resultArray = $this->serializer->toArray($event);
             $this->assertJsonStringEqualsJsonString($result, json_encode($resultArray));
         }
@@ -478,6 +479,22 @@ TEXT
 JSON
             ,
             true,
+        ];
+
+        $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->addAttachment(new Attachment('data', 'filename.ext', 'text/plain'));
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"event","content_type":"application\/json"}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"attachment","filename":"filename.ext","content_type":"text\/plain","length":4}
+data
+TEXT
+            ,
+            false,
         ];
     }
 }

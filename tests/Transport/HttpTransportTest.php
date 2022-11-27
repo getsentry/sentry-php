@@ -18,6 +18,7 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment;
 use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\Options;
@@ -76,6 +77,55 @@ final class HttpTransportTest extends TestCase
     {
         $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $event = Event::createTransaction();
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        $this->requestFactory->expects($this->once())
+            ->method('createRequest')
+            ->with('POST', $dsn->getEnvelopeApiEndpointUrl())
+            ->willReturn(new Request('POST', 'http://www.example.com'));
+
+        $this->streamFactory->expects($this->once())
+            ->method('createStream')
+            ->with('{"foo":"bar"}')
+            ->willReturnCallback(static function (string $content): StreamInterface {
+                return Utils::streamFor($content);
+            });
+
+        $this->httpClient->expects($this->once())
+            ->method('sendAsyncRequest')
+            ->with($this->callback(function (Request $requestArg): bool {
+                if ('application/x-sentry-envelope' !== $requestArg->getHeaderLine('Content-Type')) {
+                    return false;
+                }
+
+                if ('{"foo":"bar"}' !== $requestArg->getBody()->getContents()) {
+                    return false;
+                }
+
+                return true;
+            }))
+            ->willReturn(new HttpFullfilledPromise(new Response()));
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => $dsn]),
+            $this->httpClient,
+            $this->streamFactory,
+            $this->requestFactory,
+            $this->payloadSerializer
+        );
+
+        $transport->send($event);
+    }
+
+    public function testSendAttachmentsInEnvelope(): void
+    {
+        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
+        $event = Event::createEvent();
+        $event->addAttachment(new Attachment('data', 'filename.ext', 'text/plain'));
 
         $this->payloadSerializer->expects($this->once())
             ->method('serialize')
