@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: Add support for sending file attachments (#1436)
+
 ## 3.12.0 (2022-11-22)
 
 - feat: Add `before_send_transaction` option (#1424)
