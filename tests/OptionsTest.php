@@ -364,6 +364,50 @@ final class OptionsTest extends TestCase
             null,
             null,
         ];
+
+        yield [
+            'default_integrations',
+            false,
+            'hasDefaultIntegrations',
+            'setDefaultIntegrations',
+            null,
+            null,
+        ];
+
+        yield [
+            'error_handler_integrations',
+            true,
+            'hasErrorHandlerIntegrations',
+            'setErrorHandlerIntegrations',
+            null,
+            null,
+        ];
+    }
+
+    /**
+     * @dataProvider errorHandlerIntegrationsOptionDataProvider
+     */
+    public function testErrorHandlerIntegrationsFallback(
+        bool $defaultIntegrationsValue,
+        ?bool $errorHandlerIntegrationsValue,
+        bool $expectedValue
+    ): void {
+        $options = new Options([
+            'default_integrations' => $defaultIntegrationsValue,
+            'error_handler_integrations' => $errorHandlerIntegrationsValue,
+        ]);
+
+        $this->assertEquals($expectedValue, $options->hasErrorHandlerIntegrations());
+    }
+
+    public function errorHandlerIntegrationsOptionDataProvider(): iterable
+    {
+        yield [true, null, true];
+        yield [true, false, false];
+        yield [true, true, true];
+        yield [false, null, false];
+        yield [false, false, false];
+        yield [false, true, true];
     }
 
     /**

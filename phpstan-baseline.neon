@@ -241,6 +241,11 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:hasErrorHandlerIntegrations\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:isCompressionEnabled\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php

@@ -609,6 +609,28 @@ final class Options
     }
 
     /**
+     * Returns whether the error handler integrations are enabled or fallbacks
+     * to whether the default integrations are enabled when null.
+     */
+    public function hasErrorHandlerIntegrations(): bool
+    {
+        return $this->options['error_handler_integrations'] ?? $this->hasDefaultIntegrations();
+    }
+
+    /**
+     * Sets whether the error handler integrations are enabled.
+     *
+     * @param ?bool $enable Flag indicating whether the error handler integrations should be enabled, fallbacks
+     *                      to "default_integrations" when null
+     */
+    public function setErrorHandlerIntegrations(?bool $enable): void
+    {
+        $options = array_merge($this->options, ['error_handler_integrations' => $enable]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets the max length for values in the event payload.
      */
     public function getMaxValueLength(): int
@@ -811,6 +833,7 @@ final class Options
         $resolver->setDefaults([
             'integrations' => [],
             'default_integrations' => true,
+            'error_handler_integrations' => null,
             'send_attempts' => 0,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
@@ -874,6 +897,7 @@ final class Options
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
+        $resolver->setAllowedTypes('error_handler_integrations', ['bool', 'null']);
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);

@@ -122,19 +122,19 @@ final class IntegrationRegistry
      */
     private function getDefaultIntegrations(Options $options): array
     {
-        if (!$options->hasDefaultIntegrations()) {
-            return [];
+        $integrations = [];
+
+        if ($options->hasDefaultIntegrations()) {
+            $integrations = [
+                new RequestIntegration(),
+                new TransactionIntegration(),
+                new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
+                new ModulesIntegration(),
+            ];
         }
 
-        $integrations = [
-            new RequestIntegration(),
-            new TransactionIntegration(),
-            new FrameContextifierIntegration(),
-            new EnvironmentIntegration(),
-            new ModulesIntegration(),
-        ];
-
-        if (null !== $options->getDsn()) {
+        if ($options->hasErrorHandlerIntegrations() && null !== $options->getDsn()) {
             array_unshift($integrations, new ExceptionListenerIntegration(), new ErrorListenerIntegration(), new FatalErrorListenerIntegration());
         }
 
