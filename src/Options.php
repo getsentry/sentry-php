@@ -138,7 +138,7 @@ final class Options
      * Gets the sampling factor to apply to transaction. A value of 0 will deny
      * sending any transaction, and a value of 1 will send 100% of transaction.
      */
-    public function getTracesSampleRate(): float
+    public function getTracesSampleRate(): ?float
     {
         return $this->options['traces_sample_rate'];
     }
@@ -147,9 +147,9 @@ final class Options
      * Sets the sampling factor to apply to transactions. A value of 0 will deny
      * sending any transactions, and a value of 1 will send 100% of transactions.
      *
-     * @param float $sampleRate The sampling factor
+     * @param ?float $sampleRate The sampling factor
      */
-    public function setTracesSampleRate(float $sampleRate): void
+    public function setTracesSampleRate(?float $sampleRate): void
     {
         $options = array_merge($this->options, ['traces_sample_rate' => $sampleRate]);
 
@@ -163,7 +163,7 @@ final class Options
      */
     public function isTracingEnabled(): bool
     {
-        return null !== $this->options['traces_sample_rate'] || null !== $this->options['traces_sampler'];
+        return null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler();
     }
 
     /**
