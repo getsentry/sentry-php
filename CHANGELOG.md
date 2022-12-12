@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Allow `null` on `getTracesSampleRate` and `setTracesSampleRate` in `Options` class
+
 ## 3.12.0 (2022-11-22)
 
 - feat: Add `before_send_transaction` option (#1424)
