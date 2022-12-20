@@ -241,7 +241,7 @@ abstract class AbstractSerializer
         }
 
         if (\is_object($value)) {
-            return 'Object ' . \get_class($value);
+            return 'Object ' . \get_class($value) . (method_exists($value, 'getId') ? ' (#' . $value->getId() . ')'  : '');
         }
 
         if (\is_resource($value)) {
