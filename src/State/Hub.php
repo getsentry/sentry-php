@@ -239,7 +239,7 @@ final class Hub implements HubInterface
             } else {
                 $sampleRate = $this->getSampleRate(
                     $samplingContext->getParentSampled(),
-                    $options->getTracesSampleRate()
+                    $options->getTracesSampleRate() ?? 0
                 );
             }
 
