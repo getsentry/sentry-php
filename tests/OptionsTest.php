@@ -123,6 +123,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'traces_sample_rate',
+            null,
+            'getTracesSampleRate',
+            'setTracesSampleRate',
+            null,
+            null,
+        ];
+
+        yield [
             'traces_sampler',
             static function (): void {},
             'getTracesSampler',
