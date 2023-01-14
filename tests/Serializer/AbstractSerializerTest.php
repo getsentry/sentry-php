@@ -54,6 +54,24 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
+    public function testObjectsWithIdPropertyAreStrings(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithIdProperty();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)', $result);
+    }
+
+    public function testObjectsWithSerializerTestObjectWithGetIdMethodAreStrings(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithGetIdMethod();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithGetIdMethod(#foobar)', $result);
+    }
+
     public function testObjectsAreNotStrings(): void
     {
         $serializer = $this->createSerializer();
@@ -149,20 +167,6 @@ abstract class AbstractSerializerTest extends TestCase
         yield [
             'object' => $object,
             'expectedResult' => ['key' => 'Object ' . SerializerTestObject::class],
-        ];
-
-        $object = new SerializerTestObjectWithIdProperty();
-        $object->key = $object;
-        yield [
-            'object' => $object,
-            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithIdProperty::class . '(#bar)'],
-        ];
-
-        $object = new SerializerTestObjectWithGetIdMethod();
-        $object->key = $object;
-        yield [
-            'object' => $object,
-            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithGetIdMethod::class . '(#bar)'],
         ];
 
         $object = new SerializerTestObject();
@@ -599,9 +603,10 @@ class SerializerTestObjectWithIdProperty extends SerializerTestObject
 #[\AllowDynamicProperties]
 class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
 {
+    private $id = 'foo';
     public function getId()
     {
-        return 'bar';
+        return $this->id . 'bar';
     }
 }
 

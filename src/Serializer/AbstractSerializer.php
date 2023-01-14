@@ -242,7 +242,7 @@ abstract class AbstractSerializer
 
         if (\is_object($value)) {
             $objectId = null;
-            if (property_exists($value, 'id')) {
+            if (isset($value->id)) {
                 $objectId = $value->id;
             } elseif (method_exists($value, 'getId')) {
                 $objectId = $value->getId();
