@@ -604,6 +604,7 @@ class SerializerTestObjectWithIdProperty extends SerializerTestObject
 class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
 {
     private $id = 'foo';
+
     public function getId()
     {
         return $this->id . 'bar';
