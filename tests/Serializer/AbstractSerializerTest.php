@@ -155,14 +155,14 @@ abstract class AbstractSerializerTest extends TestCase
         $object->key = $object;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithIdProperty::class . ' (#bar)'],
+            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithIdProperty::class . '(#bar)'],
         ];
 
         $object = new SerializerTestObjectWithGetIdMethod();
         $object->key = $object;
         yield [
             'object' => $object,
-            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithGetIdMethod::class . ' (#bar)'],
+            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithGetIdMethod::class . '(#bar)'],
         ];
 
         $object = new SerializerTestObject();
