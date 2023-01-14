@@ -151,6 +151,20 @@ abstract class AbstractSerializerTest extends TestCase
             'expectedResult' => ['key' => 'Object ' . SerializerTestObject::class],
         ];
 
+        $object = new SerializerTestObjectWithIdProperty();
+        $object->key = $object;
+        yield [
+            'object' => $object,
+            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithIdProperty::class . ' (#bar)'],
+        ];
+
+        $object = new SerializerTestObjectWithGetIdMethod();
+        $object->key = $object;
+        yield [
+            'object' => $object,
+            'expectedResult' => ['key' => 'Object ' . SerializerTestObjectWithGetIdMethod::class . ' (#bar)'],
+        ];
+
         $object = new SerializerTestObject();
         $object2 = new SerializerTestObject();
         $object2->key = $object;
@@ -573,6 +587,21 @@ class SerializerTestObject
     public static function testy(): void
     {
         throw new \Exception('We should not reach this');
+    }
+}
+
+#[\AllowDynamicProperties]
+class SerializerTestObjectWithIdProperty extends SerializerTestObject
+{
+    public $id = 'bar';
+}
+
+#[\AllowDynamicProperties]
+class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
+{
+    public function getId()
+    {
+        return 'bar';
     }
 }
 

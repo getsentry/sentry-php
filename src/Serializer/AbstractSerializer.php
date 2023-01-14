@@ -241,7 +241,14 @@ abstract class AbstractSerializer
         }
 
         if (\is_object($value)) {
-            return 'Object ' . \get_class($value) . (method_exists($value, 'getId') ? ' (#' . $value->getId() . ')'  : '');
+            $objectId = null;
+            if (property_exists($value, 'id')) {
+                $objectId = $value->id;
+            } elseif (method_exists($value, 'getId')) {
+                $objectId = $value->getId();
+            }
+
+            return 'Object ' . \get_class($value) . (($objectId !== null) ? ' (#' . $objectId . ')'  : '');
         }
 
         if (\is_resource($value)) {
