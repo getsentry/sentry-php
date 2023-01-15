@@ -244,7 +244,7 @@ abstract class AbstractSerializer
             $objectId = null;
             if (isset($value->id)) {
                 $objectId = $value->id;
-            } elseif (method_exists($value, 'getId')) {
+            } elseif (is_callable([$value, 'id']) && method_exists($value, 'getId')) {
                 $objectId = $value->getId();
             }
 
