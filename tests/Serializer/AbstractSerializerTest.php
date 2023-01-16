@@ -54,6 +54,24 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
+    public function testObjectsWithIdPropertyAreStrings(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithIdProperty();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)', $result);
+    }
+
+    public function testObjectsWithSerializerTestObjectWithGetIdMethodAreStrings(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithGetIdMethod();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithGetIdMethod(#foobar)', $result);
+    }
+
     public function testObjectsAreNotStrings(): void
     {
         $serializer = $this->createSerializer();
@@ -573,6 +591,21 @@ class SerializerTestObject
     public static function testy(): void
     {
         throw new \Exception('We should not reach this');
+    }
+}
+
+class SerializerTestObjectWithIdProperty extends SerializerTestObject
+{
+    public $id = 'bar';
+}
+
+class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
+{
+    private $id = 'foo';
+
+    public function getId()
+    {
+        return $this->id . 'bar';
     }
 }
 

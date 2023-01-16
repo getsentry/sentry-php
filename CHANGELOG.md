@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: add object ID to serialized value (#1443)
+
 ## 3.12.1 (2023-01-12)
 
 - fix: Allow `null` on `getTracesSampleRate` and `setTracesSampleRate` in `Options` class (#1441)
