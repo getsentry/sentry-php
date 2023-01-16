@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.12.1 (2023-01-12)
+
 - fix: Allow `null` on `getTracesSampleRate` and `setTracesSampleRate` in `Options` class (#1441)
 
 ## 3.12.0 (2022-11-22)
