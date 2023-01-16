@@ -594,13 +594,11 @@ class SerializerTestObject
     }
 }
 
-#[\AllowDynamicProperties]
 class SerializerTestObjectWithIdProperty extends SerializerTestObject
 {
     public $id = 'bar';
 }
 
-#[\AllowDynamicProperties]
 class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
 {
     private $id = 'foo';
