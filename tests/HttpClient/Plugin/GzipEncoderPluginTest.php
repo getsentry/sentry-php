@@ -17,11 +17,13 @@ final class GzipEncoderPluginTest extends TestCase
 {
     public function testHandleRequest(): void
     {
-        $plugin = new GzipEncoderPlugin(Psr17FactoryDiscovery::findStreamFactory());
+        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
+
+        $plugin = new GzipEncoderPlugin($streamFactory);
         $expectedPromise = $this->createMock(PromiseInterface::class);
         $request = Psr17FactoryDiscovery::findRequestFactory()
             ->createRequest('POST', 'http://www.example.com')
-            ->withBody(Psr17FactoryDiscovery::findStreamFactory()->createStream('foo'));
+            ->withBody($streamFactory->createStream('foo'));
 
         $this->assertSame('foo', (string) $request->getBody());
         $this->assertSame($expectedPromise, $plugin->handleRequest(
