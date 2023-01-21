@@ -266,7 +266,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
      *     },
      *     mechanism?: array{
      *         type: string,
-     *         handled: boolean
+     *         handled: boolean,
+     *         data?: array<string, mixed>
      *     }
      * }
      */

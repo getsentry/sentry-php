@@ -41,6 +41,7 @@ final class ExceptionMechanism
      *                            handled by the user (e.g. via try..catch)
      * @param array|null $data    Arbitrary extra data that might help the user
      *                            understand the error thrown by this mechanism
+     * @psalm-param array<string, mixed>|null $data
      */
     public function __construct(string $type, bool $handled, array $data = null)
     {
@@ -70,6 +71,8 @@ final class ExceptionMechanism
     /**
      * Returns arbitrary extra data that might help the user understand the error
      * thrown by this mechanism.
+     *
+     * @return array<string, mixed>|null
      */
     public function getData(): ?array
     {
