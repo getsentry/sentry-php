@@ -27,9 +27,10 @@ final class ExceptionMechanism
     private $handled;
 
     /**
-     * @var array|null Optional information from the operating system or runtime
+     * @var array|null Arbitrary extra data that might help the user understand
+     *                 the error thrown by this mechanism
      */
-    private $meta;
+    private $data;
 
     /**
      * Class constructor.
@@ -38,14 +39,14 @@ final class ExceptionMechanism
      *                            rendering and processing of the mechanism data
      * @param bool       $handled Flag indicating whether the exception has been
      *                            handled by the user (e.g. via try..catch)
-     * @param array|null $meta    Optional information from the operating system
-     *                            or runtime
+     * @param array|null $data    Arbitrary extra data that might help the user
+     *                            understand the error thrown by this mechanism
      */
-    public function __construct(string $type, bool $handled, array $meta = null)
+    public function __construct(string $type, bool $handled, array $data = null)
     {
         $this->type = $type;
         $this->handled = $handled;
-        $this->meta = $meta;
+        $this->data = $data;
     }
 
     /**
@@ -67,10 +68,11 @@ final class ExceptionMechanism
     }
 
     /**
-     * Returns optional information from the operating system or runtime
+     * Returns arbitrary extra data that might help the user understand the error
+     * thrown by this mechanism.
      */
-    public function getMeta(): ?array
+    public function getData(): ?array
     {
-        return $this->meta;
+        return $this->data;
     }
 }
