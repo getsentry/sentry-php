@@ -292,7 +292,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'handled' => $exceptionMechanism->isHandled(),
             ];
 
-            if (null !== $exceptionMechanism->getData()) {
+            if ([] !== $exceptionMechanism->getData()) {
                 $result['mechanism']['data'] = $exceptionMechanism->getData();
             }
         }
