@@ -77,4 +77,14 @@ final class ExceptionMechanism
     {
         return $this->data;
     }
+
+    /**
+     * Sets the arbitrary extra data.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function setData(array $data): void
+    {
+        $this->data = $data;
+    }
 }
