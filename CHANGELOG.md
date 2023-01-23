@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Unreleased
+- feat: Add `data` param to `ExceptionMechanism` class (#1450)
+- feat: Log exception's `code` to the `ExceptionMechanism::data` (#1450)
 
 - feat: add object ID to serialized value (#1443)
 
