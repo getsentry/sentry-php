@@ -7,9 +7,6 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\ExceptionMechanism;
 
-/**
- * @covers \Sentry\ExceptionMechanism
- */
 final class ExceptionMechanismTest extends TestCase
 {
     /**
