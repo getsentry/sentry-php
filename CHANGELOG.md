@@ -2,10 +2,9 @@
 
 ## Unreleased
 
+- feat: add object ID to serialized value (#1443)
 - feat: Add support for sending arbitrary extra data as part of the exception mechanism (#1450)
 - feat: Log exception's `code` to the `ExceptionMechanism::data` (#1450)
-
-- feat: add object ID to serialized value (#1443)
 
 ## 3.12.1 (2023-01-12)
 
