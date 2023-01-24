@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## Unreleased
+
 - feat: Add support for sending arbitrary extra data as part of the exception mechanism (#1450)
 - feat: Log exception's `code` to the `ExceptionMechanism::data` (#1450)
 
