@@ -110,8 +110,10 @@ final class IgnoreErrorsIntegration implements IntegrationInterface
         }
 
         foreach ($options['ignore_exceptions'] as $ignoredException) {
-            if (is_a($exceptions[0]->getType(), $ignoredException, true)) {
-                return true;
+            foreach ($exceptions as $exception) {
+                if (is_a($exception->getType(), $ignoredException, true)) {
+                    return true;
+                }
             }
         }
 
