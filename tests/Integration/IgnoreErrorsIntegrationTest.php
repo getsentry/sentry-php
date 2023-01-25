@@ -84,6 +84,20 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         ];
 
         $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException()), new ExceptionDataBag(new \BadMethodCallException())]);
+
+        yield 'The second exception is matching exactly the "ignore_exceptions" option' => [
+            $event,
+            true,
+            [
+                'ignore_exceptions' => [
+                    \BadMethodCallException::class,
+                ],
+            ],
+            true,
+        ];
+
+        $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
 
         yield 'The exception is matching the "ignore_exceptions" option' => [
