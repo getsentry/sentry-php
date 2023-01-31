@@ -36,7 +36,13 @@ abstract class AbstractErrorListenerIntegration implements IntegrationInterface
         $exceptions = $event->getExceptions();
 
         foreach ($exceptions as $exception) {
-            $exception->setMechanism(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false));
+            $data = [];
+            $mechanism = $exception->getMechanism();
+            if (null !== $mechanism) {
+                $data = $mechanism->getData();
+            }
+
+            $exception->setMechanism(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false, $data));
         }
 
         return $event;
