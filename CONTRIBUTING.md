@@ -19,7 +19,6 @@ If you feel that you can fix or implement it yourself, please read on to learn h
 - Add tests for your changes to `tests/`.
 - Run tests and make sure all of them pass.
 - Submit a pull request, targeting the `develop` branch if you added any new features. For bug fixes of the current release, please target the `master` branch instead.
-- Make sure to update the `CHANGELOG.md` file below the `Unreleased` heading.
 
 We will review your pull request as soon as possible.
 Thank you for contributing!
