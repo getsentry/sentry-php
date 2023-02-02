@@ -724,7 +724,7 @@ final class ClientTest extends TestCase
     {
         $options = new Options();
         $previousException = new \RuntimeException('testMessage2');
-        $exception = new \Exception('testMessage', 0, $previousException);
+        $exception = new \Exception('testMessage', 1, $previousException);
 
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -735,12 +735,12 @@ final class ClientTest extends TestCase
 
                 $this->assertCount(2, $capturedExceptions);
                 $this->assertNotNull($capturedExceptions[0]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[0]->getMechanism());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 1]), $capturedExceptions[0]->getMechanism());
                 $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
                 $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
 
                 $this->assertNotNull($capturedExceptions[1]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[1]->getMechanism());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 0]), $capturedExceptions[1]->getMechanism());
                 $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
                 $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
 

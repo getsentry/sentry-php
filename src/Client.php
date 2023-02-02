@@ -383,7 +383,7 @@ final class Client implements ClientInterface
             $exceptions[] = new ExceptionDataBag(
                 $exception,
                 $this->stacktraceBuilder->buildFromException($exception),
-                $hint->mechanism ?? new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
+                $hint->mechanism ?? new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => $exception->getCode()])
             );
         } while ($exception = $exception->getPrevious());
 

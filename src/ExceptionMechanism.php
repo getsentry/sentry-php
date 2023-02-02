@@ -27,17 +27,26 @@ final class ExceptionMechanism
     private $handled;
 
     /**
+     * @var array<string, mixed> Arbitrary extra data that might help the user
+     *                           understand the error thrown by this mechanism
+     */
+    private $data;
+
+    /**
      * Class constructor.
      *
-     * @param string $type    Unique identifier of this mechanism determining
-     *                        rendering and processing of the mechanism data
-     * @param bool   $handled Flag indicating whether the exception has been
-     *                        handled by the user (e.g. via try..catch)
+     * @param string               $type    Unique identifier of this mechanism determining
+     *                                      rendering and processing of the mechanism data
+     * @param bool                 $handled Flag indicating whether the exception has been
+     *                                      handled by the user (e.g. via try..catch)
+     * @param array<string, mixed> $data    Arbitrary extra data that might help the user
+     *                                      understand the error thrown by this mechanism
      */
-    public function __construct(string $type, bool $handled)
+    public function __construct(string $type, bool $handled, array $data = [])
     {
         $this->type = $type;
         $this->handled = $handled;
+        $this->data = $data;
     }
 
     /**
@@ -56,5 +65,26 @@ final class ExceptionMechanism
     public function isHandled(): bool
     {
         return $this->handled;
+    }
+
+    /**
+     * Returns arbitrary extra data that might help the user understand the error
+     * thrown by this mechanism.
+     *
+     * @return array<string, mixed>
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * Sets the arbitrary extra data.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function setData(array $data): void
+    {
+        $this->data = $data;
     }
 }

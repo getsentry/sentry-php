@@ -179,7 +179,7 @@ JSON
                     $frame1,
                     $frame2,
                 ]),
-                new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true)
+                new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 123])
             ),
         ]);
 
@@ -314,7 +314,10 @@ JSON
                 },
                 "mechanism": {
                     "type": "generic",
-                    "handled": true
+                    "handled": true,
+                    "data": {
+                        "code": 123
+                    }
                 }
             },
             {

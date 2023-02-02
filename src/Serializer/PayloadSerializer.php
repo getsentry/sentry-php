@@ -266,7 +266,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
      *     },
      *     mechanism?: array{
      *         type: string,
-     *         handled: boolean
+     *         handled: boolean,
+     *         data?: array<string, mixed>
      *     }
      * }
      */
@@ -290,6 +291,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'type' => $exceptionMechanism->getType(),
                 'handled' => $exceptionMechanism->isHandled(),
             ];
+
+            if ([] !== $exceptionMechanism->getData()) {
+                $result['mechanism']['data'] = $exceptionMechanism->getData();
+            }
         }
 
         return $result;
