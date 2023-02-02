@@ -54,16 +54,16 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     /**
      * Constructor.
      *
-     * @param UriFactoryInterface           $uriFactory      The PSR-7 URI factory
-     * @param ResponseFactoryInterface      $responseFactory The PSR-7 response factory
+     * @param UriFactoryInterface|null      $uriFactory      The PSR-7 URI factory
+     * @param ResponseFactoryInterface|null $responseFactory The PSR-7 response factory
      * @param StreamFactoryInterface        $streamFactory   The PSR-17 stream factory
      * @param HttpAsyncClientInterface|null $httpClient      The HTTP client
      * @param string                        $sdkIdentifier   The SDK identifier
      * @param string                        $sdkVersion      The SDK version
      */
     public function __construct(
-        UriFactoryInterface $uriFactory,
-        ResponseFactoryInterface $responseFactory,
+        ?UriFactoryInterface $uriFactory,
+        ?ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
         ?HttpAsyncClientInterface $httpClient,
         string $sdkIdentifier,
