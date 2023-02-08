@@ -623,7 +623,7 @@ final class OptionsTest extends TestCase
     {
         $options = new Options([
             'enable_tracing' => $enabledTracing,
-            'traces_sample_rate' => $tracesSampleRate
+            'traces_sample_rate' => $tracesSampleRate,
         ]);
 
         $this->assertSame($expectedResult, $options->isTracingEnabled());

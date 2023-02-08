@@ -64,8 +64,6 @@ final class Options
         }
     }
 
-    
-
     /**
      * Gets the number of attempts to resend an event that failed to be sent.
      *
@@ -152,7 +150,7 @@ final class Options
     }
 
     /**
-     * Sets if tracing should be enabled or not. If null tracesSampleRate takes 
+     * Sets if tracing should be enabled or not. If null tracesSampleRate takes
      * precedence.
      *
      * @param ?bool $enableTracing Boolean if tracing should be enabled or not
@@ -197,7 +195,8 @@ final class Options
                 return false;
             }
         }
-        return (null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler());
+
+        return null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler();
     }
 
     /**
