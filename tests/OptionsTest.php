@@ -615,4 +615,31 @@ final class OptionsTest extends TestCase
 
         $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
     }
+
+    /**
+     * @dataProvider enableTracingDataProvider
+     */
+    public function testEnableTracing(?bool $enabledTracing, ?float $tracesSampleRate, $expectedResult): void
+    {
+        $options = new Options([
+            'enable_tracing' => $enabledTracing,
+            'traces_sample_rate' => $tracesSampleRate
+        ]);
+
+        $this->assertSame($expectedResult, $options->isTracingEnabled());
+    }
+
+    public function enableTracingDataProvider(): array
+    {
+        return [
+            [null, null, false],
+            [null, 1.0, true],
+            [false, 1.0, false],
+            [true, 1.0, true],
+            [null, 0.0, true], // We use this as - it's configured but turned off
+            [false, 0.0, false],
+            [true, 0.0, true], // We use this as - it's configured but turned off
+            [true, null, true],
+        ];
+    }
 }

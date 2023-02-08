@@ -56,7 +56,15 @@ final class Options
         $this->configureOptions($this->resolver);
 
         $this->options = $this->resolver->resolve($options);
+
+        if (true === $this->options['enable_tracing']) {
+            if (null === $this->options['traces_sample_rate']) {
+                $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
+            }
+        }
     }
+
+    
 
     /**
      * Gets the number of attempts to resend an event that failed to be sent.
@@ -144,6 +152,27 @@ final class Options
     }
 
     /**
+     * Sets if tracing should be enabled or not. If null tracesSampleRate takes 
+     * precedence.
+     *
+     * @param ?bool $enableTracing Boolean if tracing should be enabled or not
+     */
+    public function setEnableTracing(?bool $enableTracing): void
+    {
+        $options = array_merge($this->options, ['enable_tracing' => $enableTracing]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets if tracing is enabled or not.
+     */
+    public function getEnableTracing(): ?bool
+    {
+        return $this->options['enable_tracing'];
+    }
+
+    /**
      * Sets the sampling factor to apply to transactions. A value of 0 will deny
      * sending any transactions, and a value of 1 will send 100% of transactions.
      *
@@ -159,11 +188,16 @@ final class Options
     /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
-     * set.
+     * set and `enable_tracing` is set and not false.
      */
     public function isTracingEnabled(): bool
     {
-        return null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler();
+        if (null !== $this->getEnableTracing()) {
+            if (false === $this->getEnableTracing()) {
+                return false;
+            }
+        }
+        return (null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler());
     }
 
     /**
@@ -814,6 +848,7 @@ final class Options
             'send_attempts' => 0,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
+            'enable_tracing' => null,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'attach_stacktrace' => false,
@@ -852,6 +887,7 @@ final class Options
         $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
+        $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
