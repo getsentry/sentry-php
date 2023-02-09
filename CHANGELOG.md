@@ -2,9 +2,39 @@
 
 ## Unreleased
 
-- feat: add object ID to serialized value (#1443)
-- feat: Add support for sending arbitrary extra data as part of the exception mechanism (#1450)
-- feat: Log exception's `code` to the `ExceptionMechanism::data` (#1450)
+## 3.13.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.13.0.
+
+### Features
+
+- Object IDs are now automatically serialized as part of a stack trace frame [(#1443)](https://github.com/getsentry/sentry-php/pull/1443)
+  - If `Obj::getID()` or `Obj->id` is accessible, this value will be displayed inside the stack trace frame on the issue details page.
+    To attach local variables to your stack trace, make sure `zend.exception_ignore_arg: 0` is set in your `php.ini`.
+    See https://docs.sentry.io/platforms/php/troubleshooting/#missing-variables-in-stack-traces
+
+- Add more functionality to the `ExceptionMechanism::class` [(#1450)](https://github.com/getsentry/sentry-php/pull/1450)
+  - Attach arbitrary data
+    ```php
+    $hint = EventHint::fromArray([
+        'exception' => $exception,
+        'mechanism' => new ExceptionMechanism(
+            ExceptionMechanism::TYPE_GENERIC,
+            false,
+            [
+                'key' => 'value',
+                //...
+            ],
+        ),
+    ]);
+    captureEvent(Event::createEvent(), $hint);
+    ```
+    Learn more about the interface of the `ExceptionMechanism` on https://develop.sentry.dev/sdk/event-payloads/exception/#exception-mechanism
+  - Access or mutate `ExceptionMechanism::data` via `ExceptionMechanism::getData()` and `ExceptionMechanism::setData()`
+  - If an exception contains a user-provided `code`, the value will be serialized into the event and displayed on the issues details page.
+    ```php
+    throw new \Exception('Oh no!', 123);
+    ```
 
 ## 3.12.1 (2023-01-12)
 

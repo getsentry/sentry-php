@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Closure;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
+use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
@@ -29,9 +30,20 @@ final class GuzzleTracingMiddleware
                     return $handler($request, $options);
                 }
 
+                $partialUri = Uri::fromParts([
+                    'scheme' => $request->getUri()->getScheme(),
+                    'host' => $request->getUri()->getHost(),
+                    'port' => $request->getUri()->getPort(),
+                    'path' => $request->getUri()->getPath(),
+                ]);
+
                 $spanContext = new SpanContext();
                 $spanContext->setOp('http.client');
-                $spanContext->setDescription($request->getMethod() . ' ' . $request->getUri());
+                $spanContext->setDescription($request->getMethod() . ' ' . (string) $partialUri);
+                $spanContext->setData([
+                    'http.query' => $request->getUri()->getQuery(),
+                    'http.fragment' => $request->getUri()->getFragment(),
+                ]);
 
                 $childSpan = $span->startChild($spanContext);
 
@@ -48,7 +60,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan, $partialUri) {
                     // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                     // the span spans is as close to only the HTTP request time and do the data collection afterwards
                     $childSpan->finish();
@@ -63,9 +75,11 @@ final class GuzzleTracingMiddleware
                     }
 
                     $breadcrumbData = [
-                        'url' => (string) $request->getUri(),
+                        'url' => (string) $partialUri,
                         'method' => $request->getMethod(),
                         'request_body_size' => $request->getBody()->getSize(),
+                        'http.query' => $request->getUri()->getQuery(),
+                        'http.fragment' => $request->getUri()->getFragment(),
                     ];
 
                     if (null !== $response) {
