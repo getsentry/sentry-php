@@ -162,7 +162,7 @@ final class Options
 
     /**
      * Gets if tracing is enabled or not.
-     * 
+     *
      * @return bool|null If the option `enable_tracing` is set or not
      */
     public function getEnableTracing(): ?bool
