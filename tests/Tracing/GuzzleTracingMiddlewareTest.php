@@ -9,6 +9,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -90,8 +91,15 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 $guzzleSpan = $spans[0];
                 $guzzleBreadcrumb = $breadcrumbs[0];
 
+                $partialUri = Uri::fromParts([
+                    'scheme' => $request->getUri()->getScheme(),
+                    'host' => $request->getUri()->getHost(),
+                    'port' => $request->getUri()->getPort(),
+                    'path' => $request->getUri()->getPath(),
+                ]);
+
                 $this->assertSame('http.client', $guzzleSpan->getOp());
-                $this->assertSame("{$request->getMethod()} {$request->getUri()}", $guzzleSpan->getDescription());
+                $this->assertSame("{$request->getMethod()} {$partialUri}", $guzzleSpan->getDescription());
 
                 if ($expectedPromiseResult instanceof Response) {
                     $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
@@ -142,6 +150,22 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
+                'http.query' => '',
+                'http.fragment' => '',
+                'status_code' => 200,
+                'response_body_size' => 0,
+            ],
+        ];
+
+        yield [
+            new Request('GET', 'https://user:password@www.example.com?query=string#fragment=1'),
+            new Response(),
+            [
+                'url' => 'https://www.example.com',
+                'method' => 'GET',
+                'request_body_size' => 0,
+                'http.query' => 'query=string',
+                'http.fragment' => 'fragment=1',
                 'status_code' => 200,
                 'response_body_size' => 0,
             ],
@@ -154,6 +178,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'POST',
                 'request_body_size' => 10,
+                'http.query' => '',
+                'http.fragment' => '',
                 'status_code' => 403,
                 'response_body_size' => 6,
             ],
@@ -166,6 +192,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
+                'http.query' => '',
+                'http.fragment' => '',
             ],
         ];
     }
