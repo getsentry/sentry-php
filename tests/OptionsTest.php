@@ -141,6 +141,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'enable_tracing',
+            true,
+            'getEnableTracing',
+            'setEnableTracing',
+            null,
+            null,
+        ];
+
+        yield [
             'attach_stacktrace',
             false,
             'shouldAttachStacktrace',

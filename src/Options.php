@@ -57,10 +57,8 @@ final class Options
 
         $this->options = $this->resolver->resolve($options);
 
-        if (true === $this->options['enable_tracing']) {
-            if (null === $this->options['traces_sample_rate']) {
-                $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
-            }
+        if (true === $this->options['enable_tracing'] && null === $this->options['traces_sample_rate']) {
+            $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
         }
     }
 
@@ -153,7 +151,7 @@ final class Options
      * Sets if tracing should be enabled or not. If null tracesSampleRate takes
      * precedence.
      *
-     * @param ?bool $enableTracing Boolean if tracing should be enabled or not
+     * @param bool|null $enableTracing Boolean if tracing should be enabled or not
      */
     public function setEnableTracing(?bool $enableTracing): void
     {
@@ -164,6 +162,8 @@ final class Options
 
     /**
      * Gets if tracing is enabled or not.
+     * 
+     * @return bool|null If the option `enable_tracing` is set or not
      */
     public function getEnableTracing(): ?bool
     {
@@ -190,10 +190,8 @@ final class Options
      */
     public function isTracingEnabled(): bool
     {
-        if (null !== $this->getEnableTracing()) {
-            if (false === $this->getEnableTracing()) {
-                return false;
-            }
+        if (null !== $this->getEnableTracing() && false === $this->getEnableTracing()) {
+            return false;
         }
 
         return null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler();
