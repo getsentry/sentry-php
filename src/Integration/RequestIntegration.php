@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
@@ -50,7 +49,7 @@ final class RequestIntegration implements IntegrationInterface
         'never' => 0,
         'small' => self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH,
         'medium' => self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH,
-        'always' => -1,
+        'always' => \PHP_INT_MAX,
     ];
 
     /**
@@ -224,7 +223,19 @@ final class RequestIntegration implements IntegrationInterface
             return $requestData;
         }
 
-        $requestBody = Utils::copyToString($request->getBody(), self::MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP[$maxRequestBodySize]);
+        $requestBody = '';
+        $maxLength = self::MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP[$maxRequestBodySize];
+
+        if (0 < $maxLength) {
+            $stream = $request->getBody();
+            while (0 < $maxLength && !$stream->eof()) {
+                if ('' === $buffer = $stream->read(min($maxLength, self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH))) {
+                    break;
+                }
+                $requestBody .= $buffer;
+                $maxLength -= \strlen($buffer);
+            }
+        }
 
         if ('application/json' === $request->getHeaderLine('Content-Type')) {
             try {
