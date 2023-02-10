@@ -4,10 +4,10 @@
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.13.1.
 
-## Bug Fixes
+### Bug Fixes
 
 - Sanatize HTTP client spans & breadcrumbs [(#1453)](https://github.com/getsentry/sentry-php/pull/1453)
-- Pin php-http/discovery to < 1.15 to disable some unwanted side-effect introduced in this new minor version [(#1464)](https://github.com/getsentry/sentry-php/pull/1464)
+- Pin php-http/discovery to `< 1.15` to disable some unwanted side-effect introduced in this new minor version [(#1464)](https://github.com/getsentry/sentry-php/pull/1464)
 
 ## 3.13.0
 
