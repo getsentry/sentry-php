@@ -215,7 +215,7 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         $requestData = $request->getParsedBody();
-        $requestData = array_merge(
+        $requestData = array_replace(
             $this->parseUploadedFiles($request->getUploadedFiles()),
             \is_array($requestData) ? $requestData : []
         );

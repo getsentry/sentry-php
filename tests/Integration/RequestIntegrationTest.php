@@ -405,6 +405,31 @@ final class RequestIntegrationTest extends TestCase
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Length', '23')
+                ->withBody(Utils::streamFor('{"1":"foo","bar":"baz"}')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Type' => ['application/json'],
+                    'Content-Length' => ['23'],
+                ],
+                'data' => [
+                    '1' => 'foo',
+                    'bar' => 'baz',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Type', 'application/json')
                 ->withHeader('Content-Length', '13')
                 ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
