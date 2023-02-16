@@ -12,7 +12,7 @@
         "crash-reports"
     ],
     "homepage": "http://sentry.io",
-    "license": "BSD-3-Clause",
+    "license": "MIT",
     "authors": [
         {
             "name": "Sentry",
