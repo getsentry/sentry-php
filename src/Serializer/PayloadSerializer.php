@@ -39,7 +39,17 @@ final class PayloadSerializer implements PayloadSerializerInterface
     public function serialize(Event $event): string
     {
         if (EventType::transaction() === $event->getType()) {
-            return $this->serializeAsEnvelope($event);
+            $transactionEnvelope = $this->serializeAsEnvelope($event);
+
+            // Attach a new envelope item containing the profile data
+            if (null !== $event->getSdkMetadata('profile')) {
+                $profileEnvelope = $this->seralizeProfileAsEnvelope($event);
+                if (null !== $profileEnvelope) {
+                    return sprintf("%s\n%s", $transactionEnvelope, $profileEnvelope);
+                }
+            }
+
+            return $transactionEnvelope;
         }
 
         return $this->serializeAsEvent($event);
@@ -221,6 +231,19 @@ final class PayloadSerializer implements PayloadSerializerInterface
         ];
 
         return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $this->serializeAsEvent($event));
+    }
+
+    private function seralizeProfileAsEnvelope(Event $event): string
+    {
+        $itemHeader = [
+            'type' => (string) 'profile',
+            'content_type' => 'application/json',
+        ];
+
+        $profile = $event->getSdkMetadata('profile');
+        $profileData = $profile->getFormatedData($event);
+
+        return sprintf("%s\n%s", JSON::encode($itemHeader), JSON::encode($profileData));
     }
 
     /**

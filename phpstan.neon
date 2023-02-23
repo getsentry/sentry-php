@@ -12,3 +12,9 @@ parameters:
         - tests/Fixtures
     dynamicConstantNames:
         - Monolog\Logger::API
+    stubFiles:
+        - stubs/ExcimerLog.stub
+        - stubs/ExcimerLogEntry.stub
+        - stubs/ExcimerProfiler.stub
+        - stubs/ExcimerTimer.stub
+        - stubs/globals.stub

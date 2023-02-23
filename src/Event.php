@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
+use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
 /**
@@ -166,6 +167,11 @@ final class Event
      * @var EventType The type of the Event
      */
     private $type;
+
+    /**
+     * @var Profile|null The profile data
+     */
+    private $profile;
 
     private function __construct(?EventId $eventId, EventType $eventType)
     {
@@ -746,5 +752,15 @@ final class Event
     public function setSpans(array $spans): void
     {
         $this->spans = $spans;
+    }
+
+    public function setProfile(?Profile $profile): void
+    {
+        $this->profile = $profile;
+    }
+
+    public function getProfile(): ?Profile
+    {
+        return $this->profile;
     }
 }

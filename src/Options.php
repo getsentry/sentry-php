@@ -156,6 +156,18 @@ final class Options
         $this->options = $this->resolver->resolve($options);
     }
 
+    public function getProfilesSampleRate(): ?float
+    {
+        return $this->options['profiles_sample_rate'];
+    }
+
+    public function setProfilesSampleRate(?float $sampleRate): void
+    {
+        $options = array_merge($this->options, ['profiles_sample_rate' => $sampleRate]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
     /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
@@ -816,6 +828,7 @@ final class Options
             'sample_rate' => 1,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
+            'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'enable_compression' => true,
@@ -854,6 +867,7 @@ final class Options
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
+        $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('enable_compression', 'bool');

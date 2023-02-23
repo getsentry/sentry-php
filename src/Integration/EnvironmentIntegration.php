@@ -70,6 +70,10 @@ final class EnvironmentIntegration implements IntegrationInterface
             $osContext->setKernelVersion(php_uname('a'));
         }
 
+        if (null === $osContext->getMachineType()) {
+            $osContext->setMachineType(php_uname('m'));
+        }
+
         return $osContext;
     }
 }
