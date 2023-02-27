@@ -63,6 +63,15 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)', $result);
     }
 
+    public function testObjectsWithMagicIdPropertyDoesNotInvokeMagicMethods(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithMagicGetAndIssetMethods();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithMagicGetAndIssetMethods', $result);
+    }
+
     public function testObjectsWithSerializerTestObjectWithGetIdMethodAreStrings(): void
     {
         $serializer = $this->createSerializer();
@@ -606,6 +615,30 @@ class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
     public function getId()
     {
         return $this->id . 'bar';
+    }
+}
+
+class SerializerTestObjectWithMagicGetAndIssetMethods
+{
+    public function __isset(string $name): bool
+    {
+        throw new \RuntimeException('We should not reach this!');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function __get(string $name)
+    {
+        throw new \RuntimeException('We should not reach this!');
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function __set(string $name, $value): void
+    {
+        throw new \RuntimeException('We should not reach this!');
     }
 }
 
