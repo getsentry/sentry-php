@@ -20,7 +20,6 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer;
 
-use ReflectionException;
 use Sentry\Exception\InvalidArgumentException;
 use Sentry\Options;
 
