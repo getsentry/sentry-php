@@ -11,25 +11,6 @@ use Sentry\EventId;
 use Sentry\Util\SentryUid;
 
 /**
- * Type definition of the Excimer profile format.
- * This format is guranteed to be returned if the extension is loaded.
- *
- * @see https://github.com/wikimedia/mediawiki-php-excimer/blob/c4bd691a505a8349b05999526167e67027a1cc87/excimer_log.c#L455
- * @phpstan-type ExcimerProfile array{
- *     shared: array{
- *         frames: array<int, array{
- *             name: string,
- *             file: string
- *         }>,
- *     },
- *     profiles: array<int, array{
- *        startValue: int,
- *        endValue: int,
- *        samples: array<int, array<int, int>>,
- *        weights: array<int, int>
- *     }>
- * }
- *
  * Type definition of the Sentry profile format.
  * All fields are none otpional.
  *
@@ -52,18 +33,12 @@ use Sentry\Util\SentryUid;
  *        version: string,
  *    },
  *    timestamp: string,
- *    transaction?: array{
+ *    transaction: array{
  *        id: string,
  *        name: string,
  *        trace_id: string,
  *        active_thread_id: string,
  *    },
- *    transactions: array<int, array{
- *        id: string,
- *        name: string,
- *        trace_id: string,
- *        active_thread_id: string,
- *    }>,
  *    version: string,
  *    profile: array{
  *        frames: array<int, array{
@@ -105,44 +80,44 @@ final class Profile
     private const MAX_PROFILE_DURATION = 30;
 
     /**
-     * @var string|null The start time of the profile
+     * @var float|null The start time of the profile
      */
     private $startTime = null;
 
     /**
-     * @var ExcimerProfile|null The data of the profile
+     * @var \ExcimerLog|null The data of the profile
      */
-    private $data = null;
+    private $excimerLog = null;
 
     /**
      * @var EventId|null The event ID of the profile
      */
     private $eventId = null;
 
-    public function getStartTime(): ?string
+    public function getStartTime(): ?float
     {
         return $this->startTime;
     }
 
-    public function setStartTime(?string $startTime): void
+    public function setStartTime(?float $startTime): void
     {
         $this->startTime = $startTime;
     }
 
     /**
-     * @return ExcimerProfile
+     * @return \ExcimerLog|null
      */
-    public function getData(): ?array
+    public function getExcimerLog(): ?\ExcimerLog
     {
-        return $this->data;
+        return $this->excimerLog;
     }
 
     /**
-     * @param ExcimerProfile|null $data
+     * @param \ExcimerLog|null $excimerLog
      */
-    public function setData(?array $data): void
+    public function setExcimerLog(?\ExcimerLog $excimerLog): void
     {
-        $this->data = $data;
+        $this->excimerLog = $excimerLog;
     }
 
     public function setEventId(EventId $eventId): void
@@ -155,13 +130,7 @@ final class Profile
      */
     public function getFormatedData(Event $event): ?array
     {
-        if (empty($this->data)) {
-            return null;
-        }
-
-        // If the profile duration is too long (> 30s), we don't send the profile.
-        // We convert nanoseconds to seconds by dividing by 1e-9.
-        if (($this->data['profiles'][0]['endValue'] * 1e-9) > self::MAX_PROFILE_DURATION) {
+        if (!$this->validateExcimerLog()) {
             return null;
         }
 
@@ -180,36 +149,44 @@ final class Profile
         }
 
         $frames = [];
-        foreach ($this->data['shared']['frames'] as $frame) {
-            $frames[] = [
-                'function' => $frame['name'],
-                'filename' => $frame['file'],
-            ];
-        }
-
-        $stacks = $this->data['profiles'][0]['samples'];
-        foreach ($stacks as $key => $stack) {
-            // Order stacks from outermost to innermost frame
-            $stacks[$key] = array_reverse($stack);
-        }
-
-        $time = 0;
         $samples = [];
+        $stacks = [];
 
-        $weights = $this->data['profiles'][0]['weights'];
-        foreach ($weights as $key => $weight) {
-            $time += $weight;
+        $frameIndex = 0;
+
+        foreach ($this->excimerLog as $stackId => $logEntry) {
+            $stack = $logEntry->getTrace();
+
+            foreach ($stack as $frame) {
+                $file = $frame['file'];
+                $function = '';
+
+                if (isset($frame['class']) && isset($frame['function'])) {
+                    $function = $frame['class'] . '::' . $frame['function'];
+                } else {
+                    $function = $frame['file'];
+                }
+
+                $frames[] = [
+                    'function' => $function,
+                    'filename' => $file,
+                    'lineno' => $frame['line'],
+                ];
+
+                $stacks[$stackId][] = $frameIndex;
+                ++$frameIndex;
+            }
+            $stacks[$stackId] = $stacks[$stackId];
+
             $samples[] = [
-                'elapsed_since_start_ns' => $time,
-                'stack_id' => $key,
+                'elapsed_since_start_ns' => (int) round($logEntry->getTimestamp() * 1e9, 0),
+                'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
             ];
         }
 
-        // If we did not collect enough (>= 2) samples, we don't send the profile.
-        if (\count($samples) < self::MIN_SAMPLE_COUNT) {
-            return null;
-        }
+        // TODO(michi) This is too hacky
+        $now = \DateTime::createFromFormat('U.u', (string) $this->startTime);
 
         return [
             'device' => [
@@ -228,23 +205,13 @@ final class Profile
                 'name' => $runtimeContext->getName(),
                 'version' => $runtimeContext->getVersion(),
             ],
-            'timestamp' => $this->startTime,
-            'transactions' => [
-                [
-                    'id' => (string) $event->getId(),
-                    'name' => $event->getTransaction(),
-                    'trace_id' => (string) $event->getContexts()['trace']['trace_id'],
-                    'active_thread_id' => self::THREAD_ID,
-                    'relative_start_ns' => 0,
-                    'relative_end_ns' => $this->data['profiles'][0]['endValue'],
-                ],
+            'timestamp' => $now->format(\DATE_RFC3339_EXTENDED),
+            'transaction' => [
+                'id' => (string) $event->getId(),
+                'name' => $event->getTransaction(),
+                'trace_id' => (string) $event->getContexts()['trace']['trace_id'],
+                'active_thread_id' => self::THREAD_ID,
             ],
-            // 'transaction' => [
-            //     'id' => (string) $event->getId(),
-            //     'name' => $event->getTransaction(),
-            //     'trace_id' => (string) $event->getContexts()['trace']['trace_id'],
-            //     'active_thread_id' => self::THREAD_ID,
-            // ],
             'version' => self::VERSION,
             'profile' => [
                 'frames' => $frames,
@@ -259,6 +226,24 @@ final class Profile
                 // ],
             ],
         ];
+    }
+
+    private function validateExcimerLog(): bool
+    {
+        if (null === $this->excimerLog) {
+            return false;
+        }
+
+        $sampleCount = $this->excimerLog->count();
+        if (0 === $sampleCount) {
+            return false;
+        }
+
+        if (self::MIN_SAMPLE_COUNT > $sampleCount) {
+            return false;
+        }
+
+        return true;
     }
 
     private function validateOsContext(?OsContext $osContext): bool

@@ -34,7 +34,6 @@ final class Profiler
     {
         if (null !== $this->profiler) {
             $this->profiler->start();
-            $this->profile->setStartTime(gmdate('Y-m-d\TH:i:s\Z'));
         }
     }
 
@@ -42,7 +41,7 @@ final class Profiler
     {
         if (null !== $this->profiler) {
             $this->profiler->stop();
-            $this->profile->setData($this->profiler->flush()->getSpeedscopeData());
+            $this->profile->setExcimerLog($this->profiler->flush());
         }
     }
 
@@ -55,6 +54,8 @@ final class Profiler
     {
         if (\extension_loaded('excimer')) {
             $this->profiler = new \ExcimerProfiler();
+            $this->profile->setStartTime(microtime(true));
+
             $this->profiler->setEventType(EXCIMER_REAL);
             $this->profiler->setPeriod(self::SAMPLE_RATE);
             $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);

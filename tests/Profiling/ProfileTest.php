@@ -34,7 +34,7 @@ final class ProfileTest extends TestCase
         $event->setTransaction('GET /');
         $event->setContext('trace', [
             'trace_id' => '566e3688a61d4bc888951642d6f14a19',
-            'span_id' => '566e3688a61d4bc8'
+            'span_id' => '566e3688a61d4bc8',
         ]);
         $event->setRuntimeContext(new RuntimeContext(
             'php',
@@ -101,29 +101,25 @@ final class ProfileTest extends TestCase
                     'version' => '8.2.3',
                 ],
                 'timestamp' => '2022-02-28T09:41:00Z',
-                'transactions' => [
-                    [
-                        'id' => 'fc9442f5aef34234bb22b9a615e30ccd',
-                        'name' => 'GET /',
-                        'trace_id' => '566e3688a61d4bc888951642d6f14a19',
-                        'active_thread_id' => '0',
-                        'relative_start_ns' => 0,
-                        'relative_end_ns' => 200000,
-                    ],
+                'transaction' => [
+                    'id' => 'fc9442f5aef34234bb22b9a615e30ccd',
+                    'name' => 'GET /',
+                    'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+                    'active_thread_id' => '0',
                 ],
                 'version' => '1',
                 'profile' => [
-                    'frames' => [
-                        [
-                            'function' => 'index.php',
-                            'filename' => 'index.php',
-                        ],
-                        [
-                            'function' => 'Function::doStuff',
-                            'filename' => 'function.php',
-                        ],
-                    ],
                     'samples' => [
+                        'frames' => [
+                            [
+                                'function' => 'index.php',
+                                'filename' => 'index.php',
+                            ],
+                            [
+                                'function' => 'Function::doStuff',
+                                'filename' => 'function.php',
+                            ],
+                        ],
                         [
                             'elapsed_since_start_ns' => 100000,
                             'stack_id' => 0,
