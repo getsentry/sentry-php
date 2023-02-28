@@ -10,6 +10,7 @@ use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\Frame;
 use Sentry\Options;
+use Sentry\Profiling\Profile;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionMetadata;
@@ -233,7 +234,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $this->serializeAsEvent($event));
     }
 
-    private function seralizeProfileAsEnvelope(Event $event): string
+    private function seralizeProfileAsEnvelope(Event $event): ?string
     {
         $itemHeader = [
             'type' => (string) 'profile',
@@ -241,7 +242,14 @@ final class PayloadSerializer implements PayloadSerializerInterface
         ];
 
         $profile = $event->getSdkMetadata('profile');
+        if (!$profile instanceof Profile) {
+            return null;
+        }
+
         $profileData = $profile->getFormatedData($event);
+        if (null === $profileData) {
+            return null;
+        }
 
         return sprintf("%s\n%s", JSON::encode($itemHeader), JSON::encode($profileData));
     }

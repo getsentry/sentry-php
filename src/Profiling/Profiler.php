@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Profiling;
 
-class Profiler
+/**
+ * @internal
+ */
+final class Profiler
 {
     private ?\ExcimerProfiler $profiler;
 
