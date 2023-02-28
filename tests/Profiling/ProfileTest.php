@@ -34,18 +34,18 @@ final class ProfileTest extends TestCase
         $event->setTransaction('GET /');
         $event->setContext('trace', [
             'trace_id' => '566e3688a61d4bc888951642d6f14a19',
-            'span_id' => '566e3688a61d4bc8',
+            'span_id' => '566e3688a61d4bc8'
         ]);
         $event->setRuntimeContext(new RuntimeContext(
             'php',
-            '8.2.3',
+            '8.2.3'
         ));
         $event->setOsContext(new OsContext(
             'macOS',
             '13.2.1',
             '22D68',
             'Darwin Kernel Version 22.2.0',
-            'aarch64',
+            'aarch64'
         ));
 
         yield [

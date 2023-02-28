@@ -108,17 +108,17 @@ final class Profile
     /**
      * @var string|null The start time of the profile
      */
-    private ?string $startTime;
+    private $startTime = null;
 
     /**
      * @var ExcimerProfile|null The data of the profile
      */
-    private ?array $data;
+    private $data = null;
 
     /**
      * @var EventId|null The event ID of the profile
      */
-    private ?EventId $eventId = null;
+    private $eventId = null;
 
     public function getStartTime(): ?string
     {
