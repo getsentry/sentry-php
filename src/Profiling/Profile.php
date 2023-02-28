@@ -8,7 +8,6 @@ use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\Tracing\TraceId;
 use Sentry\Util\SentryUid;
 
 /**
