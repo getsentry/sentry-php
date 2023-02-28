@@ -60,11 +60,6 @@ final class Client implements ClientInterface
     private $integrations;
 
     /**
-     * @var RepresentationSerializerInterface The representation serializer of the client
-     */
-    private $representationSerializer;
-
-    /**
      * @var StacktraceBuilder
      */
     private $stacktraceBuilder;
@@ -86,7 +81,7 @@ final class Client implements ClientInterface
      * @param TransportInterface                     $transport                The transport
      * @param string|null                            $sdkIdentifier            The Sentry SDK identifier
      * @param string|null                            $sdkVersion               The Sentry SDK version
-     * @param SerializerInterface|null               $serializer               The serializer
+     * @param SerializerInterface|null               $serializer               The serializer argument is deprecated since version 3.3 and will be removed in 4.0. It's currently unused.
      * @param RepresentationSerializerInterface|null $representationSerializer The serializer for function arguments
      * @param LoggerInterface|null                   $logger                   The PSR-3 logger
      */
@@ -103,8 +98,7 @@ final class Client implements ClientInterface
         $this->transport = $transport;
         $this->logger = $logger ?? new NullLogger();
         $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
-        $this->representationSerializer = $representationSerializer ?? new RepresentationSerializer($this->options);
-        $this->stacktraceBuilder = new StacktraceBuilder($options, $this->representationSerializer);
+        $this->stacktraceBuilder = new StacktraceBuilder($options, $representationSerializer ?? new RepresentationSerializer($this->options));
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
         $this->sdkVersion = $sdkVersion ?? self::SDK_VERSION;
     }

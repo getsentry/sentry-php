@@ -60,6 +60,14 @@ final class JSONTest extends TestCase
             new JsonSerializableClass(),
             '{"key":"value"}',
         ];
+
+        $data = [];
+        $data['recursive'] = &$data;
+
+        yield [
+            $data,
+            '{"recursive":{"recursive":null}}',
+        ];
     }
 
     /**
