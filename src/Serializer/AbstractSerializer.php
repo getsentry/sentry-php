@@ -248,7 +248,7 @@ abstract class AbstractSerializer
                 $objectId = $value->getId();
             }
 
-            return 'Object ' . \get_class($value) . ((null !== $objectId) ? '(#' . $objectId . ')' : '');
+            return 'Object ' . \get_class($value) . (\is_scalar($objectId) ? '(#' . $objectId . ')' : '');
         }
 
         if (\is_resource($value)) {
