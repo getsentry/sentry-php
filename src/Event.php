@@ -763,4 +763,15 @@ final class Event
     {
         return $this->profile;
     }
+
+    public function getTraceId(): ?string
+    {
+        $traceId = $this->getContexts()['trace']['trace_id'];
+
+        if (\is_string($traceId) && !empty($traceId)) {
+            return $traceId;
+        }
+
+        return null;
+    }
 }

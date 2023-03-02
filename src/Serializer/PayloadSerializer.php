@@ -237,7 +237,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
     private function seralizeProfileAsEnvelope(Event $event): ?string
     {
         $itemHeader = [
-            'type' => (string) 'profile',
+            'type' => 'profile',
             'content_type' => 'application/json',
         ];
 

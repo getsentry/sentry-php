@@ -15,6 +15,7 @@ use Sentry\Util\SentryUid;
  * All fields are none otpional.
  *
  * @see https://develop.sentry.dev/sdk/sample-format/
+ *
  * @phpstan-type SentryProfile array{
  *    device: array{
  *        architecture: string,
@@ -44,7 +45,7 @@ use Sentry\Util\SentryUid;
  *        frames: array<int, array{
  *            function: string,
  *            filename: string,
- *            lineno?: int,
+ *            lineno: int|null,
  *        }>,
  *        samples: array<int, array{
  *            elapsed_since_start_ns: int,
@@ -75,11 +76,6 @@ final class Profile
     private const MIN_SAMPLE_COUNT = 2;
 
     /**
-     * @var int The maximum duration of a profile in seconds
-     */
-    private const MAX_PROFILE_DURATION = 30;
-
-    /**
      * @var float|null The start time of the profile
      */
     private $startTime = null;
@@ -104,17 +100,11 @@ final class Profile
         $this->startTime = $startTime;
     }
 
-    /**
-     * @return \ExcimerLog|null
-     */
     public function getExcimerLog(): ?\ExcimerLog
     {
         return $this->excimerLog;
     }
 
-    /**
-     * @param \ExcimerLog|null $excimerLog
-     */
     public function setExcimerLog(?\ExcimerLog $excimerLog): void
     {
         $this->excimerLog = $excimerLog;
@@ -130,6 +120,10 @@ final class Profile
      */
     public function getFormatedData(Event $event): ?array
     {
+        if (null === $this->startTime) {
+            return null;
+        }
+
         if (!$this->validateExcimerLog()) {
             return null;
         }
@@ -158,10 +152,9 @@ final class Profile
             $stack = $logEntry->getTrace();
 
             foreach ($stack as $frame) {
-                $file = $frame['file'];
-                $function = '';
+                $file = (string) $frame['file'];
 
-                if (isset($frame['class']) && isset($frame['function'])) {
+                if (isset($frame['class'], $frame['function'])) {
                     $function = $frame['class'] . '::' . $frame['function'];
                 } else {
                     $function = $frame['file'];
@@ -170,13 +163,12 @@ final class Profile
                 $frames[] = [
                     'function' => $function,
                     'filename' => $file,
-                    'lineno' => $frame['line'],
+                    'lineno' => empty($frame['line']) ? null : (int) $frame['line'],
                 ];
 
                 $stacks[$stackId][] = $frameIndex;
                 ++$frameIndex;
             }
-            $stacks[$stackId] = $stacks[$stackId];
 
             $samples[] = [
                 'elapsed_since_start_ns' => (int) round($logEntry->getTimestamp() * 1e9, 0),
@@ -187,6 +179,10 @@ final class Profile
 
         // TODO(michi) This is too hacky
         $now = \DateTime::createFromFormat('U.u', (string) $this->startTime);
+
+        if (false === $now) {
+            return null;
+        }
 
         return [
             'device' => [
@@ -200,7 +196,8 @@ final class Profile
             ],
             'platform' => 'php',
             'release' => $event->getRelease() ?? '',
-            'environment' => $event->getEnvironment(),
+            // @TODO: Validate "production" is the correct default environment
+            'environment' => $event->getEnvironment() ?? 'production',
             'runtime' => [
                 'name' => $runtimeContext->getName(),
                 'version' => $runtimeContext->getVersion(),
@@ -209,7 +206,7 @@ final class Profile
             'transaction' => [
                 'id' => (string) $event->getId(),
                 'name' => $event->getTransaction(),
-                'trace_id' => (string) $event->getContexts()['trace']['trace_id'],
+                'trace_id' => $event->getTraceId(),
                 'active_thread_id' => self::THREAD_ID,
             ],
             'version' => self::VERSION,
@@ -228,6 +225,9 @@ final class Profile
         ];
     }
 
+    /**
+     * @phpstan-assert-if-true !null $this->excimerLog $osContext
+     */
     private function validateExcimerLog(): bool
     {
         if (null === $this->excimerLog) {
@@ -246,6 +246,11 @@ final class Profile
         return true;
     }
 
+    /**
+     * @phpstan-assert-if-true OsContext $osContext
+     * @phpstan-assert-if-true !null $osContext->getVersion()
+     * @phpstan-assert-if-true !null $osContext->getMachineType()
+     */
     private function validateOsContext(?OsContext $osContext): bool
     {
         if (null === $osContext) {
@@ -263,6 +268,10 @@ final class Profile
         return true;
     }
 
+    /**
+     * @phpstan-assert-if-true RuntimeContext $runtimeContext
+     * @phpstan-assert-if-true !null $runtimeContext->getVersion()
+     */
     private function validateRuntimeContext(?RuntimeContext $runtimeContext): bool
     {
         if (null === $runtimeContext) {
@@ -276,13 +285,17 @@ final class Profile
         return true;
     }
 
+    /**
+     * @phpstan-assert-if-true !null $event->getTransaction()
+     * @phpstan-assert-if-true !null $event->getTraceId()
+     */
     private function validateEvent(Event $event): bool
     {
         if (null === $event->getTransaction()) {
             return false;
         }
 
-        if (empty($event->getContexts()['trace']['trace_id'])) {
+        if (null === $event->getTraceId()) {
             return false;
         }
 

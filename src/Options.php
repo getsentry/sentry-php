@@ -185,7 +185,10 @@ final class Options
 
     public function getProfilesSampleRate(): ?float
     {
-        return $this->options['profiles_sample_rate'];
+        /** @var int|float|null $value */
+        $value = $this->options['profiles_sample_rate'] ?? null;
+
+        return $value ?? null;
     }
 
     public function setProfilesSampleRate(?float $sampleRate): void

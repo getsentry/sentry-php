@@ -9,9 +9,15 @@ namespace Sentry\Profiling;
  */
 final class Profiler
 {
-    private ?\ExcimerProfiler $profiler;
+    /**
+     * @var \ExcimerProfiler|null
+     */
+    private $profiler;
 
-    private ?Profile $profile;
+    /**
+     * @var Profile
+     */
+    private $profile;
 
     /**
      * @var float The sample rate (10.01ms/101 Hz)
@@ -45,7 +51,7 @@ final class Profiler
         }
     }
 
-    public function getProfile(): ?Profile
+    public function getProfile(): Profile
     {
         return $this->profile;
     }
