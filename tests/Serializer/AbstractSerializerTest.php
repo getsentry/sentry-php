@@ -54,13 +54,28 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
-    public function testObjectsWithIdPropertyAreStrings(): void
+    public function objectsWithIdPropertyDataProvider(): array
+    {
+        return [
+            ['bar', 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)'],
+            [123, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#123)'],
+            [[1, 2, 3], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+            [(object) ['id' => 321], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+            [null, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+        ];
+    }
+
+    /**
+     * @dataProvider objectsWithIdPropertyDataProvider
+     */
+    public function testObjectsWithIdPropertyAreStrings($id, string $expectedResult): void
     {
         $serializer = $this->createSerializer();
         $input = new SerializerTestObjectWithIdProperty();
+        $input->id = $id;
         $result = $this->invokeSerialization($serializer, $input);
 
-        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)', $result);
+        $this->assertSame($expectedResult, $result);
     }
 
     public function testObjectsWithMagicIdPropertyDoesNotInvokeMagicMethods(): void
