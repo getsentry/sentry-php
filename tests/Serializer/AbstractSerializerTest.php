@@ -59,7 +59,7 @@ abstract class AbstractSerializerTest extends TestCase
         return [
             ['bar', 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)'],
             [123, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#123)'],
-            [[1,2,3], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+            [[1, 2, 3], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
             [(object) ['id' => 321], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
             [null, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
         ];
