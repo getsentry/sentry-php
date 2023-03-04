@@ -196,8 +196,7 @@ final class Profile
             ],
             'platform' => 'php',
             'release' => $event->getRelease() ?? '',
-            // @TODO: Validate "production" is the correct default environment
-            'environment' => $event->getEnvironment() ?? 'production',
+            'environment' => $event->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
             'runtime' => [
                 'name' => $runtimeContext->getName(),
                 'version' => $runtimeContext->getVersion(),
