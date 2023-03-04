@@ -178,9 +178,9 @@ final class Profile
         }
 
         // TODO(michi) This is too hacky
-        $now = \DateTime::createFromFormat('U.u', (string) $this->startTime);
+        $startTime = \DateTime::createFromFormat('U.u', (string) $this->startTime);
 
-        if (false === $now) {
+        if (false === $startTime) {
             return null;
         }
 
@@ -201,7 +201,7 @@ final class Profile
                 'name' => $runtimeContext->getName(),
                 'version' => $runtimeContext->getVersion(),
             ],
-            'timestamp' => $now->format(\DATE_RFC3339_EXTENDED),
+            'timestamp' => $startTime->format(\DATE_RFC3339_EXTENDED),
             'transaction' => [
                 'id' => (string) $event->getId(),
                 'name' => $event->getTransaction(),
