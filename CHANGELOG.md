@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 3.14.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.14.0.
+
+### Features
+
+- Add a new `enable_tracing: true/false` option, an alternative for `traces_sample_rate: 1.0/null` [(#1458)](https://github.com/getsentry/sentry-php/pull/1458)
+
+### Bug Fixes
+
+- Fix missing keys in the request body [(#1470)](https://github.com/getsentry/sentry-php/pull/1470)
+- Add support for partial JSON encoding [(#1481)](https://github.com/getsentry/sentry-php/pull/1481)
+- Prevent calling *magic methods* when retrieving the ID from an object [(#1483)](https://github.com/getsentry/sentry-php/pull/1483)
+- Only serialize scalar object IDs [(#1485)](https://github.com/getsentry/sentry-php/pull/1485)
+
+### Misc
+
+- The SDK is now licensed under MIT [(#1471)](https://github.com/getsentry/sentry-php/pull/1471)
+  - Read more about Sentry's licensing [here](https://open.sentry.io/licensing/).
+- Deprecate `Client::__construct` `$serializer` argument. It is currently un-used [(#1482)](https://github.com/getsentry/sentry-php/pull/1482)
+
 ## 3.13.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.13.1.
