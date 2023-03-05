@@ -19,7 +19,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 - The SDK is now licensed under MIT [(#1471)](https://github.com/getsentry/sentry-php/pull/1471)
   - Read more about Sentry's licensing [here](https://open.sentry.io/licensing/).
-- Depreacte `Client::__construct` `$serializer`. It is currently un-used [(#1482)](https://github.com/getsentry/sentry-php/pull/1482)
+- Deprecate `Client::__construct` `$serializer` argument. It is currently un-used [(#1482)](https://github.com/getsentry/sentry-php/pull/1482)
 
 ## 3.13.1
 
