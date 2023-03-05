@@ -13,7 +13,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 - Fix missing keys in the request body [(#1470)](https://github.com/getsentry/sentry-php/pull/1470)
 - Add support for partial JSON encoding [(#1481)](https://github.com/getsentry/sentry-php/pull/1481)
 - Prevent calling *magic methods* when retrieving the ID from an object [(#1483)](https://github.com/getsentry/sentry-php/pull/1483)
-- Onyl seralize scalar object IDs [(#1485)](https://github.com/getsentry/sentry-php/pull/1485)
+- Only serialize scalar object IDs [(#1485)](https://github.com/getsentry/sentry-php/pull/1485)
 
 ### Misc
 
