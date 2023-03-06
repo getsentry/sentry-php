@@ -131,7 +131,7 @@ final class Profile
     }
 
     /**
-     * @param \ExcimerLog|array<int, mixed> $excimerLog 
+     * @param \ExcimerLog|array<int, mixed> $excimerLog
      */
     public function setExcimerLog($excimerLog): void
     {
@@ -245,9 +245,6 @@ final class Profile
         ];
     }
 
-    /**
-     * @return array
-     */
     private function prepareStacks(): array
     {
         $stacks = [];
@@ -268,7 +265,7 @@ final class Profile
 
     private function validateExcimerLog(): bool
     {
-        if (self::MIN_SAMPLE_COUNT > count($this->excimerLog)) {
+        if (self::MIN_SAMPLE_COUNT > \count($this->excimerLog)) {
             return false;
         }
 
