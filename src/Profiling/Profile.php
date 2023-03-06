@@ -71,14 +71,34 @@ final class Profile
     private const THREAD_ID = '0';
 
     /**
-     * @var int The minimum number of samples required to send a profile
+     * @var int The minimum number of samples required for a profile
      */
     private const MIN_SAMPLE_COUNT = 2;
 
     /**
-     * @var float|null The start time of the profile
+     * @var int The maximum duration of a profile in seconds
      */
-    private $startTime = null;
+    private const MAX_PROFILE_DURATION = 30;
+
+    /**
+     * @var int The time when the profiler was initialized in nanoseconds
+     */
+    private $initTime;
+
+    /**
+     * @var int The start time of the profile in nanoseconds
+     */
+    private $startTime;
+
+    /**
+     * @var int The stop time of the profile in nanoseconds
+     */
+    private $stopTime;
+
+    /**
+     * @var float The start time of the profile as a Unix timestamp with microseconds
+     */
+    private $startTimeStamp;
 
     /**
      * @var \ExcimerLog|null The data of the profile
@@ -90,14 +110,24 @@ final class Profile
      */
     private $eventId = null;
 
-    public function getStartTime(): ?float
+    public function setInitTime(int $initTime): void
     {
-        return $this->startTime;
+        $this->initTime = $initTime;
     }
 
-    public function setStartTime(?float $startTime): void
+    public function setStartTime(int $startTime): void
     {
         $this->startTime = $startTime;
+    }
+
+    public function setStopTime(int $stopTime): void
+    {
+        $this->stopTime = $stopTime;
+    }
+
+    public function setStartTimeStamp(float $startTimeStamp): void
+    {
+        $this->startTimeStamp = $startTimeStamp;
     }
 
     public function getExcimerLog(): ?\ExcimerLog
@@ -120,11 +150,11 @@ final class Profile
      */
     public function getFormatedData(Event $event): ?array
     {
-        if (null === $this->startTime) {
+        if (!$this->validateExcimerLog()) {
             return null;
         }
 
-        if (!$this->validateExcimerLog()) {
+        if (!$this->validateMaxDuration()) {
             return null;
         }
 
@@ -147,6 +177,7 @@ final class Profile
         $stacks = [];
 
         $frameIndex = 0;
+        $time = 0;
 
         foreach ($this->excimerLog as $stackId => $logEntry) {
             $stack = $logEntry->getTrace();
@@ -170,16 +201,17 @@ final class Profile
                 ++$frameIndex;
             }
 
+            $elapsedNsSinceInit = $logEntry->getTimestamp() * 1e+9;
+            $elapsedNsSinceStart = $elapsedNsSinceInit - ($this->startTime - $this->initTime);
+
             $samples[] = [
-                'elapsed_since_start_ns' => (int) round($logEntry->getTimestamp() * 1e9, 0),
+                'elapsed_since_start_ns' => (int) round($elapsedNsSinceStart, 0),
                 'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
             ];
         }
 
-        // TODO(michi) This is too hacky
-        $startTime = \DateTime::createFromFormat('U.u', (string) $this->startTime);
-
+        $startTime = \DateTime::createFromFormat('U.u', (string) $this->startTimeStamp);
         if (false === $startTime) {
             return null;
         }
@@ -225,7 +257,7 @@ final class Profile
     }
 
     /**
-     * @phpstan-assert-if-true !null $this->excimerLog $osContext
+     * @phpstan-assert-if-true !null $this->excimerLog
      */
     private function validateExcimerLog(): bool
     {
@@ -234,11 +266,18 @@ final class Profile
         }
 
         $sampleCount = $this->excimerLog->count();
-        if (0 === $sampleCount) {
+        if (self::MIN_SAMPLE_COUNT > $sampleCount) {
             return false;
         }
 
-        if (self::MIN_SAMPLE_COUNT > $sampleCount) {
+        return true;
+    }
+
+    private function validateMaxDuration(): bool
+    {
+        // Convert the start and stop time into seconds
+        $duration = ($this->stopTime - $this->startTime) / 1e+9;
+        if ($duration > self::MAX_PROFILE_DURATION) {
             return false;
         }
 

@@ -40,6 +40,9 @@ final class Profiler
     {
         if (null !== $this->profiler) {
             $this->profiler->start();
+
+            $this->profile->setStartTime(hrtime(true));
+            $this->profile->setStartTimeStamp(microtime(true));
         }
     }
 
@@ -47,6 +50,8 @@ final class Profiler
     {
         if (null !== $this->profiler) {
             $this->profiler->stop();
+
+            $this->profile->setStopTime(hrtime(true));
             $this->profile->setExcimerLog($this->profiler->flush());
         }
     }
@@ -58,13 +63,13 @@ final class Profiler
 
     private function initProfiler(): void
     {
-        if (\extension_loaded('excimer')) {
+        if (\extension_loaded('excimer') && \PHP_VERSION_ID >= 70300) {
             $this->profiler = new \ExcimerProfiler();
-            $this->profile->setStartTime(microtime(true));
-
             $this->profiler->setEventType(EXCIMER_REAL);
             $this->profiler->setPeriod(self::SAMPLE_RATE);
             $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);
+
+            $this->profile->setInitTime(hrtime(true));
         }
     }
 }
