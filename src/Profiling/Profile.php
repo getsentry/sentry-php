@@ -101,9 +101,9 @@ final class Profile
     private $startTimeStamp;
 
     /**
-     * @var \ExcimerLog|null The data of the profile
+     * @var \ExcimerLog|array<int, mixed> The data of the profile
      */
-    private $excimerLog = null;
+    private $excimerLog;
 
     /**
      * @var EventId|null The event ID of the profile
@@ -130,12 +130,10 @@ final class Profile
         $this->startTimeStamp = $startTimeStamp;
     }
 
-    public function getExcimerLog(): ?\ExcimerLog
-    {
-        return $this->excimerLog;
-    }
-
-    public function setExcimerLog(?\ExcimerLog $excimerLog): void
+    /**
+     * @param \ExcimerLog|array<int, mixed> $excimerLog 
+     */
+    public function setExcimerLog($excimerLog): void
     {
         $this->excimerLog = $excimerLog;
     }
@@ -177,12 +175,10 @@ final class Profile
         $stacks = [];
 
         $frameIndex = 0;
-        $time = 0;
 
-        foreach ($this->excimerLog as $stackId => $logEntry) {
-            $stack = $logEntry->getTrace();
-
-            foreach ($stack as $frame) {
+        $loggedStacks = $this->prepareStacks();
+        foreach ($loggedStacks as $stackId => $stack) {
+            foreach ($stack['trace'] as $frame) {
                 $file = (string) $frame['file'];
 
                 if (isset($frame['class'], $frame['function'])) {
@@ -201,7 +197,7 @@ final class Profile
                 ++$frameIndex;
             }
 
-            $elapsedNsSinceInit = $logEntry->getTimestamp() * 1e+9;
+            $elapsedNsSinceInit = $stack['timestamp'] * 1e+9;
             $elapsedNsSinceStart = $elapsedNsSinceInit - ($this->startTime - $this->initTime);
 
             $samples[] = [
@@ -211,7 +207,7 @@ final class Profile
             ];
         }
 
-        $startTime = \DateTime::createFromFormat('U.u', (string) $this->startTimeStamp);
+        $startTime = \DateTime::createFromFormat('U.u', (string) number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
         if (false === $startTime) {
             return null;
         }
@@ -245,28 +241,34 @@ final class Profile
                 'frames' => $frames,
                 'samples' => $samples,
                 'stacks' => $stacks,
-                // TODO(michi)
-                // Format needs to be "thread_metadata": { "0": { "name": "main" } }
-                // 'thread_metadata' => [
-                //     '0' => [
-                //         'name' => 'main',
-                //     ],
-                // ],
             ],
         ];
     }
 
     /**
-     * @phpstan-assert-if-true !null $this->excimerLog
+     * @return array
      */
-    private function validateExcimerLog(): bool
+    private function prepareStacks(): array
     {
-        if (null === $this->excimerLog) {
-            return false;
+        $stacks = [];
+
+        foreach ($this->excimerLog as $stack) {
+            if ($stack instanceof \ExcimerLogEntry) {
+                $stacks[] = [
+                    'trace' => $stack->getTrace(),
+                    'timestamp' => $stack->getTimestamp(),
+                ];
+            } else {
+                $stacks[] = $stack;
+            }
         }
 
-        $sampleCount = $this->excimerLog->count();
-        if (self::MIN_SAMPLE_COUNT > $sampleCount) {
+        return $stacks;
+    }
+
+    private function validateExcimerLog(): bool
+    {
+        if (self::MIN_SAMPLE_COUNT > count($this->excimerLog)) {
             return false;
         }
 

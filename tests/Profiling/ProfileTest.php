@@ -16,11 +16,18 @@ final class ProfileTest extends TestCase
     /**
      * @dataProvider formatedDataDataProvider
      */
-    public function testGetFormatedData(Event $event, array $rawProfile, $expectedData): void
+    public function testGetFormatedData(Event $event, int $startTime, int $stopTime, array $excimerLog, $expectedData): void
     {
         $profile = new Profile();
-        $profile->setData($rawProfile);
-        $profile->setStartTime('2022-02-28T09:41:00Z');
+        $profile->setInitTime((int) (0.001 / 1e+9));
+
+        $profile->setStartTime($startTime);
+        $profile->setStopTime($stopTime);
+
+        // 2022-02-28T09:41:00Z
+        $profile->setStartTimeStamp(1677573660.0000);
+
+        $profile->setExcimerLog($excimerLog);
         $profile->setEventId((new EventId('815e57b4bb134056ab1840919834689d')));
 
         $this->assertSame($expectedData, $profile->getFormatedData($event));
@@ -50,37 +57,32 @@ final class ProfileTest extends TestCase
 
         yield [
             $event,
+            2000000,
+            3000000,
             [
-                'shared' => [
-                    'frames' => [
+                [
+                    'trace' => [
                         [
-                            'name' => 'index.php',
                             'file' => 'index.php',
+                            'line' => 42,
+                        ],
+                    ],
+                    'timestamp' => 0.002,
+                ],
+                [
+                    'trace' => [
+                        [
+                            'file' => 'index.php',
+                            'line' => 42,
                         ],
                         [
-                            'name' => 'Function::doStuff',
+                            'class' => 'Function',
+                            'function' => 'doStuff',
                             'file' => 'function.php',
+                            'line' => 84,
                         ],
                     ],
-                ],
-                'profiles' => [
-                    [
-                        'startValue' => 0,
-                        'endValue' => 200000,
-                        'samples' => [
-                            [
-                                1,
-                            ],
-                            [
-                                1,
-                                2,
-                            ],
-                        ],
-                        'weights' => [
-                            100000,
-                            100000,
-                        ],
-                    ],
+                    'timestamp' => 0.003,
                 ],
             ],
             [
@@ -100,7 +102,7 @@ final class ProfileTest extends TestCase
                     'name' => 'php',
                     'version' => '8.2.3',
                 ],
-                'timestamp' => '2022-02-28T09:41:00Z',
+                'timestamp' => '2023-02-28T08:41:00.000+00:00',
                 'transaction' => [
                     'id' => 'fc9442f5aef34234bb22b9a615e30ccd',
                     'name' => 'GET /',
@@ -109,35 +111,42 @@ final class ProfileTest extends TestCase
                 ],
                 'version' => '1',
                 'profile' => [
-                    'samples' => [
-                        'frames' => [
-                            [
-                                'function' => 'index.php',
-                                'filename' => 'index.php',
-                            ],
-                            [
-                                'function' => 'Function::doStuff',
-                                'filename' => 'function.php',
-                            ],
+                    'frames' => [
+                        [
+                            'function' => 'index.php',
+                            'filename' => 'index.php',
+                            'lineno' => 42,
                         ],
                         [
-                            'elapsed_since_start_ns' => 100000,
+                            'function' => 'index.php',
+                            'filename' => 'index.php',
+                            'lineno' => 42,
+                        ],
+                        [
+                            'function' => 'Function::doStuff',
+                            'filename' => 'function.php',
+                            'lineno' => 84,
+                        ],
+                    ],
+                    'samples' => [
+                        [
+                            'elapsed_since_start_ns' => 0,
                             'stack_id' => 0,
                             'thread_id' => '0',
                         ],
                         [
-                            'elapsed_since_start_ns' => 200000,
+                            'elapsed_since_start_ns' => 1000000,
                             'stack_id' => 1,
                             'thread_id' => '0',
                         ],
                     ],
                     'stacks' => [
                         [
-                            1,
+                            0,
                         ],
                         [
-                            2,
                             1,
+                            2,
                         ],
                     ],
                 ],
@@ -146,32 +155,17 @@ final class ProfileTest extends TestCase
 
         yield 'Too little samples' => [
             $event,
+            2000000,
+            3000000,
             [
-                'shared' => [
-                    'frames' => [
+                [
+                    'trace' => [
                         [
-                            'name' => 'index.php',
                             'file' => 'index.php',
-                        ],
-                        [
-                            'name' => 'Function::doStuff',
-                            'file' => 'function.php',
+                            'line' => 42,
                         ],
                     ],
-                ],
-                'profiles' => [
-                    [
-                        'startValue' => 0,
-                        'endValue' => 200000,
-                        'samples' => [
-                            [
-                                1,
-                            ],
-                        ],
-                        'weights' => [
-                            100000,
-                        ],
-                    ],
+                    'timestamp' => 0.002,
                 ],
             ],
             null,
@@ -179,55 +173,32 @@ final class ProfileTest extends TestCase
 
         yield 'Too long duration' => [
             $event,
+            2000000,
+            32000000000,
             [
-                'shared' => [
-                    'frames' => [
+                [
+                    'trace' => [
                         [
-                            'name' => 'index.php',
                             'file' => 'index.php',
+                            'line' => 42,
+                        ],
+                    ],
+                    'timestamp' => 15,
+                ],
+                [
+                    'trace' => [
+                        [
+                            'file' => 'index.php',
+                            'line' => 42,
                         ],
                         [
-                            'name' => 'Function::doStuff',
+                            'class' => 'Function',
+                            'function' => 'doStuff',
                             'file' => 'function.php',
+                            'line' => 84,
                         ],
                     ],
-                ],
-                'profiles' => [
-                    [
-                        'startValue' => 0,
-                        'endValue' => (30 * 1e+9),
-                        'samples' => [
-                            [
-                                1,
-                            ],
-                            [
-                                1,
-                                2,
-                            ],
-                        ],
-                        'weights' => [
-                            (15 * 1e+9),
-                            (15 * 1e+9),
-                        ],
-                    ],
-                ],
-            ],
-            null,
-        ];
-
-        yield 'Empty Excimer profile' => [
-            $event,
-            [
-                'shared' => [
-                    'frames' => [],
-                ],
-                'profiles' => [
-                    [
-                        'startValue' => 0,
-                        'endValue' => 0,
-                        'samples' => [],
-                        'weights' => [],
-                    ],
+                    'timestamp' => 15,
                 ],
             ],
             null,
