@@ -246,7 +246,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             return null;
         }
 
-        $profileData = $profile->getFormatedData($event);
+        $profileData = $profile->getFormattedData($event);
         if (null === $profileData) {
             return null;
         }

@@ -146,7 +146,7 @@ final class Profile
     /**
      * @return SentryProfile|null
      */
-    public function getFormatedData(Event $event): ?array
+    public function getFormattedData(Event $event): ?array
     {
         if (!$this->validateExcimerLog()) {
             return null;
@@ -186,6 +186,11 @@ final class Profile
                 } else {
                     $function = $frame['file'];
                 }
+                // TBD add 'package' \Cake\Core\Configure -> Configure
+                // Allows for filtering by package
+
+                // filename is foo.php
+                // abs_path is /var/www/html/foo.php
 
                 $frames[] = [
                     'function' => $function,
@@ -245,6 +250,9 @@ final class Profile
         ];
     }
 
+    /**
+     * TBD: needed for tests
+     */
     private function prepareStacks(): array
     {
         $stacks = [];
