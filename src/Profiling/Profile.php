@@ -94,21 +94,6 @@ final class Profile
     private const MAX_PROFILE_DURATION = 30;
 
     /**
-     * @var int The time when the profiler was initialized in nanoseconds
-     */
-    private $initTime;
-
-    /**
-     * @var int The start time of the profile in nanoseconds
-     */
-    private $startTime;
-
-    /**
-     * @var int The stop time of the profile in nanoseconds
-     */
-    private $stopTime;
-
-    /**
      * @var float The start time of the profile as a Unix timestamp with microseconds
      */
     private $startTimeStamp;
@@ -122,21 +107,6 @@ final class Profile
      * @var EventId|null The event ID of the profile
      */
     private $eventId;
-
-    public function setInitTime(int $initTime): void
-    {
-        $this->initTime = $initTime;
-    }
-
-    public function setStartTime(int $startTime): void
-    {
-        $this->startTime = $startTime;
-    }
-
-    public function setStopTime(int $stopTime): void
-    {
-        $this->stopTime = $stopTime;
-    }
 
     public function setStartTimeStamp(float $startTimeStamp): void
     {
@@ -165,10 +135,6 @@ final class Profile
             return null;
         }
 
-        if (!$this->validateMaxDuration()) {
-            return null;
-        }
-
         $osContext = $event->getOsContext();
         if (!$this->validateOsContext($osContext)) {
             return null;
@@ -188,42 +154,48 @@ final class Profile
         $stacks = [];
 
         $frameIndex = 0;
+        $duration = 0;
 
         $loggedStacks = $this->prepareStacks();
         foreach ($loggedStacks as $stackId => $stack) {
             foreach ($stack['trace'] as $frame) {
                 $file = (string) $frame['file'];
+                $module = null;
 
                 if (isset($frame['class'], $frame['function'])) {
-                    $function = $frame['class'] . '::' . $frame['function'];
+                    // Class::method
+                    $function = (string) $frame['class'] . '::' . (string) $frame['function'];
+                    $module = (string) $frame['class'];
+                } elseif (isset($frame['function'])) {
+                    // {clousre}
+                    $function = (string) $frame['function'];
                 } else {
+                    // /var/www/html/index.php
                     $function = (string) $frame['file'];
                 }
 
-                // TBD add 'package' \Cake\Core\Configure -> Configure
-                // Allows for filtering by package
-
-                // filename is foo.php
-                // abs_path is /var/www/html/foo.php
-
                 $frames[] = [
-                    'function' => $function,
                     'filename' => $file,
-                    'lineno' => empty($frame['line']) ? null : (int) $frame['line'],
+                    'module' => $module,
+                    'function' => $function,
+                    'lineno' => !empty($frame['line']) ? (int) $frame['line'] : null,
                 ];
 
                 $stacks[$stackId][] = $frameIndex;
                 ++$frameIndex;
             }
 
-            $elapsedNsSinceInit = $stack['timestamp'] * 1e+9;
-            $elapsedNsSinceStart = $elapsedNsSinceInit - ($this->startTime - $this->initTime);
+            $duration = $stack['timestamp'];
 
             $samples[] = [
-                'elapsed_since_start_ns' => (int) round($elapsedNsSinceStart),
+                'elapsed_since_start_ns' => (int) round($duration * 1e+9),
                 'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
             ];
+        }
+
+        if (!$this->validateMaxDuration((float) $duration)) {
+            return null;
         }
 
         $startTime = \DateTime::createFromFormat('U.u', number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
@@ -265,7 +237,7 @@ final class Profile
     }
 
     /**
-     * TBD: needed for tests.
+     * This method is mainly used to be able to mock the ExcimerLog class in the tests.
      *
      * @return array<int, ExcimerLogStackEntry>
      */
@@ -299,10 +271,8 @@ final class Profile
         return self::MIN_SAMPLE_COUNT <= $sampleCount;
     }
 
-    private function validateMaxDuration(): bool
+    private function validateMaxDuration(float $duration): bool
     {
-        // Convert the start and stop time into seconds
-        $duration = ($this->stopTime - $this->startTime) / 1e+9;
         if ($duration > self::MAX_PROFILE_DURATION) {
             return false;
         }
