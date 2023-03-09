@@ -56,6 +56,19 @@ use Sentry\Util\SentryUid;
  *    },
  * }
  *
+ * @phpstan-type ExcimerLogStackEntryTrace array{
+ *     file: string|null,
+ *     line: string|int|null,
+ *     class: string,
+ *     function: string,
+ *     closure_line: int
+ * }
+ *
+ * @phpstan-type ExcimerLogStackEntry array{
+ *     trace: array<int, ExcimerLogStackEntryTrace>,
+ *     timestamp: float
+ * }
+ *
  * @internal
  */
 final class Profile
@@ -101,14 +114,14 @@ final class Profile
     private $startTimeStamp;
 
     /**
-     * @var \ExcimerLog|array<int, mixed> The data of the profile
+     * @var \ExcimerLog|array<int, ExcimerLogStackEntry> The data of the profile
      */
     private $excimerLog;
 
     /**
      * @var EventId|null The event ID of the profile
      */
-    private $eventId = null;
+    private $eventId;
 
     public function setInitTime(int $initTime): void
     {
@@ -131,7 +144,7 @@ final class Profile
     }
 
     /**
-     * @param \ExcimerLog|array<int, mixed> $excimerLog
+     * @param \ExcimerLog|array<int, ExcimerLogStackEntry> $excimerLog
      */
     public function setExcimerLog($excimerLog): void
     {
@@ -184,8 +197,9 @@ final class Profile
                 if (isset($frame['class'], $frame['function'])) {
                     $function = $frame['class'] . '::' . $frame['function'];
                 } else {
-                    $function = $frame['file'];
+                    $function = (string) $frame['file'];
                 }
+
                 // TBD add 'package' \Cake\Core\Configure -> Configure
                 // Allows for filtering by package
 
@@ -206,13 +220,13 @@ final class Profile
             $elapsedNsSinceStart = $elapsedNsSinceInit - ($this->startTime - $this->initTime);
 
             $samples[] = [
-                'elapsed_since_start_ns' => (int) round($elapsedNsSinceStart, 0),
+                'elapsed_since_start_ns' => (int) round($elapsedNsSinceStart),
                 'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
             ];
         }
 
-        $startTime = \DateTime::createFromFormat('U.u', (string) number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
+        $startTime = \DateTime::createFromFormat('U.u', number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
         if (false === $startTime) {
             return null;
         }
@@ -251,7 +265,9 @@ final class Profile
     }
 
     /**
-     * TBD: needed for tests
+     * TBD: needed for tests.
+     *
+     * @return array<int, ExcimerLogStackEntry>
      */
     private function prepareStacks(): array
     {
@@ -264,6 +280,7 @@ final class Profile
                     'timestamp' => $stack->getTimestamp(),
                 ];
             } else {
+                /** @var ExcimerLogStackEntry $stack */
                 $stacks[] = $stack;
             }
         }
@@ -273,11 +290,13 @@ final class Profile
 
     private function validateExcimerLog(): bool
     {
-        if (self::MIN_SAMPLE_COUNT > \count($this->excimerLog)) {
-            return false;
+        if (\is_array($this->excimerLog)) {
+            $sampleCount = \count($this->excimerLog);
+        } else {
+            $sampleCount = $this->excimerLog->count();
         }
 
-        return true;
+        return self::MIN_SAMPLE_COUNT <= $sampleCount;
     }
 
     private function validateMaxDuration(): bool

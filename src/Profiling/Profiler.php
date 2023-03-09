@@ -41,7 +41,7 @@ final class Profiler
         if (null !== $this->profiler) {
             $this->profiler->start();
 
-            $this->profile->setStartTime(hrtime(true));
+            $this->profile->setStartTime($this->currentTimestampInMicroseconds());
             $this->profile->setStartTimeStamp(microtime(true));
         }
     }
@@ -51,7 +51,7 @@ final class Profiler
         if (null !== $this->profiler) {
             $this->profiler->stop();
 
-            $this->profile->setStopTime(hrtime(true));
+            $this->profile->setStopTime($this->currentTimestampInMicroseconds());
             $this->profile->setExcimerLog($this->profiler->flush());
         }
     }
@@ -71,5 +71,22 @@ final class Profiler
 
             $this->profile->setInitTime(hrtime(true));
         }
+    }
+
+    /**
+     * Get the system's highest resolution of time possible.
+     *
+     * If the `hrtime` function is available, it will be used to get a nanosecond precision point in time.
+     *
+     * Otherwise, the `microtime` function will be used to get a microsecond precision point in time (that will be converted to look like a nanosecond precise timestamp).
+     */
+    private function currentTimestampInMicroseconds(): int
+    {
+        // Is the `hrtime` function available to get a nanosecond precision point in time?
+        if (\function_exists('hrtime')) {
+            return hrtime(true);
+        }
+
+        return (int) (microtime(true) * 1e9);
     }
 }
