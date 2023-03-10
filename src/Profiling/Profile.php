@@ -159,23 +159,26 @@ final class Profile
         $loggedStacks = $this->prepareStacks();
         foreach ($loggedStacks as $stackId => $stack) {
             foreach ($stack['trace'] as $frame) {
-                $file = (string) $frame['file'];
+                $absolutePath = (string) $frame['file'];
+                // TODO(michi) Strip the file path based on the `prefixes` option
+                $file = $absolutePath;
                 $module = null;
 
                 if (isset($frame['class'], $frame['function'])) {
                     // Class::method
-                    $function = (string) $frame['class'] . '::' . (string) $frame['function'];
-                    $module = (string) $frame['class'];
+                    $function = $frame['class'] . '::' . $frame['function'];
+                    $module = $frame['class'];
                 } elseif (isset($frame['function'])) {
                     // {clousre}
-                    $function = (string) $frame['function'];
+                    $function = $frame['function'];
                 } else {
-                    // /var/www/html/index.php
-                    $function = (string) $frame['file'];
+                    // /index.php
+                    $function = $file;
                 }
 
                 $frames[] = [
                     'filename' => $file,
+                    'abs_path' => $absolutePath,
                     'module' => $module,
                     'function' => $function,
                     'lineno' => !empty($frame['line']) ? (int) $frame['line'] : null,

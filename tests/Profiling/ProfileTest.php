@@ -56,7 +56,7 @@ final class ProfileTest extends TestCase
                 [
                     'trace' => [
                         [
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 42,
                         ],
                     ],
@@ -65,13 +65,13 @@ final class ProfileTest extends TestCase
                 [
                     'trace' => [
                         [
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 42,
                         ],
                         [
                             'class' => 'Function',
                             'function' => 'doStuff',
-                            'file' => 'function.php',
+                            'file' => '/var/www/html/function.php',
                             'line' => 84,
                         ],
                     ],
@@ -80,24 +80,24 @@ final class ProfileTest extends TestCase
                 [
                     'trace' => [
                         [
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 42,
                         ],
                         [
                             'class' => 'Function',
                             'function' => 'doStuff',
-                            'file' => 'function.php',
+                            'file' => '/var/www/html/function.php',
                             'line' => 84,
                         ],
                         [
                             'class' => 'Class\Something',
                             'function' => 'run',
-                            'file' => 'class.php',
+                            'file' => '/var/www/html/class.php',
                             'line' => 42,
                         ],
                         [
                             'function' => '{closure}',
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 126,
                         ],
                     ],
@@ -132,43 +132,50 @@ final class ProfileTest extends TestCase
                 'profile' => [
                     'frames' => [
                         [
-                            'filename' => 'index.php',
+                            'filename' => '/var/www/html/index.php',
+                            'abs_path' => '/var/www/html/index.php',
                             'module' => null,
-                            'function' => 'index.php',
+                            'function' => '/var/www/html/index.php',
                             'lineno' => 42,
                         ],
                         [
-                            'filename' => 'index.php',
+                            'filename' => '/var/www/html/index.php',
+                            'abs_path' => '/var/www/html/index.php',
                             'module' => null,
-                            'function' => 'index.php',
+                            'function' => '/var/www/html/index.php',
                             'lineno' => 42,
                         ],
                         [
-                            'filename' => 'function.php',
+                            'filename' => '/var/www/html/function.php',
+                            'abs_path' => '/var/www/html/function.php',
                             'module' => 'Function',
                             'function' => 'Function::doStuff',
                             'lineno' => 84,
                         ],
                         [
-                            'filename' => 'index.php',
+                            'filename' => '/var/www/html/index.php',
+                            'abs_path' => '/var/www/html/index.php',
                             'module' => null,
-                            'function' => 'index.php',
+                            'function' => '/var/www/html/index.php',
                             'lineno' => 42,
                         ],
                         [
-                            'filename' => 'function.php',
+                            'filename' => '/var/www/html/function.php',
+                            'abs_path' => '/var/www/html/function.php',
                             'module' => 'Function',
                             'function' => 'Function::doStuff',
                             'lineno' => 84,
                         ],
                         [
-                            'filename' => 'class.php',
+                            'filename' => '/var/www/html/class.php',
+                            'abs_path' => '/var/www/html/class.php',
                             'module' => 'Class\Something',
                             'function' => 'Class\Something::run',
                             'lineno' => 42,
                         ],
                         [
-                            'filename' => 'index.php',
+                            'filename' => '/var/www/html/index.php',
+                            'abs_path' => '/var/www/html/index.php',
                             'module' => null,
                             'function' => '{closure}',
                             'lineno' => 126,
@@ -232,7 +239,7 @@ final class ProfileTest extends TestCase
                 [
                     'trace' => [
                         [
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 42,
                         ],
                     ],
@@ -241,13 +248,13 @@ final class ProfileTest extends TestCase
                 [
                     'trace' => [
                         [
-                            'file' => 'index.php',
+                            'file' => '/var/www/html/index.php',
                             'line' => 42,
                         ],
                         [
                             'class' => 'Function',
                             'function' => 'doStuff',
-                            'file' => 'function.php',
+                            'file' => '/var/www/html/function.php',
                             'line' => 84,
                         ],
                     ],
