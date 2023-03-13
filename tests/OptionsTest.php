@@ -150,6 +150,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'profiles_sample_rate',
+            0.5,
+            'getProfilesSampleRate',
+            'setProfilesSampleRate',
+            null,
+            null,
+        ];
+
+        yield [
             'attach_stacktrace',
             false,
             'shouldAttachStacktrace',

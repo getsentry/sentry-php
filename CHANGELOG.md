@@ -1,5 +1,71 @@
 # CHANGELOG
 
+## 3.15.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.15.0.
+This release adds initial support for [Profiling](https://docs.sentry.io/product/profiling/).
+
+> **Warning**
+> Profiling is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony.
+> If you have any questions or feedback, please email us at profiling@sentry.io, reach out via Discord (#profiling), or open an issue.
+
+Profiling is only available on Sentry SaaS (sentry.io). Support for Sentry self-hosted is planned once Profiling is released into GA.
+
+### Features
+
+- Add initial support for profiling [(#1477)](https://github.com/getsentry/sentry-php/pull/1477)
+
+  Under the hood, we're using Wikipedia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
+  We chose this profiler for its low overhead and for being used in production by one of the largest PHP-powered websites in the world.
+
+  Excimer works with PHP 7.2 and up, for PHP 8.2 support, make sure to use Excimer version 1.1.0.
+
+  There is currently no support for either Windows or macOS.
+
+  You can install Excimer via your operating systems package manager.
+
+  ```bash
+  apt-get install php-excimer
+  ```
+
+  If no suitable version is available, you may build Excimer from source.
+
+  ```bash
+  git clone https://github.com/wikimedia/mediawiki-php-excimer.git
+
+  cd excimer/
+  phpize && ./configure && make && sudo make install
+  ```
+
+  Depending on your environment, you may need to enable the Excimer extension afterward.
+
+  ```bash
+  phpenmod -s fpm excimer
+  # or
+  phpenmod -s apache2 excimer
+  ```
+
+  Once the extension is installed, you may enable profiling by adding the new `profiles_sample_rate` config option to your `Sentry::init` method.
+
+  ```php
+  \Sentry\init([
+      'dsn' => '__DSN__',
+      'traces_sample_rate' => 1.0,
+      'profiles_sample_rate' => 1.0,
+  ]);
+  ```
+
+  Profiles are being sampled in relation to your `traces_sample_rate`.
+
+  Please note that the profiler is started inside transactions only. If you're not using our [Laravel](https://github.com/getsentry/sentry-laravel) or [Symfony](https://github.com/getsentry/sentry-symfony) SDKs, you may need to manually add transactions to your application as described [here](https://docs.sentry.io/platforms/php/performance/instrumentation/custom-instrumentation/).
+
+  #### Other things you should consider:
+
+  - The current sample rate of the profiler is set to 101Hz (every ~10ms). A minimum of two samples is required for a profile being sent, hence requests that finish in less than ~20ms won't hail any profiles.
+  - The maximum duration of a profile is 30s, hence we do not recommend enabling the extension in an CLI environment.
+  - By design, the profiler will take samples at the end of any userland functions. You may see long sample durations on tasks like HTTP client requests and DB queries.
+    You can read more about Excimer's architecture [here](https://techblog.wikimedia.org/2021/03/03/profiling-php-in-production-at-scale/).
+
 ## 3.14.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.14.0.
