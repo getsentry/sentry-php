@@ -257,7 +257,7 @@ final class Hub implements HubInterface
                 return $transaction;
             }
 
-            $transaction->setSampled(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate);
+            $transaction->setSampled($this->sample($sampleRate));
         }
 
         if (!$transaction->getSampled()) {
@@ -265,6 +265,15 @@ final class Hub implements HubInterface
         }
 
         $transaction->initSpanRecorder();
+
+        $profilesSampleRate = $options->getProfilesSampleRate();
+        if ($this->sample($profilesSampleRate)) {
+            $transaction->initProfiler();
+            $profiler = $transaction->getProfiler();
+            if (null !== $profiler) {
+                $profiler->start();
+            }
+        }
 
         return $transaction;
     }
@@ -322,6 +331,22 @@ final class Hub implements HubInterface
         }
 
         return $fallbackSampleRate;
+    }
+
+    /**
+     * @param mixed $sampleRate
+     */
+    private function sample($sampleRate): bool
+    {
+        if (0.0 === $sampleRate) {
+            return false;
+        }
+
+        if (1.0 === $sampleRate) {
+            return true;
+        }
+
+        return mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate;
     }
 
     /**

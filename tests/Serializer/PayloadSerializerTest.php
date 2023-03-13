@@ -16,6 +16,7 @@ use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Options;
+use Sentry\Profiling\Profile;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
@@ -427,13 +428,68 @@ JSON
 
         $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setSpans([$span1, $span2]);
+        $event->setRelease('1.0.0');
+        $event->setEnvironment('dev');
+        $event->setTransaction('GET /');
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
+        $event->setRuntimeContext(new RuntimeContext(
+            'php',
+            '8.2.3'
+        ));
+        $event->setOsContext(new OsContext(
+            'macOS',
+            '13.2.1',
+            '22D68',
+            'Darwin Kernel Version 22.2.0',
+            'aarch64'
+        ));
+
+        $excimerLog = [
+            [
+                'trace' => [
+                    [
+                        'file' => '/var/www/html/index.php',
+                        'line' => 42,
+                    ],
+                ],
+                'timestamp' => 0.001,
+            ],
+            [
+                'trace' => [
+                    [
+                        'file' => '/var/www/html/index.php',
+                        'line' => 42,
+                    ],
+                    [
+                        'class' => 'Function',
+                        'function' => 'doStuff',
+                        'file' => '/var/www/html/function.php',
+                        'line' => 84,
+                    ],
+                ],
+                'timestamp' => 0.002,
+            ],
+        ];
+
+        $profile = new Profile();
+        // 2022-02-28T09:41:00Z
+        $profile->setStartTimeStamp(1677573660.0000);
+        $profile->setExcimerLog($excimerLog);
+        $profile->setEventId($event->getId());
+
+        $event->setSdkMetadata('profile', $profile);
 
         yield [
             $event,
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"transaction","content_type":"application\/json"}
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"3.13.1"},"transaction":"GET \/","release":"1.0.0","environment":"dev","contexts":{"os":{"name":"macOS","version":"13.2.1","build":"22D68","kernel_version":"Darwin Kernel Version 22.2.0"},"runtime":{"name":"php","version":"8.2.3"},"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
+{"type":"profile","content_type":"application\/json"}
+{"device":{"architecture":"aarch64"},"event_id":"fc9442f5aef34234bb22b9a615e30ccd","os":{"name":"macOS","version":"13.2.1","build_number":"22D68"},"platform":"php","release":"1.0.0","environment":"dev","runtime":{"name":"php","version":"8.2.3"},"timestamp":"2023-02-28T08:41:00.000+00:00","transaction":{"id":"fc9442f5aef34234bb22b9a615e30ccd","name":"GET \/","trace_id":"21160e9b836d479f81611368b2aa3d2c","active_thread_id":"0"},"version":"1","profile":{"frames":[{"filename":"\/var\/www\/html\/index.php","abs_path":"\/var\/www\/html\/index.php","module":null,"function":"\/var\/www\/html\/index.php","lineno":42},{"filename":"\/var\/www\/html\/index.php","abs_path":"\/var\/www\/html\/index.php","module":null,"function":"\/var\/www\/html\/index.php","lineno":42},{"filename":"\/var\/www\/html\/function.php","abs_path":"\/var\/www\/html\/function.php","module":"Function","function":"Function::doStuff","lineno":84}],"samples":[{"elapsed_since_start_ns":1000000,"stack_id":0,"thread_id":"0"},{"elapsed_since_start_ns":2000000,"stack_id":1,"thread_id":"0"}],"stacks":[[0],[1,2]]}}
 TEXT
             ,
             false,

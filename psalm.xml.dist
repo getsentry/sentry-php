@@ -64,4 +64,12 @@
             </errorLevel>
         </UndefinedClass>
     </issueHandlers>
+
+    <stubs>
+        <file name="stubs/ExcimerLog.stub" />
+        <file name="stubs/ExcimerLogEntry.stub" />
+        <file name="stubs/ExcimerProfiler.stub" />
+        <file name="stubs/ExcimerTimer.stub" />
+        <file name="stubs/globals.stub" />
+    </stubs>
 </psalm>
