@@ -15,7 +15,7 @@ Profiling is only available on Sentry SaaS (sentry.io). Support for Sentry self-
 
 - Add inital support for profiling [(#1477)](https://github.com/getsentry/sentry-php/pull/1477)
 
-  Under the hood, we're using Wikiepdia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
+  Under the hood, we're using Wikipedia's sampling profiler [Excimer](https://github.com/wikimedia/mediawiki-php-excimer).
   We chose this profiler for its low overhead and for being used in production by one of the largest PHP-powered websites in the world.
 
   Excimer works with PHP 7.2 and up, for PHP 8.2 support, make sure to use Excimer version 1.1.0.
