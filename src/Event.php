@@ -51,6 +51,11 @@ final class Event
     private $transaction;
 
     /**
+     * @var CheckIn|null The check in data
+     */
+    private $checkIn;
+
+    /**
      * @var string|null The name of the server (e.g. the host name)
      */
     private $serverName;
@@ -200,6 +205,11 @@ final class Event
         return new self($eventId, EventType::transaction());
     }
 
+    public static function createCheckIn(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::checkIn());
+    }
+
     /**
      * Gets the ID of this event.
      */
@@ -320,6 +330,16 @@ final class Event
     public function setTransaction(?string $transaction): void
     {
         $this->transaction = $transaction;
+    }
+
+    public function setCheckIn(?CheckIn $checkIn): void
+    {
+        $this->checkIn = $checkIn;
+    }
+
+    public function getCheckIn(): ?CheckIn
+    {
+        return $this->checkIn;
     }
 
     /**
