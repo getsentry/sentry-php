@@ -12,3 +12,5 @@ parameters:
         - tests/Fixtures
     dynamicConstantNames:
         - Monolog\Logger::API
+    bootstrapFiles:
+        - stubs/autoload.php
