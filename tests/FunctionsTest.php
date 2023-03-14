@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -14,8 +15,10 @@ use Sentry\EventId;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
@@ -26,6 +29,7 @@ use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\init;
 use function Sentry\startTransaction;
+use function Sentry\trace;
 use function Sentry\withScope;
 
 final class FunctionsTest extends TestCase
@@ -230,5 +234,43 @@ final class FunctionsTest extends TestCase
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($transaction, startTransaction($transactionContext, $customSamplingContext));
+    }
+
+    public function testTraceReturnsClosureResult(): void
+    {
+        $returnValue = 'foo';
+
+        $result = trace(function () use ($returnValue) {
+            return $returnValue;
+        }, new SpanContext());
+
+        $this->assertSame($returnValue, $result);
+    }
+
+    public function testTraceCorrectlyReplacesAndRestoresCurrentSpan(): void
+    {
+        $hub = new Hub();
+
+        $transaction = new Transaction(new TransactionContext());
+
+        $hub->setSpan($transaction);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $this->assertSame($transaction, $hub->getSpan());
+
+        trace(function () use ($transaction, $hub) {
+            $this->assertNotSame($transaction, $hub->getSpan());
+        }, new SpanContext());
+
+        $this->assertSame($transaction, $hub->getSpan());
+
+        try {
+            trace(function () {
+                throw new RuntimeException('Throwing should still restore the previous span');
+            }, new SpanContext());
+        } catch (RuntimeException $e) {
+            $this->assertSame($transaction, $hub->getSpan());
+        }
     }
 }
