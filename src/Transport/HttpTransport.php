@@ -112,7 +112,10 @@ final class HttpTransport implements TransportInterface
             return new RejectedPromise(new Response(ResponseStatus::rateLimit(), $event));
         }
 
-        if (EventType::transaction() === $eventType) {
+        if (
+            EventType::transaction() === $eventType ||
+            EventType::checkIn() === $eventType
+        ) {
             $request = $this->requestFactory->createRequest('POST', $dsn->getEnvelopeApiEndpointUrl())
                 ->withHeader('Content-Type', 'application/x-sentry-envelope')
                 ->withBody($this->streamFactory->createStream($this->payloadSerializer->serialize($event)));
