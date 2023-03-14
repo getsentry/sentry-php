@@ -1,5 +1,89 @@
 # CHANGELOG
 
+## 3.16.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.16.0.
+This release adds initial support for [Cron Monitoring](https://docs.sentry.io/product/crons/).
+
+> **Warning**
+> Cron Monitoring is currently in beta. Beta features are still in-progress and may have bugs. We recognize the irony.
+> If you have any questions or feedback, please email us at crons-feedback@sentry.io, reach out via Discord (#cronjobs), or open an issue.
+
+### Features
+
+- Add inital support for Cron Monitoring [(#1467)](https://github.com/getsentry/sentry-php/pull/1467)
+  
+  You can use Cron Monitoring to monitor your cron jobs. No pun intended.
+
+  Add the code below to your application or script that is invoked by your cron job.
+  The first Check-In will let Sentry know that your job started, with the second Check-In reporting the outcome.
+
+  ```php
+  <?php
+
+  $checkIn = new CheckIn(
+      monitorSlug: '<your-monitor-slug>',
+      status: CheckInStatus::inProgress(),
+  );
+
+  $event = Event::createCheckIn();
+  $event->setCheckIn($checkIn);
+
+  $this->hub->captureEvent($event);
+
+  try {
+
+      // do stuff
+
+      $checkIn->setStatus(CheckInStatus::ok());
+  } catch (Throwable $e) {
+      $checkIn->setStatus(CheckInStatus::error());
+  }
+
+  $event = Event::createCheckIn();
+  $event->setCheckIn($checkIn);
+
+  $this->hub->captureEvent($event);
+  ```
+
+  If you only want to check if a cron did run, you may create a "Heartbeat" instead.
+  Add the code below to your application or script that is invoked by your cron job.
+  
+
+  ```php
+  <?php
+
+  // do stuff
+
+  $checkIn = new CheckIn(
+      monitorSlug: '<your-monitor-slug>',
+      status: CheckInStatus::ok(), // or - CheckInStatus::error()
+      duration: 10, // optional - duration in seconds
+  );
+
+  $event = Event::createCheckIn();
+  $event->setCheckIn($checkIn);
+
+  $this->hub->captureEvent($event);
+  ```
+
+- Introduce a new `trace` helper function [(#1490)](https://github.com/getsentry/sentry-php/pull/1490)
+
+  We made it a tad easier to add custom tracing spans to your application.
+
+  ```php
+  $spanContext = new SpanContext();
+  $spanContext->setOp('function');
+  $spanContext->setDescription('Soemthing to be traced');
+
+  trace(
+      function (Scope $scope) {
+          // something to be traced
+      },
+      $spanContext,
+  );
+  ```
+
 ## 3.15.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.15.0.
