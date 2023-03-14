@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\State\Scope;
+use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -127,4 +128,42 @@ function withScope(callable $callback)
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
     return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
+}
+
+/**
+ * Execute the given callable while wrapping it in a span added as a child to the current transaction and active span.
+ *
+ * If there is no transaction active this is a no-op and the scope passed to the trace callable will be unused.
+ *
+ * @template T
+ *
+ * @param callable(Scope): T $trace   The callable that is going to be traced
+ * @param SpanContext        $context The context of the span to be created
+ *
+ * @return T
+ */
+function trace(callable $trace, SpanContext $context)
+{
+    return SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($context, $trace) {
+        $parentSpan = $scope->getSpan();
+
+        // If there's a span set on the scope there is a transaction
+        // active currently. If that is the case we create a child span
+        // and set it on the scope. Otherwise we only execute the callable
+        if (null !== $parentSpan) {
+            $span = $parentSpan->startChild($context);
+
+            $scope->setSpan($span);
+        }
+
+        try {
+            return $trace($scope);
+        } finally {
+            if (isset($span)) {
+                $span->finish();
+
+                $scope->setSpan($parentSpan);
+            }
+        }
+    });
 }
