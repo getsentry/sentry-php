@@ -53,35 +53,12 @@ final class PayloadSerializer implements PayloadSerializerInterface
             return $transactionEnvelope;
         }
 
-        if (EventType::checkIn() === $event->getType()) {
-            return $this->serializeAsEnvelope($event);
-        }
-
         return $this->serializeAsEvent($event);
     }
 
     private function serializeAsEvent(Event $event): string
     {
         $result = $this->toArray($event);
-
-        return JSON::encode($result);
-    }
-
-    private function serializeAsCheckInEvent(Event $event): string
-    {
-        $result = [];
-
-        $checkIn = $event->getCheckIn();
-        if (null !== $checkIn) {
-            $result = [
-                'check_in_id' => $checkIn->getId(),
-                'monitor_slug' => $checkIn->getMonitorSlug(),
-                'status' => (string) $checkIn->getStatus(),
-                'duration' => $checkIn->getDuration(),
-                'release' => $checkIn->getRelease(),
-                'environment' => $checkIn->getEnvironment(),
-            ];
-        }
 
         return JSON::encode($result);
     }
@@ -254,15 +231,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'content_type' => 'application/json',
         ];
 
-        $seralizedEvent = '';
-        if (EventType::transaction() === $event->getType()) {
-            $seralizedEvent = $this->serializeAsEvent($event);
-        }
-        if (EventType::checkIn() === $event->getType()) {
-            $seralizedEvent = $this->serializeAsCheckInEvent($event);
-        }
-
-        return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $seralizedEvent);
+        return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $this->serializeAsEvent($event));
     }
 
     private function seralizeProfileAsEnvelope(Event $event): ?string

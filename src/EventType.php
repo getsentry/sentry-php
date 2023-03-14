@@ -48,11 +48,6 @@ final class EventType implements \Stringable
         return self::getInstance('transaction');
     }
 
-    public static function checkIn(): self
-    {
-        return self::getInstance('check_in');
-    }
-
     public function __toString(): string
     {
         return $this->value;

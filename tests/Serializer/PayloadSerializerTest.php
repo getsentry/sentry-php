@@ -6,8 +6,6 @@ namespace Sentry\Tests\Serializer;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
-use Sentry\CheckIn;
-use Sentry\CheckInStatus;
 use Sentry\Client;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
@@ -29,7 +27,6 @@ use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\UserDataBag;
-use Sentry\Util\SentryUid;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
@@ -58,10 +55,7 @@ final class PayloadSerializerTest extends TestCase
 
         $result = $this->serializer->serialize($event);
 
-        if (
-            EventType::transaction() !== $event->getType() &&
-            EventType::checkIn() !== $event->getType()
-        ) {
+        if (EventType::transaction() !== $event->getType()) {
             $resultArray = $this->serializer->toArray($event);
             $this->assertJsonStringEqualsJsonString($result, json_encode($resultArray));
         }
@@ -543,51 +537,6 @@ TEXT
 JSON
             ,
             true,
-        ];
-
-        $checkinId = SentryUid::generate();
-        $checkIn = new CheckIn(
-            'my-monitor',
-            CheckInStatus::ok(),
-            $checkinId,
-            '1.0.0',
-            'dev',
-            10
-        );
-
-        $event = Event::createCheckIn(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setCheckIn($checkIn);
-
-        yield [
-            $event,
-            <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev"}
-TEXT
-            ,
-            false,
-        ];
-
-        $checkinId = SentryUid::generate();
-        $checkIn = new CheckIn(
-            'my-monitor',
-            CheckInStatus::inProgress(),
-            $checkinId
-        );
-
-        $event = Event::createCheckIn(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setCheckIn($checkIn);
-
-        yield [
-            $event,
-            <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"in_progress","duration":null,"release":"","environment":"production"}
-TEXT
-            ,
-            false,
         ];
     }
 }
