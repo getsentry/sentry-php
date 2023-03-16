@@ -34,17 +34,20 @@ final class CheckIn
     private $environment;
 
     /**
-     * @var int|null The duration of the check in seconds
+     * @var int|float|null The duration of the check-in in seconds
      */
     private $duration;
 
+    /**
+     * @param int|float|null $duration The duration of the check-in in seconds
+     */
     public function __construct(
         string $monitorSlug,
         CheckInStatus $status,
         string $id = null,
         ?string $release = null,
         ?string $environment = null,
-        ?int $duration = null
+        $duration = null
     ) {
         $this->setMonitorSlug($monitorSlug);
         $this->setStatus($status);
@@ -105,12 +108,18 @@ final class CheckIn
         $this->environment = $environment;
     }
 
-    public function getDuration(): ?int
+    /**
+     * @return int|float|null
+     */
+    public function getDuration()
     {
         return $this->duration;
     }
 
-    public function setDuration(?int $duration): void
+    /**
+     * @param int|float|null $duration The duration of the check-in in seconds
+     */
+    public function setDuration($duration): void
     {
         $this->duration = $duration;
     }
