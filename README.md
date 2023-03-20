@@ -129,7 +129,7 @@ If you need help setting up or configuring the PHP SDK (or anything else in the 
 
 ## License
 
-Licensed under the BSD license, see [`LICENSE`](LICENSE)
+Licensed under the MIT license, see [`LICENSE`](LICENSE)
 
 [master Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster
 [master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master
