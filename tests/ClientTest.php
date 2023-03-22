@@ -619,7 +619,7 @@ final class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because it matches a entry "ignore_transactions".', $this->callback(static function (array $context): bool {
+            ->with('The event will be discarded because it matches a entry in "ignore_transactions".', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
