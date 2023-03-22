@@ -441,7 +441,7 @@ final class Options
     /**
      * Gets a list of transaction names to be ignored and not sent to Sentry.
      *
-     * @return int[]
+     * @return string[]
      */
     public function getIgnoreTransactions(): array
     {
@@ -451,7 +451,7 @@ final class Options
     /**
      * Sets a list of transaction names to be ignored and not sent to Sentry.
      *
-     * @param int[] $ignoreTransaction The list of transaction names to be ignored
+     * @param string[] $ignoreTransaction The list of transaction names to be ignored
      */
     public function setIgnoreTransactions(array $ignoreTransaction): void
     {
