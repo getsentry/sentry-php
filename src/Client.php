@@ -346,7 +346,7 @@ final class Client implements ClientInterface
 
             if (\in_array($transactionName, $this->options->getIgnoreTransactions(), true)) {
                 $this->logger->info(
-                    'The event will be discarded because it matches a entry "ignore_transactions".',
+                    'The event will be discarded because it matches a entry in "ignore_transactions".',
                     ['event' => $event]
                 );
 
