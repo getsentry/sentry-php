@@ -587,6 +587,53 @@ final class ClientTest extends TestCase
         ];
     }
 
+    public function testProcessEventDiscardsEventWhenIgnoreExceptionsMatches(): void
+    {
+        $exception = new \Exception('Some foo error');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_exceptions' => [\Exception::class],
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureException($exception);
+    }
+
+    public function testProcessEventDiscardsEventWhenIgnoreTransactionsMatches(): void
+    {
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /foo');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches a entry "ignore_transactions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_transactions' => ['GET /foo'],
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent($event);
+    }
+
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
     {
         /** @var LoggerInterface&MockObject $logger */

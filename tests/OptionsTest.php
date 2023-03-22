@@ -267,6 +267,24 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'ignore_exceptions',
+            ['foo', 'bar'],
+            'getIgnoreExceptions',
+            'setIgnoreExceptions',
+            null,
+            null,
+        ];
+
+        yield [
+            'ignore_transactions',
+            ['foo', 'bar'],
+            'getIgnoreTransactions',
+            'setIgnoreTransactions',
+            null,
+            null,
+        ];
+
+        yield [
             'before_send',
             static function (): void {},
             'getBeforeSendCallback',

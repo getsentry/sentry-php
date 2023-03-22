@@ -281,6 +281,11 @@ final class Client implements ClientInterface
             return null;
         }
 
+        $event = $this->applyIgnoreOptions($event, $hint);
+        if (null === $event) {
+            return null;
+        }
+
         if (null !== $scope) {
             $beforeEventProcessors = $event;
             $event = $scope->applyToEvent($event, $hint);
@@ -306,6 +311,47 @@ final class Client implements ClientInterface
                 ),
                 ['event' => $beforeSendCallback]
             );
+        }
+
+        return $event;
+    }
+
+    private function applyIgnoreOptions(Event $event, ?EventHint $hint): ?Event
+    {
+        if ($event->getType() === EventType::event()) {
+            $exceptions = $event->getExceptions();
+
+            if (empty($exceptions)) {
+                return $event;
+            }
+
+            foreach ($exceptions as $exception) {
+                if (\in_array($exception->getType(), $this->options->getIgnoreExceptions(), true)) {
+                    $this->logger->info(
+                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                        ['event' => $event]
+                    );
+
+                    return null;
+                }
+            }
+        }
+
+        if ($event->getType() === EventType::transaction()) {
+            $transactionName = $event->getTransaction();
+
+            if (null === $transactionName) {
+                return $event;
+            }
+
+            if (\in_array($transactionName, $this->options->getIgnoreTransactions(), true)) {
+                $this->logger->info(
+                    'The event will be discarded because it matches a entry "ignore_transactions".',
+                    ['event' => $event]
+                );
+
+                return null;
+            }
         }
 
         return $event;

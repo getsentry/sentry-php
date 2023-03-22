@@ -13,6 +13,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * This integration decides whether an event should not be captured according
  * to a series of options that must match with its data.
  *
+ * @deprecated since version 3.17, to be removed in 4.0. Use the `ignore_exceptions` option instead
+ *
  * @author Stefano Arlandini <sarlandini@alice.it>
  *
  * @psalm-type IntegrationOptions array{
