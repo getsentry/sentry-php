@@ -316,7 +316,7 @@ final class Client implements ClientInterface
         return $event;
     }
 
-    private function applyIgnoreOptions(Event $event, ?EventHint $hint): ?Event
+    private function applyIgnoreOptions(Event $event): ?Event
     {
         if ($event->getType() === EventType::event()) {
             $exceptions = $event->getExceptions();
