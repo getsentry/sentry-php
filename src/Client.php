@@ -282,6 +282,7 @@ final class Client implements ClientInterface
         }
 
         $event = $this->applyIgnoreOptions($event, $hint);
+        
         if (null === $event) {
             return null;
         }
