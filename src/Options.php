@@ -417,6 +417,50 @@ final class Options
     }
 
     /**
+     * Gets a list of exceptions to be ignored and not sent to Sentry.
+     *
+     * @return string[]
+     */
+    public function getIgnoreExceptions(): array
+    {
+        return $this->options['ignore_exceptions'];
+    }
+
+    /**
+     * Sets a list of exceptions to be ignored and not sent to Sentry.
+     *
+     * @param string[] $ignoreErrors The list of exceptions to be ignored
+     */
+    public function setIgnoreExceptions(array $ignoreErrors): void
+    {
+        $options = array_merge($this->options, ['ignore_exceptions' => $ignoreErrors]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
+     * Gets a list of transaction names to be ignored and not sent to Sentry.
+     *
+     * @return string[]
+     */
+    public function getIgnoreTransactions(): array
+    {
+        return $this->options['ignore_transactions'];
+    }
+
+    /**
+     * Sets a list of transaction names to be ignored and not sent to Sentry.
+     *
+     * @param string[] $ignoreTransaction The list of transaction names to be ignored
+     */
+    public function setIgnoreTransactions(array $ignoreTransaction): void
+    {
+        $options = array_merge($this->options, ['ignore_transactions' => $ignoreTransaction]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    /**
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
@@ -872,6 +916,8 @@ final class Options
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
+            'ignore_exceptions' => [],
+            'ignore_transactions' => [],
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
@@ -916,6 +962,8 @@ final class Options
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
+        $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
+        $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', 'string[]');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
