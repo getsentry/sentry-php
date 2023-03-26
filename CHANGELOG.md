@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## 3.17.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.16.0.
+
+### Features
+
+- Add `ignore_exceptions` & `ignore_transactions` options [(#1503)](https://github.com/getsentry/sentry-php/pull/1503)
+  
+  We deprecated the [IgnoreErrorsIntegration](https://docs.sentry.io/platforms/php/integrations/#ignoreerrorsintegration) in favor of this new option.
+  The option will also take [previous exceptions](https://www.php.net/manual/en/exception.getprevious.php) into account.
+
+  ```php
+  \Sentry\init([
+    'ignore_exceptions' => [BadThingsHappenedException::class],
+  ]);
+  ```
+
+  To ignore a transaction being sent to Sentry, add its name to the config option.
+  You can find the transaction name on the [Performance page](https://sentry.io/performance/).
+
+  ```php
+  \Sentry\init([
+      'ignore_transactions' => ['GET /health'],
+  ]);
+  ```
+
+### Misc
+
+ - Bump `php-http/discovery` to `^1.15` [(#1504)](https://github.com/getsentry/sentry-php/pull/1504)
+
+   You may need to allow the added composer plugin, introduced in `php-http/discovery v1.15.0`, to execute when running `composer update`.
+   We previously pinned this package to version `<1.15`.
+   Due to conflicts with other packages, we decided to lift this restriction.
+
 ## 3.16.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.16.0.
