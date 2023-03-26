@@ -2,7 +2,7 @@
 
 ## 3.17.0
 
-The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.16.0.
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.17.0.
 
 ### Features
 
