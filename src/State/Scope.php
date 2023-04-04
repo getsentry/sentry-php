@@ -19,6 +19,11 @@ use Sentry\UserDataBag;
 final class Scope
 {
     /**
+     * @var PropagationContext
+     */
+    private $propagationContext;
+
+    /**
      * @var Breadcrumb[] The list of breadcrumbs recorded in this scope
      */
     private $breadcrumbs = [];
@@ -73,6 +78,11 @@ final class Scope
      * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private static $globalEventProcessors = [];
+
+    public function __construct()
+    {
+        $this->propagationContext = new PropagationContext();
+    }
 
     /**
      * Sets a new tag in the tags context.
@@ -362,7 +372,10 @@ final class Scope
             $event->setUser($user);
         }
 
-        // Apply the trace context to errors if there is a Span on the Scope
+        /**
+         * Apply the trace context to errors if there is a Span on the Scope.
+         * Else fallback to the propagation context.
+         */
         if (null !== $this->span) {
             $event->setContext('trace', $this->span->getTraceContext());
 
@@ -371,6 +384,13 @@ final class Scope
             if (null !== $transaction) {
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
+        } else {
+            // $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this)));
+
+            $event->setContext('trace', [
+                'trace_id' => $this->getPorpagationContext()->getTraceId(),
+                'span_id' => $this->getPorpagationContext()->getSpanId(),
+            ]);
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
@@ -431,10 +451,23 @@ final class Scope
         return null;
     }
 
+    public function getPorpagationContext(): PropagationContext
+    {
+        return $this->propagationContext;
+    }
+
+    public function setPropagationContext(PropagationContext $propagationContext): self
+    {
+        $this->propagationContext = $propagationContext;
+
+        return $this;
+    }
+
     public function __clone()
     {
         if (null !== $this->user) {
             $this->user = clone $this->user;
         }
+        $this->propagationContext = clone $this->propagationContext;
     }
 }
