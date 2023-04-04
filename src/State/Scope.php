@@ -139,9 +139,13 @@ final class Scope
      *
      * @return $this
      */
-    public function removeContext(string $name): self
+    public function removeContext(string $name = ''): self
     {
-        unset($this->contexts[$name]);
+        if ($name == ''){
+            unset($this->contexts[$name]);
+        } else {
+            $this->contexts = [];
+        }
 
         return $this;
     }
