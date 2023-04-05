@@ -81,6 +81,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'release' => $checkIn->getRelease(),
                 'environment' => $checkIn->getEnvironment(),
             ];
+
+            if (null !== $checkIn->getMonitorConfig()) {
+                $result['monitor_config'] = $checkIn->getMonitorConfig()->toArray();
+            }
         }
 
         return JSON::encode($result);

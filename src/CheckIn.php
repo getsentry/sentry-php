@@ -39,6 +39,11 @@ final class CheckIn
     private $duration;
 
     /**
+     * @var \Sentry\MonitorConfig|null The monitor configuration
+     */
+    private $monitorConfig;
+
+    /**
      * @param int|float|null $duration The duration of the check-in in seconds
      */
     public function __construct(
@@ -47,7 +52,8 @@ final class CheckIn
         string $id = null,
         ?string $release = null,
         ?string $environment = null,
-        $duration = null
+        $duration = null,
+        ?MonitorConfig $monitorConfig = null
     ) {
         $this->setMonitorSlug($monitorSlug);
         $this->setStatus($status);
@@ -56,6 +62,7 @@ final class CheckIn
         $this->setRelease($release ?? '');
         $this->setEnvironment($environment ?? Event::DEFAULT_ENVIRONMENT);
         $this->setDuration($duration);
+        $this->setMonitorConfig($monitorConfig);
     }
 
     public function getId(): string
@@ -122,5 +129,15 @@ final class CheckIn
     public function setDuration($duration): void
     {
         $this->duration = $duration;
+    }
+
+    public function getMonitorConfig(): ?MonitorConfig
+    {
+        return $this->monitorConfig;
+    }
+
+    public function setMonitorConfig(?MonitorConfig $monitorConfig): void
+    {
+        $this->monitorConfig = $monitorConfig;
     }
 }
