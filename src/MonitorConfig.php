@@ -28,9 +28,9 @@ final class MonitorConfig
 
     public function __construct(
         MonitorSchedule $schedule,
-        ?int $checkinMargin,
-        ?int $maxRuntime,
-        ?string $timezone
+        ?int $checkinMargin = null,
+        ?int $maxRuntime = null,
+        ?string $timezone = null
     ) {
         $this->schedule = $schedule;
         $this->checkinMargin = $checkinMargin;
