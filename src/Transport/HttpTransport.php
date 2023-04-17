@@ -113,6 +113,7 @@ final class HttpTransport implements TransportInterface
         }
 
         if (
+            $this->options->isTracingEnabled() ||
             EventType::transaction() === $eventType ||
             EventType::checkIn() === $eventType
         ) {
