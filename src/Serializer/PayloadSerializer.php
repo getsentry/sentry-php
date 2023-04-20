@@ -57,6 +57,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
             return $this->serializeAsEnvelope($event);
         }
 
+        if ($this->options->isTracingEnabled()) {
+            return $this->serializeAsEnvelope($event);
+        }
+
         return $this->serializeAsEvent($event);
     }
 
@@ -254,12 +258,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'content_type' => 'application/json',
         ];
 
-        $seralizedEvent = '';
-        if (EventType::transaction() === $event->getType()) {
-            $seralizedEvent = $this->serializeAsEvent($event);
-        }
         if (EventType::checkIn() === $event->getType()) {
             $seralizedEvent = $this->serializeAsCheckInEvent($event);
+        } else {
+            $seralizedEvent = $this->serializeAsEvent($event);
         }
 
         return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $seralizedEvent);
