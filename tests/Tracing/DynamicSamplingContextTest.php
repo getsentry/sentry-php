@@ -100,6 +100,7 @@ final class DynamicSamplingContextTest extends TestCase
         $transactionContext->setName('foo');
 
         $transaction = new Transaction($transactionContext, $hub);
+        $transaction->getMetadata()->setSamplingRate(1.0);
 
         $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
 

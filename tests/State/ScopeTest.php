@@ -10,9 +10,13 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
@@ -357,9 +361,13 @@ final class ScopeTest extends TestCase
         $event = Event::createEvent();
         $event->setContext('foocontext', ['foo' => 'foo', 'bar' => 'bar']);
 
-        $span = new Span();
+        $transactionContext = new TransactionContext('foo');
+        $transaction = new Transaction($transactionContext);
+        $transaction->setSpanId(new SpanId('8c2df92a922b4efe'));
+        $transaction->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+
+        $span = $transaction->startChild(new SpanContext());
         $span->setSpanId(new SpanId('566e3688a61d4bc8'));
-        $span->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
 
         $scope = new Scope();
         $scope->setLevel(Severity::warning());
@@ -387,10 +395,17 @@ final class ScopeTest extends TestCase
             'trace' => [
                 'span_id' => '566e3688a61d4bc8',
                 'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+                'parent_span_id' => '8c2df92a922b4efe',
             ],
             'barcontext' => [
                 'bar' => 'foo',
             ],
         ], $event->getContexts());
+
+        $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+
+        $this->assertInstanceOf(DynamicSamplingContext::class, $dynamicSamplingContext);
+        $this->assertSame('foo', $dynamicSamplingContext->get('transaction'));
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', $dynamicSamplingContext->get('trace_id'));
     }
 }
