@@ -360,9 +360,15 @@ final class Scope
             $event->setUser($user);
         }
 
-        // We do this here to also apply the trace context to errors if there is a Span on the Scope
+        // Apply the trace context to errors if there is a Span on the Scope
         if (null !== $this->span) {
             $event->setContext('trace', $this->span->getTraceContext());
+
+            // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
+            $transaction = $this->span->getTransaction();
+            if (null !== $transaction) {
+                $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
+            }
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {

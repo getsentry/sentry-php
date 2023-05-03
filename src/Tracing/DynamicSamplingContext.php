@@ -148,7 +148,11 @@ final class DynamicSamplingContext
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $transaction->getTraceId());
-        $samplingContext->set('sample_rate', (string) $transaction->getMetaData()->getSamplingRate());
+
+        $sampleRate = $transaction->getMetaData()->getSamplingRate();
+        if (null !== $sampleRate) {
+            $samplingContext->set('sample_rate', (string) $sampleRate);
+        }
 
         // Only include the transaction name if it has good quality
         if ($transaction->getMetadata()->getSource() !== TransactionSource::url()) {
