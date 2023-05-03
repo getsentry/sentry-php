@@ -367,7 +367,7 @@ final class Scope
             // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
             $transaction = $this->span->getTransaction();
             if (null !== $transaction) {
-                $event->setSdkMetadata('dynamic_sampling_context', $this->span->getTransaction()->getDynamicSamplingContext());
+                $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         }
 
