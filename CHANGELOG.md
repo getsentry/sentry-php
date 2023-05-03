@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 3.18.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.0.
+
+### Features
+
+- Add `TransactionContext::fromEnvironment` [(#1519)](https://github.com/getsentry/sentry-php/pull/1519)
+
+### Misc
+
+- Sent all events to the `/envelope` endpoint if tracing is enabled [(#1518)](https://github.com/getsentry/sentry-php/pull/1518)
+- Attach the Dynamic Sampling Context to error events [(#1522)](https://github.com/getsentry/sentry-php/pull/1522)
+
 ## 3.17.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.17.0.
