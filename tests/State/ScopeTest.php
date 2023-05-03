@@ -11,7 +11,6 @@ use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
-use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
