@@ -83,7 +83,7 @@ final class Scope
 
     public function __construct(PropagationContext $propagationContext = null)
     {
-        $this->propagationContext = $propagationContext ?? new PropagationContext();
+        $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
     }
 
     /**
@@ -391,10 +391,7 @@ final class Scope
                 $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this));
             }
 
-            $event->setContext('trace', [
-                'trace_id' => $this->getPropagationContext()->getTraceId(),
-                'span_id' => $this->getPropagationContext()->getSpanId(),
-            ]);
+            $event->setContext('trace', $this->propagationContext->getTraceContext());
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {

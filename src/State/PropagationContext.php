@@ -61,4 +61,21 @@ final class PropagationContext
     {
         $this->dynamicSamplingContext = $dynamicSamplingContext;
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getTraceContext(): array
+    {
+        $result = [
+            'trace_id' => (string) $this->traceId,
+            'span_id' => (string) $this->spanId,
+        ];
+
+        if (null !== $this->parentSpanId) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
+        }
+
+        return $result;
+    }
 }
