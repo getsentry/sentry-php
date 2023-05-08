@@ -7,7 +7,9 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\Options;
 use Sentry\Severity;
+use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
@@ -340,7 +342,7 @@ final class Scope
      *
      * @param Event $event The event object that will be enriched with scope data
      */
-    public function applyToEvent(Event $event, ?EventHint $hint = null): ?Event
+    public function applyToEvent(Event $event, ?EventHint $hint = null, ?Options $options = null): ?Event
     {
         $event->setFingerprint(array_merge($event->getFingerprint(), $this->fingerprint));
 
@@ -385,7 +387,9 @@ final class Scope
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } else {
-            // $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this)));
+            if (null !== $options) {
+                $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this));
+            }
 
             $event->setContext('trace', [
                 'trace_id' => $this->getPropagationContext()->getTraceId(),

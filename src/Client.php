@@ -289,7 +289,7 @@ final class Client implements ClientInterface
 
         if (null !== $scope) {
             $beforeEventProcessors = $event;
-            $event = $scope->applyToEvent($event, $hint);
+            $event = $scope->applyToEvent($event, $hint, $this->options);
 
             if (null === $event) {
                 $this->logger->info(
