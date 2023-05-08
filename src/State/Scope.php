@@ -81,9 +81,9 @@ final class Scope
      */
     private static $globalEventProcessors = [];
 
-    public function __construct()
+    public function __construct(PropagationContext $propagationContext = null)
     {
-        $this->propagationContext = new PropagationContext();
+        $this->propagationContext = $propagationContext ?? new PropagationContext();
     }
 
     /**

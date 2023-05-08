@@ -9,6 +9,7 @@ use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Severity;
+use Sentry\State\PropagationContext;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanContext;
@@ -78,27 +79,45 @@ final class ScopeTest extends TestCase
 
     public function testSetAndRemoveContext(): void
     {
-        $scope = new Scope();
+        $propgationContext = new PropagationContext();
+
+        $scope = new Scope($propgationContext);
         $scope->setContext('foo', ['foo' => 'bar']);
 
         $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['foo' => ['foo' => 'bar']], $event->getContexts());
+        $this->assertSame([
+            'trace' => [
+                'trace_id' => $propgationContext->getTraceId(),
+                'span_id' => $propgationContext->getSpanId(),
+            ],
+            'foo' => ['foo' => 'bar'],
+        ], $event->getContexts());
 
         $scope->removeContext('foo');
 
         $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame([], $event->getContexts());
+        $this->assertSame([
+            'trace' => [
+                'trace_id' => $propgationContext->getTraceId(),
+                'span_id' => $propgationContext->getSpanId(),
+            ],
+        ], $event->getContexts());
 
         $scope->setContext('foo', []);
 
         $event = $scope->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame([], $event->getContexts());
+        $this->assertSame([
+            'trace' => [
+                'trace_id' => $propgationContext->getTraceId(),
+                'span_id' => $propgationContext->getSpanId(),
+            ],
+        ], $event->getContexts());
     }
 
     public function testSetExtra(): void
