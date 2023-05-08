@@ -85,6 +85,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'release' => $checkIn->getRelease(),
                 'environment' => $checkIn->getEnvironment(),
             ];
+
+            if (!empty($event->getContexts()['trace'])) {
+                $result['contexts']['trace'] = $event->getContexts()['trace'];
+            }
         }
 
         return JSON::encode($result);
