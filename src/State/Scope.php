@@ -472,6 +472,5 @@ final class Scope
         if (null !== $this->user) {
             $this->user = clone $this->user;
         }
-        $this->propagationContext = clone $this->propagationContext;
     }
 }
