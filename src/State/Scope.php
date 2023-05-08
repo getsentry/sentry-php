@@ -388,8 +388,8 @@ final class Scope
             // $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this)));
 
             $event->setContext('trace', [
-                'trace_id' => $this->getPorpagationContext()->getTraceId(),
-                'span_id' => $this->getPorpagationContext()->getSpanId(),
+                'trace_id' => $this->getPropagationContext()->getTraceId(),
+                'span_id' => $this->getPropagationContext()->getSpanId(),
             ]);
         }
 
@@ -451,7 +451,7 @@ final class Scope
         return null;
     }
 
-    public function getPorpagationContext(): PropagationContext
+    public function getPropagationContext(): PropagationContext
     {
         return $this->propagationContext;
     }

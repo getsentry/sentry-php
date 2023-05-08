@@ -192,7 +192,7 @@ final class DynamicSamplingContext
     public static function fromOptions(Options $options, Scope $scope): self
     {
         $samplingContext = new self();
-        $samplingContext->set('trace_id', (string) $scope->getPorpagationContext()->getTraceId());
+        $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
 
         if (null !== $options->getSampleRate()) {
             $samplingContext->set('sample_rate', (string) $options->getSampleRate());
