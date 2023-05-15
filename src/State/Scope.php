@@ -118,7 +118,7 @@ final class Scope
     }
 
     /**
-     * Sets context data with the given name.
+     * Sets data to the context by a given name.
      *
      * @param string               $name  The name that uniquely identifies the context
      * @param array<string, mixed> $value The value
@@ -127,7 +127,9 @@ final class Scope
      */
     public function setContext(string $name, array $value): self
     {
-        $this->contexts[$name] = $value;
+        if (!empty($value)) {
+            $this->contexts[$name] = $value;
+        }
 
         return $this;
     }

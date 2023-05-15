@@ -92,6 +92,13 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame([], $event->getContexts());
+
+        $scope->setContext('foo', []);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getContexts());
     }
 
     public function testSetExtra(): void
