@@ -55,6 +55,23 @@ final class PropagationContext
         return self::parseTraceAndBaggage($sentryTrace, $baggage);
     }
 
+    /**
+     * Returns a string that can be used for the `sentry-trace` header & meta tag.
+     */
+    public function toTraceparent(): string
+    {
+        // We do consider all spans as un-sampled for now
+        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, 0);
+    }
+
+    /**
+     * Returns a string that can be used for the `baggage` header & meta tag.
+     */
+    public function toBaggage(): string
+    {
+        return (string) $this->dynamicSamplingContext;
+    }
+
     public function getTraceId(): TraceId
     {
         return $this->traceId;
@@ -112,6 +129,7 @@ final class PropagationContext
         return $result;
     }
 
+    // TODO(michi) Moce into central place
     private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self
     {
         $context = new self();
