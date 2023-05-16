@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\State\PropagationContext;
 use Sentry\State\Scope;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -165,5 +166,80 @@ function trace(callable $trace, SpanContext $context)
                 $scope->setSpan($parentSpan);
             }
         }
+    });
+}
+
+// TODO(michi) Name TBD
+function traceparent(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        if (null !== $options && $options->getEnableTracing()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if (null !== $span) {
+                return $span->toTraceparent();
+            }
+        }
+    }
+
+    $traceParent = '';
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use (&$traceParent) {
+        $traceParent = $scope->getPropagationContext()->toTraceparent();
+    });
+
+    return $traceParent;
+}
+
+// TODO(michi) Name TBD
+function baggage(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        if (null !== $options && $options->getEnableTracing()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if (null !== $span) {
+                return $span->toBaggage();
+            }
+        }
+    }
+
+    $baggage = '';
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use (&$baggage) {
+        $baggage = $scope->getPropagationContext()->toBaggage();
+    });
+
+    return $baggage;
+}
+
+/**
+ * TODO(michi) Name TBD
+ * 
+ * @return mixed
+ */
+function continueTrace(string $sentryTrace, string $baggage)
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        // TODO(michi) Hacky hacky
+        if (null !== $options && $options->getEnableTracing()) {
+            return TransactionContext::fromHeaders($sentryTrace, $baggage);
+        }
+    }
+
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
+        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+        $scope->setPropagationContext($propagationContext);
     });
 }

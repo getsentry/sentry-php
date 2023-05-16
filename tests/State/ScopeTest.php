@@ -79,7 +79,7 @@ final class ScopeTest extends TestCase
 
     public function testSetAndRemoveContext(): void
     {
-        $propgationContext = new PropagationContext();
+        $propgationContext = PropagationContext::fromDefaults();
 
         $scope = new Scope($propgationContext);
         $scope->setContext('foo', ['foo' => 'bar']);

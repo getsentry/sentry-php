@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\SentrySdk;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 
 final class PropagationContext
 {
-    // TODO(michi) Moce into central place
+    // TODO(michi) Move into central place
     private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
     /**
@@ -32,6 +33,10 @@ final class PropagationContext
      * @var DynamicSamplingContext|null The dynamic sampling context
      */
     private $dynamicSamplingContext;
+
+    private function __construct()
+    {
+    }
 
     public static function fromDefaults(): self
     {
@@ -61,7 +66,7 @@ final class PropagationContext
     public function toTraceparent(): string
     {
         // We do consider all spans as un-sampled for now
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, 0);
+        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-1');
     }
 
     /**
@@ -69,6 +74,21 @@ final class PropagationContext
      */
     public function toBaggage(): string
     {
+        if (null === $this->dynamicSamplingContext) {
+            $hub = SentrySdk::getCurrentHub();
+            $client = $hub->getClient();
+        
+            if (null !== $client) {
+                $options = $client->getOptions();
+        
+                if (null !== $options) {
+                    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($options) {
+                        $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+                    });
+                }
+            }
+        }
+
         return (string) $this->dynamicSamplingContext;
     }
 
@@ -129,10 +149,10 @@ final class PropagationContext
         return $result;
     }
 
-    // TODO(michi) Moce into central place
+    // TODO(michi) Move into central place
     private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self
     {
-        $context = new self();
+        $context = self::fromDefaults();
         $hasSentryTrace = false;
 
         if (preg_match(self::TRACEPARENT_HEADER_REGEX, $sentryTrace, $matches)) {
