@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 3.18.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.1.
+
+### Bug Fixes
+
+- Guard against empty profiles [(#1528)](https://github.com/getsentry/sentry-php/pull/1528)
+- Ignore empty context values [(#1529)](https://github.com/getsentry/sentry-php/pull/1529)
+
 ## 3.18.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.0.
