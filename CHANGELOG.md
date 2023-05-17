@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.18.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.2.
+
+### Bug Fixes
+
+- Require php-http/message-factory [(#1534)](https://github.com/getsentry/sentry-php/pull/1534)
+
 ## 3.18.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.1.
