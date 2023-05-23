@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.19.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.0.
+
+### Misc
+
+- Add support for `guzzlehttp/promises` v2 [(#1536)](https://github.com/getsentry/sentry-php/pull/1536)
+
 ## 3.18.2
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.2.
