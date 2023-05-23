@@ -40,6 +40,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.19|3.4.*",
+        "http-interop/http-factory-guzzle": "^1.0",
         "monolog/monolog": "^1.6|^2.0|^3.0",
         "nikic/php-parser": "^4.10.3",
         "php-http/mock-client": "^1.3",
