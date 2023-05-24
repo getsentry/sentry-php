@@ -56,6 +56,11 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Call to static method createWithConfig\\(\\) on an unknown class Http\\\\Adapter\\\\Guzzle6\\\\Client\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
 			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
