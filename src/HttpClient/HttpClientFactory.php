@@ -114,6 +114,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             $symfonyConfig = [
                 'timeout' => $options->getHttpConnectTimeout(),
                 'max_duration' => $options->getHttpTimeout(),
+                'http_version' => $options->isCompressionEnabled() ? '1.1' : null,
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -139,6 +140,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
                 \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
+                \CURLOPT_HTTP_VERSION => $options->isCompressionEnabled() ? \CURL_HTTP_VERSION_1_1 : \CURL_HTTP_VERSION_NONE,
                 \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
             ];
 
