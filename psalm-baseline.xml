@@ -9,7 +9,8 @@
     </PossiblyUndefinedArrayOffset>
   </file>
   <file src="src/HttpClient/HttpClientFactory.php">
-    <UndefinedClass occurrences="4">
+    <UndefinedClass occurrences="5">
+      <code>Guzzle6HttpClient</code>
       <code>GuzzleHttpClientOptions</code>
       <code>GuzzleHttpClientOptions</code>
       <code>GuzzleHttpClientOptions</code>

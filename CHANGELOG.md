@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.19.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.1.
+
+### Bug Fixes
+
+- Use HTTP/1.1 when compression is enabled [(#1542)](https://github.com/getsentry/sentry-php/pull/1542)
+
 ## 3.19.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.0.
