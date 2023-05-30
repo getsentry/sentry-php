@@ -220,8 +220,8 @@ function baggage(): string
 }
 
 /**
- * TODO(michi) Name TBD
- * 
+ * TODO(michi) Name TBD.
+ *
  * @return mixed
  */
 function continueTrace(string $sentryTrace, string $baggage)

@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
-
 use function Sentry\baggage;
 use function Sentry\traceparent;
 
