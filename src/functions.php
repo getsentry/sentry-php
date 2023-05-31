@@ -232,7 +232,6 @@ function continueTrace(string $sentryTrace, string $baggage)
     if (null !== $client) {
         $options = $client->getOptions();
 
-        // TODO(michi) Hacky hacky
         if (null !== $options && $options->getEnableTracing()) {
             return TransactionContext::fromHeaders($sentryTrace, $baggage);
         }
