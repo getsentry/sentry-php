@@ -89,8 +89,8 @@ final class ScopeTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame([
             'trace' => [
-                'trace_id' => $propgationContext->getTraceId(),
-                'span_id' => $propgationContext->getSpanId(),
+                'trace_id' => (string) $propgationContext->getTraceId(),
+                'span_id' => (string) $propgationContext->getSpanId(),
             ],
             'foo' => ['foo' => 'bar'],
         ], $event->getContexts());
@@ -102,8 +102,8 @@ final class ScopeTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame([
             'trace' => [
-                'trace_id' => $propgationContext->getTraceId(),
-                'span_id' => $propgationContext->getSpanId(),
+                'trace_id' => (string) $propgationContext->getTraceId(),
+                'span_id' => (string) $propgationContext->getSpanId(),
             ],
         ], $event->getContexts());
 
@@ -114,8 +114,8 @@ final class ScopeTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame([
             'trace' => [
-                'trace_id' => $propgationContext->getTraceId(),
-                'span_id' => $propgationContext->getSpanId(),
+                'trace_id' => (string) $propgationContext->getTraceId(),
+                'span_id' => (string) $propgationContext->getSpanId(),
             ],
         ], $event->getContexts());
     }
