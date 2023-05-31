@@ -92,6 +92,23 @@ final class PropagationContext
         return (string) $this->dynamicSamplingContext;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function getTraceContext(): array
+    {
+        $result = [
+            'trace_id' => (string) $this->traceId,
+            'span_id' => (string) $this->spanId,
+        ];
+
+        if (null !== $this->parentSpanId) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
+        }
+
+        return $result;
+    }
+
     public function getTraceId(): TraceId
     {
         return $this->traceId;
@@ -130,23 +147,6 @@ final class PropagationContext
     public function setDynamicSamplingContext(DynamicSamplingContext $dynamicSamplingContext): void
     {
         $this->dynamicSamplingContext = $dynamicSamplingContext;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getTraceContext(): array
-    {
-        $result = [
-            'trace_id' => (string) $this->traceId,
-            'span_id' => (string) $this->spanId,
-        ];
-
-        if (null !== $this->parentSpanId) {
-            $result['parent_span_id'] = (string) $this->parentSpanId;
-        }
-
-        return $result;
     }
 
     // TODO(michi) Move into central place
