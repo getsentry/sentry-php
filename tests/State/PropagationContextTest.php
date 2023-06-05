@@ -16,32 +16,32 @@ final class PropagationContextTest extends TestCase
 {
     public function testFromDefaults()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     public function testFromHeaders()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     public function testFromEnvironment()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     public function testToTraceparent()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     public function testToBaggage()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     public function testGetTraceContext()
     {
-        $this->markTestSkipped();
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**

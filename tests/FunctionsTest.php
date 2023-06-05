@@ -273,4 +273,19 @@ final class FunctionsTest extends TestCase
             $this->assertSame($transaction, $hub->getSpan());
         }
     }
+
+    public function testTraceparent(): void
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    public function testBaggage(): void
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
+
+    public function testContinueTrace(): void
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
+    }
 }
