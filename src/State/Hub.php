@@ -61,12 +61,9 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function pushScope(bool $continueTrace = true): Scope
+    public function pushScope(): Scope
     {
         $clonedScope = clone $this->getScope();
-        if ($continueTrace) {
-            $clonedScope->setPropagationContext($this->getScope()->getPropagationContext());
-        }
 
         $this->stack[] = new Layer($this->getClient(), $clonedScope);
 
@@ -88,9 +85,9 @@ final class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function withScope(callable $callback, bool $continueTrace = true)
+    public function withScope(callable $callback)
     {
-        $scope = $this->pushScope($continueTrace);
+        $scope = $this->pushScope();
 
         try {
             return $callback($scope);
