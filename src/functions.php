@@ -231,7 +231,7 @@ function baggage(): string
 
 /**
  * Continue a trace based on HTTP header values.
- * If the SDK is configured to use the performance API,
+ * If the SDK is configured with enabled tracing,
  * this function returns a populated TransactionContext.
  * In any other cases, it populates the propagation context on the scope.
  *
