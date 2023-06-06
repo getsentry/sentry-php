@@ -169,7 +169,12 @@ function trace(callable $trace, SpanContext $context)
     });
 }
 
-// TODO(michi) Name TBD
+/**
+ * Creates the current traceparent string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the traceparent based
+ * on the current span, or the scope's propagation context.
+ */
 function traceparent(): string
 {
     $hub = SentrySdk::getCurrentHub();
@@ -194,7 +199,12 @@ function traceparent(): string
     return $traceParent;
 }
 
-// TODO(michi) Name TBD
+/**
+ * Creates the baggage content string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the baggage based
+ * on the current span or the scope's propagation context.
+ */
 function baggage(): string
 {
     $hub = SentrySdk::getCurrentHub();
@@ -220,7 +230,10 @@ function baggage(): string
 }
 
 /**
- * TODO(michi) Name TBD.
+ * Continue a trace based on HTTP header values.
+ * If the SDK is configured to use the performance API,
+ * this function returns a populated TransactionContext.
+ * In any other cases, it populates the propagation context on the scope.
  *
  * @return mixed
  */
