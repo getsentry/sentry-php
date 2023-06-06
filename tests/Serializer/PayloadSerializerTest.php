@@ -120,6 +120,8 @@ JSON
             new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_NAVIGATION, 'log', null, ['from' => '/login', 'to' => '/dashboard']),
         ]);
 
+        $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-replay_id=12312012123120121231201212312012'));
+
         $event->setUser(UserDataBag::createFromArray([
             'id' => 'unique_id',
             'username' => 'my_user',
@@ -255,6 +257,9 @@ JSON
             "type": "runtime",
             "name": "Electron",
             "version": "4.0"
+        },
+        "replay": {
+            "replay_id": "12312012123120121231201212312012"
         }
     },
     "breadcrumbs": {

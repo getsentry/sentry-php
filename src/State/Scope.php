@@ -387,9 +387,11 @@ final class Scope
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } else {
-            if (null !== $options) {
-                $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromOptions($options, $this));
+            $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
+            if (null === $dynamicSamplingContext && null !== $options) {
+                $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
             }
+            $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
 
             $event->setContext('trace', $this->propagationContext->getTraceContext());
         }

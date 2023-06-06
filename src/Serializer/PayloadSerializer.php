@@ -216,10 +216,30 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (EventType::transaction() === $event->getType()) {
             $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
-            $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
 
+            $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
             if ($transactionMetadata instanceof TransactionMetadata) {
                 $result['transaction_info']['source'] = (string) $transactionMetadata->getSource();
+            }
+        }
+
+        /**
+         * In case of error events, with tracing being disabled, we set the Replay ID
+         * as a context into the payload.
+         */
+        if (
+            EventType::event() === $event->getType() &&
+            !$this->options->isTracingEnabled()
+        ) {
+            $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+            if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+                $replayId = $dynamicSamplingContext->get('replay_id');
+
+                if (null !== $replayId) {
+                    $result['contexts']['replay'] = [
+                        'replay_id' => $replayId,
+                    ];
+                }
             }
         }
 
