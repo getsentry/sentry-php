@@ -65,8 +65,7 @@ final class PropagationContext
      */
     public function toTraceparent(): string
     {
-        // We do consider all spans as un-sampled for now
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-1');
+        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-0');
     }
 
     /**
