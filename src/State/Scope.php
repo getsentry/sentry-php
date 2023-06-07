@@ -388,13 +388,13 @@ final class Scope
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } else {
+            $event->setContext('trace', $this->propagationContext->getTraceContext());
+
             $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
             if (null === $dynamicSamplingContext && null !== $options) {
                 $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
             }
             $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
-
-            $event->setContext('trace', $this->propagationContext->getTraceContext());
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
