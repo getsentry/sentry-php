@@ -16,22 +16,92 @@ final class PropagationContextTest extends TestCase
 {
     public function testFromDefaults()
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $propagationContext = PropagationContext::fromDefaults();
+
+        $this->assertInstanceOf(TraceId::class, $propagationContext->getTraceId());
+        $this->assertInstanceOf(SpanId::class, $propagationContext->getSpanId());
+        $this->assertNull($propagationContext->getParentSpanId());
+        $this->assertNull($propagationContext->getDynamicSamplingContext());
     }
 
-    public function testFromHeaders()
+/**
+     * @dataProvider tracingDataProvider
+     */
+    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $propagationContext = PropagationContext::fromHeaders($sentryTraceHeader, $baggageHeader);
+
+        $this->assertInstanceOf(TraceId::class, $propagationContext->getTraceId());
+        if (null !== $expectedTraceId) {
+            $this->assertSame((string) $expectedTraceId, (string) $propagationContext->getTraceId());
+        }
+
+        $this->assertInstanceOf(SpanId::class, $propagationContext->getParentSpanId());
+        if (null !== $expectedParentSpanId) {
+            $this->assertSame((string) $expectedParentSpanId, (string) $propagationContext->getParentSpanId());
+        }
+
+        $this->assertInstanceOf(SpanId::class, $propagationContext->getSpanId());
+        $this->assertInstanceOf(DynamicSamplingContext::class, $propagationContext->getDynamicSamplingContext());
+        $this->assertSame($expectedDynamicSamplingContextFrozen, $propagationContext->getDynamicSamplingContext()->isFrozen());
     }
 
-    public function testFromEnvironment()
+    /**
+     * @dataProvider tracingDataProvider
+     */
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $propagationContext = PropagationContext::fromEnvironment($sentryTrace, $baggage);
+
+        $this->assertInstanceOf(TraceId::class, $propagationContext->getTraceId());
+        if (null !== $expectedTraceId) {
+            $this->assertSame((string) $expectedTraceId, (string) $propagationContext->getTraceId());
+        }
+
+        $this->assertInstanceOf(SpanId::class, $propagationContext->getParentSpanId());
+        if (null !== $expectedParentSpanId) {
+            $this->assertSame((string) $expectedParentSpanId, (string) $propagationContext->getParentSpanId());
+        }
+
+        $this->assertInstanceOf(SpanId::class, $propagationContext->getSpanId());
+        $this->assertInstanceOf(DynamicSamplingContext::class, $propagationContext->getDynamicSamplingContext());
+        $this->assertSame($expectedDynamicSamplingContextFrozen, $propagationContext->getDynamicSamplingContext()->isFrozen());
+    }
+
+    public function tracingDataProvider(): iterable
+    {
+        yield [
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            '',
+            new TraceId('566e3688a61d4bc888951642d6f14a19'),
+            new SpanId('566e3688a61d4bc8'),
+            true,
+        ];
+
+        yield [
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
+            new TraceId('566e3688a61d4bc888951642d6f14a19'),
+            new SpanId('566e3688a61d4bc8'),
+            true,
+        ];
+
+        yield [
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'foo=bar',
+            new TraceId('566e3688a61d4bc888951642d6f14a19'),
+            new SpanId('566e3688a61d4bc8'),
+            true,
+        ];
     }
 
     public function testToTraceparent()
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', $propagationContext->toTraceparent());
     }
 
     public function testToBaggage()
@@ -41,7 +111,25 @@ final class PropagationContextTest extends TestCase
 
     public function testGetTraceContext()
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        $this->assertSame([
+            'trace_id' => (string) $propagationContext->getTraceId(),
+            'span_id' => (string) $propagationContext->getSpanId(),
+        ], $propagationContext->getTraceContext());
+
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $propagationContext->setParentSpanId(new SpanId('b01b9f6349558cd1'));
+
+        $this->assertSame([
+            'trace_id' => (string) $propagationContext->getTraceId(),
+            'span_id' => (string) $propagationContext->getSpanId(),
+            'parent_span_id' => (string) $propagationContext->getParentSpanId(),
+        ], $propagationContext->getTraceContext());
     }
 
     /**
