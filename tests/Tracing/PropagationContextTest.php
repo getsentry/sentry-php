@@ -24,7 +24,7 @@ final class PropagationContextTest extends TestCase
         $this->assertNull($propagationContext->getDynamicSamplingContext());
     }
 
-/**
+    /**
      * @dataProvider tracingDataProvider
      */
     public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
