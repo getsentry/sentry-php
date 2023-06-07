@@ -192,7 +192,7 @@ function traceparent(): string
     }
 
     $traceParent = '';
-    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use (&$traceParent) {
+    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
         $traceParent = $scope->getPropagationContext()->toTraceparent();
     });
 
@@ -222,7 +222,7 @@ function baggage(): string
     }
 
     $baggage = '';
-    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use (&$baggage) {
+    $hub->configureScope(function (Scope $scope) use (&$baggage) {
         $baggage = $scope->getPropagationContext()->toBaggage();
     });
 
@@ -250,7 +250,7 @@ function continueTrace(string $sentryTrace, string $baggage)
         }
     }
 
-    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
+    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
         $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
         $scope->setPropagationContext($propagationContext);
     });
