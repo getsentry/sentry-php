@@ -15,8 +15,8 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
-use Sentry\State\PropagationContext;
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
 

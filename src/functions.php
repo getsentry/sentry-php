@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\State\PropagationContext;
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;

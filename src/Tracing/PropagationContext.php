@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Sentry\State;
+namespace Sentry\Tracing;
 
 use Sentry\SentrySdk;
-use Sentry\Tracing\DynamicSamplingContext;
-use Sentry\Tracing\SpanId;
-use Sentry\Tracing\TraceId;
+use Sentry\State\Scope;
 
 final class PropagationContext
 {

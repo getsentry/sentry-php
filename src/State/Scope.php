@@ -10,6 +10,7 @@ use Sentry\EventHint;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Tests\State;
+namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Options;
-use Sentry\State\PropagationContext;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 
