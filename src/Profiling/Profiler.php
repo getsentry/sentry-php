@@ -52,8 +52,12 @@ final class Profiler
         }
     }
 
-    public function getProfile(): Profile
+    public function getProfile(): ?Profile
     {
+        if (null === $this->profiler) {
+            return null;
+        }
+
         return $this->profile;
     }
 

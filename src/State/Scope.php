@@ -7,7 +7,10 @@ namespace Sentry\State;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\Options;
 use Sentry\Severity;
+use Sentry\Tracing\DynamicSamplingContext;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
@@ -18,6 +21,11 @@ use Sentry\UserDataBag;
  */
 final class Scope
 {
+    /**
+     * @var PropagationContext
+     */
+    private $propagationContext;
+
     /**
      * @var Breadcrumb[] The list of breadcrumbs recorded in this scope
      */
@@ -74,6 +82,11 @@ final class Scope
      */
     private static $globalEventProcessors = [];
 
+    public function __construct(PropagationContext $propagationContext = null)
+    {
+        $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
+    }
+
     /**
      * Sets a new tag in the tags context.
      *
@@ -118,7 +131,7 @@ final class Scope
     }
 
     /**
-     * Sets context data with the given name.
+     * Sets data to the context by a given name.
      *
      * @param string               $name  The name that uniquely identifies the context
      * @param array<string, mixed> $value The value
@@ -127,7 +140,9 @@ final class Scope
      */
     public function setContext(string $name, array $value): self
     {
-        $this->contexts[$name] = $value;
+        if (!empty($value)) {
+            $this->contexts[$name] = $value;
+        }
 
         return $this;
     }
@@ -328,7 +343,7 @@ final class Scope
      *
      * @param Event $event The event object that will be enriched with scope data
      */
-    public function applyToEvent(Event $event, ?EventHint $hint = null): ?Event
+    public function applyToEvent(Event $event, ?EventHint $hint = null, ?Options $options = null): ?Event
     {
         $event->setFingerprint(array_merge($event->getFingerprint(), $this->fingerprint));
 
@@ -360,9 +375,26 @@ final class Scope
             $event->setUser($user);
         }
 
-        // We do this here to also apply the trace context to errors if there is a Span on the Scope
+        /**
+         * Apply the trace context to errors if there is a Span on the Scope.
+         * Else fallback to the propagation context.
+         */
         if (null !== $this->span) {
             $event->setContext('trace', $this->span->getTraceContext());
+
+            // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
+            $transaction = $this->span->getTransaction();
+            if (null !== $transaction) {
+                $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
+            }
+        } else {
+            $event->setContext('trace', $this->propagationContext->getTraceContext());
+
+            $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
+            if (null === $dynamicSamplingContext && null !== $options) {
+                $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
+            }
+            $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {
@@ -423,10 +455,25 @@ final class Scope
         return null;
     }
 
+    public function getPropagationContext(): PropagationContext
+    {
+        return $this->propagationContext;
+    }
+
+    public function setPropagationContext(PropagationContext $propagationContext): self
+    {
+        $this->propagationContext = $propagationContext;
+
+        return $this;
+    }
+
     public function __clone()
     {
         if (null !== $this->user) {
             $this->user = clone $this->user;
+        }
+        if (null !== $this->propagationContext) {
+            $this->propagationContext = clone $this->propagationContext;
         }
     }
 }

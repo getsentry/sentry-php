@@ -16,6 +16,7 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
 
@@ -227,10 +228,14 @@ final class HubTest extends TestCase
     /**
      * @dataProvider captureMessageDataProvider
      */
-    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -248,6 +253,8 @@ final class HubTest extends TestCase
 
     public function captureMessageDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [
                 'foo',
@@ -256,8 +263,9 @@ final class HubTest extends TestCase
             [
                 'foo',
                 Severity::debug(),
-                new Scope(),
+                new Scope($propagationContext),
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -269,19 +277,24 @@ final class HubTest extends TestCase
             [
                 'foo',
                 Severity::debug(),
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
     }
 
     /**
      * @dataProvider captureExceptionDataProvider
      */
-    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
@@ -298,15 +311,18 @@ final class HubTest extends TestCase
 
     public function captureExceptionDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [
                 new \Exception('foo'),
             ],
             [
                 new \Exception('foo'),
-                new Scope(),
+                new Scope($propagationContext),
                 null,
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -316,19 +332,24 @@ final class HubTest extends TestCase
             ],
             [
                 new \Exception('foo'),
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
     }
 
     /**
      * @dataProvider captureLastErrorDataProvider
      */
-    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -346,12 +367,15 @@ final class HubTest extends TestCase
 
     public function captureLastErrorDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [],
             [
-                new Scope(),
+                new Scope($propagationContext),
                 null,
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -359,9 +383,10 @@ final class HubTest extends TestCase
                 new EventHint(),
             ],
             [
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
     }
 

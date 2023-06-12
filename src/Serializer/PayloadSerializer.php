@@ -57,6 +57,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
             return $this->serializeAsEnvelope($event);
         }
 
+        if ($this->options->isTracingEnabled()) {
+            return $this->serializeAsEnvelope($event);
+        }
+
         return $this->serializeAsEvent($event);
     }
 
@@ -84,6 +88,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
             if (null !== $checkIn->getMonitorConfig()) {
                 $result['monitor_config'] = $checkIn->getMonitorConfig()->toArray();
+            }
+
+            if (!empty($event->getContexts()['trace'])) {
+                $result['contexts']['trace'] = $event->getContexts()['trace'];
             }
         }
 
@@ -212,10 +220,30 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         if (EventType::transaction() === $event->getType()) {
             $result['spans'] = array_values(array_map([$this, 'serializeSpan'], $event->getSpans()));
-            $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
 
+            $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
             if ($transactionMetadata instanceof TransactionMetadata) {
                 $result['transaction_info']['source'] = (string) $transactionMetadata->getSource();
+            }
+        }
+
+        /**
+         * In case of error events, with tracing being disabled, we set the Replay ID
+         * as a context into the payload.
+         */
+        if (
+            EventType::event() === $event->getType() &&
+            !$this->options->isTracingEnabled()
+        ) {
+            $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+            if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+                $replayId = $dynamicSamplingContext->get('replay_id');
+
+                if (null !== $replayId) {
+                    $result['contexts']['replay'] = [
+                        'replay_id' => $replayId,
+                    ];
+                }
             }
         }
 
@@ -258,12 +286,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'content_type' => 'application/json',
         ];
 
-        $seralizedEvent = '';
-        if (EventType::transaction() === $event->getType()) {
-            $seralizedEvent = $this->serializeAsEvent($event);
-        }
         if (EventType::checkIn() === $event->getType()) {
             $seralizedEvent = $this->serializeAsCheckInEvent($event);
+        } else {
+            $seralizedEvent = $this->serializeAsEvent($event);
         }
 
         return sprintf("%s\n%s\n%s", JSON::encode($envelopeHeader), JSON::encode($itemHeader), $seralizedEvent);

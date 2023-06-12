@@ -469,14 +469,16 @@ final class Event
     }
 
     /**
-     * Sets the data of the context with the given name.
+     * Sets data to the context by a given name.
      *
      * @param string               $name The name that uniquely identifies the context
      * @param array<string, mixed> $data The data of the context
      */
     public function setContext(string $name, array $data): self
     {
-        $this->contexts[$name] = $data;
+        if (!empty($data)) {
+            $this->contexts[$name] = $data;
+        }
 
         return $this;
     }

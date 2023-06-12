@@ -10,6 +10,8 @@ use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
+use Sentry\Tracing\PropagationContext;
+use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionSource;
@@ -100,6 +102,7 @@ final class DynamicSamplingContextTest extends TestCase
         $transactionContext->setName('foo');
 
         $transaction = new Transaction($transactionContext, $hub);
+        $transaction->getMetadata()->setSamplingRate(1.0);
 
         $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
 
@@ -126,6 +129,36 @@ final class DynamicSamplingContextTest extends TestCase
         $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
 
         $this->assertNull($samplingContext->get('transaction'));
+    }
+
+    public function testFromOptions(): void
+    {
+        $options = new Options([
+            'dsn' => 'http://public@example.com/sentry/1',
+            'release' => '1.0.0',
+            'environment' => 'test',
+            'traces_sample_rate' => 0.5,
+        ]);
+
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+
+        $user = new UserDataBag();
+        $user->setSegment('my_segment');
+
+        $scope = new Scope();
+        $scope->setUser($user);
+        $scope->setPropagationContext($propagationContext);
+
+        $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+
+        $this->assertSame('21160e9b836d479f81611368b2aa3d2c', $samplingContext->get('trace_id'));
+        $this->assertSame('0.5', $samplingContext->get('sample_rate'));
+        $this->assertSame('public', $samplingContext->get('public_key'));
+        $this->assertSame('1.0.0', $samplingContext->get('release'));
+        $this->assertSame('test', $samplingContext->get('environment'));
+        $this->assertSame('my_segment', $samplingContext->get('user_segment'));
+        $this->assertTrue($samplingContext->isFrozen());
     }
 
     /**

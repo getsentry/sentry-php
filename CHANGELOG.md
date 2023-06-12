@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## 3.19.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.1.
+
+### Bug Fixes
+
+- Use HTTP/1.1 when compression is enabled [(#1542)](https://github.com/getsentry/sentry-php/pull/1542)
+
+## 3.19.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.0.
+
+### Misc
+
+- Add support for `guzzlehttp/promises` v2 [(#1536)](https://github.com/getsentry/sentry-php/pull/1536)
+
+## 3.18.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.2.
+
+### Bug Fixes
+
+- Require php-http/message-factory [(#1534)](https://github.com/getsentry/sentry-php/pull/1534)
+
+## 3.18.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.1.
+
+### Bug Fixes
+
+- Guard against empty profiles [(#1528)](https://github.com/getsentry/sentry-php/pull/1528)
+- Ignore empty context values [(#1529)](https://github.com/getsentry/sentry-php/pull/1529)
+
+## 3.18.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.18.0.
+
+### Features
+
+- Add `TransactionContext::fromEnvironment` [(#1519)](https://github.com/getsentry/sentry-php/pull/1519)
+
+### Misc
+
+- Sent all events to the `/envelope` endpoint if tracing is enabled [(#1518)](https://github.com/getsentry/sentry-php/pull/1518)
+- Attach the Dynamic Sampling Context to error events [(#1522)](https://github.com/getsentry/sentry-php/pull/1522)
+
 ## 3.17.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.17.0.

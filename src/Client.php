@@ -35,7 +35,7 @@ final class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '3.17.0';
+    public const SDK_VERSION = '3.19.1';
 
     /**
      * @var Options The client options
@@ -289,7 +289,7 @@ final class Client implements ClientInterface
 
         if (null !== $scope) {
             $beforeEventProcessors = $event;
-            $event = $scope->applyToEvent($event, $hint);
+            $event = $scope->applyToEvent($event, $hint, $this->options);
 
             if (null === $event) {
                 $this->logger->info(
