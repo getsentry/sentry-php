@@ -17,6 +17,8 @@ use Sentry\EventType;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\Serializer\PayloadSerializer;
@@ -607,6 +609,40 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"in_progress","duration":null,"release":"","environment":"production","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
+TEXT
+            ,
+            false,
+        ];
+
+        $checkinId = SentryUid::generate();
+        $checkIn = new CheckIn(
+            'my-monitor',
+            CheckInStatus::ok(),
+            $checkinId,
+            '1.0.0',
+            'dev',
+            10,
+            new MonitorConfig(
+                MonitorSchedule::crontab('0 0 * * *'),
+                10,
+                12,
+                'Europe/Amsterdam'
+            )
+        );
+
+        $event = Event::createCheckIn(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setCheckIn($checkIn);
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"check_in","content_type":"application\/json"}
+{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam"},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
 TEXT
             ,
             false,
