@@ -45,9 +45,11 @@ final class MonitorSchedule
         return $this->type;
     }
 
-    public function setType(string $type): void
+    public function setType(string $type): self
     {
         $this->type = $type;
+
+        return $this;
     }
 
     /**
@@ -61,9 +63,11 @@ final class MonitorSchedule
     /**
      * @param string|int $value
      */
-    public function setValue($value): void
+    public function setValue($value): self
     {
         $this->value = $value;
+
+        return $this;
     }
 
     public function getUnit(): ?MonitorScheduleUnit
@@ -71,9 +75,11 @@ final class MonitorSchedule
         return $this->unit;
     }
 
-    public function setUnit(?MonitorScheduleUnit $unit): void
+    public function setUnit(?MonitorScheduleUnit $unit): self
     {
         $this->unit = $unit;
+
+        return $this;
     }
 
     /**

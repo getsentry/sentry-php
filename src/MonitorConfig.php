@@ -43,9 +43,11 @@ final class MonitorConfig
         return $this->schedule;
     }
 
-    public function setSchedule(MonitorSchedule $schedule): void
+    public function setSchedule(MonitorSchedule $schedule): self
     {
         $this->schedule = $schedule;
+
+        return $this;
     }
 
     public function getCheckinMargin(): ?int
@@ -53,9 +55,11 @@ final class MonitorConfig
         return $this->checkinMargin;
     }
 
-    public function setCheckinMargin(?int $checkinMargin): void
+    public function setCheckinMargin(?int $checkinMargin): self
     {
         $this->checkinMargin = $checkinMargin;
+
+        return $this;
     }
 
     public function getMaxRuntime(): ?int
@@ -63,9 +67,11 @@ final class MonitorConfig
         return $this->maxRuntime;
     }
 
-    public function setMaxRuntime(?int $maxRuntime): void
+    public function setMaxRuntime(?int $maxRuntime): self
     {
         $this->maxRuntime = $maxRuntime;
+
+        return $this;
     }
 
     public function getTimezone(): ?string
@@ -73,9 +79,11 @@ final class MonitorConfig
         return $this->timezone;
     }
 
-    public function setTimezone(?string $timezone): void
+    public function setTimezone(?string $timezone): self
     {
         $this->timezone = $timezone;
+
+        return $this;
     }
 
     /**
