@@ -40,6 +40,16 @@ final class MonitorSchedule
         $this->unit = $unit;
     }
 
+    public static function crontab(string $value): self
+    {
+        return new self(self::TYPE_CRONTAB, $value);
+    }
+
+    public static function interval(int $value, MonitorScheduleUnit $unit): self
+    {
+        return new self(self::TYPE_INTERVAL, $value, $unit);
+    }
+
     public function getType(): string
     {
         return $this->type;
