@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -166,4 +167,91 @@ function trace(callable $trace, SpanContext $context)
             }
         }
     });
+}
+
+/**
+ * Creates the current traceparent string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the traceparent based
+ * on the current span, or the scope's propagation context.
+ */
+function traceparent(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        if (null !== $options && $options->getEnableTracing()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if (null !== $span) {
+                return $span->toTraceparent();
+            }
+        }
+    }
+
+    $traceParent = '';
+    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
+        $traceParent = $scope->getPropagationContext()->toTraceparent();
+    });
+
+    return $traceParent;
+}
+
+/**
+ * Creates the baggage content string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the baggage based
+ * on the current span or the scope's propagation context.
+ */
+function baggage(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        if (null !== $options && $options->getEnableTracing()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if (null !== $span) {
+                return $span->toBaggage();
+            }
+        }
+    }
+
+    $baggage = '';
+    $hub->configureScope(function (Scope $scope) use (&$baggage) {
+        $baggage = $scope->getPropagationContext()->toBaggage();
+    });
+
+    return $baggage;
+}
+
+/**
+ * Continue a trace based on HTTP header values.
+ * If the SDK is configured with enabled tracing,
+ * this function returns a populated TransactionContext.
+ * In any other cases, it populates the propagation context on the scope.
+ *
+ * @return mixed
+ */
+function continueTrace(string $sentryTrace, string $baggage)
+{
+    $hub = SentrySdk::getCurrentHub();
+    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
+        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+        $scope->setPropagationContext($propagationContext);
+    });
+
+    $client = $hub->getClient();
+
+    if (null !== $client) {
+        $options = $client->getOptions();
+
+        if (null !== $options && $options->getEnableTracing()) {
+            return TransactionContext::fromHeaders($sentryTrace, $baggage);
+        }
+    }
 }

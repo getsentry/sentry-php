@@ -18,18 +18,25 @@ use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\SpanId;
+use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
+use function Sentry\baggage;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
+use function Sentry\continueTrace;
 use function Sentry\init;
 use function Sentry\startTransaction;
 use function Sentry\trace;
+use function Sentry\traceparent;
 use function Sentry\withScope;
 
 final class FunctionsTest extends TestCase
@@ -272,5 +279,141 @@ final class FunctionsTest extends TestCase
         } catch (RuntimeException $e) {
             $this->assertSame($transaction, $hub->getSpan());
         }
+    }
+
+    public function testTraceparentWithTracingDisabled(): void
+    {
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        $scope = new Scope($propagationContext);
+
+        $hub = new Hub(null, $scope);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $traceParent = traceparent();
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
+    }
+
+    public function testTraceparentWithTracingEnabled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'enable_tracing' => true,
+            ]));
+
+        $hub = new Hub($client);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $spanContext = new SpanContext();
+        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        $span = new Span($spanContext);
+
+        $hub->setSpan($span);
+
+        $traceParent = traceparent();
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
+    }
+
+    public function testBaggageWithTracingDisabled(): void
+    {
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+
+        $scope = new Scope($propagationContext);
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+
+        $hub = new Hub($client, $scope);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $baggage = baggage();
+
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-release=1.0.0,sentry-environment=development', $baggage);
+    }
+
+    public function testBaggageWithTracingEnabled(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'enable_tracing' => true,
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+
+        $hub = new Hub($client);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = new TransactionContext();
+        $transactionContext->setName('Test');
+        $transactionContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+
+        $transaction = startTransaction($transactionContext);
+
+        $spanContext = new SpanContext();
+
+        $span = $transaction->startChild($spanContext);
+
+        $hub->setSpan($span);
+
+        $baggage = baggage();
+
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development', $baggage);
+    }
+
+    public function testContinueTrace(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'enable_tracing' => true,
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+
+        $hub = new Hub($client);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-trace_id=566e3688a61d4bc888951642d6f14a19'
+        );
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $transactionContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
+        $this->assertTrue($transactionContext->getParentSampled());
+
+        configureScope(function (Scope $scope): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+
+            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+
+            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
+            $this->assertTrue($dynamicSamplingContext->isFrozen());
+        });
     }
 }

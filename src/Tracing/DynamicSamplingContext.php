@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\Options;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
@@ -182,6 +183,36 @@ final class DynamicSamplingContext
                 $samplingContext->set('user_segment', $scope->getUser()->getSegment());
             }
         });
+
+        $samplingContext->freeze();
+
+        return $samplingContext;
+    }
+
+    public static function fromOptions(Options $options, Scope $scope): self
+    {
+        $samplingContext = new self();
+        $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
+
+        if (null !== $options->getTracesSampleRate()) {
+            $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());
+        }
+
+        if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
+            $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
+        }
+
+        if (null !== $options->getRelease()) {
+            $samplingContext->set('release', $options->getRelease());
+        }
+
+        if (null !== $options->getEnvironment()) {
+            $samplingContext->set('environment', $options->getEnvironment());
+        }
+
+        if (null !== $scope->getUser() && null !== $scope->getUser()->getSegment()) {
+            $samplingContext->set('user_segment', $scope->getUser()->getSegment());
+        }
 
         $samplingContext->freeze();
 

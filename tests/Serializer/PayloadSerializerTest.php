@@ -120,6 +120,8 @@ JSON
             new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_NAVIGATION, 'log', null, ['from' => '/login', 'to' => '/dashboard']),
         ]);
 
+        $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-replay_id=12312012123120121231201212312012'));
+
         $event->setUser(UserDataBag::createFromArray([
             'id' => 'unique_id',
             'username' => 'my_user',
@@ -255,6 +257,9 @@ JSON
             "type": "runtime",
             "name": "Electron",
             "version": "4.0"
+        },
+        "replay": {
+            "replay_id": "12312012123120121231201212312012"
         }
     },
     "breadcrumbs": {
@@ -566,13 +571,17 @@ JSON
 
         $event = Event::createCheckIn(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setCheckIn($checkIn);
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
 
         yield [
             $event,
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev"}
+{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
 TEXT
             ,
             false,
@@ -587,13 +596,17 @@ TEXT
 
         $event = Event::createCheckIn(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setCheckIn($checkIn);
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
 
         yield [
             $event,
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"in_progress","duration":null,"release":"","environment":"production"}
+{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"in_progress","duration":null,"release":"","environment":"production","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
 TEXT
             ,
             false,
