@@ -106,7 +106,11 @@ final class PropagationContextTest extends TestCase
 
     public function testToBaggage()
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $dynamicSamplingContext = DynamicSamplingContext::fromHeader('sentry-trace_id=566e3688a61d4bc888951642d6f14a19');
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
+
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19', $propagationContext->toBaggage());
     }
 
     public function testGetTraceContext()

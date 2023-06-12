@@ -9,7 +9,6 @@ use Sentry\State\Scope;
 
 final class PropagationContext
 {
-    // TODO(michi) Move into central place
     private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
     /**
@@ -146,7 +145,6 @@ final class PropagationContext
         $this->dynamicSamplingContext = $dynamicSamplingContext;
     }
 
-    // TODO(michi) Move into central place
     private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self
     {
         $context = self::fromDefaults();
