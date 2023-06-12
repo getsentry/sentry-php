@@ -7,6 +7,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
 use Sentry\Util\SentryUid;
 
 final class CheckInTest extends TestCase
@@ -54,6 +56,7 @@ final class CheckInTest extends TestCase
             ['getRelease', 'setRelease', '1.0.0'],
             ['getEnvironment', 'setEnvironment', 'dev'],
             ['getDuration', 'setDuration', 10],
+            ['getMonitorConfig', 'setMonitorConfig', new MonitorConfig(MonitorSchedule::crontab('* * * * *'))],
         ];
     }
 }
