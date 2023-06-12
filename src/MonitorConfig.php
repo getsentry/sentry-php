@@ -38,7 +38,7 @@ final class MonitorConfig
         $this->timezone = $timezone;
     }
 
-    public function getShedule(): MonitorSchedule
+    public function getSchedule(): MonitorSchedule
     {
         return $this->schedule;
     }
