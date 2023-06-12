@@ -63,7 +63,7 @@ final class PropagationContext
      */
     public function toTraceparent(): string
     {
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-0');
+        return sprintf('%s-%s', (string) $this->traceId, (string) $this->spanId);
     }
 
     /**
