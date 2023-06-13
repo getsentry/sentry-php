@@ -26,6 +26,9 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceDoesNothingIfSpanIsNotSet(): void
     {
         $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
         $hub = new Hub($client);
 
