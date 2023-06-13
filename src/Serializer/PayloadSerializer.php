@@ -86,6 +86,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'environment' => $checkIn->getEnvironment(),
             ];
 
+            if (null !== $checkIn->getMonitorConfig()) {
+                $result['monitor_config'] = $checkIn->getMonitorConfig()->toArray();
+            }
+
             if (!empty($event->getContexts()['trace'])) {
                 $result['contexts']['trace'] = $event->getContexts()['trace'];
             }
