@@ -29,10 +29,12 @@ final class GuzzleTracingMiddleware
                 $client = $hub->getClient();
                 $span = $hub->getSpan();
 
-                if (null === $span && self::shouldAttachTracingHeaders($client, $request)) {
-                    $request = $request
-                        ->withHeader('sentry-trace', traceparent())
-                        ->withHeader('baggage', baggage());
+                if (null === $span) {
+                    if (self::shouldAttachTracingHeaders($client, $request)) {
+                        $request = $request
+                            ->withHeader('sentry-trace', traceparent())
+                            ->withHeader('baggage', baggage());
+                    }
 
                     return $handler($request, $options);
                 }
