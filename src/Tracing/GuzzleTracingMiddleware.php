@@ -122,8 +122,10 @@ final class GuzzleTracingMiddleware
             if (
                 null !== $sdkOptions->getTracePropagationTargets() &&
                 // Due to BC, we treat an empty array (the default) as all hosts are allow listed
-                [] === $sdkOptions->getTracePropagationTargets() ||
-                \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
+                (
+                    [] === $sdkOptions->getTracePropagationTargets() ||
+                    \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
+                )
             ) {
                 return true;
             }
