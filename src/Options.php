@@ -515,9 +515,9 @@ final class Options
     /**
      * Gets an allow list of trace propagation targets.
      *
-     * @return string[]
+     * @return string[]|null
      */
-    public function getTracePropagationTargets(): array
+    public function getTracePropagationTargets(): ?array
     {
         return $this->options['trace_propagation_targets'];
     }
