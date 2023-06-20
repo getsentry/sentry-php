@@ -10,6 +10,7 @@ use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use function Sentry\baggage;
@@ -29,10 +30,11 @@ final class GuzzleTracingMiddleware
                 $span = $hub->getSpan();
 
                 if (null === $span) {
-                    // TODO(michi) Decide on trace_propagation_targets handling
-                    $request = $request
-                        ->withHeader('sentry-trace', traceparent())
-                        ->withHeader('baggage', baggage());
+                    if (self::shouldAttachTracingHeaders($client, $request)) {
+                        $request = $request
+                            ->withHeader('sentry-trace', traceparent())
+                            ->withHeader('baggage', baggage());
+                    }
 
                     return $handler($request, $options);
                 }
@@ -54,17 +56,10 @@ final class GuzzleTracingMiddleware
 
                 $childSpan = $span->startChild($spanContext);
 
-                $request = $request
-                    ->withHeader('sentry-trace', $childSpan->toTraceparent());
-
-                // Check if the request destination is allow listed in the trace_propagation_targets option.
-                if (null !== $client) {
-                    $sdkOptions = $client->getOptions();
-
-                    if (\in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())) {
-                        $request = $request
-                            ->withHeader('baggage', $childSpan->toBaggage());
-                    }
+                if (self::shouldAttachTracingHeaders($client, $request)) {
+                    $request = $request
+                        ->withHeader('sentry-trace', $childSpan->toTraceparent())
+                        ->withHeader('baggage', $childSpan->toBaggage());
                 }
 
                 $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan, $partialUri) {
@@ -116,5 +111,26 @@ final class GuzzleTracingMiddleware
                 return $handler($request, $options)->then($handlerPromiseCallback, $handlerPromiseCallback);
             };
         };
+    }
+
+    private static function shouldAttachTracingHeaders(?ClientInterface $client, RequestInterface $request): bool
+    {
+        if (null !== $client) {
+            $sdkOptions = $client->getOptions();
+
+            // Check if the request destination is allow listed in the trace_propagation_targets option.
+            if (
+                null !== $sdkOptions->getTracePropagationTargets() &&
+                // Due to BC, we treat an empty array (the default) as all hosts are allow listed
+                (
+                    [] === $sdkOptions->getTracePropagationTargets() ||
+                    \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
+                )
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

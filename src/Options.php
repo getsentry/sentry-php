@@ -515,9 +515,9 @@ final class Options
     /**
      * Gets an allow list of trace propagation targets.
      *
-     * @return string[]
+     * @return string[]|null
      */
-    public function getTracePropagationTargets(): array
+    public function getTracePropagationTargets(): ?array
     {
         return $this->options['trace_propagation_targets'];
     }
@@ -964,7 +964,7 @@ final class Options
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
-        $resolver->setAllowedTypes('trace_propagation_targets', 'string[]');
+        $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');

@@ -26,6 +26,9 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceDoesNothingIfSpanIsNotSet(): void
     {
         $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
         $hub = new Hub($client);
 
@@ -54,6 +57,125 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
             $this->assertCount(0, $event->getBreadcrumbs());
         });
+    }
+
+    /**
+     * @dataProvider traceHeadersDataProvider
+     */
+    public function testTraceHeaders(Request $request, Options $options, bool $headersShouldBePresent): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+
+        $expectedPromiseResult = new Response();
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
+            if ($headersShouldBePresent) {
+                $this->assertNotEmpty($request->getHeader('sentry-trace'));
+                $this->assertNotEmpty($request->getHeader('baggage'));
+            } else {
+                $this->assertEmpty($request->getHeader('sentry-trace'));
+                $this->assertEmpty($request->getHeader('baggage'));
+            }
+
+            return new FulfilledPromise($expectedPromiseResult);
+        });
+
+        /** @var PromiseInterface $promise */
+        $function($request, []);
+    }
+
+    /**
+     * @dataProvider traceHeadersDataProvider
+     */
+    public function testTraceHeadersWithTransacttion(Request $request, Options $options, bool $headersShouldBePresent): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeast(2))
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $hub->setSpan($transaction);
+
+        $expectedPromiseResult = new Response();
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
+            if ($headersShouldBePresent) {
+                $this->assertNotEmpty($request->getHeader('sentry-trace'));
+                $this->assertNotEmpty($request->getHeader('baggage'));
+            } else {
+                $this->assertEmpty($request->getHeader('sentry-trace'));
+                $this->assertEmpty($request->getHeader('baggage'));
+            }
+
+            return new FulfilledPromise($expectedPromiseResult);
+        });
+
+        /** @var PromiseInterface $promise */
+        $function($request, []);
+
+        $transaction->finish();
+    }
+
+    public function traceHeadersDataProvider(): iterable
+    {
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new Options([
+                'traces_sample_rate' => 1,
+            ]),
+            true,
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => [],
+            ]),
+            true,
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => [
+                    'www.example.com',
+                ],
+            ]),
+            true,
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => null,
+            ]),
+            false,
+        ];
+
+        yield [
+            new Request('GET', 'https://www.example.com'),
+            new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => [
+                    'example.com',
+                ],
+            ]),
+            false,
+        ];
     }
 
     /**
