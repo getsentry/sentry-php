@@ -175,7 +175,7 @@ function trace(callable $trace, SpanContext $context)
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
  */
-function traceparent(): string
+function getTraceparent(): string
 {
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
@@ -205,7 +205,7 @@ function traceparent(): string
  * This function is context aware, as in it either returns the baggage based
  * on the current span or the scope's propagation context.
  */
-function baggage(): string
+function getBaggage(): string
 {
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
