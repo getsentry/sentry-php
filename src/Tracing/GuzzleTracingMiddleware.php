@@ -13,8 +13,8 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
-use function Sentry\baggage;
-use function Sentry\traceparent;
+use function Sentry\getBaggage;
+use function Sentry\getTraceparent;
 
 /**
  * This handler traces each outgoing HTTP request by recording performance data.
@@ -32,8 +32,8 @@ final class GuzzleTracingMiddleware
                 if (null === $span) {
                     if (self::shouldAttachTracingHeaders($client, $request)) {
                         $request = $request
-                            ->withHeader('sentry-trace', traceparent())
-                            ->withHeader('baggage', baggage());
+                            ->withHeader('sentry-trace', getTraceparent())
+                            ->withHeader('baggage', getBaggage());
                     }
 
                     return $handler($request, $options);
