@@ -26,17 +26,17 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
-use function Sentry\getBaggage;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\continueTrace;
+use function Sentry\getBaggage;
+use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\startTransaction;
 use function Sentry\trace;
-use function Sentry\getTraceparent;
 use function Sentry\withScope;
 
 final class FunctionsTest extends TestCase
