@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 3.20.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.20.0.
+
+### Features
+
+- Tracing without Performance [(#1516)](https://github.com/getsentry/sentry-php/pull/1516)
+
+  You can now set up distributed tracing without the need to use the performance APIs.
+  This allows you to connect your errors that hail from other Sentry instrumented applications to errors in your PHP application.
+
+  To continue a trace, fetch the incoming Sentry tracing headers and call `\Sentry\continueTrace()` as early as possible in the request cycle.
+
+  ```php
+  $sentryTraceHeader = $request->getHeaderLine('sentry-trace');
+  $baggageHeader = $request->getHeaderLine('baggage');
+
+  continueTrace($sentryTraceHeader, $baggageHeader);
+  ```
+
+  To continue a trace outward, you may attach the Sentry tracing headers to any HTTP client request.
+  You can fetch the required header values by calling `\Sentry\getBaggage()` and `\Sentry\getTraceparent()`.
+
+- Upserting Cron Monitors [(#1511)](https://github.com/getsentry/sentry-php/pull/1511)
+
+  You can now create and update your Cron Monitors programmatically with code.
+  Read more about this in our [docs](https://docs.sentry.io/platforms/php/crons/#upserting-cron-monitors).
+
 ## 3.19.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.19.1.
