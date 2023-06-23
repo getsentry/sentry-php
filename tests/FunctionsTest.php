@@ -304,7 +304,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->once())
             ->method('getOptions')
             ->willReturn(new Options([
-                'enable_tracing' => true,
+                'traces_sample_rate' => 1.0,
             ]));
 
         $hub = new Hub($client);
@@ -354,7 +354,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->atLeastOnce())
             ->method('getOptions')
             ->willReturn(new Options([
-                'enable_tracing' => true,
+                'traces_sample_rate' => 1.0,
                 'release' => '1.0.0',
                 'environment' => 'development',
             ]));
@@ -386,7 +386,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->atLeastOnce())
             ->method('getOptions')
             ->willReturn(new Options([
-                'enable_tracing' => true,
+                'traces_sample_rate' => 1.0,
                 'release' => '1.0.0',
                 'environment' => 'development',
             ]));

@@ -183,7 +183,7 @@ function getTraceparent(): string
     if (null !== $client) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->getEnableTracing()) {
+        if (null !== $options && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if (null !== $span) {
                 return $span->toTraceparent();
@@ -213,7 +213,7 @@ function getBaggage(): string
     if (null !== $client) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->getEnableTracing()) {
+        if (null !== $options && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if (null !== $span) {
                 return $span->toBaggage();
@@ -250,7 +250,7 @@ function continueTrace(string $sentryTrace, string $baggage)
     if (null !== $client) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->getEnableTracing()) {
+        if (null !== $options && $options->isTracingEnabled()) {
             return TransactionContext::fromHeaders($sentryTrace, $baggage);
         }
     }
