@@ -94,10 +94,5 @@
             "phpstan/extension-installer": true
         }
     },
-    "prefer-stable": true,
-    "extra": {
-        "branch-alias": {
-            "dev-master": "3.13.x-dev"
-        }
-    }
+    "prefer-stable": true
 }
