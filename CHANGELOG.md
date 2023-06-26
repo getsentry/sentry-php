@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 3.20.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.20.1.
+
+### Bug Fixes
+
+- Use the result of `isTracingEnabled()` to determine the behaviour of `getBaggage()` and `getTraceparent()` [(#1555)](https://github.com/getsentry/sentry-php/pull/1555)
+
+### Misc
+
+- Always return a `TransactionContext` from `continueTrace()` [(#1556)](https://github.com/getsentry/sentry-php/pull/1556)
+
 ## 3.20.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.20.0.
