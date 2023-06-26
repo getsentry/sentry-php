@@ -234,10 +234,8 @@ function getBaggage(): string
  * If the SDK is configured with enabled tracing,
  * this function returns a populated TransactionContext.
  * In any other cases, it populates the propagation context on the scope.
- *
- * @return mixed
  */
-function continueTrace(string $sentryTrace, string $baggage)
+function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 {
     $hub = SentrySdk::getCurrentHub();
     $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
@@ -245,13 +243,5 @@ function continueTrace(string $sentryTrace, string $baggage)
         $scope->setPropagationContext($propagationContext);
     });
 
-    $client = $hub->getClient();
-
-    if (null !== $client) {
-        $options = $client->getOptions();
-
-        if (null !== $options && $options->isTracingEnabled()) {
-            return TransactionContext::fromHeaders($sentryTrace, $baggage);
-        }
-    }
+    return TransactionContext::fromHeaders($sentryTrace, $baggage);
 }

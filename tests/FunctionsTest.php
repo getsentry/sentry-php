@@ -382,16 +382,7 @@ final class FunctionsTest extends TestCase
 
     public function testContinueTrace(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1.0,
-                'release' => '1.0.0',
-                'environment' => 'development',
-            ]));
-
-        $hub = new Hub($client);
+        $hub = new Hub();
 
         SentrySdk::setCurrentHub($hub);
 
