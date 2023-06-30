@@ -27,7 +27,7 @@ final class FrameBuilderTest extends TestCase
         $this->assertSame($expectedFrame->getAbsoluteFilePath(), $frame->getAbsoluteFilePath());
     }
 
-    public function buildFromBacktraceFrameDataProvider(): \Generator
+    public static function buildFromBacktraceFrameDataProvider(): \Generator
     {
         yield [
             new Options([]),
@@ -162,7 +162,7 @@ final class FrameBuilderTest extends TestCase
         $this->assertSame($expectedResult, $frame->isInApp());
     }
 
-    public function addFrameSetsInAppFlagCorrectlyDataProvider(): \Generator
+    public static function addFrameSetsInAppFlagCorrectlyDataProvider(): \Generator
     {
         yield 'No config specified' => [
             new Options([

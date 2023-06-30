@@ -51,7 +51,7 @@ final class HttpClientFactoryTest extends TestCase
         $this->assertSame($expectedRequestBody, (string) $httpRequest->getBody());
     }
 
-    public function createDataProvider(): \Generator
+    public static function createDataProvider(): \Generator
     {
         yield [
             false,

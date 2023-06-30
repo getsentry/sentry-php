@@ -49,7 +49,7 @@ final class HandlerTest extends TestCase
         $handler->handle($record);
     }
 
-    public function handleDataProvider(): iterable
+    public static function handleDataProvider(): iterable
     {
         $event = Event::createEvent();
         $event->setMessage('foo bar');

@@ -39,7 +39,7 @@ final class MonitorConfigTest extends TestCase
         $this->assertEquals($expectedData, $monitorConfig->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         return [
             ['getSchedule', 'setSchedule', MonitorSchedule::crontab('foo')],

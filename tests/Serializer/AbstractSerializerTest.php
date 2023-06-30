@@ -20,7 +20,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
     }
 
-    public function serializeAllObjectsDataProvider(): array
+    public static function serializeAllObjectsDataProvider(): array
     {
         return [
             ['serializeAllObjects' => false],
@@ -54,7 +54,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
-    public function objectsWithIdPropertyDataProvider(): array
+    public static function objectsWithIdPropertyDataProvider(): array
     {
         return [
             ['bar', 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)'],
@@ -124,7 +124,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame($input, $output);
     }
 
-    public function iterableDataProvider(): \Generator
+    public static function iterableDataProvider(): \Generator
     {
         yield [
             'iterable' => ['value1', 'value2'],
@@ -183,7 +183,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame([[['Array of length 0']]], $result);
     }
 
-    public function dataRecursionInObjectsDataProvider(): \Generator
+    public static function dataRecursionInObjectsDataProvider(): \Generator
     {
         $object = new SerializerTestObject();
         $object->key = $object;
@@ -285,7 +285,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertEquals($expectedResult, $result);
     }
 
-    public function recursionMaxDepthForObjectDataProvider(): array
+    public static function recursionMaxDepthForObjectDataProvider(): array
     {
         return [
             [
@@ -575,7 +575,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame($expected, $this->invokeSerialization($serializer, $string));
     }
 
-    public function serializationForBadStringsDataProvider(): array
+    public static function serializationForBadStringsDataProvider(): array
     {
         $utf8String = 'äöü';
 

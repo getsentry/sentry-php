@@ -127,7 +127,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $transaction->finish();
     }
 
-    public function traceHeadersDataProvider(): iterable
+    public static function traceHeadersDataProvider(): iterable
     {
         yield [
             new Request('GET', 'https://www.example.com'),
@@ -263,7 +263,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $transaction->finish();
     }
 
-    public function traceDataProvider(): iterable
+    public static function traceDataProvider(): iterable
     {
         yield [
             new Request('GET', 'https://www.example.com'),

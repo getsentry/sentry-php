@@ -68,7 +68,7 @@ final class PropagationContextTest extends TestCase
         $this->assertSame($expectedDynamicSamplingContextFrozen, $propagationContext->getDynamicSamplingContext()->isFrozen());
     }
 
-    public function tracingDataProvider(): iterable
+    public static function tracingDataProvider(): iterable
     {
         yield [
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
@@ -147,7 +147,7 @@ final class PropagationContextTest extends TestCase
         $this->assertEquals($expectedData, $propagationContext->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         $scope = new Scope();
         $options = new Options([

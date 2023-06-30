@@ -53,7 +53,7 @@ final class RateLimiterTest extends TestCase
         $this->assertSame($event, $transportResponse->getEvent());
     }
 
-    public function handleResponseDataProvider(): \Generator
+    public static function handleResponseDataProvider(): \Generator
     {
         yield 'Rate limits headers missing' => [
             Event::createEvent(),

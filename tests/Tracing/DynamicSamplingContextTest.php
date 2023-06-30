@@ -43,7 +43,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedTransaction, $samplingContext->get('transaction'));
     }
 
-    public function fromHeaderDataProvider(): \Generator
+    public static function fromHeaderDataProvider(): \Generator
     {
         yield [
             '',
@@ -169,7 +169,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedDynamicSamplingContext, $samplingContext->getEntries());
     }
 
-    public function getEntriesDataProvider(): \Generator
+    public static function getEntriesDataProvider(): \Generator
     {
         yield [
             DynamicSamplingContext::fromHeader(''),
@@ -203,7 +203,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedString, (string) $samplingContext);
     }
 
-    public function toStringDataProvider(): \Generator
+    public static function toStringDataProvider(): \Generator
     {
         yield [
             DynamicSamplingContext::fromHeader(''),

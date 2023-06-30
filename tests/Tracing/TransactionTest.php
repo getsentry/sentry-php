@@ -107,7 +107,7 @@ final class TransactionTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public function parentTransactionContextDataProvider(): Generator
+    public static function parentTransactionContextDataProvider(): Generator
     {
         yield [
             new TransactionContext(TransactionContext::DEFAULT_NAME, true),

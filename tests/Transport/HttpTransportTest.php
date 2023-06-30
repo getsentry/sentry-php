@@ -181,7 +181,7 @@ final class HttpTransportTest extends TestCase
         $this->assertSame($event, $promiseResult->getEvent());
     }
 
-    public function sendDataProvider(): iterable
+    public static function sendDataProvider(): iterable
     {
         yield [
             200,

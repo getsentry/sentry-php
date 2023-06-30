@@ -66,7 +66,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($eventId, captureMessage(...$functionCallArgs));
     }
 
-    public function captureMessageDataProvider(): \Generator
+    public static function captureMessageDataProvider(): \Generator
     {
         yield [
             [
@@ -112,7 +112,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($eventId, captureException(...$functionCallArgs));
     }
 
-    public function captureExceptionDataProvider(): \Generator
+    public static function captureExceptionDataProvider(): \Generator
     {
         yield [
             [
@@ -172,7 +172,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($eventId, captureLastError(...$functionCallArgs));
     }
 
-    public function captureLastErrorDataProvider(): \Generator
+    public static function captureLastErrorDataProvider(): \Generator
     {
         yield [
             [],

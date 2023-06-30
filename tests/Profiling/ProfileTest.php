@@ -28,7 +28,7 @@ final class ProfileTest extends TestCase
         $this->assertSame($expectedData, $profile->getFormattedData($event));
     }
 
-    public function formattedDataDataProvider(): \Generator
+    public static function formattedDataDataProvider(): \Generator
     {
         $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setRelease('1.0.0');

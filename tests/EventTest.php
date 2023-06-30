@@ -35,7 +35,7 @@ final class EventTest extends TestCase
         $this->assertSame($expectedValue['formatted'], $event->getMessageFormatted());
     }
 
-    public function getMessageDataProvider(): array
+    public static function getMessageDataProvider(): array
     {
         return [
             [
@@ -86,7 +86,7 @@ final class EventTest extends TestCase
         $this->assertEquals($event->$getterMethod(), $propertyValue);
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         return [
             ['sdkIdentifier', 'sentry.sdk.test-identifier'],

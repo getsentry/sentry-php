@@ -29,7 +29,7 @@ final class FrameTest extends TestCase
         $this->assertEquals($expectedData, $frame->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         return [
             ['getPreContext', 'setPreContext', ['foo' => 'bar', 'bar' => 'baz']],

@@ -32,7 +32,7 @@ final class StacktraceTest extends TestCase
         new Stacktrace($values);
     }
 
-    public function constructorThrowsIfFramesListContainsUnexpectedValueDataProvider(): \Generator
+    public static function constructorThrowsIfFramesListContainsUnexpectedValueDataProvider(): \Generator
     {
         yield [
             [
@@ -94,7 +94,7 @@ final class StacktraceTest extends TestCase
         $this->assertFrameEquals($frames[0], 'test_function_parent', 'path/to/file', 12);
     }
 
-    public function removeFrameDataProvider(): \Generator
+    public static function removeFrameDataProvider(): \Generator
     {
         yield [
             -1,
@@ -126,7 +126,7 @@ final class StacktraceTest extends TestCase
         }
     }
 
-    public function buildFromBacktraceDataProvider(): \Generator
+    public static function buildFromBacktraceDataProvider(): \Generator
     {
         yield 'Plain backtrace' => [
             new Options(),

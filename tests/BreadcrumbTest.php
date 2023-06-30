@@ -44,7 +44,7 @@ final class BreadcrumbTest extends TestCase
         $this->assertSame($expectedTimestamp, $breadcrumb->getTimestamp());
     }
 
-    public function constructorDataProvider(): \Generator
+    public static function constructorDataProvider(): \Generator
     {
         yield [
             [
@@ -112,7 +112,7 @@ final class BreadcrumbTest extends TestCase
         $this->assertSame($expectedTimestamp, $breadcrumb->getTimestamp());
     }
 
-    public function fromArrayDataProvider(): iterable
+    public static function fromArrayDataProvider(): iterable
     {
         yield [
             [

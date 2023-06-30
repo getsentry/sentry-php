@@ -251,7 +251,7 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureMessage(...$functionCallArgs));
     }
 
-    public function captureMessageDataProvider(): \Generator
+    public static function captureMessageDataProvider(): \Generator
     {
         $propagationContext = PropagationContext::fromDefaults();
 
@@ -309,7 +309,7 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureException(...$functionCallArgs));
     }
 
-    public function captureExceptionDataProvider(): \Generator
+    public static function captureExceptionDataProvider(): \Generator
     {
         $propagationContext = PropagationContext::fromDefaults();
 
@@ -365,7 +365,7 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureLastError(...$functionCallArgs));
     }
 
-    public function captureLastErrorDataProvider(): \Generator
+    public static function captureLastErrorDataProvider(): \Generator
     {
         $propagationContext = PropagationContext::fromDefaults();
 
@@ -586,7 +586,7 @@ final class HubTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public function startTransactionDataProvider(): iterable
+    public static function startTransactionDataProvider(): iterable
     {
         yield 'Acceptable float value returned from traces_sampler' => [
             new Options([

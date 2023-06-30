@@ -92,7 +92,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         }
     }
 
-    public function invokeDataProvider(): \Generator
+    public static function invokeDataProvider(): \Generator
     {
         yield 'short file' => [
             realpath(__DIR__ . '/../Fixtures/code/ShortFile.php'),
