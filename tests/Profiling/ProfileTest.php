@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Profiling;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Context\OsContext;
