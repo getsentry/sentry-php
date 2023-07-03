@@ -43,7 +43,7 @@ final class IgnoreErrorsIntegrationTest extends TestCase
         });
     }
 
-    public function invokeDataProvider(): \Generator
+    public static function invokeDataProvider(): \Generator
     {
         $event = Event::createEvent();
         $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);

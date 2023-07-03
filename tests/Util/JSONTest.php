@@ -20,7 +20,7 @@ final class JSONTest extends TestCase
         $this->assertSame($expectedResult, JSON::encode($value));
     }
 
-    public function encodeDataProvider(): \Generator
+    public static function encodeDataProvider(): \Generator
     {
         yield [
             [
@@ -78,7 +78,7 @@ final class JSONTest extends TestCase
         $this->assertSame($expectedResult, JSON::encode($value));
     }
 
-    public function encodeSubstitutesInvalidUtf8CharactersDataProvider(): \Generator
+    public static function encodeSubstitutesInvalidUtf8CharactersDataProvider(): \Generator
     {
         yield [
             "\x61\xb0\x62",
@@ -132,7 +132,7 @@ final class JSONTest extends TestCase
         JSON::encode('foo', 0, $maxDepth);
     }
 
-    public function encodeThrowsExceptionIfMaxDepthArgumentIsInvalidDataProvider(): \Generator
+    public static function encodeThrowsExceptionIfMaxDepthArgumentIsInvalidDataProvider(): \Generator
     {
         yield [0];
         yield [-1];
@@ -151,7 +151,7 @@ final class JSONTest extends TestCase
         $this->assertSame($expectedResult, JSON::decode($value));
     }
 
-    public function decodeDataProvider(): \Generator
+    public static function decodeDataProvider(): \Generator
     {
         yield [
             '{"key":"value"}',

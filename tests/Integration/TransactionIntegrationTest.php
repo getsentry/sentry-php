@@ -44,7 +44,7 @@ final class TransactionIntegrationTest extends TestCase
         });
     }
 
-    public function setupOnceDataProvider(): \Generator
+    public static function setupOnceDataProvider(): \Generator
     {
         yield [
             Event::createEvent(),

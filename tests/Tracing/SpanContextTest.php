@@ -36,7 +36,7 @@ final class SpanContextTest extends TestCase
         $this->assertSame($expectedSampled, $spanContext->getSampled());
     }
 
-    public function fromTraceparentDataProvider(): iterable
+    public static function fromTraceparentDataProvider(): iterable
     {
         yield [
             '0',

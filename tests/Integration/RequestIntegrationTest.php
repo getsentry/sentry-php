@@ -62,7 +62,7 @@ final class RequestIntegrationTest extends TestCase
         });
     }
 
-    public function invokeDataProvider(): iterable
+    public static function invokeDataProvider(): iterable
     {
         yield [
             [

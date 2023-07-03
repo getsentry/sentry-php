@@ -44,7 +44,7 @@ final class EventHintTest extends TestCase
         EventHint::fromArray($hintData);
     }
 
-    public function createFromArrayWithInvalidValuesDataProvider(): \Generator
+    public static function createFromArrayWithInvalidValuesDataProvider(): \Generator
     {
         yield [
             ['exception' => 'foo'],

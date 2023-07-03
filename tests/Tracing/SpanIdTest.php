@@ -27,7 +27,7 @@ final class SpanIdTest extends TestCase
         new SpanId($value);
     }
 
-    public function constructorThrowsOnInvalidValueDataProvider(): \Generator
+    public static function constructorThrowsOnInvalidValueDataProvider(): \Generator
     {
         yield 'Value too long' => ['566e3688a61d4bc88'];
         yield 'Value too short' => ['566e3688a61d4b8'];

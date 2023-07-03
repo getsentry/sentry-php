@@ -25,7 +25,7 @@ final class ExceptionMechanismTest extends TestCase
         $this->assertSame($expectedData, $exceptionMechanism->getData());
     }
 
-    public function constructorDataProvider(): iterable
+    public static function constructorDataProvider(): iterable
     {
         yield [
             [

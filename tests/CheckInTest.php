@@ -47,7 +47,7 @@ final class CheckInTest extends TestCase
         $this->assertEquals($expectedData, $checkIn->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         return [
             ['getId', 'setId', SentryUid::generate()],

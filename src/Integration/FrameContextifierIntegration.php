@@ -27,7 +27,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
     /**
      * Creates a new instance of this integration.
      *
-     * @param LoggerInterface $logger A PSR-3 logger
+     * @param LoggerInterface|null $logger A PSR-3 logger
      */
     public function __construct(?LoggerInterface $logger = null)
     {

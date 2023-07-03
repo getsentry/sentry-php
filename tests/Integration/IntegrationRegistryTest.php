@@ -49,7 +49,7 @@ final class IntegrationRegistryTest extends TestCase
         $this->assertEquals($expectedIntegrations, IntegrationRegistry::getInstance()->setupIntegrations($options, $logger));
     }
 
-    public function setupIntegrationsDataProvider(): iterable
+    public static function setupIntegrationsDataProvider(): iterable
     {
         $integration1 = new class() implements IntegrationInterface {
             public function setupOnce(): void
@@ -319,7 +319,7 @@ final class IntegrationRegistryTest extends TestCase
         );
     }
 
-    public function setupIntegrationsThrowsExceptionIfValueReturnedFromOptionIsNotValidDataProvider(): iterable
+    public static function setupIntegrationsThrowsExceptionIfValueReturnedFromOptionIsNotValidDataProvider(): iterable
     {
         yield [
             12.34,

@@ -155,7 +155,7 @@ final class HubAdapterTest extends TestCase
         $this->assertSame($eventId, HubAdapter::getInstance()->captureMessage(...$expectedFunctionCallArgs));
     }
 
-    public function captureMessageDataProvider(): \Generator
+    public static function captureMessageDataProvider(): \Generator
     {
         yield [
             [
@@ -192,7 +192,7 @@ final class HubAdapterTest extends TestCase
         $this->assertSame($eventId, HubAdapter::getInstance()->captureException(...$expectedFunctionCallArgs));
     }
 
-    public function captureExceptionDataProvider(): \Generator
+    public static function captureExceptionDataProvider(): \Generator
     {
         yield [
             [
@@ -242,7 +242,7 @@ final class HubAdapterTest extends TestCase
         $this->assertSame($eventId, HubAdapter::getInstance()->captureLastError(...$expectedFunctionCallArgs));
     }
 
-    public function captureLastErrorDataProvider(): \Generator
+    public static function captureLastErrorDataProvider(): \Generator
     {
         yield [
             [],

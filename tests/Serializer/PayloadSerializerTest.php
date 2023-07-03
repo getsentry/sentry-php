@@ -84,7 +84,7 @@ final class PayloadSerializerTest extends TestCase
         $this->assertSame($expectedResult, $result);
     }
 
-    public function serializeAsJsonDataProvider(): iterable
+    public static function serializeAsJsonDataProvider(): iterable
     {
         ClockMock::withClockMock(1597790835);
 
@@ -649,7 +649,7 @@ TEXT
         ];
     }
 
-    public function serializeAsEnvelopeDataProvider(): iterable
+    public static function serializeAsEnvelopeDataProvider(): iterable
     {
         ClockMock::withClockMock(1597790835);
 

@@ -21,7 +21,7 @@ final class TransactionMetadataTest extends TestCase
         $this->assertSame($expectedSource, $transactionMetadata->getSource());
     }
 
-    public function constructorDataProvider(): \Generator
+    public static function constructorDataProvider(): \Generator
     {
         $samplingContext = DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1');
         $source = TransactionSource::custom();

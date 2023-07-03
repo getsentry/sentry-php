@@ -54,7 +54,7 @@ final class MonitorScheduleTest extends TestCase
         $this->assertEquals($expectedData, $monitorSchedule->$getterMethod());
     }
 
-    public function gettersAndSettersDataProvider(): array
+    public static function gettersAndSettersDataProvider(): array
     {
         return [
             ['getType', 'setType', MonitorSchedule::TYPE_INTERVAL],

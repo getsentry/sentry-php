@@ -51,7 +51,7 @@ final class TransactionContextTest extends TestCase
         $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
     }
 
-    public function fromSentryTraceDataProvider(): iterable
+    public static function fromSentryTraceDataProvider(): iterable
     {
         yield [
             '0',
@@ -117,7 +117,7 @@ final class TransactionContextTest extends TestCase
         $this->assertSame($expectedDynamicSamplingContextFrozen, $spanContext->getMetadata()->getDynamicSamplingContext()->isFrozen());
     }
 
-    public function tracingDataProvider(): iterable
+    public static function tracingDataProvider(): iterable
     {
         yield [
             '0',

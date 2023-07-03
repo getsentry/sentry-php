@@ -7,7 +7,6 @@ namespace Sentry\Tests;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\Client;
@@ -182,7 +181,7 @@ final class ClientTest extends TestCase
         $this->assertTrue($beforeSendCallbackCalled);
     }
 
-    public function captureExceptionWithEventHintDataProvider(): \Generator
+    public static function captureExceptionWithEventHintDataProvider(): \Generator
     {
         yield [
             EventHint::fromArray([
@@ -223,7 +222,7 @@ final class ClientTest extends TestCase
         $this->assertSame($event->getId(), $client->captureEvent($event));
     }
 
-    public function captureEventDataProvider(): \Generator
+    public static function captureEventDataProvider(): \Generator
     {
         $event = Event::createEvent();
         $expectedEvent = clone $event;
@@ -347,7 +346,7 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
     }
 
-    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
+    public static function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
         yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
             true,
@@ -497,7 +496,7 @@ final class ClientTest extends TestCase
         $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
     }
 
-    public function processEventChecksBeforeSendOptionDataProvider(): \Generator
+    public static function processEventChecksBeforeSendOptionDataProvider(): \Generator
     {
         yield [
             Event::createEvent(),
@@ -530,7 +529,7 @@ final class ClientTest extends TestCase
         $this->assertSame($expectedBeforeSendCall, $beforeSendTransactionCalled);
     }
 
-    public function processEventChecksBeforeSendTransactionOptionDataProvider(): \Generator
+    public static function processEventChecksBeforeSendTransactionOptionDataProvider(): \Generator
     {
         yield [
             Event::createEvent(),
@@ -543,48 +542,40 @@ final class ClientTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
-     */
-    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, InvocationOrder $transportCallInvocationMatcher, InvocationOrder $loggerCallInvocationMatcher): void
+    public function testProcessEventDiscardsEventWhenSampleRateOptionIsZero(): void
     {
-        /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($transportCallInvocationMatcher)
+        $transport->expects($this->never())
             ->method('send')
             ->with($this->anything());
 
-        /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($loggerCallInvocationMatcher)
+        $logger->expects($this->once())
             ->method('info')
             ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
-        $client = ClientBuilder::create(['sample_rate' => $sampleRate])
+        $client = ClientBuilder::create(['sample_rate' => 0])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->setLogger($logger)
             ->getClient();
 
-        for ($i = 0; $i < 10; ++$i) {
-            $client->captureMessage('foo');
-        }
+        $client->captureEvent(Event::createEvent());
     }
 
-    public function processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider(): \Generator
+    public function testProcessEventCapturesEventWhenSampleRateOptionIsAboveZero(): void
     {
-        yield [
-            0,
-            $this->never(),
-            $this->exactly(10),
-        ];
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->anything());
 
-        yield [
-            1,
-            $this->exactly(10),
-            $this->never(),
-        ];
+        $client = ClientBuilder::create(['sample_rate' => 1])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $client->captureEvent(Event::createEvent());
     }
 
     public function testProcessEventDiscardsEventWhenIgnoreExceptionsMatches(): void
@@ -967,7 +958,7 @@ final class ClientTest extends TestCase
         $this->assertSame($expectedUrl, $client->getCspReportUrl());
     }
 
-    public function getCspReportUrlDataProvider(): \Generator
+    public static function getCspReportUrlDataProvider(): \Generator
     {
         yield [
             ['dsn' => null],

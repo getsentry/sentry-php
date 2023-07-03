@@ -84,7 +84,7 @@ final class OptionsTest extends TestCase
         $this->assertEquals($value, $options->$getterMethod());
     }
 
-    public function optionsDataProvider(): \Generator
+    public static function optionsDataProvider(): \Generator
     {
         yield [
             'send_attempts',
@@ -421,7 +421,7 @@ final class OptionsTest extends TestCase
         $this->assertEquals($expectedDsnAsObject, $options->getDsn());
     }
 
-    public function dsnOptionDataProvider(): \Generator
+    public static function dsnOptionDataProvider(): \Generator
     {
         yield [
             'http://public:secret@example.com/sentry/1',
@@ -490,7 +490,7 @@ final class OptionsTest extends TestCase
         new Options(['dsn' => $value]);
     }
 
-    public function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
+    public static function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
     {
         yield [
             true,
@@ -557,7 +557,7 @@ final class OptionsTest extends TestCase
         $this->assertSame($value, $options->getMaxBreadcrumbs());
     }
 
-    public function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
+    public static function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
             [false, -1],
@@ -585,7 +585,7 @@ final class OptionsTest extends TestCase
         new Options(['context_lines' => $value]);
     }
 
-    public function contextLinesOptionValidatesInputValueDataProvider(): \Generator
+    public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
     {
         yield [
             -1,
@@ -665,7 +665,7 @@ final class OptionsTest extends TestCase
         $this->assertSame($expectedResult, $options->isTracingEnabled());
     }
 
-    public function enableTracingDataProvider(): array
+    public static function enableTracingDataProvider(): array
     {
         return [
             [null, null, false],

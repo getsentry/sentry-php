@@ -50,7 +50,7 @@ final class OsContextTest extends TestCase
         $this->assertSame($expectedMachineType, $context->getMachineType());
     }
 
-    public function valuesDataProvider(): iterable
+    public static function valuesDataProvider(): iterable
     {
         yield [
             'Linux',
