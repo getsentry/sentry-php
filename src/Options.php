@@ -538,15 +538,9 @@ final class Options
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
-     *
-     * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getTags(/*bool $triggerDeprecation = true*/): array
+    public function getTags(): array
     {
-        if (0 === \func_num_args() || false !== func_get_arg(0)) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-        }
-
         return $this->options['tags'];
     }
 
@@ -554,13 +548,9 @@ final class Options
      * Sets a list of default tags for events.
      *
      * @param array<string, string> $tags A list of tags
-     *
-     * @deprecated since version 3.2, to be removed in 4.0
      */
     public function setTags(array $tags): void
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.', __METHOD__), \E_USER_DEPRECATED);
-
         $options = array_merge($this->options, ['tags' => $tags]);
 
         $this->options = $this->resolver->resolve($options);
