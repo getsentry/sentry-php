@@ -377,7 +377,7 @@ final class FunctionsTest extends TestCase
 
         $baggage = getBaggage();
 
-        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development', $baggage);
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true', $baggage);
     }
 
     public function testContinueTrace(): void
