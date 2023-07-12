@@ -13,7 +13,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: SDK Version
+      label: SDK version
       description: Which SDK version do you use?
       placeholder: e.g. 3.20.1
     validations:
@@ -32,13 +32,13 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Expected Result
+      label: Expected result
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Actual Result
+      label: Actual result
       description: Logs? Screenshots? Yes, please.
     validations:
       required: true
