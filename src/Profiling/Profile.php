@@ -8,6 +8,8 @@ use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Options;
+use Sentry\Util\PrefixStripper;
 use Sentry\Util\SentryUid;
 
 /**
@@ -73,6 +75,8 @@ use Sentry\Util\SentryUid;
  */
 final class Profile
 {
+    use PrefixStripper;
+
     /**
      * @var string The version of the profile format
      */
@@ -107,6 +111,16 @@ final class Profile
      * @var EventId|null The event ID of the profile
      */
     private $eventId;
+
+    /**
+     * @var Options|null
+     */
+    private $options;
+
+    public function __construct(?Options $options = null)
+    {
+        $this->options = $options;
+    }
 
     public function setStartTimeStamp(float $startTimeStamp): void
     {
@@ -160,8 +174,7 @@ final class Profile
         foreach ($loggedStacks as $stackId => $stack) {
             foreach ($stack['trace'] as $frame) {
                 $absolutePath = (string) $frame['file'];
-                // TODO(michi) Strip the file path based on the `prefixes` option
-                $file = $absolutePath;
+                $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
                 $module = null;
 
                 if (isset($frame['class'], $frame['function'])) {
