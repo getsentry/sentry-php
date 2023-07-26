@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\MonitorConfig;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -111,6 +114,18 @@ interface HubInterface
      * @param EventHint|null $hint Object that can contain additional information about the event
      */
     public function captureLastError(/*?EventHint $hint = null*/): ?EventId;
+
+    /**
+     * Captures a CheckIn to the configured Monitor.
+     *
+     * @param string $slug Identifier of the Monitor
+     * @param MonitorConfig $upsertMonitorConfig Configuration of the Monitor
+     * @param CheckInStatus $status The status of the Monitor
+     * @param CheckIn|null $previos A CheckIn that may have preceded the current CheckIn
+     *
+     * @return CheckIn The created CheckIn
+     */
+    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): CheckIn;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They

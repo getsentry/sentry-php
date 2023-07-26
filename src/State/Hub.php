@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\MonitorConfig;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -167,6 +170,26 @@ final class Hub implements HubInterface
         }
 
         return null;
+    }
+
+    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): CheckIn
+    {
+        $options = $this->getClient()->getOptions();
+
+        $event = Event::createCheckIn();
+        $checkIn = new CheckIn(
+            $slug,
+            $status,
+            $previous,
+            $options->getRelease(),
+            $options->getEnvironment(),
+            null,
+            $upsertMonitorConfig
+        );
+        $event->setCheckIn($checkIn);
+        $this->captureEvent($event);
+
+        return $checkIn;
     }
 
     /**

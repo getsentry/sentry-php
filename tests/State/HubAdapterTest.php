@@ -6,11 +6,16 @@ namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
+use Sentry\MonitorScheduleUnit;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\HubAdapter;
@@ -251,6 +256,60 @@ final class HubAdapterTest extends TestCase
         yield [
             [
                 new EventHint(),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider captureCheckInProvider
+     */
+    public function testCaptureCheckIn(array $expectedFunctionCallArgs)
+    {
+        $checkIn = new CheckIn(
+            $expectedFunctionCallArgs[0],
+            $expectedFunctionCallArgs[2]
+        );
+
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
+            ->method('captureCheckIn')
+            ->with(...$expectedFunctionCallArgs)
+            ->willReturn($checkIn);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $this->assertSame($checkIn, HubAdapter::getInstance()->captureCheckIn(...$expectedFunctionCallArgs));
+
+    }
+
+    public static function captureCheckInProvider(): \Generator
+    {
+        yield [
+            [
+                'test-crontab',
+                new MonitorConfig(
+                    MonitorSchedule::crontab('*/5 * * * *'),
+                    5,
+                    30,
+                    'UTC'
+                ),
+                CheckInStatus::ok(),
+            ],
+        ];
+
+        yield [
+            [
+                'test-interval',
+                new MonitorConfig(
+                    MonitorSchedule::interval(
+                        5,
+                        MonitorScheduleUnit::minute()
+                    ),
+                    5,
+                    30,
+                    'UTC'
+                ),
+                CheckInStatus::ok(),
             ],
         ];
     }
