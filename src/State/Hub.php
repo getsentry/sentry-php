@@ -172,10 +172,15 @@ final class Hub implements HubInterface
         return null;
     }
 
-    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): CheckIn
+    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn
     {
-        $options = $this->getClient()->getOptions();
+        $client = $this->getClient();
 
+        if (!$client instanceof ClientInterface) {
+            return null;
+        }
+
+        $options = $client->getOptions();
         $event = Event::createCheckIn();
         $checkIn = new CheckIn(
             $slug,

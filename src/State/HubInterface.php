@@ -125,7 +125,7 @@ interface HubInterface
      *
      * @return CheckIn The created CheckIn
      */
-    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): CheckIn;
+    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They

@@ -141,7 +141,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): CheckIn
+    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn
     {
         return SentrySdk::getCurrentHub()->captureCheckIn($slug, $upsertMonitorConfig, $status, $previous);
     }
