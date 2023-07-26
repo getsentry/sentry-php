@@ -63,11 +63,11 @@ use Sentry\Util\SentryUid;
  * }
  *
  * @phpstan-type ExcimerLogStackEntryTrace array{
- *     file: string|null,
- *     line: string|int|null,
- *     class: string,
- *     function: string,
- *     closure_line: int
+ *     file: string,
+ *     line: int,
+ *     class?: string,
+ *     function?: string,
+ *     closure_line?: int,
  * }
  *
  * @phpstan-type ExcimerLogStackEntry array{
@@ -193,8 +193,8 @@ final class Profile
             $stackFrames = [];
 
             foreach ($stack['trace'] as $frame) {
-                $absolutePath = (string) $frame['file'];
-                $lineno = !empty($frame['line']) ? (int) $frame['line'] : null;
+                $absolutePath = $frame['file'];
+                $lineno = $frame['line'];
 
                 $frameKey = "{$absolutePath}:{$lineno}";
 

@@ -45,11 +45,11 @@ namespace {
          *   - closure_line: The line number at which the closure was defined
          *
          * @return array<int, array{
-         *     file: string|null,
-         *     line: string|int|null,
-         *     class: string,
-         *     function: string,
-         *     closure_line: int
+         *     file: string,
+         *     line: int,
+         *     class?: string,
+         *     function?: string,
+         *     closure_line?: int,
          * }>
          */
         public function getTrace(): array
