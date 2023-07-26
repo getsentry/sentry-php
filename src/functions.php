@@ -67,6 +67,21 @@ function captureLastError(?EventHint $hint = null): ?EventId
 }
 
 /**
+ * Captures a CheckIn to the configured Monitor.
+ *
+ * @param string        $slug                Identifier of the Monitor
+ * @param MonitorConfig $upsertMonitorConfig Configuration of the Monitor
+ * @param CheckInStatus $status              The status of the Monitor
+ * @param CheckIn|null  $previous            A CheckIn that may have preceded the current CheckIn
+ *
+ * @return CheckIn The created CheckIn
+ */
+function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn
+{
+    return SentrySdk::getCurrentHub()->captureCheckIn($slug, $upsertMonitorConfig, $status, $previous);
+}
+
+/**
  * Records a new breadcrumb which will be attached to future events. They
  * will be added to subsequent events to provide more context on user's
  * actions prior to an error or crash.
