@@ -23,6 +23,8 @@ use Sentry\Tracing\TransactionContext;
  * This interface represent the class which is responsible for maintaining a
  * stack of pairs of clients and scopes. It is the main entry point to talk
  * with the Sentry client.
+ *
+ * @method CheckIn|null captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null) Captures a CheckIn to the configured Monitor.
  */
 interface HubInterface
 {
@@ -114,18 +116,6 @@ interface HubInterface
      * @param EventHint|null $hint Object that can contain additional information about the event
      */
     public function captureLastError(/*?EventHint $hint = null*/): ?EventId;
-
-    /**
-     * Captures a CheckIn to the configured Monitor.
-     *
-     * @param string        $slug                Identifier of the Monitor
-     * @param MonitorConfig $upsertMonitorConfig Configuration of the Monitor
-     * @param CheckInStatus $status              The status of the Monitor
-     * @param CheckIn|null  $previous            A CheckIn that may have preceded the current CheckIn
-     *
-     * @return CheckIn The created CheckIn
-     */
-    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They
