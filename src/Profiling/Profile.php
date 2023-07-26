@@ -182,13 +182,28 @@ final class Profile
             return $frameHashMap[$frameHash];
         };
 
-        $samples = [];
         $stacks = [];
+        $stackHashMap = [];
+
+        $registerStack = static function (array $stack) use (&$stacks, &$stackHashMap): int {
+            $stackHash = md5(serialize($stack));
+
+            if (false === \array_key_exists($stackHash, $stackHashMap)) {
+                $stackHashMap[$stackHash] = \count($stacks);
+                $stacks[] = $stack;
+            }
+
+            return $stackHashMap[$stackHash];
+        };
+
+        $samples = [];
 
         $duration = 0;
 
         $loggedStacks = $this->prepareStacks();
-        foreach ($loggedStacks as $stackId => $stack) {
+        foreach ($loggedStacks as $stack) {
+            $stackFrames = [];
+
             foreach ($stack['trace'] as $frame) {
                 $absolutePath = (string) $frame['file'];
                 $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
@@ -199,14 +214,14 @@ final class Profile
                     $function = $frame['class'] . '::' . $frame['function'];
                     $module = $frame['class'];
                 } elseif (isset($frame['function'])) {
-                    // {clousre}
+                    // {closure}
                     $function = $frame['function'];
                 } else {
                     // /index.php
                     $function = $file;
                 }
 
-                $stacks[$stackId][] = $registerFrame([
+                $stackFrames[] = $registerFrame([
                     'filename' => $file,
                     'abs_path' => $absolutePath,
                     'module' => $module,
@@ -214,6 +229,8 @@ final class Profile
                     'lineno' => !empty($frame['line']) ? (int) $frame['line'] : null,
                 ]);
             }
+
+            $stackId = $registerStack($stackFrames);
 
             $duration = $stack['timestamp'];
 

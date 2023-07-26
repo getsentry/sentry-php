@@ -179,25 +179,22 @@ final class ProfileTest extends TestCase
                             'elapsed_since_start_ns' => 1000000,
                         ],
                         [
-                            'stack_id' => 1,
+                            'stack_id' => 0,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 2000000,
                         ],
                         [
-                            'stack_id' => 2,
+                            'stack_id' => 1,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 3000000,
                         ],
                         [
-                            'stack_id' => 3,
+                            'stack_id' => 2,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 4000000,
                         ],
                     ],
                     'stacks' => [
-                        [
-                            0,
-                        ],
                         [
                             0,
                         ],
@@ -282,25 +279,22 @@ final class ProfileTest extends TestCase
                             'elapsed_since_start_ns' => 1000000,
                         ],
                         [
-                            'stack_id' => 1,
+                            'stack_id' => 0,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 2000000,
                         ],
                         [
-                            'stack_id' => 2,
+                            'stack_id' => 1,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 3000000,
                         ],
                         [
-                            'stack_id' => 3,
+                            'stack_id' => 2,
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 4000000,
                         ],
                     ],
                     'stacks' => [
-                        [
-                            0,
-                        ],
                         [
                             0,
                         ],
