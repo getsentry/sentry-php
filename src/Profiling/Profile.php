@@ -170,18 +170,6 @@ final class Profile
         $frames = [];
         $frameHashMap = [];
 
-        $registerFrame = static function (array $frame) use (&$frames, &$frameHashMap): int {
-            $frameHash = md5(serialize($frame));
-
-            if (false === \array_key_exists($frameHash, $frameHashMap)) {
-                $frameHashMap[$frameHash] = \count($frames);
-                /** @var SentryProfileFrame $frame */
-                $frames[] = $frame;
-            }
-
-            return $frameHashMap[$frameHash];
-        };
-
         $stacks = [];
         $stackHashMap = [];
 
@@ -206,28 +194,39 @@ final class Profile
 
             foreach ($stack['trace'] as $frame) {
                 $absolutePath = (string) $frame['file'];
-                $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
-                $module = null;
+                $lineno = !empty($frame['line']) ? (int) $frame['line'] : null;
 
-                if (isset($frame['class'], $frame['function'])) {
-                    // Class::method
-                    $function = $frame['class'] . '::' . $frame['function'];
-                    $module = $frame['class'];
-                } elseif (isset($frame['function'])) {
-                    // {closure}
-                    $function = $frame['function'];
-                } else {
-                    // /index.php
-                    $function = $file;
+                $frameKey = "{$absolutePath}:{$lineno}";
+
+                $frameIndex = $frameHashMap[$frameKey] ?? null;
+
+                if (null === $frameIndex) {
+                    $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
+                    $module = null;
+
+                    if (isset($frame['class'], $frame['function'])) {
+                        // Class::method
+                        $function = $frame['class'] . '::' . $frame['function'];
+                        $module = $frame['class'];
+                    } elseif (isset($frame['function'])) {
+                        // {closure}
+                        $function = $frame['function'];
+                    } else {
+                        // /index.php
+                        $function = $file;
+                    }
+
+                    $frameHashMap[$frameKey] = $frameIndex = \count($frames);
+                    $frames[] = [
+                        'filename' => $file,
+                        'abs_path' => $absolutePath,
+                        'module' => $module,
+                        'function' => $function,
+                        'lineno' => $lineno,
+                    ];
                 }
 
-                $stackFrames[] = $registerFrame([
-                    'filename' => $file,
-                    'abs_path' => $absolutePath,
-                    'module' => $module,
-                    'function' => $function,
-                    'lineno' => !empty($frame['line']) ? (int) $frame['line'] : null,
-                ]);
+                $stackFrames[] = $frameIndex;
             }
 
             $stackId = $registerStack($stackFrames);
