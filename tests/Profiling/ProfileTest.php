@@ -67,6 +67,15 @@ final class ProfileTest extends TestCase
                         'file' => '/var/www/html/index.php',
                         'line' => 42,
                     ],
+                ],
+                'timestamp' => 0.002,
+            ],
+            [
+                'trace' => [
+                    [
+                        'file' => '/var/www/html/index.php',
+                        'line' => 42,
+                    ],
                     [
                         'class' => 'Function',
                         'function' => 'doStuff',
@@ -74,7 +83,7 @@ final class ProfileTest extends TestCase
                         'line' => 84,
                     ],
                 ],
-                'timestamp' => 0.002,
+                'timestamp' => 0.003,
             ],
             [
                 'trace' => [
@@ -100,7 +109,7 @@ final class ProfileTest extends TestCase
                         'line' => 126,
                     ],
                 ],
-                'timestamp' => 0.003,
+                'timestamp' => 0.004,
             ],
         ];
 
@@ -179,8 +188,16 @@ final class ProfileTest extends TestCase
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 3000000,
                         ],
+                        [
+                            'stack_id' => 3,
+                            'thread_id' => '0',
+                            'elapsed_since_start_ns' => 4000000,
+                        ],
                     ],
                     'stacks' => [
+                        [
+                            0,
+                        ],
                         [
                             0,
                         ],
@@ -274,8 +291,16 @@ final class ProfileTest extends TestCase
                             'thread_id' => '0',
                             'elapsed_since_start_ns' => 3000000,
                         ],
+                        [
+                            'stack_id' => 3,
+                            'thread_id' => '0',
+                            'elapsed_since_start_ns' => 4000000,
+                        ],
                     ],
                     'stacks' => [
+                        [
+                            0,
+                        ],
                         [
                             0,
                         ],
