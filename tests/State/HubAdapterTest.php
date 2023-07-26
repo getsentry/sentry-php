@@ -279,7 +279,6 @@ final class HubAdapterTest extends TestCase
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($checkIn, HubAdapter::getInstance()->captureCheckIn(...$expectedFunctionCallArgs));
-
     }
 
     public static function captureCheckInProvider(): \Generator

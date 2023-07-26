@@ -180,7 +180,7 @@ final class Hub implements HubInterface
         $checkIn = new CheckIn(
             $slug,
             $status,
-            $previous?$previous->getId():null,
+            $previous ? $previous->getId() : null,
             $options->getRelease(),
             $options->getEnvironment(),
             null,

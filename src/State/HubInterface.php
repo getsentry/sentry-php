@@ -118,10 +118,10 @@ interface HubInterface
     /**
      * Captures a CheckIn to the configured Monitor.
      *
-     * @param string $slug Identifier of the Monitor
+     * @param string        $slug                Identifier of the Monitor
      * @param MonitorConfig $upsertMonitorConfig Configuration of the Monitor
-     * @param CheckInStatus $status The status of the Monitor
-     * @param CheckIn|null $previous A CheckIn that may have preceded the current CheckIn
+     * @param CheckInStatus $status              The status of the Monitor
+     * @param CheckIn|null  $previous            A CheckIn that may have preceded the current CheckIn
      *
      * @return CheckIn The created CheckIn
      */
