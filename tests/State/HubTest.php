@@ -18,11 +18,8 @@ use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\MonitorScheduleUnit;
 use Sentry\Options;
-use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Hub;
-use Sentry\State\HubAdapter;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
@@ -403,20 +400,25 @@ final class HubTest extends TestCase
      */
     public function testCaptureCheckIn(array $expectedFunctionCallArgs)
     {
-        $checkIn = new CheckIn(
-            $expectedFunctionCallArgs[0],
-            $expectedFunctionCallArgs[2]
-        );
+        $hub = new Hub();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('captureCheckIn')
-            ->with(...$expectedFunctionCallArgs)
-            ->willReturn($checkIn);
+        $options = new Options([
+            'environment' => Event::DEFAULT_ENVIRONMENT,
+            'release' => '1.1.8',
+        ]);
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
 
-        SentrySdk::setCurrentHub($hub);
+        $this->assertNull($hub->captureCheckIn(...$expectedFunctionCallArgs));
+        $hub->bindClient($client);
 
-        $this->assertSame($checkIn, HubAdapter::getInstance()->captureCheckIn(...$expectedFunctionCallArgs));
+        $checkIn = $hub->captureCheckIn(...$expectedFunctionCallArgs);
+        $this->assertInstanceOf(CheckIn::class, $checkIn);
+        $this->assertSame(Event::DEFAULT_ENVIRONMENT, $checkIn->getEnvironment());
+        $this->assertSame('1.1.8', $checkIn->getRelease());
     }
 
     public static function captureCheckInProvider(): \Generator
