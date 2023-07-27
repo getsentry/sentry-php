@@ -8,10 +8,15 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
+use Sentry\MonitorScheduleUnit;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -26,6 +31,7 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use function Sentry\addBreadcrumb;
+use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
@@ -182,6 +188,65 @@ final class FunctionsTest extends TestCase
         yield [
             [new EventHint()],
             [new EventHint()],
+        ];
+    }
+
+    /**
+     * @dataProvider captureCheckInProvider
+     */
+    public function testCaptureCheckIn(array $expectedFunctionCallArgs)
+    {
+        $hub = new Hub();
+        $options = new Options([
+            'environment' => Event::DEFAULT_ENVIRONMENT,
+            'release' => '1.1.8',
+        ]);
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $this->assertNull(captureCheckIn(...$expectedFunctionCallArgs));
+        $hub->bindClient($client);
+
+        $checkIn = captureCheckIn(...$expectedFunctionCallArgs);
+        $this->assertInstanceOf(CheckIn::class, $checkIn);
+        $this->assertSame(Event::DEFAULT_ENVIRONMENT, $checkIn->getEnvironment());
+        $this->assertSame('1.1.8', $checkIn->getRelease());
+    }
+
+    public static function captureCheckInProvider(): \Generator
+    {
+        yield [
+            [
+                'test-crontab',
+                new MonitorConfig(
+                    MonitorSchedule::crontab('*/5 * * * *'),
+                    5,
+                    30,
+                    'UTC'
+                ),
+                CheckInStatus::ok(),
+            ],
+        ];
+
+        yield [
+            [
+                'test-interval',
+                new MonitorConfig(
+                    MonitorSchedule::interval(
+                        5,
+                        MonitorScheduleUnit::minute()
+                    ),
+                    5,
+                    30,
+                    'UTC'
+                ),
+                CheckInStatus::ok(),
+            ],
         ];
     }
 
