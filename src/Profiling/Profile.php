@@ -79,6 +79,11 @@ final class Profile
     use PrefixStripper;
 
     /**
+     * @var callable(SentryProfileFrame): SentryProfileFrame|null
+     */
+    private static $frameProcessor;
+
+    /**
      * @var string The version of the profile format
      */
     private const VERSION = '1';
@@ -214,13 +219,17 @@ final class Profile
                     }
 
                     $frameHashMap[$frameKey] = $frameIndex = \count($frames);
-                    $frames[] = [
+
+                    /** @var SentryProfileFrame $frame */
+                    $frame = [
                         'filename' => $file,
                         'abs_path' => $absolutePath,
                         'module' => $module,
                         'function' => $function,
                         'lineno' => $lineno,
                     ];
+
+                    $frames[] = self::$frameProcessor !== null ? (self::$frameProcessor)($frame) : $frame;
                 }
 
                 $stackFrames[] = $frameIndex;
@@ -377,5 +386,17 @@ final class Profile
         }
 
         return true;
+    }
+
+    /**
+     * Set a callable to process each frame of the profile.
+     *
+     * @param callable(SentryProfileFrame $frame): SentryProfileFrame|null $frameProcessor
+     *
+     * @internal this method is used internally by framework SDKs to process each frame of the profile
+     */
+    public static function setFrameProcessor(?callable $frameProcessor): void
+    {
+        self::$frameProcessor = $frameProcessor;
     }
 }
