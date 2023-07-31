@@ -18,6 +18,14 @@ use Sentry\Util\SentryUid;
  *
  * @see https://develop.sentry.dev/sdk/sample-format/
  *
+ * @phpstan-type SentryProfileFrame array{
+ *     abs_path: string,
+ *     filename: string,
+ *     function: string,
+ *     module: string|null,
+ *     lineno: int|null,
+ * }
+ *
  * @phpstan-type SentryProfile array{
  *    device: array{
  *        architecture: string,
@@ -44,11 +52,7 @@ use Sentry\Util\SentryUid;
  *    },
  *    version: string,
  *    profile: array{
- *        frames: array<int, array{
- *            function: string,
- *            filename: string,
- *            lineno: int|null,
- *        }>,
+ *        frames: array<int, SentryProfileFrame>,
  *        samples: array<int, array{
  *            elapsed_since_start_ns: int,
  *            stack_id: int,
@@ -59,11 +63,11 @@ use Sentry\Util\SentryUid;
  * }
  *
  * @phpstan-type ExcimerLogStackEntryTrace array{
- *     file: string|null,
- *     line: string|int|null,
- *     class: string,
- *     function: string,
- *     closure_line: int
+ *     file: string,
+ *     line: int,
+ *     class?: string,
+ *     function?: string,
+ *     closure_line?: int,
  * }
  *
  * @phpstan-type ExcimerLogStackEntry array{
@@ -164,49 +168,75 @@ final class Profile
         }
 
         $frames = [];
-        $samples = [];
-        $stacks = [];
+        $frameHashMap = [];
 
-        $frameIndex = 0;
+        $stacks = [];
+        $stackHashMap = [];
+
+        $registerStack = static function (array $stack) use (&$stacks, &$stackHashMap): int {
+            $stackHash = md5(serialize($stack));
+
+            if (false === \array_key_exists($stackHash, $stackHashMap)) {
+                $stackHashMap[$stackHash] = \count($stacks);
+                $stacks[] = $stack;
+            }
+
+            return $stackHashMap[$stackHash];
+        };
+
+        $samples = [];
+
         $duration = 0;
 
         $loggedStacks = $this->prepareStacks();
-        foreach ($loggedStacks as $stackId => $stack) {
-            foreach ($stack['trace'] as $frame) {
-                $absolutePath = (string) $frame['file'];
-                $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
-                $module = null;
+        foreach ($loggedStacks as $stack) {
+            $stackFrames = [];
 
-                if (isset($frame['class'], $frame['function'])) {
-                    // Class::method
-                    $function = $frame['class'] . '::' . $frame['function'];
-                    $module = $frame['class'];
-                } elseif (isset($frame['function'])) {
-                    // {clousre}
-                    $function = $frame['function'];
-                } else {
-                    // /index.php
-                    $function = $file;
+            foreach ($stack['trace'] as $frame) {
+                $absolutePath = $frame['file'];
+                $lineno = $frame['line'];
+
+                $frameKey = "{$absolutePath}:{$lineno}";
+
+                $frameIndex = $frameHashMap[$frameKey] ?? null;
+
+                if (null === $frameIndex) {
+                    $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
+                    $module = null;
+
+                    if (isset($frame['class'], $frame['function'])) {
+                        // Class::method
+                        $function = $frame['class'] . '::' . $frame['function'];
+                        $module = $frame['class'];
+                    } elseif (isset($frame['function'])) {
+                        // {closure}
+                        $function = $frame['function'];
+                    } else {
+                        // /index.php
+                        $function = $file;
+                    }
+
+                    $frameHashMap[$frameKey] = $frameIndex = \count($frames);
+                    $frames[] = [
+                        'filename' => $file,
+                        'abs_path' => $absolutePath,
+                        'module' => $module,
+                        'function' => $function,
+                        'lineno' => $lineno,
+                    ];
                 }
 
-                $frames[] = [
-                    'filename' => $file,
-                    'abs_path' => $absolutePath,
-                    'module' => $module,
-                    'function' => $function,
-                    'lineno' => !empty($frame['line']) ? (int) $frame['line'] : null,
-                ];
-
-                $stacks[$stackId][] = $frameIndex;
-                ++$frameIndex;
+                $stackFrames[] = $frameIndex;
             }
+
+            $stackId = $registerStack($stackFrames);
 
             $duration = $stack['timestamp'];
 
             $samples[] = [
-                'elapsed_since_start_ns' => (int) round($duration * 1e+9),
                 'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
+                'elapsed_since_start_ns' => (int) round($duration * 1e+9),
             ];
         }
 
