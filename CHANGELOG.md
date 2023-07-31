@@ -1,5 +1,63 @@
 # CHANGELOG
 
+## 3.21.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.21.0.
+
+### Features
+
+- Add `Sentry::captureCheckIn()` [(#1573)](https://github.com/getsentry/sentry-php/pull/1573)
+
+  Sending check-ins from the SDK is now simplified.
+
+  ```php
+  $checkInId = Sentry\captureCheckIn(
+      slug: 'monitor-slug',
+      status: CheckInStatus::inProgress()
+  );
+
+
+  // do something
+
+  Sentry\captureCheckIn(
+      checkInId: $checkInId,
+      slug: 'monitor-slug',
+      status: CheckInStatus::ok()
+  );
+  ```
+
+  You can also pass in a `monitorConfig` object as well as the `duration`.
+
+- Undeprecate the `tags` option [(#1561)](https://github.com/getsentry/sentry-php/pull/1561)
+
+  You can now set tags that are applied to each event when calling `Sentry::init()`.
+
+  ```php
+  Sentry\init([
+      'tags' => [
+          'foo' => 'bar',
+      ],
+  ])
+  ```
+
+- Apply the `prefixes`option to profiling frames [(#1568)](https://github.com/getsentry/sentry-php/pull/1568)
+
+  If you added the `prefixes` option when calling `Sentry::init()`, this option will now also apply to profile frames.
+
+  ```php
+  Sentry\init([
+      'prefixes' => ['/var/www/html'],
+  ])
+  ```
+
+### Misc
+
+- Deduplicate profile stacks and frames [(#1570)](https://github.com/getsentry/sentry-php/pull/1570)
+
+  This will decrease the payload size of the `profile` event payload.
+
+- Add the transaction's sampling decision to the trace envelope header [(#1562)](https://github.com/getsentry/sentry-php/pull/1562)
+
 ## 3.20.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.20.1.
