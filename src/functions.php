@@ -67,15 +67,13 @@ function captureLastError(?EventHint $hint = null): ?EventId
 }
 
 /**
- * Captures a CheckIn to the configured Monitor.
+ * Captures a check-in and sends it to Sentry.
  *
  * @param string             $slug                Identifier of the Monitor
  * @param CheckInStatus      $status              The status of the check-in
  * @param int|float|null     $duration            The duration of the check-in
  * @param MonitorConfig|null $upsertMonitorConfig Configuration of the Monitor
  * @param string|null        $checkInId           A check-in ID from the previous check-in
- *
- * @return string The check-in ID
  */
 function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null): ?string
 {

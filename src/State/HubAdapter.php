@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
-use Sentry\CheckIn;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -139,7 +138,11 @@ final class HubAdapter implements HubInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param string             $slug                Identifier of the Monitor
+     * @param CheckInStatus      $status              The status of the check-in
+     * @param int|float|null     $duration            The duration of the check-in
+     * @param MonitorConfig|null $upsertMonitorConfig Configuration of the Monitor
+     * @param string|null        $checkInId           A check-in ID from the previous check-in
      */
     public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null): ?string
     {

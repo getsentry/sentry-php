@@ -7,7 +7,6 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
-use Sentry\CheckIn;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -16,7 +15,6 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
-use Sentry\MonitorScheduleUnit;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -24,6 +22,7 @@ use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Util\SentryUid;
 
 final class HubTest extends TestCase
 {
@@ -395,10 +394,7 @@ final class HubTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider captureCheckInProvider
-     */
-    public function testCaptureCheckIn(array $expectedFunctionCallArgs)
+    public function testCaptureCheckIn()
     {
         $hub = new Hub();
 
@@ -412,47 +408,22 @@ final class HubTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        $this->assertNull($hub->captureCheckIn(...$expectedFunctionCallArgs));
         $hub->bindClient($client);
 
-        $checkIn = $hub->captureCheckIn(...$expectedFunctionCallArgs);
-        $this->assertInstanceOf(CheckIn::class, $checkIn);
-        $this->assertSame(Event::DEFAULT_ENVIRONMENT, $checkIn->getEnvironment());
-        $this->assertSame('1.1.8', $checkIn->getRelease());
-    }
+        $checkInId = SentryUid::generate();
 
-    public static function captureCheckInProvider(): \Generator
-    {
-        yield [
-            [
-                'test-crontab',
-                CheckInStatus::ok(),
-                null,
-                new MonitorConfig(
-                    MonitorSchedule::crontab('*/5 * * * *'),
-                    5,
-                    30,
-                    'UTC'
-                ),
-            ],
-        ];
-
-        yield [
-            [
-                'test-interval',
-                CheckInStatus::ok(),
-                null,
-                new MonitorConfig(
-                    MonitorSchedule::interval(
-                        5,
-                        MonitorScheduleUnit::minute()
-                    ),
-                    5,
-                    30,
-                    'UTC'
-                ),
-            ],
-        ];
+        $this->assertSame($checkInId, $hub->captureCheckIn(
+            'test-crontab',
+            CheckInStatus::ok(),
+            10,
+            new MonitorConfig(
+                MonitorSchedule::crontab('*/5 * * * *'),
+                5,
+                30,
+                'UTC'
+            ),
+            $checkInId
+        ));
     }
 
     public function testCaptureEvent(): void

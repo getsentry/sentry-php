@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
-use Sentry\CheckIn;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -24,7 +23,7 @@ use Sentry\Tracing\TransactionContext;
  * stack of pairs of clients and scopes. It is the main entry point to talk
  * with the Sentry client.
  *
- * @method string|null captureCheckIn(string $slug, CheckInStatus $status, ?MonitorConfig $upsertMonitorConfig = null, ?CheckIn $previous = null) Captures a CheckIn to the configured Monitor.
+ * @method string|null captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null) Captures a check-in
  */
 interface HubInterface
 {
