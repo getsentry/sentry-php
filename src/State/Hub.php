@@ -173,13 +173,13 @@ final class Hub implements HubInterface
     }
 
     /**
-     * @param string             $slug                Identifier of the Monitor
-     * @param CheckInStatus      $status              The status of the check-in
-     * @param int|float|null     $duration            The duration of the check-in
-     * @param MonitorConfig|null $upsertMonitorConfig Configuration of the Monitor
-     * @param string|null        $checkInId           A check-in ID from the previous check-in
+     * @param string             $slug          Identifier of the Monitor
+     * @param CheckInStatus      $status        The status of the check-in
+     * @param int|float|null     $duration      The duration of the check-in
+     * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
+     * @param string|null        $checkInId     A check-in ID from the previous check-in
      */
-    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null): ?string
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
     {
         $client = $this->getClient();
 
@@ -196,7 +196,7 @@ final class Hub implements HubInterface
             $options->getRelease(),
             $options->getEnvironment(),
             $duration,
-            $upsertMonitorConfig
+            $monitorConfig
         );
         $event->setCheckIn($checkIn);
         $this->captureEvent($event);

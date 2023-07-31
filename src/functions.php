@@ -69,15 +69,15 @@ function captureLastError(?EventHint $hint = null): ?EventId
 /**
  * Captures a check-in and sends it to Sentry.
  *
- * @param string             $slug                Identifier of the Monitor
- * @param CheckInStatus      $status              The status of the check-in
- * @param int|float|null     $duration            The duration of the check-in
- * @param MonitorConfig|null $upsertMonitorConfig Configuration of the Monitor
- * @param string|null        $checkInId           A check-in ID from the previous check-in
+ * @param string             $slug          Identifier of the Monitor
+ * @param CheckInStatus      $status        The status of the check-in
+ * @param int|float|null     $duration      The duration of the check-in
+ * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
+ * @param string|null        $checkInId     A check-in ID from the previous check-in
  */
-function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null): ?string
+function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
 {
-    return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $upsertMonitorConfig, $checkInId);
+    return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
 }
 
 /**
