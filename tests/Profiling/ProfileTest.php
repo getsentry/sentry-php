@@ -67,6 +67,15 @@ final class ProfileTest extends TestCase
                         'file' => '/var/www/html/index.php',
                         'line' => 42,
                     ],
+                ],
+                'timestamp' => 0.002,
+            ],
+            [
+                'trace' => [
+                    [
+                        'file' => '/var/www/html/index.php',
+                        'line' => 42,
+                    ],
                     [
                         'class' => 'Function',
                         'function' => 'doStuff',
@@ -74,7 +83,7 @@ final class ProfileTest extends TestCase
                         'line' => 84,
                     ],
                 ],
-                'timestamp' => 0.002,
+                'timestamp' => 0.003,
             ],
             [
                 'trace' => [
@@ -100,7 +109,7 @@ final class ProfileTest extends TestCase
                         'line' => 126,
                     ],
                 ],
-                'timestamp' => 0.003,
+                'timestamp' => 0.004,
             ],
         ];
 
@@ -134,27 +143,6 @@ final class ProfileTest extends TestCase
                 'version' => '1',
                 'profile' => [
                     'frames' => [
-                        [
-                            'filename' => '/var/www/html/index.php',
-                            'abs_path' => '/var/www/html/index.php',
-                            'module' => null,
-                            'function' => '/var/www/html/index.php',
-                            'lineno' => 42,
-                        ],
-                        [
-                            'filename' => '/var/www/html/index.php',
-                            'abs_path' => '/var/www/html/index.php',
-                            'module' => null,
-                            'function' => '/var/www/html/index.php',
-                            'lineno' => 42,
-                        ],
-                        [
-                            'filename' => '/var/www/html/function.php',
-                            'abs_path' => '/var/www/html/function.php',
-                            'module' => 'Function',
-                            'function' => 'Function::doStuff',
-                            'lineno' => 84,
-                        ],
                         [
                             'filename' => '/var/www/html/index.php',
                             'abs_path' => '/var/www/html/index.php',
@@ -186,19 +174,24 @@ final class ProfileTest extends TestCase
                     ],
                     'samples' => [
                         [
-                            'elapsed_since_start_ns' => 1000000,
                             'stack_id' => 0,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 1000000,
                         ],
                         [
+                            'stack_id' => 0,
+                            'thread_id' => '0',
                             'elapsed_since_start_ns' => 2000000,
+                        ],
+                        [
                             'stack_id' => 1,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 3000000,
                         ],
                         [
-                            'elapsed_since_start_ns' => 3000000,
                             'stack_id' => 2,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 4000000,
                         ],
                     ],
                     'stacks' => [
@@ -206,14 +199,14 @@ final class ProfileTest extends TestCase
                             0,
                         ],
                         [
+                            0,
                             1,
-                            2,
                         ],
                         [
+                            0,
+                            1,
+                            2,
                             3,
-                            4,
-                            5,
-                            6,
                         ],
                     ],
                 ],
@@ -258,27 +251,6 @@ final class ProfileTest extends TestCase
                             'lineno' => 42,
                         ],
                         [
-                            'filename' => '/index.php',
-                            'abs_path' => '/var/www/html/index.php',
-                            'module' => null,
-                            'function' => '/index.php',
-                            'lineno' => 42,
-                        ],
-                        [
-                            'filename' => '/function.php',
-                            'abs_path' => '/var/www/html/function.php',
-                            'module' => 'Function',
-                            'function' => 'Function::doStuff',
-                            'lineno' => 84,
-                        ],
-                        [
-                            'filename' => '/index.php',
-                            'abs_path' => '/var/www/html/index.php',
-                            'module' => null,
-                            'function' => '/index.php',
-                            'lineno' => 42,
-                        ],
-                        [
                             'filename' => '/function.php',
                             'abs_path' => '/var/www/html/function.php',
                             'module' => 'Function',
@@ -302,19 +274,24 @@ final class ProfileTest extends TestCase
                     ],
                     'samples' => [
                         [
-                            'elapsed_since_start_ns' => 1000000,
                             'stack_id' => 0,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 1000000,
                         ],
                         [
+                            'stack_id' => 0,
+                            'thread_id' => '0',
                             'elapsed_since_start_ns' => 2000000,
+                        ],
+                        [
                             'stack_id' => 1,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 3000000,
                         ],
                         [
-                            'elapsed_since_start_ns' => 3000000,
                             'stack_id' => 2,
                             'thread_id' => '0',
+                            'elapsed_since_start_ns' => 4000000,
                         ],
                     ],
                     'stacks' => [
@@ -322,14 +299,14 @@ final class ProfileTest extends TestCase
                             0,
                         ],
                         [
+                            0,
                             1,
-                            2,
                         ],
                         [
+                            0,
+                            1,
+                            2,
                             3,
-                            4,
-                            5,
-                            6,
                         ],
                     ],
                 ],
