@@ -24,7 +24,7 @@ use Sentry\Tracing\TransactionContext;
  * stack of pairs of clients and scopes. It is the main entry point to talk
  * with the Sentry client.
  *
- * @method CheckIn|null captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null) Captures a CheckIn to the configured Monitor.
+ * @method string|null captureCheckIn(string $slug, CheckInStatus $status, ?MonitorConfig $upsertMonitorConfig = null, ?CheckIn $previous = null) Captures a CheckIn to the configured Monitor.
  */
 interface HubInterface
 {

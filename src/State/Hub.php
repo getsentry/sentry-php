@@ -172,11 +172,14 @@ final class Hub implements HubInterface
         return null;
     }
 
-    public function captureCheckIn(string $slug, MonitorConfig $upsertMonitorConfig, CheckInStatus $status, ?CheckIn $previous = null): ?CheckIn
+    /**
+     * {@inheritdoc}
+     */
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null): ?string
     {
         $client = $this->getClient();
 
-        if (!$client instanceof ClientInterface) {
+        if (null === $client) {
             return null;
         }
 
@@ -185,16 +188,16 @@ final class Hub implements HubInterface
         $checkIn = new CheckIn(
             $slug,
             $status,
-            $previous ? $previous->getId() : null,
+            $checkInId,
             $options->getRelease(),
             $options->getEnvironment(),
-            null,
+            $duration,
             $upsertMonitorConfig
         );
         $event->setCheckIn($checkIn);
         $this->captureEvent($event);
 
-        return $checkIn;
+        return $checkIn->getId();
     }
 
     /**

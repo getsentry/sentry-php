@@ -223,19 +223,22 @@ final class FunctionsTest extends TestCase
         yield [
             [
                 'test-crontab',
+                CheckInStatus::ok(),
+                null,
                 new MonitorConfig(
                     MonitorSchedule::crontab('*/5 * * * *'),
                     5,
                     30,
                     'UTC'
                 ),
-                CheckInStatus::ok(),
             ],
         ];
 
         yield [
             [
                 'test-interval',
+                CheckInStatus::ok(),
+                null,
                 new MonitorConfig(
                     MonitorSchedule::interval(
                         5,
@@ -245,7 +248,6 @@ final class FunctionsTest extends TestCase
                     30,
                     'UTC'
                 ),
-                CheckInStatus::ok(),
             ],
         ];
     }
