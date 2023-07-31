@@ -25,6 +25,7 @@ use Sentry\HttpClient\Plugin\GzipEncoderPlugin;
 use Sentry\Options;
 use Symfony\Component\HttpClient\HttpClient as SymfonyHttpClient;
 use Symfony\Component\HttpClient\HttplugClient as SymfonyHttplugClient;
+use Symfony\Component\HttpClient\Psr18Client as SymfonyPsr18Client;
 
 /**
  * Default implementation of the {@HttpClientFactoryInterface} interface that uses
@@ -111,7 +112,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
      */
     private function resolveClient(Options $options)
     {
-        if (class_exists(SymfonyHttplugClient::class)) {
+        if (class_exists(SymfonyPsr18Client::class) || class_exists(SymfonyHttplugClient::class)) {
             $symfonyConfig = [
                 'timeout' => $options->getHttpConnectTimeout(),
                 'max_duration' => $options->getHttpTimeout(),
@@ -120,6 +121,10 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
             if (null !== $options->getHttpProxy()) {
                 $symfonyConfig['proxy'] = $options->getHttpProxy();
+            }
+
+            if (class_exists(SymfonyPsr18Client::class)) {
+                return new SymfonyPsr18Client(SymfonyHttpClient::create($symfonyConfig));
             }
 
             return new SymfonyHttplugClient(SymfonyHttpClient::create($symfonyConfig));
