@@ -8,10 +8,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Sentry\Breadcrumb;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -25,7 +28,9 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Util\SentryUid;
 use function Sentry\addBreadcrumb;
+use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
 use function Sentry\captureLastError;
@@ -183,6 +188,38 @@ final class FunctionsTest extends TestCase
             [new EventHint()],
             [new EventHint()],
         ];
+    }
+
+    public function testCaptureCheckIn()
+    {
+        $hub = new Hub();
+        $options = new Options([
+            'environment' => Event::DEFAULT_ENVIRONMENT,
+            'release' => '1.1.8',
+        ]);
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub->bindClient($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $checkInId = SentryUid::generate();
+
+        $this->assertSame($checkInId, captureCheckIn(
+            'test-crontab',
+            CheckInStatus::ok(),
+            10,
+            new MonitorConfig(
+                MonitorSchedule::crontab('*/5 * * * *'),
+                5,
+                30,
+                'UTC'
+            ),
+            $checkInId
+        ));
     }
 
     public function testAddBreadcrumb(): void
