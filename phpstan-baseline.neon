@@ -52,7 +52,7 @@ parameters:
 
 		-
 			message: "#^Call to static method create\\(\\) on an unknown class Symfony\\\\Component\\\\HttpClient\\\\HttpClient\\.$#"
-			count: 1
+			count: 2
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
@@ -71,12 +71,22 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Instantiated class Symfony\\\\Component\\\\HttpClient\\\\HttplugClient not found\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
 			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
 			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\Psr18Client\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 

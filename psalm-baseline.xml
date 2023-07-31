@@ -9,12 +9,14 @@
     </PossiblyUndefinedArrayOffset>
   </file>
   <file src="src/HttpClient/HttpClientFactory.php">
-    <UndefinedClass occurrences="5">
+    <UndefinedClass occurrences="7">
       <code>Guzzle6HttpClient</code>
       <code>GuzzleHttpClientOptions</code>
       <code>GuzzleHttpClientOptions</code>
       <code>GuzzleHttpClientOptions</code>
       <code>SymfonyHttpClient</code>
+      <code>SymfonyHttpClient</code>
+      <code>SymfonyHttplugClient</code>
     </UndefinedClass>
   </file>
   <file src="src/Integration/IntegrationRegistry.php">
