@@ -173,11 +173,9 @@ final class Hub implements HubInterface
     }
 
     /**
-     * @param string             $slug          Identifier of the Monitor
-     * @param CheckInStatus      $status        The status of the check-in
-     * @param int|float|null     $duration      The duration of the check-in
-     * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
-     * @param string|null        $checkInId     A check-in ID from the previous check-in
+     * {@inheritdoc}
+     *
+     * @param int|float|null $duration
      */
     public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
     {
