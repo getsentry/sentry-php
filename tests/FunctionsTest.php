@@ -190,34 +190,29 @@ final class FunctionsTest extends TestCase
         ];
     }
 
-    public function testCaptureCheckIn()
+    public function testCaptureCheckIn(): void
     {
-        $hub = new Hub();
-        $options = new Options([
-            'environment' => Event::DEFAULT_ENVIRONMENT,
-            'release' => '1.1.8',
-        ]);
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn($options);
-
-        $hub->bindClient($client);
-        SentrySdk::setCurrentHub($hub);
-
         $checkInId = SentryUid::generate();
+        $monitorConfig = new MonitorConfig(
+            MonitorSchedule::crontab('*/5 * * * *'),
+            5,
+            30,
+            'UTC'
+        );
+
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())
+            ->method('captureCheckIn')
+            ->with('test-crontab', CheckInStatus::ok(), 10, $monitorConfig, $checkInId)
+            ->willReturn($checkInId);
+
+        SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($checkInId, captureCheckIn(
             'test-crontab',
             CheckInStatus::ok(),
             10,
-            new MonitorConfig(
-                MonitorSchedule::crontab('*/5 * * * *'),
-                5,
-                30,
-                'UTC'
-            ),
+            $monitorConfig,
             $checkInId
         ));
     }
