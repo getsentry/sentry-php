@@ -200,7 +200,7 @@ final class FunctionsTest extends TestCase
             'UTC'
         );
 
-        $hub = $this->createMock(HubInterface::class);
+        $hub = $this->createMock(StubHubInterface::class);
         $hub->expects($this->once())
             ->method('captureCheckIn')
             ->with('test-crontab', CheckInStatus::ok(), 10, $monitorConfig, $checkInId)
@@ -439,4 +439,9 @@ final class FunctionsTest extends TestCase
             $this->assertTrue($dynamicSamplingContext->isFrozen());
         });
     }
+}
+
+interface StubHubInterface extends HubInterface
+{
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string;
 }
