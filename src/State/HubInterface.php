@@ -23,7 +23,7 @@ use Sentry\Tracing\TransactionContext;
  * stack of pairs of clients and scopes. It is the main entry point to talk
  * with the Sentry client.
  *
- * @method string|null captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $upsertMonitorConfig = null, ?string $checkInId = null) Captures a check-in
+ * @method string|null captureCheckIn(string $slug, CheckInStatus $status, int|float|null $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null) Captures a check-in
  */
 interface HubInterface
 {
