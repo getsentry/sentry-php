@@ -7,6 +7,7 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -394,35 +395,46 @@ final class HubTest extends TestCase
         ];
     }
 
-    public function testCaptureCheckIn()
+    public function testCaptureCheckIn(): void
     {
-        $hub = new Hub();
-
-        $options = new Options([
-            'environment' => Event::DEFAULT_ENVIRONMENT,
-            'release' => '1.1.8',
-        ]);
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn($options);
-
-        $hub->bindClient($client);
-
-        $checkInId = SentryUid::generate();
-
-        $this->assertSame($checkInId, $hub->captureCheckIn(
+        $expectedCheckIn = new CheckIn(
             'test-crontab',
             CheckInStatus::ok(),
+            SentryUid::generate(),
+            '0.0.1-dev',
+            Event::DEFAULT_ENVIRONMENT,
             10,
             new MonitorConfig(
                 MonitorSchedule::crontab('*/5 * * * *'),
                 5,
                 30,
                 'UTC'
-            ),
-            $checkInId
+            )
+        );
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'environment' => Event::DEFAULT_ENVIRONMENT,
+                'release' => '0.0.1-dev',
+            ]));
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($expectedCheckIn): bool {
+                return $event->getCheckIn() == $expectedCheckIn;
+            }));
+
+        $hub = new Hub($client);
+
+        $this->assertSame($expectedCheckIn->getId(), $hub->captureCheckIn(
+            $expectedCheckIn->getMonitorSlug(),
+            $expectedCheckIn->getStatus(),
+            $expectedCheckIn->getDuration(),
+            $expectedCheckIn->getMonitorConfig(),
+            $expectedCheckIn->getId()
         ));
     }
 
