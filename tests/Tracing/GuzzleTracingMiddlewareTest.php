@@ -272,8 +272,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
-                'http.query' => '',
-                'http.fragment' => '',
                 'status_code' => 200,
                 'response_body_size' => 0,
             ],
@@ -300,8 +298,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'POST',
                 'request_body_size' => 10,
-                'http.query' => '',
-                'http.fragment' => '',
                 'status_code' => 403,
                 'response_body_size' => 6,
             ],
@@ -314,8 +310,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'method' => 'GET',
                 'request_body_size' => 0,
-                'http.query' => '',
-                'http.fragment' => '',
             ],
         ];
     }

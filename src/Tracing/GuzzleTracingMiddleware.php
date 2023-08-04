@@ -80,9 +80,13 @@ final class GuzzleTracingMiddleware
                         'url' => (string) $partialUri,
                         'method' => $request->getMethod(),
                         'request_body_size' => $request->getBody()->getSize(),
-                        'http.query' => $request->getUri()->getQuery(),
-                        'http.fragment' => $request->getUri()->getFragment(),
                     ];
+                    if ('' !== $request->getUri()->getQuery()) {
+                        $breadcrumbData['http.query'] = $request->getUri()->getQuery();
+                    }
+                    if ('' !== $request->getUri()->getFragment()) {
+                        $breadcrumbData['http.fragment'] = $request->getUri()->getFragment();
+                    }
 
                     if (null !== $response) {
                         $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
