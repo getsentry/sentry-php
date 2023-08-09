@@ -270,10 +270,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Response(),
             [
                 'url' => 'https://www.example.com',
-                'method' => 'GET',
-                'request_body_size' => 0,
-                'status_code' => 200,
-                'response_body_size' => 0,
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
+                'http.response.status_code' => 200,
+                'http.response.body.size' => 0,
             ],
         ];
 
@@ -282,12 +282,12 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Response(),
             [
                 'url' => 'https://www.example.com',
-                'method' => 'GET',
-                'request_body_size' => 0,
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
                 'http.query' => 'query=string',
                 'http.fragment' => 'fragment=1',
-                'status_code' => 200,
-                'response_body_size' => 0,
+                'http.response.status_code' => 200,
+                'http.response.body.size' => 0,
             ],
         ];
 
@@ -296,10 +296,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Response(403, [], 'sentry'),
             [
                 'url' => 'https://www.example.com',
-                'method' => 'POST',
-                'request_body_size' => 10,
-                'status_code' => 403,
-                'response_body_size' => 6,
+                'http.request.method' => 'POST',
+                'http.request.body.size' => 10,
+                'http.response.status_code' => 403,
+                'http.response.body.size' => 6,
             ],
         ];
 
@@ -308,8 +308,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new \Exception(),
             [
                 'url' => 'https://www.example.com',
-                'method' => 'GET',
-                'request_body_size' => 0,
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
             ],
         ];
     }
