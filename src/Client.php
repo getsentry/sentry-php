@@ -248,6 +248,10 @@ final class Client implements ClientInterface
             if (null !== $hint->stacktrace && null === $event->getStacktrace()) {
                 $event->setStacktrace($hint->stacktrace);
             }
+
+            if (!empty($hint->extra)) {
+                $event->setExtra(array_merge($event->getExtra(), $hint->extra));
+            }
         }
 
         $this->addMissingStacktraceToEvent($event);

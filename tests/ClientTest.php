@@ -114,6 +114,7 @@ final class ClientTest extends TestCase
         $options = new Options([
             'before_send' => function (Event $event, ?EventHint $hintArg) use ($hint, &$beforeSendCallbackCalled) {
                 $this->assertSame($hint, $hintArg);
+                $this->assertSame($hint->extra, $event->getExtra());
 
                 $beforeSendCallbackCalled = true;
 
