@@ -91,6 +91,7 @@ The following integrations are available and maintained by members of the Sentry
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
 - [CakePHP 3.0 - 4.3](https://github.com/Connehito/cake-sentry)
 - [CakePHP 4.4+](https://github.com/lordsimal/cakephp-sentry)
+- [October CMS](https://github.com/OFFLINE-GmbH/oc-sentry-plugin)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using old SDK 2.x
