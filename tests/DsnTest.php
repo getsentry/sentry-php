@@ -36,7 +36,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedPath, $dsn->getPath());
     }
 
-    public function createFromStringDataProvider(): \Generator
+    public static function createFromStringDataProvider(): \Generator
     {
         yield [
             'http://public@example.com/sentry/1',
@@ -138,7 +138,7 @@ final class DsnTest extends TestCase
         Dsn::createFromString($value);
     }
 
-    public function createFromStringThrowsExceptionIfValueIsInvalidDataProvider(): \Generator
+    public static function createFromStringThrowsExceptionIfValueIsInvalidDataProvider(): \Generator
     {
         yield 'invalid DSN' => [
             ':',
@@ -186,7 +186,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedUrl, $dsn->getStoreApiEndpointUrl());
     }
 
-    public function getStoreApiEndpointUrlDataProvider(): \Generator
+    public static function getStoreApiEndpointUrlDataProvider(): \Generator
     {
         yield [
             'http://public@example.com/sentry/1',
@@ -224,7 +224,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedUrl, $dsn->getCspReportEndpointUrl());
     }
 
-    public function getCspReportEndpointUrlDataProvider(): \Generator
+    public static function getCspReportEndpointUrlDataProvider(): \Generator
     {
         yield [
             'http://public@example.com/sentry/1',
@@ -260,7 +260,7 @@ final class DsnTest extends TestCase
         $this->assertSame($value, (string) Dsn::createFromString($value));
     }
 
-    public function toStringDataProvider(): array
+    public static function toStringDataProvider(): array
     {
         return [
             ['http://public@example.com/sentry/1'],

@@ -42,7 +42,7 @@ final class UserDataBagTest extends TestCase
         $this->assertSame($expectedMetadata, $userDataBag->getMetadata());
     }
 
-    public function createFromArrayDataProvider(): iterable
+    public static function createFromArrayDataProvider(): iterable
     {
         yield [
             ['id' => 1234],
@@ -149,7 +149,7 @@ final class UserDataBagTest extends TestCase
         UserDataBag::createFromUserIdentifier($value);
     }
 
-    public function unexpectedValueForIdFieldDataProvider(): iterable
+    public static function unexpectedValueForIdFieldDataProvider(): iterable
     {
         yield [
             12.34,

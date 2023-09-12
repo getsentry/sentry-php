@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Tracing;
 
+use Generator;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -83,5 +85,91 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext(), $hub);
         $transaction->finish();
+    }
+
+    /**
+     * @dataProvider parentTransactionContextDataProvider
+     */
+    public function testTransactionIsSampledCorrectlyWhenTracingIsSetToZeroInOptions(TransactionContext $context, bool $expectedSampled): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(
+                new Options([
+                    'traces_sampler' => null,
+                    'traces_sample_rate' => 0,
+                ])
+            );
+
+        $transaction = (new Hub($client))->startTransaction($context);
+
+        $this->assertSame($expectedSampled, $transaction->getSampled());
+    }
+
+    public static function parentTransactionContextDataProvider(): Generator
+    {
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, true),
+            true,
+        ];
+
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1', ''),
+            true,
+        ];
+
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', ''),
+            false,
+        ];
+    }
+
+    /**
+     * @dataProvider parentTransactionContextDataProviderDisabled
+     */
+    public function testTransactionIsNotSampledWhenTracingIsDisabledInOptions(TransactionContext $context, bool $expectedSampled): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(
+                new Options([
+                    'traces_sampler' => null,
+                    'traces_sample_rate' => null,
+                ])
+            );
+
+        $transaction = (new Hub($client))->startTransaction($context);
+
+        $this->assertSame($expectedSampled, $transaction->getSampled());
+    }
+
+    public function parentTransactionContextDataProviderDisabled(): Generator
+    {
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, true),
+            false,
+        ];
+
+        yield [
+            new TransactionContext(TransactionContext::DEFAULT_NAME, false),
+            false,
+        ];
+
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1', ''),
+            false,
+        ];
+
+        yield [
+            TransactionContext::fromHeaders('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', ''),
+            false,
+        ];
     }
 }

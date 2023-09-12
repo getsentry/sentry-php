@@ -64,7 +64,7 @@ final class EnvironmentIntegrationTest extends TestCase
         });
     }
 
-    public function invokeDataProvider(): iterable
+    public static function invokeDataProvider(): iterable
     {
         yield 'Integration disabled => do nothing' => [
             false,

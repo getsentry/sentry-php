@@ -7,7 +7,6 @@ namespace Sentry\Tests;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\Client;
@@ -182,7 +181,7 @@ final class ClientTest extends TestCase
         $this->assertTrue($beforeSendCallbackCalled);
     }
 
-    public function captureExceptionWithEventHintDataProvider(): \Generator
+    public static function captureExceptionWithEventHintDataProvider(): \Generator
     {
         yield [
             EventHint::fromArray([
@@ -223,7 +222,7 @@ final class ClientTest extends TestCase
         $this->assertSame($event->getId(), $client->captureEvent($event));
     }
 
-    public function captureEventDataProvider(): \Generator
+    public static function captureEventDataProvider(): \Generator
     {
         $event = Event::createEvent();
         $expectedEvent = clone $event;
@@ -347,7 +346,7 @@ final class ClientTest extends TestCase
         $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
     }
 
-    public function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
+    public static function captureEventAttachesStacktraceAccordingToAttachStacktraceOptionDataProvider(): \Generator
     {
         yield 'Stacktrace attached when attach_stacktrace = true and both payload.exception and payload.stacktrace are unset' => [
             true,
@@ -497,7 +496,7 @@ final class ClientTest extends TestCase
         $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
     }
 
-    public function processEventChecksBeforeSendOptionDataProvider(): \Generator
+    public static function processEventChecksBeforeSendOptionDataProvider(): \Generator
     {
         yield [
             Event::createEvent(),
@@ -511,47 +510,119 @@ final class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider
+     * @dataProvider processEventChecksBeforeSendTransactionOptionDataProvider
      */
-    public function testProcessEventDiscardsEventWhenItIsSampledDueToSampleRateOption(float $sampleRate, InvocationOrder $transportCallInvocationMatcher, InvocationOrder $loggerCallInvocationMatcher): void
+    public function testProcessEventChecksBeforeSendTransactionOption(Event $event, bool $expectedBeforeSendCall): void
     {
-        /** @var TransportInterface&MockObject $transport */
+        $beforeSendTransactionCalled = false;
+        $options = [
+            'before_send_transaction' => static function () use (&$beforeSendTransactionCalled) {
+                $beforeSendTransactionCalled = true;
+
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
+
+        $this->assertSame($expectedBeforeSendCall, $beforeSendTransactionCalled);
+    }
+
+    public static function processEventChecksBeforeSendTransactionOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            false,
+        ];
+
+        yield [
+            Event::createTransaction(),
+            true,
+        ];
+    }
+
+    public function testProcessEventDiscardsEventWhenSampleRateOptionIsZero(): void
+    {
         $transport = $this->createMock(TransportInterface::class);
-        $transport->expects($transportCallInvocationMatcher)
+        $transport->expects($this->never())
             ->method('send')
             ->with($this->anything());
 
-        /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($loggerCallInvocationMatcher)
+        $logger->expects($this->once())
             ->method('info')
             ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
                 return isset($context['event']) && $context['event'] instanceof Event;
             }));
 
-        $client = ClientBuilder::create(['sample_rate' => $sampleRate])
+        $client = ClientBuilder::create(['sample_rate' => 0])
             ->setTransportFactory($this->createTransportFactory($transport))
             ->setLogger($logger)
             ->getClient();
 
-        for ($i = 0; $i < 10; ++$i) {
-            $client->captureMessage('foo');
-        }
+        $client->captureEvent(Event::createEvent());
     }
 
-    public function processEventDiscardsEventWhenItIsSampledDueToSampleRateOptionDataProvider(): \Generator
+    public function testProcessEventCapturesEventWhenSampleRateOptionIsAboveZero(): void
     {
-        yield [
-            0,
-            $this->never(),
-            $this->exactly(10),
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->anything());
+
+        $client = ClientBuilder::create(['sample_rate' => 1])
+            ->setTransportFactory($this->createTransportFactory($transport))
+            ->getClient();
+
+        $client->captureEvent(Event::createEvent());
+    }
+
+    public function testProcessEventDiscardsEventWhenIgnoreExceptionsMatches(): void
+    {
+        $exception = new \Exception('Some foo error');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_exceptions' => [\Exception::class],
         ];
 
-        yield [
-            1,
-            $this->exactly(10),
-            $this->never(),
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureException($exception);
+    }
+
+    public function testProcessEventDiscardsEventWhenIgnoreTransactionsMatches(): void
+    {
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /foo');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches a entry in "ignore_transactions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_transactions' => ['GET /foo'],
         ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent($event);
     }
 
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
@@ -574,7 +645,30 @@ final class ClientTest extends TestCase
             ->setLogger($logger)
             ->getClient();
 
-        $client->captureMessage('foo');
+        $client->captureEvent(Event::createEvent());
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendTransactionCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send_transaction" callback returned "null".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'before_send_transaction' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent(Event::createTransaction());
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void
@@ -668,7 +762,7 @@ final class ClientTest extends TestCase
     {
         $options = new Options();
         $previousException = new \RuntimeException('testMessage2');
-        $exception = new \Exception('testMessage', 0, $previousException);
+        $exception = new \Exception('testMessage', 1, $previousException);
 
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -679,12 +773,12 @@ final class ClientTest extends TestCase
 
                 $this->assertCount(2, $capturedExceptions);
                 $this->assertNotNull($capturedExceptions[0]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[0]->getMechanism());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 1]), $capturedExceptions[0]->getMechanism());
                 $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
                 $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
 
                 $this->assertNotNull($capturedExceptions[1]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true), $capturedExceptions[1]->getMechanism());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 0]), $capturedExceptions[1]->getMechanism());
                 $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
                 $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
 
@@ -702,6 +796,42 @@ final class ClientTest extends TestCase
 
         $client->captureEvent(Event::createEvent(), EventHint::fromArray([
             'exception' => $exception,
+        ]));
+    }
+
+    public function testBuildEventWithExceptionAndMechansim(): void
+    {
+        $options = new Options();
+        $exception = new \Exception('testMessage');
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $capturedExceptions = $event->getExceptions();
+
+                $this->assertCount(1, $capturedExceptions);
+                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false), $capturedExceptions[0]->getMechanism());
+                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+
+                return true;
+            }));
+
+        $client = new Client(
+            $options,
+            $transport,
+            'sentry.sdk.identifier',
+            '1.2.3',
+            new Serializer($options),
+            $this->createMock(RepresentationSerializerInterface::class)
+        );
+
+        $client->captureEvent(Event::createEvent(), EventHint::fromArray([
+            'exception' => $exception,
+            'mechanism' => new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false),
         ]));
     }
 
@@ -828,7 +958,7 @@ final class ClientTest extends TestCase
         $this->assertSame($expectedUrl, $client->getCspReportUrl());
     }
 
-    public function getCspReportUrlDataProvider(): \Generator
+    public static function getCspReportUrlDataProvider(): \Generator
     {
         yield [
             ['dsn' => null],

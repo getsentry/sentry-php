@@ -8,16 +8,13 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 
 # Official Sentry SDK for PHP
 
+[![CI](https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master)](https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster)
+[![Coverage Status](https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov)](https://codecov.io/gh/getsentry/sentry-php/branch/master)
 [![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
 [![License](https://poser.pugx.org/sentry/sentry/license)](https://packagist.org/packages/sentry/sentry)
 [![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
 [![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/cWnMQeA)
-
-| Version | Build Status | Code Coverage |
-|:---------:|:-------------:|:-----:|
-| `master`| [![CI][master Build Status Image]][master Build Status] | [![Coverage Status][master Code Coverage Image]][master Code Coverage] |
-| `develop`| [![CI][develop Build Status Image]][develop Build Status] | [![Coverage Status][develop Code Coverage Image]][develop Code Coverage] |
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
@@ -89,7 +86,9 @@ The following integrations are available and maintained by members of the Sentry
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
-- [CakePHP](https://github.com/Connehito/cake-sentry)
+- [CakePHP 3.0 - 4.3](https://github.com/Connehito/cake-sentry)
+- [CakePHP 4.4+](https://github.com/lordsimal/cakephp-sentry)
+- [October CMS](https://github.com/OFFLINE-GmbH/oc-sentry-plugin)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using old SDK 2.x
@@ -128,13 +127,4 @@ If you need help setting up or configuring the PHP SDK (or anything else in the 
 
 ## License
 
-Licensed under the BSD license, see [`LICENSE`](LICENSE)
-
-[master Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster
-[master Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master
-[develop Build Status]: https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Adevelop
-[develop Build Status Image]: https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=develop
-[master Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/master
-[master Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov
-[develop Code Coverage]: https://codecov.io/gh/getsentry/sentry-php/branch/develop
-[develop Code Coverage Image]: https://img.shields.io/codecov/c/github/getsentry/sentry-php/develop?logo=codecov
+Licensed under the MIT license, see [`LICENSE`](LICENSE)

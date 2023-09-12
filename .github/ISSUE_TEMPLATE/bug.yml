@@ -6,22 +6,22 @@ body:
     attributes:
       label: How do you use Sentry?
       options:
-        - Sentry Saas (sentry.io)
-        - Self-hosted/on-premise
+        - Sentry SaaS (sentry.io)
+        - Self-hosted / on-premises
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Version
-      description: Which SDK version?
-      placeholder: ex. 3.7.0
+      label: SDK version
+      description: Which SDK version do you use?
+      placeholder: e.g. 3.20.1
     validations:
       required: true
   - type: textarea
     id: repro
     attributes:
-      label: Steps to Reproduce
+      label: Steps to reproduce
       description: How can we see what you're seeing? Specific is terrific.
       placeholder: |-
         1. What
@@ -32,13 +32,13 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Expected Result
+      label: Expected result
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Actual Result
+      label: Actual result
       description: Logs? Screenshots? Yes, please.
     validations:
       required: true

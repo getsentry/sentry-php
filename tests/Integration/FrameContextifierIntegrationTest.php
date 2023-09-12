@@ -13,30 +13,12 @@ use Sentry\Frame;
 use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use function Sentry\withScope;
 
 final class FrameContextifierIntegrationTest extends TestCase
 {
-    /**
-     * @var MockObject&SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var MockObject&RepresentationSerializerInterface
-     */
-    private $representationSerializer;
-
-    protected function setUp(): void
-    {
-        $this->serializer = $this->createMock(SerializerInterface::class);
-        $this->representationSerializer = $this->createMock(RepresentationSerializerInterface::class);
-    }
-
     /**
      * @dataProvider invokeDataProvider
      */
@@ -92,7 +74,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         }
     }
 
-    public function invokeDataProvider(): \Generator
+    public static function invokeDataProvider(): \Generator
     {
         yield 'short file' => [
             realpath(__DIR__ . '/../Fixtures/code/ShortFile.php'),

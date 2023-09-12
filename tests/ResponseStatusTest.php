@@ -17,7 +17,7 @@ final class ResponseStatusTest extends TestCase
         $this->assertSame($expectedStringRepresentation, (string) $responseStatus);
     }
 
-    public function toStringDataProvider(): iterable
+    public static function toStringDataProvider(): iterable
     {
         yield [
             ResponseStatus::success(),
@@ -58,7 +58,7 @@ final class ResponseStatusTest extends TestCase
         $this->assertSame($expectedResponseStatus, ResponseStatus::createFromHttpStatusCode($httpStatusCode));
     }
 
-    public function createFromHttpStatusCodeDataProvider(): iterable
+    public static function createFromHttpStatusCodeDataProvider(): iterable
     {
         yield [
             ResponseStatus::success(),

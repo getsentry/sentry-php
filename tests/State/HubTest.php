@@ -7,17 +7,23 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\CheckIn;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\MonitorConfig;
+use Sentry\MonitorSchedule;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Util\SentryUid;
 
 final class HubTest extends TestCase
 {
@@ -227,10 +233,14 @@ final class HubTest extends TestCase
     /**
      * @dataProvider captureMessageDataProvider
      */
-    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -246,8 +256,10 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureMessage(...$functionCallArgs));
     }
 
-    public function captureMessageDataProvider(): \Generator
+    public static function captureMessageDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [
                 'foo',
@@ -256,8 +268,9 @@ final class HubTest extends TestCase
             [
                 'foo',
                 Severity::debug(),
-                new Scope(),
+                new Scope($propagationContext),
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -269,19 +282,24 @@ final class HubTest extends TestCase
             [
                 'foo',
                 Severity::debug(),
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
     }
 
     /**
      * @dataProvider captureExceptionDataProvider
      */
-    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
@@ -296,17 +314,20 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureException(...$functionCallArgs));
     }
 
-    public function captureExceptionDataProvider(): \Generator
+    public static function captureExceptionDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [
                 new \Exception('foo'),
             ],
             [
                 new \Exception('foo'),
-                new Scope(),
+                new Scope($propagationContext),
                 null,
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -316,19 +337,24 @@ final class HubTest extends TestCase
             ],
             [
                 new \Exception('foo'),
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
     }
 
     /**
      * @dataProvider captureLastErrorDataProvider
      */
-    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs): void
+    public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
         $hub = new Hub();
+
+        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+            $scope->setPropagationContext($propagationContext);
+        });
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -344,14 +370,17 @@ final class HubTest extends TestCase
         $this->assertSame($eventId, $hub->captureLastError(...$functionCallArgs));
     }
 
-    public function captureLastErrorDataProvider(): \Generator
+    public static function captureLastErrorDataProvider(): \Generator
     {
+        $propagationContext = PropagationContext::fromDefaults();
+
         yield [
             [],
             [
-                new Scope(),
+                new Scope($propagationContext),
                 null,
             ],
+            $propagationContext,
         ];
 
         yield [
@@ -359,10 +388,54 @@ final class HubTest extends TestCase
                 new EventHint(),
             ],
             [
-                new Scope(),
+                new Scope($propagationContext),
                 new EventHint(),
             ],
+            $propagationContext,
         ];
+    }
+
+    public function testCaptureCheckIn(): void
+    {
+        $expectedCheckIn = new CheckIn(
+            'test-crontab',
+            CheckInStatus::ok(),
+            SentryUid::generate(),
+            '0.0.1-dev',
+            Event::DEFAULT_ENVIRONMENT,
+            10,
+            new MonitorConfig(
+                MonitorSchedule::crontab('*/5 * * * *'),
+                5,
+                30,
+                'UTC'
+            )
+        );
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'environment' => Event::DEFAULT_ENVIRONMENT,
+                'release' => '0.0.1-dev',
+            ]));
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($expectedCheckIn): bool {
+                return $event->getCheckIn() == $expectedCheckIn;
+            }));
+
+        $hub = new Hub($client);
+
+        $this->assertSame($expectedCheckIn->getId(), $hub->captureCheckIn(
+            $expectedCheckIn->getMonitorSlug(),
+            $expectedCheckIn->getStatus(),
+            $expectedCheckIn->getDuration(),
+            $expectedCheckIn->getMonitorConfig(),
+            $expectedCheckIn->getId()
+        ));
     }
 
     public function testCaptureEvent(): void
@@ -561,7 +634,7 @@ final class HubTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public function startTransactionDataProvider(): iterable
+    public static function startTransactionDataProvider(): iterable
     {
         yield 'Acceptable float value returned from traces_sampler' => [
             new Options([

@@ -23,8 +23,8 @@ final class HttpClientFactoryTest extends TestCase
 
         $mockHttpClient = new HttpMockClient();
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
+            null,
+            null,
             $streamFactory,
             $mockHttpClient,
             'sentry.php.test',
@@ -51,7 +51,7 @@ final class HttpClientFactoryTest extends TestCase
         $this->assertSame($expectedRequestBody, (string) $httpRequest->getBody());
     }
 
-    public function createDataProvider(): \Generator
+    public static function createDataProvider(): \Generator
     {
         yield [
             false,
@@ -67,8 +67,8 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfDsnOptionIsNotConfigured(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
+            null,
+            null,
             Psr17FactoryDiscovery::findStreamFactory(),
             null,
             'sentry.php.test',
@@ -84,8 +84,8 @@ final class HttpClientFactoryTest extends TestCase
     public function testCreateThrowsIfHttpProxyOptionIsUsedWithCustomHttpClient(): void
     {
         $httpClientFactory = new HttpClientFactory(
-            Psr17FactoryDiscovery::findUrlFactory(),
-            Psr17FactoryDiscovery::findResponseFactory(),
+            null,
+            null,
             Psr17FactoryDiscovery::findStreamFactory(),
             $this->createMock(HttpAsyncClientInterface::class),
             'sentry.php.test',

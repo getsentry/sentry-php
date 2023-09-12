@@ -20,7 +20,7 @@ abstract class AbstractSerializerTest extends TestCase
     {
     }
 
-    public function serializeAllObjectsDataProvider(): array
+    public static function serializeAllObjectsDataProvider(): array
     {
         return [
             ['serializeAllObjects' => false],
@@ -54,6 +54,48 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObject', $result);
     }
 
+    public static function objectsWithIdPropertyDataProvider(): array
+    {
+        return [
+            ['bar', 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#bar)'],
+            [123, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty(#123)'],
+            [[1, 2, 3], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+            [(object) ['id' => 321], 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+            [null, 'Object Sentry\Tests\Serializer\SerializerTestObjectWithIdProperty'],
+        ];
+    }
+
+    /**
+     * @dataProvider objectsWithIdPropertyDataProvider
+     */
+    public function testObjectsWithIdPropertyAreStrings($id, string $expectedResult): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithIdProperty();
+        $input->id = $id;
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    public function testObjectsWithMagicIdPropertyDoesNotInvokeMagicMethods(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithMagicGetAndIssetMethods();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithMagicGetAndIssetMethods', $result);
+    }
+
+    public function testObjectsWithSerializerTestObjectWithGetIdMethodAreStrings(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithGetIdMethod();
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithGetIdMethod(#foobar)', $result);
+    }
+
     public function testObjectsAreNotStrings(): void
     {
         $serializer = $this->createSerializer();
@@ -82,7 +124,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame($input, $output);
     }
 
-    public function iterableDataProvider(): \Generator
+    public static function iterableDataProvider(): \Generator
     {
         yield [
             'iterable' => ['value1', 'value2'],
@@ -141,7 +183,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame([[['Array of length 0']]], $result);
     }
 
-    public function dataRecursionInObjectsDataProvider(): \Generator
+    public static function dataRecursionInObjectsDataProvider(): \Generator
     {
         $object = new SerializerTestObject();
         $object->key = $object;
@@ -243,7 +285,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertEquals($expectedResult, $result);
     }
 
-    public function recursionMaxDepthForObjectDataProvider(): array
+    public static function recursionMaxDepthForObjectDataProvider(): array
     {
         return [
             [
@@ -533,7 +575,7 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame($expected, $this->invokeSerialization($serializer, $string));
     }
 
-    public function serializationForBadStringsDataProvider(): array
+    public static function serializationForBadStringsDataProvider(): array
     {
         $utf8String = 'äöü';
 
@@ -573,6 +615,45 @@ class SerializerTestObject
     public static function testy(): void
     {
         throw new \Exception('We should not reach this');
+    }
+}
+
+class SerializerTestObjectWithIdProperty extends SerializerTestObject
+{
+    public $id = 'bar';
+}
+
+class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
+{
+    private $id = 'foo';
+
+    public function getId()
+    {
+        return $this->id . 'bar';
+    }
+}
+
+class SerializerTestObjectWithMagicGetAndIssetMethods
+{
+    public function __isset(string $name): bool
+    {
+        throw new \RuntimeException('We should not reach this!');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function __get(string $name)
+    {
+        throw new \RuntimeException('We should not reach this!');
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function __set(string $name, $value): void
+    {
+        throw new \RuntimeException('We should not reach this!');
     }
 }
 

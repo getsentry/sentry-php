@@ -25,7 +25,7 @@ final class ExceptionDataBagTest extends TestCase
         $this->assertSame($expectedExceptionMechansim, $exceptionDataBag->getMechanism());
     }
 
-    public function constructorDataProvider(): \Generator
+    public static function constructorDataProvider(): \Generator
     {
         yield [
             [

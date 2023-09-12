@@ -31,7 +31,7 @@ final class SpanTest extends TestCase
         $this->assertSame($expectedEndTimestamp, $span->getEndTimestamp());
     }
 
-    public function finishDataProvider(): iterable
+    public static function finishDataProvider(): iterable
     {
         yield [
             1598660006,
@@ -86,7 +86,7 @@ final class SpanTest extends TestCase
         $this->assertSame($expectedValue, $span->toTraceparent());
     }
 
-    public function toTraceparentDataProvider(): iterable
+    public static function toTraceparentDataProvider(): iterable
     {
         yield [
             null,
@@ -118,7 +118,7 @@ final class SpanTest extends TestCase
         $this->assertSame($expectedValue, $transaction->toBaggage());
     }
 
-    public function toBaggageDataProvider(): iterable
+    public static function toBaggageDataProvider(): iterable
     {
         yield [
             '',

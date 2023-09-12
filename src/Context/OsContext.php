@@ -32,15 +32,26 @@ final class OsContext
     private $kernelVersion;
 
     /**
+     * @var string|null
+     */
+    private $machineType;
+
+    /**
      * Constructor.
      *
      * @param string      $name          The name of the operating system
      * @param string|null $version       The version of the operating system
      * @param string|null $build         The internal build revision of the operating system
      * @param string|null $kernelVersion An independent kernel version string
+     * @param string|null $machineType   The machine type
      */
-    public function __construct(string $name, ?string $version = null, ?string $build = null, ?string $kernelVersion = null)
-    {
+    public function __construct(
+        string $name,
+        ?string $version = null,
+        ?string $build = null,
+        ?string $kernelVersion = null,
+        ?string $machineType = null
+    ) {
         if ('' === trim($name)) {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
@@ -49,6 +60,7 @@ final class OsContext
         $this->version = $version;
         $this->build = $build;
         $this->kernelVersion = $kernelVersion;
+        $this->machineType = $machineType;
     }
 
     /**
@@ -125,5 +137,18 @@ final class OsContext
     public function setKernelVersion(?string $kernelVersion): void
     {
         $this->kernelVersion = $kernelVersion;
+    }
+
+    public function getMachineType(): ?string
+    {
+        return $this->machineType;
+    }
+
+    /**
+     * @param string|null $machineType The machine type
+     */
+    public function setMachineType(?string $machineType): void
+    {
+        $this->machineType = $machineType;
     }
 }

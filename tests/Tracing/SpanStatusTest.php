@@ -17,7 +17,7 @@ final class SpanStatusTest extends TestCase
         $this->assertSame($expectedStringRepresentation, (string) $spanStatus);
     }
 
-    public function toStringDataProvider(): iterable
+    public static function toStringDataProvider(): iterable
     {
         yield [
             SpanStatus::unauthenticated(),
@@ -93,7 +93,7 @@ final class SpanStatusTest extends TestCase
         $this->assertSame($expectedSpanStatus, SpanStatus::createFromHttpStatusCode($httpStatusCode));
     }
 
-    public function createFromHttpStatusCodeDataProvider(): iterable
+    public static function createFromHttpStatusCodeDataProvider(): iterable
     {
         yield [
             SpanStatus::unauthenticated(),

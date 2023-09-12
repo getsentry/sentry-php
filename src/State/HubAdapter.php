@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Breadcrumb;
+use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\MonitorConfig;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
@@ -133,6 +135,16 @@ final class HubAdapter implements HubInterface
     public function captureLastError(?EventHint $hint = null): ?EventId
     {
         return SentrySdk::getCurrentHub()->captureLastError($hint);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param int|float|null $duration
+     */
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
+    {
+        return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
     }
 
     /**

@@ -21,11 +21,6 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Offset 'host'\\|'path'\\|'scheme'\\|'user' on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\} in isset\\(\\) always exists and is not nullable\\.$#"
-			count: 1
-			path: src/Dsn.php
-
-		-
 			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 4
 			path: src/Dsn.php
@@ -39,11 +34,6 @@ parameters:
 			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
 			count: 1
 			path: src/Dsn.php
-
-		-
-			message: "#^Result of && is always false\\.$#"
-			count: 2
-			path: src/EventHint.php
 
 		-
 			message: "#^Access to constant CONNECT_TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
@@ -62,6 +52,11 @@ parameters:
 
 		-
 			message: "#^Call to static method create\\(\\) on an unknown class Symfony\\\\Component\\\\HttpClient\\\\HttpClient\\.$#"
+			count: 1
+			path: src/HttpClient/HttpClientFactory.php
+
+		-
+			message: "#^Call to static method createWithConfig\\(\\) on an unknown class Http\\\\Adapter\\\\Guzzle6\\\\Client\\.$#"
 			count: 1
 			path: src/HttpClient/HttpClientFactory.php
 
@@ -101,12 +96,17 @@ parameters:
 			path: src/Monolog/BreadcrumbHandler.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeBreadcrumbCallback\\(\\) should return callable\\(Sentry\\\\Breadcrumb\\)\\: Sentry\\\\Breadcrumb\\|null but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeBreadcrumbCallback\\(\\) should return callable\\(Sentry\\\\Breadcrumb\\)\\: \\(Sentry\\\\Breadcrumb\\|null\\) but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: Sentry\\\\Event\\|null but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendTransactionCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -122,6 +122,11 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getDsn\\(\\) should return Sentry\\\\Dsn\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getEnableTracing\\(\\) should return bool\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -147,6 +152,16 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpTimeout\\(\\) should return float but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreExceptions\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreTransactions\\(\\) should return array\\<string\\> but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -216,7 +231,12 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampleRate\\(\\) should return float but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getTracePropagationTargets\\(\\) should return array\\<string\\>\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampleRate\\(\\) should return float\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -336,12 +356,12 @@ parameters:
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$username of method Sentry\\\\UserDataBag\\:\\:setUsername\\(\\) expects string\\|null, mixed given\\.$#"
+			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
+			message: "#^Parameter \\#1 \\$username of method Sentry\\\\UserDataBag\\:\\:setUsername\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
 
@@ -369,4 +389,3 @@ parameters:
 			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:startTransaction\\(\\) invoked with 2 parameters, 1 required\\.$#"
 			count: 1
 			path: src/functions.php
-

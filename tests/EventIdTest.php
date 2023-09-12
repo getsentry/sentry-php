@@ -27,7 +27,7 @@ final class EventIdTest extends TestCase
         new EventId($value);
     }
 
-    public function constructorThrowsOnInvalidValueDataProvider(): \Generator
+    public static function constructorThrowsOnInvalidValueDataProvider(): \Generator
     {
         yield 'Value too long' => ['566e3688a61d4bc888951642d6f14a199'];
         yield 'Value too short' => ['566e3688a61d4bc888951642d6f14a1'];

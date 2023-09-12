@@ -44,7 +44,7 @@ final class ModulesIntegrationTest extends TestCase
         });
     }
 
-    public function invokeDataProvider(): \Generator
+    public static function invokeDataProvider(): \Generator
     {
         yield [
             false,

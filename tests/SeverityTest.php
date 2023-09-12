@@ -33,7 +33,7 @@ final class SeverityTest extends TestCase
         $this->assertSame($expectedStringRepresentation, (string) $severity);
     }
 
-    public function constantsDataProvider(): array
+    public static function constantsDataProvider(): array
     {
         return [
             [Severity::debug(), 'debug'],
@@ -62,7 +62,7 @@ final class SeverityTest extends TestCase
         $this->assertSame($expectedSeverity, (string) Severity::fromError($errorLevel));
     }
 
-    public function levelsDataProvider(): array
+    public static function levelsDataProvider(): array
     {
         return [
             // Warning

@@ -10,6 +10,7 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionMetadata;
+use Sentry\Tracing\TransactionSource;
 use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class TransactionContextTest extends TestCase
@@ -20,6 +21,7 @@ final class TransactionContextTest extends TestCase
     {
         $transactionContext = new TransactionContext();
         $transactionMetadata = new TransactionMetadata();
+        $transactionSource = TransactionSource::custom();
 
         $this->assertSame('<unlabeled transaction>', $transactionContext->getName());
         $this->assertNull($transactionContext->getParentSampled());
@@ -27,10 +29,12 @@ final class TransactionContextTest extends TestCase
         $transactionContext->setName('foo');
         $transactionContext->setParentSampled(true);
         $transactionContext->setMetadata($transactionMetadata);
+        $transactionContext->setSource($transactionSource);
 
         $this->assertSame('foo', $transactionContext->getName());
         $this->assertTrue($transactionContext->getParentSampled());
         $this->assertSame($transactionMetadata, $transactionContext->getMetadata());
+        $this->assertSame($transactionSource, $transactionContext->getMetadata()->getSource());
     }
 
     /**
@@ -47,7 +51,7 @@ final class TransactionContextTest extends TestCase
         $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
     }
 
-    public function fromSentryTraceDataProvider(): iterable
+    public static function fromSentryTraceDataProvider(): iterable
     {
         yield [
             '0',
@@ -86,7 +90,7 @@ final class TransactionContextTest extends TestCase
     }
 
     /**
-     * @dataProvider fromHeadersDataProvider
+     * @dataProvider tracingDataProvider
      */
     public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
     {
@@ -99,7 +103,21 @@ final class TransactionContextTest extends TestCase
         $this->assertSame($expectedDynamicSamplingContextFrozen, $spanContext->getMetadata()->getDynamicSamplingContext()->isFrozen());
     }
 
-    public function fromHeadersDataProvider(): iterable
+    /**
+     * @dataProvider tracingDataProvider
+     */
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
+    {
+        $spanContext = TransactionContext::fromEnvironment($sentryTrace, $baggage);
+
+        $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
+        $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
+        $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
+        $this->assertInstanceOf($expectedDynamicSamplingContextClass, $spanContext->getMetadata()->getDynamicSamplingContext());
+        $this->assertSame($expectedDynamicSamplingContextFrozen, $spanContext->getMetadata()->getDynamicSamplingContext()->isFrozen());
+    }
+
+    public static function tracingDataProvider(): iterable
     {
         yield [
             '0',

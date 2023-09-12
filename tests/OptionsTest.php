@@ -84,7 +84,7 @@ final class OptionsTest extends TestCase
         $this->assertEquals($value, $options->$getterMethod());
     }
 
-    public function optionsDataProvider(): \Generator
+    public static function optionsDataProvider(): \Generator
     {
         yield [
             'send_attempts',
@@ -123,10 +123,37 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'traces_sample_rate',
+            null,
+            'getTracesSampleRate',
+            'setTracesSampleRate',
+            null,
+            null,
+        ];
+
+        yield [
             'traces_sampler',
             static function (): void {},
             'getTracesSampler',
             'setTracesSampler',
+            null,
+            null,
+        ];
+
+        yield [
+            'enable_tracing',
+            true,
+            'getEnableTracing',
+            'setEnableTracing',
+            null,
+            null,
+        ];
+
+        yield [
+            'profiles_sample_rate',
+            0.5,
+            'getProfilesSampleRate',
+            'setProfilesSampleRate',
             null,
             null,
         ];
@@ -217,8 +244,8 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getTags',
             'setTags',
-            'Method Sentry\\Options::getTags() is deprecated since version 3.2 and will be removed in 4.0.',
-            'Method Sentry\\Options::setTags() is deprecated since version 3.2 and will be removed in 4.0. Use Sentry\\Scope::setTags() instead.',
+            null,
+            null,
         ];
 
         yield [
@@ -240,10 +267,46 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'ignore_exceptions',
+            ['foo', 'bar'],
+            'getIgnoreExceptions',
+            'setIgnoreExceptions',
+            null,
+            null,
+        ];
+
+        yield [
+            'ignore_transactions',
+            ['foo', 'bar'],
+            'getIgnoreTransactions',
+            'setIgnoreTransactions',
+            null,
+            null,
+        ];
+
+        yield [
             'before_send',
             static function (): void {},
             'getBeforeSendCallback',
             'setBeforeSendCallback',
+            null,
+            null,
+        ];
+
+        yield [
+            'before_send_transaction',
+            static function (): void {},
+            'getBeforeSendTransactionCallback',
+            'setBeforeSendTransactionCallback',
+            null,
+            null,
+        ];
+
+        yield [
+            'trace_propagation_targets',
+            ['www.example.com'],
+            'getTracePropagationTargets',
+            'setTracePropagationTargets',
             null,
             null,
         ];
@@ -358,7 +421,7 @@ final class OptionsTest extends TestCase
         $this->assertEquals($expectedDsnAsObject, $options->getDsn());
     }
 
-    public function dsnOptionDataProvider(): \Generator
+    public static function dsnOptionDataProvider(): \Generator
     {
         yield [
             'http://public:secret@example.com/sentry/1',
@@ -427,7 +490,7 @@ final class OptionsTest extends TestCase
         new Options(['dsn' => $value]);
     }
 
-    public function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
+    public static function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
     {
         yield [
             true,
@@ -494,7 +557,7 @@ final class OptionsTest extends TestCase
         $this->assertSame($value, $options->getMaxBreadcrumbs());
     }
 
-    public function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
+    public static function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
             [false, -1],
@@ -522,7 +585,7 @@ final class OptionsTest extends TestCase
         new Options(['context_lines' => $value]);
     }
 
-    public function contextLinesOptionValidatesInputValueDataProvider(): \Generator
+    public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
     {
         yield [
             -1,
@@ -587,5 +650,32 @@ final class OptionsTest extends TestCase
         error_reporting($errorReportingBeforeTest);
 
         $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
+    }
+
+    /**
+     * @dataProvider enableTracingDataProvider
+     */
+    public function testEnableTracing(?bool $enabledTracing, ?float $tracesSampleRate, $expectedResult): void
+    {
+        $options = new Options([
+            'enable_tracing' => $enabledTracing,
+            'traces_sample_rate' => $tracesSampleRate,
+        ]);
+
+        $this->assertSame($expectedResult, $options->isTracingEnabled());
+    }
+
+    public static function enableTracingDataProvider(): array
+    {
+        return [
+            [null, null, false],
+            [null, 1.0, true],
+            [false, 1.0, false],
+            [true, 1.0, true],
+            [null, 0.0, true], // We use this as - it's configured but turned off
+            [false, 0.0, false],
+            [true, 0.0, true], // We use this as - it's configured but turned off
+            [true, null, true],
+        ];
     }
 }

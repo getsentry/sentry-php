@@ -100,7 +100,7 @@ abstract class AbstractSerializer
             }
 
             try {
-                if (\is_callable($value)) {
+                if (@\is_callable($value)) {
                     return $this->serializeCallable($value);
                 }
             } catch (\Throwable $exception) {
@@ -241,7 +241,20 @@ abstract class AbstractSerializer
         }
 
         if (\is_object($value)) {
-            return 'Object ' . \get_class($value);
+            $reflection = new \ReflectionObject($value);
+
+            $objectId = null;
+            if ($reflection->hasProperty('id') && ($idProperty = $reflection->getProperty('id'))->isPublic()) {
+                $objectId = $idProperty->getValue($value);
+            } elseif ($reflection->hasMethod('getId') && ($getIdMethod = $reflection->getMethod('getId'))->isPublic()) {
+                try {
+                    $objectId = $getIdMethod->invoke($value);
+                } catch (\Throwable $e) {
+                    // Do nothing on purpose
+                }
+            }
+
+            return 'Object ' . $reflection->getName() . (is_scalar($objectId) ? '(#' . $objectId . ')' : '');
         }
 
         if (\is_resource($value)) {

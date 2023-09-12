@@ -7,7 +7,11 @@ on:
       - master
       - develop
       - release/**
-
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   tests:
     name: Tests
@@ -31,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -46,10 +50,11 @@ jobs:
 
       - name: Determine Composer cache directory
         id: composer-cache
-        run: echo "::set-output name=directory::$(composer config cache-dir)"
+        run: echo "directory=$(composer config cache-dir)" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
@@ -57,11 +62,7 @@ jobs:
 
       - name: Install highest dependencies
         run: composer update --no-progress --no-interaction --prefer-dist
-        if: ${{ matrix.dependencies == 'highest' && matrix.php != '8.2' }}
-
-      - name: Install highest PHP 8.2 dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist --ignore-platform-req=php
-        if: ${{ matrix.dependencies == 'highest' && matrix.php == '8.2' }}
+        if: ${{ matrix.dependencies == 'highest' }}
 
       - name: Restrict lowest Symfony version on PHP 8.1 & 8.2
         run: composer require symfony/options-resolver:^4.4.30 --no-update
@@ -69,11 +70,7 @@ jobs:
 
       - name: Install lowest dependencies
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
-        if: ${{ matrix.dependencies == 'lowest' && matrix.php != '8.2' }}
-
-      - name: Install lowest PHP 8.2 dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --ignore-platform-req=php
-        if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.2' }}
+        if: ${{ matrix.dependencies == 'lowest' }}
 
       - name: Run tests
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
@@ -83,4 +80,4 @@ jobs:
 
       - name: Check benchmarks
         run: vendor/bin/phpbench run --revs=1 --iterations=1
-        if: ${{ matrix.dependencies == 'highest' && matrix.php == '8.1' }}
+        if: ${{ matrix.dependencies == 'highest' && matrix.php == '8.2' }}

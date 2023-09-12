@@ -39,7 +39,7 @@ final class BreadcrumbHandlerTest extends TestCase
     /**
      * @return iterable<LogRecord|array{array<string, mixed>, Breadcrumb}>
      */
-    public function handleDataProvider(): iterable
+    public static function handleDataProvider(): iterable
     {
         $defaultBreadcrumb = new Breadcrumb(
             Breadcrumb::LEVEL_DEBUG,

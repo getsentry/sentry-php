@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Sentry\HttpClient;
 
 use GuzzleHttp\RequestOptions as GuzzleHttpClientOptions;
-use Http\Adapter\Guzzle6\Client as GuzzleHttpClient;
+use Http\Adapter\Guzzle6\Client as Guzzle6HttpClient;
+use Http\Adapter\Guzzle7\Client as Guzzle7HttpClient;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\DecoderPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
@@ -54,16 +55,16 @@ final class HttpClientFactory implements HttpClientFactoryInterface
     /**
      * Constructor.
      *
-     * @param UriFactoryInterface           $uriFactory      The PSR-7 URI factory
-     * @param ResponseFactoryInterface      $responseFactory The PSR-7 response factory
+     * @param UriFactoryInterface|null      $uriFactory      The PSR-7 URI factory
+     * @param ResponseFactoryInterface|null $responseFactory The PSR-7 response factory
      * @param StreamFactoryInterface        $streamFactory   The PSR-17 stream factory
      * @param HttpAsyncClientInterface|null $httpClient      The HTTP client
      * @param string                        $sdkIdentifier   The SDK identifier
      * @param string                        $sdkVersion      The SDK version
      */
     public function __construct(
-        UriFactoryInterface $uriFactory,
-        ResponseFactoryInterface $responseFactory,
+        ?UriFactoryInterface $uriFactory,
+        ?ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
         ?HttpAsyncClientInterface $httpClient,
         string $sdkIdentifier,
@@ -114,6 +115,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             $symfonyConfig = [
                 'timeout' => $options->getHttpConnectTimeout(),
                 'max_duration' => $options->getHttpTimeout(),
+                'http_version' => $options->isCompressionEnabled() ? '1.1' : null,
             ];
 
             if (null !== $options->getHttpProxy()) {
@@ -123,7 +125,7 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             return new SymfonyHttplugClient(SymfonyHttpClient::create($symfonyConfig));
         }
 
-        if (class_exists(GuzzleHttpClient::class)) {
+        if (class_exists(Guzzle7HttpClient::class) || class_exists(Guzzle6HttpClient::class)) {
             $guzzleConfig = [
                 GuzzleHttpClientOptions::TIMEOUT => $options->getHttpTimeout(),
                 GuzzleHttpClientOptions::CONNECT_TIMEOUT => $options->getHttpConnectTimeout(),
@@ -133,12 +135,17 @@ final class HttpClientFactory implements HttpClientFactoryInterface
                 $guzzleConfig[GuzzleHttpClientOptions::PROXY] = $options->getHttpProxy();
             }
 
-            return GuzzleHttpClient::createWithConfig($guzzleConfig);
+            if (class_exists(Guzzle7HttpClient::class)) {
+                return Guzzle7HttpClient::createWithConfig($guzzleConfig);
+            }
+
+            return Guzzle6HttpClient::createWithConfig($guzzleConfig);
         }
 
         if (class_exists(CurlHttpClient::class)) {
             $curlConfig = [
                 \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
+                \CURLOPT_HTTP_VERSION => $options->isCompressionEnabled() ? \CURL_HTTP_VERSION_1_1 : \CURL_HTTP_VERSION_NONE,
                 \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
             ];
 
