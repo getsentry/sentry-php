@@ -7,7 +7,6 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
-use Sentry\Transport\TransportFactoryInterface;
 
 /**
  * A configurable builder for Client objects.
@@ -63,15 +62,6 @@ interface ClientBuilderInterface
      * @return $this
      */
     public function setLogger(LoggerInterface $logger): ClientBuilderInterface;
-
-    /**
-     * Sets the transport factory.
-     *
-     * @param TransportFactoryInterface $transportFactory The transport factory
-     *
-     * @return $this
-     */
-    public function setTransportFactory(TransportFactoryInterface $transportFactory): ClientBuilderInterface;
 
     /**
      * Sets the SDK identifier to be passed onto {@see Event} and HTTP User-Agent header.

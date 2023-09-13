@@ -15,10 +15,9 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Options;
-use Sentry\Response;
-use Sentry\ResponseStatus;
 use Sentry\SentrySdk;
-use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
@@ -29,22 +28,17 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$transportFactory = new class implements TransportFactoryInterface {
-    public function create(Options $options): TransportInterface
+$transport = new class implements TransportInterface {
+    public function send(Event $event): Result
     {
-        return new class implements TransportInterface {
-            public function send(Event $event): PromiseInterface
-            {
-                echo 'Transport called' . PHP_EOL;
+        echo 'Transport called' . PHP_EOL;
 
-                return new FulfilledPromise(new Response(ResponseStatus::success()));
-            }
+        return new Result(ResultStatus::success());
+    }
 
-            public function close(?int $timeout = null): PromiseInterface
-            {
-                return new FulfilledPromise(true);
-            }
-        };
+    public function close(?int $timeout = null): Result
+    {
+        return new Result(ResultStatus::success());
     }
 };
 
@@ -57,7 +51,7 @@ $options = new Options([
 ]);
 
 $client = (new ClientBuilder($options))
-    ->setTransportFactory($transportFactory)
+    ->setTransport($transport)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);

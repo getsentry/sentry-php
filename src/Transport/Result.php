@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Sentry;
+namespace Sentry\Transport;
+
+use Sentry\Event;
 
 /**
  * This class contains the details of the sending operation of an event, e.g.
  * if it was sent successfully or if it was skipped because of some reason.
  */
-final class Response
+class Result
 {
     /**
-     * @var ResponseStatus The status of the sending operation of the event
+     * @var ResultStatus The status of the sending operation of the event
      */
     private $status;
 
@@ -21,7 +23,7 @@ final class Response
      */
     private $event;
 
-    public function __construct(ResponseStatus $status, ?Event $event = null)
+    public function __construct(ResultStatus $status, ?Event $event = null)
     {
         $this->status = $status;
         $this->event = $event;
@@ -30,7 +32,7 @@ final class Response
     /**
      * Gets the status of the sending operation of the event.
      */
-    public function getStatus(): ResponseStatus
+    public function getStatus(): ResultStatus
     {
         return $this->status;
     }

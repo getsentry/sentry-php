@@ -10,9 +10,6 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
-use Sentry\Transport\HttpTransport;
-use Sentry\Transport\NullTransport;
-use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
@@ -22,24 +19,6 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder = new ClientBuilder($options);
 
         $this->assertSame($options, $clientBuilder->getOptions());
-    }
-
-    public function testHttpTransportIsUsedWhenServerIsConfigured(): void
-    {
-        $clientBuilder = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/sentry/1']);
-
-        $transport = $this->getTransport($clientBuilder->getClient());
-
-        $this->assertInstanceOf(HttpTransport::class, $transport);
-    }
-
-    public function testNullTransportIsUsedWhenNoServerIsConfigured(): void
-    {
-        $clientBuilder = new ClientBuilder();
-
-        $transport = $this->getTransport($clientBuilder->getClient());
-
-        $this->assertInstanceOf(NullTransport::class, $transport);
     }
 
     public function testClientBuilderFallbacksToDefaultSdkIdentifierAndVersion(): void
@@ -90,17 +69,6 @@ final class ClientBuilderTest extends TestCase
             new ClientBuilder(new Options()),
             ClientBuilder::create([])
         );
-    }
-
-    private function getTransport(Client $client): TransportInterface
-    {
-        $property = new \ReflectionProperty(Client::class, 'transport');
-
-        $property->setAccessible(true);
-        $value = $property->getValue($client);
-        $property->setAccessible(false);
-
-        return $value;
     }
 }
 

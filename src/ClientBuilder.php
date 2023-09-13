@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Http\Discovery\Psr17FactoryDiscovery;
 use Psr\Log\LoggerInterface;
-use Sentry\HttpClient\HttpClientFactory;
+use Sentry\HttpClient\HttpClient;
+use Sentry\HttpClient\HttpClientInterface;
+use Sentry\Serializer\PayloadSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
-use Sentry\Transport\DefaultTransportFactory;
-use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -26,14 +26,14 @@ final class ClientBuilder implements ClientBuilderInterface
     private $options;
 
     /**
-     * @var TransportFactoryInterface|null The transport factory
-     */
-    private $transportFactory;
-
-    /**
-     * @var TransportInterface|null The transport
+     * @var TransportInterface The transport
      */
     private $transport;
+
+    /**
+     * @var HttpClientInterface The HTTP client
+     */
+    private $httpClient;
 
     /**
      * @var SerializerInterface|null The serializer to be injected in the client
@@ -68,6 +68,13 @@ final class ClientBuilder implements ClientBuilderInterface
     public function __construct(Options $options = null)
     {
         $this->options = $options ?? new Options();
+
+        $this->httpClient = $this->options->getHttpClient() ?? new HttpClient($this->options, $this->sdkIdentifier, $this->sdkVersion);
+        $this->transport = $this->options->getTransport() ?? new HttpTransport(
+            $this->httpClient,
+            new PayloadSerializer($this->options),
+            $this->logger
+        );
     }
 
     /**
@@ -136,12 +143,26 @@ final class ClientBuilder implements ClientBuilderInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setTransportFactory(TransportFactoryInterface $transportFactory): ClientBuilderInterface
+    public function getTransport(): TransportInterface
     {
-        $this->transportFactory = $transportFactory;
+        return $this->transport;
+    }
+
+    public function setTransport(TransportInterface $transport): ClientBuilderInterface
+    {
+        $this->transport = $transport;
+
+        return $this;
+    }
+
+    public function getHttpClient(): HttpClientInterface
+    {
+        return $this->httpClient;
+    }
+
+    public function setHttpClient(HttpClientInterface $httpClient): ClientBuilderInterface
+    {
+        $this->httpClient = $httpClient;
 
         return $this;
     }
@@ -151,45 +172,6 @@ final class ClientBuilder implements ClientBuilderInterface
      */
     public function getClient(): ClientInterface
     {
-        $this->transport = $this->transport ?? $this->createTransportInstance();
-
         return new Client($this->options, $this->transport, $this->sdkIdentifier, $this->sdkVersion, $this->serializer, $this->representationSerializer, $this->logger);
-    }
-
-    /**
-     * Creates a new instance of the transport mechanism.
-     */
-    private function createTransportInstance(): TransportInterface
-    {
-        if (null !== $this->transport) {
-            return $this->transport;
-        }
-
-        $transportFactory = $this->transportFactory ?? $this->createDefaultTransportFactory();
-
-        return $transportFactory->create($this->options);
-    }
-
-    /**
-     * Creates a new instance of the {@see DefaultTransportFactory} factory.
-     */
-    private function createDefaultTransportFactory(): DefaultTransportFactory
-    {
-        $streamFactory = Psr17FactoryDiscovery::findStreamFactory();
-        $httpClientFactory = new HttpClientFactory(
-            null,
-            null,
-            $streamFactory,
-            null,
-            $this->sdkIdentifier,
-            $this->sdkVersion
-        );
-
-        return new DefaultTransportFactory(
-            $streamFactory,
-            Psr17FactoryDiscovery::findRequestFactory(),
-            $httpClientFactory,
-            $this->logger
-        );
     }
 }

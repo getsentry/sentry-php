@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -648,6 +650,30 @@ final class Options
         return $this->options['integrations'];
     }
 
+    public function setTransport(TransportInterface $transport): void
+    {
+        $options = array_merge($this->options, ['transport' => $transport]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    public function getTransport(): ?TransportInterface
+    {
+        return $this->options['transport'];
+    }
+
+    public function setHttpClient(HttpClientInterface $httpClient): void
+    {
+        $options = array_merge($this->options, ['http_client' => $httpClient]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    public function getHttpClient(): ?HttpClientInterface
+    {
+        return $this->options['http_client'];
+    }
+
     /**
      * Should default PII be sent by default.
      */
@@ -724,6 +750,18 @@ final class Options
     public function setHttpProxy(?string $httpProxy): void
     {
         $options = array_merge($this->options, ['http_proxy' => $httpProxy]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
+    public function getHttpProxyAuthentication(): ?string
+    {
+        return $this->options['http_proxy_authentication'];
+    }
+
+    public function setHttpProxyAuthentication(?string $httpProxy): void
+    {
+        $options = array_merge($this->options, ['http_proxy_authentication' => $httpProxy]);
 
         $this->options = $this->resolver->resolve($options);
     }
@@ -925,7 +963,10 @@ final class Options
             'in_app_include' => [],
             'send_default_pii' => false,
             'max_value_length' => 1024,
+            'transport' => null,
+            'http_client' => null,
             'http_proxy' => null,
+            'http_proxy_authentication' => null,
             'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
             'capture_silenced_errors' => false,
@@ -963,7 +1004,10 @@ final class Options
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
+        $resolver->setAllowedTypes('transport', ['null', 'Sentry\\Transport\\TransportInterface']);
+        $resolver->setAllowedTypes('http_client', ['null', 'Sentry\\HttpCLient\\HttpCLientInterface']);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
+        $resolver->setAllowedTypes('http_proxy_authentication', ['null', 'string']);
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('http_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');

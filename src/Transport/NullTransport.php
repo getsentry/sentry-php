@@ -4,32 +4,23 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
-use GuzzleHttp\Promise\FulfilledPromise;
-use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Event;
-use Sentry\Response;
-use Sentry\ResponseStatus;
 
-/**
- * This transport fakes the sending of events by just ignoring them.
- *
- * @author Stefano Arlandini <sarlandini@alice.it>
- */
 final class NullTransport implements TransportInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function send(Event $event): PromiseInterface
+    public function send(Event $event): Result
     {
-        return new FulfilledPromise(new Response(ResponseStatus::skipped(), $event));
+        return new Result(ResultStatus::skipped(), $event);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close(?int $timeout = null): PromiseInterface
+    public function close(?int $timeout = null): Result
     {
-        return new FulfilledPromise(true);
+        return new Result(ResultStatus::success());
     }
 }
