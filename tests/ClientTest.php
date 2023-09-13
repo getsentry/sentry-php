@@ -26,6 +26,7 @@ use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
+use Sentry\Tests\Fixtures\code\CustomException;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
 use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
@@ -592,6 +593,29 @@ final class ClientTest extends TestCase
 
         $options = [
             'ignore_exceptions' => [\Exception::class],
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureException($exception);
+    }
+
+    public function testProcessEventDiscardsEventWhenParentHierarchyOfIgnoreExceptionsMatches(): void
+    {
+        $exception = new CustomException('Some foo error');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_exceptions' => [\RuntimeException::class],
         ];
 
         $client = ClientBuilder::create($options)

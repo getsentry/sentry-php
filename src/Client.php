@@ -327,13 +327,15 @@ final class Client implements ClientInterface
             }
 
             foreach ($exceptions as $exception) {
-                if (\in_array($exception->getType(), $this->options->getIgnoreExceptions(), true)) {
-                    $this->logger->info(
-                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
-                        ['event' => $event]
-                    );
+                foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
+                    if (is_a($exception->getType(), $ignoredException, true)) {
+                        $this->logger->info(
+                            'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                            ['event' => $event]
+                        );
 
-                    return null;
+                        return null;
+                    }
                 }
             }
         }
