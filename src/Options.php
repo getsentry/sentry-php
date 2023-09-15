@@ -977,13 +977,6 @@ final class Options
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
-        $resolver->setNormalizer('tags', static function (SymfonyOptions $options, array $value): array {
-            if (!empty($value)) {
-                @trigger_error('The option "tags" is deprecated since version 3.2 and will be removed in 4.0. Either set the tags on the scope or on the event.', \E_USER_DEPRECATED);
-            }
-
-            return $value;
-        });
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
