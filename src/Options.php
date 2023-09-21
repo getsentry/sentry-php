@@ -808,6 +808,18 @@ final class Options
         $this->options = $this->resolver->resolve($options);
     }
 
+    public function getHttpSslVerifyPeer(): bool
+    {
+        return $this->options['http_ssl_verify_peer'];
+    }
+
+    public function setHttpSslVerifyPeer(bool $httpSslVerifyPeer): void
+    {
+        $options = array_merge($this->options, ['http_ssl_verify_peer' => $httpSslVerifyPeer]);
+
+        $this->options = $this->resolver->resolve($options);
+    }
+
     /**
      * Gets whether the silenced errors should be captured or not.
      *
@@ -969,6 +981,7 @@ final class Options
             'http_proxy_authentication' => null,
             'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
+            'http_ssl_verify_peer' => true,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],

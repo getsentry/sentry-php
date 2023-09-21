@@ -44,16 +44,11 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
         curl_setopt($curlHandle, \CURLOPT_TIMEOUT, $this->options->getHttpTimeout());
         curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT, $this->options->getHttpConnectTimeout());
-        curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($curlHandle, \CURLOPT_ENCODING, '');
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
         curl_setopt($curlHandle, \CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curlHandle, \CURLOPT_HEADER, true);
-        /**
-         * @TODO(michi) make this configurable
-         */
-        curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, true);
         /**
          * @TODO(michi) make this configurable
          *
@@ -62,6 +57,11 @@ class HttpClient implements HttpClientInterface
          * are all lowercase.
          */
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
+
+        $httpSslVerifyPeer = $this->options->getHttpSslVerifyPeer();
+        if ($httpSslVerifyPeer) {
+            curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, true);
+        }
 
         $httpProxy = $this->options->getHttpProxy();
         if (null !== $httpProxy) {
