@@ -42,6 +42,7 @@ class HttpTransport implements TransportInterface
     private $rateLimiter;
 
     /**
+     * @param Options                    $options           The options
      * @param HttpClientInterface        $httpClient        The HTTP client
      * @param PayloadSerializerInterface $payloadSerializer The event serializer
      * @param LoggerInterface|null       $logger            An instance of a PSR-3 logger
