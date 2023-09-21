@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Response;
+use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\ResultStatus;
@@ -55,6 +56,7 @@ final class HttpTransportTest extends TestCase
             ->willReturn(new Response($httpStatusCode, [], ''));
 
         $transport = new HttpTransport(
+            new Options(),
             $this->httpClient,
             $this->payloadSerializer
         );
@@ -115,6 +117,7 @@ final class HttpTransportTest extends TestCase
             ->will($this->throwException($exception));
 
         $transport = new HttpTransport(
+            new Options(),
             $this->httpClient,
             $this->payloadSerializer,
             $logger
@@ -153,6 +156,7 @@ final class HttpTransportTest extends TestCase
             ->willReturn(new Response(429, ['Retry-After' => '60'], ''));
 
         $transport = new HttpTransport(
+            new Options(),
             $this->httpClient,
             $this->payloadSerializer,
             $logger
@@ -172,6 +176,7 @@ final class HttpTransportTest extends TestCase
     public function testClose(): void
     {
         $transport = new HttpTransport(
+            new Options(),
             $this->createMock(HttpClientInterface::class),
             $this->createMock(PayloadSerializerInterface::class)
         );

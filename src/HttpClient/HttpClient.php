@@ -5,15 +5,11 @@ declare(strict_types=1);
 namespace Sentry\HttpClient;
 
 use Sentry\Client;
+use Sentry\Dsn;
 use Sentry\Options;
 
 class HttpClient implements HttpClientInterface
 {
-    /**
-     * @var Options
-     */
-    protected $options;
-
     /**
      * @var string The Sentry SDK identifier
      */
@@ -24,26 +20,25 @@ class HttpClient implements HttpClientInterface
      */
     protected $sdkVersion;
 
-    public function __construct(Options $options, string $sdkIdentifier, string $sdkVersion)
+    public function __construct(string $sdkIdentifier, string $sdkVersion)
     {
-        $this->options = $options;
         $this->sdkIdentifier = $sdkIdentifier;
         $this->sdkVersion = $sdkVersion;
     }
 
-    public function sendRequest(string $requestData): Response
+    public function sendRequest(string $requestData, Options $options): Response
     {
-        $dsn = $this->options->getDsn();
+        $dsn = $options->getDsn();
         if (null === $dsn) {
             throw new \RuntimeException('The DSN option must be set to use the HttpClient.');
         }
 
         $curlHandle = curl_init();
         curl_setopt($curlHandle, \CURLOPT_URL, $dsn->getEnvelopeApiEndpointUrl());
-        curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, $this->getRequestHeaders());
+        curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, $this->getRequestHeaders($dsn));
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
-        curl_setopt($curlHandle, \CURLOPT_TIMEOUT, $this->options->getHttpTimeout());
-        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT, $this->options->getHttpConnectTimeout());
+        curl_setopt($curlHandle, \CURLOPT_TIMEOUT, $$options->getHttpTimeout());
+        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT, $options->getHttpConnectTimeout());
         curl_setopt($curlHandle, \CURLOPT_ENCODING, '');
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
@@ -58,17 +53,17 @@ class HttpClient implements HttpClientInterface
          */
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 
-        $httpSslVerifyPeer = $this->options->getHttpSslVerifyPeer();
+        $httpSslVerifyPeer = $options->getHttpSslVerifyPeer();
         if ($httpSslVerifyPeer) {
             curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, true);
         }
 
-        $httpProxy = $this->options->getHttpProxy();
+        $httpProxy = $options->getHttpProxy();
         if (null !== $httpProxy) {
             curl_setopt($curlHandle, \CURLOPT_PROXY, $httpProxy);
         }
 
-        $httpProxyAuthentication = $this->options->getHttpProxyAuthentication();
+        $httpProxyAuthentication = $options->getHttpProxyAuthentication();
         if (null !== $httpProxyAuthentication) {
             curl_setopt($curlHandle, \CURLOPT_PROXYUSERPWD, $httpProxyAuthentication);
         }
@@ -100,16 +95,11 @@ class HttpClient implements HttpClientInterface
     /**
      * @return string[]
      */
-    protected function getRequestHeaders(): array
+    protected function getRequestHeaders(Dsn $dsn): array
     {
         $headers = [
             'Content-Type' => 'application/x-sentry-envelope',
         ];
-
-        $dsn = $this->options->getDsn();
-        if (null === $dsn) {
-            return $headers;
-        }
 
         $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,

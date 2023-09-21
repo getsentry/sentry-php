@@ -352,7 +352,7 @@ final class OptionsTest extends TestCase
 
         yield [
             'transport',
-            new HttpTransport(new HttpClient(new Options(), 'foo', 'bar'), new PayloadSerializer(new Options())),
+            new HttpTransport(new Options(), new HttpClient('foo', 'bar'), new PayloadSerializer(new Options())),
             'getTransport',
             'setTransport',
             null,
@@ -361,7 +361,7 @@ final class OptionsTest extends TestCase
 
         yield [
             'http_client',
-            new HttpClient(new Options(), 'foo', 'bar'),
+            new HttpClient('foo', 'bar'),
             'getHttpClient',
             'setHttpClient',
             null,

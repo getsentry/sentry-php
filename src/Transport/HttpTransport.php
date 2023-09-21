@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
+use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
 
 /**
@@ -15,6 +16,11 @@ use Sentry\Serializer\PayloadSerializerInterface;
  */
 class HttpTransport implements TransportInterface
 {
+    /**
+     * @var Options
+     */
+    private $options;
+
     /**
      * @var HttpClientInterface The HTTP client
      */
@@ -41,10 +47,12 @@ class HttpTransport implements TransportInterface
      * @param LoggerInterface|null       $logger            An instance of a PSR-3 logger
      */
     public function __construct(
+        Options $options,
         HttpClientInterface $httpClient,
         PayloadSerializerInterface $payloadSerializer,
         ?LoggerInterface $logger = null
     ) {
+        $this->options = $options;
         $this->httpClient = $httpClient;
         $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
@@ -67,7 +75,7 @@ class HttpTransport implements TransportInterface
         }
 
         try {
-            $response = $this->httpClient->sendRequest($this->payloadSerializer->serialize($event));
+            $response = $this->httpClient->sendRequest($this->payloadSerializer->serialize($event), $this->options);
         } catch (\Throwable $exception) {
             $this->logger->error(
                 sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),

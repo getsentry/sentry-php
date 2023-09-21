@@ -69,8 +69,9 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->options = $options ?? new Options();
 
-        $this->httpClient = $this->options->getHttpClient() ?? new HttpClient($this->options, $this->sdkIdentifier, $this->sdkVersion);
+        $this->httpClient = $this->options->getHttpClient() ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
         $this->transport = $this->options->getTransport() ?? new HttpTransport(
+            $this->options,
             $this->httpClient,
             new PayloadSerializer($this->options),
             $this->logger

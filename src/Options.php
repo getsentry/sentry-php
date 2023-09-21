@@ -1017,8 +1017,8 @@ final class Options
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
-        $resolver->setAllowedTypes('transport', ['null', 'Sentry\\Transport\\TransportInterface']);
-        $resolver->setAllowedTypes('http_client', ['null', 'Sentry\\HttpCLient\\HttpCLientInterface']);
+        $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
+        $resolver->setAllowedTypes('http_client', ['null', HttpCLientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('http_proxy_authentication', ['null', 'string']);
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
