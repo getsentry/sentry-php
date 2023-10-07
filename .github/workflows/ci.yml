@@ -65,10 +65,6 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist
         if: ${{ matrix.dependencies == 'highest' }}
 
-      - name: Restrict lowest Symfony version on PHP 8.1 & 8.2
-        run: composer require symfony/options-resolver:^4.4.30 --no-update
-        if: ${{ matrix.dependencies == 'lowest' && matrix.php == '8.1' || matrix.php == '8.2' }}
-
       - name: Install lowest dependencies
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
         if: ${{ matrix.dependencies == 'lowest' }}
