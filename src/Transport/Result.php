@@ -10,7 +10,7 @@ use Sentry\Event;
  * This class contains the details of the sending operation of an event, e.g.
  * if it was sent successfully or if it was skipped because of some reason.
  */
-class Result
+final class Result
 {
     /**
      * @var ResultStatus The status of the sending operation of the event
