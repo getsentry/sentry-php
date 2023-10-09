@@ -14,11 +14,11 @@ use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
 
 /**
- * The default implementation of {@link ClientBuilderInterface}.
+ * A configurable builder for Client objects.
  *
- * @author Stefano Arlandini <sarlandini@alice.it>
+ * @internal
  */
-final class ClientBuilder implements ClientBuilderInterface
+final class ClientBuilder
 {
     /**
      * @var Options The client options
@@ -79,65 +79,47 @@ final class ClientBuilder implements ClientBuilderInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param array<string, mixed> $options The client options, in naked array form
      */
-    public static function create(array $options = []): ClientBuilderInterface
+    public static function create(array $options = []): ClientBuilder
     {
         return new self(new Options($options));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getOptions(): Options
     {
         return $this->options;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setSerializer(SerializerInterface $serializer): ClientBuilderInterface
+    public function setSerializer(SerializerInterface $serializer): ClientBuilder
     {
         $this->serializer = $serializer;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilderInterface
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilder
     {
         $this->representationSerializer = $representationSerializer;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setLogger(LoggerInterface $logger): ClientBuilderInterface
+    public function setLogger(LoggerInterface $logger): ClientBuilder
     {
         $this->logger = $logger;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setSdkIdentifier(string $sdkIdentifier): ClientBuilderInterface
+    public function setSdkIdentifier(string $sdkIdentifier): ClientBuilder
     {
         $this->sdkIdentifier = $sdkIdentifier;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setSdkVersion(string $sdkVersion): ClientBuilderInterface
+    public function setSdkVersion(string $sdkVersion): ClientBuilder
     {
         $this->sdkVersion = $sdkVersion;
 
@@ -149,7 +131,7 @@ final class ClientBuilder implements ClientBuilderInterface
         return $this->transport;
     }
 
-    public function setTransport(TransportInterface $transport): ClientBuilderInterface
+    public function setTransport(TransportInterface $transport): ClientBuilder
     {
         $this->transport = $transport;
 
@@ -161,18 +143,23 @@ final class ClientBuilder implements ClientBuilderInterface
         return $this->httpClient;
     }
 
-    public function setHttpClient(HttpClientInterface $httpClient): ClientBuilderInterface
+    public function setHttpClient(HttpClientInterface $httpClient): ClientBuilder
     {
         $this->httpClient = $httpClient;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClient(): ClientInterface
     {
-        return new Client($this->options, $this->transport, $this->sdkIdentifier, $this->sdkVersion, $this->serializer, $this->representationSerializer, $this->logger);
+        return new Client(
+            $this->options,
+            $this->transport,
+            $this->sdkIdentifier,
+            $this->sdkVersion,
+            $this->serializer,
+            $this->representationSerializer,
+            $this->logger
+        );
     }
 }
