@@ -8,8 +8,15 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
+use Sentry\HttpClient\HttpClient;
+use Sentry\HttpClient\HttpClientInterface;
+use Sentry\HttpClient\Response;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
+use Sentry\Transport\HttpTransport;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
+use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
@@ -70,11 +77,67 @@ final class ClientBuilderTest extends TestCase
             ClientBuilder::create([])
         );
     }
+
+    public function testDefaultHttpClientAndTransport()
+    {
+        $options = new Options();
+        $clientBuilder = new ClientBuilder($options);
+
+        $this->assertInstanceOf(HttpClient::class, $clientBuilder->getHttpClient());
+        $this->assertInstanceOf(HttpTransport::class, $clientBuilder->getTransport());
+    }
+
+    public function testSettingCustomHttpClinet()
+    {
+        $httpClient = new CustomHttpClient();
+
+        $options = new Options([
+            'http_client' => $httpClient,
+        ]);
+        $clientBuilder = new ClientBuilder($options);
+
+        $this->assertSame($httpClient, $clientBuilder->getHttpClient());
+        $this->assertInstanceOf(HttpTransport::class, $clientBuilder->getTransport());
+    }
+
+    public function testSettingCustomTransport()
+    {
+        $transport = new CustomTransport();
+
+        $options = new Options([
+            'transport' => $transport,
+        ]);
+        $clientBuilder = new ClientBuilder($options);
+
+        $this->assertInstanceOf(HttpClient::class, $clientBuilder->getHttpClient());
+        $this->assertSame($transport, $clientBuilder->getTransport());
+    }
 }
 
 final class StubIntegration implements IntegrationInterface
 {
     public function setupOnce(): void
     {
+    }
+}
+
+final class CustomHttpClient implements HttpClientInterface
+{
+    public function sendRequest(string $requestData, Options $options): Response
+    {
+        return new Response(0, [], '');
+    }
+}
+
+final class CustomTransport implements TransportInterface
+{
+    public function send(Event $event): Result
+    {
+        return new Result(ResultStatus::success());
+    }
+
+    public function close(?int $timeout = null): Result
+    {
+        return new Result(ResultStatus::success());
     }
 }
