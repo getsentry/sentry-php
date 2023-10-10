@@ -179,7 +179,7 @@ final class HttpTransportTest extends TestCase
 
         $this->httpClient->expects($this->once())
             ->method('sendRequest')
-            ->willReturn(new Response(429, ['Retry-After' => '60'], ''));
+            ->willReturn(new Response(429, ['Retry-After' => ['60']], ''));
 
         $transport = new HttpTransport(
             new Options(),

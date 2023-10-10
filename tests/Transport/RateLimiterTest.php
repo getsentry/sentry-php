@@ -60,31 +60,31 @@ final class RateLimiterTest extends TestCase
 
         yield 'Back-off using X-Sentry-Rate-Limits header with single category' => [
             Event::createEvent(),
-            new Response(429, ['X-Sentry-Rate-Limits' => '60:error:org'], ''),
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:org']], ''),
             429,
         ];
 
         yield 'Back-off using X-Sentry-Rate-Limits header with multiple categories' => [
             Event::createEvent(),
-            new Response(429, ['X-Sentry-Rate-Limits' => '60:error;transaction:org'], ''),
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:error;transaction:org']], ''),
             429,
         ];
 
         yield 'Back-off using X-Sentry-Rate-Limits header with missing categories should lock them all' => [
             Event::createEvent(),
-            new Response(429, ['X-Sentry-Rate-Limits' => '60::org'], ''),
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60::org']], ''),
             429,
         ];
 
         yield 'Back-off using Retry-After header with number-based value' => [
             Event::createEvent(),
-            new Response(429, ['Retry-After' => '60'], ''),
+            new Response(429, ['Retry-After' => ['60']], ''),
             429,
         ];
 
         yield 'Back-off using Retry-After header with date-based value' => [
             Event::createEvent(),
-            new Response(429, ['Retry-After' => 'Sun, 02 February 2022 00:01:00 GMT'], ''),
+            new Response(429, ['Retry-After' => ['Sun, 02 February 2022 00:01:00 GMT']], ''),
             429,
         ];
     }
@@ -99,7 +99,7 @@ final class RateLimiterTest extends TestCase
 
         // Events should be rate-limited for 60 seconds, but transactions should
         // still be allowed to be sent
-        $this->rateLimiter->handleResponse(Event::createEvent(), new Response(429, ['X-Sentry-Rate-Limits' => '60:error:org'], ''));
+        $this->rateLimiter->handleResponse(Event::createEvent(), new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:org']], ''));
 
         $this->assertTrue($this->rateLimiter->isRateLimited(EventType::event()));
         $this->assertFalse($this->rateLimiter->isRateLimited(EventType::transaction()));
@@ -112,7 +112,7 @@ final class RateLimiterTest extends TestCase
 
         // Both events and transactions should be rate-limited if all categories
         // are
-        $this->rateLimiter->handleResponse(Event::createTransaction(), new Response(429, ['X-Sentry-Rate-Limits' => '60:all:org'], ''));
+        $this->rateLimiter->handleResponse(Event::createTransaction(), new Response(429, ['X-Sentry-Rate-Limits' => ['60:all:org']], ''));
 
         $this->assertTrue($this->rateLimiter->isRateLimited(EventType::event()));
         $this->assertTrue($this->rateLimiter->isRateLimited(EventType::transaction()));

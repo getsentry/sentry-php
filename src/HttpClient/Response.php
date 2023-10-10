@@ -15,7 +15,7 @@ final class Response
     private $statusCode;
 
     /**
-     * @var string[] The HTTP response headers
+     * @var string[][]
      */
     private $headers;
 
@@ -25,7 +25,7 @@ final class Response
     private $error;
 
     /**
-     * @param string[] $headers
+     * @param string[][] $headers
      */
     public function __construct(int $statusCode, array $headers, string $error)
     {
@@ -44,14 +44,31 @@ final class Response
         return $this->statusCode >= 200 && $this->statusCode <= 299;
     }
 
-    public function hasHeader(string $headerName): bool
+    public function hasHeader(string $name): bool
     {
-        return \array_key_exists($headerName, $this->headers);
+        return \array_key_exists($name, $this->headers);
     }
 
-    public function getHeaderLine(string $headerName): string
+    /**
+     * @return string[]
+     */
+    public function getHeader(string $header): array
     {
-        return $this->headers[$headerName] ?? '';
+        if (!$this->hasHeader($header)) {
+            return [];
+        }
+
+        return $this->headers[$header];
+    }
+
+    public function getHeaderLine(string $name): string
+    {
+        $value = $this->getHeader($name);
+        if (empty($value)) {
+            return '';
+        }
+
+        return implode(',', $value);
     }
 
     public function getError(): string
