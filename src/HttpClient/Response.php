@@ -12,17 +12,17 @@ final class Response
     /**
      * @var int The HTTP status code
      */
-    protected $statusCode;
+    private $statusCode;
 
     /**
      * @var string[] The HTTP response headers
      */
-    protected $headers;
+    private $headers;
 
     /**
      * @var string The cURL error and error message
      */
-    protected $error;
+    private $error;
 
     /**
      * @param string[] $headers
