@@ -24,11 +24,6 @@ final class HttpTransportTest extends TestCase
     private $httpClient;
 
     /**
-     * @var MockObject&RequestFactoryInterface
-     */
-    private $requestFactory;
-
-    /**
      * @var MockObject&PayloadSerializerInterface
      */
     private $payloadSerializer;
@@ -126,6 +121,37 @@ final class HttpTransportTest extends TestCase
         $result = $transport->send($event);
 
         $this->assertSame(ResultStatus::failed(), $result->getStatus());
+    }
+
+    public function testSendFailsDueToCulrError(): void
+    {
+        $event = Event::createEvent();
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('Failed to send the event to Sentry. Reason: "cURL Error (6) Could not resolve host: example.com".', ['event' => $event]);
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn(new Response(0, [], 'cURL Error (6) Could not resolve host: example.com'));
+
+        $transport = new HttpTransport(
+            new Options(),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $logger
+        );
+
+        $result = $transport->send($event);
+
+        $this->assertSame(ResultStatus::unknown(), $result->getStatus());
     }
 
     /**
