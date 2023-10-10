@@ -8,6 +8,9 @@ use Sentry\Client;
 use Sentry\Dsn;
 use Sentry\Options;
 
+/**
+ * @internal
+ */
 class HttpClient implements HttpClientInterface
 {
     /**
@@ -45,8 +48,6 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curlHandle, \CURLOPT_HEADER, true);
         /**
-         * @TODO(michi) make this configurable
-         *
          * If we add support for CURL_HTTP_VERSION_2_0, we need
          * case-insensitive header handling, as HTTP 2.0 headers
          * are all lowercase.
