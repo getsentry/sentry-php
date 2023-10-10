@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\HttpClient;
 
-class Response
+/**
+ * @internal
+ */
+final class Response
 {
     /**
      * @var int The HTTP status code
