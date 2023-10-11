@@ -15,6 +15,11 @@ final class Response
     private $statusCode;
 
     /**
+     * @var string[]
+     */
+    private $headerNames = [];
+
+    /**
      * @var string[][]
      */
     private $headers;
@@ -32,6 +37,10 @@ final class Response
         $this->statusCode = $statusCode;
         $this->headers = $headers;
         $this->error = $error;
+
+        foreach ($headers as $name => $value) {
+            $this->headerNames[strtolower($name)] = $name;
+        }
     }
 
     public function getStatusCode(): int
@@ -46,7 +55,7 @@ final class Response
 
     public function hasHeader(string $name): bool
     {
-        return \array_key_exists($name, $this->headers);
+        return isset($this->headerNames[strtolower($name)]);
     }
 
     /**
@@ -57,6 +66,8 @@ final class Response
         if (!$this->hasHeader($header)) {
             return [];
         }
+
+        $header = $this->headerNames[strtolower($header)];
 
         return $this->headers[$header];
     }
