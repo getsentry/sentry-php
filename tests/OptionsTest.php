@@ -87,15 +87,6 @@ final class OptionsTest extends TestCase
     public static function optionsDataProvider(): \Generator
     {
         yield [
-            'send_attempts',
-            1,
-            'getSendAttempts',
-            'setSendAttempts',
-            'Method Sentry\\Options::getSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
-            'Method Sentry\\Options::setSendAttempts() is deprecated since version 3.5 and will be removed in 4.0.',
-        ];
-
-        yield [
             'prefixes',
             ['foo', 'bar'],
             'getPrefixes',
