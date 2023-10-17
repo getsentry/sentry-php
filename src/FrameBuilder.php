@@ -74,7 +74,7 @@ final class FrameBuilder
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['class'];
 
-            if (str_starts_with($functionName, Frame::ANONYMOUS_CLASS_PREFIX)) {
+            if (Frame::ANONYMOUS_CLASS_PREFIX === mb_substr($functionName, 0, mb_strlen(Frame::ANONYMOUS_CLASS_PREFIX))) {
                 $functionName = Frame::ANONYMOUS_CLASS_PREFIX . $this->stripPrefixFromFilePath($this->options, substr($backtraceFrame['class'], \strlen(Frame::ANONYMOUS_CLASS_PREFIX)));
             }
 
@@ -107,7 +107,7 @@ final class FrameBuilder
             return false;
         }
 
-        if (null !== $functionName && str_starts_with($functionName, 'Sentry\\')) {
+        if (null !== $functionName && 'Sentry\\' === substr($functionName, 0, \strlen('Sentry\\'))) {
             return false;
         }
 
@@ -117,7 +117,7 @@ final class FrameBuilder
         $isInApp = true;
 
         foreach ($excludedAppPaths as $excludedAppPath) {
-            if (str_starts_with($absoluteFilePath, $excludedAppPath)) {
+            if (mb_substr($absoluteFilePath, 0, mb_strlen($excludedAppPath)) === $excludedAppPath) {
                 $isInApp = false;
 
                 break;
@@ -125,7 +125,7 @@ final class FrameBuilder
         }
 
         foreach ($includedAppPaths as $includedAppPath) {
-            if (str_starts_with($absoluteFilePath, $includedAppPath)) {
+            if (mb_substr($absoluteFilePath, 0, mb_strlen($includedAppPath)) === $includedAppPath) {
                 $isInApp = true;
 
                 break;
