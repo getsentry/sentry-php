@@ -7,7 +7,7 @@ namespace Sentry\Exception;
 /**
  * This exception is thrown when an issue is preventing the creation of an {@see Event}.
  */
-class EventCreationException extends \RuntimeException implements ExceptionInterface
+class EventCreationException extends \RuntimeException
 {
     /**
      * EventCreationException constructor.
