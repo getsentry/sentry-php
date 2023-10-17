@@ -56,6 +56,7 @@ class HttpClient implements HttpClientInterface
         $httpProxy = $options->getHttpProxy();
         if (null !== $httpProxy) {
             curl_setopt($curlHandle, \CURLOPT_PROXY, $httpProxy);
+            curl_setopt($curlHandle, \CURLOPT_HEADEROPT, \CURLHEADER_SEPARATE);
         }
 
         $httpProxyAuthentication = $options->getHttpProxyAuthentication();
