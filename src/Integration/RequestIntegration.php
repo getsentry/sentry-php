@@ -41,11 +41,8 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * This constant is a map of maximum allowed sizes for each value of the
      * `max_request_body_size` option.
-     *
-     * @deprecated The 'none' option is deprecated since version 3.10, to be removed in 4.0
      */
     private const MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP = [
-        'none' => 0,
         'never' => 0,
         'small' => self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH,
         'medium' => self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH,
