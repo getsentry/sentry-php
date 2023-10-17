@@ -38,58 +38,6 @@ final class TransactionContextTest extends TestCase
     }
 
     /**
-     * @dataProvider fromSentryTraceDataProvider
-     *
-     * @group legacy
-     */
-    public function testFromTraceparent(string $header, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled): void
-    {
-        $spanContext = TransactionContext::fromSentryTrace($header);
-
-        $this->assertEquals($expectedSpanId, $spanContext->getParentSpanId());
-        $this->assertEquals($expectedTraceId, $spanContext->getTraceId());
-        $this->assertSame($expectedParentSampled, $spanContext->getParentSampled());
-    }
-
-    public static function fromSentryTraceDataProvider(): iterable
-    {
-        yield [
-            '0',
-            null,
-            null,
-            false,
-        ];
-
-        yield [
-            '1',
-            null,
-            null,
-            true,
-        ];
-
-        yield [
-            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0',
-            new SpanId('566e3688a61d4bc8'),
-            new TraceId('566e3688a61d4bc888951642d6f14a19'),
-            false,
-        ];
-
-        yield [
-            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
-            new SpanId('566e3688a61d4bc8'),
-            new TraceId('566e3688a61d4bc888951642d6f14a19'),
-            true,
-        ];
-
-        yield [
-            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8',
-            new SpanId('566e3688a61d4bc8'),
-            new TraceId('566e3688a61d4bc888951642d6f14a19'),
-            null,
-        ];
-    }
-
-    /**
      * @dataProvider tracingDataProvider
      */
     public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
