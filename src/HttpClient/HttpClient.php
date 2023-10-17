@@ -38,7 +38,7 @@ class HttpClient implements HttpClientInterface
         $curlHandle = curl_init();
 
         $responseHeaders = [];
-        $responseHeaderCallback = function ($curlHandle, $headerLine) use (&$responseHeaders) {
+        $responseHeaderCallback = function ($curlHandle, $headerLine) use (&$responseHeaders): int {
             return Http::parseResponseHeaders($headerLine, $responseHeaders);
         };
 
