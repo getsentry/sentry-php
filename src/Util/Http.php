@@ -17,10 +17,6 @@ final class Http
      */
     public static function getRequestHeaders(Dsn $dsn, string $sdkIdentifier, string $sdkVersion): array
     {
-        $headers = [
-            'Content-Type' => 'application/x-sentry-envelope',
-        ];
-
         $data = [
             'sentry_version' => Client::PROTOCOL_VERSION,
             'sentry_client' => $sdkIdentifier . '/' . $sdkVersion,
@@ -36,9 +32,10 @@ final class Http
             $authHeader[] = $headerKey . '=' . $headerValue;
         }
 
-        return array_merge($headers, [
+        return [
+            'Content-Type' => 'application/x-sentry-envelope',
             'X-Sentry-Auth' => 'Sentry ' . implode(', ', $authHeader),
-        ]);
+        ];
     }
 
     /**
