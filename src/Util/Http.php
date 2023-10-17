@@ -39,6 +39,21 @@ final class Http
     }
 
     /**
+     * @param string[][] $headers
+     */
+    public static function parseResponseHeaders(string $headerLine, &$headers): int
+    {
+        if (false === strpos($headerLine, ':')) {
+            return \strlen($headerLine);
+        }
+
+        [$key, $value] = explode(':', trim($headerLine), 2);
+        $headers[trim($key)] = trim($value);
+
+        return \strlen($headerLine);
+    }
+
+    /**
      * @return string[][]
      */
     public static function getResponseHeaders(?int $headerSize, string $body): array

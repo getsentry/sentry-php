@@ -36,6 +36,12 @@ class HttpClient implements HttpClientInterface
         }
 
         $curlHandle = curl_init();
+
+        $responseHeaders = [];
+        $responseHeaderCallback = function ($curlHandle, $headerLine) use (&$responseHeaders) {
+            return Http::parseResponseHeaders($headerLine, $responseHeaders);
+        };
+
         curl_setopt($curlHandle, \CURLOPT_URL, $dsn->getEnvelopeApiEndpointUrl());
         curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, Http::getRequestHeaders($dsn, $this->sdkIdentifier, $this->sdkVersion));
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
@@ -45,7 +51,8 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
         curl_setopt($curlHandle, \CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlHandle, \CURLOPT_HEADER, true);
+        // curl_setopt($curlHandle, \CURLOPT_HEADER, true);
+        curl_setopt($curlHandle, \CURLOPT_HEADERFUNCTION, $responseHeaderCallback);
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 
         $httpSslVerifyPeer = $options->getHttpSslVerifyPeer();
@@ -80,11 +87,9 @@ class HttpClient implements HttpClientInterface
         }
 
         $statusCode = curl_getinfo($curlHandle, \CURLINFO_HTTP_CODE);
-        $headerSize = curl_getinfo($curlHandle, \CURLINFO_HEADER_SIZE);
-        $headers = Http::getResponseHeaders($headerSize, (string) $body);
 
         curl_close($curlHandle);
 
-        return new Response($statusCode, $headers, '');
+        return new Response($statusCode, $responseHeaders, '');
     }
 }
