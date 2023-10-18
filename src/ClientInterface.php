@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\Result;
 
 /**
  * This interface must be implemented by all Raven client classes.
@@ -78,5 +78,5 @@ interface ClientInterface
      *
      * @param int|null $timeout Maximum time in seconds the client should wait
      */
-    public function flush(?int $timeout = null): PromiseInterface;
+    public function flush(?int $timeout = null): Result;
 }

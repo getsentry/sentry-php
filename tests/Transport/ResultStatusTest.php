@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Tests;
+namespace Sentry\Tests\Transport;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\ResponseStatus;
+use Sentry\Transport\ResultStatus;
 
-final class ResponseStatusTest extends TestCase
+final class ResultStatusTest extends TestCase
 {
     /**
      * @dataProvider toStringDataProvider
      */
-    public function testToString(ResponseStatus $responseStatus, string $expectedStringRepresentation): void
+    public function testToString(ResultStatus $responseStatus, string $expectedStringRepresentation): void
     {
         $this->assertSame($expectedStringRepresentation, (string) $responseStatus);
     }
@@ -20,32 +20,32 @@ final class ResponseStatusTest extends TestCase
     public static function toStringDataProvider(): iterable
     {
         yield [
-            ResponseStatus::success(),
+            ResultStatus::success(),
             'SUCCESS',
         ];
 
         yield [
-            ResponseStatus::failed(),
+            ResultStatus::failed(),
             'FAILED',
         ];
 
         yield [
-            ResponseStatus::invalid(),
+            ResultStatus::invalid(),
             'INVALID',
         ];
 
         yield [
-            ResponseStatus::skipped(),
+            ResultStatus::skipped(),
             'SKIPPED',
         ];
 
         yield [
-            ResponseStatus::rateLimit(),
+            ResultStatus::rateLimit(),
             'RATE_LIMIT',
         ];
 
         yield [
-            ResponseStatus::unknown(),
+            ResultStatus::unknown(),
             'UNKNOWN',
         ];
     }
@@ -53,59 +53,59 @@ final class ResponseStatusTest extends TestCase
     /**
      * @dataProvider createFromHttpStatusCodeDataProvider
      */
-    public function testCreateFromHttpStatusCode(ResponseStatus $expectedResponseStatus, int $httpStatusCode): void
+    public function testCreateFromHttpStatusCode(ResultStatus $expectedResultStatus, int $httpStatusCode): void
     {
-        $this->assertSame($expectedResponseStatus, ResponseStatus::createFromHttpStatusCode($httpStatusCode));
+        $this->assertSame($expectedResultStatus, ResultStatus::createFromHttpStatusCode($httpStatusCode));
     }
 
     public static function createFromHttpStatusCodeDataProvider(): iterable
     {
         yield [
-            ResponseStatus::success(),
+            ResultStatus::success(),
             200,
         ];
 
         yield [
-            ResponseStatus::success(),
+            ResultStatus::success(),
             299,
         ];
 
         yield [
-            ResponseStatus::rateLimit(),
+            ResultStatus::rateLimit(),
             429,
         ];
 
         yield [
-            ResponseStatus::invalid(),
+            ResultStatus::invalid(),
             400,
         ];
 
         yield [
-            ResponseStatus::invalid(),
+            ResultStatus::invalid(),
             499,
         ];
 
         yield [
-            ResponseStatus::failed(),
+            ResultStatus::failed(),
             500,
         ];
 
         yield [
-            ResponseStatus::failed(),
+            ResultStatus::failed(),
             501,
         ];
 
         yield [
-            ResponseStatus::unknown(),
+            ResultStatus::unknown(),
             199,
         ];
     }
 
     public function testStrictComparison(): void
     {
-        $responseStatus1 = ResponseStatus::unknown();
-        $responseStatus2 = ResponseStatus::unknown();
-        $responseStatus3 = ResponseStatus::skipped();
+        $responseStatus1 = ResultStatus::unknown();
+        $responseStatus2 = ResultStatus::unknown();
+        $responseStatus3 = ResultStatus::skipped();
 
         $this->assertSame($responseStatus1, $responseStatus2);
         $this->assertNotSame($responseStatus1, $responseStatus3);
