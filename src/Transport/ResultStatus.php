@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Sentry;
+namespace Sentry\Transport;
 
 /**
  * This enum represents all possible reasons an event sending operation succeeded
  * or failed.
  */
-final class ResponseStatus implements \Stringable
+class ResultStatus implements \Stringable
 {
     /**
      * @var string The value of the enum instance
