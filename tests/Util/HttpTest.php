@@ -40,35 +40,4 @@ final class HttpTest extends TestCase
             ],
         ];
     }
-
-    /**
-     * @dataProvider getResponseHeadersDataProvider
-     */
-    public function testGetResponseHeaders(?int $headerSize, string $body, array $expectedResult): void
-    {
-        $this->assertSame($expectedResult, Http::getResponseHeaders($headerSize, $body));
-    }
-
-    public static function getResponseHeadersDataProvider(): \Generator
-    {
-        yield [
-            128,
-            <<<TEXT
-HTTP/1.1 200 OK\r\n
-Server: nginx\r\n
-Date: Tue, 10 Oct 2023 10:00:00 GMT\r\n
-Content-Type: application/json\r\n
-Content-Length: 41\r\n
-\r\n
-{"id":"2beb84919c3b4c92855206dd7f911a56"}
-TEXT
-            ,
-            [
-                'Server' => ['nginx'],
-                'Date' => ['Tue, 10 Oct 2023 10:00:00 GMT'],
-                'Content-Type' => ['application/json'],
-                'Content-Length' => ['41'],
-            ],
-        ];
-    }
 }

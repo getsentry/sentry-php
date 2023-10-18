@@ -51,7 +51,6 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
         curl_setopt($curlHandle, \CURLOPT_RETURNTRANSFER, true);
-        // curl_setopt($curlHandle, \CURLOPT_HEADER, true);
         curl_setopt($curlHandle, \CURLOPT_HEADERFUNCTION, $responseHeaderCallback);
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 

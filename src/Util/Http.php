@@ -52,30 +52,4 @@ final class Http
 
         return \strlen($headerLine);
     }
-
-    /**
-     * @return string[][]
-     */
-    public static function getResponseHeaders(?int $headerSize, string $body): array
-    {
-        $headers = [];
-        $rawHeaders = explode("\r\n", trim(substr($body, 0, $headerSize)));
-
-        foreach ($rawHeaders as $value) {
-            if (!str_contains($value, ':')) {
-                continue;
-            }
-            [$name, $value] = explode(':', $value, 2);
-            $value = trim($value);
-            $name = trim($name);
-
-            if (isset($headers[$name])) {
-                $headers[$name][] = $value;
-            } else {
-                $headers[$name] = (array) $value;
-            }
-        }
-
-        return $headers;
-    }
 }
