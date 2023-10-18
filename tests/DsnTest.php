@@ -271,16 +271,4 @@ final class DsnTest extends TestCase
             ['https://public@example.com:4343/sentry/1'],
         ];
     }
-
-    /**
-     * @group legacy
-     */
-    public function testGetProjectIdTriggersDeprecationErrorIfReturningInteger(): void
-    {
-        $dsn = Dsn::createFromString('https://public@example.com/sentry/1');
-
-        $this->expectDeprecation('Calling the method Sentry\\Dsn::getProjectId() and expecting it to return an integer is deprecated since version 3.4 and will stop working in 4.0.');
-
-        $this->assertSame(1, $dsn->getProjectId());
-    }
 }

@@ -9,3 +9,4 @@
 - Removed `ClientBuilderInterface::setSerializer()`
 - Removed `ClientBuilder::setSerializer()`
 - Removed `Client::__construct()` param SerializerInterface $serializer.
+- Change return type of `Dsn:: getProjectId()` to string
