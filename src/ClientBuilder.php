@@ -8,7 +8,6 @@ use Http\Discovery\Psr17FactoryDiscovery;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\DefaultTransportFactory;
 use Sentry\Transport\TransportFactoryInterface;
 use Sentry\Transport\TransportInterface;
@@ -89,16 +88,6 @@ final class ClientBuilder implements ClientBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function setSerializer(SerializerInterface $serializer): ClientBuilderInterface
-    {
-        $this->serializer = $serializer;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilderInterface
     {
         $this->representationSerializer = $representationSerializer;
@@ -153,7 +142,7 @@ final class ClientBuilder implements ClientBuilderInterface
     {
         $this->transport = $this->transport ?? $this->createTransportInstance();
 
-        return new Client($this->options, $this->transport, $this->sdkIdentifier, $this->sdkVersion, $this->serializer, $this->representationSerializer, $this->logger);
+        return new Client($this->options, $this->transport, $this->sdkIdentifier, $this->sdkVersion, $this->representationSerializer, $this->logger);
     }
 
     /**

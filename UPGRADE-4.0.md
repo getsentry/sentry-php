@@ -6,3 +6,6 @@
 - The `IgnoreErrorsIntegration` integration was removed. Use the `ignore_errors` option instead.
 - `Sentry\Exception\InvalidArgumentException` was removed. Use `\InvalidArgumentException` instead.
 - `Sentry\Exception/ExceptionInterface` was removed.
+- Removed `ClientBuilderInterface::setSerializer()`
+- Removed `ClientBuilder::setSerializer()`
+- Removed `Client::__construct()` param SerializerInterface $serializer.

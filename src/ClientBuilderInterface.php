@@ -6,7 +6,6 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\TransportFactoryInterface;
 
 /**
@@ -34,15 +33,6 @@ interface ClientBuilderInterface
      * Gets the instance of the client built using the configured options.
      */
     public function getClient(): ClientInterface;
-
-    /**
-     * Sets a serializer instance to be injected as a dependency of the client.
-     *
-     * @param SerializerInterface $serializer The serializer to be used by the client to fill the events
-     *
-     * @return $this
-     */
-    public function setSerializer(SerializerInterface $serializer): self;
 
     /**
      * Sets a representation serializer instance to be injected as a dependency of the client.
