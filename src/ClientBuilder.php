@@ -35,11 +35,6 @@ final class ClientBuilder implements ClientBuilderInterface
     private $transport;
 
     /**
-     * @var SerializerInterface|null The serializer to be injected in the client
-     */
-    private $serializer;
-
-    /**
      * @var RepresentationSerializerInterface|null The representation serializer to be injected in the client
      */
     private $representationSerializer;

@@ -1,11 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Constructor of class Sentry\\\\Client has an unused parameter \\$serializer\\.$#"
-			count: 1
-			path: src/Client.php
-
-		-
 			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null but returns \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null\\.$#"
 			count: 1
 			path: src/Client.php
