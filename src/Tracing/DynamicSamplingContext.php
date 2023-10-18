@@ -127,7 +127,7 @@ final class DynamicSamplingContext
 
             [$key, $value] = explode('=', $keyValue, 2);
 
-            if (str_starts_with($key, self::SENTRY_ENTRY_PREFIX)) {
+            if (self::SENTRY_ENTRY_PREFIX === mb_substr($key, 0, mb_strlen(self::SENTRY_ENTRY_PREFIX))) {
                 $samplingContext->set(rawurldecode(mb_substr($key, mb_strlen(self::SENTRY_ENTRY_PREFIX))), rawurldecode($value));
             }
         }
