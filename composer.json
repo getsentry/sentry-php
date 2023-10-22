@@ -34,7 +34,7 @@
         "psr/http-factory": "^1.0",
         "psr/http-factory-implementation": "^1.0",
         "psr/log": "^1.0|^2.0|^3.0",
-        "symfony/options-resolver": "^3.4.43|^4.4.30|^5.0.11|^6.0",
+        "symfony/options-resolver": "^3.4.43|^4.4.30|^5.0.11|^6.0|^7.0",
         "symfony/polyfill-php80": "^1.17"
     },
     "require-dev": {
