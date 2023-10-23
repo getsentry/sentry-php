@@ -392,6 +392,7 @@ final class Options
      * Gets a list of exceptions to be ignored and not sent to Sentry.
      *
      * @return string[]
+     * @psalm-return list<class-string<\Throwable>>
      */
     public function getIgnoreExceptions(): array
     {

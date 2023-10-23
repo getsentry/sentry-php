@@ -9,7 +9,6 @@ use Sentry\HttpClient\HttpClient;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
 
