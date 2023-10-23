@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use GuzzleHttp\Promise\FulfilledPromise;
-use GuzzleHttp\Promise\PromiseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -18,13 +16,13 @@ use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
-use Sentry\Response;
-use Sentry\ResponseStatus;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
-use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Tests\Fixtures\code\CustomException;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
@@ -91,12 +89,12 @@ final class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertNotNull($client->captureMessage('foo', Severity::fatal()));
@@ -142,12 +140,12 @@ final class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertNotNull($client->captureException($exception));
@@ -204,12 +202,12 @@ final class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($expectedEvent)
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create($options)
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertSame($event->getId(), $client->captureEvent($event));
@@ -328,12 +326,12 @@ final class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
@@ -383,12 +381,12 @@ final class ClientTest extends TestCase
             ->with($this->callback(static function (Event $event) use ($stacktrace): bool {
                 return $stacktrace === $event->getStacktrace();
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertNotNull($client->captureEvent(Event::createEvent(), EventHint::fromArray([
@@ -410,12 +408,12 @@ final class ClientTest extends TestCase
 
                 return true;
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         @trigger_error('foo', \E_USER_NOTICE);
@@ -461,7 +459,7 @@ final class ClientTest extends TestCase
             ->with($this->anything());
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         error_clear_last();
@@ -550,7 +548,7 @@ final class ClientTest extends TestCase
             }));
 
         $client = ClientBuilder::create(['sample_rate' => 0])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->setLogger($logger)
             ->getClient();
 
@@ -565,7 +563,7 @@ final class ClientTest extends TestCase
             ->with($this->anything());
 
         $client = ClientBuilder::create(['sample_rate' => 1])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $client->captureEvent(Event::createEvent());
@@ -585,6 +583,29 @@ final class ClientTest extends TestCase
 
         $options = [
             'ignore_exceptions' => [\Exception::class],
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureException($exception);
+    }
+
+    public function testProcessEventDiscardsEventWhenParentHierarchyOfIgnoreExceptionsMatches(): void
+    {
+        $exception = new CustomException('Some foo error');
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'ignore_exceptions' => [\RuntimeException::class],
         ];
 
         $client = ClientBuilder::create($options)
@@ -697,12 +718,12 @@ final class ClientTest extends TestCase
 
                 return null !== $result;
             }))
-            ->willReturnCallback(static function (Event $event): FulfilledPromise {
-                return new FulfilledPromise(new Response(ResponseStatus::success(), $event));
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
             });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
         $this->assertNotNull($client->captureMessage('test'));
@@ -715,16 +736,15 @@ final class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('close')
             ->with(10)
-            ->willReturn(new FulfilledPromise(true));
+            ->willReturn(new Result(ResultStatus::success()));
 
         $client = ClientBuilder::create()
-            ->setTransportFactory($this->createTransportFactory($transport))
+            ->setTransport($transport)
             ->getClient();
 
-        $promise = $client->flush(10);
+        $response = $client->flush(10);
 
-        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
-        $this->assertTrue($promise->wait());
+        $this->assertSame(ResultStatus::success(), $response->getStatus());
     }
 
     public function testBuildEventInCLIDoesntSetTransaction(): void
@@ -981,25 +1001,5 @@ final class ClientTest extends TestCase
             ],
             'https://example.com/api/1/security/?sentry_key=public&sentry_release=dev-release&sentry_environment=development',
         ];
-    }
-
-    private function createTransportFactory(TransportInterface $transport): TransportFactoryInterface
-    {
-        return new class($transport) implements TransportFactoryInterface {
-            /**
-             * @var TransportInterface
-             */
-            private $transport;
-
-            public function __construct(TransportInterface $transport)
-            {
-                $this->transport = $transport;
-            }
-
-            public function create(Options $options): TransportInterface
-            {
-                return $this->transport;
-            }
-        };
     }
 }

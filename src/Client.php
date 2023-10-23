@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Integration\IntegrationInterface;
@@ -12,6 +11,7 @@ use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\Result;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -170,14 +170,18 @@ final class Client implements ClientInterface
         }
 
         try {
-            /** @var Response $response */
-            $response = $this->transport->send($event)->wait();
-            $event = $response->getEvent();
+            /** @var Result $result */
+            $result = $this->transport->send($event);
+            $event = $result->getEvent();
 
             if (null !== $event) {
                 return $event->getId();
             }
         } catch (\Throwable $exception) {
+            $this->logger->error(
+                sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception, 'event' => $event]
+            );
         }
 
         return null;
@@ -213,7 +217,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function flush(?int $timeout = null): PromiseInterface
+    public function flush(?int $timeout = null): Result
     {
         return $this->transport->close($timeout);
     }
@@ -324,13 +328,15 @@ final class Client implements ClientInterface
             }
 
             foreach ($exceptions as $exception) {
-                if (\in_array($exception->getType(), $this->options->getIgnoreExceptions(), true)) {
-                    $this->logger->info(
-                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
-                        ['event' => $event]
-                    );
+                foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
+                    if (is_a($exception->getType(), $ignoredException, true)) {
+                        $this->logger->info(
+                            'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                            ['event' => $event]
+                        );
 
-                    return null;
+                        return null;
+                    }
                 }
             }
         }

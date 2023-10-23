@@ -31,51 +31,6 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Access to constant CONNECT_TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Access to constant PROXY on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Access to constant TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Call to static method create\\(\\) on an unknown class Symfony\\\\Component\\\\HttpClient\\\\HttpClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Call to static method createWithConfig\\(\\) on an unknown class Http\\\\Adapter\\\\Guzzle6\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$uriFactory\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
 			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/RequestIntegration.php
@@ -131,12 +86,27 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpClient\\(\\) should return Sentry\\\\HttpClient\\\\HttpClientInterface\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpConnectTimeout\\(\\) should return float but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxy\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxyAuthentication\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpSslVerifyPeer\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -227,6 +197,11 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampler\\(\\) should return \\(callable\\(Sentry\\\\Tracing\\\\SamplingContext\\)\\: float\\)\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTransport\\(\\) should return Sentry\\\\Transport\\\\TransportInterface\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 

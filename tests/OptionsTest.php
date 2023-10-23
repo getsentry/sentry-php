@@ -6,7 +6,10 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
+use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
+use Sentry\Serializer\PayloadSerializer;
+use Sentry\Transport\HttpTransport;
 use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
@@ -339,6 +342,24 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'transport',
+            new HttpTransport(new Options(), new HttpClient('foo', 'bar'), new PayloadSerializer(new Options())),
+            'getTransport',
+            'setTransport',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_client',
+            new HttpClient('foo', 'bar'),
+            'getHttpClient',
+            'setHttpClient',
+            null,
+            null,
+        ];
+
+        yield [
             'http_proxy',
             '127.0.0.1',
             'getHttpProxy',
@@ -348,6 +369,15 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_proxy_authentication',
+            'username:password',
+            'getHttpProxyAuthentication',
+            'setHttpProxyAuthentication',
+            null,
+            null,
+        ];
+
+        yield [
             'http_timeout',
             1,
             'getHttpTimeout',
@@ -379,6 +409,15 @@ final class OptionsTest extends TestCase
             1.2,
             'getHttpConnectTimeout',
             'setHttpConnectTimeout',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_ssl_verify_peer',
+            false,
+            'getHttpSslVerifyPeer',
+            'setHttpSslVerifyPeer',
             null,
             null,
         ];
