@@ -85,13 +85,15 @@ final class Options
      *
      * @deprecated since version 3.5, to be removed in 4.0
      */
-    public function setSendAttempts(int $attemptsCount): void
+    public function setSendAttempts(int $attemptsCount): self
     {
         @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -111,11 +113,13 @@ final class Options
      *
      * @param string[] $prefixes The prefixes
      */
-    public function setPrefixes(array $prefixes): void
+    public function setPrefixes(array $prefixes): self
     {
         $options = array_merge($this->options, ['prefixes' => $prefixes]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -133,11 +137,13 @@ final class Options
      *
      * @param float $sampleRate The sampling factor
      */
-    public function setSampleRate(float $sampleRate): void
+    public function setSampleRate(float $sampleRate): self
     {
         $options = array_merge($this->options, ['sample_rate' => $sampleRate]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -155,11 +161,13 @@ final class Options
      *
      * @param bool|null $enableTracing Boolean if tracing should be enabled or not
      */
-    public function setEnableTracing(?bool $enableTracing): void
+    public function setEnableTracing(?bool $enableTracing): self
     {
         $options = array_merge($this->options, ['enable_tracing' => $enableTracing]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -178,11 +186,13 @@ final class Options
      *
      * @param ?float $sampleRate The sampling factor
      */
-    public function setTracesSampleRate(?float $sampleRate): void
+    public function setTracesSampleRate(?float $sampleRate): self
     {
         $options = array_merge($this->options, ['traces_sample_rate' => $sampleRate]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     public function getProfilesSampleRate(): ?float
@@ -193,11 +203,13 @@ final class Options
         return $value ?? null;
     }
 
-    public function setProfilesSampleRate(?float $sampleRate): void
+    public function setProfilesSampleRate(?float $sampleRate): self
     {
         $options = array_merge($this->options, ['profiles_sample_rate' => $sampleRate]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -227,11 +239,13 @@ final class Options
      *
      * @param bool $enable Flag indicating if the stacktrace will be attached to captureMessage calls
      */
-    public function setAttachStacktrace(bool $enable): void
+    public function setAttachStacktrace(bool $enable): self
     {
         $options = array_merge($this->options, ['attach_stacktrace' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -247,11 +261,13 @@ final class Options
      *
      * @param int|null $contextLines The number of lines of code
      */
-    public function setContextLines(?int $contextLines): void
+    public function setContextLines(?int $contextLines): self
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -267,11 +283,13 @@ final class Options
      *
      * @param bool $enabled Flag indicating whether the request should be compressed
      */
-    public function setEnableCompression(bool $enabled): void
+    public function setEnableCompression(bool $enabled): self
     {
         $options = array_merge($this->options, ['enable_compression' => $enabled]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -287,11 +305,13 @@ final class Options
      *
      * @param string|null $environment The environment
      */
-    public function setEnvironment(?string $environment): void
+    public function setEnvironment(?string $environment): self
     {
         $options = array_merge($this->options, ['environment' => $environment]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -309,11 +329,13 @@ final class Options
      *
      * @param string[] $paths The list of paths
      */
-    public function setInAppExcludedPaths(array $paths): void
+    public function setInAppExcludedPaths(array $paths): self
     {
         $options = array_merge($this->options, ['in_app_exclude' => $paths]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -331,11 +353,13 @@ final class Options
      *
      * @param string[] $paths The list of paths
      */
-    public function setInAppIncludedPaths(array $paths): void
+    public function setInAppIncludedPaths(array $paths): self
     {
         $options = array_merge($this->options, ['in_app_include' => $paths]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -359,13 +383,15 @@ final class Options
      *
      * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function setLogger(string $logger): void
+    public function setLogger(string $logger): self
     {
         @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
 
         $options = array_merge($this->options, ['logger' => $logger]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -383,11 +409,13 @@ final class Options
      *
      * @param string|null $release The release
      */
-    public function setRelease(?string $release): void
+    public function setRelease(?string $release): self
     {
         $options = array_merge($this->options, ['release' => $release]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -411,11 +439,13 @@ final class Options
      *
      * @param string $serverName The server name
      */
-    public function setServerName(string $serverName): void
+    public function setServerName(string $serverName): self
     {
         $options = array_merge($this->options, ['server_name' => $serverName]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -433,11 +463,13 @@ final class Options
      *
      * @param string[] $ignoreErrors The list of exceptions to be ignored
      */
-    public function setIgnoreExceptions(array $ignoreErrors): void
+    public function setIgnoreExceptions(array $ignoreErrors): self
     {
         $options = array_merge($this->options, ['ignore_exceptions' => $ignoreErrors]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -455,11 +487,13 @@ final class Options
      *
      * @param string[] $ignoreTransaction The list of transaction names to be ignored
      */
-    public function setIgnoreTransactions(array $ignoreTransaction): void
+    public function setIgnoreTransactions(array $ignoreTransaction): self
     {
         $options = array_merge($this->options, ['ignore_transactions' => $ignoreTransaction]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -477,15 +511,17 @@ final class Options
      * Sets a callable to be called to decide whether an event should
      * be captured or not.
      *
-     * @param callable $callback The callable
+     * @param callable                                  $callback The callable
      *
      * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
-    public function setBeforeSendCallback(callable $callback): void
+    public function setBeforeSendCallback(callable $callback): self
     {
         $options = array_merge($this->options, ['before_send' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -503,15 +539,17 @@ final class Options
      * Sets a callable to be called to decide whether an transaction should
      * be captured or not.
      *
-     * @param callable $callback The callable
+     * @param callable                                  $callback The callable
      *
      * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
-    public function setBeforeSendTransactionCallback(callable $callback): void
+    public function setBeforeSendTransactionCallback(callable $callback): self
     {
         $options = array_merge($this->options, ['before_send_transaction' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -529,11 +567,13 @@ final class Options
      *
      * @param string[] $tracePropagationTargets Trace propagation targets
      */
-    public function setTracePropagationTargets(array $tracePropagationTargets): void
+    public function setTracePropagationTargets(array $tracePropagationTargets): self
     {
         $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -551,11 +591,13 @@ final class Options
      *
      * @param array<string, string> $tags A list of tags
      */
-    public function setTags(array $tags): void
+    public function setTags(array $tags): self
     {
         $options = array_merge($this->options, ['tags' => $tags]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -571,11 +613,13 @@ final class Options
      *
      * @param int $errorTypes The bit mask
      */
-    public function setErrorTypes(int $errorTypes): void
+    public function setErrorTypes(int $errorTypes): self
     {
         $options = array_merge($this->options, ['error_types' => $errorTypes]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -591,11 +635,13 @@ final class Options
      *
      * @param int $maxBreadcrumbs The maximum number of breadcrumbs
      */
-    public function setMaxBreadcrumbs(int $maxBreadcrumbs): void
+    public function setMaxBreadcrumbs(int $maxBreadcrumbs): self
     {
         $options = array_merge($this->options, ['max_breadcrumbs' => $maxBreadcrumbs]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -615,15 +661,17 @@ final class Options
      * modify the breadcrumb, simply return it at the end. Returning `null` will
      * cause the breadcrumb to be dropped.
      *
-     * @param callable $callback The callback
+     * @param callable                                $callback The callback
      *
      * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
      */
-    public function setBeforeBreadcrumbCallback(callable $callback): void
+    public function setBeforeBreadcrumbCallback(callable $callback): self
     {
         $options = array_merge($this->options, ['before_breadcrumb' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -633,11 +681,13 @@ final class Options
      *
      * @param IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[] $integrations The list or callable
      */
-    public function setIntegrations($integrations): void
+    public function setIntegrations($integrations): self
     {
         $options = array_merge($this->options, ['integrations' => $integrations]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -650,11 +700,13 @@ final class Options
         return $this->options['integrations'];
     }
 
-    public function setTransport(TransportInterface $transport): void
+    public function setTransport(TransportInterface $transport): self
     {
         $options = array_merge($this->options, ['transport' => $transport]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     public function getTransport(): ?TransportInterface
@@ -662,11 +714,13 @@ final class Options
         return $this->options['transport'];
     }
 
-    public function setHttpClient(HttpClientInterface $httpClient): void
+    public function setHttpClient(HttpClientInterface $httpClient): self
     {
         $options = array_merge($this->options, ['http_client' => $httpClient]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     public function getHttpClient(): ?HttpClientInterface
@@ -687,11 +741,13 @@ final class Options
      *
      * @param bool $enable Flag indicating if default PII will be sent
      */
-    public function setSendDefaultPii(bool $enable): void
+    public function setSendDefaultPii(bool $enable): self
     {
         $options = array_merge($this->options, ['send_default_pii' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -707,11 +763,13 @@ final class Options
      *
      * @param bool $enable Flag indicating whether the default integrations should be enabled
      */
-    public function setDefaultIntegrations(bool $enable): void
+    public function setDefaultIntegrations(bool $enable): self
     {
         $options = array_merge($this->options, ['default_integrations' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -727,11 +785,13 @@ final class Options
      *
      * @param int $maxValueLength The number of characters after which the values containing text will be truncated
      */
-    public function setMaxValueLength(int $maxValueLength): void
+    public function setMaxValueLength(int $maxValueLength): self
     {
         $options = array_merge($this->options, ['max_value_length' => $maxValueLength]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -747,11 +807,13 @@ final class Options
      *
      * @param string|null $httpProxy The http proxy
      */
-    public function setHttpProxy(?string $httpProxy): void
+    public function setHttpProxy(?string $httpProxy): self
     {
         $options = array_merge($this->options, ['http_proxy' => $httpProxy]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     public function getHttpProxyAuthentication(): ?string
@@ -759,11 +821,13 @@ final class Options
         return $this->options['http_proxy_authentication'];
     }
 
-    public function setHttpProxyAuthentication(?string $httpProxy): void
+    public function setHttpProxyAuthentication(?string $httpProxy): self
     {
         $options = array_merge($this->options, ['http_proxy_authentication' => $httpProxy]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -779,11 +843,13 @@ final class Options
      *
      * @param float $httpConnectTimeout The amount of time in seconds
      */
-    public function setHttpConnectTimeout(float $httpConnectTimeout): void
+    public function setHttpConnectTimeout(float $httpConnectTimeout): self
     {
         $options = array_merge($this->options, ['http_connect_timeout' => $httpConnectTimeout]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -801,11 +867,13 @@ final class Options
      *
      * @param float $httpTimeout The amount of time in seconds
      */
-    public function setHttpTimeout(float $httpTimeout): void
+    public function setHttpTimeout(float $httpTimeout): self
     {
         $options = array_merge($this->options, ['http_timeout' => $httpTimeout]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     public function getHttpSslVerifyPeer(): bool
@@ -813,11 +881,13 @@ final class Options
         return $this->options['http_ssl_verify_peer'];
     }
 
-    public function setHttpSslVerifyPeer(bool $httpSslVerifyPeer): void
+    public function setHttpSslVerifyPeer(bool $httpSslVerifyPeer): self
     {
         $options = array_merge($this->options, ['http_ssl_verify_peer' => $httpSslVerifyPeer]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -837,11 +907,13 @@ final class Options
      * @param bool $shouldCapture If set to true, errors silenced through the @
      *                            operator will be reported, ignored otherwise
      */
-    public function setCaptureSilencedErrors(bool $shouldCapture): void
+    public function setCaptureSilencedErrors(bool $shouldCapture): self
     {
         $options = array_merge($this->options, ['capture_silenced_errors' => $shouldCapture]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -871,11 +943,13 @@ final class Options
      *                                      request body for as long as sentry can
      *                                      make sense of it
      */
-    public function setMaxRequestBodySize(string $maxRequestBodySize): void
+    public function setMaxRequestBodySize(string $maxRequestBodySize): self
     {
         $options = array_merge($this->options, ['max_request_body_size' => $maxRequestBodySize]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -896,11 +970,13 @@ final class Options
      *
      * @param array<string, callable> $serializers The list of serializer callbacks
      */
-    public function setClassSerializers(array $serializers): void
+    public function setClassSerializers(array $serializers): self
     {
         $options = array_merge($this->options, ['class_serializers' => $serializers]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -917,15 +993,17 @@ final class Options
      * Sets a callback that will be invoked when we take the sampling decision for Transactions.
      * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
      *
-     * @param ?callable $sampler The sampler
+     * @param ?callable                                                   $sampler The sampler
      *
      * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
      */
-    public function setTracesSampler(?callable $sampler): void
+    public function setTracesSampler(?callable $sampler): self
     {
         $options = array_merge($this->options, ['traces_sampler' => $sampler]);
 
         $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -939,52 +1017,52 @@ final class Options
     private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'integrations' => [],
-            'default_integrations' => true,
-            'send_attempts' => 0,
-            'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
-            'sample_rate' => 1,
-            'enable_tracing' => null,
-            'traces_sample_rate' => null,
-            'traces_sampler' => null,
-            'profiles_sample_rate' => null,
-            'attach_stacktrace' => false,
-            'context_lines' => 5,
-            'enable_compression' => true,
-            'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
-            'logger' => 'php',
-            'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
-            'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
-            'server_name' => gethostname(),
-            'ignore_exceptions' => [],
-            'ignore_transactions' => [],
-            'before_send' => static function (Event $event): Event {
+            'integrations'              => [],
+            'default_integrations'      => true,
+            'send_attempts'             => 0,
+            'prefixes'                  => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
+            'sample_rate'               => 1,
+            'enable_tracing'            => null,
+            'traces_sample_rate'        => null,
+            'traces_sampler'            => null,
+            'profiles_sample_rate'      => null,
+            'attach_stacktrace'         => false,
+            'context_lines'             => 5,
+            'enable_compression'        => true,
+            'environment'               => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
+            'logger'                    => 'php',
+            'release'                   => $_SERVER['SENTRY_RELEASE'] ?? null,
+            'dsn'                       => $_SERVER['SENTRY_DSN'] ?? null,
+            'server_name'               => gethostname(),
+            'ignore_exceptions'         => [],
+            'ignore_transactions'       => [],
+            'before_send'               => static function (Event $event): Event {
                 return $event;
             },
-            'before_send_transaction' => static function (Event $transaction): Event {
+            'before_send_transaction'   => static function (Event $transaction): Event {
                 return $transaction;
             },
             'trace_propagation_targets' => [],
-            'tags' => [],
-            'error_types' => null,
-            'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
-            'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
+            'tags'                      => [],
+            'error_types'               => null,
+            'max_breadcrumbs'           => self::DEFAULT_MAX_BREADCRUMBS,
+            'before_breadcrumb'         => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
             },
-            'in_app_exclude' => [],
-            'in_app_include' => [],
-            'send_default_pii' => false,
-            'max_value_length' => 1024,
-            'transport' => null,
-            'http_client' => null,
-            'http_proxy' => null,
+            'in_app_exclude'            => [],
+            'in_app_include'            => [],
+            'send_default_pii'          => false,
+            'max_value_length'          => 1024,
+            'transport'                 => null,
+            'http_client'               => null,
+            'http_proxy'                => null,
             'http_proxy_authentication' => null,
-            'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
-            'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
-            'http_ssl_verify_peer' => true,
-            'capture_silenced_errors' => false,
-            'max_request_body_size' => 'medium',
-            'class_serializers' => [],
+            'http_connect_timeout'      => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
+            'http_timeout'              => self::DEFAULT_HTTP_TIMEOUT,
+            'http_ssl_verify_peer'      => true,
+            'capture_silenced_errors'   => false,
+            'max_request_body_size'     => 'medium',
+            'class_serializers'         => [],
         ]);
 
         $resolver->setAllowedTypes('send_attempts', 'int');
