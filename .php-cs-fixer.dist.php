@@ -12,6 +12,9 @@ return (new PhpCsFixer\Config())
         'declare_strict_types' => true,
         'yoda_style' => true,
         'self_accessor' => false,
+        'nullable_type_declaration_for_default_null_value' => [
+            'use_nullable_type_declaration' => true,
+        ],
         'phpdoc_no_useless_inheritdoc' => false,
         'phpdoc_to_comment' => false,
         'phpdoc_align' => [
