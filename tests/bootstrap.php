@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Http\Discovery\ClassDiscovery;
-use Http\Discovery\Strategy\MockClientStrategy;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\Tracing\Span;
@@ -11,8 +9,6 @@ use Sentry\Transport\RateLimiter;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 require_once __DIR__ . '/../vendor/autoload.php';
-
-ClassDiscovery::appendStrategy(MockClientStrategy::class);
 
 // According to the Symfony documentation the proper way to register the mocked
 // functions for a certain class would be to configure the listener in the
