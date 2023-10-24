@@ -40,4 +40,42 @@ final class HttpTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider parseResponseHeadersDataProvider
+     */
+    public function testParseResponseHeaders(string $headerline, $expectedResult): void
+    {
+        $responseHeaders = [];
+
+        Http::parseResponseHeaders($headerline, $responseHeaders);
+
+        $this->assertSame($expectedResult, $responseHeaders);
+    }
+
+    public static function parseResponseHeadersDataProvider(): \Generator
+    {
+        yield [
+            'Content-Type: application/json',
+            [
+                'Content-Type' => [
+                    'application/json',
+                ],
+            ],
+        ];
+
+        yield [
+            'X-Sentry-Rate-Limits: 60:transaction:key,2700:default;error;security:organization',
+            [
+                'X-Sentry-Rate-Limits' => [
+                    '60:transaction:key,2700:default;error;security:organization',
+                ],
+            ],
+        ];
+
+        yield [
+            'Invalid',
+            [],
+        ];
+    }
 }
