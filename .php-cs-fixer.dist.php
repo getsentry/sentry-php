@@ -10,6 +10,7 @@ return (new PhpCsFixer\Config())
             'imports_order' => ['class', 'function', 'const'],
         ],
         'declare_strict_types' => true,
+        'get_class_to_class_keyword' => false,
         'yoda_style' => true,
         'self_accessor' => false,
         'nullable_type_declaration_for_default_null_value' => [
