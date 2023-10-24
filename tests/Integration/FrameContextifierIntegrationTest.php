@@ -160,7 +160,7 @@ final class FrameContextifierIntegrationTest extends TestCase
     {
         $fileContent = file_get_contents($file);
 
-        if (false === $fileContent) {
+        if ($fileContent === false) {
             throw new \RuntimeException(sprintf('The fixture file at path "%s" could not be read.', $file));
         }
 

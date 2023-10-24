@@ -29,7 +29,7 @@ final class GuzzleTracingMiddleware
                 $client = $hub->getClient();
                 $span = $hub->getSpan();
 
-                if (null === $span) {
+                if ($span === null) {
                     if (self::shouldAttachTracingHeaders($client, $request)) {
                         $request = $request
                             ->withHeader('sentry-trace', getTraceparent())
@@ -82,14 +82,14 @@ final class GuzzleTracingMiddleware
                         'http.request.method' => $request->getMethod(),
                         'http.request.body.size' => $request->getBody()->getSize(),
                     ];
-                    if ('' !== $request->getUri()->getQuery()) {
+                    if ($request->getUri()->getQuery() !== '') {
                         $breadcrumbData['http.query'] = $request->getUri()->getQuery();
                     }
-                    if ('' !== $request->getUri()->getFragment()) {
+                    if ($request->getUri()->getFragment() !== '') {
                         $breadcrumbData['http.fragment'] = $request->getUri()->getFragment();
                     }
 
-                    if (null !== $response) {
+                    if ($response !== null) {
                         $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
 
                         $breadcrumbData['http.response.status_code'] = $response->getStatusCode();
@@ -120,15 +120,15 @@ final class GuzzleTracingMiddleware
 
     private static function shouldAttachTracingHeaders(?ClientInterface $client, RequestInterface $request): bool
     {
-        if (null !== $client) {
+        if ($client !== null) {
             $sdkOptions = $client->getOptions();
 
             // Check if the request destination is allow listed in the trace_propagation_targets option.
             if (
-                null !== $sdkOptions->getTracePropagationTargets()
+                $sdkOptions->getTracePropagationTargets() !== null
                 // Due to BC, we treat an empty array (the default) as all hosts are allow listed
                 && (
-                    [] === $sdkOptions->getTracePropagationTargets()
+                    $sdkOptions->getTracePropagationTargets() === []
                     || \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
                 )
             ) {

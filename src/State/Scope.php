@@ -215,7 +215,7 @@ final class Scope
             $user = UserDataBag::createFromArray($user);
         }
 
-        if (null === $this->user) {
+        if ($this->user === null) {
             $this->user = $user;
         } else {
             $this->user = $this->user->merge($user);
@@ -351,7 +351,7 @@ final class Scope
             $event->setBreadcrumb($this->breadcrumbs);
         }
 
-        if (null !== $this->level) {
+        if ($this->level !== null) {
             $event->setLevel($this->level);
         }
 
@@ -363,10 +363,10 @@ final class Scope
             $event->setExtra(array_merge($this->extra, $event->getExtra()));
         }
 
-        if (null !== $this->user) {
+        if ($this->user !== null) {
             $user = $event->getUser();
 
-            if (null === $user) {
+            if ($user === null) {
                 $user = $this->user;
             } else {
                 $user = $this->user->merge($user);
@@ -379,19 +379,19 @@ final class Scope
          * Apply the trace context to errors if there is a Span on the Scope.
          * Else fallback to the propagation context.
          */
-        if (null !== $this->span) {
+        if ($this->span !== null) {
             $event->setContext('trace', $this->span->getTraceContext());
 
             // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
             $transaction = $this->span->getTransaction();
-            if (null !== $transaction) {
+            if ($transaction !== null) {
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } else {
             $event->setContext('trace', $this->propagationContext->getTraceContext());
 
             $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
-            if (null === $dynamicSamplingContext && null !== $options) {
+            if ($dynamicSamplingContext === null && $options !== null) {
                 $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
             }
             $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
@@ -402,14 +402,14 @@ final class Scope
         }
 
         // We create a empty `EventHint` instance to allow processors to always receive a `EventHint` instance even if there wasn't one
-        if (null === $hint) {
+        if ($hint === null) {
             $hint = new EventHint();
         }
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
             $event = $processor($event, $hint);
 
-            if (null === $event) {
+            if ($event === null) {
                 return null;
             }
 
@@ -448,7 +448,7 @@ final class Scope
      */
     public function getTransaction(): ?Transaction
     {
-        if (null !== $this->span) {
+        if ($this->span !== null) {
             return $this->span->getTransaction();
         }
 
@@ -469,10 +469,10 @@ final class Scope
 
     public function __clone()
     {
-        if (null !== $this->user) {
+        if ($this->user !== null) {
             $this->user = clone $this->user;
         }
-        if (null !== $this->propagationContext) {
+        if ($this->propagationContext !== null) {
             $this->propagationContext = clone $this->propagationContext;
         }
     }

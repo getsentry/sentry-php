@@ -729,7 +729,7 @@ final class Event
      */
     public function getSdkMetadata(?string $name = null)
     {
-        if (null !== $name) {
+        if ($name !== null) {
             return $this->sdkMetadata[$name] ?? null;
         }
 

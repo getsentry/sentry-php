@@ -32,12 +32,12 @@ final class PropagationContextTest extends TestCase
         $propagationContext = PropagationContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
         $this->assertInstanceOf(TraceId::class, $propagationContext->getTraceId());
-        if (null !== $expectedTraceId) {
+        if ($expectedTraceId !== null) {
             $this->assertSame((string) $expectedTraceId, (string) $propagationContext->getTraceId());
         }
 
         $this->assertInstanceOf(SpanId::class, $propagationContext->getParentSpanId());
-        if (null !== $expectedParentSpanId) {
+        if ($expectedParentSpanId !== null) {
             $this->assertSame((string) $expectedParentSpanId, (string) $propagationContext->getParentSpanId());
         }
 
@@ -54,12 +54,12 @@ final class PropagationContextTest extends TestCase
         $propagationContext = PropagationContext::fromEnvironment($sentryTrace, $baggage);
 
         $this->assertInstanceOf(TraceId::class, $propagationContext->getTraceId());
-        if (null !== $expectedTraceId) {
+        if ($expectedTraceId !== null) {
             $this->assertSame((string) $expectedTraceId, (string) $propagationContext->getTraceId());
         }
 
         $this->assertInstanceOf(SpanId::class, $propagationContext->getParentSpanId());
-        if (null !== $expectedParentSpanId) {
+        if ($expectedParentSpanId !== null) {
             $this->assertSame((string) $expectedParentSpanId, (string) $propagationContext->getParentSpanId());
         }
 

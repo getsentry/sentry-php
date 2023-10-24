@@ -152,23 +152,23 @@ final class SpanStatus implements \Stringable
     public static function createFromHttpStatusCode(int $statusCode): self
     {
         switch (true) {
-            case 401 === $statusCode:
+            case $statusCode === 401:
                 return self::unauthenticated();
-            case 403 === $statusCode:
+            case $statusCode === 403:
                 return self::permissionDenied();
-            case 404 === $statusCode:
+            case $statusCode === 404:
                 return self::notFound();
-            case 409 === $statusCode:
+            case $statusCode === 409:
                 return self::alreadyExists();
-            case 413 === $statusCode:
+            case $statusCode === 413:
                 return self::failedPrecondition();
-            case 429 === $statusCode:
+            case $statusCode === 429:
                 return self::resourceExchausted();
-            case 501 === $statusCode:
+            case $statusCode === 501:
                 return self::unimplemented();
-            case 503 === $statusCode:
+            case $statusCode === 503:
                 return self::unavailable();
-            case 504 === $statusCode:
+            case $statusCode === 504:
                 return self::deadlineExceeded();
             case $statusCode < 400:
                 return self::ok();

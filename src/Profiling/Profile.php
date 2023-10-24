@@ -173,7 +173,7 @@ final class Profile
         $registerStack = static function (array $stack) use (&$stacks, &$stackHashMap): int {
             $stackHash = md5(serialize($stack));
 
-            if (false === \array_key_exists($stackHash, $stackHashMap)) {
+            if (\array_key_exists($stackHash, $stackHashMap) === false) {
                 $stackHashMap[$stackHash] = \count($stacks);
                 $stacks[] = $stack;
             }
@@ -197,7 +197,7 @@ final class Profile
 
                 $frameIndex = $frameHashMap[$frameKey] ?? null;
 
-                if (null === $frameIndex) {
+                if ($frameIndex === null) {
                     $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
                     $module = null;
 
@@ -242,7 +242,7 @@ final class Profile
         }
 
         $startTime = \DateTime::createFromFormat('U.u', number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
-        if (false === $startTime) {
+        if ($startTime === false) {
             return null;
         }
 
@@ -311,7 +311,7 @@ final class Profile
             $sampleCount = $this->excimerLog->count();
         }
 
-        return self::MIN_SAMPLE_COUNT <= $sampleCount;
+        return $sampleCount >= self::MIN_SAMPLE_COUNT;
     }
 
     private function validateMaxDuration(float $duration): bool
@@ -330,15 +330,15 @@ final class Profile
      */
     private function validateOsContext(?OsContext $osContext): bool
     {
-        if (null === $osContext) {
+        if ($osContext === null) {
             return false;
         }
 
-        if (null === $osContext->getVersion()) {
+        if ($osContext->getVersion() === null) {
             return false;
         }
 
-        if (null === $osContext->getMachineType()) {
+        if ($osContext->getMachineType() === null) {
             return false;
         }
 
@@ -351,11 +351,11 @@ final class Profile
      */
     private function validateRuntimeContext(?RuntimeContext $runtimeContext): bool
     {
-        if (null === $runtimeContext) {
+        if ($runtimeContext === null) {
             return false;
         }
 
-        if (null === $runtimeContext->getVersion()) {
+        if ($runtimeContext->getVersion() === null) {
             return false;
         }
 
@@ -368,11 +368,11 @@ final class Profile
      */
     private function validateEvent(Event $event): bool
     {
-        if (null === $event->getTransaction()) {
+        if ($event->getTransaction() === null) {
             return false;
         }
 
-        if (null === $event->getTraceId()) {
+        if ($event->getTraceId() === null) {
             return false;
         }
 

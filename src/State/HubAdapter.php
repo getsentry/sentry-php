@@ -42,7 +42,7 @@ final class HubAdapter implements HubInterface
      */
     public static function getInstance(): self
     {
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 

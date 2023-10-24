@@ -94,7 +94,7 @@ class ResultStatus implements \Stringable
         switch (true) {
             case $statusCode >= 200 && $statusCode < 300:
                 return self::success();
-            case 429 === $statusCode:
+            case $statusCode === 429:
                 return self::rateLimit();
             case $statusCode >= 400 && $statusCode < 500:
                 return self::invalid();

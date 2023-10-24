@@ -52,7 +52,7 @@ final class OsContext
         ?string $kernelVersion = null,
         ?string $machineType = null
     ) {
-        if ('' === trim($name)) {
+        if (trim($name) === '') {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 
@@ -78,7 +78,7 @@ final class OsContext
      */
     public function setName(string $name): void
     {
-        if ('' === trim($name)) {
+        if (trim($name) === '') {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 

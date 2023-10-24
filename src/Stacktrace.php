@@ -87,7 +87,7 @@ final class Stacktrace
             throw new \OutOfBoundsException(sprintf('Cannot remove the frame at index %d.', $index));
         }
 
-        if (1 === \count($this->frames)) {
+        if (\count($this->frames) === 1) {
             throw new \RuntimeException('Cannot remove all frames from the stacktrace.');
         }
 

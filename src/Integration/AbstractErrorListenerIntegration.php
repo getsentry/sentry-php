@@ -38,7 +38,7 @@ abstract class AbstractErrorListenerIntegration implements IntegrationInterface
         foreach ($exceptions as $exception) {
             $data = [];
             $mechanism = $exception->getMechanism();
-            if (null !== $mechanism) {
+            if ($mechanism !== null) {
                 $data = $mechanism->getData();
             }
 

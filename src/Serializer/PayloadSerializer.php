@@ -43,9 +43,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
             $transactionEnvelope = $this->serializeAsEnvelope($event);
 
             // Attach a new envelope item containing the profile data
-            if (null !== $event->getSdkMetadata('profile')) {
+            if ($event->getSdkMetadata('profile') !== null) {
                 $profileEnvelope = $this->seralizeProfileAsEnvelope($event);
-                if (null !== $profileEnvelope) {
+                if ($profileEnvelope !== null) {
                     return sprintf("%s\n%s", $transactionEnvelope, $profileEnvelope);
                 }
             }
@@ -76,7 +76,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         $result = [];
 
         $checkIn = $event->getCheckIn();
-        if (null !== $checkIn) {
+        if ($checkIn !== null) {
             $result = [
                 'check_in_id' => $checkIn->getId(),
                 'monitor_slug' => $checkIn->getMonitorSlug(),
@@ -86,7 +86,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 'environment' => $checkIn->getEnvironment(),
             ];
 
-            if (null !== $checkIn->getMonitorConfig()) {
+            if ($checkIn->getMonitorConfig() !== null) {
                 $result['monitor_config'] = $checkIn->getMonitorConfig()->toArray();
             }
 
@@ -113,31 +113,31 @@ final class PayloadSerializer implements PayloadSerializerInterface
             ],
         ];
 
-        if (null !== $event->getStartTimestamp()) {
+        if ($event->getStartTimestamp() !== null) {
             $result['start_timestamp'] = $event->getStartTimestamp();
         }
 
-        if (null !== $event->getLevel()) {
+        if ($event->getLevel() !== null) {
             $result['level'] = (string) $event->getLevel();
         }
 
-        if (null !== $event->getLogger()) {
+        if ($event->getLogger() !== null) {
             $result['logger'] = $event->getLogger();
         }
 
-        if (null !== $event->getTransaction()) {
+        if ($event->getTransaction() !== null) {
             $result['transaction'] = $event->getTransaction();
         }
 
-        if (null !== $event->getServerName()) {
+        if ($event->getServerName() !== null) {
             $result['server_name'] = $event->getServerName();
         }
 
-        if (null !== $event->getRelease()) {
+        if ($event->getRelease() !== null) {
             $result['release'] = $event->getRelease();
         }
 
-        if (null !== $event->getEnvironment()) {
+        if ($event->getEnvironment() !== null) {
             $result['environment'] = $event->getEnvironment();
         }
 
@@ -159,7 +159,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         $user = $event->getUser();
 
-        if (null !== $user) {
+        if ($user !== null) {
             $result['user'] = array_merge($user->getMetadata(), [
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
@@ -172,7 +172,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         $osContext = $event->getOsContext();
         $runtimeContext = $event->getRuntimeContext();
 
-        if (null !== $osContext) {
+        if ($osContext !== null) {
             $result['contexts']['os'] = [
                 'name' => $osContext->getName(),
                 'version' => $osContext->getVersion(),
@@ -181,7 +181,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             ];
         }
 
-        if (null !== $runtimeContext) {
+        if ($runtimeContext !== null) {
             $result['contexts']['runtime'] = [
                 'name' => $runtimeContext->getName(),
                 'version' => $runtimeContext->getVersion(),
@@ -200,7 +200,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             $result['request'] = $event->getRequest();
         }
 
-        if (null !== $event->getMessage()) {
+        if ($event->getMessage() !== null) {
             if (empty($event->getMessageParams())) {
                 $result['message'] = $event->getMessage();
             } else {
@@ -239,7 +239,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
                 $replayId = $dynamicSamplingContext->get('replay_id');
 
-                if (null !== $replayId) {
+                if ($replayId !== null) {
                     $result['contexts']['replay'] = [
                         'replay_id' => $replayId,
                     ];
@@ -249,7 +249,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
 
         $stacktrace = $event->getStacktrace();
 
-        if (null !== $stacktrace) {
+        if ($stacktrace !== null) {
             $result['stacktrace'] = [
                 'frames' => array_map([$this, 'serializeStacktraceFrame'], $stacktrace->getFrames()),
             ];
@@ -308,7 +308,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         }
 
         $profileData = $profile->getFormattedData($event);
-        if (null === $profileData) {
+        if ($profileData === null) {
             return null;
         }
 
@@ -336,7 +336,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'timestamp' => $breadcrumb->getTimestamp(),
         ];
 
-        if (null !== $breadcrumb->getMessage()) {
+        if ($breadcrumb->getMessage() !== null) {
             $result['message'] = $breadcrumb->getMessage();
         }
 
@@ -372,19 +372,19 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'value' => $exception->getValue(),
         ];
 
-        if (null !== $exceptionStacktrace) {
+        if ($exceptionStacktrace !== null) {
             $result['stacktrace'] = [
                 'frames' => array_map([$this, 'serializeStacktraceFrame'], $exceptionStacktrace->getFrames()),
             ];
         }
 
-        if (null !== $exceptionMechanism) {
+        if ($exceptionMechanism !== null) {
             $result['mechanism'] = [
                 'type' => $exceptionMechanism->getType(),
                 'handled' => $exceptionMechanism->isHandled(),
             ];
 
-            if ([] !== $exceptionMechanism->getData()) {
+            if ($exceptionMechanism->getData() !== []) {
                 $result['mechanism']['data'] = $exceptionMechanism->getData();
             }
         }
@@ -416,15 +416,15 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'in_app' => $frame->isInApp(),
         ];
 
-        if (null !== $frame->getAbsoluteFilePath()) {
+        if ($frame->getAbsoluteFilePath() !== null) {
             $result['abs_path'] = $frame->getAbsoluteFilePath();
         }
 
-        if (null !== $frame->getFunctionName()) {
+        if ($frame->getFunctionName() !== null) {
             $result['function'] = $frame->getFunctionName();
         }
 
-        if (null !== $frame->getRawFunctionName()) {
+        if ($frame->getRawFunctionName() !== null) {
             $result['raw_function'] = $frame->getRawFunctionName();
         }
 
@@ -432,7 +432,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             $result['pre_context'] = $frame->getPreContext();
         }
 
-        if (null !== $frame->getContextLine()) {
+        if ($frame->getContextLine() !== null) {
             $result['context_line'] = $frame->getContextLine();
         }
 
@@ -471,23 +471,23 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'start_timestamp' => $span->getStartTimestamp(),
         ];
 
-        if (null !== $span->getParentSpanId()) {
+        if ($span->getParentSpanId() !== null) {
             $result['parent_span_id'] = (string) $span->getParentSpanId();
         }
 
-        if (null !== $span->getEndTimestamp()) {
+        if ($span->getEndTimestamp() !== null) {
             $result['timestamp'] = $span->getEndTimestamp();
         }
 
-        if (null !== $span->getStatus()) {
+        if ($span->getStatus() !== null) {
             $result['status'] = (string) $span->getStatus();
         }
 
-        if (null !== $span->getDescription()) {
+        if ($span->getDescription() !== null) {
             $result['description'] = $span->getDescription();
         }
 
-        if (null !== $span->getOp()) {
+        if ($span->getOp() !== null) {
             $result['op'] = $span->getOp();
         }
 

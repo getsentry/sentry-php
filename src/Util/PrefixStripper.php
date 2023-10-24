@@ -13,7 +13,7 @@ trait PrefixStripper
      */
     protected function stripPrefixFromFilePath(?Options $options, string $filePath): string
     {
-        if (null === $options) {
+        if ($options === null) {
             return $filePath;
         }
 

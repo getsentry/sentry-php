@@ -107,7 +107,7 @@ final class RequestIntegration implements IntegrationInterface
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out
-            if (null === $integration || null === $client) {
+            if ($integration === null || $client === null) {
                 return $event;
             }
 
@@ -121,7 +121,7 @@ final class RequestIntegration implements IntegrationInterface
     {
         $request = $this->requestFetcher->fetchRequest();
 
-        if (null === $request) {
+        if ($request === null) {
             return;
         }
 
@@ -141,9 +141,9 @@ final class RequestIntegration implements IntegrationInterface
                 $user = $event->getUser();
                 $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
 
-                if (null === $user) {
+                if ($user === null) {
                     $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
-                } elseif (null === $user->getIpAddress()) {
+                } elseif ($user->getIpAddress() === null) {
                     $user->setIpAddress($serverParams['REMOTE_ADDR']);
                 }
 
@@ -223,9 +223,9 @@ final class RequestIntegration implements IntegrationInterface
         $requestBody = '';
         $maxLength = self::MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP[$maxRequestBodySize];
 
-        if (0 < $maxLength) {
+        if ($maxLength > 0) {
             $stream = $request->getBody();
-            while (0 < $maxLength && !$stream->eof()) {
+            while ($maxLength > 0 && !$stream->eof()) {
                 if ('' === $buffer = $stream->read(min($maxLength, self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH))) {
                     break;
                 }
@@ -234,7 +234,7 @@ final class RequestIntegration implements IntegrationInterface
             }
         }
 
-        if ('application/json' === $request->getHeaderLine('Content-Type')) {
+        if ($request->getHeaderLine('Content-Type') === 'application/json') {
             try {
                 return JSON::decode($requestBody);
             } catch (JsonException $exception) {
@@ -280,15 +280,15 @@ final class RequestIntegration implements IntegrationInterface
             return false;
         }
 
-        if ('none' === $maxRequestBodySize || 'never' === $maxRequestBodySize) {
+        if ($maxRequestBodySize === 'none' || $maxRequestBodySize === 'never') {
             return false;
         }
 
-        if ('small' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) {
+        if ($maxRequestBodySize === 'small' && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) {
             return false;
         }
 
-        if ('medium' === $maxRequestBodySize && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH) {
+        if ($maxRequestBodySize === 'medium' && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH) {
             return false;
         }
 

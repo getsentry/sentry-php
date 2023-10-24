@@ -69,13 +69,13 @@ final class Handler extends AbstractProcessingHandler
 
             $monologContextData = $this->getMonologContextData($record['context']);
 
-            if ([] !== $monologContextData) {
+            if ($monologContextData !== []) {
                 $scope->setExtra('monolog.context', $monologContextData);
             }
 
             $monologExtraData = $this->getMonologExtraData($record['extra']);
 
-            if ([] !== $monologExtraData) {
+            if ($monologExtraData !== []) {
                 $scope->setExtra('monolog.extra', $monologExtraData);
             }
 
@@ -98,7 +98,7 @@ final class Handler extends AbstractProcessingHandler
 
         foreach ($context as $key => $value) {
             // We skip the `exception` field because it goes in its own context
-            if (self::CONTEXT_EXCEPTION_KEY === $key) {
+            if ($key === self::CONTEXT_EXCEPTION_KEY) {
                 continue;
             }
 

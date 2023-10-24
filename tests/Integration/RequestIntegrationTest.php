@@ -54,7 +54,7 @@ final class RequestIntegrationTest extends TestCase
 
             $user = $event->getUser();
 
-            if (null !== $expectedUser) {
+            if ($expectedUser !== null) {
                 $this->assertNotNull($user);
                 $this->assertEquals($expectedUser, $user);
             } else {

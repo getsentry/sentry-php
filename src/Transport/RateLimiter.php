@@ -109,13 +109,13 @@ final class RateLimiter
 
     private function parseRetryAfterHeader(int $currentTime, string $header): int
     {
-        if (1 === preg_match('/^\d+$/', $header)) {
+        if (preg_match('/^\d+$/', $header) === 1) {
             return (int) $header;
         }
 
         $headerDate = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC1123, $header);
 
-        if (false !== $headerDate && $headerDate->getTimestamp() >= $currentTime) {
+        if ($headerDate !== false && $headerDate->getTimestamp() >= $currentTime) {
             return $headerDate->getTimestamp() - $currentTime;
         }
 

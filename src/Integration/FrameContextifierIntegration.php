@@ -42,25 +42,25 @@ final class FrameContextifierIntegration implements IntegrationInterface
         Scope::addGlobalEventProcessor(static function (Event $event): Event {
             $client = SentrySdk::getCurrentHub()->getClient();
 
-            if (null === $client) {
+            if ($client === null) {
                 return $event;
             }
 
             $maxContextLines = $client->getOptions()->getContextLines();
             $integration = $client->getIntegration(self::class);
 
-            if (null === $integration || null === $maxContextLines) {
+            if ($integration === null || $maxContextLines === null) {
                 return $event;
             }
 
             $stacktrace = $event->getStacktrace();
 
-            if (null !== $stacktrace) {
+            if ($stacktrace !== null) {
                 $integration->addContextToStacktraceFrames($maxContextLines, $stacktrace);
             }
 
             foreach ($event->getExceptions() as $exception) {
-                if (null !== $exception->getStacktrace()) {
+                if ($exception->getStacktrace() !== null) {
                     $integration->addContextToStacktraceFrames($maxContextLines, $exception->getStacktrace());
                 }
             }
@@ -78,7 +78,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
     private function addContextToStacktraceFrames(int $maxContextLines, Stacktrace $stacktrace): void
     {
         foreach ($stacktrace->getFrames() as $frame) {
-            if ($frame->isInternal() || null === $frame->getAbsoluteFilePath()) {
+            if ($frame->isInternal() || $frame->getAbsoluteFilePath() === null) {
                 continue;
             }
 

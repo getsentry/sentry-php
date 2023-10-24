@@ -11,7 +11,11 @@ return (new PhpCsFixer\Config())
         ],
         'declare_strict_types' => true,
         'get_class_to_class_keyword' => false,
-        'yoda_style' => true,
+        'yoda_style' => [
+            'equal' => false,
+            'identical' => false,
+            'less_and_greater' => false,
+        ],
         'self_accessor' => false,
         'modernize_strpos' => false,
         'nullable_type_declaration_for_default_null_value' => [

@@ -28,11 +28,11 @@ final class TransactionIntegration implements IntegrationInterface
 
             // The client bound to the current hub, if any, could not have this
             // integration enabled. If this is the case, bail out
-            if (null === $integration) {
+            if ($integration === null) {
                 return $event;
             }
 
-            if (null !== $event->getTransaction()) {
+            if ($event->getTransaction() !== null) {
                 return $event;
             }
 
