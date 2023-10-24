@@ -10,9 +10,20 @@ return (new PhpCsFixer\Config())
             'imports_order' => ['class', 'function', 'const'],
         ],
         'declare_strict_types' => true,
-        'yoda_style' => true,
+        'get_class_to_class_keyword' => false,
+        'yoda_style' => [
+            'equal' => false,
+            'identical' => false,
+            'less_and_greater' => false,
+        ],
         'self_accessor' => false,
-        'phpdoc_no_useless_inheritdoc' => false,
+        'modernize_strpos' => false,
+        'nullable_type_declaration_for_default_null_value' => [
+            'use_nullable_type_declaration' => true,
+        ],
+        'no_superfluous_phpdoc_tags' => [
+            'allow_mixed' => true,
+        ],
         'phpdoc_to_comment' => false,
         'phpdoc_align' => [
             'tags' => ['param', 'return', 'throws', 'type', 'var'],

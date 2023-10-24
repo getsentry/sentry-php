@@ -32,7 +32,7 @@ final class IntegrationRegistry
      */
     public static function getInstance(): self
     {
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 
@@ -134,7 +134,7 @@ final class IntegrationRegistry
             new ModulesIntegration(),
         ];
 
-        if (null !== $options->getDsn()) {
+        if ($options->getDsn() !== null) {
             array_unshift($integrations, new ExceptionListenerIntegration(), new ErrorListenerIntegration(), new FatalErrorListenerIntegration());
         }
 

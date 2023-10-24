@@ -55,15 +55,15 @@ final class EventHint
         $stacktrace = $hintData['stacktrace'] ?? null;
         $extra = $hintData['extra'] ?? [];
 
-        if (null !== $exception && !$exception instanceof \Throwable) {
+        if ($exception !== null && !$exception instanceof \Throwable) {
             throw new \InvalidArgumentException(sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, get_debug_type($exception)));
         }
 
-        if (null !== $mechanism && !$mechanism instanceof ExceptionMechanism) {
+        if ($mechanism !== null && !$mechanism instanceof ExceptionMechanism) {
             throw new \InvalidArgumentException(sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, get_debug_type($mechanism)));
         }
 
-        if (null !== $stacktrace && !$stacktrace instanceof Stacktrace) {
+        if ($stacktrace !== null && !$stacktrace instanceof Stacktrace) {
             throw new \InvalidArgumentException(sprintf('The value of the "stacktrace" field must be an instance of the "%s" class. Got: "%s".', Stacktrace::class, get_debug_type($stacktrace)));
         }
 

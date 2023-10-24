@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Tracing;
 
-use Generator;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -107,7 +106,7 @@ final class TransactionTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public static function parentTransactionContextDataProvider(): Generator
+    public static function parentTransactionContextDataProvider(): \Generator
     {
         yield [
             new TransactionContext(TransactionContext::DEFAULT_NAME, true),
@@ -150,7 +149,7 @@ final class TransactionTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
-    public function parentTransactionContextDataProviderDisabled(): Generator
+    public function parentTransactionContextDataProviderDisabled(): \Generator
     {
         yield [
             new TransactionContext(TransactionContext::DEFAULT_NAME, true),

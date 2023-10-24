@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Monolog;
 
-use DateTimeImmutable;
 use Monolog\Logger;
 use Monolog\LogRecord;
 
@@ -24,7 +23,7 @@ final class RecordFactory
     {
         if (Logger::API >= 3) {
             return new LogRecord(
-                new DateTimeImmutable(),
+                new \DateTimeImmutable(),
                 $channel,
                 Logger::toMonologLevel($level),
                 $message,

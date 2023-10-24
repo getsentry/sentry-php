@@ -245,6 +245,6 @@ final class Frame
      */
     public function isInternal(): bool
     {
-        return self::INTERNAL_FRAME_FILENAME === $this->file;
+        return $this->file === self::INTERNAL_FRAME_FILENAME;
     }
 }

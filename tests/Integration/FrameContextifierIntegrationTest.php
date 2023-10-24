@@ -15,6 +15,7 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
+
 use function Sentry\withScope;
 
 final class FrameContextifierIntegrationTest extends TestCase
@@ -159,7 +160,7 @@ final class FrameContextifierIntegrationTest extends TestCase
     {
         $fileContent = file_get_contents($file);
 
-        if (false === $fileContent) {
+        if ($fileContent === false) {
             throw new \RuntimeException(sprintf('The fixture file at path "%s" could not be read.', $file));
         }
 

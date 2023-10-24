@@ -31,7 +31,7 @@ class HttpClient implements HttpClientInterface
     public function sendRequest(string $requestData, Options $options): Response
     {
         $dsn = $options->getDsn();
-        if (null === $dsn) {
+        if ($dsn === null) {
             throw new \RuntimeException('The DSN option must be set to use the HttpClient.');
         }
 
@@ -60,13 +60,13 @@ class HttpClient implements HttpClientInterface
         }
 
         $httpProxy = $options->getHttpProxy();
-        if (null !== $httpProxy) {
+        if ($httpProxy !== null) {
             curl_setopt($curlHandle, \CURLOPT_PROXY, $httpProxy);
             curl_setopt($curlHandle, \CURLOPT_HEADEROPT, \CURLHEADER_SEPARATE);
         }
 
         $httpProxyAuthentication = $options->getHttpProxyAuthentication();
-        if (null !== $httpProxyAuthentication) {
+        if ($httpProxyAuthentication !== null) {
             curl_setopt($curlHandle, \CURLOPT_PROXYUSERPWD, $httpProxyAuthentication);
         }
 
@@ -75,7 +75,7 @@ class HttpClient implements HttpClientInterface
          */
         $body = curl_exec($curlHandle);
 
-        if (false === $body) {
+        if ($body === false) {
             $errorCode = curl_errno($curlHandle);
             $error = curl_error($curlHandle);
             curl_close($curlHandle);

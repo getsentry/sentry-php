@@ -59,7 +59,7 @@ final class Options
 
         $this->options = $this->resolver->resolve($options);
 
-        if (true === $this->options['enable_tracing'] && null === $this->options['traces_sample_rate']) {
+        if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
             $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
         }
     }
@@ -187,11 +187,11 @@ final class Options
      */
     public function isTracingEnabled(): bool
     {
-        if (null !== $this->getEnableTracing() && false === $this->getEnableTracing()) {
+        if ($this->getEnableTracing() !== null && $this->getEnableTracing() === false) {
             return false;
         }
 
-        return null !== $this->getTracesSampleRate() || null !== $this->getTracesSampler();
+        return $this->getTracesSampleRate() !== null || $this->getTracesSampler() !== null;
     }
 
     /**
@@ -335,9 +335,9 @@ final class Options
      *
      * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getLogger(/*bool $triggerDeprecation = true*/): string
+    public function getLogger(/* bool $triggerDeprecation = true */): string
     {
-        if (0 === \func_num_args() || false !== func_get_arg(0)) {
+        if (\func_num_args() === 0 || func_get_arg(0) !== false) {
             @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
         }
 
@@ -364,8 +364,6 @@ final class Options
 
     /**
      * Gets the release tag to be passed with every event sent to Sentry.
-     *
-     * @return string
      */
     public function getRelease(): ?string
     {
@@ -420,6 +418,7 @@ final class Options
      * Gets a list of exceptions to be ignored and not sent to Sentry.
      *
      * @return string[]
+     *
      * @psalm-return list<class-string<\Throwable>>
      */
     public function getIgnoreExceptions(): array
@@ -1093,7 +1092,7 @@ final class Options
         });
 
         $resolver->setNormalizer('logger', function (SymfonyOptions $options, ?string $value): ?string {
-            if ('php' !== $value) {
+            if ($value !== 'php') {
                 @trigger_error('The option "logger" is deprecated.', \E_USER_DEPRECATED);
             }
 
@@ -1110,7 +1109,7 @@ final class Options
     {
         $path = @realpath($value);
 
-        if (false === $path) {
+        if ($path === false) {
             $path = $value;
         }
 
@@ -1126,7 +1125,7 @@ final class Options
      */
     private function normalizeDsnOption(SymfonyOptions $options, $value): ?Dsn
     {
-        if (null === $value || \is_bool($value)) {
+        if ($value === null || \is_bool($value)) {
             return null;
         }
 
@@ -1156,12 +1155,12 @@ final class Options
      */
     private function validateDsnOption($dsn): bool
     {
-        if (null === $dsn || $dsn instanceof Dsn) {
+        if ($dsn === null || $dsn instanceof Dsn) {
             return true;
         }
 
         if (\is_bool($dsn)) {
-            return false === $dsn;
+            return $dsn === false;
         }
 
         switch (strtolower($dsn)) {
@@ -1217,6 +1216,6 @@ final class Options
      */
     private function validateContextLinesOption(?int $contextLines): bool
     {
-        return null === $contextLines || $contextLines >= 0;
+        return $contextLines === null || $contextLines >= 0;
     }
 }

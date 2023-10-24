@@ -468,7 +468,7 @@ abstract class AbstractSerializerTest extends TestCase
                 'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass param1d]',
             ],
             [
-                'callable' => function (\stdClass $param1e = null) {
+                'callable' => function (?\stdClass $param1e = null) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass|null [param1e]]',
@@ -480,7 +480,7 @@ abstract class AbstractSerializerTest extends TestCase
                 'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array &param1f]',
             ],
             [
-                'callable' => function (array &$param1g = null) {
+                'callable' => function (?array &$param1g = null) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => 'Lambda ' . __NAMESPACE__ . '\\{closure} [array|null [&param1g]]',
@@ -564,7 +564,7 @@ abstract class AbstractSerializerTest extends TestCase
     /**
      * @dataProvider serializationForBadStringsDataProvider
      */
-    public function testSerializationForBadStrings(string $string, string $expected, string $mbDetectOrder = null): void
+    public function testSerializationForBadStrings(string $string, string $expected, ?string $mbDetectOrder = null): void
     {
         $serializer = $this->createSerializer();
 

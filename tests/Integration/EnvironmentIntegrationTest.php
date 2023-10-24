@@ -14,6 +14,7 @@ use Sentry\Integration\EnvironmentIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Util\PHPVersion;
+
 use function Sentry\withScope;
 
 final class EnvironmentIntegrationTest extends TestCase
@@ -46,14 +47,14 @@ final class EnvironmentIntegrationTest extends TestCase
             $runtimeContext = $event->getRuntimeContext();
             $osContext = $event->getOsContext();
 
-            if (null === $expectedRuntimeContext) {
+            if ($expectedRuntimeContext === null) {
                 $this->assertNull($runtimeContext);
             } else {
                 $this->assertSame($expectedRuntimeContext->getName(), $runtimeContext->getName());
                 $this->assertSame($expectedRuntimeContext->getVersion(), $runtimeContext->getVersion());
             }
 
-            if (null === $expectedOsContext) {
+            if ($expectedOsContext === null) {
                 $this->assertNull($expectedOsContext);
             } else {
                 $this->assertSame($expectedOsContext->getName(), $osContext->getName());

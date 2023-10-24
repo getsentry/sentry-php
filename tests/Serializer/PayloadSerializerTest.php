@@ -53,8 +53,8 @@ final class PayloadSerializerTest extends TestCase
         $result = $serializer->serialize($event);
 
         if (
-            EventType::transaction() !== $event->getType() &&
-            EventType::checkIn() !== $event->getType()
+            EventType::transaction() !== $event->getType()
+            && EventType::checkIn() !== $event->getType()
         ) {
             $resultArray = $serializer->toArray($event);
             $this->assertJsonStringEqualsJsonString($result, json_encode($resultArray));

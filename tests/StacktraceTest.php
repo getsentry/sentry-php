@@ -74,7 +74,7 @@ final class StacktraceTest extends TestCase
      */
     public function testRemoveFrame(int $index, ?string $expectedExceptionMessage): void
     {
-        if (null !== $expectedExceptionMessage) {
+        if ($expectedExceptionMessage !== null) {
             $this->expectException(\OutOfBoundsException::class);
             $this->expectExceptionMessage($expectedExceptionMessage);
         }

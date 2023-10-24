@@ -23,7 +23,7 @@ final class Http
             'sentry_key' => $dsn->getPublicKey(),
         ];
 
-        if (null !== $dsn->getSecretKey()) {
+        if ($dsn->getSecretKey() !== null) {
             $data['sentry_secret'] = $dsn->getSecretKey();
         }
 
@@ -40,15 +40,25 @@ final class Http
 
     /**
      * @param string[][] $headers
+     *
+     * @param-out string[][] $headers
      */
-    public static function parseResponseHeaders(string $headerLine, &$headers): int
+    public static function parseResponseHeaders(string $headerLine, array &$headers): int
     {
-        if (false === strpos($headerLine, ':')) {
+        if (strpos($headerLine, ':') === false) {
             return \strlen($headerLine);
         }
 
-        [$key, $value] = explode(':', trim($headerLine), 2);
-        $headers[trim($key)] = trim($value);
+        [$name, $value] = explode(':', trim($headerLine), 2);
+
+        $name = trim($name);
+        $value = trim($value);
+
+        if (isset($headers[$name])) {
+            $headers[$name][] = $value;
+        } else {
+            $headers[$name] = (array) $value;
+        }
 
         return \strlen($headerLine);
     }

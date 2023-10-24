@@ -78,11 +78,11 @@ final class Hub implements HubInterface
      */
     public function popScope(): bool
     {
-        if (1 === \count($this->stack)) {
+        if (\count($this->stack) === 1) {
             return false;
         }
 
-        return null !== array_pop($this->stack);
+        return array_pop($this->stack) !== null;
     }
 
     /**
@@ -123,7 +123,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope(), $hint);
         }
 
@@ -137,7 +137,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             return $this->lastEventId = $client->captureException($exception, $this->getScope(), $hint);
         }
 
@@ -151,7 +151,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             return $this->lastEventId = $client->captureEvent($event, $hint, $this->getScope());
         }
 
@@ -165,7 +165,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             return $this->lastEventId = $client->captureLastError($this->getScope(), $hint);
         }
 
@@ -181,7 +181,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null === $client) {
+        if ($client === null) {
             return null;
         }
 
@@ -209,7 +209,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null === $client) {
+        if ($client === null) {
             return false;
         }
 
@@ -223,11 +223,11 @@ final class Hub implements HubInterface
 
         $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
 
-        if (null !== $breadcrumb) {
+        if ($breadcrumb !== null) {
             $this->getScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
         }
 
-        return null !== $breadcrumb;
+        return $breadcrumb !== null;
     }
 
     /**
@@ -237,7 +237,7 @@ final class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             return $client->getIntegration($className);
         }
 
@@ -253,9 +253,9 @@ final class Hub implements HubInterface
     {
         $transaction = new Transaction($context, $this);
         $client = $this->getClient();
-        $options = null !== $client ? $client->getOptions() : null;
+        $options = $client !== null ? $client->getOptions() : null;
 
-        if (null === $options || !$options->isTracingEnabled()) {
+        if ($options === null || !$options->isTracingEnabled()) {
             $transaction->setSampled(false);
 
             return $transaction;
@@ -266,8 +266,8 @@ final class Hub implements HubInterface
 
         $tracesSampler = $options->getTracesSampler();
 
-        if (null === $transaction->getSampled()) {
-            if (null !== $tracesSampler) {
+        if ($transaction->getSampled() === null) {
+            if ($tracesSampler !== null) {
                 $sampleRate = $tracesSampler($samplingContext);
             } else {
                 $sampleRate = $this->getSampleRate(
@@ -284,7 +284,7 @@ final class Hub implements HubInterface
 
             $transaction->getMetadata()->setSamplingRate($sampleRate);
 
-            if (0.0 === $sampleRate) {
+            if ($sampleRate === 0.0) {
                 $transaction->setSampled(false);
 
                 return $transaction;
@@ -303,7 +303,7 @@ final class Hub implements HubInterface
         if ($this->sample($profilesSampleRate)) {
             $transaction->initProfiler();
             $profiler = $transaction->getProfiler();
-            if (null !== $profiler) {
+            if ($profiler !== null) {
                 $profiler->start();
             }
         }
@@ -355,11 +355,11 @@ final class Hub implements HubInterface
 
     private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
     {
-        if (true === $hasParentBeenSampled) {
+        if ($hasParentBeenSampled === true) {
             return 1;
         }
 
-        if (false === $hasParentBeenSampled) {
+        if ($hasParentBeenSampled === false) {
             return 0;
         }
 
@@ -371,11 +371,11 @@ final class Hub implements HubInterface
      */
     private function sample($sampleRate): bool
     {
-        if (0.0 === $sampleRate) {
+        if ($sampleRate === 0.0) {
             return false;
         }
 
-        if (1.0 === $sampleRate) {
+        if ($sampleRate === 1.0) {
             return true;
         }
 

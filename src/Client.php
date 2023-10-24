@@ -115,7 +115,7 @@ final class Client implements ClientInterface
     {
         $dsn = $this->options->getDsn();
 
-        if (null === $dsn) {
+        if ($dsn === null) {
             return null;
         }
 
@@ -151,7 +151,7 @@ final class Client implements ClientInterface
     {
         $hint = $hint ?? new EventHint();
 
-        if (null === $hint->exception) {
+        if ($hint->exception === null) {
             $hint->exception = $exception;
         }
 
@@ -165,7 +165,7 @@ final class Client implements ClientInterface
     {
         $event = $this->prepareEvent($event, $hint, $scope);
 
-        if (null === $event) {
+        if ($event === null) {
             return null;
         }
 
@@ -174,7 +174,7 @@ final class Client implements ClientInterface
             $result = $this->transport->send($event);
             $event = $result->getEvent();
 
-            if (null !== $event) {
+            if ($event !== null) {
                 return $event->getId();
             }
         } catch (\Throwable $exception) {
@@ -194,7 +194,7 @@ final class Client implements ClientInterface
     {
         $error = error_get_last();
 
-        if (null === $error || !isset($error['message'][0])) {
+        if ($error === null || !isset($error['message'][0])) {
             return null;
         }
 
@@ -241,12 +241,12 @@ final class Client implements ClientInterface
      */
     private function prepareEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?Event
     {
-        if (null !== $hint) {
-            if (null !== $hint->exception && empty($event->getExceptions())) {
+        if ($hint !== null) {
+            if ($hint->exception !== null && empty($event->getExceptions())) {
                 $this->addThrowableToEvent($event, $hint->exception, $hint);
             }
 
-            if (null !== $hint->stacktrace && null === $event->getStacktrace()) {
+            if ($hint->stacktrace !== null && $event->getStacktrace() === null) {
                 $event->setStacktrace($hint->stacktrace);
             }
         }
@@ -257,19 +257,19 @@ final class Client implements ClientInterface
         $event->setSdkVersion($this->sdkVersion);
         $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
 
-        if (null === $event->getServerName()) {
+        if ($event->getServerName() === null) {
             $event->setServerName($this->options->getServerName());
         }
 
-        if (null === $event->getRelease()) {
+        if ($event->getRelease() === null) {
             $event->setRelease($this->options->getRelease());
         }
 
-        if (null === $event->getEnvironment()) {
+        if ($event->getEnvironment() === null) {
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
-        if (null === $event->getLogger()) {
+        if ($event->getLogger() === null) {
             $event->setLogger($this->options->getLogger(false));
         }
 
@@ -284,15 +284,15 @@ final class Client implements ClientInterface
 
         $event = $this->applyIgnoreOptions($event);
 
-        if (null === $event) {
+        if ($event === null) {
             return null;
         }
 
-        if (null !== $scope) {
+        if ($scope !== null) {
             $beforeEventProcessors = $event;
             $event = $scope->applyToEvent($event, $hint, $this->options);
 
-            if (null === $event) {
+            if ($event === null) {
                 $this->logger->info(
                     'The event will be discarded because one of the event processors returned "null".',
                     ['event' => $beforeEventProcessors]
@@ -305,7 +305,7 @@ final class Client implements ClientInterface
         $beforeSendCallback = $event;
         $event = $this->applyBeforeSendCallback($event, $hint);
 
-        if (null === $event) {
+        if ($event === null) {
             $this->logger->info(
                 sprintf(
                     'The event will be discarded because the "%s" callback returned "null".',
@@ -344,7 +344,7 @@ final class Client implements ClientInterface
         if ($event->getType() === EventType::transaction()) {
             $transactionName = $event->getTransaction();
 
-            if (null === $transactionName) {
+            if ($transactionName === null) {
                 return $event;
             }
 
@@ -397,7 +397,7 @@ final class Client implements ClientInterface
         }
 
         // We should not add a stacktrace when the event already has one or contains exceptions
-        if (null !== $event->getStacktrace() || !empty($event->getExceptions())) {
+        if ($event->getStacktrace() !== null || !empty($event->getExceptions())) {
             return;
         }
 
@@ -417,7 +417,7 @@ final class Client implements ClientInterface
      */
     private function addThrowableToEvent(Event $event, \Throwable $exception, EventHint $hint): void
     {
-        if ($exception instanceof \ErrorException && null === $event->getLevel()) {
+        if ($exception instanceof \ErrorException && $event->getLevel() === null) {
             $event->setLevel(Severity::fromError($exception->getSeverity()));
         }
 

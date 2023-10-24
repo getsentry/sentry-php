@@ -43,7 +43,7 @@ final class SentrySdk
      */
     public static function getCurrentHub(): HubInterface
     {
-        if (null === self::$currentHub) {
+        if (self::$currentHub === null) {
             self::$currentHub = new Hub();
         }
 

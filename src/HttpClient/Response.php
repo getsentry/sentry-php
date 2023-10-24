@@ -89,6 +89,6 @@ final class Response
 
     public function hasError(): bool
     {
-        return '' !== $this->error;
+        return $this->error !== '';
     }
 }
