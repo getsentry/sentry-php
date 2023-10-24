@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\Exception\InvalidArgumentException;
-
 /**
  * This class stores all the information about a breadcrumb.
  *
@@ -118,7 +116,7 @@ final class Breadcrumb
     public function __construct(string $level, string $type, string $category, ?string $message = null, array $metadata = [], ?float $timestamp = null)
     {
         if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+            throw new \InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
         }
 
         $this->type = $type;
@@ -174,7 +172,7 @@ final class Breadcrumb
     public function withLevel(string $level): self
     {
         if (!\in_array($level, self::ALLOWED_LEVELS, true)) {
-            throw new InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
+            throw new \InvalidArgumentException('The value of the $level argument must be one of the Breadcrumb::LEVEL_* constants.');
         }
 
         if ($level === $this->level) {
