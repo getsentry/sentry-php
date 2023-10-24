@@ -13,6 +13,7 @@ return (new PhpCsFixer\Config())
         'get_class_to_class_keyword' => false,
         'yoda_style' => true,
         'self_accessor' => false,
+        'modernize_strpos' => false,
         'nullable_type_declaration_for_default_null_value' => [
             'use_nullable_type_declaration' => true,
         ],
