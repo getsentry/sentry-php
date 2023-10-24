@@ -82,7 +82,7 @@ final class Scope
      */
     private static $globalEventProcessors = [];
 
-    public function __construct(PropagationContext $propagationContext = null)
+    public function __construct(?PropagationContext $propagationContext = null)
     {
         $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
     }

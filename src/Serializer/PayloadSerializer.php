@@ -232,8 +232,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
          * as a context into the payload.
          */
         if (
-            EventType::event() === $event->getType() &&
-            !$this->options->isTracingEnabled()
+            EventType::event() === $event->getType()
+            && !$this->options->isTracingEnabled()
         ) {
             $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
             if ($dynamicSamplingContext instanceof DynamicSamplingContext) {

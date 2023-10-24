@@ -38,7 +38,7 @@ final class Transaction extends Span
     /**
      * @var Profiler|null Reference instance to the {@see Profiler}
      */
-    protected $profiler = null;
+    protected $profiler;
 
     /**
      * Span constructor.

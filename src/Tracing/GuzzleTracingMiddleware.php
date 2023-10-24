@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use Closure;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
@@ -13,6 +12,7 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
+
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
 
@@ -21,9 +21,9 @@ use function Sentry\getTraceparent;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?HubInterface $hub = null): Closure
+    public static function trace(?HubInterface $hub = null): \Closure
     {
-        return static function (callable $handler) use ($hub): Closure {
+        return static function (callable $handler) use ($hub): \Closure {
             return static function (RequestInterface $request, array $options) use ($hub, $handler) {
                 $hub = $hub ?? SentrySdk::getCurrentHub();
                 $client = $hub->getClient();
@@ -125,11 +125,11 @@ final class GuzzleTracingMiddleware
 
             // Check if the request destination is allow listed in the trace_propagation_targets option.
             if (
-                null !== $sdkOptions->getTracePropagationTargets() &&
+                null !== $sdkOptions->getTracePropagationTargets()
                 // Due to BC, we treat an empty array (the default) as all hosts are allow listed
-                (
-                    [] === $sdkOptions->getTracePropagationTargets() ||
-                    \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
+                && (
+                    [] === $sdkOptions->getTracePropagationTargets()
+                    || \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets())
                 )
             ) {
                 return true;

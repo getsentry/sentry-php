@@ -30,6 +30,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructor(): void
@@ -39,6 +40,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContext(): void
@@ -48,6 +50,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContextAndStartTimestamp(): void

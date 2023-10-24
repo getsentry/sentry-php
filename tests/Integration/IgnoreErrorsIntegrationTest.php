@@ -12,6 +12,7 @@ use Sentry\ExceptionDataBag;
 use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+
 use function Sentry\withScope;
 
 final class IgnoreErrorsIntegrationTest extends TestCase

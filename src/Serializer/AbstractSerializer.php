@@ -254,7 +254,7 @@ abstract class AbstractSerializer
                 }
             }
 
-            return 'Object ' . $reflection->getName() . (is_scalar($objectId) ? '(#' . $objectId . ')' : '');
+            return 'Object ' . $reflection->getName() . (\is_scalar($objectId) ? '(#' . $objectId . ')' : '');
         }
 
         if (\is_resource($value)) {

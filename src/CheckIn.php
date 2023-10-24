@@ -49,7 +49,7 @@ final class CheckIn
     public function __construct(
         string $monitorSlug,
         CheckInStatus $status,
-        string $id = null,
+        ?string $id = null,
         ?string $release = null,
         ?string $environment = null,
         $duration = null,

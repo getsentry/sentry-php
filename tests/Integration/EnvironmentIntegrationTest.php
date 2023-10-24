@@ -14,6 +14,7 @@ use Sentry\Integration\EnvironmentIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Util\PHPVersion;
+
 use function Sentry\withScope;
 
 final class EnvironmentIntegrationTest extends TestCase

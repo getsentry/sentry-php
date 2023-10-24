@@ -31,7 +31,7 @@ interface ClientInterface
      * @param Scope|null     $scope   An optional scope keeping the state
      * @param EventHint|null $hint    Object that can contain additional information about the event
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Logs an exception.
@@ -40,7 +40,7 @@ interface ClientInterface
      * @param Scope|null     $scope     An optional scope keeping the state
      * @param EventHint|null $hint      Object that can contain additional information about the event
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
@@ -48,7 +48,7 @@ interface ClientInterface
      * @param Scope|null     $scope An optional scope keeping the state
      * @param EventHint|null $hint  Object that can contain additional information about the event
      */
-    public function captureLastError(?Scope $scope = null/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures a new event using the provided data.

@@ -15,6 +15,7 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
+
 use function Sentry\withScope;
 
 final class FrameContextifierIntegrationTest extends TestCase

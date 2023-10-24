@@ -69,7 +69,7 @@ final class Options
      *
      * @deprecated since version 3.5, to be removed in 4.0
      */
-    public function getSendAttempts(/*bool $triggerDeprecation = true*/): int
+    public function getSendAttempts(/* bool $triggerDeprecation = true */): int
     {
         if (0 === \func_num_args() || false !== func_get_arg(0)) {
             @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
@@ -343,7 +343,7 @@ final class Options
      *
      * @deprecated since version 3.2, to be removed in 4.0
      */
-    public function getLogger(/*bool $triggerDeprecation = true*/): string
+    public function getLogger(/* bool $triggerDeprecation = true */): string
     {
         if (0 === \func_num_args() || false !== func_get_arg(0)) {
             @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
@@ -370,8 +370,6 @@ final class Options
 
     /**
      * Gets the release tag to be passed with every event sent to Sentry.
-     *
-     * @return string
      */
     public function getRelease(): ?string
     {

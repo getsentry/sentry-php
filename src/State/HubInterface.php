@@ -91,7 +91,7 @@ interface HubInterface
      * @param Severity|null  $level   The severity level of the message
      * @param EventHint|null $hint    Object that can contain additional information about the event
      */
-    public function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures an exception event and sends it to Sentry.
@@ -99,7 +99,7 @@ interface HubInterface
      * @param \Throwable     $exception The exception
      * @param EventHint|null $hint      Object that can contain additional information about the event
      */
-    public function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures a new event using the provided data.
@@ -114,7 +114,7 @@ interface HubInterface
      *
      * @param EventHint|null $hint Object that can contain additional information about the event
      */
-    public function captureLastError(/*?EventHint $hint = null*/): ?EventId;
+    public function captureLastError(?EventHint $hint = null): ?EventId;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They
@@ -158,7 +158,7 @@ interface HubInterface
      * @param TransactionContext   $context               Properties of the new transaction
      * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context/*, array $customSamplingContext = []*/): Transaction;
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction;
 
     /**
      * Returns the transaction that is on the Hub.

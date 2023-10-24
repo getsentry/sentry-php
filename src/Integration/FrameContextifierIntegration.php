@@ -113,7 +113,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
             'post_context' => [],
         ];
 
-        $target = max(0, ($lineNumber - ($maxContextLines + 1)));
+        $target = max(0, $lineNumber - ($maxContextLines + 1));
         $currentLineNumber = $target + 1;
 
         try {

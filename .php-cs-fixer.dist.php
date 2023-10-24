@@ -15,7 +15,9 @@ return (new PhpCsFixer\Config())
         'nullable_type_declaration_for_default_null_value' => [
             'use_nullable_type_declaration' => true,
         ],
-        'phpdoc_no_useless_inheritdoc' => false,
+        'no_superfluous_phpdoc_tags' => [
+            'allow_mixed' => true,
+        ],
         'phpdoc_to_comment' => false,
         'phpdoc_align' => [
             'tags' => ['param', 'return', 'throws', 'type', 'var'],

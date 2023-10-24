@@ -25,7 +25,6 @@ use Sentry\Util\SentryUid;
  *     module: string|null,
  *     lineno: int|null,
  * }
- *
  * @phpstan-type SentryProfile array{
  *    device: array{
  *        architecture: string,
@@ -61,7 +60,6 @@ use Sentry\Util\SentryUid;
  *        stacks: array<int, array<int, int>>,
  *    },
  * }
- *
  * @phpstan-type ExcimerLogStackEntryTrace array{
  *     file: string,
  *     line: int,
@@ -69,7 +67,6 @@ use Sentry\Util\SentryUid;
  *     function?: string,
  *     closure_line?: int,
  * }
- *
  * @phpstan-type ExcimerLogStackEntry array{
  *     trace: array<int, ExcimerLogStackEntryTrace>,
  *     timestamp: float

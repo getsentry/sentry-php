@@ -18,6 +18,7 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
+
 use function Sentry\withScope;
 
 final class RequestIntegrationTest extends TestCase
@@ -105,7 +106,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => true,
             ],
-            (new ServerRequest('GET', 'http://www.example.com:1234/foo')),
+            new ServerRequest('GET', 'http://www.example.com:1234/foo'),
             [
                 'url' => 'http://www.example.com:1234/foo',
                 'method' => 'GET',
@@ -122,7 +123,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'send_default_pii' => false,
             ],
-            (new ServerRequest('GET', 'http://www.example.com:1234/foo')),
+            new ServerRequest('GET', 'http://www.example.com:1234/foo'),
             [
                 'url' => 'http://www.example.com:1234/foo',
                 'method' => 'GET',
