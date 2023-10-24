@@ -1063,7 +1063,7 @@ final class Options
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
-        $resolver->setAllowedTypes('http_client', ['null', HttpCLientInterface::class]);
+        $resolver->setAllowedTypes('http_client', ['null', HttpClientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
         $resolver->setAllowedTypes('http_proxy_authentication', ['null', 'string']);
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
