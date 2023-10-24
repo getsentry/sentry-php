@@ -479,7 +479,7 @@ final class Options
      * Sets a callable to be called to decide whether an event should
      * be captured or not.
      *
-     * @param callable                                  $callback The callable
+     * @param callable $callback The callable
      *
      * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
@@ -507,7 +507,7 @@ final class Options
      * Sets a callable to be called to decide whether an transaction should
      * be captured or not.
      *
-     * @param callable                                  $callback The callable
+     * @param callable $callback The callable
      *
      * @psalm-param callable(Event, ?EventHint): ?Event $callback
      */
@@ -629,7 +629,7 @@ final class Options
      * modify the breadcrumb, simply return it at the end. Returning `null` will
      * cause the breadcrumb to be dropped.
      *
-     * @param callable                                $callback The callback
+     * @param callable $callback The callback
      *
      * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
      */
@@ -961,7 +961,7 @@ final class Options
      * Sets a callback that will be invoked when we take the sampling decision for Transactions.
      * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
      *
-     * @param ?callable                                                   $sampler The sampler
+     * @param ?callable $sampler The sampler
      *
      * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
      */
@@ -1006,30 +1006,30 @@ final class Options
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
-            'before_send_transaction'   => static function (Event $transaction): Event {
+            'before_send_transaction' => static function (Event $transaction): Event {
                 return $transaction;
             },
             'trace_propagation_targets' => [],
-            'tags'                      => [],
-            'error_types'               => null,
-            'max_breadcrumbs'           => self::DEFAULT_MAX_BREADCRUMBS,
-            'before_breadcrumb'         => static function (Breadcrumb $breadcrumb): Breadcrumb {
+            'tags' => [],
+            'error_types' => null,
+            'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
+            'before_breadcrumb' => static function (Breadcrumb $breadcrumb): Breadcrumb {
                 return $breadcrumb;
             },
-            'in_app_exclude'            => [],
-            'in_app_include'            => [],
-            'send_default_pii'          => false,
-            'max_value_length'          => 1024,
-            'transport'                 => null,
-            'http_client'               => null,
-            'http_proxy'                => null,
+            'in_app_exclude' => [],
+            'in_app_include' => [],
+            'send_default_pii' => false,
+            'max_value_length' => 1024,
+            'transport' => null,
+            'http_client' => null,
+            'http_proxy' => null,
             'http_proxy_authentication' => null,
-            'http_connect_timeout'      => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
-            'http_timeout'              => self::DEFAULT_HTTP_TIMEOUT,
-            'http_ssl_verify_peer'      => true,
-            'capture_silenced_errors'   => false,
-            'max_request_body_size'     => 'medium',
-            'class_serializers'         => [],
+            'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
+            'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
+            'http_ssl_verify_peer' => true,
+            'capture_silenced_errors' => false,
+            'max_request_body_size' => 'medium',
+            'class_serializers' => [],
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
