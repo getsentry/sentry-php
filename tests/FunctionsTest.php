@@ -343,9 +343,9 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::setCurrentHub($hub);
 
-        $spanContext = new SpanContext();
-        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
-        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $spanContext = (new SpanContext())
+            ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
+            ->setSpanId(new SpanId('566e3688a61d4bc8'));
 
         $span = new Span($spanContext);
 
