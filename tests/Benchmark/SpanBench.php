@@ -8,6 +8,7 @@ use PhpBench\Benchmark\Metadata\Annotations\Iterations;
 use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionContext;
+
 use function Sentry\continueTrace;
 
 final class SpanBench
