@@ -104,21 +104,18 @@ final class Transaction extends Span
      *
      * @param int $maxSpans The maximum number of spans that can be recorded
      */
-    public function initSpanRecorder(int $maxSpans = 1000): void
+    public function initSpanRecorder(int $maxSpans = 1000): self
     {
         if (null === $this->spanRecorder) {
             $this->spanRecorder = new SpanRecorder($maxSpans);
         }
 
         $this->spanRecorder->add($this);
+
+        return $this;
     }
 
-    public function detachSpanRecorder(): void
-    {
-        $this->spanRecorder = null;
-    }
-
-    public function initProfiler(): void
+    public function initProfiler(): self
     {
         if (null === $this->profiler) {
             $client = $this->hub->getClient();
@@ -126,6 +123,8 @@ final class Transaction extends Span
 
             $this->profiler = new Profiler($options);
         }
+
+        return $this;
     }
 
     public function getProfiler(): ?Profiler
@@ -133,9 +132,11 @@ final class Transaction extends Span
         return $this->profiler;
     }
 
-    public function detachProfiler(): void
+    public function detachProfiler(): self
     {
         $this->profiler = null;
+
+        return $this;
     }
 
     /**
