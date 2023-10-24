@@ -65,38 +65,6 @@ final class Options
     }
 
     /**
-     * Gets the number of attempts to resend an event that failed to be sent.
-     *
-     * @deprecated since version 3.5, to be removed in 4.0
-     */
-    public function getSendAttempts(/*bool $triggerDeprecation = true*/): int
-    {
-        if (0 === \func_num_args() || false !== func_get_arg(0)) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-        }
-
-        return $this->options['send_attempts'];
-    }
-
-    /**
-     * Sets the number of attempts to resend an event that failed to be sent.
-     *
-     * @param int $attemptsCount The number of attempts
-     *
-     * @deprecated since version 3.5, to be removed in 4.0
-     */
-    public function setSendAttempts(int $attemptsCount): self
-    {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.5 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-
-        $options = array_merge($this->options, ['send_attempts' => $attemptsCount]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
      * Gets the prefixes which should be stripped from filenames to create
      * relative paths.
      *
@@ -452,6 +420,7 @@ final class Options
      * Gets a list of exceptions to be ignored and not sent to Sentry.
      *
      * @return string[]
+     * @psalm-return list<class-string<\Throwable>>
      */
     public function getIgnoreExceptions(): array
     {
@@ -1017,26 +986,25 @@ final class Options
     private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'integrations'              => [],
-            'default_integrations'      => true,
-            'send_attempts'             => 0,
-            'prefixes'                  => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
-            'sample_rate'               => 1,
-            'enable_tracing'            => null,
-            'traces_sample_rate'        => null,
-            'traces_sampler'            => null,
-            'profiles_sample_rate'      => null,
-            'attach_stacktrace'         => false,
-            'context_lines'             => 5,
-            'enable_compression'        => true,
-            'environment'               => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
-            'logger'                    => 'php',
-            'release'                   => $_SERVER['SENTRY_RELEASE'] ?? null,
-            'dsn'                       => $_SERVER['SENTRY_DSN'] ?? null,
-            'server_name'               => gethostname(),
-            'ignore_exceptions'         => [],
-            'ignore_transactions'       => [],
-            'before_send'               => static function (Event $event): Event {
+            'integrations' => [],
+            'default_integrations' => true,
+            'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
+            'sample_rate' => 1,
+            'enable_tracing' => null,
+            'traces_sample_rate' => null,
+            'traces_sampler' => null,
+            'profiles_sample_rate' => null,
+            'attach_stacktrace' => false,
+            'context_lines' => 5,
+            'enable_compression' => true,
+            'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
+            'logger' => 'php',
+            'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
+            'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
+            'server_name' => gethostname(),
+            'ignore_exceptions' => [],
+            'ignore_transactions' => [],
+            'before_send' => static function (Event $event): Event {
                 return $event;
             },
             'before_send_transaction'   => static function (Event $transaction): Event {
@@ -1065,7 +1033,6 @@ final class Options
             'class_serializers'         => [],
         ]);
 
-        $resolver->setAllowedTypes('send_attempts', 'int');
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
