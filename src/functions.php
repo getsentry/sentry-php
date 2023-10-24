@@ -165,7 +165,7 @@ function trace(callable $trace, SpanContext $context)
         // If there's a span set on the scope there is a transaction
         // active currently. If that is the case we create a child span
         // and set it on the scope. Otherwise we only execute the callable
-        if (null !== $parentSpan) {
+        if ($parentSpan !== null) {
             $span = $parentSpan->startChild($context);
 
             $scope->setSpan($span);
@@ -194,12 +194,12 @@ function getTraceparent(): string
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
-    if (null !== $client) {
+    if ($client !== null) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->isTracingEnabled()) {
+        if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
-            if (null !== $span) {
+            if ($span !== null) {
                 return $span->toTraceparent();
             }
         }
@@ -224,12 +224,12 @@ function getBaggage(): string
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
-    if (null !== $client) {
+    if ($client !== null) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->isTracingEnabled()) {
+        if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
-            if (null !== $span) {
+            if ($span !== null) {
                 return $span->toBaggage();
             }
         }

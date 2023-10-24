@@ -76,7 +76,7 @@ abstract class AbstractSerializer
     {
         $this->maxDepth = $maxDepth;
 
-        if (null != $mbDetectOrder) {
+        if ($mbDetectOrder != null) {
             $this->mbDetectOrder = $mbDetectOrder;
         }
 
@@ -235,7 +235,7 @@ abstract class AbstractSerializer
      */
     protected function serializeValue($value)
     {
-        if ((null === $value) || \is_bool($value) || is_numeric($value)) {
+        if (($value === null) || \is_bool($value) || is_numeric($value)) {
             return $value;
         }
 
@@ -253,7 +253,7 @@ abstract class AbstractSerializer
                 }
             }
 
-            return 'Object ' . $reflection->getName() . (is_scalar($objectId) ? '(#' . $objectId . ')' : '');
+            return 'Object ' . $reflection->getName() . (\is_scalar($objectId) ? '(#' . $objectId . ')' : '');
         }
 
         if (\is_resource($value)) {

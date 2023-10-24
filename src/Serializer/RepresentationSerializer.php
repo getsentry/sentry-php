@@ -37,15 +37,15 @@ class RepresentationSerializer extends AbstractSerializer implements Representat
      */
     protected function serializeValue($value)
     {
-        if (null === $value) {
+        if ($value === null) {
             return 'null';
         }
 
-        if (false === $value) {
+        if ($value === false) {
             return 'false';
         }
 
-        if (true === $value) {
+        if ($value === true) {
             return 'true';
         }
 

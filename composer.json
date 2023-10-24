@@ -29,7 +29,7 @@
         "symfony/options-resolver": "^4.4.30|^5.0.11|^6.0|^7.0"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.19|3.4.*",
+        "friendsofphp/php-cs-fixer": "^3.4",
         "guzzlehttp/promises": "^1.0|^2.0",
         "guzzlehttp/psr7": "^1.8.4|^2.1.1",
         "http-interop/http-factory-guzzle": "^1.0",

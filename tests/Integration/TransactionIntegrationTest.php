@@ -12,6 +12,7 @@ use Sentry\EventHint;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+
 use function Sentry\withScope;
 
 final class TransactionIntegrationTest extends TestCase

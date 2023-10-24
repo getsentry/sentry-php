@@ -29,7 +29,7 @@ final class RuntimeContext
      */
     public function __construct(string $name, ?string $version = null)
     {
-        if ('' === trim($name)) {
+        if (trim($name) === '') {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 
@@ -52,7 +52,7 @@ final class RuntimeContext
      */
     public function setName(string $name): void
     {
-        if ('' === trim($name)) {
+        if (trim($name) === '') {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');
         }
 

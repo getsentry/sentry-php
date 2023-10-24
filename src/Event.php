@@ -200,7 +200,7 @@ final class Event
      *
      * @param EventId|null $eventId The ID of the event
      */
-    public static function createTransaction(EventId $eventId = null): self
+    public static function createTransaction(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::transaction());
     }
@@ -260,8 +260,6 @@ final class Event
 
     /**
      * Gets the timestamp of when this event was generated.
-     *
-     * @return float
      */
     public function getTimestamp(): ?float
     {
@@ -731,7 +729,7 @@ final class Event
      */
     public function getSdkMetadata(?string $name = null)
     {
-        if (null !== $name) {
+        if ($name !== null) {
             return $this->sdkMetadata[$name] ?? null;
         }
 

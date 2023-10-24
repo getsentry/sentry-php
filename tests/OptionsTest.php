@@ -48,7 +48,7 @@ final class OptionsTest extends TestCase
         ?string $setterMethod,
         ?string $expectedGetterDeprecationMessage
     ): void {
-        if (null !== $expectedGetterDeprecationMessage) {
+        if ($expectedGetterDeprecationMessage !== null) {
             $this->expectDeprecation($expectedGetterDeprecationMessage);
         }
 
@@ -70,17 +70,17 @@ final class OptionsTest extends TestCase
         ?string $expectedGetterDeprecationMessage,
         ?string $expectedSetterDeprecationMessage
     ): void {
-        if (null !== $expectedSetterDeprecationMessage) {
+        if ($expectedSetterDeprecationMessage !== null) {
             $this->expectDeprecation($expectedSetterDeprecationMessage);
         }
 
-        if (null !== $expectedGetterDeprecationMessage) {
+        if ($expectedGetterDeprecationMessage !== null) {
             $this->expectDeprecation($expectedGetterDeprecationMessage);
         }
 
         $options = new Options();
 
-        if (null !== $setterMethod) {
+        if ($setterMethod !== null) {
             $options->$setterMethod($value);
         }
 
@@ -605,7 +605,7 @@ final class OptionsTest extends TestCase
      */
     public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
     {
-        if (null !== $expectedExceptionMessage) {
+        if ($expectedExceptionMessage !== null) {
             $this->expectException(InvalidOptionsException::class);
             $this->expectExceptionMessage($expectedExceptionMessage);
         } else {

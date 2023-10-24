@@ -145,7 +145,7 @@ final class TransactionContext extends SpanContext
             }
 
             if (isset($matches['sampled'])) {
-                $context->parentSampled = '1' === $matches['sampled'];
+                $context->parentSampled = $matches['sampled'] === '1';
                 $hasSentryTrace = true;
             }
         }

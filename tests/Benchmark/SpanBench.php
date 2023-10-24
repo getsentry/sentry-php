@@ -8,6 +8,7 @@ use PhpBench\Benchmark\Metadata\Annotations\Iterations;
 use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionContext;
+
 use function Sentry\continueTrace;
 
 final class SpanBench
@@ -31,6 +32,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructor(): void
@@ -40,6 +42,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContext(): void
@@ -49,6 +52,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContextAndStartTimestamp(): void

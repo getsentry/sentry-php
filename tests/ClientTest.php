@@ -316,11 +316,11 @@ final class ClientTest extends TestCase
         $transport->expects($this->once())
             ->method('send')
             ->with($this->callback(static function (Event $event) use ($shouldAttachStacktrace): bool {
-                if ($shouldAttachStacktrace && null === $event->getStacktrace()) {
+                if ($shouldAttachStacktrace && $event->getStacktrace() === null) {
                     return false;
                 }
 
-                if (!$shouldAttachStacktrace && null !== $event->getStacktrace()) {
+                if (!$shouldAttachStacktrace && $event->getStacktrace() !== null) {
                     return false;
                 }
 
@@ -716,7 +716,7 @@ final class ClientTest extends TestCase
             ->with($this->callback(function (Event $event): bool {
                 $result = $event->getStacktrace();
 
-                return null !== $result;
+                return $result !== null;
             }))
             ->willReturnCallback(static function (Event $event): Result {
                 return new Result(ResultStatus::success(), $event);

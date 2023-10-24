@@ -78,7 +78,7 @@ final class Dsn implements \Stringable
     {
         $parsedDsn = parse_url($value);
 
-        if (false === $parsedDsn) {
+        if ($parsedDsn === false) {
             throw new \InvalidArgumentException(sprintf('The "%s" DSN is invalid.', $value));
         }
 
@@ -101,14 +101,14 @@ final class Dsn implements \Stringable
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
 
-        if (false !== $lastSlashPosition) {
+        if ($lastSlashPosition !== false) {
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
         return new self(
             $parsedDsn['scheme'],
             $parsedDsn['host'],
-            $parsedDsn['port'] ?? ('http' === $parsedDsn['scheme'] ? 80 : 443),
+            $parsedDsn['port'] ?? ($parsedDsn['scheme'] === 'http' ? 80 : 443),
             $projectId,
             $path,
             $parsedDsn['user'],
@@ -203,17 +203,17 @@ final class Dsn implements \Stringable
     {
         $url = $this->scheme . '://' . $this->publicKey;
 
-        if (null !== $this->secretKey) {
+        if ($this->secretKey !== null) {
             $url .= ':' . $this->secretKey;
         }
 
         $url .= '@' . $this->host;
 
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+        if (($this->scheme === 'http' && $this->port !== 80) || ($this->scheme === 'https' && $this->port !== 443)) {
             $url .= ':' . $this->port;
         }
 
-        if (null !== $this->path) {
+        if ($this->path !== null) {
             $url .= $this->path;
         }
 
@@ -229,11 +229,11 @@ final class Dsn implements \Stringable
     {
         $url = $this->scheme . '://' . $this->host;
 
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+        if (($this->scheme === 'http' && $this->port !== 80) || ($this->scheme === 'https' && $this->port !== 443)) {
             $url .= ':' . $this->port;
         }
 
-        if (null !== $this->path) {
+        if ($this->path !== null) {
             $url .= $this->path;
         }
 

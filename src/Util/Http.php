@@ -23,7 +23,7 @@ final class Http
             'sentry_key' => $dsn->getPublicKey(),
         ];
 
-        if (null !== $dsn->getSecretKey()) {
+        if ($dsn->getSecretKey() !== null) {
             $data['sentry_secret'] = $dsn->getSecretKey();
         }
 
@@ -45,7 +45,7 @@ final class Http
      */
     public static function parseResponseHeaders(string $headerLine, array &$headers): int
     {
-        if (false === strpos($headerLine, ':')) {
+        if (strpos($headerLine, ':') === false) {
             return \strlen($headerLine);
         }
 

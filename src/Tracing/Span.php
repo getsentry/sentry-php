@@ -85,7 +85,7 @@ class Span
      */
     public function __construct(?SpanContext $context = null)
     {
-        if (null === $context) {
+        if ($context === null) {
             $this->traceId = TraceId::generate();
             $this->spanId = SpanId::generate();
             $this->startTimestamp = microtime(true);
@@ -340,19 +340,19 @@ class Span
             'trace_id' => (string) $this->traceId,
         ];
 
-        if (null !== $this->parentSpanId) {
+        if ($this->parentSpanId !== null) {
             $result['parent_span_id'] = (string) $this->parentSpanId;
         }
 
-        if (null !== $this->description) {
+        if ($this->description !== null) {
             $result['description'] = $this->description;
         }
 
-        if (null !== $this->op) {
+        if ($this->op !== null) {
             $result['op'] = $this->op;
         }
 
-        if (null !== $this->status) {
+        if ($this->status !== null) {
             $result['status'] = (string) $this->status;
         }
 
@@ -398,7 +398,7 @@ class Span
         $span->transaction = $this->transaction;
         $span->spanRecorder = $this->spanRecorder;
 
-        if (null != $span->spanRecorder) {
+        if ($span->spanRecorder != null) {
             $span->spanRecorder->add($span);
         }
 
@@ -438,7 +438,7 @@ class Span
     {
         $sampled = '';
 
-        if (null !== $this->sampled) {
+        if ($this->sampled !== null) {
             $sampled = $this->sampled ? '-1' : '-0';
         }
 
@@ -452,7 +452,7 @@ class Span
     {
         $transaction = $this->getTransaction();
 
-        if (null !== $transaction) {
+        if ($transaction !== null) {
             return (string) $transaction->getDynamicSamplingContext();
         }
 
