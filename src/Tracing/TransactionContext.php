@@ -107,36 +107,6 @@ final class TransactionContext extends SpanContext
     }
 
     /**
-     * Returns a context populated with the data of the given header.
-     *
-     * @param string $header The sentry-trace header from the request
-     *
-     * @deprecated since version 3.9, to be removed in 4.0
-     */
-    public static function fromSentryTrace(string $header): self
-    {
-        $context = new self();
-
-        if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
-            return $context;
-        }
-
-        if (!empty($matches['trace_id'])) {
-            $context->traceId = new TraceId($matches['trace_id']);
-        }
-
-        if (!empty($matches['span_id'])) {
-            $context->parentSpanId = new SpanId($matches['span_id']);
-        }
-
-        if (isset($matches['sampled'])) {
-            $context->parentSampled = '1' === $matches['sampled'];
-        }
-
-        return $context;
-    }
-
-    /**
      * Returns a context populated with the data of the given environment variables.
      *
      * @param string $sentryTrace The sentry-trace value from the environment

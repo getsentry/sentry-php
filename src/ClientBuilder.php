@@ -9,7 +9,6 @@ use Sentry\HttpClient\HttpClient;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\TransportInterface;
 
@@ -34,11 +33,6 @@ final class ClientBuilder
      * @var HttpClientInterface The HTTP client
      */
     private $httpClient;
-
-    /**
-     * @var SerializerInterface|null The serializer to be injected in the client
-     */
-    private $serializer;
 
     /**
      * @var RepresentationSerializerInterface|null The representation serializer to be injected in the client
@@ -89,13 +83,6 @@ final class ClientBuilder
     public function getOptions(): Options
     {
         return $this->options;
-    }
-
-    public function setSerializer(SerializerInterface $serializer): ClientBuilder
-    {
-        $this->serializer = $serializer;
-
-        return $this;
     }
 
     public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilder
@@ -157,7 +144,6 @@ final class ClientBuilder
             $this->transport,
             $this->sdkIdentifier,
             $this->sdkVersion,
-            $this->serializer,
             $this->representationSerializer,
             $this->logger
         );

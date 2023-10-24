@@ -17,8 +17,6 @@ use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\Serializer\Serializer;
-use Sentry\Serializer\SerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -68,7 +66,6 @@ final class ClientTest extends TestCase
                 'integrations' => [$integration],
             ]),
             $this->createMock(TransportInterface::class),
-            null,
             null,
             null,
             null,
@@ -767,7 +764,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -806,7 +802,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -841,7 +836,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -870,7 +864,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -909,7 +902,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -945,7 +937,6 @@ final class ClientTest extends TestCase
             $transport,
             'sentry.sdk.identifier',
             '1.2.3',
-            new Serializer($options),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 
@@ -967,7 +958,6 @@ final class ClientTest extends TestCase
             $this->createMock(TransportInterface::class),
             'sentry.sdk.identifier',
             '1.2.3',
-            $this->createMock(SerializerInterface::class),
             $this->createMock(RepresentationSerializerInterface::class)
         );
 

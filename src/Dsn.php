@@ -150,18 +150,10 @@ final class Dsn implements \Stringable
 
     /**
      * Gets the ID of the resource to access.
-     *
-     * @return int|string
      */
-    public function getProjectId(bool $returnAsString = false)
+    public function getProjectId(): string
     {
-        if ($returnAsString) {
-            return $this->projectId;
-        }
-
-        @trigger_error(sprintf('Calling the method %s() and expecting it to return an integer is deprecated since version 3.4 and will stop working in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-
-        return (int) $this->projectId;
+        return $this->projectId;
     }
 
     /**
