@@ -80,9 +80,11 @@ final class CheckIn
         return $this->monitorSlug;
     }
 
-    public function setMonitorSlug(string $monitorSlug): void
+    public function setMonitorSlug(string $monitorSlug): self
     {
         $this->monitorSlug = $monitorSlug;
+
+        return $this;
     }
 
     public function getStatus(): CheckInStatus
@@ -90,9 +92,11 @@ final class CheckIn
         return $this->status;
     }
 
-    public function setStatus(CheckInStatus $status): void
+    public function setStatus(CheckInStatus $status): self
     {
         $this->status = $status;
+
+        return $this;
     }
 
     public function getRelease(): ?string
@@ -100,9 +104,11 @@ final class CheckIn
         return $this->release;
     }
 
-    public function setRelease(string $release): void
+    public function setRelease(string $release): self
     {
         $this->release = $release;
+
+        return $this;
     }
 
     public function getEnvironment(): ?string
@@ -110,9 +116,11 @@ final class CheckIn
         return $this->environment;
     }
 
-    public function setEnvironment(string $environment): void
+    public function setEnvironment(string $environment): self
     {
         $this->environment = $environment;
+
+        return $this;
     }
 
     /**
@@ -126,9 +134,11 @@ final class CheckIn
     /**
      * @param int|float|null $duration The duration of the check-in in seconds
      */
-    public function setDuration($duration): void
+    public function setDuration($duration): self
     {
         $this->duration = $duration;
+
+        return $this;
     }
 
     public function getMonitorConfig(): ?MonitorConfig
@@ -136,8 +146,10 @@ final class CheckIn
         return $this->monitorConfig;
     }
 
-    public function setMonitorConfig(?MonitorConfig $monitorConfig): void
+    public function setMonitorConfig(?MonitorConfig $monitorConfig): self
     {
         $this->monitorConfig = $monitorConfig;
+
+        return $this;
     }
 }

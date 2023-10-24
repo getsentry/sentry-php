@@ -130,13 +130,15 @@ final class UserDataBag
      *
      * @param string|int|null $id The ID
      */
-    public function setId($id): void
+    public function setId($id): self
     {
         if ($id !== null && !\is_string($id) && !\is_int($id)) {
             throw new \UnexpectedValueException(sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
         }
 
         $this->id = $id;
+
+        return $this;
     }
 
     /**
@@ -152,9 +154,11 @@ final class UserDataBag
      *
      * @param string|null $username The username
      */
-    public function setUsername(?string $username): void
+    public function setUsername(?string $username): self
     {
         $this->username = $username;
+
+        return $this;
     }
 
     /**
@@ -170,9 +174,11 @@ final class UserDataBag
      *
      * @param string|null $email The email
      */
-    public function setEmail(?string $email): void
+    public function setEmail(?string $email): self
     {
         $this->email = $email;
+
+        return $this;
     }
 
     /**
@@ -188,9 +194,11 @@ final class UserDataBag
      *
      * @param string|null $segment The segment
      */
-    public function setSegment(?string $segment): void
+    public function setSegment(?string $segment): self
     {
         $this->segment = $segment;
+
+        return $this;
     }
 
     /**
@@ -206,13 +214,15 @@ final class UserDataBag
      *
      * @param string|null $ipAddress The ip address
      */
-    public function setIpAddress(?string $ipAddress): void
+    public function setIpAddress(?string $ipAddress): self
     {
         if ($ipAddress !== null && filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
             throw new \InvalidArgumentException(sprintf('The "%s" value is not a valid IP address.', $ipAddress));
         }
 
         $this->ipAddress = $ipAddress;
+
+        return $this;
     }
 
     /**
@@ -231,9 +241,11 @@ final class UserDataBag
      * @param string $name  The name of the field
      * @param mixed  $value The value
      */
-    public function setMetadata(string $name, $value): void
+    public function setMetadata(string $name, $value): self
     {
         $this->metadata[$name] = $value;
+
+        return $this;
     }
 
     /**
@@ -241,9 +253,11 @@ final class UserDataBag
      *
      * @param string $name The name of the field
      */
-    public function removeMetadata(string $name): void
+    public function removeMetadata(string $name): self
     {
         unset($this->metadata[$name]);
+
+        return $this;
     }
 
     /**

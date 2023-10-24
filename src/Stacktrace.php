@@ -69,9 +69,11 @@ final class Stacktrace
      *
      * @param Frame $frame The frame
      */
-    public function addFrame(Frame $frame): void
+    public function addFrame(Frame $frame): self
     {
         array_unshift($this->frames, $frame);
+
+        return $this;
     }
 
     /**
@@ -81,7 +83,7 @@ final class Stacktrace
      *
      * @throws \OutOfBoundsException If the index is out of range
      */
-    public function removeFrame(int $index): void
+    public function removeFrame(int $index): self
     {
         if (!isset($this->frames[$index])) {
             throw new \OutOfBoundsException(sprintf('Cannot remove the frame at index %d.', $index));
@@ -92,5 +94,7 @@ final class Stacktrace
         }
 
         array_splice($this->frames, $index, 1);
+
+        return $this;
     }
 }
