@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use Http\Discovery\Psr17Factory;
+use GuzzleHttp\Psr7\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -22,6 +22,6 @@ final class RequestFetcher implements RequestFetcherInterface
             return null;
         }
 
-        return (new Psr17Factory())->createServerRequestFromGlobals();
+        return ServerRequest::fromGlobals();
     }
 }
