@@ -8,20 +8,17 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\State\Scope;
 use Sentry\Transport\Result;
 
-/**
- * This interface must be implemented by all Raven client classes.
- *
- * @method StacktraceBuilder getStacktraceBuilder() Returns the stacktrace builder of the client.
- * @method string|null getCspReportUrl() Returns an URL for security policy reporting that's generated from the given DSN
- *
- * @author Stefano Arlandini <sarlandini@alice.it>
- */
 interface ClientInterface
 {
     /**
      * Returns the options of the client.
      */
     public function getOptions(): Options;
+
+    /**
+     * Returns an URL for security policy reporting that's generated from the configured DSN.
+     */
+    public function getCspReportUrl(): ?string;
 
     /**
      * Logs a message.
@@ -79,4 +76,9 @@ interface ClientInterface
      * @param int|null $timeout Maximum time in seconds the client should wait
      */
     public function flush(?int $timeout = null): Result;
+
+    /**
+     * Returns the stacktrace builder of the client.
+     */
+    public function getStacktraceBuilder(): StacktraceBuilder;
 }
