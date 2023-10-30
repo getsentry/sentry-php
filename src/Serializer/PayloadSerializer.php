@@ -53,15 +53,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             return $transactionEnvelope;
         }
 
-        if (EventType::checkIn() === $event->getType()) {
-            return $this->serializeAsEnvelope($event);
-        }
-
-        if ($this->options->isTracingEnabled()) {
-            return $this->serializeAsEnvelope($event);
-        }
-
-        return $this->serializeAsEvent($event);
+        return $this->serializeAsEnvelope($event);
     }
 
     private function serializeAsEvent(Event $event): string
@@ -224,26 +216,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
             $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
             if ($transactionMetadata instanceof TransactionMetadata) {
                 $result['transaction_info']['source'] = (string) $transactionMetadata->getSource();
-            }
-        }
-
-        /**
-         * In case of error events, with tracing being disabled, we set the Replay ID
-         * as a context into the payload.
-         */
-        if (
-            EventType::event() === $event->getType()
-            && !$this->options->isTracingEnabled()
-        ) {
-            $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
-            if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
-                $replayId = $dynamicSamplingContext->get('replay_id');
-
-                if ($replayId !== null) {
-                    $result['contexts']['replay'] = [
-                        'replay_id' => $replayId,
-                    ];
-                }
             }
         }
 
