@@ -92,7 +92,7 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
  * @param string               $type      The type of the breadcrumb
  * @param float|null           $timestamp Optional timestamp of the breadcrumb
  */
-function addreadcrumb($category, ?string $message = null, array $metadata = [], string $level = Breadcrumb::LEVEL_INFO, string $type = Breadcrumb::TYPE_DEFAULT, ?float $timestamp = null): void
+function addBreadcrumb($category, ?string $message = null, array $metadata = [], string $level = Breadcrumb::LEVEL_INFO, string $type = Breadcrumb::TYPE_DEFAULT, ?float $timestamp = null): void
 {
     SentrySdk::getCurrentHub()->addBreadcrumb(
         $category instanceof Breadcrumb
