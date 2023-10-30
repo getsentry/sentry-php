@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 3.22.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.22.0.
+
+### Features
+
+- Adopt Starfish HTTP attributes in spans and breadcrumbs [(#1581)](https://github.com/getsentry/sentry-php/pull/1581)
+
+### Bug Fixes
+
+- Don't add empty HTTP fragment or query strings to breadcrumb data [(#1588)](https://github.com/getsentry/sentry-php/pull/1588)
+
+### Misc
+
+- Remove obsolete `tags` option depreaction [(#1588)](https://github.com/getsentry/sentry-php/pull/1588)
+- Run CI on PHP 8.3 [(1591)](https://github.com/getsentry/sentry-php/pull/1591)
+- Add support for `symfony/options-resolver: ^7.0` [(1597)](https://github.com/getsentry/sentry-php/pull/1597)
+
 ## 3.21.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.21.0.
