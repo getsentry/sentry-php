@@ -49,9 +49,11 @@ final class SamplingContext
     /**
      * Sets the sampling decision from the parent transaction, if any.
      */
-    public function setParentSampled(?bool $parentSampled): void
+    public function setParentSampled(?bool $parentSampled): self
     {
         $this->parentSampled = $parentSampled;
+
+        return $this;
     }
 
     /**
@@ -59,9 +61,11 @@ final class SamplingContext
      *
      * @param array<string, mixed>|null $additionalContext
      */
-    public function setAdditionalContext(?array $additionalContext): void
+    public function setAdditionalContext(?array $additionalContext): self
     {
         $this->additionalContext = $additionalContext;
+
+        return $this;
     }
 
     /**

@@ -31,13 +31,15 @@ final class SpanRecorder
      * Adds a span to the list of recorded spans or detaches the recorder if the
      * maximum number of spans to store has been reached.
      */
-    public function add(Span $span): void
+    public function add(Span $span): self
     {
         if (\count($this->spans) > $this->maxSpans) {
             $span->detachSpanRecorder();
         } else {
             $this->spans[] = $span;
         }
+
+        return $this;
     }
 
     /**

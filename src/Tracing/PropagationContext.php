@@ -130,9 +130,11 @@ final class PropagationContext
         return $this->spanId;
     }
 
-    public function setSpanId(SpanId $spanId): void
+    public function setSpanId(SpanId $spanId): self
     {
         $this->spanId = $spanId;
+
+        return $this;
     }
 
     public function getDynamicSamplingContext(): ?DynamicSamplingContext
@@ -140,9 +142,11 @@ final class PropagationContext
         return $this->dynamicSamplingContext;
     }
 
-    public function setDynamicSamplingContext(DynamicSamplingContext $dynamicSamplingContext): void
+    public function setDynamicSamplingContext(DynamicSamplingContext $dynamicSamplingContext): self
     {
         $this->dynamicSamplingContext = $dynamicSamplingContext;
+
+        return $this;
     }
 
     private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self

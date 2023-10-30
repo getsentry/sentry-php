@@ -75,7 +75,7 @@ final class ClientBuilder
     /**
      * @param array<string, mixed> $options The client options, in naked array form
      */
-    public static function create(array $options = []): ClientBuilder
+    public static function create(array $options = []): self
     {
         return new self(new Options($options));
     }
@@ -85,28 +85,28 @@ final class ClientBuilder
         return $this->options;
     }
 
-    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): ClientBuilder
+    public function setRepresentationSerializer(RepresentationSerializerInterface $representationSerializer): self
     {
         $this->representationSerializer = $representationSerializer;
 
         return $this;
     }
 
-    public function setLogger(LoggerInterface $logger): ClientBuilder
+    public function setLogger(LoggerInterface $logger): self
     {
         $this->logger = $logger;
 
         return $this;
     }
 
-    public function setSdkIdentifier(string $sdkIdentifier): ClientBuilder
+    public function setSdkIdentifier(string $sdkIdentifier): self
     {
         $this->sdkIdentifier = $sdkIdentifier;
 
         return $this;
     }
 
-    public function setSdkVersion(string $sdkVersion): ClientBuilder
+    public function setSdkVersion(string $sdkVersion): self
     {
         $this->sdkVersion = $sdkVersion;
 
@@ -118,7 +118,7 @@ final class ClientBuilder
         return $this->transport;
     }
 
-    public function setTransport(TransportInterface $transport): ClientBuilder
+    public function setTransport(TransportInterface $transport): self
     {
         $this->transport = $transport;
 
@@ -130,7 +130,7 @@ final class ClientBuilder
         return $this->httpClient;
     }
 
-    public function setHttpClient(HttpClientInterface $httpClient): ClientBuilder
+    public function setHttpClient(HttpClientInterface $httpClient): self
     {
         $this->httpClient = $httpClient;
 

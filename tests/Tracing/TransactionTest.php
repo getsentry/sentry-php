@@ -28,10 +28,10 @@ final class TransactionTest extends TestCase
         ClockMock::withClockMock(1600640877);
 
         $expectedEventId = null;
-        $transactionContext = new TransactionContext();
-        $transactionContext->setTags(['ios_version' => '4.0']);
-        $transactionContext->setSampled(true);
-        $transactionContext->setStartTimestamp(1600640865);
+        $transactionContext = (new TransactionContext())
+            ->setTags(['ios_version' => '4.0'])
+            ->setSampled(true)
+            ->setStartTimestamp(1600640865);
 
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())

@@ -55,9 +55,11 @@ final class TransactionContext extends SpanContext
      *
      * @param string $name The name
      */
-    public function setName(string $name): void
+    public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
     }
 
     /**
@@ -73,9 +75,11 @@ final class TransactionContext extends SpanContext
      *
      * @param bool|null $parentSampled The decision
      */
-    public function setParentSampled(?bool $parentSampled): void
+    public function setParentSampled(?bool $parentSampled): self
     {
         $this->parentSampled = $parentSampled;
+
+        return $this;
     }
 
     /**
@@ -91,9 +95,11 @@ final class TransactionContext extends SpanContext
      *
      * @param TransactionMetadata $metadata The transaction metadata
      */
-    public function setMetadata(TransactionMetadata $metadata): void
+    public function setMetadata(TransactionMetadata $metadata): self
     {
         $this->metadata = $metadata;
+
+        return $this;
     }
 
     /**
@@ -101,9 +107,11 @@ final class TransactionContext extends SpanContext
      *
      * @param TransactionSource $transactionSource The transaction source
      */
-    public function setSource(TransactionSource $transactionSource): void
+    public function setSource(TransactionSource $transactionSource): self
     {
         $this->metadata->setSource($transactionSource);
+
+        return $this;
     }
 
     /**

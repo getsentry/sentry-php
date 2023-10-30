@@ -111,9 +111,11 @@ class Span
      *
      * @param SpanId $spanId The ID
      */
-    public function setSpanId(SpanId $spanId): void
+    public function setSpanId(SpanId $spanId): self
     {
         $this->spanId = $spanId;
+
+        return $this;
     }
 
     /**
@@ -129,9 +131,11 @@ class Span
      *
      * @param TraceId $traceId The ID
      */
-    public function setTraceId(TraceId $traceId): void
+    public function setTraceId(TraceId $traceId): self
     {
         $this->traceId = $traceId;
+
+        return $this;
     }
 
     /**
@@ -147,9 +151,11 @@ class Span
      *
      * @param SpanId|null $parentSpanId The ID
      */
-    public function setParentSpanId(?SpanId $parentSpanId): void
+    public function setParentSpanId(?SpanId $parentSpanId): self
     {
         $this->parentSpanId = $parentSpanId;
+
+        return $this;
     }
 
     /**
@@ -165,9 +171,11 @@ class Span
      *
      * @param float $startTimestamp The timestamp
      */
-    public function setStartTimestamp(float $startTimestamp): void
+    public function setStartTimestamp(float $startTimestamp): self
     {
         $this->startTimestamp = $startTimestamp;
+
+        return $this;
     }
 
     /**
@@ -193,9 +201,11 @@ class Span
      *
      * @param string|null $description The description
      */
-    public function setDescription(?string $description): void
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
     }
 
     /**
@@ -211,9 +221,11 @@ class Span
      *
      * @param string|null $op The short code
      */
-    public function setOp(?string $op): void
+    public function setOp(?string $op): self
     {
         $this->op = $op;
+
+        return $this;
     }
 
     /**
@@ -229,9 +241,11 @@ class Span
      *
      * @param SpanStatus|null $status The status
      */
-    public function setStatus(?SpanStatus $status): void
+    public function setStatus(?SpanStatus $status): self
     {
         $this->status = $status;
+
+        return $this;
     }
 
     /**
@@ -239,7 +253,7 @@ class Span
      *
      * @param int $statusCode The HTTP status code
      */
-    public function setHttpStatus(int $statusCode): void
+    public function setHttpStatus(int $statusCode): self
     {
         $this->tags['http.status_code'] = (string) $statusCode;
 
@@ -248,6 +262,8 @@ class Span
         if ($status !== SpanStatus::unknownError()) {
             $this->status = $status;
         }
+
+        return $this;
     }
 
     /**
@@ -261,13 +277,16 @@ class Span
     }
 
     /**
-     * Sets a map of tags for this event.
+     * Sets a map of tags for this event. This method will merge the given tags with
+     * the existing ones.
      *
      * @param array<string, string> $tags The tags
      */
-    public function setTags(array $tags): void
+    public function setTags(array $tags): self
     {
         $this->tags = array_merge($this->tags, $tags);
+
+        return $this;
     }
 
     /**
@@ -291,9 +310,11 @@ class Span
      *
      * @param bool $sampled Whether to sample or not this span
      */
-    public function setSampled(?bool $sampled): void
+    public function setSampled(?bool $sampled): self
     {
         $this->sampled = $sampled;
+
+        return $this;
     }
 
     /**
@@ -312,9 +333,11 @@ class Span
      *
      * @param array<string, mixed> $data The data
      */
-    public function setData(array $data): void
+    public function setData(array $data): self
     {
         $this->data = array_merge($this->data, $data);
+
+        return $this;
     }
 
     /**
@@ -398,7 +421,7 @@ class Span
         $span->transaction = $this->transaction;
         $span->spanRecorder = $this->spanRecorder;
 
-        if ($span->spanRecorder != null) {
+        if ($span->spanRecorder !== null) {
             $span->spanRecorder->add($span);
         }
 
@@ -418,9 +441,11 @@ class Span
     /**
      * Detaches the span recorder from this instance.
      */
-    public function detachSpanRecorder(): void
+    public function detachSpanRecorder(): self
     {
         $this->spanRecorder = null;
+
+        return $this;
     }
 
     /**
