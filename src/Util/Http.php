@@ -17,20 +17,11 @@ final class Http
      */
     public static function getRequestHeaders(Dsn $dsn, string $sdkIdentifier, string $sdkVersion): array
     {
-        $data = [
-            'sentry_version' => Client::PROTOCOL_VERSION,
-            'sentry_client' => $sdkIdentifier . '/' . $sdkVersion,
-            'sentry_key' => $dsn->getPublicKey(),
+        $authHeader = [
+            'sentry_version=' . Client::PROTOCOL_VERSION,
+            'sentry_client=' . $sdkIdentifier . '/' . $sdkVersion,
+            'sentry_key=' . $dsn->getPublicKey(),
         ];
-
-        if ($dsn->getSecretKey() !== null) {
-            $data['sentry_secret'] = $dsn->getSecretKey();
-        }
-
-        $authHeader = [];
-        foreach ($data as $headerKey => $headerValue) {
-            $authHeader[] = $headerKey . '=' . $headerValue;
-        }
 
         return [
             'Content-Type' => 'application/x-sentry-envelope',
