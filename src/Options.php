@@ -1009,7 +1009,7 @@ final class Options
             'before_send_transaction' => static function (Event $transaction): Event {
                 return $transaction;
             },
-            'trace_propagation_targets' => [],
+            'trace_propagation_targets' => null,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
