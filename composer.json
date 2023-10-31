@@ -60,6 +60,12 @@
         }
     },
     "scripts": {
+        "check": [
+            "@cs-check",
+            "@phpstan",
+            "@psalm",
+            "@tests"
+        ],
         "tests": [
             "vendor/bin/phpunit --verbose"
         ],
