@@ -41,11 +41,6 @@ class TransactionItem implements EnvelopeItemInterface
             $payload['level'] = (string) $event->getLevel();
         }
 
-        // TODO(michi) remove
-        // if ($event->getLogger() !== null) {
-        //     $payload['logger'] = $event->getLogger();
-        // }
-
         if ($event->getTransaction() !== null) {
             $payload['transaction'] = $event->getTransaction();
         }
@@ -118,19 +113,6 @@ class TransactionItem implements EnvelopeItemInterface
         if (!empty($event->getRequest())) {
             $payload['request'] = $event->getRequest();
         }
-
-        // TODO(michi) clarify
-        // if ($event->getMessage() !== null) {
-        //     if (empty($event->getMessageParams())) {
-        //         $payload['message'] = $event->getMessage();
-        //     } else {
-        //         $payload['message'] = [
-        //             'message' => $event->getMessage(),
-        //             'params' => $event->getMessageParams(),
-        //             'formatted' => $event->getMessageFormatted() ?? vsprintf($event->getMessage(), $event->getMessageParams()),
-        //         ];
-        //     }
-        // }
 
         $payload['spans'] = array_values(array_map([self::class, 'serializeSpan'], $event->getSpans()));
 
