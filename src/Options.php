@@ -239,28 +239,6 @@ final class Options
     }
 
     /**
-     * Returns whether the requests should be compressed using GZIP or not.
-     */
-    public function isCompressionEnabled(): bool
-    {
-        return $this->options['enable_compression'];
-    }
-
-    /**
-     * Sets whether the request should be compressed using JSON or not.
-     *
-     * @param bool $enabled Flag indicating whether the request should be compressed
-     */
-    public function setEnableCompression(bool $enabled): self
-    {
-        $options = array_merge($this->options, ['enable_compression' => $enabled]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
      * Gets the environment.
      */
     public function getEnvironment(): ?string
@@ -859,6 +837,26 @@ final class Options
     }
 
     /**
+     * Returns whether the requests should be compressed using GZIP or not.
+     */
+    public function isHttpCompressionEnabled(): bool
+    {
+        return $this->options['http_compression'];
+    }
+
+    /**
+     * Sets whether the request should be compressed using JSON or not.
+     */
+    public function setEnableHttpCompression(bool $enabled): self
+    {
+        $options = array_merge($this->options, ['http_compression' => $enabled]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets whether the silenced errors should be captured or not.
      *
      * @return bool If true, errors silenced through the @ operator will be reported,
@@ -995,7 +993,6 @@ final class Options
             'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
-            'enable_compression' => true,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => 'php',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
@@ -1027,6 +1024,7 @@ final class Options
             'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
             'http_ssl_verify_peer' => true,
+            'http_compression' => true,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
@@ -1040,7 +1038,6 @@ final class Options
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
-        $resolver->setAllowedTypes('enable_compression', 'bool');
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
@@ -1067,6 +1064,8 @@ final class Options
         $resolver->setAllowedTypes('http_proxy_authentication', ['null', 'string']);
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('http_timeout', ['int', 'float']);
+        $resolver->setAllowedTypes('http_ssl_verify_peer', 'bool');
+        $resolver->setAllowedTypes('http_compression', 'bool');
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
