@@ -320,6 +320,84 @@ class Hub implements HubInterface
     }
 
     /**
+     * @param int|float $value
+     * @param string[]  $tags
+     */
+    public function metricsIncr(string $name, $value, array $tags): ?EventId
+    {
+        $client = $this->getClient();
+
+        if ($client === null) {
+            return null;
+        }
+
+        $event = Event::createMetric();
+        $metric = [
+            'timestamp' => time(),
+            'width' => 0,
+            'name' => 'c:custom/' . $name . '@none',
+            'type' => 'c',
+            'value' => $value,
+            'tags' => $tags,
+        ];
+        $event->setMetric($metric);
+
+        return $this->captureEvent($event);
+    }
+
+    /**
+     * @param int|float $value
+     * @param string[]  $tags
+     */
+    public function metricsDistribution(string $name, $value, array $tags, ?string $unit = null): ?EventId
+    {
+        $client = $this->getClient();
+
+        if ($client === null) {
+            return null;
+        }
+
+        $event = Event::createMetric();
+        $metric = [
+            'timestamp' => time(),
+            'width' => 0,
+            'name' => 'd:custom/' . $name . '@' . ($unit ?? 'none'),
+            'type' => 'd',
+            'value' => $value,
+            'tags' => $tags,
+        ];
+        $event->setMetric($metric);
+
+        return $this->captureEvent($event);
+    }
+
+    /**
+     * @param int|float $value
+     * @param string[]  $tags
+     */
+    public function metricsSet(string $name, $value, array $tags): ?EventId
+    {
+        $client = $this->getClient();
+
+        if ($client === null) {
+            return null;
+        }
+
+        $event = Event::createMetric();
+        $metric = [
+            'timestamp' => time(),
+            'width' => 0,
+            'name' => 's:custom/' . $name . '@none',
+            'type' => 's',
+            'value' => $value,
+            'tags' => $tags,
+        ];
+        $event->setMetric($metric);
+
+        return $this->captureEvent($event);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setSpan(?Span $span): HubInterface

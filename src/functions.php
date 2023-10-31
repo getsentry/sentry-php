@@ -268,3 +268,30 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
 }
+
+/**
+ * @param int|float $value
+ * @param string[]  $tags
+ */
+function metricsIncr(string $key, $value, array $tags): ?EventId
+{
+    return SentrySdk::getCurrentHub()->metricsIncr($key, $value, $tags);
+}
+
+/**
+ * @param int|float $value
+ * @param string[]  $tags
+ */
+function metricsDistribution(string $key, $value, array $tags, ?string $unit = null): ?EventId
+{
+    return SentrySdk::getCurrentHub()->metricsDistribution($key, $value, $tags, $unit);
+}
+
+/**
+ * @param int|float $value
+ * @param string[]  $tags
+ */
+function metricsSet(string $key, $value, array $tags): ?EventId
+{
+    return SentrySdk::getCurrentHub()->metricsSet($key, $value, $tags);
+}

@@ -42,6 +42,11 @@ final class EventType implements \Stringable
         return self::getInstance('check_in');
     }
 
+    public static function metric(): self
+    {
+        return self::getInstance('metric_buckets');
+    }
+
     public function __toString(): string
     {
         return $this->value;

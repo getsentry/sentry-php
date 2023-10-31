@@ -17,6 +17,15 @@ use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
+/**
+ * This interface represent the class which is responsible for maintaining a
+ * stack of pairs of clients and scopes. It is the main entry point to talk
+ * with the Sentry client.
+ *
+ * @method EventId|null  metricsIncr(string $name, $value, array $tags)
+ * @method EventId|null  metricsDistribution(string $name, $value, array $tags, ?string $unit = null)
+ * @method EventId|null  metricsSet(string $name, $value, array $tags)
+ */
 interface HubInterface
 {
     /**

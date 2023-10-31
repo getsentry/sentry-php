@@ -56,6 +56,11 @@ final class Event
     private $checkIn;
 
     /**
+     * @var array<string, array<string>|float|int|string>|null The check in data
+     */
+    private $metric;
+
+    /**
      * @var string|null The name of the server (e.g. the host name)
      */
     private $serverName;
@@ -210,6 +215,11 @@ final class Event
         return new self($eventId, EventType::checkIn());
     }
 
+    public static function createMetric(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::metric());
+    }
+
     /**
      * Gets the ID of this event.
      */
@@ -350,6 +360,24 @@ final class Event
     public function setCheckIn(?CheckIn $checkIn): self
     {
         $this->checkIn = $checkIn;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, array<string>|float|int|string>|null
+     */
+    public function getMetric(): ?array
+    {
+        return $this->metric;
+    }
+
+    /**
+     * @param array<string, array<string>|float|int|string> $metric
+     */
+    public function setMetric(array $metric): self
+    {
+        $this->metric = $metric;
 
         return $this;
     }
