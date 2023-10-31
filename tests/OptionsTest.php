@@ -171,15 +171,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'enable_compression',
-            false,
-            'isCompressionEnabled',
-            'setEnableCompression',
-            null,
-            null,
-        ];
-
-        yield [
             'environment',
             'foo',
             'getEnvironment',
@@ -418,6 +409,15 @@ final class OptionsTest extends TestCase
             false,
             'getHttpSslVerifyPeer',
             'setHttpSslVerifyPeer',
+            null,
+            null,
+        ];
+
+        yield [
+            'http_compression',
+            false,
+            'isHttpCompressionEnabled',
+            'setEnableHttpCompression',
             null,
             null,
         ];

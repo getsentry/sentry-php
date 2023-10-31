@@ -37,13 +37,23 @@ class HttpClient implements HttpClientInterface
 
         $curlHandle = curl_init();
 
+        $requestHeaders = Http::getRequestHeaders($dsn, $this->sdkIdentifier, $this->sdkVersion);
+
+        if (
+            \extension_loaded('zlib')
+            && $options->isHttpCompressionEnabled()
+        ) {
+            $requestData = gzcompress($requestData, -1, \ZLIB_ENCODING_GZIP);
+            $requestHeaders['Content-Encoding'] = 'gzip';
+        }
+
         $responseHeaders = [];
         $responseHeaderCallback = function ($curlHandle, $headerLine) use (&$responseHeaders): int {
             return Http::parseResponseHeaders($headerLine, $responseHeaders);
         };
 
         curl_setopt($curlHandle, \CURLOPT_URL, $dsn->getEnvelopeApiEndpointUrl());
-        curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, Http::getRequestHeaders($dsn, $this->sdkIdentifier, $this->sdkVersion));
+        curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
         curl_setopt($curlHandle, \CURLOPT_TIMEOUT, $options->getHttpTimeout());
         curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT, $options->getHttpConnectTimeout());
@@ -70,9 +80,6 @@ class HttpClient implements HttpClientInterface
             curl_setopt($curlHandle, \CURLOPT_PROXYUSERPWD, $httpProxyAuthentication);
         }
 
-        /**
-         * @TODO(michi) add request compression (gzip/brotli) depending on availiable extensions
-         */
         $body = curl_exec($curlHandle);
 
         if ($body === false) {
