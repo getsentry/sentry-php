@@ -24,8 +24,8 @@ final class Http
         ];
 
         return [
-            'Content-Type' => 'application/x-sentry-envelope',
-            'X-Sentry-Auth' => 'Sentry ' . implode(', ', $authHeader),
+            'Content-Type: application/x-sentry-envelope',
+            'X-Sentry-Auth: Sentry ' . implode(', ', $authHeader),
         ];
     }
 

@@ -44,7 +44,7 @@ class HttpClient implements HttpClientInterface
             && $options->isHttpCompressionEnabled()
         ) {
             $requestData = gzcompress($requestData, -1, \ZLIB_ENCODING_GZIP);
-            $requestHeaders['Content-Encoding'] = 'gzip';
+            $requestHeaders[] = 'Content-Encoding: gzip';
         }
 
         $responseHeaders = [];
