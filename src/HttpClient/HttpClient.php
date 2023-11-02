@@ -28,11 +28,16 @@ class HttpClient implements HttpClientInterface
         $this->sdkVersion = $sdkVersion;
     }
 
-    public function sendRequest(string $requestData, Options $options): Response
+    public function sendRequest(Request $request, Options $options): Response
     {
         $dsn = $options->getDsn();
         if ($dsn === null) {
             throw new \RuntimeException('The DSN option must be set to use the HttpClient.');
+        }
+
+        $requestData = $request->getStringBody();
+        if ($requestData === null) {
+            throw new \RuntimeException('The request data is empty.');
         }
 
         $curlHandle = curl_init();
