@@ -130,8 +130,10 @@ class Span
      * Sets the ID that determines which trace the span belongs to.
      *
      * @param TraceId $traceId The ID
+     *
+     * @return $this
      */
-    public function setTraceId(TraceId $traceId): self
+    public function setTraceId(TraceId $traceId)
     {
         $this->traceId = $traceId;
 
@@ -150,8 +152,10 @@ class Span
      * Sets the ID that determines which span is the parent of the current one.
      *
      * @param SpanId|null $parentSpanId The ID
+     *
+     * @return $this
      */
-    public function setParentSpanId(?SpanId $parentSpanId): self
+    public function setParentSpanId(?SpanId $parentSpanId)
     {
         $this->parentSpanId = $parentSpanId;
 
@@ -170,8 +174,10 @@ class Span
      * Sets the timestamp representing when the measuring started.
      *
      * @param float $startTimestamp The timestamp
+     *
+     * @return $this
      */
-    public function setStartTimestamp(float $startTimestamp): self
+    public function setStartTimestamp(float $startTimestamp)
     {
         $this->startTimestamp = $startTimestamp;
 
@@ -200,8 +206,10 @@ class Span
      * the span but is consistent across instances of the span.
      *
      * @param string|null $description The description
+     *
+     * @return $this
      */
-    public function setDescription(?string $description): self
+    public function setDescription(?string $description)
     {
         $this->description = $description;
 
@@ -220,8 +228,10 @@ class Span
      * Sets a short code identifying the type of operation the span is measuring.
      *
      * @param string|null $op The short code
+     *
+     * @return $this
      */
-    public function setOp(?string $op): self
+    public function setOp(?string $op)
     {
         $this->op = $op;
 
@@ -240,8 +250,10 @@ class Span
      * Sets the status of the span/transaction.
      *
      * @param SpanStatus|null $status The status
+     *
+     * @return $this
      */
-    public function setStatus(?SpanStatus $status): self
+    public function setStatus(?SpanStatus $status)
     {
         $this->status = $status;
 
@@ -252,8 +264,10 @@ class Span
      * Sets the HTTP status code and the status of the span/transaction.
      *
      * @param int $statusCode The HTTP status code
+     *
+     * @return $this
      */
-    public function setHttpStatus(int $statusCode): self
+    public function setHttpStatus(int $statusCode)
     {
         $this->tags['http.status_code'] = (string) $statusCode;
 
@@ -281,8 +295,10 @@ class Span
      * the existing ones.
      *
      * @param array<string, string> $tags The tags
+     *
+     * @return $this
      */
-    public function setTags(array $tags): self
+    public function setTags(array $tags)
     {
         $this->tags = array_merge($this->tags, $tags);
 
@@ -309,8 +325,10 @@ class Span
      * Sets the flag determining whether this span should be sampled or not.
      *
      * @param bool $sampled Whether to sample or not this span
+     *
+     * @return $this
      */
-    public function setSampled(?bool $sampled): self
+    public function setSampled(?bool $sampled)
     {
         $this->sampled = $sampled;
 
@@ -332,8 +350,10 @@ class Span
      * the existing one.
      *
      * @param array<string, mixed> $data The data
+     *
+     * @return $this
      */
-    public function setData(array $data): self
+    public function setData(array $data)
     {
         $this->data = array_merge($this->data, $data);
 
@@ -440,8 +460,10 @@ class Span
 
     /**
      * Detaches the span recorder from this instance.
+     *
+     * @return $this
      */
-    public function detachSpanRecorder(): self
+    public function detachSpanRecorder()
     {
         $this->spanRecorder = null;
 

@@ -66,7 +66,10 @@ class SpanContext
         return $this->description;
     }
 
-    public function setDescription(?string $description): self
+    /**
+     * @return $this
+     */
+    public function setDescription(?string $description)
     {
         $this->description = $description;
 
@@ -78,7 +81,10 @@ class SpanContext
         return $this->op;
     }
 
-    public function setOp(?string $op): self
+    /**
+     * @return $this
+     */
+    public function setOp(?string $op)
     {
         $this->op = $op;
 
@@ -90,7 +96,10 @@ class SpanContext
         return $this->status;
     }
 
-    public function setStatus(?SpanStatus $status): self
+    /**
+     * @return $this
+     */
+    public function setStatus(?SpanStatus $status)
     {
         $this->status = $status;
 
@@ -102,7 +111,10 @@ class SpanContext
         return $this->parentSpanId;
     }
 
-    public function setParentSpanId(?SpanId $parentSpanId): self
+    /**
+     * @return $this
+     */
+    public function setParentSpanId(?SpanId $parentSpanId)
     {
         $this->parentSpanId = $parentSpanId;
 
@@ -114,7 +126,10 @@ class SpanContext
         return $this->sampled;
     }
 
-    public function setSampled(?bool $sampled): self
+    /**
+     * @return $this
+     */
+    public function setSampled(?bool $sampled)
     {
         $this->sampled = $sampled;
 
@@ -126,7 +141,10 @@ class SpanContext
         return $this->spanId;
     }
 
-    public function setSpanId(?SpanId $spanId): self
+    /**
+     * @return $this
+     */
+    public function setSpanId(?SpanId $spanId)
     {
         $this->spanId = $spanId;
 
@@ -138,7 +156,10 @@ class SpanContext
         return $this->traceId;
     }
 
-    public function setTraceId(?TraceId $traceId): self
+    /**
+     * @return $this
+     */
+    public function setTraceId(?TraceId $traceId)
     {
         $this->traceId = $traceId;
 
@@ -155,8 +176,10 @@ class SpanContext
 
     /**
      * @param array<string, string> $tags
+     *
+     * @return $this
      */
-    public function setTags(array $tags): self
+    public function setTags(array $tags)
     {
         $this->tags = $tags;
 
@@ -173,8 +196,10 @@ class SpanContext
 
     /**
      * @param array<string, mixed> $data
+     *
+     * @return $this
      */
-    public function setData(array $data): self
+    public function setData(array $data)
     {
         $this->data = $data;
 
@@ -186,7 +211,10 @@ class SpanContext
         return $this->startTimestamp;
     }
 
-    public function setStartTimestamp(?float $startTimestamp): self
+    /**
+     * @return $this
+     */
+    public function setStartTimestamp(?float $startTimestamp)
     {
         $this->startTimestamp = $startTimestamp;
 
@@ -198,7 +226,10 @@ class SpanContext
         return $this->endTimestamp;
     }
 
-    public function setEndTimestamp(?float $endTimestamp): self
+    /**
+     * @return $this
+     */
+    public function setEndTimestamp(?float $endTimestamp)
     {
         $this->endTimestamp = $endTimestamp;
 
