@@ -81,6 +81,7 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
       'logger' => new DebugStdOutLogger(),
   ]);
   ```
+
 - New default cURL HTTP client [(#1589)](https://github.com/getsentry/sentry-php/pull/1589)
 
   The SDK now ships with its own HTTP client based on cURL. A few new options were added.
