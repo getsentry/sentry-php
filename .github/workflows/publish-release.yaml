@@ -10,6 +10,9 @@ on:
         description: Force a release even when there are release-blockers (optional)
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest

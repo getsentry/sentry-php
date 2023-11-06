@@ -7,6 +7,9 @@ on:
       - master
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   php-cs-fixer:
     name: PHP-CS-Fixer
