@@ -140,6 +140,8 @@ final class HttpClientFactory implements HttpClientFactoryInterface
             $curlConfig = [
                 \CURLOPT_TIMEOUT => $options->getHttpTimeout(),
                 \CURLOPT_CONNECTTIMEOUT => $options->getHttpConnectTimeout(),
+                // Backport of explicit protocol setting: https://github.com/ShootProof/sentry-php/commit/6ce65abab960ddbd7b22355afe3088261fab4775#diff-e2b9681244f52c28911e89834f05a2953654ccb96e1d353b42cae64a753bab63
+                \CURLOPT_HTTP_VERSION => $options->isCompressionEnabled() ? \CURL_HTTP_VERSION_1_1 : \CURL_HTTP_VERSION_NONE,
             ];
 
             if (null !== $options->getHttpProxy()) {
