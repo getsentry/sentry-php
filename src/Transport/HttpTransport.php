@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
+use Sentry\HttpClient\Request;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
 
@@ -79,8 +80,11 @@ class HttpTransport implements TransportInterface
             return new Result(ResultStatus::rateLimit());
         }
 
+        $request = new Request();
+        $request->setStringBody($this->payloadSerializer->serialize($event));
+
         try {
-            $response = $this->httpClient->sendRequest($this->payloadSerializer->serialize($event), $this->options);
+            $response = $this->httpClient->sendRequest($request, $this->options);
         } catch (\Throwable $exception) {
             $this->logger->error(
                 sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
