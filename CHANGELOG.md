@@ -23,7 +23,7 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
   ]);
   ```
   
-  This option performs an `is_a` check now, so you can also ignore more generic exceptions.
+  This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check now, so you can also ignore more generic exceptions.
 
 # Features
 
