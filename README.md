@@ -24,7 +24,7 @@ information needed to prioritize, identify, reproduce and fix each issue.
 
 ### Install
 
-Install the SDK using [Composer]([https://getcomposer.org/).
+Install the SDK using [Composer](https://getcomposer.org/).
 
 ```bash
 composer require sentry/sentry
