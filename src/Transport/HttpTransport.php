@@ -65,6 +65,10 @@ class HttpTransport implements TransportInterface
      */
     public function send(Event $event): Result
     {
+        if ($this->options->getDsn() === null) {
+            return new Result(ResultStatus::skipped(), $event);
+        }
+
         $eventType = $event->getType();
         if ($this->rateLimiter->isRateLimited($eventType)) {
             $this->logger->warning(
