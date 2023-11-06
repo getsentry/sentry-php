@@ -8,7 +8,7 @@ The Sentry SDK team is thrilled to announce the immediate availability of Sentry
 
 Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list of breaking changes.
 
-- This version exclusifly uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/) to send event data to Sentry.
+- This version exclusively uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/) to send event data to Sentry.
 
   If you are using [sentry.io](https://sentry.io), no action is needed.
   If you are using an on-premise/self-hosted installation of Sentry, the minimum requirement is now version `>= v20.6.0`.
