@@ -7,14 +7,14 @@
 
 - Added `ext-curl` as a composer requirement.
 
-- The `IgnoreErrorsIntegration` integration was removed. Use the `ignore_errors` option instead.
+- The `IgnoreErrorsIntegration` integration was removed. Use the `ignore_exceptions` option instead.
 
   ```php
   Sentry\init([
       'ignore_exceptions' => [BadThingsHappenedException::class],
   ]);
   ```
-  
+
   This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check, so you can also ignore more generic exceptions.
 
 - Removed support for `symfony/options-resolver: ^3.4.43`.
@@ -36,7 +36,7 @@
   ```
 
 - The new default value for the `trace_propagation_targets` option is now `null`. To not attach any headers to outgoing requests, using the `GuzzleTracingMiddleware`, set this option to `[]`.
-- The `ignore_errors` option now performs a `is_a` check on the provided class strings.
+- The `ignore_exceptions` option now performs a `is_a` check on the provided class strings.
 - The `send_attempts` option was removed. You may implement a custom transport if you rely on this behaviour.
 - The `enable_compression` option was removed. Use `http_compression` instead.
 - The `logger` option now accepts a `Psr\Log\LoggerInterface` instance instead of `string`.

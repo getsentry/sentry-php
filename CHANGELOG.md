@@ -15,14 +15,14 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
 
 - You need to have `ext-curl` installed to use the SDK.
 
-- The `IgnoreErrorsIntegration` integration was removed. Use the `ignore_errors` option instead.
+- The `IgnoreErrorsIntegration` integration was removed. Use the `ignore_exceptions` option instead.
 
   ```php
   Sentry\init([
       'ignore_exceptions' => [BadThingsHappenedException::class],
   ]);
   ```
-  
+
   This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check now, so you can also ignore more generic exceptions.
 
 # Features
@@ -57,7 +57,7 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
 
   // After
   \Sentry\addBreadcrumb(
-      category: 'auth', 
+      category: 'auth',
       message: 'User authenticated', // optional
       metadata: ['user_id' => $userId], // optional
       level: Breadcrumb::LEVEL_INFO, // set by default
@@ -108,11 +108,11 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
       {
 
           // your custom implementation
-  
+
           return new Response($response->getStatusCode(), $response->getHeaders(), '');
       }
   };
-  
+
   Sentry\init([
       'http_client' => $httpClient,
   ]);
