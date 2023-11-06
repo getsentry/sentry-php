@@ -51,7 +51,9 @@ final class HttpTransportTest extends TestCase
             ->willReturn(new Response($httpStatusCode, [], ''));
 
         $transport = new HttpTransport(
-            new Options(),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
             $this->payloadSerializer
         );
@@ -112,7 +114,9 @@ final class HttpTransportTest extends TestCase
             ->will($this->throwException($exception));
 
         $transport = new HttpTransport(
-            new Options(),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
             $this->payloadSerializer,
             $logger
@@ -143,7 +147,9 @@ final class HttpTransportTest extends TestCase
             ->willReturn(new Response(0, [], 'cURL Error (6) Could not resolve host: example.com'));
 
         $transport = new HttpTransport(
-            new Options(),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
             $this->payloadSerializer,
             $logger
@@ -182,7 +188,9 @@ final class HttpTransportTest extends TestCase
             ->willReturn(new Response(429, ['Retry-After' => ['60']], ''));
 
         $transport = new HttpTransport(
-            new Options(),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
             $this->payloadSerializer,
             $logger

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -309,30 +310,18 @@ final class Options
     }
 
     /**
-     * Gets the logger used by Sentry.
-     *
-     * @deprecated since version 3.2, to be removed in 4.0
+     * Gets a PSR-3 compatible logger to log internal debug messages.
      */
-    public function getLogger(/* bool $triggerDeprecation = true */): string
+    public function getLogger(): ?LoggerInterface
     {
-        if (\func_num_args() === 0 || func_get_arg(0) !== false) {
-            @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-        }
-
         return $this->options['logger'];
     }
 
     /**
-     * Sets the logger used by Sentry.
-     *
-     * @param string $logger The logger
-     *
-     * @deprecated since version 3.2, to be removed in 4.0
+     * Sets a PSR-3 compatible logger to log internal debug messages.
      */
-    public function setLogger(string $logger): self
+    public function setLogger(LoggerInterface $logger): self
     {
-        @trigger_error(sprintf('Method %s() is deprecated since version 3.2 and will be removed in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-
         $options = array_merge($this->options, ['logger' => $logger]);
 
         $this->options = $this->resolver->resolve($options);
@@ -994,7 +983,7 @@ final class Options
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
-            'logger' => 'php',
+            'logger' => null,
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
@@ -1041,7 +1030,7 @@ final class Options
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
-        $resolver->setAllowedTypes('logger', ['null', 'string']);
+        $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
@@ -1088,14 +1077,6 @@ final class Options
 
         $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
-        });
-
-        $resolver->setNormalizer('logger', function (SymfonyOptions $options, ?string $value): ?string {
-            if ($value !== 'php') {
-                @trigger_error('The option "logger" is deprecated.', \E_USER_DEPRECATED);
-            }
-
-            return $value;
         });
     }
 

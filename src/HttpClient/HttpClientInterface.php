@@ -8,5 +8,5 @@ use Sentry\Options;
 
 interface HttpClientInterface
 {
-    public function sendRequest(string $requestData, Options $options): Response;
+    public function sendRequest(Request $request, Options $options): Response;
 }

@@ -63,6 +63,8 @@ final class ClientBuilder
     {
         $this->options = $options ?? new Options();
 
+        $this->logger = $this->options->getLogger() ?? null;
+
         $this->httpClient = $this->options->getHttpClient() ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
         $this->transport = $this->options->getTransport() ?? new HttpTransport(
             $this->options,
@@ -90,6 +92,11 @@ final class ClientBuilder
         $this->representationSerializer = $representationSerializer;
 
         return $this;
+    }
+
+    public function getLogger(): ?LoggerInterface
+    {
+        return $this->logger;
     }
 
     public function setLogger(LoggerInterface $logger): self
