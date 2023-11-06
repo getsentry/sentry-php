@@ -10,6 +10,7 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClient;
 use Sentry\HttpClient\HttpClientInterface;
+use Sentry\HttpClient\Request;
 use Sentry\HttpClient\Response;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
@@ -123,7 +124,7 @@ final class StubIntegration implements IntegrationInterface
 
 final class CustomHttpClient implements HttpClientInterface
 {
-    public function sendRequest(string $requestData, Options $options): Response
+    public function sendRequest(Request $request, Options $options): Response
     {
         return new Response(0, [], '');
     }
