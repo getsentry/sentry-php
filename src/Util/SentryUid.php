@@ -17,7 +17,7 @@ final class SentryUid
     public static function generate(): string
     {
         if (\function_exists('uuid_create')) {
-            return strtolower(str_replace('-', '', uuid_create(UUID_TYPE_RANDOM)));
+            return strtolower(str_replace('-', '', uuid_create(\UUID_TYPE_RANDOM)));
         }
 
         $uuid = bin2hex(random_bytes(16));

@@ -18,13 +18,13 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
 
       - name: Install dependencies
         run: composer update --no-progress --no-interaction --prefer-dist
 
       - name: Run script
-        run: composer phpcs
+        run: vendor/bin/php-cs-fixer fix --verbose --diff --dry-run
 
   phpstan:
     name: PHPStan
@@ -42,7 +42,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist
 
       - name: Run script
-        run: composer phpstan
+        run: vendor/bin/phpstan analyse
 
   psalm:
     name: Psalm
@@ -62,4 +62,4 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist
 
       - name: Run script
-        run: composer psalm
+        run: vendor/bin/psalm

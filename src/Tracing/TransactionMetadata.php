@@ -49,9 +49,11 @@ final class TransactionMetadata
     /**
      * @param float|int|null $samplingRate
      */
-    public function setSamplingRate($samplingRate): void
+    public function setSamplingRate($samplingRate): self
     {
         $this->samplingRate = $samplingRate;
+
+        return $this;
     }
 
     public function getDynamicSamplingContext(): ?DynamicSamplingContext
@@ -59,9 +61,11 @@ final class TransactionMetadata
         return $this->dynamicSamplingContext;
     }
 
-    public function setDynamicSamplingContext(?DynamicSamplingContext $dynamicSamplingContext): void
+    public function setDynamicSamplingContext(?DynamicSamplingContext $dynamicSamplingContext): self
     {
         $this->dynamicSamplingContext = $dynamicSamplingContext;
+
+        return $this;
     }
 
     public function getSource(): ?TransactionSource
@@ -69,8 +73,10 @@ final class TransactionMetadata
         return $this->source;
     }
 
-    public function setSource(?TransactionSource $source): void
+    public function setSource(?TransactionSource $source): self
     {
         $this->source = $source;
+
+        return $this;
     }
 }

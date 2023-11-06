@@ -40,14 +40,14 @@ final class Profiler
 
     public function start(): void
     {
-        if (null !== $this->profiler) {
+        if ($this->profiler !== null) {
             $this->profiler->start();
         }
     }
 
     public function stop(): void
     {
-        if (null !== $this->profiler) {
+        if ($this->profiler !== null) {
             $this->profiler->stop();
 
             $this->profile->setExcimerLog($this->profiler->flush());
@@ -56,7 +56,7 @@ final class Profiler
 
     public function getProfile(): ?Profile
     {
-        if (null === $this->profiler) {
+        if ($this->profiler === null) {
             return null;
         }
 

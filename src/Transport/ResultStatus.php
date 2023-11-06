@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Sentry;
+namespace Sentry\Transport;
 
 /**
  * This enum represents all possible reasons an event sending operation succeeded
  * or failed.
  */
-final class ResponseStatus implements \Stringable
+class ResultStatus implements \Stringable
 {
     /**
      * @var string The value of the enum instance
@@ -94,7 +94,7 @@ final class ResponseStatus implements \Stringable
         switch (true) {
             case $statusCode >= 200 && $statusCode < 300:
                 return self::success();
-            case 429 === $statusCode:
+            case $statusCode === 429:
                 return self::rateLimit();
             case $statusCode >= 400 && $statusCode < 500:
                 return self::invalid();

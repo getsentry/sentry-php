@@ -36,9 +36,9 @@ final class JSON
 
         $allowedErrors = [\JSON_ERROR_NONE, \JSON_ERROR_RECURSION, \JSON_ERROR_INF_OR_NAN, \JSON_ERROR_UNSUPPORTED_TYPE];
 
-        $encounteredAnyError = \JSON_ERROR_NONE !== json_last_error();
+        $encounteredAnyError = json_last_error() !== \JSON_ERROR_NONE;
 
-        if (($encounteredAnyError && ('null' === $encodedData || false === $encodedData)) || !\in_array(json_last_error(), $allowedErrors, true)) {
+        if (($encounteredAnyError && ($encodedData === 'null' || $encodedData === false)) || !\in_array(json_last_error(), $allowedErrors, true)) {
             throw new JsonException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
@@ -58,7 +58,7 @@ final class JSON
     {
         $decodedData = json_decode($data, true);
 
-        if (\JSON_ERROR_NONE !== json_last_error()) {
+        if (json_last_error() !== \JSON_ERROR_NONE) {
             throw new JsonException(sprintf('Could not decode value from JSON format. Error was: "%s".', json_last_error_msg()));
         }
 

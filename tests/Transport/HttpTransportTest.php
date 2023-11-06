@@ -4,26 +4,16 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Transport;
 
-use GuzzleHttp\Promise\PromiseInterface;
-use GuzzleHttp\Promise\RejectionException;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Utils;
-use Http\Client\HttpAsyncClient as HttpAsyncClientInterface;
-use Http\Promise\FulfilledPromise as HttpFullfilledPromise;
-use Http\Promise\RejectedPromise as HttpRejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
-use Sentry\Dsn;
 use Sentry\Event;
+use Sentry\HttpClient\HttpClientInterface;
+use Sentry\HttpClient\Response;
 use Sentry\Options;
-use Sentry\ResponseStatus;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
+use Sentry\Transport\ResultStatus;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 final class HttpTransportTest extends TestCase
@@ -34,98 +24,21 @@ final class HttpTransportTest extends TestCase
     private $httpClient;
 
     /**
-     * @var MockObject&StreamFactoryInterface
-     */
-    private $streamFactory;
-
-    /**
-     * @var MockObject&RequestFactoryInterface
-     */
-    private $requestFactory;
-
-    /**
      * @var MockObject&PayloadSerializerInterface
      */
     private $payloadSerializer;
 
     protected function setUp(): void
     {
-        $this->httpClient = $this->createMock(HttpAsyncClientInterface::class);
-        $this->streamFactory = $this->createMock(StreamFactoryInterface::class);
-        $this->requestFactory = $this->createMock(RequestFactoryInterface::class);
+        $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->payloadSerializer = $this->createMock(PayloadSerializerInterface::class);
-    }
-
-    public function testSendThrowsIfDsnOptionIsNotSet(): void
-    {
-        $transport = new HttpTransport(
-            new Options(),
-            $this->httpClient,
-            $this->streamFactory,
-            $this->requestFactory,
-            $this->payloadSerializer
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('The DSN option must be set to use the "Sentry\Transport\HttpTransport" transport.');
-
-        $transport->send(Event::createEvent());
-    }
-
-    public function testSendTransactionAsEnvelope(): void
-    {
-        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
-        $event = Event::createTransaction();
-
-        $this->payloadSerializer->expects($this->once())
-            ->method('serialize')
-            ->with($event)
-            ->willReturn('{"foo":"bar"}');
-
-        $this->requestFactory->expects($this->once())
-            ->method('createRequest')
-            ->with('POST', $dsn->getEnvelopeApiEndpointUrl())
-            ->willReturn(new Request('POST', 'http://www.example.com'));
-
-        $this->streamFactory->expects($this->once())
-            ->method('createStream')
-            ->with('{"foo":"bar"}')
-            ->willReturnCallback(static function (string $content): StreamInterface {
-                return Utils::streamFor($content);
-            });
-
-        $this->httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->with($this->callback(function (Request $requestArg): bool {
-                if ('application/x-sentry-envelope' !== $requestArg->getHeaderLine('Content-Type')) {
-                    return false;
-                }
-
-                if ('{"foo":"bar"}' !== $requestArg->getBody()->getContents()) {
-                    return false;
-                }
-
-                return true;
-            }))
-            ->willReturn(new HttpFullfilledPromise(new Response()));
-
-        $transport = new HttpTransport(
-            new Options(['dsn' => $dsn]),
-            $this->httpClient,
-            $this->streamFactory,
-            $this->requestFactory,
-            $this->payloadSerializer
-        );
-
-        $transport->send($event);
     }
 
     /**
      * @dataProvider sendDataProvider
      */
-    public function testSend(int $httpStatusCode, string $expectedPromiseStatus, ResponseStatus $expectedResponseStatus): void
+    public function testSend(int $httpStatusCode, ResultStatus $expectedResultStatus, bool $expectEventReturned): void
     {
-        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $event = Event::createEvent();
 
         $this->payloadSerializer->expects($this->once())
@@ -133,72 +46,55 @@ final class HttpTransportTest extends TestCase
             ->with($event)
             ->willReturn('{"foo":"bar"}');
 
-        $this->streamFactory->expects($this->once())
-            ->method('createStream')
-            ->with('{"foo":"bar"}')
-            ->willReturnCallback(static function (string $content): StreamInterface {
-                return Utils::streamFor($content);
-            });
-
-        $this->requestFactory->expects($this->once())
-            ->method('createRequest')
-            ->with('POST', $dsn->getStoreApiEndpointUrl())
-            ->willReturn(new Request('POST', 'http://www.example.com'));
-
         $this->httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->with($this->callback(function (Request $requestArg): bool {
-                if ('application/json' !== $requestArg->getHeaderLine('Content-Type')) {
-                    return false;
-                }
-
-                if ('{"foo":"bar"}' !== $requestArg->getBody()->getContents()) {
-                    return false;
-                }
-
-                return true;
-            }))
-            ->willReturn(new HttpFullfilledPromise(new Response($httpStatusCode)));
+            ->method('sendRequest')
+            ->willReturn(new Response($httpStatusCode, [], ''));
 
         $transport = new HttpTransport(
-            new Options(['dsn' => 'http://public@example.com/sentry/1']),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
-            $this->streamFactory,
-            $this->requestFactory,
             $this->payloadSerializer
         );
 
-        $promise = $transport->send($event);
+        $result = $transport->send($event);
 
-        try {
-            $promiseResult = $promise->wait();
-        } catch (RejectionException $exception) {
-            $promiseResult = $exception->getReason();
+        $this->assertSame($expectedResultStatus, $result->getStatus());
+        if ($expectEventReturned) {
+            $this->assertSame($event, $result->getEvent());
         }
-
-        $this->assertSame($expectedPromiseStatus, $promise->getState());
-        $this->assertSame($expectedResponseStatus, $promiseResult->getStatus());
-        $this->assertSame($event, $promiseResult->getEvent());
     }
 
     public static function sendDataProvider(): iterable
     {
         yield [
             200,
-            PromiseInterface::FULFILLED,
-            ResponseStatus::success(),
+            ResultStatus::success(),
+            true,
+        ];
+
+        yield [
+            401,
+            ResultStatus::invalid(),
+            false,
+        ];
+
+        yield [
+            429,
+            ResultStatus::rateLimit(),
+            false,
         ];
 
         yield [
             500,
-            PromiseInterface::REJECTED,
-            ResponseStatus::failed(),
+            ResultStatus::failed(),
+            false,
         ];
     }
 
-    public function testSendReturnsRejectedPromiseIfSendingFailedDueToHttpClientException(): void
+    public function testSendFailsDueToHttpClientException(): void
     {
-        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $exception = new \Exception('foo');
         $event = Event::createEvent();
 
@@ -213,52 +109,64 @@ final class HttpTransportTest extends TestCase
             ->with($event)
             ->willReturn('{"foo":"bar"}');
 
-        $this->requestFactory->expects($this->once())
-            ->method('createRequest')
-            ->with('POST', $dsn->getStoreApiEndpointUrl())
-            ->willReturn(new Request('POST', 'http://www.example.com'));
-
-        $this->streamFactory->expects($this->once())
-            ->method('createStream')
-            ->with('{"foo":"bar"}')
-            ->willReturnCallback(static function (string $content): StreamInterface {
-                return Utils::streamFor($content);
-            });
-
         $this->httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->willReturn(new HttpRejectedPromise($exception));
+            ->method('sendRequest')
+            ->will($this->throwException($exception));
 
         $transport = new HttpTransport(
-            new Options(['dsn' => $dsn]),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
-            $this->streamFactory,
-            $this->requestFactory,
             $this->payloadSerializer,
             $logger
         );
 
-        $promise = $transport->send($event);
+        $result = $transport->send($event);
 
-        try {
-            $promiseResult = $promise->wait();
-        } catch (RejectionException $exception) {
-            $promiseResult = $exception->getReason();
-        }
+        $this->assertSame(ResultStatus::failed(), $result->getStatus());
+    }
 
-        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
-        $this->assertSame(ResponseStatus::failed(), $promiseResult->getStatus());
-        $this->assertSame($event, $promiseResult->getEvent());
+    public function testSendFailsDueToCulrError(): void
+    {
+        $event = Event::createEvent();
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('Failed to send the event to Sentry. Reason: "cURL Error (6) Could not resolve host: example.com".', ['event' => $event]);
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn(new Response(0, [], 'cURL Error (6) Could not resolve host: example.com'));
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $logger
+        );
+
+        $result = $transport->send($event);
+
+        $this->assertSame(ResultStatus::unknown(), $result->getStatus());
     }
 
     /**
      * @group time-sensitive
      */
-    public function testSendReturnsRejectedPromiseIfExceedingRateLimits(): void
+    public function testSendFailsDueToExceedingRateLimits(): void
     {
         ClockMock::withClockMock(1644105600);
 
-        $dsn = Dsn::createFromString('http://public@example.com/sentry/1');
         $event = Event::createEvent();
 
         /** @var LoggerInterface&MockObject $logger */
@@ -275,69 +183,40 @@ final class HttpTransportTest extends TestCase
             ->with($event)
             ->willReturn('{"foo":"bar"}');
 
-        $this->requestFactory->expects($this->once())
-            ->method('createRequest')
-            ->with('POST', $dsn->getStoreApiEndpointUrl())
-            ->willReturn(new Request('POST', 'http://www.example.com'));
-
-        $this->streamFactory->expects($this->once())
-            ->method('createStream')
-            ->with('{"foo":"bar"}')
-            ->willReturnCallback([Utils::class, 'streamFor']);
-
         $this->httpClient->expects($this->once())
-            ->method('sendAsyncRequest')
-            ->willReturn(new HttpFullfilledPromise(new Response(429, ['Retry-After' => '60'])));
+            ->method('sendRequest')
+            ->willReturn(new Response(429, ['Retry-After' => ['60']], ''));
 
         $transport = new HttpTransport(
-            new Options(['dsn' => $dsn]),
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
             $this->httpClient,
-            $this->streamFactory,
-            $this->requestFactory,
             $this->payloadSerializer,
             $logger
         );
 
         // Event should be sent, but the server should reply with a HTTP 429
-        $promise = $transport->send($event);
+        $result = $transport->send($event);
 
-        try {
-            $promiseResult = $promise->wait();
-        } catch (RejectionException $exception) {
-            $promiseResult = $exception->getReason();
-        }
-
-        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
-        $this->assertSame(ResponseStatus::rateLimit(), $promiseResult->getStatus());
-        $this->assertSame($event, $promiseResult->getEvent());
+        $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
 
         // Event should not be sent at all because rate-limit is in effect
-        $promise = $transport->send($event);
+        $result = $transport->send($event);
 
-        try {
-            $promiseResult = $promise->wait();
-        } catch (RejectionException $exception) {
-            $promiseResult = $exception->getReason();
-        }
-
-        $this->assertSame(PromiseInterface::REJECTED, $promise->getState());
-        $this->assertSame(ResponseStatus::rateLimit(), $promiseResult->getStatus());
-        $this->assertSame($event, $promiseResult->getEvent());
+        $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
     }
 
     public function testClose(): void
     {
         $transport = new HttpTransport(
-            new Options(['dsn' => 'http://public@example.com/sentry/1']),
-            $this->createMock(HttpAsyncClientInterface::class),
-            $this->createMock(StreamFactoryInterface::class),
-            $this->createMock(RequestFactoryInterface::class),
+            new Options(),
+            $this->createMock(HttpClientInterface::class),
             $this->createMock(PayloadSerializerInterface::class)
         );
 
-        $promise = $transport->close();
+        $result = $transport->close();
 
-        $this->assertSame(PromiseInterface::FULFILLED, $promise->getState());
-        $this->assertTrue($promise->wait());
+        $this->assertSame(ResultStatus::success(), $result->getStatus());
     }
 }

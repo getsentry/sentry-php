@@ -9,6 +9,8 @@ use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionContext;
 
+use function Sentry\continueTrace;
+
 final class SpanBench
 {
     /**
@@ -23,13 +25,14 @@ final class SpanBench
 
     public function __construct()
     {
-        $this->context = TransactionContext::fromSentryTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0');
-        $this->contextWithTimestamp = TransactionContext::fromSentryTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0');
+        $this->context = continueTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', '');
+        $this->contextWithTimestamp = continueTrace('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0', '');
         $this->contextWithTimestamp->setStartTimestamp(microtime(true));
     }
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructor(): void
@@ -39,6 +42,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContext(): void
@@ -48,6 +52,7 @@ final class SpanBench
 
     /**
      * @Revs(100000)
+     *
      * @Iterations(10)
      */
     public function benchConstructorWithInjectedContextAndStartTimestamp(): void

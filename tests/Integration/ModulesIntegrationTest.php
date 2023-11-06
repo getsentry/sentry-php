@@ -11,6 +11,7 @@ use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+
 use function Sentry\withScope;
 
 final class ModulesIntegrationTest extends TestCase

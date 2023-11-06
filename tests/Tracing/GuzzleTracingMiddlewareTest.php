@@ -141,7 +141,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Request('GET', 'https://www.example.com'),
             new Options([
                 'traces_sample_rate' => 1,
-                'trace_propagation_targets' => [],
+                'trace_propagation_targets' => null,
             ]),
             true,
         ];
@@ -161,7 +161,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Request('GET', 'https://www.example.com'),
             new Options([
                 'traces_sample_rate' => 1,
-                'trace_propagation_targets' => null,
+                'trace_propagation_targets' => [],
             ]),
             false,
         ];

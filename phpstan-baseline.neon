@@ -1,19 +1,9 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Constructor of class Sentry\\\\Client has an unused parameter \\$serializer\\.$#"
-			count: 1
-			path: src/Client.php
-
-		-
 			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null but returns \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null\\.$#"
 			count: 1
 			path: src/Client.php
-
-		-
-			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
-			count: 3
-			path: src/ClientInterface.php
 
 		-
 			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
@@ -36,59 +26,19 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Access to constant CONNECT_TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Access to constant PROXY on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Access to constant TIMEOUT on an unknown class GuzzleHttp\\\\RequestOptions\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Call to static method create\\(\\) on an unknown class Symfony\\\\Component\\\\HttpClient\\\\HttpClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Call to static method createWithConfig\\(\\) on an unknown class Http\\\\Adapter\\\\Guzzle6\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$responseFactory\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Constructor of class Sentry\\\\HttpClient\\\\HttpClientFactory has an unused parameter \\$uriFactory\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Http\\\\Client\\\\Curl\\\\Client\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Method Sentry\\\\HttpClient\\\\HttpClientFactory\\:\\:resolveClient\\(\\) should return Http\\\\Client\\\\HttpAsyncClient\\|Psr\\\\Http\\\\Client\\\\ClientInterface but returns Symfony\\\\Component\\\\HttpClient\\\\HttplugClient\\.$#"
-			count: 1
-			path: src/HttpClient/HttpClientFactory.php
-
-		-
-			message: "#^Property Sentry\\\\Integration\\\\IgnoreErrorsIntegration\\:\\:\\$options \\(array\\{ignore_exceptions\\: array\\<int, class\\-string\\<Throwable\\>\\>, ignore_tags\\: array\\<string, string\\>\\}\\) does not accept array\\.$#"
-			count: 1
-			path: src/Integration/IgnoreErrorsIntegration.php
-
-		-
 			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/RequestIntegration.php
+
+		-
+			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/Logger/DebugFileLogger.php
+
+		-
+			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/Logger/DebugStdOutLogger.php
 
 		-
 			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
@@ -141,6 +91,11 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpClient\\(\\) should return Sentry\\\\HttpClient\\\\HttpClientInterface\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpConnectTimeout\\(\\) should return float but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -151,12 +106,22 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxyAuthentication\\(\\) should return string\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
+			message: "#^Method Sentry\\\\Options\\:\\:getHttpSslVerifyPeer\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpTimeout\\(\\) should return float but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreExceptions\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreExceptions\\(\\) should return array\\<int, class\\-string\\<Throwable\\>\\> but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -181,7 +146,7 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getLogger\\(\\) should return string but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getLogger\\(\\) should return Psr\\\\Log\\\\LoggerInterface\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -216,11 +181,6 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getSendAttempts\\(\\) should return int but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
 			message: "#^Method Sentry\\\\Options\\:\\:getServerName\\(\\) should return string but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -246,12 +206,17 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getTransport\\(\\) should return Sentry\\\\Transport\\\\TransportInterface\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:hasDefaultIntegrations\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:isCompressionEnabled\\(\\) should return bool but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:isHttpCompressionEnabled\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -281,51 +246,6 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureException\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
-			count: 1
-			path: src/State/Hub.php
-
-		-
-			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureLastError\\(\\) invoked with 2 parameters, 0\\-1 required\\.$#"
-			count: 1
-			path: src/State/Hub.php
-
-		-
-			message: "#^Method Sentry\\\\ClientInterface\\:\\:captureMessage\\(\\) invoked with 4 parameters, 1\\-3 required\\.$#"
-			count: 1
-			path: src/State/Hub.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureException\\(\\) invoked with 2 parameters, 1 required\\.$#"
-			count: 1
-			path: src/State/HubAdapter.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureLastError\\(\\) invoked with 1 parameter, 0 required\\.$#"
-			count: 1
-			path: src/State/HubAdapter.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureMessage\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
-			count: 1
-			path: src/State/HubAdapter.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:startTransaction\\(\\) invoked with 2 parameters, 1 required\\.$#"
-			count: 1
-			path: src/State/HubAdapter.php
-
-		-
-			message: "#^PHPDoc tag @param references unknown parameter\\: \\$customSamplingContext$#"
-			count: 1
-			path: src/State/HubInterface.php
-
-		-
-			message: "#^PHPDoc tag @param references unknown parameter\\: \\$hint$#"
-			count: 3
-			path: src/State/HubInterface.php
-
-		-
 			message: "#^Call to method getResponse\\(\\) on an unknown class GuzzleHttp\\\\Exception\\\\RequestException\\.$#"
 			count: 1
 			path: src/Tracing/GuzzleTracingMiddleware.php
@@ -334,11 +254,6 @@ parameters:
 			message: "#^Class GuzzleHttp\\\\Exception\\\\RequestException not found\\.$#"
 			count: 1
 			path: src/Tracing/GuzzleTracingMiddleware.php
-
-		-
-			message: "#^Unsafe usage of new static\\(\\)\\.$#"
-			count: 1
-			path: src/Tracing/SpanContext.php
 
 		-
 			message: "#^Parameter \\#1 \\$email of method Sentry\\\\UserDataBag\\:\\:setEmail\\(\\) expects string\\|null, mixed given\\.$#"
@@ -369,23 +284,3 @@ parameters:
 			message: "#^Method Sentry\\\\Util\\\\JSON\\:\\:encode\\(\\) should return string but returns string\\|false\\.$#"
 			count: 1
 			path: src/Util/JSON.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureException\\(\\) invoked with 2 parameters, 1 required\\.$#"
-			count: 1
-			path: src/functions.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureLastError\\(\\) invoked with 1 parameter, 0 required\\.$#"
-			count: 1
-			path: src/functions.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:captureMessage\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#"
-			count: 1
-			path: src/functions.php
-
-		-
-			message: "#^Method Sentry\\\\State\\\\HubInterface\\:\\:startTransaction\\(\\) invoked with 2 parameters, 1 required\\.$#"
-			count: 1
-			path: src/functions.php

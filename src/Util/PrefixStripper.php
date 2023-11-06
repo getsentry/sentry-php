@@ -13,12 +13,12 @@ trait PrefixStripper
      */
     protected function stripPrefixFromFilePath(?Options $options, string $filePath): string
     {
-        if (null === $options) {
+        if ($options === null) {
             return $filePath;
         }
 
         foreach ($options->getPrefixes() as $prefix) {
-            if (str_starts_with($filePath, $prefix)) {
+            if (mb_substr($filePath, 0, mb_strlen($prefix)) === $prefix) {
                 return mb_substr($filePath, mb_strlen($prefix));
             }
         }

@@ -132,7 +132,7 @@ final class ErrorHandler
      */
     public static function registerOnceErrorHandler(): self
     {
-        if (null === self::$handlerInstance) {
+        if (self::$handlerInstance === null) {
             self::$handlerInstance = new self();
         }
 
@@ -145,7 +145,7 @@ final class ErrorHandler
         self::$handlerInstance->isErrorHandlerRegistered = true;
         self::$handlerInstance->previousErrorHandler = set_error_handler($errorHandlerCallback);
 
-        if (null === self::$handlerInstance->previousErrorHandler) {
+        if (self::$handlerInstance->previousErrorHandler === null) {
             restore_error_handler();
 
             // Specifying the error types caught by the error handler with the
@@ -172,7 +172,7 @@ final class ErrorHandler
             throw new \InvalidArgumentException('The $reservedMemorySize argument must be greater than 0.');
         }
 
-        if (null === self::$handlerInstance) {
+        if (self::$handlerInstance === null) {
             self::$handlerInstance = new self();
         }
 
@@ -195,7 +195,7 @@ final class ErrorHandler
      */
     public static function registerOnceExceptionHandler(): self
     {
-        if (null === self::$handlerInstance) {
+        if (self::$handlerInstance === null) {
             self::$handlerInstance = new self();
         }
 
@@ -272,7 +272,7 @@ final class ErrorHandler
      */
     private function handleError(int $level, string $message, string $file, int $line, ?array $errcontext = []): bool
     {
-        $isSilencedError = 0 === error_reporting();
+        $isSilencedError = error_reporting() === 0;
 
         if (\PHP_MAJOR_VERSION >= 8) {
             // Starting from PHP8, when a silenced error occurs the `error_reporting()`
@@ -301,7 +301,7 @@ final class ErrorHandler
 
         $this->invokeListeners($this->errorListeners, $errorAsException);
 
-        if (null !== $this->previousErrorHandler) {
+        if ($this->previousErrorHandler !== null) {
             return false !== ($this->previousErrorHandler)($level, $message, $file, $line, $errcontext);
         }
 
@@ -317,7 +317,7 @@ final class ErrorHandler
     {
         // If there is not enough memory that can be used to handle the error
         // do nothing
-        if (null === self::$reservedMemory) {
+        if (self::$reservedMemory === null) {
             return;
         }
 
@@ -353,7 +353,7 @@ final class ErrorHandler
         $this->previousExceptionHandler = null;
 
         try {
-            if (null !== $previousExceptionHandler) {
+            if ($previousExceptionHandler !== null) {
                 $previousExceptionHandler($exception);
 
                 return;

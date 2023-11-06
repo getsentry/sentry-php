@@ -40,13 +40,15 @@ final class DynamicSamplingContext
      * @param string $key   the list member key
      * @param string $value the list member value
      */
-    public function set(string $key, string $value): void
+    public function set(string $key, string $value): self
     {
         if ($this->isFrozen) {
-            return;
+            return $this;
         }
 
         $this->entries[$key] = $value;
+
+        return $this;
     }
 
     /**
@@ -73,9 +75,11 @@ final class DynamicSamplingContext
     /**
      * Mark the dsc as frozen.
      */
-    public function freeze(): void
+    public function freeze(): self
     {
         $this->isFrozen = true;
+
+        return $this;
     }
 
     /**
@@ -127,7 +131,7 @@ final class DynamicSamplingContext
 
             [$key, $value] = explode('=', $keyValue, 2);
 
-            if (str_starts_with($key, self::SENTRY_ENTRY_PREFIX)) {
+            if (mb_substr($key, 0, mb_strlen(self::SENTRY_ENTRY_PREFIX)) === self::SENTRY_ENTRY_PREFIX) {
                 $samplingContext->set(rawurldecode(mb_substr($key, mb_strlen(self::SENTRY_ENTRY_PREFIX))), rawurldecode($value));
             }
         }
@@ -151,7 +155,7 @@ final class DynamicSamplingContext
         $samplingContext->set('trace_id', (string) $transaction->getTraceId());
 
         $sampleRate = $transaction->getMetaData()->getSamplingRate();
-        if (null !== $sampleRate) {
+        if ($sampleRate !== null) {
             $samplingContext->set('sample_rate', (string) $sampleRate);
         }
 
@@ -162,29 +166,29 @@ final class DynamicSamplingContext
 
         $client = $hub->getClient();
 
-        if (null !== $client) {
+        if ($client !== null) {
             $options = $client->getOptions();
 
-            if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
+            if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
                 $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
 
-            if (null !== $options->getRelease()) {
+            if ($options->getRelease() !== null) {
                 $samplingContext->set('release', $options->getRelease());
             }
 
-            if (null !== $options->getEnvironment()) {
+            if ($options->getEnvironment() !== null) {
                 $samplingContext->set('environment', $options->getEnvironment());
             }
         }
 
         $hub->configureScope(static function (Scope $scope) use ($samplingContext): void {
-            if (null !== $scope->getUser() && null !== $scope->getUser()->getSegment()) {
+            if ($scope->getUser() !== null && $scope->getUser()->getSegment() !== null) {
                 $samplingContext->set('user_segment', $scope->getUser()->getSegment());
             }
         });
 
-        if (null !== $transaction->getSampled()) {
+        if ($transaction->getSampled() !== null) {
             $samplingContext->set('sampled', $transaction->getSampled() ? 'true' : 'false');
         }
 
@@ -198,23 +202,23 @@ final class DynamicSamplingContext
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
 
-        if (null !== $options->getTracesSampleRate()) {
+        if ($options->getTracesSampleRate() !== null) {
             $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());
         }
 
-        if (null !== $options->getDsn() && null !== $options->getDsn()->getPublicKey()) {
+        if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
             $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
         }
 
-        if (null !== $options->getRelease()) {
+        if ($options->getRelease() !== null) {
             $samplingContext->set('release', $options->getRelease());
         }
 
-        if (null !== $options->getEnvironment()) {
+        if ($options->getEnvironment() !== null) {
             $samplingContext->set('environment', $options->getEnvironment());
         }
 
-        if (null !== $scope->getUser() && null !== $scope->getUser()->getSegment()) {
+        if ($scope->getUser() !== null && $scope->getUser()->getSegment() !== null) {
             $samplingContext->set('user_segment', $scope->getUser()->getSegment());
         }
 

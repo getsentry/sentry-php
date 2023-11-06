@@ -33,11 +33,6 @@ final class Dsn implements \Stringable
     private $publicKey;
 
     /**
-     * @var string|null The secret key to authenticate the SDK
-     */
-    private $secretKey;
-
-    /**
      * @var string The ID of the resource to access
      */
     private $projectId;
@@ -50,21 +45,19 @@ final class Dsn implements \Stringable
     /**
      * Class constructor.
      *
-     * @param string      $scheme    The protocol to be used to access the resource
-     * @param string      $host      The host that holds the resource
-     * @param int         $port      The port on which the resource is exposed
-     * @param string      $projectId The ID of the resource to access
-     * @param string      $path      The specific resource that the web client wants to access
-     * @param string      $publicKey The public key to authenticate the SDK
-     * @param string|null $secretKey The secret key to authenticate the SDK
+     * @param string $scheme    The protocol to be used to access the resource
+     * @param string $host      The host that holds the resource
+     * @param int    $port      The port on which the resource is exposed
+     * @param string $projectId The ID of the resource to access
+     * @param string $path      The specific resource that the web client wants to access
+     * @param string $publicKey The public key to authenticate the SDK
      */
-    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?string $secretKey)
+    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey)
     {
         $this->scheme = $scheme;
         $this->host = $host;
         $this->port = $port;
         $this->publicKey = $publicKey;
-        $this->secretKey = $secretKey;
         $this->path = $path;
         $this->projectId = $projectId;
     }
@@ -78,7 +71,7 @@ final class Dsn implements \Stringable
     {
         $parsedDsn = parse_url($value);
 
-        if (false === $parsedDsn) {
+        if ($parsedDsn === false) {
             throw new \InvalidArgumentException(sprintf('The "%s" DSN is invalid.', $value));
         }
 
@@ -86,10 +79,6 @@ final class Dsn implements \Stringable
             if (!isset($parsedDsn[$component]) || (isset($parsedDsn[$component]) && empty($parsedDsn[$component]))) {
                 throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a scheme, a host, a user and a path component.', $value));
             }
-        }
-
-        if (isset($parsedDsn['pass']) && empty($parsedDsn['pass'])) {
-            throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a valid secret key.', $value));
         }
 
         if (!\in_array($parsedDsn['scheme'], ['http', 'https'], true)) {
@@ -101,18 +90,17 @@ final class Dsn implements \Stringable
         $lastSlashPosition = strrpos($parsedDsn['path'], '/');
         $path = $parsedDsn['path'];
 
-        if (false !== $lastSlashPosition) {
+        if ($lastSlashPosition !== false) {
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
         return new self(
             $parsedDsn['scheme'],
             $parsedDsn['host'],
-            $parsedDsn['port'] ?? ('http' === $parsedDsn['scheme'] ? 80 : 443),
+            $parsedDsn['port'] ?? ($parsedDsn['scheme'] === 'http' ? 80 : 443),
             $projectId,
             $path,
-            $parsedDsn['user'],
-            $parsedDsn['pass'] ?? null
+            $parsedDsn['user']
         );
     }
 
@@ -150,18 +138,10 @@ final class Dsn implements \Stringable
 
     /**
      * Gets the ID of the resource to access.
-     *
-     * @return int|string
      */
-    public function getProjectId(bool $returnAsString = false)
+    public function getProjectId(): string
     {
-        if ($returnAsString) {
-            return $this->projectId;
-        }
-
-        @trigger_error(sprintf('Calling the method %s() and expecting it to return an integer is deprecated since version 3.4 and will stop working in 4.0.', __METHOD__), \E_USER_DEPRECATED);
-
-        return (int) $this->projectId;
+        return $this->projectId;
     }
 
     /**
@@ -170,22 +150,6 @@ final class Dsn implements \Stringable
     public function getPublicKey(): string
     {
         return $this->publicKey;
-    }
-
-    /**
-     * Gets the secret key to authenticate the SDK.
-     */
-    public function getSecretKey(): ?string
-    {
-        return $this->secretKey;
-    }
-
-    /**
-     * Returns the URL of the API for the store endpoint.
-     */
-    public function getStoreApiEndpointUrl(): string
-    {
-        return $this->getBaseEndpointUrl() . '/store/';
     }
 
     /**
@@ -211,17 +175,13 @@ final class Dsn implements \Stringable
     {
         $url = $this->scheme . '://' . $this->publicKey;
 
-        if (null !== $this->secretKey) {
-            $url .= ':' . $this->secretKey;
-        }
-
         $url .= '@' . $this->host;
 
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+        if (($this->scheme === 'http' && $this->port !== 80) || ($this->scheme === 'https' && $this->port !== 443)) {
             $url .= ':' . $this->port;
         }
 
-        if (null !== $this->path) {
+        if ($this->path !== null) {
             $url .= $this->path;
         }
 
@@ -237,11 +197,11 @@ final class Dsn implements \Stringable
     {
         $url = $this->scheme . '://' . $this->host;
 
-        if (('http' === $this->scheme && 80 !== $this->port) || ('https' === $this->scheme && 443 !== $this->port)) {
+        if (($this->scheme === 'http' && $this->port !== 80) || ($this->scheme === 'https' && $this->port !== 443)) {
             $url .= ':' . $this->port;
         }
 
-        if (null !== $this->path) {
+        if ($this->path !== null) {
             $url .= $this->path;
         }
 

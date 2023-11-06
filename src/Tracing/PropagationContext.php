@@ -70,14 +70,14 @@ final class PropagationContext
      */
     public function toBaggage(): string
     {
-        if (null === $this->dynamicSamplingContext) {
+        if ($this->dynamicSamplingContext === null) {
             $hub = SentrySdk::getCurrentHub();
             $client = $hub->getClient();
 
-            if (null !== $client) {
+            if ($client !== null) {
                 $options = $client->getOptions();
 
-                if (null !== $options) {
+                if ($options !== null) {
                     $hub->configureScope(function (Scope $scope) use ($options) {
                         $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
                     });
@@ -98,7 +98,7 @@ final class PropagationContext
             'span_id' => (string) $this->spanId,
         ];
 
-        if (null !== $this->parentSpanId) {
+        if ($this->parentSpanId !== null) {
             $result['parent_span_id'] = (string) $this->parentSpanId;
         }
 
@@ -130,9 +130,11 @@ final class PropagationContext
         return $this->spanId;
     }
 
-    public function setSpanId(SpanId $spanId): void
+    public function setSpanId(SpanId $spanId): self
     {
         $this->spanId = $spanId;
+
+        return $this;
     }
 
     public function getDynamicSamplingContext(): ?DynamicSamplingContext
@@ -140,9 +142,11 @@ final class PropagationContext
         return $this->dynamicSamplingContext;
     }
 
-    public function setDynamicSamplingContext(DynamicSamplingContext $dynamicSamplingContext): void
+    public function setDynamicSamplingContext(DynamicSamplingContext $dynamicSamplingContext): self
     {
         $this->dynamicSamplingContext = $dynamicSamplingContext;
+
+        return $this;
     }
 
     private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self

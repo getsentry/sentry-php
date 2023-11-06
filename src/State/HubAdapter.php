@@ -42,7 +42,7 @@ final class HubAdapter implements HubInterface
      */
     public static function getInstance(): self
     {
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             self::$instance = new self();
         }
 
@@ -165,8 +165,6 @@ final class HubAdapter implements HubInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {

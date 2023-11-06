@@ -13,18 +13,10 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\Severity;
-use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
-/**
- * This interface represent the class which is responsible for maintaining a
- * stack of pairs of clients and scopes. It is the main entry point to talk
- * with the Sentry client.
- *
- * @method string|null captureCheckIn(string $slug, CheckInStatus $status, int|float|null $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null) Captures a check-in
- */
 interface HubInterface
 {
     /**
@@ -72,60 +64,47 @@ interface HubInterface
     /**
      * Calls the given callback passing to it the current scope so that any
      * operation can be run within its context.
-     *
-     * @param callable $callback The callback to be executed
      */
     public function configureScope(callable $callback): void;
 
     /**
      * Binds the given client to the current scope.
-     *
-     * @param ClientInterface $client The client
      */
     public function bindClient(ClientInterface $client): void;
 
     /**
      * Captures a message event and sends it to Sentry.
-     *
-     * @param string         $message The message
-     * @param Severity|null  $level   The severity level of the message
-     * @param EventHint|null $hint    Object that can contain additional information about the event
      */
-    public function captureMessage(string $message, ?Severity $level = null/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures an exception event and sends it to Sentry.
-     *
-     * @param \Throwable     $exception The exception
-     * @param EventHint|null $hint      Object that can contain additional information about the event
      */
-    public function captureException(\Throwable $exception/*, ?EventHint $hint = null*/): ?EventId;
+    public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures a new event using the provided data.
-     *
-     * @param Event          $event The event being captured
-     * @param EventHint|null $hint  May contain additional information about the event
      */
     public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures an event that logs the last occurred error.
-     *
-     * @param EventHint|null $hint Object that can contain additional information about the event
      */
-    public function captureLastError(/*?EventHint $hint = null*/): ?EventId;
+    public function captureLastError(?EventHint $hint = null): ?EventId;
 
     /**
      * Records a new breadcrumb which will be attached to future events. They
      * will be added to subsequent events to provide more context on user's
      * actions prior to an error or crash.
-     *
-     * @param Breadcrumb $breadcrumb The breadcrumb to record
-     *
-     * @return bool Whether the breadcrumb was actually added to the current scope
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool;
+
+    /**
+     * Captures a check-in.
+     *
+     * @param int|float|null $duration
+     */
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string;
 
     /**
      * Gets the integration whose FQCN matches the given one if it's available on the current client.
@@ -155,10 +134,9 @@ interface HubInterface
      * which point the transaction with all its finished child spans will be sent to
      * Sentry.
      *
-     * @param TransactionContext   $context               Properties of the new transaction
      * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(TransactionContext $context/*, array $customSamplingContext = []*/): Transaction;
+    public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction;
 
     /**
      * Returns the transaction that is on the Hub.
@@ -172,8 +150,6 @@ interface HubInterface
 
     /**
      * Sets the span on the Hub.
-     *
-     * @param Span|null $span The span
      */
     public function setSpan(?Span $span): HubInterface;
 }

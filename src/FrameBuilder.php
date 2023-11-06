@@ -74,7 +74,7 @@ final class FrameBuilder
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['class'];
 
-            if (str_starts_with($functionName, Frame::ANONYMOUS_CLASS_PREFIX)) {
+            if (mb_substr($functionName, 0, mb_strlen(Frame::ANONYMOUS_CLASS_PREFIX)) === Frame::ANONYMOUS_CLASS_PREFIX) {
                 $functionName = Frame::ANONYMOUS_CLASS_PREFIX . $this->stripPrefixFromFilePath($this->options, substr($backtraceFrame['class'], \strlen(Frame::ANONYMOUS_CLASS_PREFIX)));
             }
 
@@ -89,7 +89,7 @@ final class FrameBuilder
             $strippedFilePath,
             $line,
             $rawFunctionName,
-            Frame::INTERNAL_FRAME_FILENAME !== $file ? $file : null,
+            $file !== Frame::INTERNAL_FRAME_FILENAME ? $file : null,
             $this->getFunctionArguments($backtraceFrame),
             $this->isFrameInApp($file, $functionName)
         );
@@ -103,11 +103,11 @@ final class FrameBuilder
      */
     private function isFrameInApp(string $file, ?string $functionName): bool
     {
-        if (Frame::INTERNAL_FRAME_FILENAME === $file) {
+        if ($file === Frame::INTERNAL_FRAME_FILENAME) {
             return false;
         }
 
-        if (null !== $functionName && str_starts_with($functionName, 'Sentry\\')) {
+        if ($functionName !== null && substr($functionName, 0, \strlen('Sentry\\')) === 'Sentry\\') {
             return false;
         }
 
@@ -117,7 +117,7 @@ final class FrameBuilder
         $isInApp = true;
 
         foreach ($excludedAppPaths as $excludedAppPath) {
-            if (str_starts_with($absoluteFilePath, $excludedAppPath)) {
+            if (mb_substr($absoluteFilePath, 0, mb_strlen($excludedAppPath)) === $excludedAppPath) {
                 $isInApp = false;
 
                 break;
@@ -125,7 +125,7 @@ final class FrameBuilder
         }
 
         foreach ($includedAppPaths as $includedAppPath) {
-            if (str_starts_with($absoluteFilePath, $includedAppPath)) {
+            if (mb_substr($absoluteFilePath, 0, mb_strlen($includedAppPath)) === $includedAppPath) {
                 $isInApp = true;
 
                 break;
@@ -156,7 +156,7 @@ final class FrameBuilder
             if (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
-                } elseif (isset($backtraceFrame['type']) && '::' === $backtraceFrame['type']) {
+                } elseif (isset($backtraceFrame['type']) && $backtraceFrame['type'] === '::') {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__callStatic');
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
@@ -170,7 +170,7 @@ final class FrameBuilder
 
         $argumentValues = [];
 
-        if (null !== $reflectionFunction) {
+        if ($reflectionFunction !== null) {
             $argumentValues = $this->getFunctionArgumentValues($reflectionFunction, $backtraceFrame['args']);
         } else {
             foreach ($backtraceFrame['args'] as $parameterPosition => $parameterValue) {

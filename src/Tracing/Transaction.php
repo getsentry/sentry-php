@@ -38,7 +38,7 @@ final class Transaction extends Span
     /**
      * @var Profiler|null Reference instance to the {@see Profiler}
      */
-    protected $profiler = null;
+    protected $profiler;
 
     /**
      * Span constructor.
@@ -89,7 +89,7 @@ final class Transaction extends Span
      */
     public function getDynamicSamplingContext(): DynamicSamplingContext
     {
-        if (null !== $this->metadata->getDynamicSamplingContext()) {
+        if ($this->metadata->getDynamicSamplingContext() !== null) {
             return $this->metadata->getDynamicSamplingContext();
         }
 
@@ -104,28 +104,27 @@ final class Transaction extends Span
      *
      * @param int $maxSpans The maximum number of spans that can be recorded
      */
-    public function initSpanRecorder(int $maxSpans = 1000): void
+    public function initSpanRecorder(int $maxSpans = 1000): self
     {
-        if (null === $this->spanRecorder) {
+        if ($this->spanRecorder === null) {
             $this->spanRecorder = new SpanRecorder($maxSpans);
         }
 
         $this->spanRecorder->add($this);
+
+        return $this;
     }
 
-    public function detachSpanRecorder(): void
+    public function initProfiler(): self
     {
-        $this->spanRecorder = null;
-    }
-
-    public function initProfiler(): void
-    {
-        if (null === $this->profiler) {
+        if ($this->profiler === null) {
             $client = $this->hub->getClient();
-            $options = null !== $client ? $client->getOptions() : null;
+            $options = $client !== null ? $client->getOptions() : null;
 
             $this->profiler = new Profiler($options);
         }
+
+        return $this;
     }
 
     public function getProfiler(): ?Profiler
@@ -133,9 +132,11 @@ final class Transaction extends Span
         return $this->profiler;
     }
 
-    public function detachProfiler(): void
+    public function detachProfiler(): self
     {
         $this->profiler = null;
+
+        return $this;
     }
 
     /**
@@ -143,26 +144,26 @@ final class Transaction extends Span
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
-        if (null !== $this->profiler) {
+        if ($this->profiler !== null) {
             $this->profiler->stop();
         }
 
-        if (null !== $this->endTimestamp) {
+        if ($this->endTimestamp !== null) {
             // Transaction was already finished once and we don't want to re-flush it
             return null;
         }
 
         parent::finish($endTimestamp);
 
-        if (true !== $this->sampled) {
+        if ($this->sampled !== true) {
             return null;
         }
 
         $finishedSpans = [];
 
-        if (null !== $this->spanRecorder) {
+        if ($this->spanRecorder !== null) {
             foreach ($this->spanRecorder->getSpans() as $span) {
-                if ($span->getSpanId() !== $this->getSpanId() && null !== $span->getEndTimestamp()) {
+                if ($span->getSpanId() !== $this->getSpanId() && $span->getEndTimestamp() !== null) {
                     $finishedSpans[] = $span;
                 }
             }
@@ -178,9 +179,9 @@ final class Transaction extends Span
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
-        if (null !== $this->profiler) {
+        if ($this->profiler !== null) {
             $profile = $this->profiler->getProfile();
-            if (null !== $profile) {
+            if ($profile !== null) {
                 $event->setSdkMetadata('profile', $profile);
             }
         }

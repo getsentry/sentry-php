@@ -24,7 +24,7 @@ final class ProfileTest extends TestCase
         $profile->setStartTimeStamp(1677573660.0000);
 
         $profile->setExcimerLog($excimerLog);
-        $profile->setEventId((new EventId('815e57b4bb134056ab1840919834689d')));
+        $profile->setEventId(new EventId('815e57b4bb134056ab1840919834689d'));
 
         $this->assertSame($expectedData, $profile->getFormattedData($event));
     }

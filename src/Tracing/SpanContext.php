@@ -7,11 +7,6 @@ namespace Sentry\Tracing;
 class SpanContext
 {
     /**
-     * @deprecated since version 3.1, to be removed in 4.0
-     */
-    private const TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
-
-    /**
      * @var string|null Description of the Span
      */
     private $description;
@@ -71,9 +66,14 @@ class SpanContext
         return $this->description;
     }
 
-    public function setDescription(?string $description): void
+    /**
+     * @return $this
+     */
+    public function setDescription(?string $description)
     {
         $this->description = $description;
+
+        return $this;
     }
 
     public function getOp(): ?string
@@ -81,9 +81,14 @@ class SpanContext
         return $this->op;
     }
 
-    public function setOp(?string $op): void
+    /**
+     * @return $this
+     */
+    public function setOp(?string $op)
     {
         $this->op = $op;
+
+        return $this;
     }
 
     public function getStatus(): ?SpanStatus
@@ -91,9 +96,14 @@ class SpanContext
         return $this->status;
     }
 
-    public function setStatus(?SpanStatus $status): void
+    /**
+     * @return $this
+     */
+    public function setStatus(?SpanStatus $status)
     {
         $this->status = $status;
+
+        return $this;
     }
 
     public function getParentSpanId(): ?SpanId
@@ -101,9 +111,14 @@ class SpanContext
         return $this->parentSpanId;
     }
 
-    public function setParentSpanId(?SpanId $parentSpanId): void
+    /**
+     * @return $this
+     */
+    public function setParentSpanId(?SpanId $parentSpanId)
     {
         $this->parentSpanId = $parentSpanId;
+
+        return $this;
     }
 
     public function getSampled(): ?bool
@@ -111,9 +126,14 @@ class SpanContext
         return $this->sampled;
     }
 
-    public function setSampled(?bool $sampled): void
+    /**
+     * @return $this
+     */
+    public function setSampled(?bool $sampled)
     {
         $this->sampled = $sampled;
+
+        return $this;
     }
 
     public function getSpanId(): ?SpanId
@@ -121,9 +141,14 @@ class SpanContext
         return $this->spanId;
     }
 
-    public function setSpanId(?SpanId $spanId): void
+    /**
+     * @return $this
+     */
+    public function setSpanId(?SpanId $spanId)
     {
         $this->spanId = $spanId;
+
+        return $this;
     }
 
     public function getTraceId(): ?TraceId
@@ -131,9 +156,14 @@ class SpanContext
         return $this->traceId;
     }
 
-    public function setTraceId(?TraceId $traceId): void
+    /**
+     * @return $this
+     */
+    public function setTraceId(?TraceId $traceId)
     {
         $this->traceId = $traceId;
+
+        return $this;
     }
 
     /**
@@ -146,10 +176,14 @@ class SpanContext
 
     /**
      * @param array<string, string> $tags
+     *
+     * @return $this
      */
-    public function setTags(array $tags): void
+    public function setTags(array $tags)
     {
         $this->tags = $tags;
+
+        return $this;
     }
 
     /**
@@ -162,10 +196,14 @@ class SpanContext
 
     /**
      * @param array<string, mixed> $data
+     *
+     * @return $this
      */
-    public function setData(array $data): void
+    public function setData(array $data)
     {
         $this->data = $data;
+
+        return $this;
     }
 
     public function getStartTimestamp(): ?float
@@ -173,9 +211,14 @@ class SpanContext
         return $this->startTimestamp;
     }
 
-    public function setStartTimestamp(?float $startTimestamp): void
+    /**
+     * @return $this
+     */
+    public function setStartTimestamp(?float $startTimestamp)
     {
         $this->startTimestamp = $startTimestamp;
+
+        return $this;
     }
 
     public function getEndTimestamp(): ?float
@@ -183,42 +226,13 @@ class SpanContext
         return $this->endTimestamp;
     }
 
-    public function setEndTimestamp(?float $endTimestamp): void
+    /**
+     * @return $this
+     */
+    public function setEndTimestamp(?float $endTimestamp)
     {
         $this->endTimestamp = $endTimestamp;
-    }
 
-    /**
-     * Returns a context populated with the data of the given header.
-     *
-     * @param string $header The sentry-trace header from the request
-     *
-     * @return static
-     *
-     * @deprecated since version 3.1, to be removed in 4.0
-     */
-    public static function fromTraceparent(string $header)
-    {
-        @trigger_error(sprintf('The %s() method is deprecated since version 3.1 and will be removed in 4.0. Use TransactionContext::fromHeaders() instead.', __METHOD__), \E_USER_DEPRECATED);
-
-        $context = new static();
-
-        if (!preg_match(self::TRACEPARENT_HEADER_REGEX, $header, $matches)) {
-            return $context;
-        }
-
-        if (!empty($matches['trace_id'])) {
-            $context->traceId = new TraceId($matches['trace_id']);
-        }
-
-        if (!empty($matches['span_id'])) {
-            $context->parentSpanId = new SpanId($matches['span_id']);
-        }
-
-        if (isset($matches['sampled'])) {
-            $context->sampled = '1' === $matches['sampled'];
-        }
-
-        return $context;
+        return $this;
     }
 }

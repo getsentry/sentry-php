@@ -6,7 +6,6 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -29,6 +28,7 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Util\SentryUid;
+
 use function Sentry\addBreadcrumb;
 use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
@@ -306,9 +306,9 @@ final class FunctionsTest extends TestCase
 
         try {
             trace(function () {
-                throw new RuntimeException('Throwing should still restore the previous span');
+                throw new \RuntimeException('Throwing should still restore the previous span');
             }, new SpanContext());
-        } catch (RuntimeException $e) {
+        } catch (\RuntimeException $e) {
             $this->assertSame($transaction, $hub->getSpan());
         }
     }
@@ -343,9 +343,9 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::setCurrentHub($hub);
 
-        $spanContext = new SpanContext();
-        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
-        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $spanContext = (new SpanContext())
+            ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
+            ->setSpanId(new SpanId('566e3688a61d4bc8'));
 
         $span = new Span($spanContext);
 

@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Event;
 use Sentry\EventType;
-use Sentry\Response;
-use Sentry\ResponseStatus;
+use Sentry\HttpClient\Response;
 
 final class RateLimiter
 {
@@ -47,10 +45,8 @@ final class RateLimiter
         $this->logger = $logger ?? new NullLogger();
     }
 
-    public function handleResponse(Event $event, ResponseInterface $response): Response
+    public function handleResponse(Event $event, Response $response): Response
     {
-        $sendResponse = new Response(ResponseStatus::createFromHttpStatusCode($response->getStatusCode()), $event);
-
         if ($this->handleRateLimit($response)) {
             $eventType = $event->getType();
             $disabledUntil = $this->getDisabledUntil($eventType);
@@ -61,7 +57,7 @@ final class RateLimiter
             );
         }
 
-        return $sendResponse;
+        return $response;
     }
 
     public function isRateLimited(EventType $eventType): bool
@@ -82,7 +78,7 @@ final class RateLimiter
         return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
     }
 
-    private function handleRateLimit(ResponseInterface $response): bool
+    private function handleRateLimit(Response $response): bool
     {
         $now = time();
 
@@ -113,13 +109,13 @@ final class RateLimiter
 
     private function parseRetryAfterHeader(int $currentTime, string $header): int
     {
-        if (1 === preg_match('/^\d+$/', $header)) {
+        if (preg_match('/^\d+$/', $header) === 1) {
             return (int) $header;
         }
 
         $headerDate = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC1123, $header);
 
-        if (false !== $headerDate && $headerDate->getTimestamp() >= $currentTime) {
+        if ($headerDate !== false && $headerDate->getTimestamp() >= $currentTime) {
             return $headerDate->getTimestamp() - $currentTime;
         }
 

@@ -85,11 +85,20 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
  * will be added to subsequent events to provide more context on user's
  * actions prior to an error or crash.
  *
- * @param Breadcrumb $breadcrumb The breadcrumb to record
+ * @param Breadcrumb|string    $category  The category of the breadcrumb, can be a Breadcrumb instance as well (in which case the other parameters are ignored)
+ * @param string|null          $message   Breadcrumb message
+ * @param array<string, mixed> $metadata  Additional information about the breadcrumb
+ * @param string               $level     The error level of the breadcrumb
+ * @param string               $type      The type of the breadcrumb
+ * @param float|null           $timestamp Optional timestamp of the breadcrumb
  */
-function addBreadcrumb(Breadcrumb $breadcrumb): void
+function addBreadcrumb($category, ?string $message = null, array $metadata = [], string $level = Breadcrumb::LEVEL_INFO, string $type = Breadcrumb::TYPE_DEFAULT, ?float $timestamp = null): void
 {
-    SentrySdk::getCurrentHub()->addBreadcrumb($breadcrumb);
+    SentrySdk::getCurrentHub()->addBreadcrumb(
+        $category instanceof Breadcrumb
+            ? $category
+            : new Breadcrumb($level, $type, $category, $message, $metadata, $timestamp)
+    );
 }
 
 /**
@@ -165,7 +174,7 @@ function trace(callable $trace, SpanContext $context)
         // If there's a span set on the scope there is a transaction
         // active currently. If that is the case we create a child span
         // and set it on the scope. Otherwise we only execute the callable
-        if (null !== $parentSpan) {
+        if ($parentSpan !== null) {
             $span = $parentSpan->startChild($context);
 
             $scope->setSpan($span);
@@ -194,12 +203,12 @@ function getTraceparent(): string
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
-    if (null !== $client) {
+    if ($client !== null) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->isTracingEnabled()) {
+        if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
-            if (null !== $span) {
+            if ($span !== null) {
                 return $span->toTraceparent();
             }
         }
@@ -224,12 +233,12 @@ function getBaggage(): string
     $hub = SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
-    if (null !== $client) {
+    if ($client !== null) {
         $options = $client->getOptions();
 
-        if (null !== $options && $options->isTracingEnabled()) {
+        if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
-            if (null !== $span) {
+            if ($span !== null) {
                 return $span->toBaggage();
             }
         }
