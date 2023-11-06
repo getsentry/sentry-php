@@ -93,11 +93,12 @@ final class Client implements ClientInterface
     ) {
         $this->options = $options;
         $this->transport = $transport;
-        $this->logger = $logger ?? new NullLogger();
-        $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
-        $this->stacktraceBuilder = new StacktraceBuilder($options, $representationSerializer ?? new RepresentationSerializer($this->options));
         $this->sdkIdentifier = $sdkIdentifier ?? self::SDK_IDENTIFIER;
         $this->sdkVersion = $sdkVersion ?? self::SDK_VERSION;
+        $this->stacktraceBuilder = new StacktraceBuilder($options, $representationSerializer ?? new RepresentationSerializer($this->options));
+        $this->logger = $logger ?? new NullLogger();
+
+        $this->integrations = IntegrationRegistry::getInstance()->setupIntegrations($options, $this->logger);
     }
 
     /**
@@ -267,10 +268,6 @@ final class Client implements ClientInterface
 
         if ($event->getEnvironment() === null) {
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
-        }
-
-        if ($event->getLogger() === null) {
-            $event->setLogger($this->options->getLogger(false));
         }
 
         $isTransaction = EventType::transaction() === $event->getType();

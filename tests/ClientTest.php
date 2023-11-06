@@ -217,7 +217,6 @@ final class ClientTest extends TestCase
     {
         $event = Event::createEvent();
         $expectedEvent = clone $event;
-        $expectedEvent->setLogger('php');
         $expectedEvent->setServerName('example.com');
         $expectedEvent->setRelease('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33');
         $expectedEvent->setEnvironment('development');
@@ -241,7 +240,6 @@ final class ClientTest extends TestCase
         $event->setTags(['context' => 'production']);
 
         $expectedEvent = clone $event;
-        $expectedEvent->setLogger('php');
         $expectedEvent->setTags(['context' => 'production', 'ios_version' => '14.0']);
 
         yield 'Options set && event properties set => event properties override options' => [
@@ -259,7 +257,6 @@ final class ClientTest extends TestCase
         $event->setServerName('example.com');
 
         $expectedEvent = clone $event;
-        $expectedEvent->setLogger('php');
         $expectedEvent->setEnvironment('production');
 
         yield 'Environment option set to null && no event property set => fallback to default value' => [
@@ -274,7 +271,6 @@ final class ClientTest extends TestCase
         $event->setExceptions([new ExceptionDataBag(new \ErrorException())]);
 
         $expectedEvent = clone $event;
-        $expectedEvent->setLogger('php');
         $expectedEvent->setEnvironment('production');
 
         yield 'Error level is set && exception is instance of ErrorException => preserve the error level set by the user' => [

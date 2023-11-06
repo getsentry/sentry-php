@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Sentry\Dsn;
 use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
@@ -45,13 +46,8 @@ final class OptionsTest extends TestCase
         string $option,
         $value,
         string $getterMethod,
-        ?string $setterMethod,
-        ?string $expectedGetterDeprecationMessage
+        ?string $setterMethod
     ): void {
-        if ($expectedGetterDeprecationMessage !== null) {
-            $this->expectDeprecation($expectedGetterDeprecationMessage);
-        }
-
         $options = new Options([$option => $value]);
 
         $this->assertEquals($value, $options->$getterMethod());
@@ -66,18 +62,8 @@ final class OptionsTest extends TestCase
         string $option,
         $value,
         string $getterMethod,
-        ?string $setterMethod,
-        ?string $expectedGetterDeprecationMessage,
-        ?string $expectedSetterDeprecationMessage
+        ?string $setterMethod
     ): void {
-        if ($expectedSetterDeprecationMessage !== null) {
-            $this->expectDeprecation($expectedSetterDeprecationMessage);
-        }
-
-        if ($expectedGetterDeprecationMessage !== null) {
-            $this->expectDeprecation($expectedGetterDeprecationMessage);
-        }
-
         $options = new Options();
 
         if ($setterMethod !== null) {
@@ -94,8 +80,6 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getPrefixes',
             'setPrefixes',
-            null,
-            null,
         ];
 
         yield [
@@ -103,8 +87,6 @@ final class OptionsTest extends TestCase
             0.5,
             'getSampleRate',
             'setSampleRate',
-            null,
-            null,
         ];
 
         yield [
@@ -112,8 +94,6 @@ final class OptionsTest extends TestCase
             0.5,
             'getTracesSampleRate',
             'setTracesSampleRate',
-            null,
-            null,
         ];
 
         yield [
@@ -121,8 +101,6 @@ final class OptionsTest extends TestCase
             null,
             'getTracesSampleRate',
             'setTracesSampleRate',
-            null,
-            null,
         ];
 
         yield [
@@ -130,8 +108,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getTracesSampler',
             'setTracesSampler',
-            null,
-            null,
         ];
 
         yield [
@@ -139,8 +115,6 @@ final class OptionsTest extends TestCase
             true,
             'getEnableTracing',
             'setEnableTracing',
-            null,
-            null,
         ];
 
         yield [
@@ -148,8 +122,6 @@ final class OptionsTest extends TestCase
             0.5,
             'getProfilesSampleRate',
             'setProfilesSampleRate',
-            null,
-            null,
         ];
 
         yield [
@@ -157,8 +129,6 @@ final class OptionsTest extends TestCase
             false,
             'shouldAttachStacktrace',
             'setAttachStacktrace',
-            null,
-            null,
         ];
 
         yield [
@@ -166,8 +136,6 @@ final class OptionsTest extends TestCase
             3,
             'getContextLines',
             'setContextLines',
-            null,
-            null,
         ];
 
         yield [
@@ -175,8 +143,6 @@ final class OptionsTest extends TestCase
             'foo',
             'getEnvironment',
             'setEnvironment',
-            null,
-            null,
         ];
 
         yield [
@@ -184,8 +150,6 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getInAppExcludedPaths',
             'setInAppExcludedPaths',
-            null,
-            null,
         ];
 
         yield [
@@ -193,17 +157,13 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getInAppIncludedPaths',
             'setInAppIncludedPaths',
-            null,
-            null,
         ];
 
         yield [
             'logger',
-            'foo',
+            new NullLogger(),
             'getLogger',
             'setLogger',
-            'Method Sentry\\Options::getLogger() is deprecated since version 3.2 and will be removed in 4.0.',
-            'Method Sentry\\Options::setLogger() is deprecated since version 3.2 and will be removed in 4.0.',
         ];
 
         yield [
@@ -211,8 +171,6 @@ final class OptionsTest extends TestCase
             'dev',
             'getRelease',
             'setRelease',
-            null,
-            null,
         ];
 
         yield [
@@ -220,8 +178,6 @@ final class OptionsTest extends TestCase
             'foo',
             'getServerName',
             'setServerName',
-            null,
-            null,
         ];
 
         yield [
@@ -229,8 +185,6 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getTags',
             'setTags',
-            null,
-            null,
         ];
 
         yield [
@@ -238,8 +192,6 @@ final class OptionsTest extends TestCase
             0,
             'getErrorTypes',
             'setErrorTypes',
-            null,
-            null,
         ];
 
         yield [
@@ -247,8 +199,6 @@ final class OptionsTest extends TestCase
             50,
             'getMaxBreadcrumbs',
             'setMaxBreadcrumbs',
-            null,
-            null,
         ];
 
         yield [
@@ -256,8 +206,6 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getIgnoreExceptions',
             'setIgnoreExceptions',
-            null,
-            null,
         ];
 
         yield [
@@ -265,8 +213,6 @@ final class OptionsTest extends TestCase
             ['foo', 'bar'],
             'getIgnoreTransactions',
             'setIgnoreTransactions',
-            null,
-            null,
         ];
 
         yield [
@@ -274,8 +220,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeSendCallback',
             'setBeforeSendCallback',
-            null,
-            null,
         ];
 
         yield [
@@ -283,8 +227,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeSendTransactionCallback',
             'setBeforeSendTransactionCallback',
-            null,
-            null,
         ];
 
         yield [
@@ -292,8 +234,6 @@ final class OptionsTest extends TestCase
             ['www.example.com'],
             'getTracePropagationTargets',
             'setTracePropagationTargets',
-            null,
-            null,
         ];
 
         yield [
@@ -301,8 +241,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeBreadcrumbCallback',
             'setBeforeBreadcrumbCallback',
-            null,
-            null,
         ];
 
         yield [
@@ -310,8 +248,6 @@ final class OptionsTest extends TestCase
             true,
             'shouldSendDefaultPii',
             'setSendDefaultPii',
-            null,
-            null,
         ];
 
         yield [
@@ -319,8 +255,6 @@ final class OptionsTest extends TestCase
             false,
             'hasDefaultIntegrations',
             'setDefaultIntegrations',
-            null,
-            null,
         ];
 
         yield [
@@ -328,8 +262,6 @@ final class OptionsTest extends TestCase
             50,
             'getMaxValueLength',
             'setMaxValueLength',
-            null,
-            null,
         ];
 
         yield [
@@ -337,8 +269,6 @@ final class OptionsTest extends TestCase
             new HttpTransport(new Options(), new HttpClient('foo', 'bar'), new PayloadSerializer(new Options())),
             'getTransport',
             'setTransport',
-            null,
-            null,
         ];
 
         yield [
@@ -346,8 +276,6 @@ final class OptionsTest extends TestCase
             new HttpClient('foo', 'bar'),
             'getHttpClient',
             'setHttpClient',
-            null,
-            null,
         ];
 
         yield [
@@ -355,8 +283,6 @@ final class OptionsTest extends TestCase
             '127.0.0.1',
             'getHttpProxy',
             'setHttpProxy',
-            null,
-            null,
         ];
 
         yield [
@@ -364,8 +290,6 @@ final class OptionsTest extends TestCase
             'username:password',
             'getHttpProxyAuthentication',
             'setHttpProxyAuthentication',
-            null,
-            null,
         ];
 
         yield [
@@ -373,8 +297,6 @@ final class OptionsTest extends TestCase
             1,
             'getHttpTimeout',
             'setHttpTimeout',
-            null,
-            null,
         ];
 
         yield [
@@ -382,8 +304,6 @@ final class OptionsTest extends TestCase
             1.2,
             'getHttpTimeout',
             'setHttpTimeout',
-            null,
-            null,
         ];
 
         yield [
@@ -391,8 +311,6 @@ final class OptionsTest extends TestCase
             1,
             'getHttpConnectTimeout',
             'setHttpConnectTimeout',
-            null,
-            null,
         ];
 
         yield [
@@ -400,8 +318,6 @@ final class OptionsTest extends TestCase
             1.2,
             'getHttpConnectTimeout',
             'setHttpConnectTimeout',
-            null,
-            null,
         ];
 
         yield [
@@ -409,8 +325,6 @@ final class OptionsTest extends TestCase
             false,
             'getHttpSslVerifyPeer',
             'setHttpSslVerifyPeer',
-            null,
-            null,
         ];
 
         yield [
@@ -418,8 +332,6 @@ final class OptionsTest extends TestCase
             false,
             'isHttpCompressionEnabled',
             'setEnableHttpCompression',
-            null,
-            null,
         ];
 
         yield [
@@ -427,8 +339,6 @@ final class OptionsTest extends TestCase
             true,
             'shouldCaptureSilencedErrors',
             'setCaptureSilencedErrors',
-            null,
-            null,
         ];
 
         yield [
@@ -436,8 +346,6 @@ final class OptionsTest extends TestCase
             'small',
             'getMaxRequestBodySize',
             'setMaxRequestBodySize',
-            null,
-            null,
         ];
     }
 
