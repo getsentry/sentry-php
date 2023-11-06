@@ -15,7 +15,7 @@
   ]);
   ```
   
-  This option performs an `is_a` check, so you can also ignore more generic exceptions.
+  This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check, so you can also ignore more generic exceptions.
 
 - Removed support for `symfony/options-resolver: ^3.4.43`.
 
