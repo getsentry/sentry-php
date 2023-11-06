@@ -55,11 +55,14 @@ The following integrations are fully supported and maintained by the Sentry team
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
 
-## 3rd party integrations using the old SDK 3.x
+## 3rd party integrations using SDK 4.x
 
 The following integrations are available and maintained by members of the Sentry community.
 
 - [Drupal](https://www.drupal.org/project/raven)
+
+## 3rd party integrations using the old SDK 3.x
+
 - [Neos Flow](https://github.com/flownative/flow-sentry)
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
