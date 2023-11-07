@@ -40,6 +40,10 @@ class HttpClient implements HttpClientInterface
             throw new \RuntimeException('The request data is empty.');
         }
 
+        if (!\extension_loaded('curl')) {
+            throw new \RuntimeException('The cURL PHP extension must be enabled to use the HttpClient.');
+        }
+
         $curlHandle = curl_init();
 
         $requestHeaders = Http::getRequestHeaders($dsn, $this->sdkIdentifier, $this->sdkVersion);
