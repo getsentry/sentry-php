@@ -60,12 +60,12 @@ The following integrations are fully supported and maintained by the Sentry team
 The following integrations are available and maintained by members of the Sentry community.
 
 - [Drupal](https://www.drupal.org/project/raven)
+- [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using the old SDK 3.x
 
 - [Neos Flow](https://github.com/flownative/flow-sentry)
-- [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
