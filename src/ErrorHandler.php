@@ -113,6 +113,11 @@ final class ErrorHandler
     private static $reservedMemory;
 
     /**
+     * @var bool Whether the fatal error handler should be disabled
+     */
+    private static $disableFatalErrorHandler = false;
+
+    /**
      * @var string[] List of error levels and their description
      */
     private const ERROR_LEVELS_DESCRIPTION = [
@@ -343,6 +348,10 @@ final class ErrorHandler
      */
     private function handleFatalError(): void
     {
+        if (self::$disableFatalErrorHandler) {
+            return;
+        }
+
         // Free the reserved memory that allows us to potentially handle OOM errors
         self::$reservedMemory = null;
 
@@ -402,7 +411,7 @@ final class ErrorHandler
         // native PHP handler to prevent an infinite loop
         if ($exception === $previousExceptionHandlerException) {
             // Disable the fatal error handler or the error will be reported twice
-            self::$reservedMemory = null;
+            self::$disableFatalErrorHandler = true;
 
             throw $exception;
         }
