@@ -71,6 +71,7 @@ jobs:
 
       - name: Run unit tests
         run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
+      # The reason for running some OOM tests without coverage is that because the coverage information collector can cause another OOM event invalidating the test
       - name: Run out of memory tests (without coverage)
         run: vendor/bin/phpunit --testsuite oom --no-coverage
 
