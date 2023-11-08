@@ -8,6 +8,10 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 
+/**
+ * This is an experimental feature and should neither be used nor considered stable.
+ * The API might change at any time without prior warning.
+ */
 class Metrics
 {
     /**
@@ -34,13 +38,6 @@ class Metrics
      */
     public function incr(string $name, $value, array $tags): ?EventId
     {
-        $client = SentrySdk::getCurrentHub()->getClient();
-
-        if ($client === null) {
-            return null;
-        }
-
-        $event = Event::createMetric();
         $metric = [
             'timestamp' => time(),
             'width' => 0,
@@ -49,24 +46,16 @@ class Metrics
             'value' => $value,
             'tags' => $tags,
         ];
-        $event->setMetric($metric);
 
-        return $client->captureEvent($event);
+        return $this->sendMetric($metric);
     }
 
     /**
      * @param int|float $value
      * @param string[]  $tags
      */
-    public function distribution(string $name, $value, array $tags, ?string $unit = null): ?EventId
+    public function distribution(string $name, $value, array $tags, ?MetricsUnit $unit = null): ?EventId
     {
-        $client = SentrySdk::getCurrentHub()->getClient();
-
-        if ($client === null) {
-            return null;
-        }
-
-        $event = Event::createMetric();
         $metric = [
             'timestamp' => time(),
             'width' => 0,
@@ -75,9 +64,8 @@ class Metrics
             'value' => $value,
             'tags' => $tags,
         ];
-        $event->setMetric($metric);
 
-        return $client->captureEvent($event);
+        return $this->sendMetric($metric);
     }
 
     /**
@@ -86,13 +74,6 @@ class Metrics
      */
     public function set(string $name, $value, array $tags): ?EventId
     {
-        $client = SentrySdk::getCurrentHub()->getClient();
-
-        if ($client === null) {
-            return null;
-        }
-
-        $event = Event::createMetric();
         $metric = [
             'timestamp' => time(),
             'width' => 0,
@@ -101,9 +82,8 @@ class Metrics
             'value' => $value,
             'tags' => $tags,
         ];
-        $event->setMetric($metric);
 
-        return $client->captureEvent($event);
+        return $this->sendMetric($metric);
     }
 
     /**
@@ -112,13 +92,6 @@ class Metrics
      */
     public function gauge(string $name, $value, array $tags): ?EventId
     {
-        $client = SentrySdk::getCurrentHub()->getClient();
-
-        if ($client === null) {
-            return null;
-        }
-
-        $event = Event::createMetric();
         $metric = [
             'timestamp' => time(),
             'width' => 0,
@@ -127,7 +100,22 @@ class Metrics
             'value' => $value,
             'tags' => $tags,
         ];
-        $event->setMetric($metric);
+
+        return $this->sendMetric($metric);
+    }
+
+    /**
+     * @param array<string, array<string>|float|int|string> $metric
+     */
+    private function sendMetric(array $metric): ?EventId
+    {
+        $event = Event::createMetric()
+            ->setMetric($metric);
+
+        $client = SentrySdk::getCurrentHub()->getClient();
+        if ($client === null) {
+            return null;
+        }
 
         return $client->captureEvent($event);
     }
