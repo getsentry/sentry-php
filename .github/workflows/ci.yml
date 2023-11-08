@@ -69,8 +69,10 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
         if: ${{ matrix.dependencies == 'lowest' }}
 
-      - name: Run tests
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      - name: Run unit tests
+        run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
+      - name: Run phpt tests
+        run: vendor/bin/phpunit --testsuite phpt --no-coverage
 
       - name: Upload code coverage
         uses: codecov/codecov-action@v3
