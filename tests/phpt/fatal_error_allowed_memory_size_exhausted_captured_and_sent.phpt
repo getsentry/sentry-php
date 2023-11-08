@@ -1,7 +1,7 @@
 --TEST--
 Test catching out of memory fatal error that is being serialized and sent to Sentry
 --INI--
-memory_limit=128M
+memory_limit=64M
 --FILE--
 <?php
 
@@ -71,7 +71,7 @@ SentrySdk::init()->bindClient($client);
 
 $array = [];
 for ($i = 0; $i < 100000000; ++$i) {
-    $array[] = str_repeat('a', 1024);
+    $array[] = 'sentry';
 }
 ?>
 --EXPECTF--
