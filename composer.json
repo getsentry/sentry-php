@@ -50,7 +50,8 @@
     },
     "autoload": {
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/functions_experimental.php"
         ],
         "psr-4": {
             "Sentry\\": "src/"
