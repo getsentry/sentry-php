@@ -22,7 +22,7 @@ final class ErrorHandler
      *
      * @internal
      */
-    public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
+    public const DEFAULT_RESERVED_MEMORY_SIZE = 16 * 1024; // 16 KiB
 
     /**
      * The regular expression used to match the message of an out of memory error.
