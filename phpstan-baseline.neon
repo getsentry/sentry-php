@@ -81,6 +81,21 @@ parameters:
 			path: src/HttpClient/HttpClientFactory.php
 
 		-
+			message: "#^Method Sentry\\\\HttpClient\\\\Plugin\\\\GzipEncoderPlugin\\:\\:handleRequest\\(\\) has parameter \\$first with generic interface Http\\\\Promise\\\\Promise but does not specify its types\\: T$#"
+			count: 1
+			path: src/HttpClient/Plugin/GzipEncoderPlugin.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\Plugin\\\\GzipEncoderPlugin\\:\\:handleRequest\\(\\) has parameter \\$next with generic interface Http\\\\Promise\\\\Promise but does not specify its types\\: T$#"
+			count: 1
+			path: src/HttpClient/Plugin/GzipEncoderPlugin.php
+
+		-
+			message: "#^Method Sentry\\\\HttpClient\\\\Plugin\\\\GzipEncoderPlugin\\:\\:handleRequest\\(\\) return type with generic interface Http\\\\Promise\\\\Promise does not specify its types\\: T$#"
+			count: 1
+			path: src/HttpClient/Plugin/GzipEncoderPlugin.php
+
+		-
 			message: "#^Property Sentry\\\\Integration\\\\IgnoreErrorsIntegration\\:\\:\\$options \\(array\\{ignore_exceptions\\: array\\<int, class\\-string\\<Throwable\\>\\>, ignore_tags\\: array\\<string, string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/IgnoreErrorsIntegration.php
