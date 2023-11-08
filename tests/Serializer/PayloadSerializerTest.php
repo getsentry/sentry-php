@@ -406,5 +406,28 @@ TEXT
             ,
             false,
         ];
+
+        $metric = [
+            'timestamp' => 1597790835,
+            'width' => 0,
+            'name' => 'c:custom/foo@none',
+            'type' => 'c',
+            'value' => 10,
+            'tags' => ['foo' => 'bar'],
+        ];
+
+        $event = Event::createMetric(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setMetric($metric);
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"metric_buckets","content_type":"application\/json"}
+[{"timestamp":1597790835,"width":0,"name":"c:custom\/foo@none","type":"c","value":10,"tags":{"foo":"bar"}}]
+TEXT
+            ,
+            false,
+        ];
     }
 }
