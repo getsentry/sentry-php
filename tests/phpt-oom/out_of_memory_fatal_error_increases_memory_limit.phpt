@@ -1,7 +1,7 @@
 --TEST--
-Test catching out of memory fatal error that is being serialized and sent to Sentry
+Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
 --INI--
-memory_limit=64M
+memory_limit=67108864
 --FILE--
 <?php
 
@@ -69,11 +69,19 @@ $client = (new ClientBuilder($options))
 
 SentrySdk::init()->bindClient($client);
 
+echo 'Before OOM memory limit: ' . ini_get('memory_limit');
+
+register_shutdown_function(function () {
+    echo 'After OOM memory limit: ' . ini_get('memory_limit');
+});
+
 $array = [];
 for ($i = 0; $i < 100000000; ++$i) {
     $array[] = 'sentry';
 }
 ?>
 --EXPECTF--
+Before OOM memory limit: 67108864
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
 Transport called
+After OOM memory limit: 72351744

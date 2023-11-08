@@ -14,10 +14,11 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
+            <directory suffix=".phpt">tests/phpt</directory>
         </testsuite>
 
-        <testsuite name="phpt">
-            <directory suffix=".phpt">tests/phpt</directory>
+        <testsuite name="oom">
+            <directory suffix=".phpt">tests/phpt-oom</directory>
         </testsuite>
     </testsuites>
 
