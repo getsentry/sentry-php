@@ -11,8 +11,10 @@ use Sentry\SentrySdk;
 /**
  * This is an experimental feature and should neither be used nor considered stable.
  * The API might change at any time without prior warning.
+ *
+ * @internal
  */
-class Metrics
+final class Metrics
 {
     /**
      * @var self|null
@@ -112,11 +114,8 @@ class Metrics
         $event = Event::createMetric()
             ->setMetric($metric);
 
-        $client = SentrySdk::getCurrentHub()->getClient();
-        if ($client === null) {
-            return null;
-        }
+        $hub = SentrySdk::getCurrentHub();
 
-        return $client->captureEvent($event);
+        return $hub->captureEvent($event);
     }
 }
