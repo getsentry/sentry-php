@@ -45,7 +45,7 @@ final class MetricsTest extends TestCase
         $this->assertSame($event->getId(), metrics()->incr('foo', 10.0, ['foo' => 'bar']));
     }
 
-    public function distribution(): void
+    public function testDistribution(): void
     {
         ClockMock::withClockMock(1699412953);
 
