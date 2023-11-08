@@ -25,6 +25,11 @@ final class ErrorHandler
     public const DEFAULT_RESERVED_MEMORY_SIZE = 10240;
 
     /**
+     * The regular expression used to match the message of an out of memory error.
+     */
+    private const OOM_MESSAGE_MATCHER = '/^Allowed memory size of (?<memory_limit>\d+) bytes exhausted \(tried to allocate \d+ bytes\)/';
+
+    /**
      * The fatal error types that cannot be silenced using the @ operator in PHP 8+.
      */
     private const PHP8_UNSILENCEABLE_FATAL_ERRORS = \E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_COMPILE_ERROR | \E_USER_ERROR | \E_RECOVERABLE_ERROR;
@@ -89,8 +94,19 @@ final class ErrorHandler
     private $isFatalErrorHandlerRegistered = false;
 
     /**
-     * @var string|null A portion of pre-allocated memory data that will be reclaimed
-     *                  in case a fatal error occurs to handle it
+     * @var int|null the amount of bytes of memory to increase the memory limit by when we are capturing a out of memory error, set to null to not increase the memory limit
+     */
+    private $memoryLimitIncreaseValue = 5 * 1024 * 1024; // 5 MiB
+
+    /**
+     * @var bool Whether the memory limit has been increased
+     */
+    private static $didIncreaseMemoryLimit = false;
+
+    /**
+     * @var string|null A portion of pre-allocated memory data that will be reclaimed in case a fatal error occurs to handle it
+     *
+     * @phpstan-ignore-next-line This property is used to reserve memory for the fatal error handler and is thus never read
      */
     private static $reservedMemory;
 
@@ -255,6 +271,16 @@ final class ErrorHandler
     }
 
     /**
+     * Sets the amount of memory to increase the memory limit by when we are capturing a out of memory error.
+     *
+     * @param int|null $valueInBytes the number of bytes to increase the memory limit by, or null to not increase the memory limit
+     */
+    public function setMemoryLimitIncrease(?int $valueInBytes): void
+    {
+        $this->memoryLimitIncreaseValue = $valueInBytes;
+    }
+
+    /**
      * Handles errors by capturing them through the client according to the
      * configured bit field.
      *
@@ -315,16 +341,21 @@ final class ErrorHandler
      */
     private function handleFatalError(): void
     {
-        // If there is not enough memory that can be used to handle the error
-        // do nothing
-        if (null === self::$reservedMemory) {
-            return;
-        }
-
+        // Free the reserved memory that allows us to potentially handle OOM errors
         self::$reservedMemory = null;
+
         $error = error_get_last();
 
         if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
+            // If we did not do so already and we are allowed to increase the memory limit, we do so when we detect an OOM error
+            if (false === self::$didIncreaseMemoryLimit && null !== $this->memoryLimitIncreaseValue && 1 === preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches)) {
+                $currentMemoryLimit = (int) $matches['memory_limit'];
+
+                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseValue));
+
+                self::$didIncreaseMemoryLimit = true;
+            }
+
             $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
 
             $this->exceptionReflection->setValue($errorAsException, []);
