@@ -26,8 +26,10 @@ final class ErrorHandler
 
     /**
      * The regular expression used to match the message of an out of memory error.
+     *
+     * Regex inspired by https://github.com/php/php-src/blob/524b13460752fba908f88e3c4428b91fa66c083a/Zend/tests/new_oom.phpt#L15
      */
-    private const OOM_MESSAGE_MATCHER = '/^Allowed memory size of (?<memory_limit>\d+) bytes exhausted \(tried to allocate \d+ bytes\)/';
+    private const OOM_MESSAGE_MATCHER = '/^Allowed memory size of (?<memory_limit>\d+) bytes exhausted[^\r\n]* \(tried to allocate \d+ bytes\)/';
 
     /**
      * The fatal error types that cannot be silenced using the @ operator in PHP 8+.
