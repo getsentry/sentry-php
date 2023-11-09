@@ -359,7 +359,10 @@ final class ErrorHandler
 
         if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
             // If we did not do so already and we are allowed to increase the memory limit, we do so when we detect an OOM error
-            if (false === self::$didIncreaseMemoryLimit && null !== $this->memoryLimitIncreaseValue && 1 === preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches)) {
+            if (false === self::$didIncreaseMemoryLimit
+                && null !== $this->memoryLimitIncreaseValue
+                && 1 === preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches)
+            ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
 
                 ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseValue));
