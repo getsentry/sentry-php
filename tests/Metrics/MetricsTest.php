@@ -28,9 +28,9 @@ final class MetricsTest extends TestCase
             'type' => 'c',
             'value' => 10.0,
             'tags' => [
-                'foo' => 'bar',
                 'environment' => 'development',
                 'release' => '1.0.0',
+                'foo' => 'bar',
             ],
         ];
 
@@ -73,9 +73,9 @@ final class MetricsTest extends TestCase
                 30,
             ],
             'tags' => [
-                'foo' => 'bar',
                 'environment' => 'development',
                 'release' => '1.0.0',
+                'foo' => 'bar',
             ],
         ];
 
@@ -118,9 +118,9 @@ final class MetricsTest extends TestCase
                 30,
             ],
             'tags' => [
-                'foo' => 'bar',
                 'environment' => 'development',
                 'release' => '1.0.0',
+                'foo' => 'bar',
             ],
         ];
 
@@ -159,9 +159,9 @@ final class MetricsTest extends TestCase
             'type' => 'g',
             'value' => 10.0,
             'tags' => [
-                'foo' => 'bar',
                 'environment' => 'development',
                 'release' => '1.0.0',
+                'foo' => 'bar',
             ],
         ];
 

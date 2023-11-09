@@ -139,6 +139,9 @@ final class Metrics
                 }
             });
 
+            /**
+             * @psalm-suppress PossiblyInvalidArgument
+             */
             $metric['tags'] = array_merge($defaultTags, $metric['tags']);
         }
 
