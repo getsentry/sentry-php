@@ -139,7 +139,7 @@ final class Metrics
                 }
             });
 
-            $metric['tags'] = array_merge($metric['tags'], $defaultTags);
+            $metric['tags'] = array_merge($defaultTags, $metric['tags']);
         }
 
         $event = Event::createMetric()
