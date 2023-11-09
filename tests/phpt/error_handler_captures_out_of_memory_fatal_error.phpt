@@ -26,7 +26,7 @@ $errorHandler->addFatalErrorHandlerListener(static function (): void {
     echo 'After OOM memory limit: ' . ini_get('memory_limit');
 });
 
-$errorHandler->setMemoryLimitIncrease(null);
+$errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(null);
 
 echo 'Before OOM memory limit: ' . ini_get('memory_limit');
 

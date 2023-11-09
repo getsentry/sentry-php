@@ -98,7 +98,7 @@ final class ErrorHandler
     /**
      * @var int|null the amount of bytes of memory to increase the memory limit by when we are capturing a out of memory error, set to null to not increase the memory limit
      */
-    private $memoryLimitIncreaseValue = 5 * 1024 * 1024; // 5 MiB
+    private $memoryLimitIncreaseOnOutOfMemoryErrorValue = 5 * 1024 * 1024; // 5 MiB
 
     /**
      * @var bool Whether the memory limit has been increased
@@ -282,9 +282,13 @@ final class ErrorHandler
      *
      * @param int|null $valueInBytes the number of bytes to increase the memory limit by, or null to not increase the memory limit
      */
-    public function setMemoryLimitIncrease(?int $valueInBytes): void
+    public function setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(?int $valueInBytes): void
     {
-        $this->memoryLimitIncreaseValue = $valueInBytes;
+        if (null !== $valueInBytes && $valueInBytes <= 0) {
+            throw new \InvalidArgumentException('The $valueInBytes argument must be greater than 0 or null.');
+        }
+
+        $this->memoryLimitIncreaseOnOutOfMemoryErrorValue = $valueInBytes;
     }
 
     /**
@@ -360,12 +364,12 @@ final class ErrorHandler
         if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
             // If we did not do so already and we are allowed to increase the memory limit, we do so when we detect an OOM error
             if (false === self::$didIncreaseMemoryLimit
-                && null !== $this->memoryLimitIncreaseValue
+                && null !== $this->memoryLimitIncreaseOnOutOfMemoryErrorValue
                 && 1 === preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches)
             ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
 
-                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseValue));
+                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue));
 
                 self::$didIncreaseMemoryLimit = true;
             }
