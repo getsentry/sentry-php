@@ -7,6 +7,8 @@ namespace Sentry\Metrics;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
+use Sentry\State\Scope;
+use Sentry\Tracing\TransactionSource;
 
 /**
  * This is an experimental feature and should neither be used nor considered stable.
@@ -111,10 +113,37 @@ final class Metrics
      */
     private function sendMetric(array $metric): ?EventId
     {
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+
+        if ($client !== null) {
+            $options = $client->getOptions();
+
+            $defaultTags = [
+                'environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
+            ];
+
+            $release = $options->getRelease();
+            if ($release !== null) {
+                $defaultTags['release'] = $options->getRelease();
+            }
+
+            $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
+                $transaction = $scope->getTransaction();
+                if (
+                    $transaction !== null
+                    // Only include the transaction name if it has good quality
+                    && $transaction->getMetadata()->getSource() !== TransactionSource::url()
+                ) {
+                    $defaultTags['transaction'] = $transaction->getName();
+                }
+            });
+
+            $metric['tags'] = array_merge($metric['tags'], $defaultTags);
+        }
+
         $event = Event::createMetric()
             ->setMetric($metric);
-
-        $hub = SentrySdk::getCurrentHub();
 
         return $hub->captureEvent($event);
     }

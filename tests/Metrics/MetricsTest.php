@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Metrics\MetricsUnit;
+use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
+use Sentry\State\Hub;
 use Symfony\Bridge\PhpUnit\ClockMock;
 
 use function Sentry\metrics;
@@ -25,21 +27,32 @@ final class MetricsTest extends TestCase
             'name' => 'c:custom/foo@none',
             'type' => 'c',
             'value' => 10.0,
-            'tags' => ['foo' => 'bar'],
+            'tags' => [
+                'foo' => 'bar',
+                'environment' => 'development',
+                'release' => '1.0.0',
+            ],
         ];
 
         $event = Event::createMetric();
         $event->setMetric($expectedMetric);
 
-        /** @var HubInterface&MockObject $hub */
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+        $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($expectedMetric): bool {
                 return $event->getMetric() === $expectedMetric;
             }))
             ->willReturn($event->getId());
 
+        $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($event->getId(), metrics()->incr('foo', 10.0, ['foo' => 'bar']));
@@ -59,21 +72,32 @@ final class MetricsTest extends TestCase
                 20,
                 30,
             ],
-            'tags' => ['foo' => 'bar'],
+            'tags' => [
+                'foo' => 'bar',
+                'environment' => 'development',
+                'release' => '1.0.0',
+            ],
         ];
 
         $event = Event::createMetric();
         $event->setMetric($expectedMetric);
 
-        /** @var HubInterface&MockObject $hub */
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+        $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($expectedMetric): bool {
                 return $event->getMetric() === $expectedMetric;
             }))
             ->willReturn($event->getId());
 
+        $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($event->getId(), metrics()->distribution('foo', [10, 20, 30], ['foo' => 'bar'], MetricsUnit::minute()));
@@ -93,21 +117,32 @@ final class MetricsTest extends TestCase
                 20,
                 30,
             ],
-            'tags' => ['foo' => 'bar'],
+            'tags' => [
+                'foo' => 'bar',
+                'environment' => 'development',
+                'release' => '1.0.0',
+            ],
         ];
 
         $event = Event::createMetric();
         $event->setMetric($expectedMetric);
 
-        /** @var HubInterface&MockObject $hub */
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+        $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($expectedMetric): bool {
                 return $event->getMetric() === $expectedMetric;
             }))
             ->willReturn($event->getId());
 
+        $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($event->getId(), metrics()->set('foo', [10, 20, 30], ['foo' => 'bar']));
@@ -123,21 +158,32 @@ final class MetricsTest extends TestCase
             'name' => 'g:custom/foo@none',
             'type' => 'g',
             'value' => 10.0,
-            'tags' => ['foo' => 'bar'],
+            'tags' => [
+                'foo' => 'bar',
+                'environment' => 'development',
+                'release' => '1.0.0',
+            ],
         ];
 
         $event = Event::createMetric();
         $event->setMetric($expectedMetric);
 
-        /** @var HubInterface&MockObject $hub */
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+        $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($expectedMetric): bool {
                 return $event->getMetric() === $expectedMetric;
             }))
             ->willReturn($event->getId());
 
+        $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
 
         $this->assertSame($event->getId(), metrics()->gauge('foo', 10.0, ['foo' => 'bar']));
