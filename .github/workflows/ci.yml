@@ -74,8 +74,11 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
         if: ${{ matrix.dependencies == 'lowest' }}
 
-      - name: Run tests
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      - name: Run unit tests
+        run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
+      # The reason for running some OOM tests without coverage is that because the coverage information collector can cause another OOM event invalidating the test
+      - name: Run out of memory tests (without coverage)
+        run: vendor/bin/phpunit --testsuite oom --no-coverage
 
       - name: Upload code coverage
         uses: codecov/codecov-action@v3

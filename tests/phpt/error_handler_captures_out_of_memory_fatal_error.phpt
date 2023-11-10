@@ -1,7 +1,7 @@
 --TEST--
-Test catching out of memory fatal error
+Test catching out of memory fatal error without increasing memory limit
 --INI--
-memory_limit=128M
+memory_limit=67108864
 --FILE--
 <?php
 
@@ -19,23 +19,21 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
-$errorHandler = ErrorHandler::registerOnceErrorHandler();
-$errorHandler->addErrorHandlerListener(static function (): void {
-    echo 'Error listener called (it should not have been)' . PHP_EOL;
-});
-
-$errorHandler = ErrorHandler::registerOnceFatalErrorHandler(1024 * 1024);
+$errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
 $errorHandler->addFatalErrorHandlerListener(static function (): void {
     echo 'Fatal error listener called' . PHP_EOL;
+
+    echo 'After OOM memory limit: ' . ini_get('memory_limit');
 });
 
-$errorHandler = ErrorHandler::registerOnceExceptionHandler();
-$errorHandler->addExceptionHandlerListener(static function (): void {
-    echo 'Exception listener called (it should not have been)' . PHP_EOL;
-});
+$errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(null);
+
+echo 'Before OOM memory limit: ' . ini_get('memory_limit');
 
 $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTF--
+Before OOM memory limit: 67108864
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
 Fatal error listener called
+After OOM memory limit: 67108864
