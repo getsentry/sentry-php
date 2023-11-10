@@ -9,20 +9,20 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use Sentry\Transport\Result;
-use Sentry\Transport\ResultStatus;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Serializer\PayloadSerializerInterface;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
 $vendor = __DIR__;
 
 while (!file_exists($vendor . '/vendor')) {
-    $vendor = dirname($vendor);
+    $vendor = \dirname($vendor);
 }
 
 require $vendor . '/vendor/autoload.php';
@@ -31,8 +31,7 @@ $options = new Options([
     'dsn' => 'http://public@example.com/sentry/1',
 ]);
 
-$transport = new class(new PayloadSerializer($options)) implements TransportInterface
-{
+$transport = new class(new PayloadSerializer($options)) implements TransportInterface {
     private $payloadSerializer;
 
     public function __construct(PayloadSerializerInterface $payloadSerializer)
@@ -44,7 +43,7 @@ $transport = new class(new PayloadSerializer($options)) implements TransportInte
     {
         $serialized = $this->payloadSerializer->serialize($event);
 
-        echo 'Transport called' . PHP_EOL;
+        echo 'Transport called' . \PHP_EOL;
 
         return new Result(ResultStatus::success());
     }
@@ -61,10 +60,10 @@ $client = (new ClientBuilder($options))->getClient();
 
 SentrySdk::init()->bindClient($client);
 
-echo 'Before OOM memory limit: ' . ini_get('memory_limit');
+echo 'Before OOM memory limit: ' . \ini_get('memory_limit');
 
 register_shutdown_function(function () {
-    echo 'After OOM memory limit: ' . ini_get('memory_limit');
+    echo 'After OOM memory limit: ' . \ini_get('memory_limit');
 });
 
 $array = [];

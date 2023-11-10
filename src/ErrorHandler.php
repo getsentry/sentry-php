@@ -284,7 +284,7 @@ final class ErrorHandler
      */
     public function setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(?int $valueInBytes): void
     {
-        if (null !== $valueInBytes && $valueInBytes <= 0) {
+        if ($valueInBytes !== null && $valueInBytes <= 0) {
             throw new \InvalidArgumentException('The $valueInBytes argument must be greater than 0 or null.');
         }
 
@@ -363,9 +363,9 @@ final class ErrorHandler
 
         if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
             // If we did not do so already and we are allowed to increase the memory limit, we do so when we detect an OOM error
-            if (false === self::$didIncreaseMemoryLimit
-                && null !== $this->memoryLimitIncreaseOnOutOfMemoryErrorValue
-                && 1 === preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches)
+            if (self::$didIncreaseMemoryLimit === false
+                && $this->memoryLimitIncreaseOnOutOfMemoryErrorValue !== null
+                && preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches) === 1
             ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
 
