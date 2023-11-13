@@ -66,16 +66,27 @@ trait TestServer
             throw new \RuntimeException("Error starting test server on pid {$pid}, command failed: {$command}");
         }
 
-        while (true) {
-            $conn = @fsockopen('localhost', $this->serverPort);
-            if (\is_resource($conn)) {
-                fclose($conn);
+        $address = "localhost:{$this->serverPort}";
 
+        $streamContext = stream_context_create(['http' => ['timeout' => 1]]);
+
+        // Wait for the server to be ready to answer HTTP requests
+        while (true) {
+            $response = @file_get_contents("http://{$address}/ping", false, $streamContext);
+
+            if ($response === 'pong') {
                 break;
             }
+
+            usleep(10000);
         }
 
-        return "localhost:{$this->serverPort}";
+        // Ensure the process is still running
+        if (!proc_get_status($this->serverProcess)['running']) {
+            throw new \RuntimeException("Error starting test server on pid {$pid}, command failed: {$command}");
+        }
+
+        return $address;
     }
 
     /**
