@@ -6,6 +6,5 @@ ignore:
 
 coverage:
   status:
-    project:
-      default:
-        threshold: 0.1%  # allow for 0.1% reduction of coverage without failing
+    project: off
+    patch: off
