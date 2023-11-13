@@ -17,7 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  phpunit:
+  tests:
+    name: Tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
