@@ -12,9 +12,13 @@
     </php>
 
     <testsuites>
-        <testsuite name="Sentry for PHP">
+        <testsuite name="unit">
             <directory>tests</directory>
             <directory suffix=".phpt">tests/phpt</directory>
+        </testsuite>
+
+        <testsuite name="oom">
+            <directory suffix=".phpt">tests/phpt-oom</directory>
         </testsuite>
     </testsuites>
 
