@@ -1,7 +1,7 @@
 {
     "name": "sentry/sentry",
     "type": "library",
-    "description": "A PHP SDK for Sentry (http://sentry.io)",
+    "description": "PHP SDK for Sentry (http://sentry.io)",
     "keywords": [
         "sentry",
         "log",
@@ -9,7 +9,9 @@
         "error-monitoring",
         "error-handler",
         "crash-reporting",
-        "crash-reports"
+        "crash-reports",
+        "profiling",
+        "tracing"
     ],
     "homepage": "http://sentry.io",
     "license": "MIT",
@@ -66,21 +68,11 @@
             "@psalm",
             "@tests"
         ],
-        "tests": [
-            "vendor/bin/phpunit --verbose"
-        ],
-        "cs-check": [
-            "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run"
-        ],
-        "cs-fix": [
-            "vendor/bin/php-cs-fixer fix --verbose --diff"
-        ],
-        "phpstan": [
-            "vendor/bin/phpstan analyse"
-        ],
-        "psalm": [
-            "vendor/bin/psalm"
-        ]
+        "tests": "vendor/bin/phpunit --verbose",
+        "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
+        "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
+        "phpstan": "vendor/bin/phpstan analyse",
+        "psalm": "vendor/bin/psalm"
     },
     "config": {
         "sort-packages": true
