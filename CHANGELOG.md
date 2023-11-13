@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 4.0.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.0.1.
+
+### Bug Fixes
+
+- Fix capturing out-of-memory errors when memory-constrained [(#1636)](https://github.com/getsentry/sentry-php/pull/1636)
+- Check if the cURL extension is installed [(#1632)](https://github.com/getsentry/sentry-php/pull/1632)
+
 ## 4.0.0
 
 The Sentry SDK team is thrilled to announce the immediate availability of Sentry PHP SDK v4.0.0.
