@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.22.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.22.1.
+
+### Bug Fixes
+
+- Fix capturing out-of-memory errors when memory-constrained [(#1633)](https://github.com/getsentry/sentry-php/pull/1633)
+
 ## 3.22.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v3.22.0.
