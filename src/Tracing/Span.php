@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
 
 /**
  * This class stores all the information about a span.
@@ -269,7 +271,11 @@ class Span
      */
     public function setHttpStatus(int $statusCode)
     {
-        $this->tags['http.status_code'] = (string) $statusCode;
+        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($statusCode) {
+            $scope->setContext('response', [
+                'status_code' => $statusCode,
+            ]);
+        });
 
         $status = SpanStatus::createFromHttpStatusCode($statusCode);
 
