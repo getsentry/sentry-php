@@ -329,6 +329,20 @@ final class Options
         return $this;
     }
 
+    public function isSpotlightEnabled(): bool
+    {
+        return $this->options['spotlight'];
+    }
+
+    public function enableSpotlight(bool $enable): self
+    {
+        $options = array_merge($this->options, ['spotlight' => $enable]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
     /**
      * Gets the release tag to be passed with every event sent to Sentry.
      */
@@ -984,6 +998,7 @@ final class Options
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
+            'spotlight' => false,
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
@@ -1031,6 +1046,7 @@ final class Options
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
+        $resolver->setAllowedTypes('spotlight', 'bool');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
