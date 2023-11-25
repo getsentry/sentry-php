@@ -36,6 +36,12 @@ final class FrameBuilder
     private $representationSerializer;
 
     /**
+     * @var string The default name for function parameters when we cannot get
+     *             them from function definition
+     */
+    private const DEFAULT_PARAMETER_NAME = 'param';
+
+    /**
      * Constructor.
      *
      * @param Options                           $options                  The SDK client options
@@ -174,7 +180,7 @@ final class FrameBuilder
             $argumentValues = $this->getFunctionArgumentValues($reflectionFunction, $backtraceFrame['args']);
         } else {
             foreach ($backtraceFrame['args'] as $parameterPosition => $parameterValue) {
-                $argumentValues['param' . $parameterPosition] = $parameterValue;
+                $argumentValues[self::DEFAULT_PARAMETER_NAME . $parameterPosition] = $parameterValue;
             }
         }
 
@@ -198,14 +204,64 @@ final class FrameBuilder
     {
         $argumentValues = [];
 
-        foreach ($reflectionFunction->getParameters() as $reflectionParameter) {
-            $parameterPosition = $reflectionParameter->getPosition();
+        // $backtraceFrameArgs can contain string keys if function has
+        // variadic parameters and we passed them by name. Because of this,
+        // we cannot use indexes to access our values.
+        // Using foreach here will complicate logic for handling variadic and
+        // undeclared arguments, so we have to use iterator.
+        reset($backtraceFrameArgs);
 
-            if (!isset($backtraceFrameArgs[$parameterPosition])) {
-                continue;
+        $variadicParameter = null;
+        foreach ($reflectionFunction->getParameters() as $reflectionParameter) {
+            // We want to handle variadic parameters separately,
+            // so we remember it and break out of the loop.
+            if ($reflectionParameter->isVariadic()) {
+                $variadicParameter = $reflectionParameter;
+                break;
             }
 
-            $argumentValues[$reflectionParameter->getName()] = $backtraceFrameArgs[$parameterPosition];
+            if (key($backtraceFrameArgs) !== null) {
+                $value = current($backtraceFrameArgs);
+                next($backtraceFrameArgs);
+            } elseif ($reflectionParameter->isDefaultValueAvailable()) {
+                $value = $reflectionParameter->getDefaultValue();
+            } else {
+                // In theory, we will only end up here if not enough arguments
+                // were passed to the function (ArgumentCountError).
+                // In this case we can break out of the loop and let next
+                // condition handle returning result.
+                break;
+            }
+
+            $argumentValues[$reflectionParameter->getName()] = $value;
+        }
+
+        // Return if we reached the end of supplied args, so we don't
+        // waste time handling things, which aren't there.
+        if (key($backtraceFrameArgs) === null) {
+            return $argumentValues;
+        }
+
+        if ($variadicParameter !== null) {
+            // If we have variadic parameters, we will write them into an
+            // array, since this is how they appear inside of function they
+            // were passed to.
+            $variadicArgs = [];
+            while (key($backtraceFrameArgs) !== null) {
+                $variadicArgs[key($backtraceFrameArgs)] = current($backtraceFrameArgs);
+                next($backtraceFrameArgs);
+            }
+            $argumentValues[$variadicParameter->getName()] = $variadicArgs;
+        } else {
+            // If we don't have variadic parameter, but still have additional
+            // arguments, it means those arguments weren't declared in a function.
+            // We will name them the same way it's done when we can't create
+            // function reflection.
+            while (key($backtraceFrameArgs) !== null) {
+                $argumentKey = self::DEFAULT_PARAMETER_NAME . key($backtraceFrameArgs);
+                $argumentValues[$argumentKey] = current($backtraceFrameArgs);
+                next($backtraceFrameArgs);
+            }
         }
 
         return $argumentValues;
