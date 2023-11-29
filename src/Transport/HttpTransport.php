@@ -122,28 +122,30 @@ class HttpTransport implements TransportInterface
 
     private function sendRequestToSpotlight(Event $event): void
     {
-        if ($this->options->isSpotlightEnabled()) {
-            $request = new Request();
-            $request->setStringBody($this->payloadSerializer->serialize($event));
+        if (!$this->options->isSpotlightEnabled()) {
+            return;
+        }
 
-            try {
-                $spotLightResponse = SpotlightClient::sendRequest(
-                    $request,
-                    'http://localhost:8969/stream'
-                );
+        $request = new Request();
+        $request->setStringBody($this->payloadSerializer->serialize($event));
 
-                if ($spotLightResponse->hasError()) {
-                    $this->logger->info(
-                        sprintf('Failed to send the event to Sentry. Reason: "%s".', $spotLightResponse->getError()),
-                        ['event' => $event]
-                    );
-                }
-            } catch (\Throwable $exception) {
+        try {
+            $spotLightResponse = SpotlightClient::sendRequest(
+                $request,
+                'http://localhost:8969/stream'
+            );
+
+            if ($spotLightResponse->hasError()) {
                 $this->logger->info(
-                    sprintf('Failed to send the event to Spotlight. Reason: "%s".', $exception->getMessage()),
-                    ['exception' => $exception, 'event' => $event]
+                    sprintf('Failed to send the event to Spotlight. Reason: "%s".', $spotLightResponse->getError()),
+                    ['event' => $event]
                 );
             }
+        } catch (\Throwable $exception) {
+            $this->logger->info(
+                sprintf('Failed to send the event to Spotlight. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception, 'event' => $event]
+            );
         }
     }
 }
