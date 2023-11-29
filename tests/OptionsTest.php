@@ -167,6 +167,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'spotlight',
+            true,
+            'isSpotlightEnabled',
+            'EnableSpotlight',
+        ];
+
+        yield [
             'release',
             'dev',
             'getRelease',

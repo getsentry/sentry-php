@@ -11,6 +11,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Request;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
+use Sentry\Spotlight\SpotlightClient;
 
 /**
  * @internal
@@ -66,6 +67,8 @@ class HttpTransport implements TransportInterface
      */
     public function send(Event $event): Result
     {
+        $this->sendRequestToSpotlight($event);
+
         if ($this->options->getDsn() === null) {
             return new Result(ResultStatus::skipped(), $event);
         }
@@ -115,5 +118,34 @@ class HttpTransport implements TransportInterface
     public function close(?int $timeout = null): Result
     {
         return new Result(ResultStatus::success());
+    }
+
+    private function sendRequestToSpotlight(Event $event): void
+    {
+        if (!$this->options->isSpotlightEnabled()) {
+            return;
+        }
+
+        $request = new Request();
+        $request->setStringBody($this->payloadSerializer->serialize($event));
+
+        try {
+            $spotLightResponse = SpotlightClient::sendRequest(
+                $request,
+                'http://localhost:8969/stream'
+            );
+
+            if ($spotLightResponse->hasError()) {
+                $this->logger->info(
+                    sprintf('Failed to send the event to Spotlight. Reason: "%s".', $spotLightResponse->getError()),
+                    ['event' => $event]
+                );
+            }
+        } catch (\Throwable $exception) {
+            $this->logger->info(
+                sprintf('Failed to send the event to Spotlight. Reason: "%s".', $exception->getMessage()),
+                ['exception' => $exception, 'event' => $event]
+            );
+        }
     }
 }
