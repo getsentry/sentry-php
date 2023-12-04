@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 4.1.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.1.0.
+
+### Features
+
+- Add support for Spotlight [(#1647)](https://github.com/getsentry/sentry-php/pull/1647)
+
+  Spotlight is Sentry for Development. Inspired by an old project, Django Debug Toolbar. Spotlight brings a rich debug overlay into development environments, and it does it by leveraging the existing power of Sentry's SDKs.
+
+  To learn more about Spotlight, go to https://spotlightjs.com/.
+
+### Misc
+
+- Normalize `response` status [(#1644)](https://github.com/getsentry/sentry-php/pull/1644)
+
 ## 4.0.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.0.1.
@@ -13,7 +29,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 The Sentry SDK team is thrilled to announce the immediate availability of Sentry PHP SDK v4.0.0.
 
-# Breaking Change
+### Breaking Change
 
 Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list of breaking changes.
 
@@ -34,7 +50,7 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
 
   This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check now, so you can also ignore more generic exceptions.
 
-# Features
+### Features
 
 - Add new fluent APIs [(#1601)](https://github.com/getsentry/sentry-php/pull/1601)
 
@@ -130,6 +146,6 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
   To use a different transport, you may use the `transport` option. A custom transport must implement the `TransportInterface`.
   If you use the `transport` option, the `http_client` option has no effect.
 
-# Misc
+### Misc
 
 - The abandoned package `php-http/message-factory` was removed.
