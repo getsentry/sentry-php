@@ -343,6 +343,11 @@ final class Options
         return $this;
     }
 
+    public function getSpotlightUrl(): string
+    {
+        return $this->options['spotlight_url'];
+    }
+
     /**
      * Gets the release tag to be passed with every event sent to Sentry.
      */
@@ -999,6 +1004,7 @@ final class Options
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
             'spotlight' => false,
+            'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
@@ -1047,6 +1053,7 @@ final class Options
         $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
         $resolver->setAllowedTypes('spotlight', 'bool');
+        $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('server_name', 'string');
