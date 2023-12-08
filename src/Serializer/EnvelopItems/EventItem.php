@@ -41,6 +41,10 @@ class EventItem implements EnvelopeItemInterface
             $payload['level'] = (string) $event->getLevel();
         }
 
+        if ($event->getLogger() !== null) {
+            $payload['logger'] = $event->getLogger();
+        }
+
         if ($event->getTransaction() !== null) {
             $payload['transaction'] = $event->getTransaction();
         }
