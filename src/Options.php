@@ -348,6 +348,15 @@ final class Options
         return $this->options['spotlight_url'];
     }
 
+    public function setSpotlightUrl(string $url): self
+    {
+        $options = array_merge($this->options, ['spotlight_url' => $url]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
     /**
      * Gets the release tag to be passed with every event sent to Sentry.
      */
