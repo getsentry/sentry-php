@@ -174,6 +174,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'spotlight_url',
+            'http://google.com',
+            'getSpotlightUrl',
+            'setSpotlightUrl',
+        ];
+
+        yield [
             'release',
             'dev',
             'getRelease',
