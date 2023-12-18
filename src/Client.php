@@ -270,10 +270,11 @@ final class Client implements ClientInterface
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
-        $isTransaction = EventType::transaction() === $event->getType();
+        $isEvent = EventType::event() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
 
-        if (!$isTransaction && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+        // only sample with the `sample_rate` on errors/messages
+        if ($isEvent && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
 
             return null;
