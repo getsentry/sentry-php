@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics;
 
-use Sentry\Event;
 use Sentry\EventId;
-use Sentry\SentrySdk;
-use Sentry\State\Scope;
-use Sentry\Tracing\TransactionSource;
+use Sentry\Metrics\Types\CounterType;
+use Sentry\Metrics\Types\DistributionType;
+use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\SetType;
 
 /**
  * This is an experimental feature and should neither be used nor considered stable.
@@ -23,8 +23,14 @@ final class Metrics
      */
     private static $instance;
 
+    /**
+     * @var MetricsAggregator
+     */
+    private $aggregator;
+
     private function __construct()
     {
+        $this->aggregator = new MetricsAggregator();
     }
 
     public static function getInstance(): self
@@ -40,114 +46,96 @@ final class Metrics
      * @param int|float $value
      * @param string[]  $tags
      */
-    public function incr(string $name, $value, array $tags): ?EventId
-    {
-        $metric = [
-            'timestamp' => time(),
-            'width' => 0,
-            'name' => 'c:custom/' . $name . '@none',
-            'type' => 'c',
-            'value' => $value,
-            'tags' => $tags,
-        ];
-
-        return $this->sendMetric($metric);
+    public function increment(
+        string $key,
+        $value,
+        ?MetricsUnit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
+    ): void {
+        $this->aggregator->add(
+            CounterType::TYPE,
+            $key,
+            $value,
+            $unit,
+            $tags,
+            $timestamp,
+            $stackLevel,
+        );
     }
 
     /**
      * @param int|float $value
      * @param string[]  $tags
      */
-    public function distribution(string $name, $value, array $tags, ?MetricsUnit $unit = null): ?EventId
-    {
-        $metric = [
-            'timestamp' => time(),
-            'width' => 0,
-            'name' => 'd:custom/' . $name . '@' . ($unit ?? 'none'),
-            'type' => 'd',
-            'value' => $value,
-            'tags' => $tags,
-        ];
-
-        return $this->sendMetric($metric);
+    public function distribution(
+        string $key,
+        $value,
+        ?MetricsUnit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
+    ): void {
+        $this->aggregator->add(
+            DistributionType::TYPE,
+            $key,
+            $value,
+            $unit,
+            $tags,
+            $timestamp,
+            $stackLevel,
+        );
     }
 
     /**
      * @param int|float $value
      * @param string[]  $tags
      */
-    public function set(string $name, $value, array $tags): ?EventId
-    {
-        $metric = [
-            'timestamp' => time(),
-            'width' => 0,
-            'name' => 's:custom/' . $name . '@none',
-            'type' => 's',
-            'value' => $value,
-            'tags' => $tags,
-        ];
-
-        return $this->sendMetric($metric);
+    public function gauge(
+        string $key,
+        $value,
+        ?MetricsUnit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
+    ): void {
+        $this->aggregator->add(
+            GaugeType::TYPE,
+            $key,
+            $value,
+            $unit,
+            $tags,
+            $timestamp,
+            $stackLevel,
+        );
     }
 
     /**
-     * @param int|float $value
-     * @param string[]  $tags
+     * @param int|string $value
+     * @param string[]   $tags
      */
-    public function gauge(string $name, $value, array $tags): ?EventId
-    {
-        $metric = [
-            'timestamp' => time(),
-            'width' => 0,
-            'name' => 'g:custom/' . $name . '@none',
-            'type' => 'g',
-            'value' => $value,
-            'tags' => $tags,
-        ];
-
-        return $this->sendMetric($metric);
+    public function set(
+        string $key,
+        $value,
+        ?MetricsUnit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
+    ): void {
+        $this->aggregator->add(
+            SetType::TYPE,
+            $key,
+            $value,
+            $unit,
+            $tags,
+            $timestamp,
+            $stackLevel,
+        );
     }
 
-    /**
-     * @param array<string, array<string>|float|int|string> $metric
-     */
-    private function sendMetric(array $metric): ?EventId
+    public function flush(): ?EventId
     {
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
-
-        if ($client !== null) {
-            $options = $client->getOptions();
-
-            $defaultTags = [
-                'environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-            ];
-
-            $release = $options->getRelease();
-            if ($release !== null) {
-                $defaultTags['release'] = $options->getRelease();
-            }
-
-            $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
-                $transaction = $scope->getTransaction();
-                if (
-                    $transaction !== null
-                    // Only include the transaction name if it has good quality
-                    && $transaction->getMetadata()->getSource() !== TransactionSource::url()
-                ) {
-                    $defaultTags['transaction'] = $transaction->getName();
-                }
-            });
-
-            /**
-             * @psalm-suppress PossiblyInvalidArgument
-             */
-            $metric['tags'] = array_merge($defaultTags, $metric['tags']);
-        }
-
-        $event = Event::createMetric()
-            ->setMetric($metric);
-
-        return $hub->captureEvent($event);
+        return $this->aggregator->flush();
     }
 }

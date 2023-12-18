@@ -152,6 +152,11 @@ final class MetricsUnit implements \Stringable
         return self::getInstance('none');
     }
 
+    public static function custom(string $unit): self
+    {
+        return new self($unit);
+    }
+
     public function __toString(): string
     {
         return $this->value;
