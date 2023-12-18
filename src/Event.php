@@ -215,9 +215,9 @@ final class Event
         return new self($eventId, EventType::checkIn());
     }
 
-    public static function createStatsd(?EventId $eventId = null): self
+    public static function createMetrics(?EventId $eventId = null): self
     {
-        return new self($eventId, EventType::statsd());
+        return new self($eventId, EventType::metrics());
     }
 
     /**

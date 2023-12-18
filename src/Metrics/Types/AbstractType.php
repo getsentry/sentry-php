@@ -55,6 +55,8 @@ abstract class AbstractType
 
     abstract public function serialize(): array;
 
+    abstract public function getType(): string;
+
     public function getKey(): string
     {
         return $this->key;
@@ -80,6 +82,11 @@ abstract class AbstractType
         return $this->codeLocation !== null;
     }
 
+    public function getCodeLocation(): ?Frame
+    {
+        return $this->codeLocation;
+    }
+
     public function addCodeLocation(int $stackLevel): void
     {
         $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 3 + $stackLevel);
@@ -90,5 +97,15 @@ abstract class AbstractType
 
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
         $this->codeLocation = $frameBuilder->buildFromBacktraceFrame($frame['file'], $frame['line'], $frame);
+    }
+
+    public function getMri(): string
+    {
+        return sprintf(
+            '%s:%s@%s',
+            $this->getType(),
+            $this->getKey(),
+            $this->getUnit()
+        );
     }
 }
