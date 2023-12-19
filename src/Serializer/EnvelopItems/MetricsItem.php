@@ -39,14 +39,10 @@ class MetricsItem implements EnvelopeItemInterface
             $statsdPayload[] = $line;
 
             if ($metric->hasCodeLocation()) {
-                $metricMetaPayload[] = [
-                    $metric->getMri() => [
-                        array_merge(
-                            ['type' => 'location'],
-                            self::serializeStacktraceFrame($metric->getCodeLocation())
-                        ),
-                    ],
-                ];
+                $metricMetaPayload[$metric->getMri()][] = array_merge(
+                    ['type' => 'location'],
+                    self::serializeStacktraceFrame($metric->getCodeLocation())
+                );
             }
         }
 
