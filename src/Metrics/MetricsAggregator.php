@@ -62,7 +62,7 @@ final class MetricsAggregator
             $type .
             $key .
             $unit .
-            $tags .
+            implode('', $tags) .
             $bucketTimestamp
         );
 
@@ -79,6 +79,11 @@ final class MetricsAggregator
         if (!$metric->hasCodeLocation()) {
             $metric->addCodeLocation($stackLevel);
         }
+
+        $span = SentrySdk::getCurrentHub()->getSpan();
+        if ($span !== null) {
+            $span->setMetricsSummary($type, $key, $value, $unit, $tags);
+        }
     }
 
     public function flush(): ?EventId
@@ -92,7 +97,7 @@ final class MetricsAggregator
         return $hub->captureEvent($event);
     }
 
-    private function serializeTags(array $tags): string
+    private function serializeTags(array $tags): array
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
@@ -122,8 +127,6 @@ final class MetricsAggregator
         // It's very important to sort the tags in order to obtain the same bucket key.
         ksort($tags);
 
-        return str_replace('=', ':', http_build_query(
-            $tags, '', ','
-        ));
+        return $tags;
     }
 }

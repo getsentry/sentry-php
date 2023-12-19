@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
+use Sentry\Metrics\MetricsUnit;
 use Sentry\Serializer\Traits\StacktraceFrameSeralizerTrait;
 use Sentry\Util\JSON;
 
@@ -26,15 +27,30 @@ class MetricsItem implements EnvelopeItemInterface
         $metricMetaPayload = [];
 
         foreach ($metrics as $metric) {
+            // key - my.metric
             $line = $metric->getKey();
 
+            if ($metric->getUnit() !== MetricsUnit::none()) {
+                // unit - @second
+                $line .= '@' . $metric->getunit();
+            }
+
             foreach ($metric->serialize() as $value) {
+                // value - 2:3:4...
                 $line .= ':' . $value;
             }
 
-            $line .= '|' . $metric->getType() . '|' .
-                '#' . $metric->getTags() . '|' .
-                'T' . $metric->getTimestamp();
+            // type - |c|, |d|, ...
+            $line .= '|' . $metric->getType() . '|';
+
+            $tags = str_replace('=', ':', http_build_query(
+                $metric->getTags(), '', ','
+            ));
+
+            // tags - #key:value,key:value...
+            $line .= '#' . $tags . '|';
+            // timestamp - T123456789
+            $line .= 'T' . $metric->getTimestamp();
 
             $statsdPayload[] = $line;
 

@@ -44,7 +44,7 @@ final class GaugeType extends AbstractType
     /**
      * @param int|float $value
      */
-    public function __construct(string $key, $value, MetricsUnit $unit, string $tags, int $timestamp)
+    public function __construct(string $key, $value, MetricsUnit $unit, array $tags, int $timestamp)
     {
         parent::__construct($key, $unit, $tags, $timestamp);
 

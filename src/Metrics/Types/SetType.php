@@ -24,7 +24,7 @@ final class SetType extends AbstractType
     /**
      * @param int|string $value
      */
-    public function __construct(string $key, $value, MetricsUnit $unit, string $tags, int $timestamp)
+    public function __construct(string $key, $value, MetricsUnit $unit, array $tags, int $timestamp)
     {
         parent::__construct($key, $unit, $tags, $timestamp);
 

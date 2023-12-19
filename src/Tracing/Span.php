@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
+use Sentry\Metrics\MetricsUnit;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -77,6 +78,11 @@ class Span
      * @var Transaction|null The transaction containing this span
      */
     protected $transaction;
+
+    /**
+     * @var array
+     */
+    protected $metricsSummary = [];
 
     /**
      * Constructor.
@@ -474,6 +480,47 @@ class Span
         $this->spanRecorder = null;
 
         return $this;
+    }
+
+    public function getMetricsSummary(): array
+    {
+        return $this->metricsSummary;
+    }
+
+    /**
+     * @param string|int|float $value
+     *
+     * @TODO(michi) add support for string set values
+     */
+    public function setMetricsSummary(
+        string $type,
+        string $key,
+        $value,
+        MetricsUnit $unit,
+        array $tags,
+    ): void {
+        $mri = sprintf('%s:%s@%s', $type, $key, $unit);
+        $bucketKey = $mri . implode('', $tags);
+        $value = (float) $value;
+
+        if (\array_key_exists($bucketKey, $this->metricsSummary)) {
+            $summary = $this->metricsSummary[$bucketKey];
+            $this->metricsSummary[$bucketKey] = [
+                'min' => min($summary['min'], $value),
+                'max' => max($summary['max'], $value),
+                'sum' => $summary['sum'] + $value,
+                'count' => $summary['count']++,
+                'tags' => $tags,
+            ];
+        } else {
+            $this->metricsSummary[$bucketKey] = [
+                'min' => $value,
+                'max' => $value,
+                'sum' => $value,
+                'count' => 1,
+                'tags' => $tags,
+            ];
+        }
     }
 
     /**
