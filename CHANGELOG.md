@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## 4.2.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.2.0.
+
+### Features
+
+- Add a config option to allow overriding the Spotlight url [(#1659)](https://github.com/getsentry/sentry-php/pull/1659)
+
+  ```php
+  Sentry\init([
+      'spotlight_url' => 'http://localhost:8969',
+  ]);
+  ```
+
+### Bug Fixes
+
+- Restore setting the `logger` value on the event payload [(#1657)](https://github.com/getsentry/sentry-php/pull/1657)
+
+- Only apply the `sample_rate` on error/message events [(#1662)](https://github.com/getsentry/sentry-php/pull/1662)
+
+  This fixes an issue where Cron Check-Ins were wrongly sampled out if a `sample_rate` lower than `1.0` is used.
+
+### Misc
+
+- Remove the `@internal` annotation from `ClientBuilder::class` [(#1661)](https://github.com/getsentry/sentry-php/pull/1661)
+
 ## 4.1.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.1.0.
