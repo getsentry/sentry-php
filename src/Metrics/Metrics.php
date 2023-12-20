@@ -10,12 +10,6 @@ use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
 use Sentry\Metrics\Types\SetType;
 
-/**
- * This is an experimental feature and should neither be used nor considered stable.
- * The API might change at any time without prior warning.
- *
- * @internal
- */
 final class Metrics
 {
     /**
