@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
+use Sentry\Metrics\Types\AbstractType;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -56,7 +57,7 @@ final class Event
     private $checkIn;
 
     /**
-     * @var array
+     * @var array<int, AbstractType>|null The metrics data
      */
     private $metrics;
 
@@ -364,11 +365,17 @@ final class Event
         return $this;
     }
 
+    /**
+     * @return array<int, AbstractType>|null
+     */
     public function getMetrics(): ?array
     {
         return $this->metrics;
     }
 
+    /**
+     * @param array<int, AbstractType> $metrics
+     */
     public function setMetrics(array $metrics): self
     {
         $this->metrics = $metrics;

@@ -81,7 +81,7 @@ class Span
     protected $transaction;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
     protected $metricsSummary = [];
 
@@ -483,6 +483,9 @@ class Span
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getMetricsSummary(): array
     {
         return $this->metricsSummary;
@@ -490,6 +493,7 @@ class Span
 
     /**
      * @param string|int|float $value
+     * @param string[]         $tags
      */
     public function setMetricsSummary(
         string $type,

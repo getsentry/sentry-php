@@ -17,7 +17,7 @@ final class SetType extends AbstractType
     public const TYPE = 's';
 
     /**
-     * @var array
+     * @var array<int, float|int|string>
      */
     private $values;
 
@@ -39,6 +39,9 @@ final class SetType extends AbstractType
         $this->values[] = $value;
     }
 
+    /**
+     * @return array<int, float|int>
+     */
     public function serialize(): array
     {
         foreach ($this->values as $key => $value) {

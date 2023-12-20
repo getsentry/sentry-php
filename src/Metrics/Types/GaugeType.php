@@ -70,7 +70,7 @@ final class GaugeType extends AbstractType
     }
 
     /**
-     * @return int|float
+     * @return array<int, float|int>
      */
     public function serialize(): array
     {

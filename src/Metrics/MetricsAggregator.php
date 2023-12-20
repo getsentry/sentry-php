@@ -6,6 +6,7 @@ namespace Sentry\Metrics;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Metrics\Types\AbstractType;
 use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
@@ -25,7 +26,7 @@ final class MetricsAggregator
     private const ROLLUP_IN_SECONDS = 10;
 
     /**
-     * @var array
+     * @var array<int, AbstractType>
      */
     private $buckets = [];
 
@@ -37,7 +38,8 @@ final class MetricsAggregator
     ];
 
     /**
-     * @param mixed $value int|float|string
+     * @param string[]         $tags
+     * @param int|float|string $value
      */
     public function add(
         string $type,
@@ -70,6 +72,7 @@ final class MetricsAggregator
             $metric = $this->buckets[$bucketKey];
             $metric->add($value);
         } else {
+            /** @var AbstractType $metric */
             $metric = new (self::METRIC_TYPES[$type])(
                 $key, $value, $unit, $tags, $timestamp
             );
@@ -97,32 +100,41 @@ final class MetricsAggregator
         return $hub->captureEvent($event);
     }
 
+    /**
+     * @param string[] $tags
+     *
+     * @return string[]
+     */
     private function serializeTags(array $tags): array
     {
         $hub = SentrySdk::getCurrentHub();
-        $options = $hub->getClient()->getOptions();
+        $client = $hub->getClient();
 
-        $defaultTags = [
-            'environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-        ];
+        if ($client !== null) {
+            $options = $client->getOptions();
 
-        $release = $options->getRelease();
-        if ($release !== null) {
-            $defaultTags['release'] = $options->getRelease();
-        }
+            $defaultTags = [
+                'environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
+            ];
 
-        $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
-            $transaction = $scope->getTransaction();
-            if (
-                $transaction !== null
-                // Only include the transaction name if it has good quality
-                && $transaction->getMetadata()->getSource() !== TransactionSource::url()
-            ) {
-                $defaultTags['transaction'] = $transaction->getName();
+            $release = $options->getRelease();
+            if ($release !== null) {
+                $defaultTags['release'] = $options->getRelease();
             }
-        });
 
-        $tags = array_merge($defaultTags, $tags);
+            $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
+                $transaction = $scope->getTransaction();
+                if (
+                    $transaction !== null
+                    // Only include the transaction name if it has good quality
+                    && $transaction->getMetadata()->getSource() !== TransactionSource::url()
+                ) {
+                    $defaultTags['transaction'] = $transaction->getName();
+                }
+            });
+
+            $tags = array_merge($defaultTags, $tags);
+        }
 
         // It's very important to sort the tags in order to obtain the same bucket key.
         ksort($tags);

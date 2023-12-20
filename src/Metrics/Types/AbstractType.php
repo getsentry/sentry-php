@@ -26,7 +26,7 @@ abstract class AbstractType
     private $unit;
 
     /**
-     * @var array
+     * @var string[]
      */
     private $tags;
 
@@ -40,6 +40,9 @@ abstract class AbstractType
      */
     private $codeLocation;
 
+    /**
+     * @param string[] $tags
+     */
     public function __construct(string $key, MetricsUnit $unit, array $tags, int $timestamp)
     {
         $this->key = $key;
@@ -53,6 +56,9 @@ abstract class AbstractType
      */
     abstract public function add($value): void;
 
+    /**
+     * @return array<int, float|int>
+     */
     abstract public function serialize(): array;
 
     abstract public function getType(): string;
@@ -67,6 +73,9 @@ abstract class AbstractType
         return $this->unit;
     }
 
+    /**
+     * @return string[]
+     */
     public function getTags(): array
     {
         return $this->tags;
@@ -89,14 +98,16 @@ abstract class AbstractType
 
     public function addCodeLocation(int $stackLevel): void
     {
-        $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 3 + $stackLevel);
-        $frame = end($backtrace);
+        $client = SentrySdk::getCurrentHub()->getClient();
+        if ($client !== null) {
+            $options = $client->getOptions();
 
-        $hub = SentrySdk::getCurrentHub();
-        $options = $hub->getClient()->getOptions();
+            $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 3 + $stackLevel);
+            $frame = end($backtrace);
 
-        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
-        $this->codeLocation = $frameBuilder->buildFromBacktraceFrame($frame['file'], $frame['line'], $frame);
+            $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+            $this->codeLocation = $frameBuilder->buildFromBacktraceFrame($frame['file'], $frame['line'], $frame);
+        }
     }
 
     public function getMri(): string
