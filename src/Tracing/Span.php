@@ -500,7 +500,7 @@ class Span
         string $key,
         $value,
         MetricsUnit $unit,
-        array $tags,
+        array $tags
     ): void {
         $mri = sprintf('%s:%s@%s', $type, $key, $unit);
         $bucketKey = $mri . implode('', $tags);
