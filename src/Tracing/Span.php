@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\EventId;
 use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\SetType;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -489,8 +490,6 @@ class Span
 
     /**
      * @param string|int|float $value
-     *
-     * @TODO(michi) add support for string set values
      */
     public function setMetricsSummary(
         string $type,
@@ -501,9 +500,14 @@ class Span
     ): void {
         $mri = sprintf('%s:%s@%s', $type, $key, $unit);
         $bucketKey = $mri . implode('', $tags);
-        $value = (float) $value;
 
         if (\array_key_exists($bucketKey, $this->metricsSummary)) {
+            if ($type === SetType::TYPE) {
+                $value = 1.0;
+            } else {
+                $value = (float) $value;
+            }
+
             $summary = $this->metricsSummary[$bucketKey];
             $this->metricsSummary[$bucketKey] = [
                 'min' => min($summary['min'], $value),
@@ -513,6 +517,12 @@ class Span
                 'tags' => $tags,
             ];
         } else {
+            if ($type === SetType::TYPE) {
+                $value = 0.0;
+            } else {
+                $value = (float) $value;
+            }
+
             $this->metricsSummary[$bucketKey] = [
                 'min' => $value,
                 'max' => $value,
