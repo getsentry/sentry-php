@@ -42,12 +42,20 @@ final class HubAdapterTest extends TestCase
         clone HubAdapter::getInstance();
     }
 
-    public function testGetInstanceReturnsUnserializableInstance(): void
+    public function testHubAdapterThrowsExceptionOnSerialization(): void
+    {
+        $this->expectException(\BadMethodCallException::class);
+        $this->expectExceptionMessage('Serializing instances of this class is forbidden.');
+
+        serialize(HubAdapter::getInstance());
+    }
+
+    public function testHubAdapterThrowsExceptionOnUnserialization(): void
     {
         $this->expectException(\BadMethodCallException::class);
         $this->expectExceptionMessage('Unserializing instances of this class is forbidden.');
 
-        unserialize(serialize(HubAdapter::getInstance()));
+        unserialize('O:23:"Sentry\State\HubAdapter":0:{}');
     }
 
     public function testGetClient(): void
