@@ -16,6 +16,11 @@ use Sentry\EventId;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\CounterType;
+use Sentry\Metrics\Types\DistributionType;
+use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\SetType;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
@@ -407,25 +412,29 @@ TEXT
             false,
         ];
 
-        $metric = [
-            'timestamp' => 1597790835,
-            'width' => 0,
-            'name' => 'c:custom/foo@none',
-            'type' => 'c',
-            'value' => 10,
-            'tags' => ['foo' => 'bar'],
-        ];
+        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $set = new SetType('set', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
 
-        $event = Event::createMetric(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setMetric($metric);
+        $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setMetrics([
+            $counter,
+            $distribution,
+            $gauge,
+            $set,
+        ]);
 
         yield [
             $event,
             <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"metric_buckets","content_type":"application\/json"}
-[{"timestamp":1597790835,"width":0,"name":"c:custom\/foo@none","type":"c","value":10,"tags":{"foo":"bar"}}]
-TEXT
+        {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+        {"type":"statsd","length":166}
+        counter@second:1|c|#foo:bar|T1597790835
+        distribution@second:1|d|#foo:bar|T1597790835
+        gauge@second:1:1:1:1:1|g|#foo:bar|T1597790835
+        set@second:1|s|#foo:bar|T1597790835
+        TEXT
             ,
             false,
         ];
