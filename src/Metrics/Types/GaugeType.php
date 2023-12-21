@@ -22,12 +22,12 @@ final class GaugeType extends AbstractType
     private $last;
 
     /**
-     * @var int|float
+     * @var float
      */
     private $min;
 
     /**
-     * @var int|float
+     * @var float
      */
     private $max;
 
@@ -49,8 +49,8 @@ final class GaugeType extends AbstractType
         parent::__construct($key, $unit, $tags, $timestamp);
 
         $this->last = $value;
-        $this->min = $value;
-        $this->max = $value;
+        $this->min = (float) $value;
+        $this->max = (float) $value;
         $this->sum = $value;
         $this->count = 1;
     }
