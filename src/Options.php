@@ -218,6 +218,26 @@ final class Options
     }
 
     /**
+     * Gets whether a metric has their code location attached.
+     */
+    public function shouldAttachMetricCodeLocations(): bool
+    {
+        return $this->options['attach_metric_code_locations'];
+    }
+
+    /**
+     * Sets whether a metric will have their code location attached.
+     */
+    public function setAttachMetricCodeLocations(bool $enable): self
+    {
+        $options = array_merge($this->options, ['attach_metric_code_locations' => $enable]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets the number of lines of code context to capture, or null if none.
      */
     public function getContextLines(): ?int
@@ -1009,6 +1029,7 @@ final class Options
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
+            'attach_metric_code_locations' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
@@ -1056,6 +1077,7 @@ final class Options
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
+        $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');

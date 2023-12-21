@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -267,4 +268,9 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     });
 
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
+}
+
+function metrics(): Metrics
+{
+    return Metrics::getInstance();
 }

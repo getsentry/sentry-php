@@ -16,6 +16,11 @@ use Sentry\EventId;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\CounterType;
+use Sentry\Metrics\Types\DistributionType;
+use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\SetType;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
@@ -83,6 +88,7 @@ TEXT
         $event->setBreadcrumb([
             new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_USER, 'log'),
             new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_NAVIGATION, 'log', null, ['from' => '/login', 'to' => '/dashboard']),
+            new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'log', null, ['foo', 'bar']),
         ]);
 
         $event->setUser(UserDataBag::createFromArray([
@@ -169,7 +175,7 @@ TEXT
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"event","content_type":"application\/json"}
-{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"start_timestamp":1597790835,"level":"error","logger":"app.php","transaction":"\/users\/<username>\/","server_name":"foo.example.com","release":"721e41770371db95eee98ca2707686226b993eda","environment":"production","fingerprint":["myrpc","POST","\/foo.bar"],"modules":{"my.module.name":"1.0"},"extra":{"my_key":1,"some_other_value":"foo bar"},"tags":{"ios_version":"4.0","context":"production"},"user":{"id":"unique_id","username":"my_user","email":"foo@example.com","ip_address":"127.0.0.1","segment":"my_segment"},"contexts":{"os":{"name":"Linux","version":"4.19.104-microsoft-standard","build":"#1 SMP Wed Feb 19 06:37:35 UTC 2020","kernel_version":"Linux 7944782cd697 4.19.104-microsoft-standard #1 SMP Wed Feb 19 06:37:35 UTC 2020 x86_64"},"runtime":{"name":"php","version":"7.4.3"},"electron":{"type":"runtime","name":"Electron","version":"4.0"}},"breadcrumbs":{"values":[{"type":"user","category":"log","level":"info","timestamp":1597790835},{"type":"navigation","category":"log","level":"info","timestamp":1597790835,"data":{"from":"\/login","to":"\/dashboard"}}]},"request":{"method":"POST","url":"http:\/\/absolute.uri\/foo","query_string":"query=foobar&page=2","data":{"foo":"bar"},"cookies":{"PHPSESSID":"298zf09hf012fh2"},"headers":{"content-type":"text\/html"},"env":{"REMOTE_ADDR":"127.0.0.1"}},"exception":{"values":[{"type":"Exception","value":"chained exception","stacktrace":{"frames":[{"filename":"file\/name.py","lineno":3,"in_app":true},{"filename":"file\/name.py","lineno":3,"in_app":false,"abs_path":"absolute\/file\/name.py","function":"myfunction","raw_function":"raw_function_name","pre_context":["def foo():","  my_var = 'foo'"],"context_line":"  raise ValueError()","post_context":["","def main():"],"vars":{"my_var":"value"}}]},"mechanism":{"type":"generic","handled":true,"data":{"code":123}}},{"type":"Exception","value":"initial exception"}]}}
+{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"start_timestamp":1597790835,"level":"error","logger":"app.php","transaction":"\/users\/<username>\/","server_name":"foo.example.com","release":"721e41770371db95eee98ca2707686226b993eda","environment":"production","fingerprint":["myrpc","POST","\/foo.bar"],"modules":{"my.module.name":"1.0"},"extra":{"my_key":1,"some_other_value":"foo bar"},"tags":{"ios_version":"4.0","context":"production"},"user":{"id":"unique_id","username":"my_user","email":"foo@example.com","ip_address":"127.0.0.1","segment":"my_segment"},"contexts":{"os":{"name":"Linux","version":"4.19.104-microsoft-standard","build":"#1 SMP Wed Feb 19 06:37:35 UTC 2020","kernel_version":"Linux 7944782cd697 4.19.104-microsoft-standard #1 SMP Wed Feb 19 06:37:35 UTC 2020 x86_64"},"runtime":{"name":"php","version":"7.4.3"},"electron":{"type":"runtime","name":"Electron","version":"4.0"}},"breadcrumbs":{"values":[{"type":"user","category":"log","level":"info","timestamp":1597790835},{"type":"navigation","category":"log","level":"info","timestamp":1597790835,"data":{"from":"\/login","to":"\/dashboard"}},{"type":"default","category":"log","level":"info","timestamp":1597790835,"data":{"0":"foo","1":"bar"}}]},"request":{"method":"POST","url":"http:\/\/absolute.uri\/foo","query_string":"query=foobar&page=2","data":{"foo":"bar"},"cookies":{"PHPSESSID":"298zf09hf012fh2"},"headers":{"content-type":"text\/html"},"env":{"REMOTE_ADDR":"127.0.0.1"}},"exception":{"values":[{"type":"Exception","value":"chained exception","stacktrace":{"frames":[{"filename":"file\/name.py","lineno":3,"in_app":true},{"filename":"file\/name.py","lineno":3,"in_app":false,"abs_path":"absolute\/file\/name.py","function":"myfunction","raw_function":"raw_function_name","pre_context":["def foo():","  my_var = 'foo'"],"context_line":"  raise ValueError()","post_context":["","def main():"],"vars":{"my_var":"value"}}]},"mechanism":{"type":"generic","handled":true,"data":{"code":123}}},{"type":"Exception","value":"initial exception"}]}}
 TEXT
         ];
 
@@ -401,6 +407,33 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam"},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
+TEXT
+            ,
+            false,
+        ];
+
+        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['$foo$' => '%bar%'], 1597790835);
+        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['föö' => 'bär'], 1597790835);
+        $set = new SetType('set', 1.0, MetricsUnit::second(), ['%{key}' => '$value$'], 1597790835);
+
+        $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setMetrics([
+            $counter,
+            $distribution,
+            $gauge,
+            $set,
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"statsd","length":172}
+counter@second:1|c|#foo:bar|T1597790835
+distribution@second:1|d|#_foo_:bar|T1597790835
+gauge@second:1:1:1:1:1|g|#f_:br|T1597790835
+set@second:1|s|#_key_:\$value\$|T1597790835
 TEXT
             ,
             false,
