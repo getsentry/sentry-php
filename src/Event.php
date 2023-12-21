@@ -57,9 +57,9 @@ final class Event
     private $checkIn;
 
     /**
-     * @var array<string, AbstractType>|null The metrics data
+     * @var array<string, AbstractType> The metrics data
      */
-    private $metrics;
+    private $metrics = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -366,9 +366,9 @@ final class Event
     }
 
     /**
-     * @return array<string, AbstractType>|null
+     * @return array<string, AbstractType>
      */
-    public function getMetrics(): ?array
+    public function getMetrics(): array
     {
         return $this->metrics;
     }

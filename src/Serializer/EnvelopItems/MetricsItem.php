@@ -29,7 +29,7 @@ class MetricsItem implements EnvelopeItemInterface
     public static function toEnvelopeItem(Event $event): string
     {
         $metrics = $event->getMetrics();
-        if ($metrics === null) {
+        if (empty($metrics)) {
             return '';
         }
 
