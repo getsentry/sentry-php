@@ -1,5 +1,48 @@
 # CHANGELOG
 
+## 4.3.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.0.
+
+### Features
+
+- Add support for Sentry Developer Metrics [(#1619)](https://github.com/getsentry/sentry-php/pull/1619)
+
+  ```php
+  use function Sentry\metrics;
+  
+  // Add 4 to a counter named hits
+  metrics()->increment(key: 'hits', value: 4);
+  
+  // Add 25 to a distribution named response_time with unit milliseconds
+  metrics()->distribution(key: 'response_time', value: 25, unit: MetricsUnit::millisecond());
+  
+  // Add 2 to gauge named parallel_requests, tagged with type: "a"
+  metrics()->gauge(key: 'parallel_requests, value: 2, tags: ['type': 'a']);
+  
+  // Add a user's email to a set named users.sessions, tagged with role: "admin"
+  metrics()->set('users.sessions, 'jane.doe@example.com', null, ['role' => User::admin()]);
+  
+  // Add 2 to gauge named `parallel_requests`, tagged with `type: "a"`
+  Sentry.metrics.gauge('parallel_requests', 2, { tags: { type: 'a' } });
+  
+  // Flush the metrics to Sentry
+  metrics()->flush();
+  
+  // We recommend registering the flushing in a shutdown function
+  register_shutdown_function(static fn () => metrics()->flush());
+  ```
+
+  To learn more about Sentry Developer Merics, join the discussion at https://github.com/getsentry/sentry-php/discussions/1666.
+
+### Bug Fixes
+
+- Disallow to seralize the `HubAdapter::class` [(#1663)](https://github.com/getsentry/sentry-php/pull/1663)
+
+### Misc
+
+- Remove the `final` keyword from `Hub::class`, `Client::class` and `Scope::class` [(#1665)](https://github.com/getsentry/sentry-php/pull/1665)
+
 ## 4.2.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.2.0.
