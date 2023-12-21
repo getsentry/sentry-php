@@ -72,8 +72,9 @@ final class MetricsAggregator
             $metric = $this->buckets[$bucketKey];
             $metric->add($value);
         } else {
-            /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
-            $metric = new (self::METRIC_TYPES[$type])($key, $value, $unit, $tags, $timestamp);
+            /** @var AbstractType $metric */
+            $metric = (new \ReflectionClass(self::METRIC_TYPES[$type]))
+                ->newInstanceArgs([$key, $value, $unit, $tags, $timestamp]);
             $this->buckets[$bucketKey] = $metric;
         }
 
