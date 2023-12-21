@@ -16,6 +16,16 @@ class MetricsItem implements EnvelopeItemInterface
 {
     use StacktraceFrameSeralizerTrait;
 
+    /**
+     * @var string
+     */
+    private const KEY_PATTERN = '/[^a-zA-Z0-9_\/.-]+/i';
+
+    /**
+     * @var string
+     */
+    private const VALUE_PATTERN = '/[^\w\d_:\/@\.{}\[\]$-]+/i';
+
     public static function toEnvelopeItem(Event $event): string
     {
         $metrics = $event->getMetrics();
@@ -28,7 +38,7 @@ class MetricsItem implements EnvelopeItemInterface
 
         foreach ($metrics as $metric) {
             // key - my.metric
-            $line = $metric->getKey();
+            $line = preg_replace(self::KEY_PATTERN, '_', $metric->getKey());
 
             if ($metric->getUnit() !== MetricsUnit::none()) {
                 // unit - @second
@@ -43,9 +53,11 @@ class MetricsItem implements EnvelopeItemInterface
             // type - |c|, |d|, ...
             $line .= '|' . $metric->getType() . '|';
 
-            $tags = str_replace('=', ':', http_build_query(
-                $metric->getTags(), '', ','
-            ));
+            $tags = '';
+            foreach ($metric->getTags() as $key => $value) {
+                $tags .= preg_replace(self::KEY_PATTERN, '_', $key) .
+                    ':' . preg_replace(self::VALUE_PATTERN, '', $value);
+            }
 
             // tags - #key:value,key:value...
             $line .= '#' . $tags . '|';

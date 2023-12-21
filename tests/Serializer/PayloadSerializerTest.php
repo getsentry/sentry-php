@@ -413,9 +413,9 @@ TEXT
         ];
 
         $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
-        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
-        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
-        $set = new SetType('set', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['$foo$' => '%bar%'], 1597790835);
+        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['föö' => 'bär'], 1597790835);
+        $set = new SetType('set', 1.0, MetricsUnit::second(), ['%{key}' => '$value$'], 1597790835);
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMetrics([
@@ -429,11 +429,11 @@ TEXT
             $event,
             <<<TEXT
         {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-        {"type":"statsd","length":166}
+        {"type":"statsd","length":172}
         counter@second:1|c|#foo:bar|T1597790835
-        distribution@second:1|d|#foo:bar|T1597790835
-        gauge@second:1:1:1:1:1|g|#foo:bar|T1597790835
-        set@second:1|s|#foo:bar|T1597790835
+        distribution@second:1|d|#_foo_:bar|T1597790835
+        gauge@second:1:1:1:1:1|g|#f_:br|T1597790835
+        set@second:1|s|#_key_:\$value\$|T1597790835
         TEXT
             ,
             false,
