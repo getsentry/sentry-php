@@ -145,6 +145,80 @@ final class MetricsTest extends TestCase
         metrics()->flush();
     }
 
+    public function testTiming(): void
+    {
+        ClockMock::withClockMock(1699412953);
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->any())
+               ->method('getOptions')
+               ->willReturn(new Options([
+                   'release' => '1.0.0',
+                   'environment' => 'development',
+                   'attach_metric_code_locations' => true,
+               ]));
+
+        $self = $this;
+
+        $client->expects($this->once())
+               ->method('captureEvent')
+               ->with($this->callback(static function (Event $event) use ($self): bool {
+                   $metric = $event->getMetrics()['8a817dcdb12cfffc1fa8b459ad0c9d56'];
+
+                   $self->assertSame(DistributionType::TYPE, $metric->getType());
+                   $self->assertSame('foo', $metric->getKey());
+                   $self->assertSame([1.0, 2.0], $metric->serialize());
+                   $self->assertSame(MetricsUnit::second(), $metric->getUnit());
+                   $self->assertSame(
+                       [
+                           'environment' => 'development',
+                           'foo' => 'bar',
+                           'release' => '1.0.0',
+                       ],
+                       $metric->getTags()
+                   );
+                   $self->assertSame(1699412953, $metric->getTimestamp());
+
+                   $codeLocation = $metric->getCodeLocation();
+
+                   $self->assertSame('Sentry\Metrics\Metrics::distribution', $codeLocation->getFunctionName());
+
+                   return true;
+               }));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $firstTimingResult = metrics()->timing(
+            static function () {
+                // Move the clock forward 1 second
+                ClockMock::withClockMock(1699412954);
+
+                return '1second';
+            },
+            'foo',
+            ['foo' => 'bar']
+        );
+
+        $this->assertEquals('1second', $firstTimingResult);
+
+        ClockMock::withClockMock(1699412953);
+
+        $secondTimingResult = metrics()->timing(
+            static function () {
+                // Move the clock forward 2 seconds
+                ClockMock::withClockMock(1699412955);
+            },
+            'foo',
+            ['foo' => 'bar']
+        );
+
+        $this->assertNull($secondTimingResult);
+
+        metrics()->flush();
+    }
+
     public function testGauge(): void
     {
         ClockMock::withClockMock(1699412953);
