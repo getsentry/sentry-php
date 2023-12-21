@@ -851,4 +851,33 @@ final class HubTest extends TestCase
 
         $this->assertNull($hub->getTransaction());
     }
+
+    public function testEventTraceContextIsAlwaysFilled(): void
+    {
+        $hub = new Hub();
+
+        $event = Event::createEvent();
+
+        $hub->configureScope(function (Scope $scope) use ($event): void {
+            $event = $scope->applyToEvent($event);
+
+            $this->assertNotEmpty($event->getContexts()['trace']);
+        });
+    }
+
+    public function testEventTraceContextIsNotOverridenWhenPresent(): void
+    {
+        $hub = new Hub();
+
+        $traceContext = ['foo' => 'bar'];
+
+        $event = Event::createEvent();
+        $event->setContext('trace', $traceContext);
+
+        $hub->configureScope(function (Scope $scope) use ($event, $traceContext): void {
+            $event = $scope->applyToEvent($event);
+
+            $this->assertEquals($event->getContexts()['trace'], $traceContext);
+        });
+    }
 }
