@@ -57,7 +57,7 @@ final class Event
     private $checkIn;
 
     /**
-     * @var array<int, AbstractType>|null The metrics data
+     * @var array<string, AbstractType>|null The metrics data
      */
     private $metrics;
 
@@ -366,7 +366,7 @@ final class Event
     }
 
     /**
-     * @return array<int, AbstractType>|null
+     * @return array<string, AbstractType>|null
      */
     public function getMetrics(): ?array
     {
@@ -374,7 +374,7 @@ final class Event
     }
 
     /**
-     * @param array<int, AbstractType> $metrics
+     * @param array<string, AbstractType> $metrics
      */
     public function setMetrics(array $metrics): self
     {

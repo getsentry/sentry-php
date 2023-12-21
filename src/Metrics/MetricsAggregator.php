@@ -26,7 +26,7 @@ final class MetricsAggregator
     private const ROLLUP_IN_SECONDS = 10;
 
     /**
-     * @var array<int, AbstractType>
+     * @var array<string, AbstractType>
      */
     private $buckets = [];
 
@@ -60,7 +60,7 @@ final class MetricsAggregator
         $tags = $this->serializeTags($tags);
 
         $bucketTimestamp = floor($timestamp / self::ROLLUP_IN_SECONDS);
-        $bucketKey = crc32(
+        $bucketKey = md5(
             $type .
             $key .
             $unit .

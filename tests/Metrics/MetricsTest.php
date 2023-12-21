@@ -39,7 +39,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()[1693069352];
+                $metric = $event->getMetrics()['92ed00fdaf9543ff4cace691f8a5166b'];
 
                 $self->assertSame(CounterType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -100,7 +100,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()[1924320516];
+                $metric = $event->getMetrics()['8a817dcdb12cfffc1fa8b459ad0c9d56'];
 
                 $self->assertSame(DistributionType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -161,7 +161,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()[1062915427];
+                $metric = $event->getMetrics()['d2a09273b9c61b66a0e6ee79c1babfed'];
 
                 $self->assertSame(GaugeType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -228,7 +228,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()[3512255301];
+                $metric = $event->getMetrics()['c900a5750d0bc79016c29a7f0bdcd937'];
 
                 $self->assertSame(SetType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
