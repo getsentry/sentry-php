@@ -132,6 +132,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'attach_metric_code_locations',
+            false,
+            'shouldAttachMetricCodeLocations',
+            'setAttachMetricCodeLocations',
+        ];
+
+        yield [
             'context_lines',
             3,
             'getContextLines',

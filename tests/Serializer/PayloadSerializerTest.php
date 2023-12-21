@@ -16,6 +16,11 @@ use Sentry\EventId;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\CounterType;
+use Sentry\Metrics\Types\DistributionType;
+use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\SetType;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
@@ -402,6 +407,33 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam"},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
+TEXT
+            ,
+            false,
+        ];
+
+        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
+        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['$foo$' => '%bar%'], 1597790835);
+        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['föö' => 'bär'], 1597790835);
+        $set = new SetType('set', 1.0, MetricsUnit::second(), ['%{key}' => '$value$'], 1597790835);
+
+        $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setMetrics([
+            $counter,
+            $distribution,
+            $gauge,
+            $set,
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"statsd","length":172}
+counter@second:1|c|#foo:bar|T1597790835
+distribution@second:1|d|#_foo_:bar|T1597790835
+gauge@second:1:1:1:1:1|g|#f_:br|T1597790835
+set@second:1|s|#_key_:\$value\$|T1597790835
 TEXT
             ,
             false,

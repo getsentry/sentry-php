@@ -7,6 +7,7 @@ namespace Sentry\Integration;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Event;
+use Sentry\Frame;
 use Sentry\SentrySdk;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -65,6 +66,13 @@ final class FrameContextifierIntegration implements IntegrationInterface
                 }
             }
 
+            foreach ($event->getMetrics() as $metric) {
+                if ($metric->hasCodeLocation()) {
+                    $frame = $metric->getCodeLocation();
+                    $integration->addContextToStacktraceFrame($maxContextLines, $frame);
+                }
+            }
+
             return $event;
         });
     }
@@ -78,16 +86,30 @@ final class FrameContextifierIntegration implements IntegrationInterface
     private function addContextToStacktraceFrames(int $maxContextLines, Stacktrace $stacktrace): void
     {
         foreach ($stacktrace->getFrames() as $frame) {
-            if ($frame->isInternal() || $frame->getAbsoluteFilePath() === null) {
+            if ($frame->isInternal()) {
                 continue;
             }
 
-            $sourceCodeExcerpt = $this->getSourceCodeExcerpt($maxContextLines, $frame->getAbsoluteFilePath(), $frame->getLine());
-
-            $frame->setPreContext($sourceCodeExcerpt['pre_context']);
-            $frame->setContextLine($sourceCodeExcerpt['context_line']);
-            $frame->setPostContext($sourceCodeExcerpt['post_context']);
+            $this->addContextToStacktraceFrame($maxContextLines, $frame);
         }
+    }
+
+    /**
+     * Contextifies the given frame.
+     *
+     * @param int $maxContextLines The maximum number of lines of code to read
+     */
+    private function addContextToStacktraceFrame(int $maxContextLines, Frame $frame): void
+    {
+        if ($frame->getAbsoluteFilePath() === null) {
+            return;
+        }
+
+        $sourceCodeExcerpt = $this->getSourceCodeExcerpt($maxContextLines, $frame->getAbsoluteFilePath(), $frame->getLine());
+
+        $frame->setPreContext($sourceCodeExcerpt['pre_context']);
+        $frame->setContextLine($sourceCodeExcerpt['context_line']);
+        $frame->setPostContext($sourceCodeExcerpt['post_context']);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Sentry\Breadcrumb;
 use Sentry\Event;
+use Sentry\Metrics\Metrics;
 use Sentry\Tracing\Span;
 use Sentry\Transport\RateLimiter;
 use Symfony\Bridge\PhpUnit\ClockMock;
@@ -25,3 +26,4 @@ ClockMock::register(Event::class);
 ClockMock::register(Breadcrumb::class);
 ClockMock::register(Span::class);
 ClockMock::register(RateLimiter::class);
+ClockMock::register(Metrics::class);
