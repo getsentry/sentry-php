@@ -10,25 +10,25 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
   ```php
   use function Sentry\metrics;
-  
+
   // Add 4 to a counter named hits
   metrics()->increment(key: 'hits', value: 4);
-  
+
   // Add 25 to a distribution named response_time with unit milliseconds
   metrics()->distribution(key: 'response_time', value: 25, unit: MetricsUnit::millisecond());
-  
+
   // Add 2 to gauge named parallel_requests, tagged with type: "a"
   metrics()->gauge(key: 'parallel_requests, value: 2, tags: ['type': 'a']);
-  
+
   // Add a user's email to a set named users.sessions, tagged with role: "admin"
   metrics()->set('users.sessions, 'jane.doe@example.com', null, ['role' => User::admin()]);
-  
+
   // Add 2 to gauge named `parallel_requests`, tagged with `type: "a"`
   Sentry.metrics.gauge('parallel_requests', 2, { tags: { type: 'a' } });
-  
+
   // Flush the metrics to Sentry
   metrics()->flush();
-  
+
   // We recommend registering the flushing in a shutdown function
   register_shutdown_function(static fn () => metrics()->flush());
   ```
@@ -38,6 +38,8 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 ### Bug Fixes
 
 - Disallow to seralize the `HubAdapter::class` [(#1663)](https://github.com/getsentry/sentry-php/pull/1663)
+- Do not overwrite trace context on event [(#1668)](https://github.com/getsentry/sentry-php/pull/1668)
+- Serialize breadcrumb data to display correct in the Sentry UI [(#1669)](https://github.com/getsentry/sentry-php/pull/1669)
 
 ### Misc
 
