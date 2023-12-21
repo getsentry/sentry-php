@@ -41,6 +41,11 @@ parameters:
 			path: src/Logger/DebugStdOutLogger.php
 
 		-
+			message: "#^Method Sentry\\\\Metrics\\\\Types\\\\AbstractType\\:\\:add\\(\\) has parameter \\$value with no type specified\\.$#"
+			count: 1
+			path: src/Metrics/Types/AbstractType.php
+
+		-
 			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
 			count: 1
 			path: src/Monolog/BreadcrumbHandler.php

@@ -51,13 +51,10 @@ abstract class AbstractType
         $this->timestamp = $timestamp;
     }
 
-    /**
-     * @param mixed $value
-     */
     abstract public function add($value): void;
 
     /**
-     * @return array<int, float|int>
+     * @return array<array-key, int|float|string>
      */
     abstract public function serialize(): array;
 
@@ -126,7 +123,7 @@ abstract class AbstractType
             '%s:%s@%s',
             $this->getType(),
             $this->getKey(),
-            $this->getUnit()
+            (string) $this->getUnit()
         );
     }
 }

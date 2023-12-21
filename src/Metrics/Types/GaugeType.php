@@ -63,8 +63,8 @@ final class GaugeType extends AbstractType
         $value = (float) $value;
 
         $this->last = $value;
-        $this->min = (float) min($this->min, $value);
-        $this->max = (float) max($this->min, $value);
+        $this->min = min($this->min, $value);
+        $this->max = max($this->min, $value);
         $this->sum += $value;
         ++$this->count;
     }

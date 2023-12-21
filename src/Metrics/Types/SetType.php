@@ -39,9 +39,6 @@ final class SetType extends AbstractType
         $this->values[] = $value;
     }
 
-    /**
-     * @return array<array-key, int|string>
-     */
     public function serialize(): array
     {
         foreach ($this->values as $key => $value) {
