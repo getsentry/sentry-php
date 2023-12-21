@@ -182,7 +182,7 @@ final class MetricsTest extends TestCase
 
                    $codeLocation = $metric->getCodeLocation();
 
-                   $self->assertSame('Sentry\Metrics\Metrics::distribution', $codeLocation->getFunctionName());
+                   $self->assertSame('Sentry\Metrics\Metrics::timing', $codeLocation->getFunctionName());
 
                    return true;
                }));

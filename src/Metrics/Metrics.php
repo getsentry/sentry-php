@@ -146,7 +146,8 @@ final class Metrics
 
         $result = $callable();
 
-        $this->distribution(
+        $this->aggregator->add(
+            DistributionType::TYPE,
             $key,
             microtime(true) - $startTimestamp,
             MetricsUnit::second(),
