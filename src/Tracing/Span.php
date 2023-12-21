@@ -517,7 +517,7 @@ class Span
                 'min' => min($summary['min'], $value),
                 'max' => max($summary['max'], $value),
                 'sum' => $summary['sum'] + $value,
-                'count' => $summary['count']++,
+                'count' => $summary['count'] + 1,
                 'tags' => $tags,
             ];
         } else {
