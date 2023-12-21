@@ -48,7 +48,7 @@ final class MetricsAggregator
         ?MetricsUnit $unit,
         array $tags,
         ?int $timestamp,
-        int $stackLevel,
+        int $stackLevel
     ): void {
         if ($timestamp === null) {
             $timestamp = time();
@@ -72,10 +72,8 @@ final class MetricsAggregator
             $metric = $this->buckets[$bucketKey];
             $metric->add($value);
         } else {
-            /** @var AbstractType $metric */
-            $metric = new (self::METRIC_TYPES[$type])(
-                $key, $value, $unit, $tags, $timestamp
-            );
+            /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
+            $metric = new (self::METRIC_TYPES[$type])($key, $value, $unit, $tags, $timestamp);
             $this->buckets[$bucketKey] = $metric;
         }
 
@@ -103,7 +101,7 @@ final class MetricsAggregator
     {
         $hub = SentrySdk::getCurrentHub();
         $event = Event::createMetrics()
-            ->setMetrics($this->buckets);
+                      ->setMetrics($this->buckets);
 
         $this->buckets = [];
 
@@ -129,7 +127,7 @@ final class MetricsAggregator
 
             $release = $options->getRelease();
             if ($release !== null) {
-                $defaultTags['release'] = $options->getRelease();
+                $defaultTags['release'] = $release;
             }
 
             $hub->configureScope(function (Scope $scope) use (&$defaultTags) {

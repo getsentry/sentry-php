@@ -88,7 +88,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
     private function addContextToStacktraceFrames(int $maxContextLines, Stacktrace $stacktrace): void
     {
         foreach ($stacktrace->getFrames() as $frame) {
-            if ($frame->isInternal() || $frame->getAbsoluteFilePath() === null) {
+            if ($frame->isInternal()) {
                 continue;
             }
 
@@ -103,6 +103,10 @@ final class FrameContextifierIntegration implements IntegrationInterface
      */
     private function addContextToStacktraceFrame(int $maxContextLines, Frame $frame): void
     {
+        if ($frame->getAbsoluteFilePath() === null) {
+            return;
+        }
+
         $sourceCodeExcerpt = $this->getSourceCodeExcerpt($maxContextLines, $frame->getAbsoluteFilePath(), $frame->getLine());
 
         $frame->setPreContext($sourceCodeExcerpt['pre_context']);

@@ -17,7 +17,7 @@ final class SetType extends AbstractType
     public const TYPE = 's';
 
     /**
-     * @var array<int, float|int|string>
+     * @var array<array-key, int|string>
      */
     private $values;
 
@@ -40,7 +40,7 @@ final class SetType extends AbstractType
     }
 
     /**
-     * @return array<int, float|int>
+     * @return array<array-key, int|string>
      */
     public function serialize(): array
     {

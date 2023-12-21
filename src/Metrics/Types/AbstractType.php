@@ -86,6 +86,9 @@ abstract class AbstractType
         return $this->timestamp;
     }
 
+    /**
+     * @phpstan-assert-if-true !null $this->getCodeLocation()
+     */
     public function hasCodeLocation(): bool
     {
         return $this->codeLocation !== null;
@@ -99,15 +102,22 @@ abstract class AbstractType
     public function addCodeLocation(int $stackLevel): void
     {
         $client = SentrySdk::getCurrentHub()->getClient();
-        if ($client !== null) {
-            $options = $client->getOptions();
-
-            $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 3 + $stackLevel);
-            $frame = end($backtrace);
-
-            $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
-            $this->codeLocation = $frameBuilder->buildFromBacktraceFrame($frame['file'], $frame['line'], $frame);
+        if ($client === null) {
+            return;
         }
+
+        $options = $client->getOptions();
+
+        $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 3 + $stackLevel);
+        $frame = end($backtrace);
+
+        // If we don't have a valid frame there is no code location to resolve
+        if ($frame === false || empty($frame['file']) || empty($frame['line'])) {
+            return;
+        }
+
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+        $this->codeLocation = $frameBuilder->buildFromBacktraceFrame($frame['file'], $frame['line'], $frame);
     }
 
     public function getMri(): string

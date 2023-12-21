@@ -17,7 +17,7 @@ final class DistributionType extends AbstractType
     public const TYPE = 'd';
 
     /**
-     * @var array<int, float>
+     * @var array<array-key, float>
      */
     private $values;
 
