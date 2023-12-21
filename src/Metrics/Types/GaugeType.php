@@ -17,7 +17,7 @@ final class GaugeType extends AbstractType
     public const TYPE = 'g';
 
     /**
-     * @var int|float
+     * @var float
      */
     private $last;
 
@@ -32,7 +32,7 @@ final class GaugeType extends AbstractType
     private $max;
 
     /**
-     * @var int|float
+     * @var float
      */
     private $sum;
 
@@ -48,9 +48,11 @@ final class GaugeType extends AbstractType
     {
         parent::__construct($key, $unit, $tags, $timestamp);
 
+        $value = (float) $value;
+
         $this->last = $value;
-        $this->min = (float) $value;
-        $this->max = (float) $value;
+        $this->min = $value;
+        $this->max = $value;
         $this->sum = $value;
         $this->count = 1;
     }
