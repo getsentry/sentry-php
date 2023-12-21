@@ -37,7 +37,7 @@ trait BreadcrumbSeralizerTrait
         }
 
         if (!empty($breadcrumb->getMetadata())) {
-            $result['data'] = $breadcrumb->getMetadata();
+            $result['data'] = (object) $breadcrumb->getMetadata();
         }
 
         return $result;
