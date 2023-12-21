@@ -20,7 +20,7 @@ trait BreadcrumbSeralizerTrait
      *     level: string,
      *     timestamp: float,
      *     message?: string,
-     *     data?: array<string, mixed>
+     *     data?: object
      * }
      */
     protected static function serializeBreadcrumb(Breadcrumb $breadcrumb): array
