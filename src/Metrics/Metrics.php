@@ -55,7 +55,7 @@ final class Metrics
             $unit,
             $tags,
             $timestamp,
-            $stackLevel,
+            $stackLevel
         );
     }
 
@@ -78,7 +78,7 @@ final class Metrics
             $unit,
             $tags,
             $timestamp,
-            $stackLevel,
+            $stackLevel
         );
     }
 
@@ -101,7 +101,7 @@ final class Metrics
             $unit,
             $tags,
             $timestamp,
-            $stackLevel,
+            $stackLevel
         );
     }
 
@@ -124,7 +124,7 @@ final class Metrics
             $unit,
             $tags,
             $timestamp,
-            $stackLevel,
+            $stackLevel
         );
     }
 

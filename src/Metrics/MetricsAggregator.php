@@ -100,8 +100,7 @@ final class MetricsAggregator
     public function flush(): ?EventId
     {
         $hub = SentrySdk::getCurrentHub();
-        $event = Event::createMetrics()
-                      ->setMetrics($this->buckets);
+        $event = Event::createMetrics()->setMetrics($this->buckets);
 
         $this->buckets = [];
 
