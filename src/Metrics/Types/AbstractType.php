@@ -26,7 +26,7 @@ abstract class AbstractType
     private $unit;
 
     /**
-     * @var string[]
+     * @var array<string, string>
      */
     private $tags;
 
@@ -41,7 +41,7 @@ abstract class AbstractType
     private $codeLocation;
 
     /**
-     * @param string[] $tags
+     * @param array<string, string> $tags
      */
     public function __construct(string $key, MetricsUnit $unit, array $tags, int $timestamp)
     {
@@ -71,7 +71,7 @@ abstract class AbstractType
     }
 
     /**
-     * @return string[]
+     * @return array<string, string>
      */
     public function getTags(): array
     {
