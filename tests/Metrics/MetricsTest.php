@@ -32,6 +32,7 @@ final class MetricsTest extends TestCase
             ->willReturn(new Options([
                 'release' => '1.0.0',
                 'environment' => 'development',
+                'attach_metric_code_locations' => true,
             ]));
 
         $self = $this;
@@ -93,6 +94,7 @@ final class MetricsTest extends TestCase
             ->willReturn(new Options([
                 'release' => '1.0.0',
                 'environment' => 'development',
+                'attach_metric_code_locations' => true,
             ]));
 
         $self = $this;
@@ -154,6 +156,7 @@ final class MetricsTest extends TestCase
             ->willReturn(new Options([
                 'release' => '1.0.0',
                 'environment' => 'development',
+                'attach_metric_code_locations' => true,
             ]));
 
         $self = $this;
@@ -221,6 +224,7 @@ final class MetricsTest extends TestCase
             ->willReturn(new Options([
                 'release' => '1.0.0',
                 'environment' => 'development',
+                'attach_metric_code_locations' => true,
             ]));
 
         $self = $this;

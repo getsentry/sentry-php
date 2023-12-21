@@ -79,11 +79,21 @@ final class MetricsAggregator
             $this->buckets[$bucketKey] = $metric;
         }
 
-        if (!$metric->hasCodeLocation()) {
-            $metric->addCodeLocation($stackLevel);
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+
+        if ($client !== null) {
+            $options = $client->getOptions();
+
+            if (
+                $options->shouldAttachMetricCodeLocations()
+                && !$metric->hasCodeLocation()
+            ) {
+                $metric->addCodeLocation($stackLevel);
+            }
         }
 
-        $span = SentrySdk::getCurrentHub()->getSpan();
+        $span = $hub->getSpan();
         if ($span !== null) {
             $span->setMetricsSummary($type, $key, $value, $unit, $tags);
         }
