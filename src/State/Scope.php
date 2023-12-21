@@ -19,7 +19,7 @@ use Sentry\UserDataBag;
  * The scope holds data that should implicitly be sent with Sentry events. It
  * can hold context data, extra parameters, level overrides, fingerprints etc.
  */
-final class Scope
+class Scope
 {
     /**
      * @var PropagationContext
