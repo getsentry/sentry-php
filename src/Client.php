@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.3.0';
+    public const SDK_VERSION = '4.3.1';
 
     /**
      * @var Options The client options
