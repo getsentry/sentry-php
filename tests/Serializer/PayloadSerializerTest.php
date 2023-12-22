@@ -424,7 +424,7 @@ TEXT
             $distribution,
             $gauge,
             $set,
-            $noTags
+            $noTags,
         ]);
 
         yield [
