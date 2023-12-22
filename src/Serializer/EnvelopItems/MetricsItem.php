@@ -53,14 +53,17 @@ class MetricsItem implements EnvelopeItemInterface
             // type - |c|, |d|, ...
             $line .= '|' . $metric->getType() . '|';
 
-            $tags = '';
+            $tags = [];
             foreach ($metric->getTags() as $key => $value) {
-                $tags .= preg_replace(self::KEY_PATTERN, '_', $key) .
+                $tags[] = preg_replace(self::KEY_PATTERN, '_', $key) .
                     ':' . preg_replace(self::VALUE_PATTERN, '', $value);
             }
 
-            // tags - #key:value,key:value...
-            $line .= '#' . $tags . '|';
+            if (!empty($tags)) {
+                // tags - #key:value,key:value...
+                $line .= '#' . implode(',', $tags) . '|';
+            }
+
             // timestamp - T123456789
             $line .= 'T' . $metric->getTimestamp();
 
