@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 4.3.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.1.
+
+### Bug Fixes
+
+- Fix tags not being serialized correctly for metrics [(#1672)](https://github.com/getsentry/sentry-php/pull/1672)
+
+### Misc
+
+- Remove `@internal` annotation from `MetricsUnit` class [(#1671)](https://github.com/getsentry/sentry-php/pull/1671)
+
 ## 4.3.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.0.
