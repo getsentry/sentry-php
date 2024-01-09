@@ -101,6 +101,10 @@ final class MetricsAggregator
 
     public function flush(): ?EventId
     {
+        if ($this->buckets === []) {
+            return null;
+        }
+
         $hub = SentrySdk::getCurrentHub();
         $event = Event::createMetrics()->setMetrics($this->buckets);
 
