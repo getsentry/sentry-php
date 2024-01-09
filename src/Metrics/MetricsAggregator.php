@@ -38,8 +38,8 @@ final class MetricsAggregator
     ];
 
     /**
-     * @param string[]         $tags
-     * @param int|float|string $value
+     * @param array<string, string> $tags
+     * @param int|float|string      $value
      */
     public function add(
         string $type,
@@ -114,9 +114,9 @@ final class MetricsAggregator
     }
 
     /**
-     * @param string[] $tags
+     * @param array<string, string> $tags
      *
-     * @return string[]
+     * @return array<string, string>
      */
     private function serializeTags(array $tags): array
     {

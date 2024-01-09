@@ -37,8 +37,8 @@ final class Metrics
     }
 
     /**
-     * @param int|float $value
-     * @param string[]  $tags
+     * @param int|float             $value
+     * @param array<string, string> $tags
      */
     public function increment(
         string $key,
@@ -60,8 +60,8 @@ final class Metrics
     }
 
     /**
-     * @param int|float $value
-     * @param string[]  $tags
+     * @param int|float             $value
+     * @param array<string, string> $tags
      */
     public function distribution(
         string $key,
@@ -83,8 +83,8 @@ final class Metrics
     }
 
     /**
-     * @param int|float $value
-     * @param string[]  $tags
+     * @param int|float             $value
+     * @param array<string, string> $tags
      */
     public function gauge(
         string $key,
@@ -106,8 +106,8 @@ final class Metrics
     }
 
     /**
-     * @param int|string $value
-     * @param string[]   $tags
+     * @param int|string            $value
+     * @param array<string, string> $tags
      */
     public function set(
         string $key,
@@ -126,6 +126,37 @@ final class Metrics
             $timestamp,
             $stackLevel
         );
+    }
+
+    /**
+     * @template T
+     *
+     * @param callable(): T         $callable
+     * @param array<string, string> $tags
+     *
+     * @return T
+     */
+    public function timing(
+        string $key,
+        callable $callable,
+        array $tags = [],
+        int $stackLevel = 0
+    ) {
+        $startTimestamp = microtime(true);
+
+        $result = $callable();
+
+        $this->aggregator->add(
+            DistributionType::TYPE,
+            $key,
+            microtime(true) - $startTimestamp,
+            MetricsUnit::second(),
+            $tags,
+            (int) $startTimestamp,
+            $stackLevel
+        );
+
+        return $result;
     }
 
     public function flush(): ?EventId
