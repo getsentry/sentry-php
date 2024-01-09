@@ -148,7 +148,7 @@ function withScope(callable $callback)
  * Sentry.
  *
  * @param TransactionContext   $context               Properties of the new transaction
- * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see \Sentry\Tracing\SamplingContext}
+ * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see Tracing\SamplingContext}
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
