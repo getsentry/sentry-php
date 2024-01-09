@@ -137,8 +137,8 @@ final class Metrics
      * @return T
      */
     public function timing(
-        callable $callable,
         string $key,
+        callable $callable,
         array $tags = [],
         int $stackLevel = 0
     ) {

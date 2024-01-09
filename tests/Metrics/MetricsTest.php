@@ -191,13 +191,13 @@ final class MetricsTest extends TestCase
         SentrySdk::setCurrentHub($hub);
 
         $firstTimingResult = metrics()->timing(
+            'foo',
             static function () {
                 // Move the clock forward 1 second
                 ClockMock::withClockMock(1699412954);
 
                 return '1second';
             },
-            'foo',
             ['foo' => 'bar']
         );
 
@@ -206,11 +206,11 @@ final class MetricsTest extends TestCase
         ClockMock::withClockMock(1699412953);
 
         $secondTimingResult = metrics()->timing(
+            'foo',
             static function () {
                 // Move the clock forward 2 seconds
                 ClockMock::withClockMock(1699412955);
             },
-            'foo',
             ['foo' => 'bar']
         );
 
