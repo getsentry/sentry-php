@@ -82,6 +82,35 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
 }
 
 /**
+ * Execute the given callable while wrapping it in a monitor check-in.
+ *
+ * @param string             $slug          Identifier of the Monitor
+ * @param callable           $callback      The callable that is going to be monitored
+ * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
+ *
+ * @return mixed
+ */
+function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorConfig = null)
+{
+    $checkInId = SentrySdk::getCurrentHub()->captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
+
+    $status = CheckInStatus::ok();
+    $duration = 0;
+
+    try {
+        $start = microtime(true);
+        $result = $callback();
+        $duration = microtime(true) - $start;
+
+        return $result;
+    } catch (\Throwable $e) {
+        $status = CheckInStatus::error();
+    } finally {
+        SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    }
+}
+
+/**
  * Records a new breadcrumb which will be attached to future events. They
  * will be added to subsequent events to provide more context on user's
  * actions prior to an error or crash.
@@ -157,7 +186,6 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
 
 /**
  * Execute the given callable while wrapping it in a span added as a child to the current transaction and active span.
- *
  * If there is no transaction active this is a no-op and the scope passed to the trace callable will be unused.
  *
  * @template T
