@@ -105,6 +105,8 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
         return $result;
     } catch (\Throwable $e) {
         $status = CheckInStatus::error();
+
+        throw $e;
     } finally {
         SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
     }
