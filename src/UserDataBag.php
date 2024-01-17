@@ -183,6 +183,8 @@ final class UserDataBag
 
     /**
      * Gets the segement of the user.
+     *
+     * @deprecated since version 4.4. To be removed in version 5.0
      */
     public function getSegment(): ?string
     {
@@ -193,6 +195,8 @@ final class UserDataBag
      * Sets the segment of the user.
      *
      * @param string|null $segment The segment
+     *
+     * @deprecated since version 4.4. To be removed in version 5.0. You may use a custom tag or context instead.
      */
     public function setSegment(?string $segment): self
     {
