@@ -194,7 +194,7 @@ function trace(callable $trace, SpanContext $context)
 }
 
 /**
- * Creates the current traceparent string, to be used as a HTTP header value
+ * Creates the current Sentry traceparent string, to be used as a HTTP header value
  * or HTML meta tag value.
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
@@ -218,6 +218,36 @@ function getTraceparent(): string
     $traceParent = '';
     $hub->configureScope(function (Scope $scope) use (&$traceParent) {
         $traceParent = $scope->getPropagationContext()->toTraceparent();
+    });
+
+    return $traceParent;
+}
+
+/**
+ * Creates the current W3C traceparent string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the traceparent based
+ * on the current span, or the scope's propagation context.
+ */
+function getW3CTraceparent(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if ($client !== null) {
+        $options = $client->getOptions();
+
+        if ($options !== null && $options->isTracingEnabled()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if ($span !== null) {
+                return $span->toW3CTraceparent();
+            }
+        }
+    }
+
+    $traceParent = '';
+    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
+        $traceParent = $scope->getPropagationContext()->toW3CTraceparent();
     });
 
     return $traceParent;
