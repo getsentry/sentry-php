@@ -28,7 +28,7 @@ final class TransactionTest extends TestCase
         ClockMock::withClockMock(1600640877);
 
         $expectedEventId = null;
-        $transactionContext = (new TransactionContext())
+        $transactionContext = TransactionContext::make()
             ->setTags(['ios_version' => '4.0'])
             ->setSampled(true)
             ->setStartTimestamp(1600640865);

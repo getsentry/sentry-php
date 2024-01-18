@@ -43,6 +43,14 @@ final class TransactionContext extends SpanContext
     }
 
     /**
+     * @return self
+     */
+    public static function make()
+    {
+        return new self();
+    }
+
+    /**
      * Gets the name of the transaction.
      */
     public function getName(): string
