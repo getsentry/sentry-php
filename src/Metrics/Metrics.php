@@ -131,20 +131,20 @@ final class Metrics
     /**
      * @template T
      *
-     * @param callable(): T         $callable
+     * @param callable(): T         $callback
      * @param array<string, string> $tags
      *
      * @return T
      */
     public function timing(
         string $key,
-        callable $callable,
+        callable $callback,
         array $tags = [],
         int $stackLevel = 0
     ) {
         $startTimestamp = microtime(true);
 
-        $result = $callable();
+        $result = $callback();
 
         $this->aggregator->add(
             DistributionType::TYPE,
