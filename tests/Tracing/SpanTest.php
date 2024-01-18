@@ -56,7 +56,7 @@ final class SpanTest extends TestCase
             ->setSpanId(SpanId::generate())
             ->setTraceId(TraceId::generate());
 
-        $spanContext2 = (new SpanContext())
+        $spanContext2 = SpanContext::make()
             ->setSampled(true)
             ->setParentSpanId($spanContext2ParentSpanId)
             ->setTraceId($spanContext2TraceId);
