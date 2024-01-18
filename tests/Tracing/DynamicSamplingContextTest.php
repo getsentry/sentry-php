@@ -15,7 +15,6 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionSource;
-use Sentry\UserDataBag;
 
 final class DynamicSamplingContextTest extends TestCase
 {
@@ -29,7 +28,6 @@ final class DynamicSamplingContextTest extends TestCase
         ?string $expectedSampleRate,
         ?string $expectedRelease,
         ?string $expectedEnvironment,
-        ?string $expectedUserSegment,
         ?string $expectedTransaction
     ): void {
         $samplingContext = DynamicSamplingContext::fromHeader($header);
@@ -39,7 +37,6 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedSampleRate, $samplingContext->get('sample_rate'));
         $this->assertSame($expectedRelease, $samplingContext->get('release'));
         $this->assertSame($expectedEnvironment, $samplingContext->get('environment'));
-        $this->assertSame($expectedUserSegment, $samplingContext->get('user_segment'));
         $this->assertSame($expectedTransaction, $samplingContext->get('transaction'));
     }
 
@@ -64,7 +61,6 @@ final class DynamicSamplingContextTest extends TestCase
             null,
             null,
             null,
-            null,
         ];
 
         yield [
@@ -74,7 +70,6 @@ final class DynamicSamplingContextTest extends TestCase
             '1',
             '1.0.0',
             'test',
-            'my_segment',
             '<unlabeled transaction>',
         ];
     }
@@ -90,13 +85,7 @@ final class DynamicSamplingContextTest extends TestCase
                 'environment' => 'test',
             ]));
 
-        $user = new UserDataBag();
-        $user->setSegment('my_segment');
-
-        $scope = new Scope();
-        $scope->setUser($user);
-
-        $hub = new Hub($client, $scope);
+        $hub = new Hub($client);
 
         $transactionContext = new TransactionContext();
         $transactionContext->setName('foo');
@@ -112,7 +101,6 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('public', $samplingContext->get('public_key'));
         $this->assertSame('1.0.0', $samplingContext->get('release'));
         $this->assertSame('test', $samplingContext->get('environment'));
-        $this->assertSame('my_segment', $samplingContext->get('user_segment'));
         $this->assertTrue($samplingContext->isFrozen());
     }
 
@@ -143,11 +131,7 @@ final class DynamicSamplingContextTest extends TestCase
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
 
-        $user = new UserDataBag();
-        $user->setSegment('my_segment');
-
         $scope = new Scope();
-        $scope->setUser($user);
         $scope->setPropagationContext($propagationContext);
 
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
@@ -157,7 +141,6 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('public', $samplingContext->get('public_key'));
         $this->assertSame('1.0.0', $samplingContext->get('release'));
         $this->assertSame('test', $samplingContext->get('environment'));
-        $this->assertSame('my_segment', $samplingContext->get('user_segment'));
         $this->assertTrue($samplingContext->isFrozen());
     }
 
