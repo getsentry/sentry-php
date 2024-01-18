@@ -568,6 +568,20 @@ class Span
     }
 
     /**
+     * Returns a string that can be used for the W3C `traceparent` header & meta tag.
+     */
+    public function toW3CTraceparent(): string
+    {
+        $sampled = '';
+
+        if ($this->sampled !== null) {
+            $sampled = $this->sampled ? '-01' : '-00';
+        }
+
+        return sprintf('00-%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+    }
+
+    /**
      * Returns a string that can be used for the `baggage` header & meta tag.
      */
     public function toBaggage(): string
