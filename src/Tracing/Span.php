@@ -89,7 +89,7 @@ class Span
     protected $transaction;
 
     /**
-     * @var array<string, MetricsSummary>
+     * @var array<string, array<string, MetricsSummary>>
      */
     protected $metricsSummary = [];
 
@@ -492,7 +492,7 @@ class Span
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, array<string, MetricsSummary>>
      */
     public function getMetricsSummary(): array
     {
@@ -513,15 +513,18 @@ class Span
         $mri = sprintf('%s:%s@%s', $type, $key, (string) $unit);
         $bucketKey = $mri . implode('', $tags);
 
-        if (\array_key_exists($bucketKey, $this->metricsSummary)) {
+        if (
+            isset($this->metricsSummary[$mri])
+            && \array_key_exists($bucketKey, $this->metricsSummary[$mri])
+        ) {
             if ($type === SetType::TYPE) {
                 $value = 1.0;
             } else {
                 $value = (float) $value;
             }
 
-            $summary = $this->metricsSummary[$bucketKey];
-            $this->metricsSummary[$bucketKey] = [
+            $summary = $this->metricsSummary[$mri][$bucketKey];
+            $this->metricsSummary[$mri][$bucketKey] = [
                 'min' => min($summary['min'], $value),
                 'max' => max($summary['max'], $value),
                 'sum' => $summary['sum'] + $value,
@@ -535,7 +538,7 @@ class Span
                 $value = (float) $value;
             }
 
-            $this->metricsSummary[$bucketKey] = [
+            $this->metricsSummary[$mri][$bucketKey] = [
                 'min' => $value,
                 'max' => $value,
                 'sum' => $value,
