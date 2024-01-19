@@ -390,7 +390,9 @@ TEXT
                 MonitorSchedule::crontab('0 0 * * *'),
                 10,
                 12,
-                'Europe/Amsterdam'
+                'Europe/Amsterdam',
+                5,
+                10
             )
         );
 
@@ -406,7 +408,7 @@ TEXT
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam"},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
+{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam","failure_issue_threshold":5,"recovery_threshold":10},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
 TEXT
             ,
             false,
