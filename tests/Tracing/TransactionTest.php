@@ -86,6 +86,18 @@ final class TransactionTest extends TestCase
         $transaction->finish();
     }
 
+    public function testFluentApi(): void
+    {
+        $transaction = new Transaction(TransactionContext::make());
+        $tags = ['foo' => 'bar'];
+        $name = 'baz';
+        $transaction->setTags($tags)
+          ->setName($name)
+          ->finish();
+        $this->assertSame($tags, $transaction->getTags());
+        $this->assertSame($name, $transaction->getName());
+    }
+
     /**
      * @dataProvider parentTransactionContextDataProvider
      */
