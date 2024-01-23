@@ -251,6 +251,20 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'before_send_check_in',
+            static function (): void {},
+            'getBeforeSendCheckInCallback',
+            'setBeforeSendCheckInCallback',
+        ];
+
+        yield [
+            'before_send_metrics',
+            static function (): void {},
+            'getBeforeSendMetricsCallback',
+            'setBeforeSendMetricsCallback',
+        ];
+
+        yield [
             'trace_propagation_targets',
             ['www.example.com'],
             'getTracePropagationTargets',

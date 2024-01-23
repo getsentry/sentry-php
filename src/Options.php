@@ -536,6 +536,62 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked before a check-in is sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Event, ?EventHint): ?Event
+     */
+    public function getBeforeSendCheckInCallback(): callable
+    {
+        return $this->options['before_send_check_in'];
+    }
+
+    /**
+     * Sets a callable to be called to decide whether a check-in should
+     * be captured or not.
+     *
+     * @param callable $callback The callable
+     *
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     */
+    public function setBeforeSendCheckInCallback(callable $callback): self
+    {
+        $options = array_merge($this->options, ['before_send_check_in' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Gets a callback that will be invoked before metrics are sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Event, ?EventHint): ?Event
+     */
+    public function getBeforeSendMetricsCallback(): callable
+    {
+        return $this->options['before_send_metrics'];
+    }
+
+    /**
+     * Sets a callable to be called to decide whether metrics should
+     * be send or not.
+     *
+     * @param callable $callback The callable
+     *
+     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     */
+    public function setBeforeSendMetricsCallback(callable $callback): self
+    {
+        $options = array_merge($this->options, ['before_send_metrics' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets an allow list of trace propagation targets.
      *
      * @return string[]|null
@@ -1045,6 +1101,12 @@ final class Options
             },
             'before_send_transaction' => static function (Event $transaction): Event {
                 return $transaction;
+            },
+            'before_send_check_in' => static function (Event $checkIn): Event {
+                return $checkIn;
+            },
+            'before_send_metrics' => static function (Event $metrics): Event {
+                return $metrics;
             },
             'trace_propagation_targets' => null,
             'tags' => [],
