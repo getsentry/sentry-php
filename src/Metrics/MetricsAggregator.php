@@ -64,7 +64,7 @@ final class MetricsAggregator
             $type .
             $key .
             $unit .
-            implode('', $tags) .
+            serialize($tags) .
             $bucketTimestamp
         );
 

@@ -40,7 +40,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['92ed00fdaf9543ff4cace691f8a5166b'];
+                $metric = $event->getMetrics()['2794a118fd879e10a3a97836df803872'];
 
                 $self->assertSame(CounterType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -102,7 +102,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['8a817dcdb12cfffc1fa8b459ad0c9d56'];
+                $metric = $event->getMetrics()['edb74f95b4572e82dc4600cfeea76181'];
 
                 $self->assertSame(DistributionType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -162,30 +162,30 @@ final class MetricsTest extends TestCase
         $self = $this;
 
         $client->expects($this->once())
-               ->method('captureEvent')
-               ->with($this->callback(static function (Event $event) use ($self): bool {
-                   $metric = $event->getMetrics()['8a817dcdb12cfffc1fa8b459ad0c9d56'];
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($self): bool {
+                $metric = $event->getMetrics()['edb74f95b4572e82dc4600cfeea76181'];
 
-                   $self->assertSame(DistributionType::TYPE, $metric->getType());
-                   $self->assertSame('foo', $metric->getKey());
-                   $self->assertSame([1.0, 2.0], $metric->serialize());
-                   $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                   $self->assertSame(
-                       [
-                           'environment' => 'development',
-                           'foo' => 'bar',
-                           'release' => '1.0.0',
-                       ],
-                       $metric->getTags()
-                   );
-                   $self->assertSame(1699412953, $metric->getTimestamp());
+                $self->assertSame(DistributionType::TYPE, $metric->getType());
+                $self->assertSame('foo', $metric->getKey());
+                $self->assertSame([1.0, 2.0], $metric->serialize());
+                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
+                $self->assertSame(
+                    [
+                        'environment' => 'development',
+                        'foo' => 'bar',
+                        'release' => '1.0.0',
+                    ],
+                    $metric->getTags()
+                );
+                $self->assertSame(1699412953, $metric->getTimestamp());
 
-                   $codeLocation = $metric->getCodeLocation();
+                $codeLocation = $metric->getCodeLocation();
 
-                   $self->assertSame('Sentry\Metrics\Metrics::timing', $codeLocation->getFunctionName());
+                $self->assertSame('Sentry\Metrics\Metrics::timing', $codeLocation->getFunctionName());
 
-                   return true;
-               }));
+                return true;
+            }));
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -238,7 +238,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['d2a09273b9c61b66a0e6ee79c1babfed'];
+                $metric = $event->getMetrics()['f39c23c73897d4f006fd617f76664571'];
 
                 $self->assertSame(GaugeType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
@@ -306,7 +306,7 @@ final class MetricsTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['c900a5750d0bc79016c29a7f0bdcd937'];
+                $metric = $event->getMetrics()['868b190d923bbd619570328d7ba3e4cd'];
 
                 $self->assertSame(SetType::TYPE, $metric->getType());
                 $self->assertSame('foo', $metric->getKey());
