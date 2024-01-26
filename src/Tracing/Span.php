@@ -511,7 +511,7 @@ class Span
         array $tags
     ): void {
         $mri = sprintf('%s:%s@%s', $type, $key, (string) $unit);
-        $bucketKey = $mri . implode('', $tags);
+        $bucketKey = $mri . serialize($tags);
 
         if (
             isset($this->metricsSummary[$mri])
