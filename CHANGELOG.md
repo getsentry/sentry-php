@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## 4.5.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.5.0.
+
+### Features
+
+- Add `before_send_check_in` and `before_send_metrics` [(#1690)](https://github.com/getsentry/sentry-php/pull/1690)
+
+  ```php
+  \Sentry\init([
+      'before_send_check_in' => function (\Sentry\Event $event) {
+          $checkIn = $event->getCheckIn(),
+          // modify the check-in or return null to not send it
+      },
+  ]);
+  ```
+
+  ```php
+  \Sentry\init([
+      'before_send_metrics' => function (\Sentry\Event $event) {
+          $metrics = $event->getMetrics(),
+          // modify the metrics or return null to not send it
+      },
+  ]);
+  ```
+
+### Bug Fixes
+
+- Fix `_metrics_summary` formatting [(#1682)](https://github.com/getsentry/sentry-php/pull/1682)
+
+- Fix `DebugFileLogger` and `DebugStdOutLogger` to be usable with PHP 7.2 and up [(#1691)](https://github.com/getsentry/sentry-php/pull/1691)
+
+- Allow whitespace in metric tag values [(#1692)](https://github.com/getsentry/sentry-php/pull/1692)
+
 ## 4.4.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.4.0.
