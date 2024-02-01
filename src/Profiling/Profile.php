@@ -26,14 +26,14 @@ use Sentry\Util\SentryUid;
  *     lineno: int|null,
  * }
  * @phpstan-type SentryProfile array{
- *    device: array{
+ *    device?: array{
  *        architecture: string,
  *    },
  *    event_id: string,
- *    os: array{
+ *    os?: array{
  *       name: string,
- *       version: string,
- *       build_number: string,
+ *       version?: string,
+ *       build_number?: string,
  *    },
  *    platform: string,
  *    release: string,
@@ -141,22 +141,9 @@ final class Profile
         $this->eventId = $eventId;
     }
 
-    /**
-     * @return SentryProfile|null
-     */
     public function getFormattedData(Event $event): ?array
     {
         if (!$this->validateExcimerLog()) {
-            return null;
-        }
-
-        $osContext = $event->getOsContext();
-        if (!$this->validateOsContext($osContext)) {
-            return null;
-        }
-
-        $runtimeContext = $event->getRuntimeContext();
-        if (!$this->validateRuntimeContext($runtimeContext)) {
             return null;
         }
 
@@ -246,23 +233,11 @@ final class Profile
             return null;
         }
 
-        return [
-            'device' => [
-                'architecture' => $osContext->getMachineType(),
-            ],
+        $formattedData = [
             'event_id' => $this->eventId ? (string) $this->eventId : SentryUid::generate(),
-            'os' => [
-                'name' => $osContext->getName(),
-                'version' => $osContext->getVersion(),
-                'build_number' => $osContext->getBuild() ?? '',
-            ],
             'platform' => 'php',
             'release' => $event->getRelease() ?? '',
             'environment' => $event->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-            'runtime' => [
-                'name' => $runtimeContext->getName(),
-                'version' => $runtimeContext->getVersion(),
-            ],
             'timestamp' => $startTime->format(\DATE_RFC3339_EXTENDED),
             'transaction' => [
                 'id' => (string) $event->getId(),
@@ -277,6 +252,43 @@ final class Profile
                 'stacks' => $stacks,
             ],
         ];
+
+        if ($event->getOsContext() !== null) {
+            $machineType = $event->getOsContext()->getMachineType();
+            $osName = $event->getOsContext()->getName();
+            $osVersion = $event->getOsContext()->getVersion();
+            $osBuild = $event->getOsContext()->getBuild();
+
+            if ($machineType !== null) {
+                $formattedData['device'] = [
+                    'architecture' => $machineType,
+                ];
+            }
+
+            $formattedData['os'] = ['name' => $osName];
+
+            if ($osVersion !== null) {
+                $formattedData['os']['version'] = $osVersion;
+            }
+            if ($osBuild !== null) {
+                $formattedData['os']['build_number'] = $osBuild;
+            }
+        }
+
+        if ($event->getRuntimeContext() !== null) {
+            $name = $event->getRuntimeContext()->getName();
+            $version = $event->getRuntimeContext()->getVersion();
+
+            $formattedData['runtime'] = [
+                'name' => $name,
+            ];
+
+            if ($version !== null) {
+                $formattedData['runtime']['version'] = $version;
+            }
+        }
+
+        return $formattedData;
     }
 
     /**
@@ -317,45 +329,6 @@ final class Profile
     private function validateMaxDuration(float $duration): bool
     {
         if ($duration > self::MAX_PROFILE_DURATION) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @phpstan-assert-if-true OsContext $osContext
-     * @phpstan-assert-if-true !null $osContext->getVersion()
-     * @phpstan-assert-if-true !null $osContext->getMachineType()
-     */
-    private function validateOsContext(?OsContext $osContext): bool
-    {
-        if ($osContext === null) {
-            return false;
-        }
-
-        if ($osContext->getVersion() === null) {
-            return false;
-        }
-
-        if ($osContext->getMachineType() === null) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @phpstan-assert-if-true RuntimeContext $runtimeContext
-     * @phpstan-assert-if-true !null $runtimeContext->getVersion()
-     */
-    private function validateRuntimeContext(?RuntimeContext $runtimeContext): bool
-    {
-        if ($runtimeContext === null) {
-            return false;
-        }
-
-        if ($runtimeContext->getVersion() === null) {
             return false;
         }
 
