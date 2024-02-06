@@ -10,7 +10,7 @@ use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
 use Sentry\Metrics\Types\SetType;
 
-final class Metrics
+class Metrics
 {
     /**
      * @var self|null
