@@ -24,7 +24,7 @@ class MetricsItem implements EnvelopeItemInterface
     /**
      * @var string
      */
-    private const VALUE_PATTERN = '/[^\w\d_:\/@\.{}\[\]$-]+/i';
+    private const VALUE_PATTERN = '/[^\w\d\s_:\/@\.{}\[\]$-]+/i';
 
     public static function toEnvelopeItem(Event $event): string
     {

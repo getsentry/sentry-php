@@ -1,5 +1,97 @@
 # CHANGELOG
 
+## 4.5.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.5.0.
+
+### Features
+
+- Add `before_send_check_in` and `before_send_metrics` [(#1690)](https://github.com/getsentry/sentry-php/pull/1690)
+
+  ```php
+  \Sentry\init([
+      'before_send_check_in' => function (\Sentry\Event $event) {
+          $checkIn = $event->getCheckIn(),
+          // modify the check-in or return null to not send it
+      },
+  ]);
+  ```
+
+  ```php
+  \Sentry\init([
+      'before_send_metrics' => function (\Sentry\Event $event) {
+          $metrics = $event->getMetrics(),
+          // modify the metrics or return null to not send it
+      },
+  ]);
+  ```
+
+### Bug Fixes
+
+- Fix `_metrics_summary` formatting [(#1682)](https://github.com/getsentry/sentry-php/pull/1682)
+
+- Fix `DebugFileLogger` and `DebugStdOutLogger` to be usable with PHP 7.2 and up [(#1691)](https://github.com/getsentry/sentry-php/pull/1691)
+
+- Allow whitespace in metric tag values [(#1692)](https://github.com/getsentry/sentry-php/pull/1692)
+
+## 4.4.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.4.0.
+
+### Features
+
+- Add `metrics()->timing()` [(#1670)](https://github.com/getsentry/sentry-php/pull/1670)
+
+  This allows you to emit a distribution metric based on the duration of the provided callback.
+
+  ```php
+  use function Sentry\metrics;
+
+  metrics()->timing(
+      key: 'my-metric',
+      callback: fn() => doSomething(),
+  );
+  ```
+
+- Add `withMonitor()` [(#1679)](https://github.com/getsentry/sentry-php/pull/1679)
+
+  This wraps a callback into monitor check-ins.
+
+  ```php
+  use function Sentry\withMonitor;
+
+  withMonitor(
+      slug: 'my-monitor',
+      callback: fn () => doSomething(),
+      monitorConfig: new MonitorConfig(...),
+  );
+  ```
+
+- Add new `failure_issue_threshold` and `recovery_threshold` configuration to `MonitorConfig` [(#1685)](https://github.com/getsentry/sentry-php/pull/1685)
+
+- Add `TransactionContext::make()` and `SpanContext::make()` [(#1684)](https://github.com/getsentry/sentry-php/pull/1684)
+
+  ```php
+  use Sentry\Tracing\SpanContext;
+
+  $spanCpntext = SpanContext::make()
+      ->setOp('http.client')
+      ->setDescription('GET https://example.com')
+  ```
+- Add support for fluent use of `Transaction::setName()` [(#1687)](https://github.com/getsentry/sentry-php/pull/1687)
+
+- Add support for the W3C `traceparent` header [(#1680)](https://github.com/getsentry/sentry-php/pull/1680)
+
+### Bug Fixes
+
+- Do not send an empty event if no metrics are in the bucket [(#1676)](https://github.com/getsentry/sentry-php/pull/1676)
+
+- Fix the `http_ssl_verify_peer` option to set the correct value to `CURLOPT_SSL_VERIFYPEER` [(#1686)](https://github.com/getsentry/sentry-php/pull/1686)
+
+### Misc
+
+- Depreacted `UserDataBag::getSegment()` and `UserDataBag::setSegment()`. You may use a custom tag or context instead [(#1681)](https://github.com/getsentry/sentry-php/pull/1681)
+
 ## 4.3.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.1.

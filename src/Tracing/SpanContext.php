@@ -61,6 +61,14 @@ class SpanContext
      */
     private $endTimestamp;
 
+    /**
+     * @return self
+     */
+    public static function make()
+    {
+        return new self();
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;

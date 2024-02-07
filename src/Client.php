@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.3.1';
+    public const SDK_VERSION = '4.5.0';
 
     /**
      * @var Options The client options
@@ -359,26 +359,32 @@ class Client implements ClientInterface
 
     private function applyBeforeSendCallback(Event $event, ?EventHint $hint): ?Event
     {
-        if ($event->getType() === EventType::event()) {
-            return ($this->options->getBeforeSendCallback())($event, $hint);
+        switch ($event->getType()) {
+            case EventType::event():
+                return ($this->options->getBeforeSendCallback())($event, $hint);
+            case EventType::transaction():
+                return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+            case EventType::checkIn():
+                return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+            case EventType::metrics():
+                return ($this->options->getBeforeSendMetricsCallback())($event, $hint);
+            default:
+                return $event;
         }
-
-        if ($event->getType() === EventType::transaction()) {
-            return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
-        }
-
-        return $event;
     }
 
     private function getBeforeSendCallbackName(Event $event): string
     {
-        $beforeSendCallbackName = 'before_send';
-
-        if ($event->getType() === EventType::transaction()) {
-            $beforeSendCallbackName = 'before_send_transaction';
+        switch ($event->getType()) {
+            case EventType::transaction():
+                return 'before_send_transaction';
+            case EventType::checkIn():
+                return 'before_send_check_in';
+            case EventType::metrics():
+                return 'before_send_metrics';
+            default:
+                return 'before_send';
         }
-
-        return $beforeSendCallbackName;
     }
 
     /**

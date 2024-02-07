@@ -319,7 +319,6 @@ TEXT
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"spans":[],"transaction_info":{"source":"custom"}}
 TEXT
             ,
-            false,
         ];
 
         $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -390,7 +389,9 @@ TEXT
                 MonitorSchedule::crontab('0 0 * * *'),
                 10,
                 12,
-                'Europe/Amsterdam'
+                'Europe/Amsterdam',
+                5,
+                10
             )
         );
 
@@ -406,13 +407,12 @@ TEXT
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
-{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam"},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
+{"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam","failure_issue_threshold":5,"recovery_threshold":10},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
 TEXT
             ,
-            false,
         ];
 
-        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar', 'baz' => 'qux'], 1597790835);
+        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar', 'route' => 'GET /foo'], 1597790835);
         $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['$foo$' => '%bar%'], 1597790835);
         $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['föö' => 'bär'], 1597790835);
         $set = new SetType('set', 1.0, MetricsUnit::second(), ['%{key}' => '$value$'], 1597790835);
@@ -431,15 +431,54 @@ TEXT
             $event,
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"statsd","length":211}
-counter@second:1|c|#foo:bar,baz:qux|T1597790835
+{"type":"statsd","length":218}
+counter@second:1|c|#foo:bar,route:GET /foo|T1597790835
 distribution@second:1|d|#_foo_:bar|T1597790835
 gauge@second:1:1:1:1:1|g|#f_:br|T1597790835
 set@second:1|s|#_key_:\$value\$|T1597790835
 no_tags@second:1|c|T1597790835
 TEXT
             ,
-            false,
+        ];
+
+        $span = new Span();
+        $span->setSpanId(new SpanId('5dd538dc297544cc'));
+        $span->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+        $span->setMetricsSummary(
+            CounterType::TYPE,
+            'counter',
+            10,
+            MetricsUnit::custom('star'),
+            [
+                'repository' => 'client',
+            ]
+        );
+        $span->setMetricsSummary(
+            CounterType::TYPE,
+            'counter',
+            50,
+            MetricsUnit::custom('star'),
+            [
+                'repository' => 'client',
+            ]
+        );
+
+        $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setSpans([$span]);
+        $event->setTransaction('GET /');
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
+{"type":"transaction","content_type":"application\/json"}
+{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"transaction":"GET \/","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835,"_metrics_summary":{"c:counter@star":[{"min":10,"max":50,"sum":60,"count":2,"tags":{"repository":"client"}}]}}]}
+TEXT
+            ,
         ];
     }
 }

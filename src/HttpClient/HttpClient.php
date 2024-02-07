@@ -74,8 +74,8 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 
         $httpSslVerifyPeer = $options->getHttpSslVerifyPeer();
-        if ($httpSslVerifyPeer) {
-            curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, true);
+        if (!$httpSslVerifyPeer) {
+            curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, false);
         }
 
         $httpProxy = $options->getHttpProxy();
