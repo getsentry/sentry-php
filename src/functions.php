@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -81,6 +82,37 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
 }
 
 /**
+ * Execute the given callable while wrapping it in a monitor check-in.
+ *
+ * @param string             $slug          Identifier of the Monitor
+ * @param callable           $callback      The callable that is going to be monitored
+ * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
+ *
+ * @return mixed
+ */
+function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorConfig = null)
+{
+    $checkInId = SentrySdk::getCurrentHub()->captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
+
+    $status = CheckInStatus::ok();
+    $duration = 0;
+
+    try {
+        $start = microtime(true);
+        $result = $callback();
+        $duration = microtime(true) - $start;
+
+        return $result;
+    } catch (\Throwable $e) {
+        $status = CheckInStatus::error();
+
+        throw $e;
+    } finally {
+        SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    }
+}
+
+/**
  * Records a new breadcrumb which will be attached to future events. They
  * will be added to subsequent events to provide more context on user's
  * actions prior to an error or crash.
@@ -147,7 +179,7 @@ function withScope(callable $callback)
  * Sentry.
  *
  * @param TransactionContext   $context               Properties of the new transaction
- * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see \Sentry\Tracing\SamplingContext}
+ * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see Tracing\SamplingContext}
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
@@ -156,7 +188,6 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
 
 /**
  * Execute the given callable while wrapping it in a span added as a child to the current transaction and active span.
- *
  * If there is no transaction active this is a no-op and the scope passed to the trace callable will be unused.
  *
  * @template T
@@ -193,7 +224,7 @@ function trace(callable $trace, SpanContext $context)
 }
 
 /**
- * Creates the current traceparent string, to be used as a HTTP header value
+ * Creates the current Sentry traceparent string, to be used as a HTTP header value
  * or HTML meta tag value.
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
@@ -217,6 +248,36 @@ function getTraceparent(): string
     $traceParent = '';
     $hub->configureScope(function (Scope $scope) use (&$traceParent) {
         $traceParent = $scope->getPropagationContext()->toTraceparent();
+    });
+
+    return $traceParent;
+}
+
+/**
+ * Creates the current W3C traceparent string, to be used as a HTTP header value
+ * or HTML meta tag value.
+ * This function is context aware, as in it either returns the traceparent based
+ * on the current span, or the scope's propagation context.
+ */
+function getW3CTraceparent(): string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if ($client !== null) {
+        $options = $client->getOptions();
+
+        if ($options !== null && $options->isTracingEnabled()) {
+            $span = SentrySdk::getCurrentHub()->getSpan();
+            if ($span !== null) {
+                return $span->toW3CTraceparent();
+            }
+        }
+    }
+
+    $traceParent = '';
+    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
+        $traceParent = $scope->getPropagationContext()->toW3CTraceparent();
     });
 
     return $traceParent;
@@ -267,4 +328,9 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     });
 
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
+}
+
+function metrics(): Metrics
+{
+    return Metrics::getInstance();
 }

@@ -176,6 +176,19 @@ class TransactionItem implements EnvelopeItemInterface
             $result['tags'] = $span->getTags();
         }
 
+        if (!empty($span->getMetricsSummary())) {
+            $formattedSummary = [];
+            $summary = $span->getMetricsSummary();
+
+            foreach ($summary as $mri => $metrics) {
+                foreach ($metrics as $metric) {
+                    $formattedSummary[$mri][] = $metric;
+                }
+            }
+
+            $result['_metrics_summary'] = $formattedSummary;
+        }
+
         return $result;
     }
 }

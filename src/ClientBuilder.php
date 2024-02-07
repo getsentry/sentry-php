@@ -14,8 +14,6 @@ use Sentry\Transport\TransportInterface;
 
 /**
  * A configurable builder for Client objects.
- *
- * @internal
  */
 final class ClientBuilder
 {

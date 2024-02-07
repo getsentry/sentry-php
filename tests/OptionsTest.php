@@ -132,6 +132,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'attach_metric_code_locations',
+            false,
+            'shouldAttachMetricCodeLocations',
+            'setAttachMetricCodeLocations',
+        ];
+
+        yield [
             'context_lines',
             3,
             'getContextLines',
@@ -164,6 +171,20 @@ final class OptionsTest extends TestCase
             new NullLogger(),
             'getLogger',
             'setLogger',
+        ];
+
+        yield [
+            'spotlight',
+            true,
+            'isSpotlightEnabled',
+            'EnableSpotlight',
+        ];
+
+        yield [
+            'spotlight_url',
+            'http://google.com',
+            'getSpotlightUrl',
+            'setSpotlightUrl',
         ];
 
         yield [
@@ -227,6 +248,20 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeSendTransactionCallback',
             'setBeforeSendTransactionCallback',
+        ];
+
+        yield [
+            'before_send_check_in',
+            static function (): void {},
+            'getBeforeSendCheckInCallback',
+            'setBeforeSendCheckInCallback',
+        ];
+
+        yield [
+            'before_send_metrics',
+            static function (): void {},
+            'getBeforeSendMetricsCallback',
+            'setBeforeSendMetricsCallback',
         ];
 
         yield [

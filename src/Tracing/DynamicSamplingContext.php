@@ -182,12 +182,6 @@ final class DynamicSamplingContext
             }
         }
 
-        $hub->configureScope(static function (Scope $scope) use ($samplingContext): void {
-            if ($scope->getUser() !== null && $scope->getUser()->getSegment() !== null) {
-                $samplingContext->set('user_segment', $scope->getUser()->getSegment());
-            }
-        });
-
         if ($transaction->getSampled() !== null) {
             $samplingContext->set('sampled', $transaction->getSampled() ? 'true' : 'false');
         }
@@ -216,10 +210,6 @@ final class DynamicSamplingContext
 
         if ($options->getEnvironment() !== null) {
             $samplingContext->set('environment', $options->getEnvironment());
-        }
-
-        if ($scope->getUser() !== null && $scope->getUser()->getSegment() !== null) {
-            $samplingContext->set('user_segment', $scope->getUser()->getSegment());
         }
 
         $samplingContext->freeze();

@@ -16,10 +16,8 @@ use Sentry\Transport\TransportInterface;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
- *
- * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Client implements ClientInterface
+class Client implements ClientInterface
 {
     /**
      * The version of the protocol to communicate with the Sentry server.
@@ -34,7 +32,7 @@ final class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.0.1';
+    public const SDK_VERSION = '4.5.0';
 
     /**
      * @var Options The client options
@@ -270,10 +268,11 @@ final class Client implements ClientInterface
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
-        $isTransaction = EventType::transaction() === $event->getType();
+        $isEvent = EventType::event() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
 
-        if (!$isTransaction && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+        // only sample with the `sample_rate` on errors/messages
+        if ($isEvent && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
 
             return null;
@@ -360,26 +359,32 @@ final class Client implements ClientInterface
 
     private function applyBeforeSendCallback(Event $event, ?EventHint $hint): ?Event
     {
-        if ($event->getType() === EventType::event()) {
-            return ($this->options->getBeforeSendCallback())($event, $hint);
+        switch ($event->getType()) {
+            case EventType::event():
+                return ($this->options->getBeforeSendCallback())($event, $hint);
+            case EventType::transaction():
+                return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+            case EventType::checkIn():
+                return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+            case EventType::metrics():
+                return ($this->options->getBeforeSendMetricsCallback())($event, $hint);
+            default:
+                return $event;
         }
-
-        if ($event->getType() === EventType::transaction()) {
-            return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
-        }
-
-        return $event;
     }
 
     private function getBeforeSendCallbackName(Event $event): string
     {
-        $beforeSendCallbackName = 'before_send';
-
-        if ($event->getType() === EventType::transaction()) {
-            $beforeSendCallbackName = 'before_send_transaction';
+        switch ($event->getType()) {
+            case EventType::transaction():
+                return 'before_send_transaction';
+            case EventType::checkIn():
+                return 'before_send_check_in';
+            case EventType::metrics():
+                return 'before_send_metrics';
+            default:
+                return 'before_send';
         }
-
-        return $beforeSendCallbackName;
     }
 
     /**

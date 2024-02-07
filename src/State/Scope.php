@@ -19,7 +19,7 @@ use Sentry\UserDataBag;
  * The scope holds data that should implicitly be sent with Sentry events. It
  * can hold context data, extra parameters, level overrides, fingerprints etc.
  */
-final class Scope
+class Scope
 {
     /**
      * @var PropagationContext
@@ -378,9 +378,12 @@ final class Scope
         /**
          * Apply the trace context to errors if there is a Span on the Scope.
          * Else fallback to the propagation context.
+         * But do not override a trace context already present.
          */
         if ($this->span !== null) {
-            $event->setContext('trace', $this->span->getTraceContext());
+            if (!\array_key_exists('trace', $event->getContexts())) {
+                $event->setContext('trace', $this->span->getTraceContext());
+            }
 
             // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
             $transaction = $this->span->getTransaction();
@@ -388,7 +391,9 @@ final class Scope
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } else {
-            $event->setContext('trace', $this->propagationContext->getTraceContext());
+            if (!\array_key_exists('trace', $event->getContexts())) {
+                $event->setContext('trace', $this->propagationContext->getTraceContext());
+            }
 
             $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
             if ($dynamicSamplingContext === null && $options !== null) {

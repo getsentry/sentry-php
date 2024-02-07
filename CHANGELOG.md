@@ -1,5 +1,196 @@
 # CHANGELOG
 
+## 4.5.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.5.0.
+
+### Features
+
+- Add `before_send_check_in` and `before_send_metrics` [(#1690)](https://github.com/getsentry/sentry-php/pull/1690)
+
+  ```php
+  \Sentry\init([
+      'before_send_check_in' => function (\Sentry\Event $event) {
+          $checkIn = $event->getCheckIn(),
+          // modify the check-in or return null to not send it
+      },
+  ]);
+  ```
+
+  ```php
+  \Sentry\init([
+      'before_send_metrics' => function (\Sentry\Event $event) {
+          $metrics = $event->getMetrics(),
+          // modify the metrics or return null to not send it
+      },
+  ]);
+  ```
+
+### Bug Fixes
+
+- Fix `_metrics_summary` formatting [(#1682)](https://github.com/getsentry/sentry-php/pull/1682)
+
+- Fix `DebugFileLogger` and `DebugStdOutLogger` to be usable with PHP 7.2 and up [(#1691)](https://github.com/getsentry/sentry-php/pull/1691)
+
+- Allow whitespace in metric tag values [(#1692)](https://github.com/getsentry/sentry-php/pull/1692)
+
+## 4.4.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.4.0.
+
+### Features
+
+- Add `metrics()->timing()` [(#1670)](https://github.com/getsentry/sentry-php/pull/1670)
+
+  This allows you to emit a distribution metric based on the duration of the provided callback.
+
+  ```php
+  use function Sentry\metrics;
+
+  metrics()->timing(
+      key: 'my-metric',
+      callback: fn() => doSomething(),
+  );
+  ```
+
+- Add `withMonitor()` [(#1679)](https://github.com/getsentry/sentry-php/pull/1679)
+
+  This wraps a callback into monitor check-ins.
+
+  ```php
+  use function Sentry\withMonitor;
+
+  withMonitor(
+      slug: 'my-monitor',
+      callback: fn () => doSomething(),
+      monitorConfig: new MonitorConfig(...),
+  );
+  ```
+
+- Add new `failure_issue_threshold` and `recovery_threshold` configuration to `MonitorConfig` [(#1685)](https://github.com/getsentry/sentry-php/pull/1685)
+
+- Add `TransactionContext::make()` and `SpanContext::make()` [(#1684)](https://github.com/getsentry/sentry-php/pull/1684)
+
+  ```php
+  use Sentry\Tracing\SpanContext;
+
+  $spanCpntext = SpanContext::make()
+      ->setOp('http.client')
+      ->setDescription('GET https://example.com')
+  ```
+- Add support for fluent use of `Transaction::setName()` [(#1687)](https://github.com/getsentry/sentry-php/pull/1687)
+
+- Add support for the W3C `traceparent` header [(#1680)](https://github.com/getsentry/sentry-php/pull/1680)
+
+### Bug Fixes
+
+- Do not send an empty event if no metrics are in the bucket [(#1676)](https://github.com/getsentry/sentry-php/pull/1676)
+
+- Fix the `http_ssl_verify_peer` option to set the correct value to `CURLOPT_SSL_VERIFYPEER` [(#1686)](https://github.com/getsentry/sentry-php/pull/1686)
+
+### Misc
+
+- Depreacted `UserDataBag::getSegment()` and `UserDataBag::setSegment()`. You may use a custom tag or context instead [(#1681)](https://github.com/getsentry/sentry-php/pull/1681)
+
+## 4.3.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.1.
+
+### Bug Fixes
+
+- Fix tags not being serialized correctly for metrics [(#1672)](https://github.com/getsentry/sentry-php/pull/1672)
+
+### Misc
+
+- Remove `@internal` annotation from `MetricsUnit` class [(#1671)](https://github.com/getsentry/sentry-php/pull/1671)
+
+## 4.3.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.3.0.
+
+### Features
+
+- Add support for Sentry Developer Metrics [(#1619)](https://github.com/getsentry/sentry-php/pull/1619)
+
+  ```php
+  use function Sentry\metrics;
+
+  // Add 4 to a counter named hits
+  metrics()->increment(key: 'hits', value: 4);
+
+  // Add 25 to a distribution named response_time with unit milliseconds
+  metrics()->distribution(key: 'response_time', value: 25, unit: MetricsUnit::millisecond());
+
+  // Add 2 to gauge named parallel_requests, tagged with type: "a"
+  metrics()->gauge(key: 'parallel_requests, value: 2, tags: ['type': 'a']);
+
+  // Add a user's email to a set named users.sessions, tagged with role: "admin"
+  metrics()->set('users.sessions, 'jane.doe@example.com', null, ['role' => User::admin()]);
+
+  // Add 2 to gauge named `parallel_requests`, tagged with `type: "a"`
+  Sentry.metrics.gauge('parallel_requests', 2, { tags: { type: 'a' } });
+
+  // Flush the metrics to Sentry
+  metrics()->flush();
+
+  // We recommend registering the flushing in a shutdown function
+  register_shutdown_function(static fn () => metrics()->flush());
+  ```
+
+  To learn more about Sentry Developer Merics, join the discussion at https://github.com/getsentry/sentry-php/discussions/1666.
+
+### Bug Fixes
+
+- Disallow to seralize the `HubAdapter::class` [(#1663)](https://github.com/getsentry/sentry-php/pull/1663)
+- Do not overwrite trace context on event [(#1668)](https://github.com/getsentry/sentry-php/pull/1668)
+- Serialize breadcrumb data to display correct in the Sentry UI [(#1669)](https://github.com/getsentry/sentry-php/pull/1669)
+
+### Misc
+
+- Remove the `final` keyword from `Hub::class`, `Client::class` and `Scope::class` [(#1665)](https://github.com/getsentry/sentry-php/pull/1665)
+
+## 4.2.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.2.0.
+
+### Features
+
+- Add a config option to allow overriding the Spotlight url [(#1659)](https://github.com/getsentry/sentry-php/pull/1659)
+
+  ```php
+  Sentry\init([
+      'spotlight_url' => 'http://localhost:8969',
+  ]);
+  ```
+
+### Bug Fixes
+
+- Restore setting the `logger` value on the event payload [(#1657)](https://github.com/getsentry/sentry-php/pull/1657)
+
+- Only apply the `sample_rate` on error/message events [(#1662)](https://github.com/getsentry/sentry-php/pull/1662)
+
+  This fixes an issue where Cron Check-Ins were wrongly sampled out if a `sample_rate` lower than `1.0` is used.
+
+### Misc
+
+- Remove the `@internal` annotation from `ClientBuilder::class` [(#1661)](https://github.com/getsentry/sentry-php/pull/1661)
+
+## 4.1.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.1.0.
+
+### Features
+
+- Add support for Spotlight [(#1647)](https://github.com/getsentry/sentry-php/pull/1647)
+
+  Spotlight is Sentry for Development. Inspired by an old project, Django Debug Toolbar. Spotlight brings a rich debug overlay into development environments, and it does it by leveraging the existing power of Sentry's SDKs.
+
+  To learn more about Spotlight, go to https://spotlightjs.com/.
+
+### Misc
+
+- Normalize `response` status [(#1644)](https://github.com/getsentry/sentry-php/pull/1644)
+
 ## 4.0.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.0.1.
@@ -13,7 +204,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 The Sentry SDK team is thrilled to announce the immediate availability of Sentry PHP SDK v4.0.0.
 
-# Breaking Change
+### Breaking Change
 
 Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list of breaking changes.
 
@@ -34,7 +225,7 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
 
   This option performs an [`is_a`](https://www.php.net/manual/en/function.is-a.php) check now, so you can also ignore more generic exceptions.
 
-# Features
+### Features
 
 - Add new fluent APIs [(#1601)](https://github.com/getsentry/sentry-php/pull/1601)
 
@@ -130,6 +321,6 @@ Please refer to the [UPGRADE-4.0.md](UPGRADE-4.0.md) guide for a complete list o
   To use a different transport, you may use the `transport` option. A custom transport must implement the `TransportInterface`.
   If you use the `transport` option, the `http_client` option has no effect.
 
-# Misc
+### Misc
 
 - The abandoned package `php-http/message-factory` was removed.

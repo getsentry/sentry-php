@@ -494,6 +494,16 @@ final class ClientTest extends TestCase
             Event::createTransaction(),
             false,
         ];
+
+        yield [
+            Event::createCheckIn(),
+            false,
+        ];
+
+        yield [
+            Event::createMetrics(),
+            false,
+        ];
     }
 
     /**
@@ -525,6 +535,102 @@ final class ClientTest extends TestCase
 
         yield [
             Event::createTransaction(),
+            true,
+        ];
+
+        yield [
+            Event::createCheckIn(),
+            false,
+        ];
+
+        yield [
+            Event::createMetrics(),
+            false,
+        ];
+    }
+
+    /**
+     * @dataProvider processEventChecksBeforeSendCheckInOptionDataProvider
+     */
+    public function testProcessEventChecksBeforeSendCheckInOption(Event $event, bool $expectedBeforeSendCall): void
+    {
+        $beforeSendCalled = false;
+        $options = [
+            'before_send_check_in' => static function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
+
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
+
+        $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
+    }
+
+    public static function processEventChecksBeforeSendCheckInOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            false,
+        ];
+
+        yield [
+            Event::createTransaction(),
+            false,
+        ];
+
+        yield [
+            Event::createCheckIn(),
+            true,
+        ];
+
+        yield [
+            Event::createMetrics(),
+            false,
+        ];
+    }
+
+    /**
+     * @dataProvider processEventChecksBeforeSendMetricsOptionDataProvider
+     */
+    public function testProcessEventChecksBeforeMetricsSendOption(Event $event, bool $expectedBeforeSendCall): void
+    {
+        $beforeSendCalled = false;
+        $options = [
+            'before_send_metrics' => static function () use (&$beforeSendCalled) {
+                $beforeSendCalled = true;
+
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)->getClient();
+        $client->captureEvent($event);
+
+        $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
+    }
+
+    public static function processEventChecksBeforeSendMetricsOptionDataProvider(): \Generator
+    {
+        yield [
+            Event::createEvent(),
+            false,
+        ];
+
+        yield [
+            Event::createTransaction(),
+            false,
+        ];
+
+        yield [
+            Event::createCheckIn(),
+            false,
+        ];
+
+        yield [
+            Event::createMetrics(),
             true,
         ];
     }
@@ -679,6 +785,52 @@ final class ClientTest extends TestCase
             ->getClient();
 
         $client->captureEvent(Event::createTransaction());
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCheckInCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send_check_in" callback returned "null".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'before_send_check_in' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent(Event::createCheckIn());
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendMetricsCallbackReturnsNull(): void
+    {
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('info')
+            ->with('The event will be discarded because the "before_send_metrics" callback returned "null".', $this->callback(static function (array $context): bool {
+                return isset($context['event']) && $context['event'] instanceof Event;
+            }));
+
+        $options = [
+            'before_send_metrics' => static function () {
+                return null;
+            },
+        ];
+
+        $client = ClientBuilder::create($options)
+            ->setLogger($logger)
+            ->getClient();
+
+        $client->captureEvent(Event::createMetrics());
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void

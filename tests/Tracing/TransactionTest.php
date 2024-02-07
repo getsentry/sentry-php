@@ -28,7 +28,7 @@ final class TransactionTest extends TestCase
         ClockMock::withClockMock(1600640877);
 
         $expectedEventId = null;
-        $transactionContext = (new TransactionContext())
+        $transactionContext = TransactionContext::make()
             ->setTags(['ios_version' => '4.0'])
             ->setSampled(true)
             ->setStartTimestamp(1600640865);
@@ -84,6 +84,18 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext(), $hub);
         $transaction->finish();
+    }
+
+    public function testFluentApi(): void
+    {
+        $transaction = new Transaction(TransactionContext::make());
+        $tags = ['foo' => 'bar'];
+        $name = 'baz';
+        $transaction->setTags($tags)
+          ->setName($name)
+          ->finish();
+        $this->assertSame($tags, $transaction->getTags());
+        $this->assertSame($name, $transaction->getName());
     }
 
     /**

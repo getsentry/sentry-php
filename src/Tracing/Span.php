@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
+use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\SetType;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 /**
  * This class stores all the information about a span.
+ *
+ * @phpstan-type MetricsSummary array{
+ *     min: int|float,
+ *     max: int|float,
+ *     sum: int|float,
+ *     count: int,
+ *     tags: array<string>,
+ * }
  */
 class Span
 {
@@ -77,6 +87,11 @@ class Span
      * @var Transaction|null The transaction containing this span
      */
     protected $transaction;
+
+    /**
+     * @var array<string, array<string, MetricsSummary>>
+     */
+    protected $metricsSummary = [];
 
     /**
      * Constructor.
@@ -477,6 +492,63 @@ class Span
     }
 
     /**
+     * @return array<string, array<string, MetricsSummary>>
+     */
+    public function getMetricsSummary(): array
+    {
+        return $this->metricsSummary;
+    }
+
+    /**
+     * @param string|int|float $value
+     * @param string[]         $tags
+     */
+    public function setMetricsSummary(
+        string $type,
+        string $key,
+        $value,
+        MetricsUnit $unit,
+        array $tags
+    ): void {
+        $mri = sprintf('%s:%s@%s', $type, $key, (string) $unit);
+        $bucketKey = $mri . serialize($tags);
+
+        if (
+            isset($this->metricsSummary[$mri])
+            && \array_key_exists($bucketKey, $this->metricsSummary[$mri])
+        ) {
+            if ($type === SetType::TYPE) {
+                $value = 1.0;
+            } else {
+                $value = (float) $value;
+            }
+
+            $summary = $this->metricsSummary[$mri][$bucketKey];
+            $this->metricsSummary[$mri][$bucketKey] = [
+                'min' => min($summary['min'], $value),
+                'max' => max($summary['max'], $value),
+                'sum' => $summary['sum'] + $value,
+                'count' => $summary['count'] + 1,
+                'tags' => $tags,
+            ];
+        } else {
+            if ($type === SetType::TYPE) {
+                $value = 0.0;
+            } else {
+                $value = (float) $value;
+            }
+
+            $this->metricsSummary[$mri][$bucketKey] = [
+                'min' => $value,
+                'max' => $value,
+                'sum' => $value,
+                'count' => 1,
+                'tags' => $tags,
+            ];
+        }
+    }
+
+    /**
      * Returns the transaction containing this span.
      */
     public function getTransaction(): ?Transaction
@@ -496,6 +568,20 @@ class Span
         }
 
         return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+    }
+
+    /**
+     * Returns a string that can be used for the W3C `traceparent` header & meta tag.
+     */
+    public function toW3CTraceparent(): string
+    {
+        $sampled = '';
+
+        if ($this->sampled !== null) {
+            $sampled = $this->sampled ? '-01' : '-00';
+        }
+
+        return sprintf('00-%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**

@@ -14,6 +14,11 @@ final class Request
      */
     private $stringBody;
 
+    public function hasStringBody(): bool
+    {
+        return $this->stringBody !== null;
+    }
+
     public function getStringBody(): ?string
     {
         return $this->stringBody;

@@ -59,6 +59,7 @@
 - Removed `Dsn::getSecretKey()`.
 - Removed `Dsn::setSecretKey()`.
 - Removed `EventType::default()`.
+- Removed adding the value of the `logger` option as a tag on the event. If you rely on this behaviour, add the tag manually.
 
 - Added return type to `Dsn::getProjectId(): string`.
 - Changed return type to `Options::getLogger(): ?LoggerInterface`.
