@@ -230,6 +230,22 @@ class Client implements ClientInterface
     }
 
     /**
+     * @internal
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @internal
+     */
+    public function getTransport(): TransportInterface
+    {
+        return $this->transport;
+    }
+
+    /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
      * @param Event          $event The payload that will be converted to an Event

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Event;
@@ -79,7 +81,7 @@ final class ClientBuilderTest extends TestCase
         );
     }
 
-    public function testDefaultHttpClientAndTransport()
+    public function testDefaultHttpClientAndTransport(): void
     {
         $options = new Options();
         $clientBuilder = new ClientBuilder($options);
@@ -88,7 +90,58 @@ final class ClientBuilderTest extends TestCase
         $this->assertInstanceOf(HttpTransport::class, $clientBuilder->getTransport());
     }
 
-    public function testSettingCustomHttpClinet()
+    public function testSettingCustomLogger(): void
+    {
+        $logger = new CustomLogger();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setLogger($logger);
+
+        $this->assertSame($logger, $clientBuilder->getLogger());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame($logger, $client->getLogger());
+    }
+
+    public function testSettingCustomLoggerFromOptions(): void
+    {
+        $logger = new CustomLogger();
+
+        $options = new Options([
+            'logger' => $logger,
+        ]);
+        $clientBuilder = new ClientBuilder($options);
+
+        $this->assertSame($logger, $clientBuilder->getLogger());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame($logger, $client->getLogger());
+    }
+
+    public function testSettingCustomHttpClient(): void
+    {
+        $httpClient = new CustomHttpClient();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setHttpClient($httpClient);
+
+        $this->assertSame($httpClient, $clientBuilder->getHttpClient());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+
+        $transport = $client->getTransport();
+
+        $this->assertInstanceOf(HttpTransport::class, $transport);
+        $this->assertSame($httpClient, $transport->getHttpClient());
+    }
+
+    public function testSettingCustomHttpClientFromOptions(): void
     {
         $httpClient = new CustomHttpClient();
 
@@ -98,10 +151,33 @@ final class ClientBuilderTest extends TestCase
         $clientBuilder = new ClientBuilder($options);
 
         $this->assertSame($httpClient, $clientBuilder->getHttpClient());
-        $this->assertInstanceOf(HttpTransport::class, $clientBuilder->getTransport());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+
+        $transport = $client->getTransport();
+
+        $this->assertInstanceOf(HttpTransport::class, $transport);
+        $this->assertSame($httpClient, $transport->getHttpClient());
     }
 
-    public function testSettingCustomTransport()
+    public function testSettingCustomTransport(): void
+    {
+        $transport = new CustomTransport();
+
+        $clientBuilder = new ClientBuilder();
+        $clientBuilder->setTransport($transport);
+
+        $this->assertSame($transport, $clientBuilder->getTransport());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame($transport, $client->getTransport());
+    }
+
+    public function testSettingCustomTransportFromOptions(): void
     {
         $transport = new CustomTransport();
 
@@ -110,8 +186,12 @@ final class ClientBuilderTest extends TestCase
         ]);
         $clientBuilder = new ClientBuilder($options);
 
-        $this->assertInstanceOf(HttpClient::class, $clientBuilder->getHttpClient());
         $this->assertSame($transport, $clientBuilder->getTransport());
+
+        $client = $clientBuilder->getClient();
+
+        $this->assertInstanceOf(Client::class, $client);
+        $this->assertSame($transport, $client->getTransport());
     }
 }
 
@@ -140,5 +220,13 @@ final class CustomTransport implements TransportInterface
     public function close(?int $timeout = null): Result
     {
         return new Result(ResultStatus::success());
+    }
+}
+
+final class CustomLogger extends AbstractLogger implements LoggerInterface
+{
+    public function log($level, $message, array $context = []): void
+    {
+        // noop
     }
 }
