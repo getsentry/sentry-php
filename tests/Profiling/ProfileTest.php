@@ -41,7 +41,8 @@ final class ProfileTest extends TestCase
         ]);
         $event->setRuntimeContext(new RuntimeContext(
             'php',
-            '8.2.3'
+            '8.2.3',
+            'cli'
         ));
         $event->setOsContext(new OsContext(
             'macOS',
@@ -131,6 +132,7 @@ final class ProfileTest extends TestCase
                 'environment' => 'dev',
                 'runtime' => [
                     'name' => 'php',
+                    'sapi' => 'cli',
                     'version' => '8.2.3',
                 ],
                 'timestamp' => '2023-02-28T08:41:00.000+00:00',
@@ -231,6 +233,7 @@ final class ProfileTest extends TestCase
                 'environment' => 'dev',
                 'runtime' => [
                     'name' => 'php',
+                    'sapi' => 'cli',
                     'version' => '8.2.3',
                 ],
                 'timestamp' => '2023-02-28T08:41:00.000+00:00',

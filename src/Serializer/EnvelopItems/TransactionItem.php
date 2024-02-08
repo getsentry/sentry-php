@@ -98,6 +98,7 @@ class TransactionItem implements EnvelopeItemInterface
         if ($runtimeContext !== null) {
             $payload['contexts']['runtime'] = [
                 'name' => $runtimeContext->getName(),
+                'sapi' => $runtimeContext->getSAPI(),
                 'version' => $runtimeContext->getVersion(),
             ];
         }
