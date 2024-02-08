@@ -110,12 +110,14 @@ final class ClientBuilder
 
     public function getTransport(): TransportInterface
     {
-        return $this->transport ?? $this->options->getTransport() ?? new HttpTransport(
-            $this->options,
-            $this->getHttpClient(),
-            new PayloadSerializer($this->options),
-            $this->getLogger()
-        );
+        return $this->transport
+            ?? $this->options->getTransport()
+            ?? new HttpTransport(
+                $this->options,
+                $this->getHttpClient(),
+                new PayloadSerializer($this->options),
+                $this->getLogger()
+            );
     }
 
     public function setTransport(TransportInterface $transport): self
@@ -127,7 +129,9 @@ final class ClientBuilder
 
     public function getHttpClient(): HttpClientInterface
     {
-        return $this->httpClient ?? $this->options->getHttpClient() ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
+        return $this->httpClient
+            ?? $this->options->getHttpClient()
+            ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
     }
 
     public function setHttpClient(HttpClientInterface $httpClient): self
