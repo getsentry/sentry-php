@@ -261,6 +261,7 @@ final class Profile
             'environment' => $event->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
             'runtime' => [
                 'name' => $runtimeContext->getName(),
+                'sapi' => $runtimeContext->getSAPI(),
                 'version' => $runtimeContext->getVersion(),
             ],
             'timestamp' => $startTime->format(\DATE_RFC3339_EXTENDED),
