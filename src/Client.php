@@ -148,7 +148,12 @@ class Client implements ClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        if ($this->isIgnoredException(\get_class($exception))) {
+        $className = \get_class($exception);
+        if ($this->isIgnoredException($className)) {
+            $this->logger->info(
+                'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                ['className' => $className]
+            );
             return null; // short circuit to avoid unnecessary processing
         }
 
@@ -338,10 +343,6 @@ class Client implements ClientInterface
     {
         foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
             if (is_a($className, $ignoredException, true)) {
-                $this->logger->info(
-                    'The event will be discarded because it matches an entry in "ignore_exceptions".',
-                    ['className' => $className]
-                );
                 return true;
             }
         }
