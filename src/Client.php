@@ -150,6 +150,11 @@ class Client implements ClientInterface
     {
         $hint = $hint ?? new EventHint();
 
+        if ($this->isIgnoredException(\get_class($exception))) {
+            // short circuit to avoid processing into an event
+            return null;
+        }
+
         if ($hint->exception === null) {
             $hint->exception = $exception;
         }
@@ -330,6 +335,21 @@ class Client implements ClientInterface
         return $event;
     }
 
+    private function isIgnoredException(string $className): bool
+    {
+        foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
+            if (is_a($className, $ignoredException, true)) {
+                $this->logger->info(
+                    'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                    ['className' => $className]
+                );
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function applyIgnoreOptions(Event $event): ?Event
     {
         if ($event->getType() === EventType::event()) {
@@ -340,15 +360,13 @@ class Client implements ClientInterface
             }
 
             foreach ($exceptions as $exception) {
-                foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
-                    if (is_a($exception->getType(), $ignoredException, true)) {
-                        $this->logger->info(
-                            'The event will be discarded because it matches an entry in "ignore_exceptions".',
-                            ['event' => $event]
-                        );
+                if ($this->isIgnoredException($exception->getType())) {
+                    $this->logger->info(
+                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                        ['event' => $event]
+                    );
 
-                        return null;
-                    }
+                    return null;
                 }
             }
         }

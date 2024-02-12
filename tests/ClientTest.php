@@ -679,9 +679,7 @@ final class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".');
 
         $options = [
             'ignore_exceptions' => [\Exception::class],
@@ -702,9 +700,7 @@ final class ClientTest extends TestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('info')
-            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".');
 
         $options = [
             'ignore_exceptions' => [\RuntimeException::class],
