@@ -154,6 +154,7 @@ class Client implements ClientInterface
                 'The event will be discarded because it matches an entry in "ignore_exceptions".',
                 ['className' => $className]
             );
+
             return null; // short circuit to avoid unnecessary processing
         }
 
