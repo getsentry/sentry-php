@@ -148,12 +148,11 @@ class Client implements ClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
-        $hint = $hint ?? new EventHint();
-
         if ($this->isIgnoredException(\get_class($exception))) {
-            // short circuit to avoid processing into an event
-            return null;
+            return null; // short circuit to avoid unnecessary processing
         }
+
+        $hint = $hint ?? new EventHint();
 
         if ($hint->exception === null) {
             $hint->exception = $exception;
