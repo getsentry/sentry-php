@@ -164,7 +164,10 @@ final class FrameContextifierIntegration implements IntegrationInterface
                 $file->next();
             }
         } catch (\Throwable $exception) {
-            $this->logger->warning(sprintf('Failed to get the source code excerpt for the file "%s".', $filePath));
+            $this->logger->warning(
+                sprintf('Failed to get the source code excerpt for the file "%s".', $filePath),
+                ['exception' => $exception]
+            );
         }
 
         return $frame;
