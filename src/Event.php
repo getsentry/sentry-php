@@ -13,7 +13,13 @@ use Sentry\Tracing\Span;
 /**
  * This is the base class for classes containing event data.
  *
- * @author Stefano Arlandini <sarlandini@alice.it>
+ * @phpstan-type MetricsSummary array{
+ *     min: int|float,
+ *     max: int|float,
+ *     sum: int|float,
+ *     count: int,
+ *     tags: array<string>,
+ * }
  */
 final class Event
 {
@@ -60,6 +66,11 @@ final class Event
      * @var array<string, AbstractType> The metrics data
      */
     private $metrics = [];
+
+    /**
+     * @var array<string, array<string, MetricsSummary>>
+     */
+    private $metricsSummary = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -379,6 +390,24 @@ final class Event
     public function setMetrics(array $metrics): self
     {
         $this->metrics = $metrics;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, array<string, MetricsSummary>>
+     */
+    public function getMetricsSummary(): array
+    {
+        return $this->metricsSummary;
+    }
+
+    /**
+     * @param array<string, array<string, MetricsSummary>> $metricsSummary
+     */
+    public function setMetricsSummary(array $metricsSummary): self
+    {
+        $this->metricsSummary = $metricsSummary;
 
         return $this;
     }

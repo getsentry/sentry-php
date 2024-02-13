@@ -472,13 +472,26 @@ TEXT
             'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
             'span_id' => '5dd538dc297544cc',
         ]);
+        $event->setMetricsSummary([
+            'c:counter@star' => [
+                'c:counter@stara:0:{s:10:"repository";s:6:"client";}' => [
+                    'min' => 1,
+                    'max' => 1,
+                    'sum' => 1,
+                    'count' => 1,
+                    'tags' => [
+                        'repository' => 'client',
+                    ],
+                ],
+            ],
+        ]);
 
         yield [
             $event,
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"transaction","content_type":"application\/json"}
-{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"transaction":"GET \/","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835,"_metrics_summary":{"c:counter@star":[{"min":10,"max":50,"sum":60,"count":2,"tags":{"repository":"client"}}]}}]}
+{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"transaction":"GET \/","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835,"_metrics_summary":{"c:counter@star":[{"min":10,"max":50,"sum":60,"count":2,"tags":{"repository":"client"}}]}}],"_metrics_summary":{"c:counter@star":[{"min":1,"max":1,"sum":1,"count":1,"tags":{"repository":"client"}}]}}
 TEXT
             ,
         ];
