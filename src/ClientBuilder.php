@@ -23,12 +23,12 @@ final class ClientBuilder
     private $options;
 
     /**
-     * @var TransportInterface The transport
+     * @var TransportInterface|null The transport
      */
     private $transport;
 
     /**
-     * @var HttpClientInterface The HTTP client
+     * @var HttpClientInterface|null The HTTP client
      */
     private $httpClient;
 
@@ -60,16 +60,6 @@ final class ClientBuilder
     public function __construct(?Options $options = null)
     {
         $this->options = $options ?? new Options();
-
-        $this->logger = $this->options->getLogger() ?? null;
-
-        $this->httpClient = $this->options->getHttpClient() ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
-        $this->transport = $this->options->getTransport() ?? new HttpTransport(
-            $this->options,
-            $this->httpClient,
-            new PayloadSerializer($this->options),
-            $this->logger
-        );
     }
 
     /**
@@ -94,7 +84,7 @@ final class ClientBuilder
 
     public function getLogger(): ?LoggerInterface
     {
-        return $this->logger;
+        return $this->logger ?? $this->options->getLogger();
     }
 
     public function setLogger(LoggerInterface $logger): self
@@ -120,7 +110,14 @@ final class ClientBuilder
 
     public function getTransport(): TransportInterface
     {
-        return $this->transport;
+        return $this->transport
+            ?? $this->options->getTransport()
+            ?? new HttpTransport(
+                $this->options,
+                $this->getHttpClient(),
+                new PayloadSerializer($this->options),
+                $this->getLogger()
+            );
     }
 
     public function setTransport(TransportInterface $transport): self
@@ -132,7 +129,9 @@ final class ClientBuilder
 
     public function getHttpClient(): HttpClientInterface
     {
-        return $this->httpClient;
+        return $this->httpClient
+            ?? $this->options->getHttpClient()
+            ?? new HttpClient($this->sdkIdentifier, $this->sdkVersion);
     }
 
     public function setHttpClient(HttpClientInterface $httpClient): self
@@ -146,11 +145,11 @@ final class ClientBuilder
     {
         return new Client(
             $this->options,
-            $this->transport,
+            $this->getTransport(),
             $this->sdkIdentifier,
             $this->sdkVersion,
             $this->representationSerializer,
-            $this->logger
+            $this->getLogger()
         );
     }
 }

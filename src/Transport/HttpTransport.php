@@ -120,6 +120,14 @@ class HttpTransport implements TransportInterface
         return new Result(ResultStatus::success());
     }
 
+    /**
+     * @internal
+     */
+    public function getHttpClient(): HttpClientInterface
+    {
+        return $this->httpClient;
+    }
+
     private function sendRequestToSpotlight(Event $event): void
     {
         if (!$this->options->isSpotlightEnabled()) {

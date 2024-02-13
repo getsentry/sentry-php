@@ -148,6 +148,16 @@ class Client implements ClientInterface
      */
     public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
+        $className = \get_class($exception);
+        if ($this->isIgnoredException($className)) {
+            $this->logger->info(
+                'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                ['className' => $className]
+            );
+
+            return null; // short circuit to avoid unnecessary processing
+        }
+
         $hint = $hint ?? new EventHint();
 
         if ($hint->exception === null) {
@@ -227,6 +237,22 @@ class Client implements ClientInterface
     public function getStacktraceBuilder(): StacktraceBuilder
     {
         return $this->stacktraceBuilder;
+    }
+
+    /**
+     * @internal
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @internal
+     */
+    public function getTransport(): TransportInterface
+    {
+        return $this->transport;
     }
 
     /**
@@ -314,6 +340,17 @@ class Client implements ClientInterface
         return $event;
     }
 
+    private function isIgnoredException(string $className): bool
+    {
+        foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
+            if (is_a($className, $ignoredException, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function applyIgnoreOptions(Event $event): ?Event
     {
         if ($event->getType() === EventType::event()) {
@@ -324,15 +361,13 @@ class Client implements ClientInterface
             }
 
             foreach ($exceptions as $exception) {
-                foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
-                    if (is_a($exception->getType(), $ignoredException, true)) {
-                        $this->logger->info(
-                            'The event will be discarded because it matches an entry in "ignore_exceptions".',
-                            ['event' => $event]
-                        );
+                if ($this->isIgnoredException($exception->getType())) {
+                    $this->logger->info(
+                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                        ['event' => $event]
+                    );
 
-                        return null;
-                    }
+                    return null;
                 }
             }
         }

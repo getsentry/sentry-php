@@ -51,6 +51,7 @@ final class EnvironmentIntegrationTest extends TestCase
                 $this->assertNull($runtimeContext);
             } else {
                 $this->assertSame($expectedRuntimeContext->getName(), $runtimeContext->getName());
+                $this->assertSame($expectedRuntimeContext->getSAPI(), $runtimeContext->getSAPI());
                 $this->assertSame($expectedRuntimeContext->getVersion(), $runtimeContext->getVersion());
             }
 
@@ -79,15 +80,15 @@ final class EnvironmentIntegrationTest extends TestCase
             true,
             null,
             null,
-            new RuntimeContext('php', PHPVersion::parseVersion()),
+            new RuntimeContext('php', PHPVersion::parseVersion(), 'cli'),
             new OsContext(php_uname('s'), php_uname('r'), php_uname('v'), php_uname('a')),
         ];
 
         yield 'Integration enabled && event context data filled => do nothing' => [
             true,
-            new RuntimeContext('go', '1.15'),
+            new RuntimeContext('go', '1.15', 'cli'),
             new OsContext('iOS', '13.5.1', '17F80', 'Darwin Kernel Version 19.5.0: Tue May 26 20:56:31 PDT 2020; root:xnu-6153.122.2~1/RELEASE_ARM64_T8015'),
-            new RuntimeContext('go', '1.15'),
+            new RuntimeContext('go', '1.15', 'cli'),
             new OsContext('iOS', '13.5.1', '17F80', 'Darwin Kernel Version 19.5.0: Tue May 26 20:56:31 PDT 2020; root:xnu-6153.122.2~1/RELEASE_ARM64_T8015'),
         ];
 
@@ -95,7 +96,7 @@ final class EnvironmentIntegrationTest extends TestCase
             true,
             new RuntimeContext('php'),
             new OsContext('Linux'),
-            new RuntimeContext('php', PHPVersion::parseVersion()),
+            new RuntimeContext('php', PHPVersion::parseVersion(), 'cli'),
             new OsContext('Linux', php_uname('r'), php_uname('v'), php_uname('a')),
         ];
     }

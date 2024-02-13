@@ -45,6 +45,10 @@ final class EnvironmentIntegration implements IntegrationInterface
             $runtimeContext->setVersion(PHPVersion::parseVersion());
         }
 
+        if ($runtimeContext->getSAPI() === null) {
+            $runtimeContext->setSAPI(\PHP_SAPI);
+        }
+
         return $runtimeContext;
     }
 
