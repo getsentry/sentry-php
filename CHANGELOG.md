@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 4.6.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.6.0.
+
+### Features
+
+- Add the PHP SAPI to the runtime context [(#1700)](https://github.com/getsentry/sentry-php/pull/1700)
+
+### Bug Fixes
+
+- Correctly apply properties/options in `ClientBuilder::class` [(#1699)](https://github.com/getsentry/sentry-php/pull/1699)
+- Attach `_metrics_summary` to transactions [(#1702)](https://github.com/getsentry/sentry-php/pull/1702)
+
+### Misc
+
+- Remove `final` from `Metrics::class` [(#1697)](https://github.com/getsentry/sentry-php/pull/1697)
+- Return early when using `ignore_exceptions` [(#1701)](https://github.com/getsentry/sentry-php/pull/1701)
+- Attach exceptions to the log message from `FrameContextifierIntegration::class` [(#1678)](https://github.com/getsentry/sentry-php/pull/1678)
+
 ## 4.5.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.5.0.
