@@ -51,29 +51,38 @@ final class IntegrationRegistry
     public function setupIntegrations(Options $options, LoggerInterface $logger): array
     {
         $integrations = [];
+        $installed = [];
 
         foreach ($this->getIntegrationsToSetup($options) as $integration) {
-            $integrations[\get_class($integration)] = $integration;
+            $integrationName = \get_class($integration);
 
-            $this->setupIntegration($integration, $logger);
+            $integrations[$integrationName] = $integration;
+
+            if ($this->setupIntegration($integration)) {
+                $installed[] = $integrationName;
+            }
+        }
+
+        if (\count($installed) > 0) {
+            $logger->debug(sprintf('The "%s" integration(s) have been installed.', implode(', ', $installed)));
         }
 
         return $integrations;
     }
 
-    private function setupIntegration(IntegrationInterface $integration, LoggerInterface $logger): void
+    private function setupIntegration(IntegrationInterface $integration): bool
     {
         $integrationName = \get_class($integration);
 
         if (isset($this->integrations[$integrationName])) {
-            return;
+            return false;
         }
 
         $integration->setupOnce();
 
         $this->integrations[$integrationName] = true;
 
-        $logger->debug(sprintf('The "%s" integration has been installed.', $integrationName));
+        return true;
     }
 
     /**
