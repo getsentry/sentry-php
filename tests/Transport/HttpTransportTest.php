@@ -19,6 +19,11 @@ use Symfony\Bridge\PhpUnit\ClockMock;
 final class HttpTransportTest extends TestCase
 {
     /**
+     * @var LoggerInterface&MockObject
+     */
+    private $logger;
+
+    /**
      * @var MockObject&HttpAsyncClientInterface
      */
     private $httpClient;
@@ -30,6 +35,7 @@ final class HttpTransportTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->logger = $this->createMock(LoggerInterface::class);
         $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->payloadSerializer = $this->createMock(PayloadSerializerInterface::class);
     }
@@ -37,7 +43,7 @@ final class HttpTransportTest extends TestCase
     /**
      * @dataProvider sendDataProvider
      */
-    public function testSend(int $httpStatusCode, ResultStatus $expectedResultStatus, bool $expectEventReturned): void
+    public function testSend(Response $response, ResultStatus $expectedResultStatus, bool $expectEventReturned, array $expectedLogMessages): void
     {
         $event = Event::createEvent();
 
@@ -48,15 +54,25 @@ final class HttpTransportTest extends TestCase
 
         $this->httpClient->expects($this->once())
             ->method('sendRequest')
-            ->willReturn(new Response($httpStatusCode, [], ''));
+            ->willReturn($response);
+
+        foreach ($expectedLogMessages as [$level, $message]) {
+            $this->logger->expects($this->once())
+                ->method($level)
+                ->with($message);
+        }
 
         $transport = new HttpTransport(
             new Options([
                 'dsn' => 'http://public@example.com/1',
             ]),
             $this->httpClient,
-            $this->payloadSerializer
+            $this->payloadSerializer,
+            $this->logger
         );
+
+        // We need to mock the time to ensure that the rate limiter works as expected and we can easily assert the log messages
+        ClockMock::withClockMock(1644105600);
 
         $result = $transport->send($event);
 
@@ -69,27 +85,42 @@ final class HttpTransportTest extends TestCase
     public static function sendDataProvider(): iterable
     {
         yield [
-            200,
+            new Response(200, [], ''),
             ResultStatus::success(),
             true,
+            [
+                ['debug', 'Sent the event to Sentry. Result: "success" (status: 200).'],
+            ],
         ];
 
         yield [
-            401,
+            new Response(401, [], ''),
             ResultStatus::invalid(),
             false,
+            [
+                ['debug', 'Sent the event to Sentry. Result: "invalid" (status: 401).'],
+            ],
         ];
 
+        ClockMock::withClockMock(1644105600);
+
         yield [
-            429,
+            new Response(429, ['Retry-After' => ['60']], ''),
             ResultStatus::rateLimit(),
             false,
+            [
+                ['warning', 'Rate limited exceeded for requests of type "event", backing off until "2022-02-06T00:01:00+00:00".'],
+                ['debug', 'Sent the event to Sentry. Result: "rate_limit" (status: 429).'],
+            ],
         ];
 
         yield [
-            500,
+            new Response(500, [], ''),
             ResultStatus::failed(),
             false,
+            [
+                ['debug', 'Sent the event to Sentry. Result: "failed" (status: 500).'],
+            ],
         ];
     }
 

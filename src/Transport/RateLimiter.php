@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Transport;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use Sentry\Event;
 use Sentry\EventType;
 use Sentry\HttpClient\Response;
 
@@ -30,55 +27,12 @@ final class RateLimiter
     private const DEFAULT_RETRY_AFTER_DELAY_SECONDS = 60;
 
     /**
-     * @var LoggerInterface An instance of a PSR-3 compatible logger
-     */
-    private $logger;
-
-    /**
      * @var array<string, int> The map of time instants for each event category after
      *                         which an HTTP request can be retried
      */
     private $rateLimits = [];
 
-    public function __construct(?LoggerInterface $logger = null)
-    {
-        $this->logger = $logger ?? new NullLogger();
-    }
-
-    public function handleResponse(Event $event, Response $response): Response
-    {
-        if ($this->handleRateLimit($response)) {
-            $eventType = $event->getType();
-            $disabledUntil = $this->getDisabledUntil($eventType);
-
-            $this->logger->warning(
-                sprintf('Rate limited exceeded for requests of type "%s", backing off until "%s".', (string) $eventType, gmdate(\DATE_ATOM, $disabledUntil)),
-                ['event' => $event]
-            );
-        }
-
-        return $response;
-    }
-
-    public function isRateLimited(EventType $eventType): bool
-    {
-        $disabledUntil = $this->getDisabledUntil($eventType);
-
-        return $disabledUntil > time();
-    }
-
-    private function getDisabledUntil(EventType $eventType): int
-    {
-        $category = (string) $eventType;
-
-        if ($eventType === EventType::event()) {
-            $category = 'error';
-        }
-
-        return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
-    }
-
-    private function handleRateLimit(Response $response): bool
+    public function handleResponse(Response $response): bool
     {
         $now = time();
 
@@ -105,6 +59,24 @@ final class RateLimiter
         }
 
         return false;
+    }
+
+    public function isRateLimited(EventType $eventType): bool
+    {
+        $disabledUntil = $this->getDisabledUntil($eventType);
+
+        return $disabledUntil > time();
+    }
+
+    public function getDisabledUntil(EventType $eventType): int
+    {
+        $category = (string) $eventType;
+
+        if ($eventType === EventType::event()) {
+            $category = 'error';
+        }
+
+        return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
     }
 
     private function parseRetryAfterHeader(int $currentTime, string $header): int
