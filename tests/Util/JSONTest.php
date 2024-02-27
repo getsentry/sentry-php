@@ -7,6 +7,7 @@ namespace Sentry\Tests\Util;
 use PHPUnit\Framework\TestCase;
 use Sentry\Exception\JsonException;
 use Sentry\Tests\Util\Fixtures\JsonSerializableClass;
+use Sentry\Tests\Util\Fixtures\NonBackedEnum;
 use Sentry\Tests\Util\Fixtures\SimpleClass;
 use Sentry\Util\JSON;
 
@@ -141,6 +142,17 @@ final class JSONTest extends TestCase
     public function testEncodeRespectsOptionsArgument(): void
     {
         $this->assertSame('{}', JSON::encode([], \JSON_FORCE_OBJECT));
+    }
+
+    /**
+     * The `JSON_ERROR_NON_BACKED_ENUM` constant is only exposed from 8.1.5 and up.
+     *
+     * @requires PHP >= 8.1.5
+     */
+    public function testEncodeGracefullyHandlesUnitEnums(): void
+    {
+        $result = JSON::encode([NonBackedEnum::None, NonBackedEnum::Some]);
+        $this->assertSame('[0,0]', $result);
     }
 
     /**
