@@ -35,6 +35,9 @@ final class JSON
         $encodedData = json_encode($data, $options, $maxDepth);
 
         $allowedErrors = [\JSON_ERROR_NONE, \JSON_ERROR_RECURSION, \JSON_ERROR_INF_OR_NAN, \JSON_ERROR_UNSUPPORTED_TYPE];
+        if (\defined('JSON_ERROR_NON_BACKED_ENUM')) {
+            $allowedErrors[] = \JSON_ERROR_NON_BACKED_ENUM;
+        }
 
         $encounteredAnyError = json_last_error() !== \JSON_ERROR_NONE;
 
