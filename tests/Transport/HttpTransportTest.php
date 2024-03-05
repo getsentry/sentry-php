@@ -29,7 +29,7 @@ final class HttpTransportTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->httpClient        = $this->createMock(HttpClientInterface::class);
+        $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->payloadSerializer = $this->createMock(PayloadSerializerInterface::class);
     }
 
@@ -100,7 +100,7 @@ final class HttpTransportTest extends TestCase
     public function testSendFailsDueToHttpClientException(): void
     {
         $exception = new \Exception('foo');
-        $event     = Event::createEvent();
+        $event = Event::createEvent();
 
         $this->payloadSerializer->expects($this->once())
                                 ->method('serialize')

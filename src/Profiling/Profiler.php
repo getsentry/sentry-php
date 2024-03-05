@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Profiling;
 
-use Sentry\Options;
-use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Sentry\Options;
 
 /**
  * @internal
