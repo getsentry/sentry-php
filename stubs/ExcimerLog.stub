@@ -1,6 +1,9 @@
 <?php
 
 namespace {
+    if (extension_loaded('excimer')) {
+        return;
+    }
 
     /**
      * A collected series of stack traces and some utility methods to aggregate them.
@@ -22,9 +25,9 @@ namespace {
          * are available via:
          *   - ExcimerProfiler::getLog()
          *   - ExcimerProfiler::flush()
-         *   - The callback to ExcimerProfiler::setFlushCallback()
+         *   - The callback to ExcimerProfiler::setFlushCallback().
          */
-        private final function __construct()
+        final private function __construct()
         {
         }
 
@@ -38,7 +41,7 @@ namespace {
          *
          * @return string
          */
-        function formatCollapsed()
+        public function formatCollapsed()
         {
         }
 
@@ -69,16 +72,16 @@ namespace {
          *
          * @return array
          */
-        function aggregateByFunction()
+        public function aggregateByFunction()
         {
         }
 
         /**
-         * Get an array which can be JSON encoded for import into speedscope
+         * Get an array which can be JSON encoded for import into speedscope.
          *
          * @return array
          */
-        function getSpeedscopeData()
+        public function getSpeedscopeData()
         {
         }
 
@@ -87,7 +90,7 @@ namespace {
          *
          * @return int
          */
-        function getEventCount()
+        public function getEventCount()
         {
         }
 
@@ -96,8 +99,8 @@ namespace {
          *
          * @return ExcimerLogEntry
          */
-        #[\ReturnTypeWillChange]
-        function current()
+        #[ReturnTypeWillChange]
+        public function current()
         {
         }
 
@@ -106,8 +109,8 @@ namespace {
          *
          * @return int
          */
-        #[\ReturnTypeWillChange]
-        function key()
+        #[ReturnTypeWillChange]
+        public function key()
         {
         }
 
@@ -116,8 +119,8 @@ namespace {
          *
          * @return void
          */
-        #[\ReturnTypeWillChange]
-        function next()
+        #[ReturnTypeWillChange]
+        public function next()
         {
         }
 
@@ -126,8 +129,8 @@ namespace {
          *
          * @return void
          */
-        #[\ReturnTypeWillChange]
-        function rewind()
+        #[ReturnTypeWillChange]
+        public function rewind()
         {
         }
 
@@ -136,8 +139,8 @@ namespace {
          *
          * @return bool
          */
-        #[\ReturnTypeWillChange]
-        function valid()
+        #[ReturnTypeWillChange]
+        public function valid()
         {
         }
 
@@ -148,7 +151,7 @@ namespace {
          *
          * @return int
          */
-        function count()
+        public function count()
         {
         }
 
@@ -157,10 +160,11 @@ namespace {
          * Part of the ArrayAccess interface.
          *
          * @param int $offset
+         *
          * @return bool
          */
-        #[\ReturnTypeWillChange]
-        function offsetExists($offset)
+        #[ReturnTypeWillChange]
+        public function offsetExists($offset)
         {
         }
 
@@ -168,10 +172,11 @@ namespace {
          * Get the ExcimerLogEntry object at the specified array offset.
          *
          * @param int $offset
+         *
          * @return ExcimerLogEntry
          */
-        #[\ReturnTypeWillChange]
-        function offsetGet($offset)
+        #[ReturnTypeWillChange]
+        public function offsetGet($offset)
         {
         }
 
@@ -179,11 +184,11 @@ namespace {
          * This function is included for compliance with the ArrayAccess interface.
          * It raises a warning and does nothing.
          *
-         * @param int|null $offset
+         * @param int|null        $offset
          * @param ExcimerLogEntry $value
          */
-        #[\ReturnTypeWillChange]
-        function offsetSet($offset, $value)
+        #[ReturnTypeWillChange]
+        public function offsetSet($offset, $value)
         {
         }
 
@@ -193,8 +198,8 @@ namespace {
          *
          * @param int $offset
          */
-        #[\ReturnTypeWillChange]
-        function offsetUnset($offset)
+        #[ReturnTypeWillChange]
+        public function offsetUnset($offset)
         {
         }
     }
