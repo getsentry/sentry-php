@@ -119,7 +119,7 @@ final class Transaction extends Span
         return $this;
     }
 
-    public function initProfiler(): self
+    public function initProfiler(): Profiler
     {
         if ($this->profiler === null) {
             $client = $this->hub->getClient();
@@ -128,7 +128,7 @@ final class Transaction extends Span
             $this->profiler = new Profiler($options);
         }
 
-        return $this;
+        return $this->profiler;
     }
 
     public function getProfiler(): ?Profiler

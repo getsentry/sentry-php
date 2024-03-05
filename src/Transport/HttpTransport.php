@@ -77,7 +77,7 @@ class HttpTransport implements TransportInterface
         );
 
         if ($this->options->getDsn() === null) {
-            $this->logger->debug(sprintf('Skipping %s, because no DSN is set.', $eventDescription), ['event' => $event]);
+            $this->logger->info(sprintf('Skipping %s, because no DSN is set.', $eventDescription), ['event' => $event]);
 
             return new Result(ResultStatus::skipped(), $event);
         }
@@ -88,7 +88,7 @@ class HttpTransport implements TransportInterface
             $this->options->getDsn()->getProjectId()
         );
 
-        $this->logger->debug(sprintf('Sending %s to %s.', $eventDescription, $targetDescription), ['event' => $event]);
+        $this->logger->info(sprintf('Sending %s to %s.', $eventDescription, $targetDescription), ['event' => $event]);
 
         $eventType = $event->getType();
         if ($this->rateLimiter->isRateLimited($eventType)) {
@@ -135,7 +135,7 @@ class HttpTransport implements TransportInterface
 
         $resultStatus = ResultStatus::createFromHttpStatusCode($response->getStatusCode());
 
-        $this->logger->debug(
+        $this->logger->info(
             sprintf('Sent %s to %s. Result: "%s" (status: %s).', $eventDescription, $targetDescription, strtolower((string) $resultStatus), $response->getStatusCode()),
             ['response' => $response, 'event' => $event]
         );
