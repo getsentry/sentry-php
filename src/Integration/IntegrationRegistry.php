@@ -64,7 +64,7 @@ final class IntegrationRegistry
         }
 
         if (\count($installed) > 0) {
-            $logger->info(sprintf('The "%s" integration(s) have been installed.', implode(', ', $installed)));
+            $logger->debug(sprintf('The "%s" integration(s) have been installed.', implode(', ', $installed)));
         }
 
         return $integrations;
