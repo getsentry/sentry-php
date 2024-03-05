@@ -1,6 +1,9 @@
 <?php
 
 namespace {
+    if (extension_loaded('excimer')) {
+        return;
+    }
 
     /** Real (wall-clock) time */
     define( 'EXCIMER_REAL', 0 );
