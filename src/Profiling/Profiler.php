@@ -73,12 +73,6 @@ final class Profiler
 
     private function initProfiler(): void
     {
-        if (\PHP_VERSION_ID < 70300) {
-            $this->logger->warning('The profiler was started but is not available because it requires PHP 7.3 or higher.');
-
-            return;
-        }
-
         if (!\extension_loaded('excimer')) {
             $this->logger->warning('The profiler was started but is not available because the "excimer" extension is not loaded.');
 
