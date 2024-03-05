@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Serializer\RepresentationSerializerInterface;
+use Sentry\Util\PHPConfiguration;
 
 /**
  * This class builds {@see Stacktrace} objects from an instance of an exception
@@ -28,6 +29,10 @@ final class StacktraceBuilder
     public function __construct(Options $options, RepresentationSerializerInterface $representationSerializer)
     {
         $this->frameBuilder = new FrameBuilder($options, $representationSerializer);
+
+        if (PHPConfiguration::isBooleanIniOptionEnabled('zend.exception_ignore_args')) {
+            $options->getLoggerOrNullLogger()->warning('The "zend.exception_ignore_args" PHP setting is enabled which results in missing stack trace arguments, see: https://docs.sentry.io/platforms/php/troubleshooting/#missing-variables-in-stack-traces.');
+        }
     }
 
     /**
