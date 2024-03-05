@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Profiling;
 
 use Sentry\Options;
+use Psr\Log\NullLogger;
+use Psr\Log\LoggerInterface;
 
 /**
  * @internal
@@ -22,6 +24,11 @@ final class Profiler
     private $profile;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @var float The sample rate (10.01ms/101 Hz)
      */
     private const SAMPLE_RATE = 0.0101;
@@ -33,6 +40,7 @@ final class Profiler
 
     public function __construct(?Options $options = null)
     {
+        $this->logger = $options !== null ? $options->getLoggerOrNullLogger() : new NullLogger();
         $this->profile = new Profile($options);
 
         $this->initProfiler();
@@ -65,13 +73,23 @@ final class Profiler
 
     private function initProfiler(): void
     {
-        if (\extension_loaded('excimer') && \PHP_VERSION_ID >= 70300) {
-            $this->profiler = new \ExcimerProfiler();
-            $this->profile->setStartTimeStamp(microtime(true));
+        if (\PHP_VERSION_ID < 70300) {
+            $this->logger->warning('The profiler was started but is not available because it requires PHP 7.3 or higher.');
 
-            $this->profiler->setEventType(EXCIMER_REAL);
-            $this->profiler->setPeriod(self::SAMPLE_RATE);
-            $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);
+            return;
         }
+
+        if (!\extension_loaded('excimer')) {
+            $this->logger->warning('The profiler was started but is not available because the "excimer" extension is not loaded.');
+
+            return;
+        }
+
+        $this->profiler = new \ExcimerProfiler();
+        $this->profile->setStartTimeStamp(microtime(true));
+
+        $this->profiler->setEventType(EXCIMER_REAL);
+        $this->profiler->setPeriod(self::SAMPLE_RATE);
+        $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);
     }
 }
