@@ -258,6 +258,10 @@ class Hub implements HubInterface
         if ($options === null || !$options->isTracingEnabled()) {
             $transaction->setSampled(false);
 
+            if ($options !== null) {
+                $options->getLoggerOrNullLogger()->debug('Transaction was started but tracing is not enabled.');
+            }
+
             return $transaction;
         }
 
