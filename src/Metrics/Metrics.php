@@ -9,6 +9,9 @@ use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
 use Sentry\Metrics\Types\SetType;
+use Sentry\Tracing\SpanContext;
+
+use function Sentry\trace;
 
 class Metrics
 {
@@ -144,7 +147,12 @@ class Metrics
     ) {
         $startTimestamp = microtime(true);
 
-        $result = $callback();
+        $result = trace(function () use ($callback) {
+            return $callback();
+        }, SpanContext::make()
+            ->setOp('metric.timing')
+            ->setDescription($key)
+        );
 
         $this->aggregator->add(
             DistributionType::TYPE,
