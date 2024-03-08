@@ -578,10 +578,13 @@ class Span
         $sampled = '';
 
         if ($this->sampled !== null) {
-            $sampled = $this->sampled ? '-01' : '-00';
+            $sampled = $this->sampled ? '01' : '00';
+        } else {
+            // If no sampling decision was made, set the flag to 00
+            $sampled = '00';
         }
 
-        return sprintf('00-%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**

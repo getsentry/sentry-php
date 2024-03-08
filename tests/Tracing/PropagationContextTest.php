@@ -118,7 +118,7 @@ final class PropagationContextTest extends TestCase
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
 
-        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $propagationContext->toW3CTraceparent());
+        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-00', $propagationContext->toW3CTraceparent());
     }
 
     public function testToBaggage()
