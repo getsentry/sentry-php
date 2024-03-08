@@ -72,7 +72,7 @@ final class PropagationContext
      */
     public function toW3CTraceparent(): string
     {
-        return sprintf('00-%s-%s', (string) $this->traceId, (string) $this->spanId);
+        return sprintf('00-%s-%s-00', (string) $this->traceId, (string) $this->spanId);
     }
 
     /**
