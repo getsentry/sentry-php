@@ -36,6 +36,13 @@ final class TransactionIntegration implements IntegrationInterface
                 return $event;
             }
 
+            $transaction = SentrySdk::getCurrentHub()->getTransaction();
+            if ($transaction !== null) {
+                $event->setTransaction($transaction->getName());
+
+                return $event;
+            }
+
             if (isset($hint->extra['transaction']) && \is_string($hint->extra['transaction'])) {
                 $event->setTransaction($hint->extra['transaction']);
             } elseif (isset($_SERVER['PATH_INFO'])) {
