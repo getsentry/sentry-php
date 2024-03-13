@@ -145,23 +145,29 @@ class Metrics
         array $tags = [],
         int $stackLevel = 0
     ) {
-        $startTimestamp = microtime(true);
+        $result = trace(function () use ($callback, $key, $tags, $stackLevel) {
+            $startTimestamp = microtime(true);
 
-        $result = trace(function () use ($callback) {
-            return $callback();
+            $result = $callback();
+
+            /**
+             * Emitting the metric here, will attach it to the
+             * "metric.timing" span
+             */
+            $this->aggregator->add(
+                DistributionType::TYPE,
+                $key,
+                microtime(true) - $startTimestamp,
+                MetricsUnit::second(),
+                $tags,
+                (int) $startTimestamp,
+                $stackLevel
+            );
+
+            return $result;
         }, SpanContext::make()
             ->setOp('metric.timing')
             ->setDescription($key)
-        );
-
-        $this->aggregator->add(
-            DistributionType::TYPE,
-            $key,
-            microtime(true) - $startTimestamp,
-            MetricsUnit::second(),
-            $tags,
-            (int) $startTimestamp,
-            $stackLevel
         );
 
         return $result;
