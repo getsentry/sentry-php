@@ -252,6 +252,10 @@ class Hub implements HubInterface
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
         $transaction = new Transaction($context, $this);
+
+        // Sync the transaction name with the scope
+        $this->getScope()->setTransactionName($transaction->getName());
+
         $client = $this->getClient();
         $options = $client !== null ? $client->getOptions() : null;
 

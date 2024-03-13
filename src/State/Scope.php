@@ -76,6 +76,11 @@ class Scope
     private $span;
 
     /**
+     * @var string|null The transaction name
+     */
+    private $transactionName;
+
+    /**
      * @var callable[] List of event processors
      *
      * @psalm-var array<callable(Event, EventHint): ?Event>
@@ -363,6 +368,10 @@ class Scope
             $event->setExtra(array_merge($this->extra, $event->getExtra()));
         }
 
+        if ($this->transactionName !== null) {
+            $event->setTransaction($this->transactionName);
+        }
+
         if ($this->user !== null) {
             $user = $event->getUser();
 
@@ -458,6 +467,25 @@ class Scope
         }
 
         return null;
+    }
+
+    /**
+     * Set the transaction name on the scope as well as on the transaction
+     * attached to the scope (if there is one).
+     */
+    public function setTransactionName(string $name): self
+    {
+        $this->transactionName = $name;
+
+        // If we have an active transaction, update its name as well
+        if ($this->span !== null) {
+            $transaction = $this->span->getTransaction();
+            if ($transaction !== null) {
+                $transaction->setName($name);
+            }
+        }
+
+        return $this;
     }
 
     public function getPropagationContext(): PropagationContext
