@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 4.6.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.6.1.
+
+### Bug Fixes
+
+- Always add the sampled flag to the W3C `traceparent` header [(#1713)](https://github.com/getsentry/sentry-php/pull/1713)
+- Add `JSON_ERROR_NON_BACKED_ENUM` to allowed `JSON::encode()` errors. [(#1707)](https://github.com/getsentry/sentry-php/pull/1707)
+
 ## 4.6.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.6.0.

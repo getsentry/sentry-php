@@ -444,7 +444,7 @@ final class FunctionsTest extends TestCase
 
         $traceParent = getW3CTraceparent();
 
-        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
+        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-00', $traceParent);
     }
 
     public function testW3CTraceparentWithTracingEnabled(): void
@@ -462,7 +462,8 @@ final class FunctionsTest extends TestCase
 
         $spanContext = (new SpanContext())
             ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
-            ->setSpanId(new SpanId('566e3688a61d4bc8'));
+            ->setSpanId(new SpanId('566e3688a61d4bc8'))
+            ->setSampled(true);
 
         $span = new Span($spanContext);
 
@@ -470,7 +471,7 @@ final class FunctionsTest extends TestCase
 
         $traceParent = getW3CTraceparent();
 
-        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
+        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-01', $traceParent);
     }
 
     public function testBaggageWithTracingDisabled(): void
