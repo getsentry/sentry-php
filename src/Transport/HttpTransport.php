@@ -59,7 +59,7 @@ class HttpTransport implements TransportInterface
         $this->httpClient = $httpClient;
         $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
-        $this->rateLimiter = new RateLimiter($this->logger);
+        $this->rateLimiter = new RateLimiter();
     }
 
     /**
@@ -69,9 +69,26 @@ class HttpTransport implements TransportInterface
     {
         $this->sendRequestToSpotlight($event);
 
+        $eventDescription = sprintf(
+            '%s%s [%s]',
+            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
+            (string) $event->getType(),
+            (string) $event->getId()
+        );
+
         if ($this->options->getDsn() === null) {
+            $this->logger->info(sprintf('Skipping %s, because no DSN is set.', $eventDescription), ['event' => $event]);
+
             return new Result(ResultStatus::skipped(), $event);
         }
+
+        $targetDescription = sprintf(
+            '%s [project:%s]',
+            $this->options->getDsn()->getHost(),
+            $this->options->getDsn()->getProjectId()
+        );
+
+        $this->logger->info(sprintf('Sending %s to %s.', $eventDescription, $targetDescription), ['event' => $event]);
 
         $eventType = $event->getType();
         if ($this->rateLimiter->isRateLimited($eventType)) {
@@ -90,26 +107,40 @@ class HttpTransport implements TransportInterface
             $response = $this->httpClient->sendRequest($request, $this->options);
         } catch (\Throwable $exception) {
             $this->logger->error(
-                sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
+                sprintf('Failed to send %s to %s. Reason: "%s".', $eventDescription, $targetDescription, $exception->getMessage()),
                 ['exception' => $exception, 'event' => $event]
             );
 
             return new Result(ResultStatus::failed());
         }
 
-        $response = $this->rateLimiter->handleResponse($event, $response);
-        if ($response->isSuccess()) {
-            return new Result(ResultStatus::success(), $event);
-        }
-
         if ($response->hasError()) {
             $this->logger->error(
-                sprintf('Failed to send the event to Sentry. Reason: "%s".', $response->getError()),
+                sprintf('Failed to send %s to %s. Reason: "%s".', $eventDescription, $targetDescription, $response->getError()),
+                ['event' => $event]
+            );
+
+            return new Result(ResultStatus::unknown());
+        }
+
+        if ($this->rateLimiter->handleResponse($response)) {
+            $eventType = $event->getType();
+            $disabledUntil = $this->rateLimiter->getDisabledUntil($eventType);
+
+            $this->logger->warning(
+                sprintf('Rate limited exceeded for requests of type "%s", backing off until "%s".', (string) $eventType, gmdate(\DATE_ATOM, $disabledUntil)),
                 ['event' => $event]
             );
         }
 
-        return new Result(ResultStatus::createFromHttpStatusCode($response->getStatusCode()));
+        $resultStatus = ResultStatus::createFromHttpStatusCode($response->getStatusCode());
+
+        $this->logger->info(
+            sprintf('Sent %s to %s. Result: "%s" (status: %s).', $eventDescription, $targetDescription, strtolower((string) $resultStatus), $response->getStatusCode()),
+            ['response' => $response, 'event' => $event]
+        );
+
+        return new Result($resultStatus, $event);
     }
 
     /**

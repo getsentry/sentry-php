@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -335,6 +336,14 @@ final class Options
     public function getLogger(): ?LoggerInterface
     {
         return $this->options['logger'];
+    }
+
+    /**
+     * Helper to always get a logger instance even if it was not set.
+     */
+    public function getLoggerOrNullLogger(): LoggerInterface
+    {
+        return $this->getLogger() ?? new NullLogger();
     }
 
     /**

@@ -151,7 +151,7 @@ class Client implements ClientInterface
         $className = \get_class($exception);
         if ($this->isIgnoredException($className)) {
             $this->logger->info(
-                'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                'The exception will be discarded because it matches an entry in "ignore_exceptions".',
                 ['className' => $className]
             );
 
@@ -294,17 +294,24 @@ class Client implements ClientInterface
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
+        $eventDescription = sprintf(
+            '%s%s [%s]',
+            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
+            (string) $event->getType(),
+            (string) $event->getId()
+        );
+
         $isEvent = EventType::event() === $event->getType();
         $sampleRate = $this->options->getSampleRate();
 
         // only sample with the `sample_rate` on errors/messages
         if ($isEvent && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-            $this->logger->info('The event will be discarded because it has been sampled.', ['event' => $event]);
+            $this->logger->info(sprintf('The %s will be discarded because it has been sampled.', $eventDescription), ['event' => $event]);
 
             return null;
         }
 
-        $event = $this->applyIgnoreOptions($event);
+        $event = $this->applyIgnoreOptions($event, $eventDescription);
 
         if ($event === null) {
             return null;
@@ -316,7 +323,7 @@ class Client implements ClientInterface
 
             if ($event === null) {
                 $this->logger->info(
-                    'The event will be discarded because one of the event processors returned "null".',
+                    sprintf('The %s will be discarded because one of the event processors returned "null".', $eventDescription),
                     ['event' => $beforeEventProcessors]
                 );
 
@@ -330,7 +337,8 @@ class Client implements ClientInterface
         if ($event === null) {
             $this->logger->info(
                 sprintf(
-                    'The event will be discarded because the "%s" callback returned "null".',
+                    'The %s will be discarded because the "%s" callback returned "null".',
+                    $eventDescription,
                     $this->getBeforeSendCallbackName($beforeSendCallback)
                 ),
                 ['event' => $beforeSendCallback]
@@ -351,7 +359,7 @@ class Client implements ClientInterface
         return false;
     }
 
-    private function applyIgnoreOptions(Event $event): ?Event
+    private function applyIgnoreOptions(Event $event, string $eventDescription): ?Event
     {
         if ($event->getType() === EventType::event()) {
             $exceptions = $event->getExceptions();
@@ -363,7 +371,7 @@ class Client implements ClientInterface
             foreach ($exceptions as $exception) {
                 if ($this->isIgnoredException($exception->getType())) {
                     $this->logger->info(
-                        'The event will be discarded because it matches an entry in "ignore_exceptions".',
+                        sprintf('The %s will be discarded because it matches an entry in "ignore_exceptions".', $eventDescription),
                         ['event' => $event]
                     );
 
@@ -381,7 +389,7 @@ class Client implements ClientInterface
 
             if (\in_array($transactionName, $this->options->getIgnoreTransactions(), true)) {
                 $this->logger->info(
-                    'The event will be discarded because it matches a entry in "ignore_transactions".',
+                    sprintf('The %s will be discarded because it matches a entry in "ignore_transactions".', $eventDescription),
                     ['event' => $event]
                 );
 

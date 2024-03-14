@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\Constraint\StringMatchesFormatDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -36,11 +37,11 @@ final class ClientTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('debug');
+               ->method('debug');
 
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because one of the event processors returned "null".');
+               ->method('info')
+               ->with(new StringMatchesFormatDescription('The event [%s] will be discarded because one of the event processors returned "null".'));
 
         $integration = new class($integrationCalled) implements IntegrationInterface {
             private $integrationCalled;
@@ -82,20 +83,20 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertSame('foo', $event->getMessage());
-                $this->assertEquals(Severity::fatal(), $event->getLevel());
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $this->assertSame('foo', $event->getMessage());
+                      $this->assertEquals(Severity::fatal(), $event->getLevel());
 
-                return true;
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                      return true;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertNotNull($client->captureMessage('foo', Severity::fatal()));
     }
@@ -129,24 +130,24 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event) use ($exception): bool {
-                $this->assertCount(1, $event->getExceptions());
+                  ->method('send')
+                  ->with($this->callback(function (Event $event) use ($exception): bool {
+                      $this->assertCount(1, $event->getExceptions());
 
-                $exceptionData = $event->getExceptions()[0];
+                      $exceptionData = $event->getExceptions()[0];
 
-                $this->assertSame(\get_class($exception), $exceptionData->getType());
-                $this->assertSame($exception->getMessage(), $exceptionData->getValue());
+                      $this->assertSame(\get_class($exception), $exceptionData->getType());
+                      $this->assertSame($exception->getMessage(), $exceptionData->getValue());
 
-                return true;
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                      return true;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertNotNull($client->captureException($exception));
     }
@@ -192,7 +193,7 @@ final class ClientTest extends TestCase
     }
 
     /**
-     * @group legacy
+     * @group        legacy
      *
      * @dataProvider captureEventDataProvider
      */
@@ -200,15 +201,15 @@ final class ClientTest extends TestCase
     {
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($expectedEvent)
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                  ->method('send')
+                  ->with($expectedEvent)
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create($options)
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertSame($event->getId(), $client->captureEvent($event));
     }
@@ -310,25 +311,25 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(static function (Event $event) use ($shouldAttachStacktrace): bool {
-                if ($shouldAttachStacktrace && $event->getStacktrace() === null) {
-                    return false;
-                }
+                  ->method('send')
+                  ->with($this->callback(static function (Event $event) use ($shouldAttachStacktrace): bool {
+                      if ($shouldAttachStacktrace && $event->getStacktrace() === null) {
+                          return false;
+                      }
 
-                if (!$shouldAttachStacktrace && $event->getStacktrace() !== null) {
-                    return false;
-                }
+                      if (!$shouldAttachStacktrace && $event->getStacktrace() !== null) {
+                          return false;
+                      }
 
-                return true;
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                      return true;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create(['attach_stacktrace' => $attachStacktraceOption])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertNotNull($client->captureEvent(Event::createEvent(), $hint));
     }
@@ -373,17 +374,17 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(static function (Event $event) use ($stacktrace): bool {
-                return $stacktrace === $event->getStacktrace();
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                  ->method('send')
+                  ->with($this->callback(static function (Event $event) use ($stacktrace): bool {
+                      return $stacktrace === $event->getStacktrace();
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertNotNull($client->captureEvent(Event::createEvent(), EventHint::fromArray([
             'stacktrace' => $stacktrace,
@@ -395,22 +396,22 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $exception = $event->getExceptions()[0];
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $exception = $event->getExceptions()[0];
 
-                $this->assertEquals('ErrorException', $exception->getType());
-                $this->assertEquals('foo', $exception->getValue());
+                      $this->assertEquals('ErrorException', $exception->getType());
+                      $this->assertEquals('foo', $exception->getValue());
 
-                return true;
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                      return true;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         @trigger_error('foo', \E_USER_NOTICE);
 
@@ -451,12 +452,12 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
-            ->method('send')
-            ->with($this->anything());
+                  ->method('send')
+                  ->with($this->anything());
 
         $client = ClientBuilder::create(['dsn' => 'http://public:secret@example.com/1'])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         error_clear_last();
 
@@ -639,20 +640,23 @@ final class ClientTest extends TestCase
     {
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->never())
-            ->method('send')
-            ->with($this->anything());
+                  ->method('send')
+                  ->with($this->anything());
 
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because it has been sampled.', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The event [%s] will be discarded because it has been sampled.'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $client = ClientBuilder::create(['sample_rate' => 0])
-            ->setTransport($transport)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent(Event::createEvent());
     }
@@ -661,12 +665,12 @@ final class ClientTest extends TestCase
     {
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->anything());
+                  ->method('send')
+                  ->with($this->anything());
 
         $client = ClientBuilder::create(['sample_rate' => 1])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $client->captureEvent(Event::createEvent());
     }
@@ -678,16 +682,16 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".');
+               ->method('info')
+               ->with('The exception will be discarded because it matches an entry in "ignore_exceptions".');
 
         $options = [
             'ignore_exceptions' => [\Exception::class],
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureException($exception);
     }
@@ -699,16 +703,16 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because it matches an entry in "ignore_exceptions".');
+               ->method('info')
+               ->with('The exception will be discarded because it matches an entry in "ignore_exceptions".');
 
         $options = [
             'ignore_exceptions' => [\RuntimeException::class],
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureException($exception);
     }
@@ -721,18 +725,21 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because it matches a entry in "ignore_transactions".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The transaction [%s] will be discarded because it matches a entry in "ignore_transactions".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $options = [
             'ignore_transactions' => ['GET /foo'],
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent($event);
     }
@@ -742,10 +749,13 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because the "before_send" callback returned "null".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The event [%s] will be discarded because the "before_send" callback returned "null".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $options = [
             'before_send' => static function () {
@@ -754,8 +764,8 @@ final class ClientTest extends TestCase
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent(Event::createEvent());
     }
@@ -765,10 +775,13 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because the "before_send_transaction" callback returned "null".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The transaction [%s] will be discarded because the "before_send_transaction" callback returned "null".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $options = [
             'before_send_transaction' => static function () {
@@ -777,8 +790,8 @@ final class ClientTest extends TestCase
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent(Event::createTransaction());
     }
@@ -788,10 +801,13 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because the "before_send_check_in" callback returned "null".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The check_in [%s] will be discarded because the "before_send_check_in" callback returned "null".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $options = [
             'before_send_check_in' => static function () {
@@ -800,8 +816,8 @@ final class ClientTest extends TestCase
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent(Event::createCheckIn());
     }
@@ -811,10 +827,13 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because the "before_send_metrics" callback returned "null".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The metrics [%s] will be discarded because the "before_send_metrics" callback returned "null".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $options = [
             'before_send_metrics' => static function () {
@@ -823,8 +842,8 @@ final class ClientTest extends TestCase
         ];
 
         $client = ClientBuilder::create($options)
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $client->captureEvent(Event::createMetrics());
     }
@@ -834,14 +853,17 @@ final class ClientTest extends TestCase
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
-            ->method('info')
-            ->with('The event will be discarded because one of the event processors returned "null".', $this->callback(static function (array $context): bool {
-                return isset($context['event']) && $context['event'] instanceof Event;
-            }));
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The debug event [%s] will be discarded because one of the event processors returned "null".'),
+                   $this->callback(static function (array $context): bool {
+                       return isset($context['event']) && $context['event'] instanceof Event;
+                   })
+               );
 
         $client = ClientBuilder::create([])
-            ->setLogger($logger)
-            ->getClient();
+                               ->setLogger($logger)
+                               ->getClient();
 
         $scope = new Scope();
         $scope->addEventProcessor(static function () {
@@ -856,19 +878,19 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $result = $event->getStacktrace();
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $result = $event->getStacktrace();
 
-                return $result !== null;
-            }))
-            ->willReturnCallback(static function (Event $event): Result {
-                return new Result(ResultStatus::success(), $event);
-            });
+                      return $result !== null;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
 
         $client = ClientBuilder::create(['attach_stacktrace' => true])
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $this->assertNotNull($client->captureMessage('test'));
     }
@@ -878,13 +900,13 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('close')
-            ->with(10)
-            ->willReturn(new Result(ResultStatus::success()));
+                  ->method('close')
+                  ->with(10)
+                  ->willReturn(new Result(ResultStatus::success()));
 
         $client = ClientBuilder::create()
-            ->setTransport($transport)
-            ->getClient();
+                               ->setTransport($transport)
+                               ->getClient();
 
         $response = $client->flush(10);
 
@@ -896,12 +918,12 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertNull($event->getTransaction());
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $this->assertNull($event->getTransaction());
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             new Options(),
@@ -923,23 +945,23 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $capturedExceptions = $event->getExceptions();
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $capturedExceptions = $event->getExceptions();
 
-                $this->assertCount(2, $capturedExceptions);
-                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 1]), $capturedExceptions[0]->getMechanism());
-                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
-                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+                      $this->assertCount(2, $capturedExceptions);
+                      $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                      $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 1]), $capturedExceptions[0]->getMechanism());
+                      $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                      $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
 
-                $this->assertNotNull($capturedExceptions[1]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 0]), $capturedExceptions[1]->getMechanism());
-                $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
-                $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
+                      $this->assertNotNull($capturedExceptions[1]->getStacktrace());
+                      $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => 0]), $capturedExceptions[1]->getMechanism());
+                      $this->assertSame(\RuntimeException::class, $capturedExceptions[1]->getType());
+                      $this->assertSame('testMessage2', $capturedExceptions[1]->getValue());
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             $options,
@@ -962,18 +984,18 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $capturedExceptions = $event->getExceptions();
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $capturedExceptions = $event->getExceptions();
 
-                $this->assertCount(1, $capturedExceptions);
-                $this->assertNotNull($capturedExceptions[0]->getStacktrace());
-                $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false), $capturedExceptions[0]->getMechanism());
-                $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
-                $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
+                      $this->assertCount(1, $capturedExceptions);
+                      $this->assertNotNull($capturedExceptions[0]->getStacktrace());
+                      $this->assertEquals(new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, false), $capturedExceptions[0]->getMechanism());
+                      $this->assertSame(\Exception::class, $capturedExceptions[0]->getType());
+                      $this->assertSame('testMessage', $capturedExceptions[0]->getValue());
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             $options,
@@ -996,12 +1018,12 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $this->assertTrue(Severity::error()->isEqualTo($event->getLevel()));
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             $options,
@@ -1024,22 +1046,22 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $stacktrace = $event->getStacktrace();
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $stacktrace = $event->getStacktrace();
 
-                $this->assertInstanceOf(Stacktrace::class, $stacktrace);
+                      $this->assertInstanceOf(Stacktrace::class, $stacktrace);
 
-                /** @var Frame $lastFrame */
-                $lastFrame = array_reverse($stacktrace->getFrames())[0];
+                      /** @var Frame $lastFrame */
+                      $lastFrame = array_reverse($stacktrace->getFrames())[0];
 
-                $this->assertSame(
-                    'Client.php',
-                    basename($lastFrame->getFile())
-                );
+                      $this->assertSame(
+                          'Client.php',
+                          basename($lastFrame->getFile())
+                      );
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             $options,
@@ -1059,22 +1081,22 @@ final class ClientTest extends TestCase
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
-            ->method('send')
-            ->with($this->callback(function (Event $event): bool {
-                $stacktrace = $event->getStacktrace();
+                  ->method('send')
+                  ->with($this->callback(function (Event $event): bool {
+                      $stacktrace = $event->getStacktrace();
 
-                $this->assertNotNull($stacktrace);
+                      $this->assertNotNull($stacktrace);
 
-                /** @var Frame $lastFrame */
-                $lastFrame = array_reverse($stacktrace->getFrames())[0];
+                      /** @var Frame $lastFrame */
+                      $lastFrame = array_reverse($stacktrace->getFrames())[0];
 
-                $this->assertSame(
-                    'MyApp.php',
-                    $lastFrame->getFile()
-                );
+                      $this->assertSame(
+                          'MyApp.php',
+                          $lastFrame->getFile()
+                      );
 
-                return true;
-            }));
+                      return true;
+                  }));
 
         $client = new Client(
             $options,
