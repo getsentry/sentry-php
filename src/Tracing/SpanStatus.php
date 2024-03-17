@@ -76,7 +76,7 @@ final class SpanStatus implements \Stringable
      * Gets an instance of this enum representing the fact that the server returned
      * 429 Too Many Requests.
      */
-    public static function resourceExchausted(): self
+    public static function resourceExhausted(): self
     {
         return self::getInstance('resource_exhausted');
     }
@@ -163,7 +163,7 @@ final class SpanStatus implements \Stringable
             case $statusCode === 413:
                 return self::failedPrecondition();
             case $statusCode === 429:
-                return self::resourceExchausted();
+                return self::resourceExhausted();
             case $statusCode === 501:
                 return self::unimplemented();
             case $statusCode === 503:
