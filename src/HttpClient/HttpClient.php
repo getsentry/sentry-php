@@ -105,6 +105,12 @@ class HttpClient implements HttpClientInterface
 
         curl_close($curlHandle);
 
-        return new Response($statusCode, $responseHeaders, '');
+        $error = '';
+
+        if ($statusCode >= 200 && $statusCode <= 299) {
+            $error = $body;
+        }
+
+        return new Response($statusCode, $responseHeaders, $error);
     }
 }
