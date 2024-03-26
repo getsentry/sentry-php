@@ -107,7 +107,7 @@ class HttpClient implements HttpClientInterface
 
         $error = '';
 
-        if ($statusCode >= 299) {
+        if ($statusCode > 299) {
             $error = (string) $body;
         }
 
