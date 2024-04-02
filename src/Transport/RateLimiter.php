@@ -76,6 +76,10 @@ final class RateLimiter
             $category = 'error';
         }
 
+        if ($eventType === EventType::metrics()) {
+            $category = 'metric_bucket';
+        }
+
         return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
     }
 
