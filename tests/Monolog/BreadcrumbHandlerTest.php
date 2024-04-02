@@ -76,7 +76,7 @@ final class BreadcrumbHandlerTest extends TestCase
         ];
 
         yield 'with context' => [
-                RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', ['context' => ['foo' => 'bar']], []),
+            RecordFactory::create('foo bar', Logger::DEBUG, 'channel.foo', ['context' => ['foo' => 'bar']], []),
             $defaultBreadcrumb->withMetadata('context', ['foo' => 'bar']),
         ];
 
