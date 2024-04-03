@@ -59,7 +59,7 @@ class HttpTransport implements TransportInterface
         $this->httpClient = $httpClient;
         $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
-        $this->rateLimiter = new RateLimiter();
+        $this->rateLimiter = new RateLimiter($this->logger);
     }
 
     /**
@@ -123,15 +123,7 @@ class HttpTransport implements TransportInterface
             return new Result(ResultStatus::unknown());
         }
 
-        if ($this->rateLimiter->handleResponse($response)) {
-            $eventType = $event->getType();
-            $disabledUntil = $this->rateLimiter->getDisabledUntil($eventType);
-
-            $this->logger->warning(
-                sprintf('Rate limited exceeded for requests of type "%s", backing off until "%s".', (string) $eventType, gmdate(\DATE_ATOM, $disabledUntil)),
-                ['event' => $event]
-            );
-        }
+        $this->rateLimiter->handleResponse($response);
 
         $resultStatus = ResultStatus::createFromHttpStatusCode($response->getStatusCode());
 
