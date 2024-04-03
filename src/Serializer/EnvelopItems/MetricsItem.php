@@ -19,12 +19,17 @@ class MetricsItem implements EnvelopeItemInterface
     /**
      * @var string
      */
-    private const KEY_PATTERN = '/[^a-zA-Z0-9_\/.-]+/i';
+    private const KEY_PATTERN = '/[^\w\-.]+/i';
 
     /**
      * @var string
      */
-    private const VALUE_PATTERN = '/[^\w\d\s_:\/@\.{}\[\]$-]+/i';
+    private const UNIT_PATTERN = '/[^\w]+/i';
+
+    /**
+     * @var string
+     */
+    private const TAG_KEY_PATTERN = '/[^\w\-.\/]+/i';
 
     public static function toEnvelopeItem(Event $event): string
     {
@@ -42,7 +47,7 @@ class MetricsItem implements EnvelopeItemInterface
 
             if ($metric->getUnit() !== MetricsUnit::none()) {
                 // unit - @second
-                $line .= '@' . $metric->getunit();
+                $line .= '@' . preg_replace(self::UNIT_PATTERN, '', (string) $metric->getUnit());
             }
 
             foreach ($metric->serialize() as $value) {
@@ -55,8 +60,8 @@ class MetricsItem implements EnvelopeItemInterface
 
             $tags = [];
             foreach ($metric->getTags() as $key => $value) {
-                $tags[] = preg_replace(self::KEY_PATTERN, '_', $key) .
-                    ':' . preg_replace(self::VALUE_PATTERN, '', $value);
+                $tags[] = preg_replace(self::TAG_KEY_PATTERN, '', $key) .
+                    ':' . self::replaceTagValueCharacters($value);
             }
 
             if (!empty($tags)) {
@@ -109,5 +114,24 @@ class MetricsItem implements EnvelopeItemInterface
             JSON::encode($statsdHeader),
             $statsdPayload
         );
+    }
+
+    private static function replaceTagValueCharacters(string $tagValue): string
+    {
+        $tagValue = str_replace(
+            [
+                '\\',
+                '|',
+                ',',
+            ],
+            [
+                '\\\\',
+                '\u{7c}',
+                '\u{2c}',
+            ],
+            $tagValue
+        );
+
+        return $tagValue;
     }
 }
