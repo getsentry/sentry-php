@@ -38,7 +38,7 @@ class MetricsItem implements EnvelopeItemInterface
 
         foreach ($metrics as $metric) {
             /**
-             * In case of us adding support for setting a namespace for metrics,
+             * In case of us adding support for emitting metrics from other namespaces,
              * we have to alter the RateLimiter::class to properly handle these
              * namespaces.
              */
