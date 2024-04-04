@@ -125,7 +125,7 @@ final class HttpTransportTest extends TestCase
                     'Sent event [%s] to %s [project:%s]. Result: "rate_limit" (status: 429).',
                 ],
                 'warning' => [
-                    'Rate limited exceeded for requests of type "event", backing off until "2022-02-06T00:01:00+00:00".',
+                    'Rate limited exceeded for all categories, backing off until "2022-02-06T00:01:00+00:00".',
                 ],
             ],
         ];
@@ -230,7 +230,7 @@ final class HttpTransportTest extends TestCase
         $logger->expects($this->exactly(2))
             ->method('warning')
             ->withConsecutive(
-                ['Rate limited exceeded for requests of type "event", backing off until "2022-02-06T00:01:00+00:00".', ['event' => $event]],
+                ['Rate limited exceeded for all categories, backing off until "2022-02-06T00:01:00+00:00".'],
                 ['Rate limit exceeded for sending requests of type "event".', ['event' => $event]]
             );
 
