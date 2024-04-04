@@ -32,7 +32,7 @@ final class MetricsItemTest extends TestCase
     public static function toEnvelopeItemDataProvider(): iterable
     {
         $metric = new CounterType('abcABC123_-./äöü$%&abcABC123', 1.0, MetricsUnit::custom('abcABC123_-./äöü$%&abcABC123'), [
-            'abcABC123_-./äöü$%&abcABC123' => 'abc|,\\123',
+            'abcABC123_-./äöü$%&abcABC123' => "abc\n\r\t|,\\123",
         ], 1597790835);
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -43,8 +43,8 @@ final class MetricsItemTest extends TestCase
         yield [
             $event,
             <<<TEXT
-{"type":"statsd","length":103}
-abcABC123_-._abcABC123@abcABC123_abcABC123:1|c|#abcABC123_-./abcABC123:abc\\u{7c}\\u{2c}\\\\123|T1597790835
+{"type":"statsd","length":112}
+abcABC123_-._abcABC123@abcABC123_abcABC123:1|c|#abcABC123_-./abcABC123:abc\\n\\r\\t\\u{7c}\\u{2c}\\\\123|T1597790835
 TEXT
             ,
         ];
