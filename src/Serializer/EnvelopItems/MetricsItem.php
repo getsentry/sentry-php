@@ -118,26 +118,24 @@ class MetricsItem implements EnvelopeItemInterface
 
     private static function replaceTagValueCharacters(string $tagValue): string
     {
-        $tagValue = str_replace(
+        return str_replace(
             [
+                '\\',
                 "\n",
                 "\r",
                 "\t",
-                '\\',
                 '|',
                 ',',
             ],
             [
+                '\\\\',
                 '\n',
                 '\r',
                 '\t',
-                '\\\\',
                 '\u{7c}',
                 '\u{2c}',
             ],
             $tagValue
         );
-
-        return $tagValue;
     }
 }

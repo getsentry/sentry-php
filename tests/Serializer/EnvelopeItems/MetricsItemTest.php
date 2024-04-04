@@ -43,7 +43,7 @@ final class MetricsItemTest extends TestCase
         yield [
             $event,
             <<<TEXT
-{"type":"statsd","length":112}
+{"type":"statsd","length":109}
 abcABC123_-._abcABC123@abcABC123_abcABC123:1|c|#abcABC123_-./abcABC123:abc\\n\\r\\t\\u{7c}\\u{2c}\\\\123|T1597790835
 TEXT
             ,
