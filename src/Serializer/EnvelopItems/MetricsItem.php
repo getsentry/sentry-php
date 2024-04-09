@@ -6,6 +6,7 @@ namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
 use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Types\AbstractType;
 use Sentry\Serializer\Traits\StacktraceFrameSeralizerTrait;
 use Sentry\Util\JSON;
 
@@ -42,37 +43,7 @@ class MetricsItem implements EnvelopeItemInterface
         $metricMetaPayload = [];
 
         foreach ($metrics as $metric) {
-            // key - my.metric
-            $line = preg_replace(self::KEY_PATTERN, '_', $metric->getKey());
-
-            if ($metric->getUnit() !== MetricsUnit::none()) {
-                // unit - @second
-                $line .= '@' . preg_replace(self::UNIT_PATTERN, '', (string) $metric->getUnit());
-            }
-
-            foreach ($metric->serialize() as $value) {
-                // value - 2:3:4...
-                $line .= ':' . $value;
-            }
-
-            // type - |c|, |d|, ...
-            $line .= '|' . $metric->getType() . '|';
-
-            $tags = [];
-            foreach ($metric->getTags() as $key => $value) {
-                $tags[] = preg_replace(self::TAG_KEY_PATTERN, '', $key) .
-                    ':' . self::replaceTagValueCharacters($value);
-            }
-
-            if (!empty($tags)) {
-                // tags - #key:value,key:value...
-                $line .= '#' . implode(',', $tags) . '|';
-            }
-
-            // timestamp - T123456789
-            $line .= 'T' . $metric->getTimestamp();
-
-            $statsdPayload[] = $line;
+            $statsdPayload[] = self::seralizeMetric($metric);
 
             if ($metric->hasCodeLocation()) {
                 $metricMetaPayload[$metric->getMri()][] = array_merge(
@@ -116,26 +87,68 @@ class MetricsItem implements EnvelopeItemInterface
         );
     }
 
-    private static function replaceTagValueCharacters(string $tagValue): string
+    public static function seralizeMetric(AbstractType $metric): string
     {
-        return str_replace(
-            [
-                '\\',
-                "\n",
-                "\r",
-                "\t",
-                '|',
-                ',',
-            ],
-            [
-                '\\\\',
-                '\n',
-                '\r',
-                '\t',
-                '\u{7c}',
-                '\u{2c}',
-            ],
-            $tagValue
-        );
+        // key - my.metric
+        $line = preg_replace(self::KEY_PATTERN, '_', $metric->getKey());
+
+        if ($metric->getUnit() !== MetricsUnit::none()) {
+            // unit - @second
+            $line .= '@' . preg_replace(self::UNIT_PATTERN, '', (string) $metric->getUnit());
+        }
+
+        foreach ($metric->serialize() as $value) {
+            // value - 2:3:4...
+            $line .= ':' . $value;
+        }
+
+        // type - |c|, |d|, ...
+        $line .= '|' . $metric->getType() . '|';
+
+        $tags = [];
+        foreach ($metric->getTags() as $key => $value) {
+            $tags[] = preg_replace(self::TAG_KEY_PATTERN, '', $key) .
+                ':' . self::escapeTagValues($value);
+        }
+
+        if (!empty($tags)) {
+            // tags - #key:value,key:value...
+            $line .= '#' . implode(',', $tags) . '|';
+        }
+
+        // timestamp - T123456789
+        $line .= 'T' . $metric->getTimestamp();
+
+        return $line;
+    }
+
+    public static function escapeTagValues(string $tagValue): string
+    {
+        $result = '';
+
+        for ($i = 0; $i < mb_strlen($tagValue); $i++) {
+            $character = mb_substr($tagValue, $i, 1);
+            $result .= str_replace(
+                [
+                    "\n",
+                    "\r",
+                    "\t",
+                    '\\',
+                    '|',
+                    ',',
+                ],
+                [
+                    '\n',
+                    '\r',
+                    '\t',
+                    '\\\\',
+                    '\u{7c}',
+                    '\u{2c}',
+                ],
+                $character
+            );
+        }
+
+        return $result;
     }
 }
