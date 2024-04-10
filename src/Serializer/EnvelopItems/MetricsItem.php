@@ -126,7 +126,7 @@ class MetricsItem implements EnvelopeItemInterface
     {
         $result = '';
 
-        for ($i = 0; $i < mb_strlen($tagValue); $i++) {
+        for ($i = 0; $i < mb_strlen($tagValue); ++$i) {
             $character = mb_substr($tagValue, $i, 1);
             $result .= str_replace(
                 [

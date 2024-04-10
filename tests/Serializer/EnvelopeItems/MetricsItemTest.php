@@ -9,10 +9,6 @@ use Sentry\Serializer\EnvelopItems\MetricsItem;
 
 final class MetricsItemTest extends TestCase
 {
-    public function testSeralizeMetric(): void
-    {
-    }
-
     public function testEscapeTagValues(): void
     {
         // No escaping
