@@ -15,7 +15,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Misc
 
-- Depreacted `SpanStatus::resourceExchausted()`. Use `SpanStatus::resourceExhausted()` instead [(#1725)](https://github.com/getsentry/sentry-php/pull/1725)
+- Deprecated `SpanStatus::resourceExchausted()`. Use `SpanStatus::resourceExhausted()` instead [(#1725)](https://github.com/getsentry/sentry-php/pull/1725)
 - Update metric normalization [(#1729)](https://github.com/getsentry/sentry-php/pull/1729)
 
 ## 4.6.1
