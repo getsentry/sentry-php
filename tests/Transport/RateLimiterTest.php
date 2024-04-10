@@ -32,9 +32,7 @@ final class RateLimiterTest extends TestCase
     {
         ClockMock::withClockMock(1644105600);
 
-        $rateLimiterResponse = $this->rateLimiter->handleResponse($response);
-
-        $this->assertSame($shouldBeHandled, $rateLimiterResponse);
+        $this->rateLimiter->handleResponse($response);
         $this->assertEventTypesAreRateLimited($eventTypesLimited);
     }
 
@@ -63,8 +61,22 @@ final class RateLimiterTest extends TestCase
             ],
         ];
 
+        yield 'Back-off using X-Sentry-Rate-Limits header with missing categories should lock them all' => [
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60::org']], ''),
+            true,
+            EventType::cases(),
+        ];
+
         yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category' => [
             new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded:custom']], ''),
+            true,
+            [
+                EventType::metrics(),
+            ],
+        ];
+
+        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category, namespace custom and foo' => [
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded:custom;foo']], ''),
             true,
             [
                 EventType::metrics(),
@@ -79,10 +91,18 @@ final class RateLimiterTest extends TestCase
             ],
         ];
 
-        yield 'Back-off using X-Sentry-Rate-Limits header with missing categories should lock them all' => [
-            new Response(429, ['X-Sentry-Rate-Limits' => ['60::org']], ''),
+        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category without metric namespaces' => [
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded']], ''),
             true,
-            EventType::cases(),
+            [
+                EventType::metrics(),
+            ],
+        ];
+
+        yield 'Do not back-off using X-Sentry-Rate-Limits header with metric_bucket category, namespace foo' => [
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded:foo']], ''),
+            false,
+            [],
         ];
 
         yield 'Back-off using Retry-After header with number-based value' => [

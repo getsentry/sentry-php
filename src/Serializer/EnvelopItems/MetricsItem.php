@@ -89,6 +89,12 @@ class MetricsItem implements EnvelopeItemInterface
 
     public static function seralizeMetric(AbstractType $metric): string
     {
+        /**
+         * In case of us adding support for emitting metrics from other namespaces,
+         * we have to alter the RateLimiter::class to properly handle these
+         * namespaces.
+         */
+
         // key - my.metric
         $line = preg_replace(self::KEY_PATTERN, '_', $metric->getKey());
 
