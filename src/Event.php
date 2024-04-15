@@ -9,6 +9,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\Spans\Span as OnlySpan;
 
 /**
  * This is the base class for classes containing event data.
@@ -60,6 +61,8 @@ final class Event
      * @var string|null the name of the transaction (or culprit) which caused this exception
      */
     private $transaction;
+
+    private $span;
 
     /**
      * @var CheckIn|null The check in data
@@ -229,6 +232,11 @@ final class Event
     public static function createTransaction(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::transaction());
+    }
+
+    public static function createSpan(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::span());
     }
 
     public static function createCheckIn(?EventId $eventId = null): self
@@ -411,6 +419,18 @@ final class Event
     public function setTransaction(?string $transaction): self
     {
         $this->transaction = $transaction;
+
+        return $this;
+    }
+
+    public function getSpan(): ?OnlySpan
+    {
+        return $this->span;
+    }
+
+    public function setSpan(?OnlySpan $span): self
+    {
+        $this->span = $span;
 
         return $this;
     }
