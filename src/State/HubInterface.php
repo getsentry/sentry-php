@@ -146,10 +146,10 @@ interface HubInterface
     /**
      * Returns the span that is on the Hub.
      */
-    public function getSpan(): ?Span;
+    public function getSpan();
 
     /**
      * Sets the span on the Hub.
      */
-    public function setSpan(?Span $span): HubInterface;
+    public function setSpan($span = null): HubInterface;
 }
