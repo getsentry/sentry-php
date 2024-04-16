@@ -52,6 +52,10 @@ class SpanItem implements EnvelopeItemInterface
 
         $payload['is_segment'] = $span->isSegment;
 
+        if ($span->parentSpanId !== null) {
+            $payload['parent_span_id'] = (string) $span->parentSpanId;
+        }
+
         if ($span->description !== null) {
             $payload['description'] = $span->description;
         }
@@ -64,9 +68,21 @@ class SpanItem implements EnvelopeItemInterface
             $payload['status'] = $span->status;
         }
 
-        if ($span->data !== null) {
+        if (!empty($span->data)) {
             $payload['data'] = $span->data;
         }
+
+        // if (!empty($span->tags)) {
+        //     $payload['tags'] = $span->tags;
+        // }
+
+        // if (!empty($span->context)) {
+        //     $payload['context'] = $span->context;
+        // }
+
+        // if (!empty($span->metricsSummary)) {
+        //     $payload['_metrics_summary'] = self::serializeMetricsSummary($span->metricsSummary);
+        // }
 
         if ($event->getRelease() !== null) {
             $payload['release'] = $event->getRelease();
@@ -76,11 +92,38 @@ class SpanItem implements EnvelopeItemInterface
             $payload['environment'] = $event->getEnvironment();
         }
 
-        // TBD: status
-        // TBD: transaction
+        // In general, mainly use data as it makes the SDK simpler
+        // See https://github.com/getsentry/rfcs/blob/main/text/0116-sentry-semantic-conventions.md
+
+        // TBD: description -> name (OTel does the same) ✅
+        // TBD: status -> use only three, HTTP status as context ✅
+        // TBD: transaction -> confusing -> data.sentry.segment.name (data.sentry.segment_name) ✅
         // TBD: trace-origin
-        // TBD: profiling
+        // TBD: profiling -> data.sentry.profiler_id
+        // TBD: tags?? -> this could become sentry.tags... field at one point
+
+        // TBD: exclusive_time can't be calculated for single spans
+        // see https://sentry.my.sentry.io/organizations/sentry/issues/797887/events/?query=sdk%3A%22sentry.javascript.browser%2F7.109.0%22
+        // we will remove the requirement for exclusive_time on Relay
 
         return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
+    }
+
+    /**
+     * @param array<string, array<string, MetricsSummary>> $metricsSummary
+     *
+     * @return array<string, mixed>
+     */
+    protected static function serializeMetricsSummary(array $metricsSummary): array
+    {
+        $formattedSummary = [];
+
+        foreach ($metricsSummary as $mri => $metrics) {
+            foreach ($metrics as $metric) {
+                $formattedSummary[$mri][] = $metric;
+            }
+        }
+
+        return $formattedSummary;
     }
 }

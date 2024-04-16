@@ -70,6 +70,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
             case EventType::span():
                 $items = SpanItem::toEnvelopeItem($event);
+                break;
             case EventType::checkIn():
                 $items[] = CheckInItem::toEnvelopeItem($event);
                 break;
