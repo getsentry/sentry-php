@@ -48,14 +48,22 @@ final class GuzzleTracingMiddleware
                     'path' => $request->getUri()->getPath(),
                 ]);
 
+                $spanAndBreadcrumbData = [
+                    'http.request.method' => $request->getMethod(),
+                    'http.request.body.size' => $request->getBody()->getSize(),
+                ];
+
+                if ($request->getUri()->getQuery() !== '') {
+                    $spanAndBreadcrumbData['http.query'] = $request->getUri()->getQuery();
+                }
+                if ($request->getUri()->getFragment() !== '') {
+                    $spanAndBreadcrumbData['http.fragment'] = $request->getUri()->getFragment();
+                }
+
                 $spanContext = new SpanContext();
                 $spanContext->setOp('http.client');
-                $spanContext->setDescription($request->getMethod() . ' ' . (string) $partialUri);
-                $spanContext->setData([
-                    'http.request.method' => $request->getMethod(),
-                    'http.query' => $request->getUri()->getQuery(),
-                    'http.fragment' => $request->getUri()->getFragment(),
-                ]);
+                $spanContext->setDescription($request->getMethod() . ' ' . $partialUri);
+                $spanContext->setData($spanAndBreadcrumbData);
 
                 $childSpan = $span->startChild($spanContext);
 
@@ -66,7 +74,7 @@ final class GuzzleTracingMiddleware
                         ->withHeader('baggage', $childSpan->toBaggage());
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $request, $childSpan, $partialUri) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $partialUri) {
                     // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                     // the span spans is as close to only the HTTP request time and do the data collection afterwards
                     $childSpan->finish();
@@ -80,23 +88,12 @@ final class GuzzleTracingMiddleware
                         $response = $responseOrException->getResponse();
                     }
 
-                    $breadcrumbData = [
-                        'url' => (string) $partialUri,
-                        'http.request.method' => $request->getMethod(),
-                        'http.request.body.size' => $request->getBody()->getSize(),
-                    ];
-                    if ($request->getUri()->getQuery() !== '') {
-                        $breadcrumbData['http.query'] = $request->getUri()->getQuery();
-                    }
-                    if ($request->getUri()->getFragment() !== '') {
-                        $breadcrumbData['http.fragment'] = $request->getUri()->getFragment();
-                    }
-
                     if ($response !== null) {
-                        $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
+                        $spanAndBreadcrumbData['http.response.body.size'] = $response->getBody()->getSize();
+                        $spanAndBreadcrumbData['http.response.status_code'] = $response->getStatusCode();
 
-                        $breadcrumbData['http.response.status_code'] = $response->getStatusCode();
-                        $breadcrumbData['http.response.body.size'] = $response->getBody()->getSize();
+                        $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
+                        $childSpan->setData($spanAndBreadcrumbData);
                     } else {
                         $childSpan->setStatus(SpanStatus::internalError());
                     }
@@ -106,7 +103,9 @@ final class GuzzleTracingMiddleware
                         Breadcrumb::TYPE_HTTP,
                         'http',
                         null,
-                        $breadcrumbData
+                        array_merge([
+                            'url' => (string) $partialUri,
+                        ], $spanAndBreadcrumbData)
                     ));
 
                     if ($responseOrException instanceof \Throwable) {
