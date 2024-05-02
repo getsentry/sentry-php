@@ -32,79 +32,110 @@ class SpanItem implements EnvelopeItemInterface
             'content_type' => 'application/json',
         ];
 
-        $payload = [
-            'platform' => 'php',
-            'sdk' => [
-                'name' => $event->getSdkIdentifier(),
-                'version' => $event->getSdkVersion(),
-            ],
-        ];
-
         $span = $event->getSpan();
 
-        $payload['start_timestamp'] = $span->startTimestamp;
-        $payload['timestamp'] = $span->endTimestamp;
-        $payload['exclusive_time'] = $span->exclusiveTime;
+        $payload = [
+            'traceId' => (string) $span->traceId,
+            'spanId' => (string) $span->spanId,
+            'parentSpanId' => (string) $span->parentSpanId,
+            // @ToDo(michi) name is required
+            'name' => $span->name ?? '<unlabeled span>',
+            'startTimeUnixNano' => (int) floor($span->startTimeUnixNano * 1_000_000_000),
+            'endTimeUnixNano' => (int) floor($span->endTimeUnixNano * 1_000_000_000),
+            // @ToDo(michi) tbd
+            'kind' => 0,
+        ];
 
-        $payload['trace_id'] = (string) $span->traceId;
-        $payload['segment_id'] = (string) $span->segmentId;
-        $payload['span_id'] = (string) $span->spanId;
-
-        $payload['is_segment'] = $span->isSegment;
-
-        if ($span->parentSpanId !== null) {
-            $payload['parent_span_id'] = (string) $span->parentSpanId;
+        foreach ($span->attributes as $attribute) {
+            $payload['attributes'][] = [
+                'key' => array_key_first($attribute),
+                'value' => [
+                    'stringValue' => $attribute[array_key_first($attribute)],
+                ],
+            ];
         }
 
-        if ($span->description !== null) {
-            $payload['description'] = $span->description;
+        if ($span->segmentSpan !== null) {
+            $payload['attributes'][] = [
+                'key' => 'sentry.segment.id',
+                'value' => [
+                    'stringValue' => (string) $span->segmentSpan->spanId,
+                ],
+            ];
+            $payload['attributes'][] = [
+                'key' => 'sentry.segment.name',
+                'value' => [
+                    'stringValue' => $span->segmentSpan->name,
+                ],
+            ];
+            // @TODO(michi) name is required
+            // $payload['attributes'][] = [
+            //     'key' => 'sentry.segment.op',
+            //     'value' => [
+            //         'stringValue' => $span->segmentSpan->spanId,
+            //     ],
+            // ];
+        } else {
+            $payload['attributes'][] = [
+                'key' => 'sentry.segment.id',
+                'value' => [
+                    'stringValue' => (string) $span->spanId,
+                ],
+            ];
+            $payload['attributes'][] = [
+                'key' => 'sentry.segment.name',
+                'value' => [
+                    'stringValue' => $span->name,
+                ],
+            ];
         }
-
-        if ($span->op !== null) {
-            $payload['op'] = $span->op;
-        }
-
-        if ($span->status !== null) {
-            $payload['status'] = $span->status;
-        }
-
-        if (!empty($span->data)) {
-            $payload['data'] = $span->data;
-        }
-
-        // if (!empty($span->tags)) {
-        //     $payload['tags'] = $span->tags;
-        // }
-
-        // if (!empty($span->context)) {
-        //     $payload['context'] = $span->context;
-        // }
-
-        // if (!empty($span->metricsSummary)) {
-        //     $payload['_metrics_summary'] = self::serializeMetricsSummary($span->metricsSummary);
-        // }
 
         if ($event->getRelease() !== null) {
-            $payload['release'] = $event->getRelease();
+            $payload['attributes'][] = [
+                'key' => 'sentry.release',
+                'value' => [
+                    'stringValue' => $event->getRelease(),
+                ],
+            ];
         }
-
         if ($event->getEnvironment() !== null) {
-            $payload['environment'] = $event->getEnvironment();
+            $payload['attributes'][] = [
+                'key' => 'sentry.environment',
+                'value' => [
+                    'stringValue' => $event->getEnvironment(),
+                ],
+            ];
         }
 
-        // In general, mainly use data as it makes the SDK simpler
-        // See https://github.com/getsentry/rfcs/blob/main/text/0116-sentry-semantic-conventions.md
+        $payload['attributes'][] = [
+            'key' => 'sentry.platform',
+            'value' => [
+                'stringValue' => 'php',
+            ],
+        ];
+        $payload['attributes'][] = [
+            'key' => 'sentry.sdk.name',
+            'value' => [
+                'stringValue' => $event->getSdkIdentifier(),
+            ],
+        ];
+        $payload['attributes'][] = [
+            'key' => 'sentry.sdk.version',
+            'value' => [
+                'stringValue' => $event->getSdkVersion(),
+            ],
+        ];
+        // @TODO(michi): add exclusive_time
+        // $payload['attributes'][] = [
+        //     'key' => 'sentry.exclusive_time_nano',
+        //     'value' => [
+        //         'integerValue' => $event->getEnvironment(),
+        //     ],
+        // ];
 
-        // TBD: description -> name (OTel does the same) ✅
-        // TBD: status -> use only three, HTTP status as context ✅
-        // TBD: transaction -> confusing -> data.sentry.segment.name (data.sentry.segment_name) ✅
-        // TBD: trace-origin
-        // TBD: profiling -> data.sentry.profiler_id
-        // TBD: tags?? -> this could become sentry.tags... field at one point
-
-        // TBD: exclusive_time can't be calculated for single spans
-        // see https://sentry.my.sentry.io/organizations/sentry/issues/797887/events/?query=sdk%3A%22sentry.javascript.browser%2F7.109.0%22
-        // we will remove the requirement for exclusive_time on Relay
+        // @TODO(michi): trace-origin
+        // @TODO(michi): add sentry.profiler.id attribute
+        // @TODO(michi): tags
 
         return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }

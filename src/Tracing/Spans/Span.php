@@ -14,48 +14,44 @@ class Span
  {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
-    private $hub;
+    public $name;
+
+    public $context = [];
 
     public $traceId;
-
-    public $segmentId;
     
     public $spanId;
 
     public $parentSpanId;
 
-    public $isSegment;
+    public $kind;
 
-    public $startTimestamp;
+    public $startTimeUnixNano;
 
-    public $endTimestamp;
+    public $endTimeUnixNano;
 
-    public $exclusiveTime;
+    public $attributes = [];
 
-    public $op;
-
-    public $description;
+    public $events = [];
 
     public $status;
 
-    public $tags = [];
+    public $links = [];
 
-    public $data = [];
+    // Sentry specifics
 
-    public $context = [];
+    private $hub;
+
+    public $segmentSpan;
 
     public $metadata = [];
-
-    public $metricsSummary = [];
 
     public function __construct()
     {
         $this->hub = SentrySdk::getCurrentHub();
 
         $this->traceId = TraceId::generate();
-        // $this->segmentId = SegmentId::generate();
         $this->spanId = SpanId::generate();
-        $this->segmentId = $this->spanId;
     }
 
     public static function make(): self
@@ -74,16 +70,14 @@ class Span
 
     public function start(): self
     {
-        $this->startTimestamp = microtime(true);
+        $this->startTimeUnixNano = microtime(true);
 
         $parentSpan = $this->hub->getSpan();
         if ($parentSpan !== null) {
             $this->parentSpanId = $parentSpan->spanId;
             $this->traceId = $parentSpan->traceId;
-            $this->segmentId = $parentSpan->segmentId;
-            $this->isSegment = false;
-        } else {
-            $this->isSegment = true;
+
+            $this->segmentSpan = $parentSpan->segmentSpan ?? $parentSpan;
         }
 
 
@@ -92,65 +86,37 @@ class Span
         return $this;
     }
 
-    public function setOp(string $op): self
+    public function setName(string $name): self
     {
-        $this->op = $op;
+        $this->name = $name;
 
         return $this;
     }
 
-    public function setDescription(string $description): self
+    public function setStartTimeUnixNanosetStartTime(float $startTime): self
     {
-        $this->description = $description;
+        $this->startTimeUnixNano = $startTime;
 
         return $this;
     }
 
-    public function setTags(array $tags): self
+    public function setAttribiute(string $key, $value): self
     {
-        $this->tags = array_merge($this->tags, $tags);
-
-        return $this;
-    }
-
-    public function setData(array $data)
-    {
-        $this->data = array_merge($this->data, $data);
-
-        return $this;
-    }
-
-    public function setContext(array $context)
-    {
-        $this->context = array_merge($this->context, $context);
-
-        return $this;
-    }
-
-    public function setStartTimestamp(?float $startTimestamp): self
-    {
-        $this->startTimestamp = $startTimestamp;
-
-        return $this;
-    }
-
-    public function setEndTimestamp(?float $endTimestamp): self
-    {
-        $this->endTimestamp = $endTimestamp;
+        $this->attributes[] = [
+            $key => $value,
+        ];
 
         return $this;
     }
 
     public function finish(): ?EventId
     {
-        if ($this->endTimestamp !== null) {
+        if ($this->endTimeUnixNano !== null) {
             // The span was already finished once and we don't want to re-flush it
             return null;
         }
 
-        $this->endTimestamp = microtime(true);
-        $this->exclusiveTime = $this->endTimestamp - $this->startTimestamp;
-
+        $this->endTimeUnixNano = microtime(true);
         $this->status = (string) SpanStatus::ok();
 
         $event = Event::createSpan();
@@ -171,26 +137,26 @@ class Span
         }
 
         // TBD do we need all this data on the trace context?
+        // 
+        // if ($this->description !== null) {
+        //     $result['description'] = $this->description;
+        // }
 
-        if ($this->description !== null) {
-            $result['description'] = $this->description;
-        }
+        // if ($this->op !== null) {
+        //     $result['op'] = $this->op;
+        // }
 
-        if ($this->op !== null) {
-            $result['op'] = $this->op;
-        }
+        // if ($this->status !== null) {
+        //     $result['status'] = (string) $this->status;
+        // }
 
-        if ($this->status !== null) {
-            $result['status'] = (string) $this->status;
-        }
+        // if (!empty($this->data)) {
+        //     $result['data'] = $this->data;
+        // }
 
-        if (!empty($this->data)) {
-            $result['data'] = $this->data;
-        }
-
-        if (!empty($this->tags)) {
-            $result['tags'] = $this->tags;
-        }
+        // if (!empty($this->tags)) {
+        //     $result['tags'] = $this->tags;
+        // }
 
         return $result;
     }

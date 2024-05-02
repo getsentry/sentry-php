@@ -82,6 +82,7 @@ final class Profile
 
     /**
      * @var string The version of the profile format
+     * @TODO(michi) VERSION::2
      */
     private const VERSION = '1';
 
@@ -249,6 +250,7 @@ final class Profile
             $samples[] = [
                 'stack_id' => $stackId,
                 'thread_id' => self::THREAD_ID,
+                // @TODO(michi) timestamp microtime(true)
                 'elapsed_since_start_ns' => (int) round($duration * 1e+9),
             ];
         }
@@ -267,30 +269,30 @@ final class Profile
         }
 
         return [
-            'device' => [
-                'architecture' => $osContext->getMachineType(),
-            ],
-            'event_id' => $this->eventId ? (string) $this->eventId : SentryUid::generate(),
-            'os' => [
-                'name' => $osContext->getName(),
-                'version' => $osContext->getVersion(),
-                'build_number' => $osContext->getBuild() ?? '',
-            ],
+            // 'device' => [
+            //     'architecture' => $osContext->getMachineType(),
+            // ],
+            // 'event_id' => $this->eventId ? (string) $this->eventId : SentryUid::generate(),
+            // 'os' => [
+            //     'name' => $osContext->getName(),
+            //     'version' => $osContext->getVersion(),
+            //     'build_number' => $osContext->getBuild() ?? '',
+            // ],
             'platform' => 'php',
             'release' => $event->getRelease() ?? '',
             'environment' => $event->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-            'runtime' => [
-                'name' => $runtimeContext->getName(),
-                'sapi' => $runtimeContext->getSAPI(),
-                'version' => $runtimeContext->getVersion(),
-            ],
-            'timestamp' => $startTime->format(\DATE_RFC3339_EXTENDED),
-            'transaction' => [
-                'id' => (string) $event->getId(),
-                'name' => $event->getTransaction(),
-                'trace_id' => $event->getTraceId(),
-                'active_thread_id' => self::THREAD_ID,
-            ],
+            // 'runtime' => [
+            //     'name' => $runtimeContext->getName(),
+            //     'sapi' => $runtimeContext->getSAPI(),
+            //     'version' => $runtimeContext->getVersion(),
+            // ],
+            // 'timestamp' => $startTime->format(\DATE_RFC3339_EXTENDED),
+            // 'transaction' => [
+            //     'id' => (string) $event->getId(),
+            //     'name' => $event->getTransaction(),
+            //     'trace_id' => $event->getTraceId(),
+            //     'active_thread_id' => self::THREAD_ID,
+            // ],
             'version' => self::VERSION,
             'profile' => [
                 'frames' => $frames,
