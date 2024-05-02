@@ -143,7 +143,7 @@ class Span
             $result['parent_span_id'] = (string) $this->parentSpanId;
         }
 
-        // TBD do we need all this data on the trace context?
+        // @TODO(michi) do we need all this data on the trace context?
         // 
         // if ($this->description !== null) {
         //     $result['description'] = $this->description;

@@ -135,16 +135,17 @@ final class MetricsAggregator
                 $defaultTags['release'] = $release;
             }
 
-            $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
-                $transaction = $scope->getTransaction();
-                if (
-                    $transaction !== null
-                    // Only include the transaction name if it has good quality
-                    && $transaction->getMetadata()->getSource() !== TransactionSource::url()
-                ) {
-                    $defaultTags['transaction'] = $transaction->getName();
-                }
-            });
+            // @TODO(michi) fix this
+            // $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
+            //     $transaction = $scope->getTransaction();
+            //     if (
+            //         $transaction !== null
+            //         // Only include the transaction name if it has good quality
+            //         && $transaction->getMetadata()->getSource() !== TransactionSource::url()
+            //     ) {
+            //         $defaultTags['transaction'] = $transaction->getName();
+            //     }
+            // });
 
             $tags = array_merge($defaultTags, $tags);
         }
