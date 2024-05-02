@@ -94,9 +94,10 @@ final class MetricsAggregator
         }
 
         $span = $hub->getSpan();
-        if ($span !== null) {
-            $span->setMetricsSummary($type, $key, $value, $unit, $tags);
-        }
+        // @TODO(michi) fix this
+        // if ($span !== null) {
+        //     $span->setMetricsSummary($type, $key, $value, $unit, $tags);
+        // }
     }
 
     public function flush(): ?EventId
