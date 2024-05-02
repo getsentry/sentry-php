@@ -38,11 +38,11 @@ class SpanItem implements EnvelopeItemInterface
             'traceId' => (string) $span->traceId,
             'spanId' => (string) $span->spanId,
             'parentSpanId' => (string) $span->parentSpanId,
-            // @ToDo(michi) name is required
+            // @TODO(michi) name is required
             'name' => $span->name ?? '<unlabeled span>',
             'startTimeUnixNano' => (int) floor($span->startTimeUnixNano * 1_000_000_000),
             'endTimeUnixNano' => (int) floor($span->endTimeUnixNano * 1_000_000_000),
-            // @ToDo(michi) tbd
+            // @TODO(michi)) tbd
             'kind' => 0,
         ];
 
