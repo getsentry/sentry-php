@@ -168,6 +168,11 @@ class Span
         return $result;
     }
 
+    public function toTraceparent(): string
+    {
+        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-1');
+    }
+
     private static function parseTraceAndBaggage(Span $span, string $sentryTrace, string $baggage)
     {
         $hasSentryTrace = false;
