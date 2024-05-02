@@ -100,6 +100,13 @@ class Span
         return $this;
     }
 
+    public function setEndTimeUnixNanosetStartTime(float $endTime): self
+    {
+        $this->endTimeUnixNano = $endTime;
+
+        return $this;
+    }
+
     public function setAttribiute(string $key, $value): self
     {
         $this->attributes[] = [
