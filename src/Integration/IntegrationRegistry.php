@@ -58,7 +58,7 @@ final class IntegrationRegistry
 
             $integrations[$integrationName] = $integration;
 
-            if ($this->setupIntegration($integration)) {
+            if ($this->setupIntegration($integration, $options)) {
                 $installed[] = $integrationName;
             }
         }
@@ -70,12 +70,16 @@ final class IntegrationRegistry
         return $integrations;
     }
 
-    private function setupIntegration(IntegrationInterface $integration): bool
+    private function setupIntegration(IntegrationInterface $integration, Options $options): bool
     {
         $integrationName = \get_class($integration);
 
         if (isset($this->integrations[$integrationName])) {
             return false;
+        }
+
+        if ($integration instanceof OptionAwareIntegrationInterface) {
+            $integration->setOptions($options);
         }
 
         $integration->setupOnce();

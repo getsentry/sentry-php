@@ -101,6 +101,11 @@ final class ErrorHandler
     private $memoryLimitIncreaseOnOutOfMemoryErrorValue = 5 * 1024 * 1024; // 5 MiB
 
     /**
+     * @var Options|null The SDK options
+     */
+    private $options;
+
+    /**
      * @var bool Whether the memory limit has been increased
      */
     private static $didIncreaseMemoryLimit = false;
@@ -153,11 +158,13 @@ final class ErrorHandler
     /**
      * Registers the error handler once and returns its instance.
      */
-    public static function registerOnceErrorHandler(): self
+    public static function registerOnceErrorHandler(?Options $options = null): self
     {
         if (self::$handlerInstance === null) {
             self::$handlerInstance = new self();
         }
+
+        self::$handlerInstance->options = $options;
 
         if (self::$handlerInstance->isErrorHandlerRegistered) {
             return self::$handlerInstance;
@@ -326,23 +333,39 @@ final class ErrorHandler
             }
         }
 
-        if ($isSilencedError) {
-            $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
-        } else {
-            $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+        if ($this->shouldHandleError($level, $isSilencedError)) {
+            if ($isSilencedError) {
+                $errorAsException = new SilencedErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+            } else {
+                $errorAsException = new \ErrorException(self::ERROR_LEVELS_DESCRIPTION[$level] . ': ' . $message, 0, $level, $file, $line);
+            }
+
+            $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $errorAsException->getFile(), $errorAsException->getLine());
+
+            $this->exceptionReflection->setValue($errorAsException, $backtrace);
+
+            $this->invokeListeners($this->errorListeners, $errorAsException);
         }
-
-        $backtrace = $this->cleanBacktraceFromErrorHandlerFrames($errorAsException->getTrace(), $errorAsException->getFile(), $errorAsException->getLine());
-
-        $this->exceptionReflection->setValue($errorAsException, $backtrace);
-
-        $this->invokeListeners($this->errorListeners, $errorAsException);
 
         if ($this->previousErrorHandler !== null) {
             return false !== ($this->previousErrorHandler)($level, $message, $file, $line, $errcontext);
         }
 
         return false;
+    }
+
+    private function shouldHandleError(int $level, bool $silenced): bool
+    {
+        // If we were not given any options, we should handle all errors
+        if ($this->options === null) {
+            return true;
+        }
+
+        if ($silenced) {
+            return $this->options->shouldCaptureSilencedErrors();
+        }
+
+        return ($this->options->getErrorTypes() & $level) !== 0;
     }
 
     /**

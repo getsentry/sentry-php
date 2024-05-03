@@ -73,13 +73,13 @@ final class IntegrationRegistryTest extends TestCase
         ];
 
         yield 'Default integrations and no user integrations' => [
-            new Options([
+            $options = new Options([
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
             ]),
             [
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => new ErrorListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
                 RequestIntegration::class => new RequestIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
@@ -104,7 +104,7 @@ final class IntegrationRegistryTest extends TestCase
         ];
 
         yield 'Default integrations and some user integrations' => [
-            new Options([
+            $options = new Options([
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => [
@@ -114,7 +114,7 @@ final class IntegrationRegistryTest extends TestCase
             ]),
             [
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => new ErrorListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
                 RequestIntegration::class => new RequestIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
@@ -127,7 +127,7 @@ final class IntegrationRegistryTest extends TestCase
         ];
 
         yield 'Default integrations and some user integrations, one of which is also a default integration' => [
-            new Options([
+            $options = new Options([
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => [
@@ -137,7 +137,7 @@ final class IntegrationRegistryTest extends TestCase
             ]),
             [
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => new ErrorListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
                 RequestIntegration::class => new RequestIntegration(),
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
@@ -149,7 +149,7 @@ final class IntegrationRegistryTest extends TestCase
         ];
 
         yield 'Default integrations and one user integration, the ModulesIntegration is also a default integration' => [
-            new Options([
+            $options = new Options([
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => [
@@ -158,7 +158,7 @@ final class IntegrationRegistryTest extends TestCase
             ]),
             [
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => new ErrorListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
                 RequestIntegration::class => new RequestIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
@@ -192,7 +192,7 @@ final class IntegrationRegistryTest extends TestCase
         ];
 
         yield 'Default integrations and a callable as user integrations' => [
-            new Options([
+            $options = new Options([
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
                 'integrations' => static function (array $defaultIntegrations): array {
@@ -201,7 +201,7 @@ final class IntegrationRegistryTest extends TestCase
             ]),
             [
                 ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => new ErrorListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
                 FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
                 RequestIntegration::class => new RequestIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
