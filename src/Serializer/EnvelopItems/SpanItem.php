@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer\EnvelopItems;
 
+use Exception;
 use Sentry\Event;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
 use Sentry\Tracing\Span;
@@ -47,10 +48,38 @@ class SpanItem implements EnvelopeItemInterface
         ];
 
         foreach ($span->attributes as $attribute) {
+            $key = array_key_first($attribute);
+            $value = $attribute[$key];
+            $type = gettype($value);
+
+            switch ($type) {
+                case 'boolean':
+                    $valueType = 'booleanValue';
+                    break;
+                case 'integer':
+                    $valueType = 'integerValue';
+                    break;
+                case 'double':
+                    $valueType = 'floatValue';
+                    break;
+                case 'string':
+                    $valueType = 'stringValue';
+                    break;
+                default:
+                    // @TODO(michi) this is temporary
+                    throw new Exception(
+                        sprintf(
+                            'Unknown attribute value type passed "%" for key "%"',
+                            $type,
+                            $key
+                        )
+                    );
+            }
+
             $payload['attributes'][] = [
                 'key' => array_key_first($attribute),
                 'value' => [
-                    'stringValue' => $attribute[array_key_first($attribute)],
+                    $valueType => $attribute[array_key_first($attribute)],
                 ],
             ];
         }
@@ -136,6 +165,8 @@ class SpanItem implements EnvelopeItemInterface
         // @TODO(michi): trace-origin
         // @TODO(michi): add sentry.profiler.id attribute
         // @TODO(michi): tags
+
+        debug($payload);
 
         return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }
