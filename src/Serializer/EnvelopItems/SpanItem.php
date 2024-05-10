@@ -50,7 +50,7 @@ class SpanItem implements EnvelopeItemInterface
             $payload['attributes'][] = [
                 'key' => array_key_first($attribute),
                 'value' => [
-                    'stringValue' => $attribute[array_key_first($attribute)],
+                    'stringValue' => (string) $attribute[array_key_first($attribute)],
                 ],
             ];
         }
