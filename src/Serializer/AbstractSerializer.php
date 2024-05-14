@@ -165,7 +165,10 @@ abstract class AbstractSerializer
         $serializers = [];
 
         foreach ($this->options->getClassSerializers() as $type => $serializer) {
-            if ($object instanceof $type || is_callable($serializer)) {
+            if ($object instanceof $type) {
+                $serializers[] = $serializer;
+            }
+            elseif ('callable' == $type && is_callable($serializer)) {
                 $serializers[] = $serializer;
             }
         }
