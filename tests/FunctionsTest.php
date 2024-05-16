@@ -365,6 +365,7 @@ final class FunctionsTest extends TestCase
         $hub = new Hub();
 
         $transaction = new Transaction(new TransactionContext());
+        $transaction->setSampled(true);
 
         $hub->setSpan($transaction);
 
