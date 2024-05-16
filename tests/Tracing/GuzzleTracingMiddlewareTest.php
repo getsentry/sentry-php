@@ -23,10 +23,10 @@ use Sentry\Tracing\TransactionContext;
 
 final class GuzzleTracingMiddlewareTest extends TestCase
 {
-    public function testTraceDoesNothingIfSpanIsNotSet(): void
+    public function testTraceCreatesBreadcrumbIfSpanIsNotSet(): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->atLeast(2))
             ->method('getOptions')
             ->willReturn(new Options());
 
@@ -55,7 +55,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
             $scope->applyToEvent($event);
 
-            $this->assertCount(0, $event->getBreadcrumbs());
+            $this->assertCount(1, $event->getBreadcrumbs());
         });
     }
 
@@ -95,7 +95,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     /**
      * @dataProvider traceHeadersDataProvider
      */
-    public function testTraceHeadersWithTransacttion(Request $request, Options $options, bool $headersShouldBePresent): void
+    public function testTraceHeadersWithTransaction(Request $request, Options $options, bool $headersShouldBePresent): void
     {
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->atLeast(2))
