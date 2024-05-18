@@ -280,7 +280,7 @@ abstract class AbstractSerializer
      */
     protected function serializeCallable($callable): string
     {
-        if (\is_string($callable) && !\function_exists($callable)) {
+        if (\is_string($callable)) {
             return $callable;
         }
 
