@@ -47,6 +47,21 @@ final class EventType implements \Stringable
         return self::getInstance('metrics');
     }
 
+    /**
+     * List of all cases on the enum.
+     *
+     * @return self[]
+     */
+    public static function cases(): array
+    {
+        return [
+            self::event(),
+            self::transaction(),
+            self::checkIn(),
+            self::metrics(),
+        ];
+    }
+
     public function __toString(): string
     {
         return $this->value;

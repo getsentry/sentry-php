@@ -185,7 +185,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     /**
      * @dataProvider traceDataProvider
      */
-    public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData): void
+    public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData, array $expectedSpanData): void
     {
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->exactly(4))
@@ -201,7 +201,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg) use ($hub, $request, $expectedPromiseResult, $expectedBreadcrumbData): bool {
+            ->with($this->callback(function (Event $eventArg) use ($hub, $request, $expectedPromiseResult, $expectedBreadcrumbData, $expectedSpanData): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
                 $hub->configureScope(static function (Scope $scope) use ($eventArg): void {
@@ -233,6 +233,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                     $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
                 }
 
+                $this->assertSame($expectedSpanData, $guzzleSpan->getData());
                 $this->assertSame($expectedBreadcrumbData, $guzzleBreadcrumb->getMetadata());
 
                 return true;
@@ -277,8 +278,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
-                'http.response.status_code' => 200,
                 'http.response.body.size' => 0,
+                'http.response.status_code' => 200,
+            ],
+            [
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
+                'http.response.body.size' => 0,
+                'http.response.status_code' => 200,
             ],
         ];
 
@@ -291,8 +298,16 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'http.request.body.size' => 0,
                 'http.query' => 'query=string',
                 'http.fragment' => 'fragment=1',
-                'http.response.status_code' => 200,
                 'http.response.body.size' => 0,
+                'http.response.status_code' => 200,
+            ],
+            [
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
+                'http.query' => 'query=string',
+                'http.fragment' => 'fragment=1',
+                'http.response.body.size' => 0,
+                'http.response.status_code' => 200,
             ],
         ];
 
@@ -303,8 +318,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'http.request.method' => 'POST',
                 'http.request.body.size' => 10,
-                'http.response.status_code' => 403,
                 'http.response.body.size' => 6,
+                'http.response.status_code' => 403,
+            ],
+            [
+                'http.request.method' => 'POST',
+                'http.request.body.size' => 10,
+                'http.response.body.size' => 6,
+                'http.response.status_code' => 403,
             ],
         ];
 
@@ -313,6 +334,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new \Exception(),
             [
                 'url' => 'https://www.example.com',
+                'http.request.method' => 'GET',
+                'http.request.body.size' => 0,
+            ],
+            [
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
             ],

@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 4.7.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.7.0.
+
+### Features
+
+- Improve debugging experience by emitting more logs from the SDK [(#1705)](https://github.com/getsentry/sentry-php/pull/1705)
+- Handle `metric_bucket` rate limits [(#1726)](https://github.com/getsentry/sentry-php/pull/1726) & [(#1728)](https://github.com/getsentry/sentry-php/pull/1728)
+
+### Bug Fixes
+
+- Fix deprecation notice when trying to serialize a callable [(#1732)](https://github.com/getsentry/sentry-php/pull/1732)
+
+### Misc
+
+- Deprecated `SpanStatus::resourceExchausted()`. Use `SpanStatus::resourceExhausted()` instead [(#1725)](https://github.com/getsentry/sentry-php/pull/1725)
+- Update metric normalization [(#1729)](https://github.com/getsentry/sentry-php/pull/1729)
+
 ## 4.6.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.6.1.
