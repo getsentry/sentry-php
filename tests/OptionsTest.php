@@ -627,6 +627,8 @@ final class OptionsTest extends TestCase
 
     /**
      * @dataProvider enableTracingDataProvider
+     *
+     * @deprecated since version 4.7. To be removed in version 5.0
      */
     public function testEnableTracing(?bool $enabledTracing, ?float $tracesSampleRate, $expectedResult): void
     {
