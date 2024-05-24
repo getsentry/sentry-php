@@ -28,7 +28,6 @@ use Sentry\Tracing\TransactionContext;
  *     context_lines?: int|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|null|Dsn,
- *     enable_tracing?: bool|null,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
