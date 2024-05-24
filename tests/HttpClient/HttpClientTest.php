@@ -71,7 +71,30 @@ class HttpClientTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals($response->getStatusCode(), $serverOutput['status']);
         $this->assertEquals($request->getStringBody(), $serverOutput['body']);
+        $this->assertEquals($response->getError(), '');
         $this->assertEquals(\strlen($request->getStringBody()), $serverOutput['headers']['Content-Length']);
+    }
+
+    public function testClientReturnsBodyAsErrorOnNonSuccessStatusCode(): void
+    {
+        $testServer = $this->startTestServer();
+
+        $options = new Options([
+            'dsn' => "http://publicKey@{$testServer}/400",
+        ]);
+
+        $request = new Request();
+        $request->setStringBody('test');
+
+        $client = new HttpClient('sentry.php', 'testing');
+        $response = $client->sendRequest($request, $options);
+
+        $this->stopTestServer();
+
+        $this->assertFalse($response->isSuccess());
+        $this->assertEquals(400, $response->getStatusCode());
+
+        $this->assertEquals($request->getStringBody(), $response->getError());
     }
 
     public function testThrowsExceptionIfDsnOptionIsNotSet(): void
