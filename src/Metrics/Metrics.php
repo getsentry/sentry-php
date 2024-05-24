@@ -145,32 +145,32 @@ class Metrics
         array $tags = [],
         int $stackLevel = 0
     ) {
-        $result = trace(function () use ($callback, $key, $tags, $stackLevel) {
-            $startTimestamp = microtime(true);
+        return trace(
+            function () use ($callback, $key, $tags, $stackLevel) {
+                $startTimestamp = microtime(true);
 
-            $result = $callback();
+                $result = $callback();
 
-            /**
-             * Emitting the metric here, will attach it to the
-             * "metric.timing" span
-             */
-            $this->aggregator->add(
-                DistributionType::TYPE,
-                $key,
-                microtime(true) - $startTimestamp,
-                MetricsUnit::second(),
-                $tags,
-                (int) $startTimestamp,
-                $stackLevel
-            );
+                /**
+                 * Emitting the metric here, will attach it to the
+                 * "metric.timing" span.
+                 */
+                $this->aggregator->add(
+                    DistributionType::TYPE,
+                    $key,
+                    microtime(true) - $startTimestamp,
+                    MetricsUnit::second(),
+                    $tags,
+                    (int) $startTimestamp,
+                    $stackLevel + 4 // the `trace` helper adds 4 additional stack frames
+                );
 
-            return $result;
-        }, SpanContext::make()
-            ->setOp('metric.timing')
-            ->setDescription($key)
+                return $result;
+            },
+            SpanContext::make()
+                ->setOp('metric.timing')
+                ->setDescription($key)
         );
-
-        return $result;
     }
 
     public function flush(): ?EventId
