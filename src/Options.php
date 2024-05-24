@@ -130,6 +130,8 @@ final class Options
      * precedence.
      *
      * @param bool|null $enableTracing Boolean if tracing should be enabled or not
+     *
+     * @deprecated since version 4.7. To be removed in version 5.0
      */
     public function setEnableTracing(?bool $enableTracing): self
     {
@@ -144,6 +146,8 @@ final class Options
      * Gets if tracing is enabled or not.
      *
      * @return bool|null If the option `enable_tracing` is set or not
+     *
+     * @deprecated since version 4.7. To be removed in version 5.0
      */
     public function getEnableTracing(): ?bool
     {
