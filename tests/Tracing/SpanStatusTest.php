@@ -45,7 +45,7 @@ final class SpanStatusTest extends TestCase
         ];
 
         yield [
-            SpanStatus::resourceExchausted(),
+            SpanStatus::resourceExhausted(),
             'resource_exhausted',
         ];
 
