@@ -1100,7 +1100,7 @@ final class Options
             'logger' => null,
             'spotlight' => false,
             'spotlight_url' => 'http://localhost:8969',
-            'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
+            'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],

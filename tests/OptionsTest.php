@@ -611,6 +611,27 @@ final class OptionsTest extends TestCase
         $this->assertSame('0.0.1', (new Options())->getRelease());
     }
 
+    /**
+     * @backupGlobals enabled
+     */
+    public function testReleaseOptionDefaultValueIsGotFromLambdaEnvironmentVariable(): void
+    {
+        $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] = '0.0.2';
+
+        $this->assertSame('0.0.2', (new Options())->getRelease());
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testReleaseOptionDefaultValueIsPreferredFromSentryEnvironmentVariable(): void
+    {
+        $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] = '0.0.3';
+        $_SERVER['SENTRY_RELEASE'] = '0.0.4';
+
+        $this->assertSame('0.0.4', (new Options())->getRelease());
+    }
+
     public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
     {
         $errorReportingBeforeTest = error_reporting(\E_ERROR);
