@@ -292,7 +292,7 @@ abstract class AbstractSerializer
             if (\is_array($callable)) {
                 $reflection = new \ReflectionMethod($callable[0], $callable[1]);
                 $class = $reflection->getDeclaringClass();
-            } elseif ($callable instanceof \Closure || (\is_string($callable) && \function_exists($callable))) {
+            } elseif ($callable instanceof \Closure) {
                 $reflection = new \ReflectionFunction($callable);
                 $class = null;
             } elseif (\is_object($callable) && method_exists($callable, '__invoke')) {
