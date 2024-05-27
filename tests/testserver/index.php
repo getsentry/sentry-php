@@ -53,4 +53,4 @@ header('X-Sentry-Test-Server-Status-Code: ' . $status);
 
 http_response_code($status);
 
-return 'Processed.';
+echo $body;
