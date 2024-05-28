@@ -540,6 +540,11 @@ abstract class AbstractSerializerTest extends TestCase
                 'expected' => 'Lambda void {closure} [int|null param1_70ns]',
             ],
             [
+                // This is (a example of) a PHP provided function that is technically callable but we want to ignore that because it causes more false positives than it helps
+                'callable' => 'header',
+                'expected' => 'header',
+            ],
+            [
                 'callable' => __METHOD__,
                 'expected' => __METHOD__,
             ],
