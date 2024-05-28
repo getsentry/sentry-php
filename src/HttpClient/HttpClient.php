@@ -89,6 +89,7 @@ class HttpClient implements HttpClientInterface
             curl_setopt($curlHandle, \CURLOPT_PROXYUSERPWD, $httpProxyAuthentication);
         }
 
+        /** @var string|false $body */
         $body = curl_exec($curlHandle);
 
         if ($body === false) {
@@ -105,6 +106,8 @@ class HttpClient implements HttpClientInterface
 
         curl_close($curlHandle);
 
-        return new Response($statusCode, $responseHeaders, '');
+        $error = $statusCode >= 400 ? $body : '';
+
+        return new Response($statusCode, $responseHeaders, $error);
     }
 }
