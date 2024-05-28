@@ -40,12 +40,11 @@ class Metrics
     }
 
     /**
-     * @param int|float             $value
      * @param array<string, string> $tags
      */
     public function increment(
         string $key,
-        $value,
+        float $value,
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
@@ -63,12 +62,11 @@ class Metrics
     }
 
     /**
-     * @param int|float             $value
      * @param array<string, string> $tags
      */
     public function distribution(
         string $key,
-        $value,
+        float $value,
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
@@ -86,12 +84,11 @@ class Metrics
     }
 
     /**
-     * @param int|float             $value
      * @param array<string, string> $tags
      */
     public function gauge(
         string $key,
-        $value,
+        float $value,
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
