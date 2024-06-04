@@ -130,6 +130,8 @@ final class Options
      * precedence.
      *
      * @param bool|null $enableTracing Boolean if tracing should be enabled or not
+     *
+     * @deprecated since version 4.7. To be removed in version 5.0
      */
     public function setEnableTracing(?bool $enableTracing): self
     {
@@ -144,6 +146,8 @@ final class Options
      * Gets if tracing is enabled or not.
      *
      * @return bool|null If the option `enable_tracing` is set or not
+     *
+     * @deprecated since version 4.7. To be removed in version 5.0
      */
     public function getEnableTracing(): ?bool
     {
@@ -1100,7 +1104,7 @@ final class Options
             'logger' => null,
             'spotlight' => false,
             'spotlight_url' => 'http://localhost:8969',
-            'release' => $_SERVER['SENTRY_RELEASE'] ?? null,
+            'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],

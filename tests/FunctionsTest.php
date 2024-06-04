@@ -364,7 +364,8 @@ final class FunctionsTest extends TestCase
     {
         $hub = new Hub();
 
-        $transaction = new Transaction(new TransactionContext());
+        $transaction = new Transaction(TransactionContext::make());
+        $transaction->setSampled(true);
 
         $hub->setSpan($transaction);
 
@@ -385,6 +386,30 @@ final class FunctionsTest extends TestCase
         } catch (\RuntimeException $e) {
             $this->assertSame($transaction, $hub->getSpan());
         }
+    }
+
+    public function testTraceDoesntCreateSpanIfTransactionIsNotSampled(): void
+    {
+        $scope = $this->createMock(Scope::class);
+
+        $hub = new Hub(null, $scope);
+
+        $transaction = new Transaction(TransactionContext::make());
+        $transaction->setSampled(false);
+
+        $scope->expects($this->never())
+              ->method('setSpan');
+        $scope->expects($this->exactly(3))
+              ->method('getSpan')
+              ->willReturn($transaction);
+
+        SentrySdk::setCurrentHub($hub);
+
+        trace(function () use ($transaction, $hub) {
+            $this->assertSame($transaction, $hub->getSpan());
+        }, SpanContext::make());
+
+        $this->assertSame($transaction, $hub->getSpan());
     }
 
     public function testTraceparentWithTracingDisabled(): void
