@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 4.8.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.8.0.
+
+### Features
+
+- Add timing span when emiting a timing metric [(#1717)](https://github.com/getsentry/sentry-php/pull/1717)
+
+  ```php
+  use function Sentry\metrics;
+
+  // This will now both emit a distribution metric and a span with the "expensive-operation" key
+  metrics()->timing(
+      key: 'expensive-operation',
+      callback: fn() => doExpensiveOperation(),
+  );
+  ```
+
+### Bug Fixes
+
+- Fix missing data on HTTP spans [(#1735)](https://github.com/getsentry/sentry-php/pull/1735)
+- Test span sampled status before creating child spans [(#1740)](https://github.com/getsentry/sentry-php/pull/1740)
+
+### Misc
+
+- Implement fast path for ignoring errors [(#1737)](https://github.com/getsentry/sentry-php/pull/1737)
+- Add array shape for better autocomplete of `Sentry\init` function [(#1738)](https://github.com/getsentry/sentry-php/pull/1738)
+- Represent callable strings as strings [(#1741)](https://github.com/getsentry/sentry-php/pull/1741)
+- Use `AWS_LAMBDA_FUNCTION_VERSION` environment variable for release if available [(#1742)](https://github.com/getsentry/sentry-php/pull/1742)
+
 ## 4.7.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.7.0.
