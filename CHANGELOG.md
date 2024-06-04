@@ -8,6 +8,16 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 - Add timing span when emiting a timing metric [(#1717)](https://github.com/getsentry/sentry-php/pull/1717)
 
+  ```php
+  use function Sentry\metrics;
+
+  // This will now both emit a distribution metric and a span with the "expensive-operation" key
+  metrics()->timing(
+      key: 'expensive-operation',
+      callback: fn() => doExpensiveOperation(),
+  );
+  ```
+
 ### Bug Fixes
 
 - Fix missing data on HTTP spans [(#1735)](https://github.com/getsentry/sentry-php/pull/1735)
