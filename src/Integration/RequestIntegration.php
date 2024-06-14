@@ -137,7 +137,7 @@ final class RequestIntegration implements IntegrationInterface
         if ($options->shouldSendDefaultPii()) {
             $serverParams = $request->getServerParams();
 
-            if (isset($serverParams['REMOTE_ADDR'])) {
+            if (!empty($serverParams['REMOTE_ADDR'])) {
                 $user = $event->getUser();
                 $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
 
