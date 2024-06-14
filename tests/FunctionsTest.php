@@ -50,9 +50,9 @@ final class FunctionsTest extends TestCase
 {
     public function testInit(): void
     {
-        init(['default_integrations' => false]);
+        $client = init(['default_integrations' => false]);
 
-        $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
+        $this->assertSame($client, SentrySdk::getCurrentHub()->getClient());
     }
 
     /**
