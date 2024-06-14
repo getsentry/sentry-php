@@ -165,6 +165,24 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => true,
+            ],
+            (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '']))
+                ->withHeader('Host', 'www.example.com'),
+            [
+                'url' => 'http://www.example.com',
+                'method' => 'GET',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
                 'send_default_pii' => false,
             ],
             (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
