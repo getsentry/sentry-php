@@ -94,7 +94,13 @@ The following integrations are available and maintained by members of the Sentry
 
 ## Contributing to the SDK
 
-Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
+Please make sure to read the [CONTRIBUTING.md](CONTRIBUTING.md) before making a pull request.
+
+Thanks to everyone who has contributed to this project so far.
+
+<a href="https://github.com/getsentry/sentry-php/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=getsentry/sentry-php" />
+</a>
 
 ## Getting help/support
 
