@@ -63,11 +63,13 @@ use Sentry\Tracing\TransactionContext;
  *     transport?: callable,
  * } $options The client options
  */
-function init(array $options = []): void
+function init(array $options = []): ClientInterface
 {
     $client = ClientBuilder::create($options)->getClient();
 
     SentrySdk::init()->bindClient($client);
+
+    return $client;
 }
 
 /**
