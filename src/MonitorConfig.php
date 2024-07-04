@@ -12,12 +12,12 @@ final class MonitorConfig
     private $schedule;
 
     /**
-     * @var int|null The check-in margin in seconds
+     * @var int|null The check-in margin in minutes
      */
     private $checkinMargin;
 
     /**
-     * @var int|null The maximum runtime in seconds
+     * @var int|null The maximum runtime in minutes
      */
     private $maxRuntime;
 
