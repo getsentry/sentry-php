@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.8.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.8.1.
+
+### Bug Fixes
+
+- Guard against empty `REMOTE_ADDR` [(#1751)](https://github.com/getsentry/sentry-php/pull/1751)
+
 ## 4.8.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.8.0.
