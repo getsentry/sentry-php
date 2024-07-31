@@ -272,4 +272,41 @@ final class SpanTest extends TestCase
             ],
         ], $span->getMetricsSummary());
     }
+
+    public function testDataGetter(): void
+    {
+        $span = new Span();
+
+        $initialData = [
+            'foo' => 'bar',
+            'baz' => 1,
+        ];
+
+        $span->setData($initialData);
+
+        $this->assertSame($initialData, $span->getData());
+        $this->assertSame('bar', $span->getData('foo'));
+        $this->assertSame(1, $span->getData('baz'));
+    }
+
+    public function testDataIsMergedWhenSet(): void
+    {
+        $span = new Span();
+
+        $span->setData([
+            'foo' => 'bar',
+            'baz' => 1,
+        ]);
+
+        $span->setData([
+            'baz' => 2,
+        ]);
+
+        $this->assertSame(2, $span->getData('baz'));
+        $this->assertSame('bar', $span->getData('foo'));
+        $this->assertSame([
+            'foo' => 'bar',
+            'baz' => 2,
+        ], $span->getData());
+    }
 }
