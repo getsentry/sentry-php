@@ -360,6 +360,17 @@ final class FunctionsTest extends TestCase
         $this->assertSame($returnValue, $result);
     }
 
+    public function testSpanContextTraceReturnsClosureResult(): void
+    {
+        $returnValue = 'foo';
+
+        $result = SpanContext::make()->trace(function () use ($returnValue) {
+            return $returnValue;
+        });
+
+        $this->assertSame($returnValue, $result);
+    }
+
     public function testTraceCorrectlyReplacesAndRestoresCurrentSpan(): void
     {
         $hub = new Hub();
