@@ -362,7 +362,7 @@ class Span
      * @param string|null $key     Select a specific key from the data to return the value of
      * @param mixed       $default When the $key is not found, return this value
      *
-     * @return ($key is string ? mixed : array<string, mixed>)
+     * @return ($key is null ? array<string, mixed> : mixed|null)
      */
     public function getData(?string $key = null, $default = null)
     {
