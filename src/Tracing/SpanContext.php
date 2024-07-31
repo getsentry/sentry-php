@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\State\Scope;
+
+use function Sentry\trace;
+
 class SpanContext
 {
     /**
@@ -242,5 +246,20 @@ class SpanContext
         $this->endTimestamp = $endTimestamp;
 
         return $this;
+    }
+
+    /**
+     * Execute the given callable while wrapping it in a span added as a child to the current transaction and active span.
+     * If there is no transaction active this is a no-op and the scope passed to the trace callable will be unused.
+     *
+     * @template T
+     *
+     * @param callable(Scope): T $trace The callable that is going to be traced
+     *
+     * @return T
+     */
+    public function trace(callable $trace)
+    {
+        return trace($trace, $this);
     }
 }
