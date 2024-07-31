@@ -510,7 +510,7 @@ class Span
         MetricsUnit $unit,
         array $tags
     ): void {
-        $mri = sprintf('%s:%s@%s', $type, $key, (string) $unit);
+        $mri = \sprintf('%s:%s@%s', $type, $key, (string) $unit);
         $bucketKey = $mri . serialize($tags);
 
         if (
@@ -567,7 +567,7 @@ class Span
             $sampled = $this->sampled ? '-1' : '-0';
         }
 
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return \sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**
@@ -584,7 +584,7 @@ class Span
             $sampled = '00';
         }
 
-        return sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return \sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**

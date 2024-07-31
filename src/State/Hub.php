@@ -260,7 +260,7 @@ class Hub implements HubInterface
         if ($options === null || !$options->isTracingEnabled()) {
             $transaction->setSampled(false);
 
-            $logger->warning(sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
+            $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
 
             return $transaction;
         }
@@ -289,7 +289,7 @@ class Hub implements HubInterface
             if (!$this->isValidSampleRate($sampleRate)) {
                 $transaction->setSampled(false);
 
-                $logger->warning(sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+                $logger->warning(\sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
 
                 return $transaction;
             }
@@ -299,7 +299,7 @@ class Hub implements HubInterface
             if ($sampleRate === 0.0) {
                 $transaction->setSampled(false);
 
-                $logger->info(sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is %s.', (string) $transaction->getTraceId(), $sampleSource, $sampleRate), ['context' => $context]);
+                $logger->info(\sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is %s.', (string) $transaction->getTraceId(), $sampleSource, $sampleRate), ['context' => $context]);
 
                 return $transaction;
             }
@@ -308,24 +308,24 @@ class Hub implements HubInterface
         }
 
         if (!$transaction->getSampled()) {
-            $logger->info(sprintf('Transaction [%s] was started but not sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+            $logger->info(\sprintf('Transaction [%s] was started but not sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
 
             return $transaction;
         }
 
-        $logger->info(sprintf('Transaction [%s] was started and sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+        $logger->info(\sprintf('Transaction [%s] was started and sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
 
         $transaction->initSpanRecorder();
 
         $profilesSampleRate = $options->getProfilesSampleRate();
         if ($profilesSampleRate === null) {
-            $logger->info(sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
+            $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
         } elseif ($this->sample($profilesSampleRate)) {
-            $logger->info(sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
+            $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 
             $transaction->initProfiler()->start();
         } else {
-            $logger->info(sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
+            $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
         }
 
         return $transaction;

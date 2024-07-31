@@ -267,7 +267,7 @@ final class RequestIntegration implements IntegrationInterface
             } elseif (\is_array($item)) {
                 $result[$key] = $this->parseUploadedFiles($item);
             } else {
-                throw new \UnexpectedValueException(sprintf('Expected either an object implementing the "%s" interface or an array. Got: "%s".', UploadedFileInterface::class, \is_object($item) ? \get_class($item) : \gettype($item)));
+                throw new \UnexpectedValueException(\sprintf('Expected either an object implementing the "%s" interface or an array. Got: "%s".', UploadedFileInterface::class, \is_object($item) ? \get_class($item) : \gettype($item)));
             }
         }
 

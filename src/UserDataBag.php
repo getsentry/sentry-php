@@ -133,7 +133,7 @@ final class UserDataBag
     public function setId($id): self
     {
         if ($id !== null && !\is_string($id) && !\is_int($id)) {
-            throw new \UnexpectedValueException(sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
+            throw new \UnexpectedValueException(\sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
         }
 
         $this->id = $id;
@@ -221,7 +221,7 @@ final class UserDataBag
     public function setIpAddress(?string $ipAddress): self
     {
         if ($ipAddress !== null && filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
-            throw new \InvalidArgumentException(sprintf('The "%s" value is not a valid IP address.', $ipAddress));
+            throw new \InvalidArgumentException(\sprintf('The "%s" value is not a valid IP address.', $ipAddress));
         }
 
         $this->ipAddress = $ipAddress;

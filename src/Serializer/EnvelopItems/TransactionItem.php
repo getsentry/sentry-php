@@ -134,7 +134,7 @@ class TransactionItem implements EnvelopeItemInterface
             $payload['transaction_info']['source'] = (string) $transactionMetadata->getSource();
         }
 
-        return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
+        return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }
 
     /**

@@ -254,14 +254,14 @@ final class Profile
         }
 
         if (!$this->validateMaxDuration((float) $duration)) {
-            $this->logger->warning(sprintf('The profile is %ss which is longer than the allowed %ss, the profile will be discarded.', (float) $duration, self::MAX_PROFILE_DURATION));
+            $this->logger->warning(\sprintf('The profile is %ss which is longer than the allowed %ss, the profile will be discarded.', (float) $duration, self::MAX_PROFILE_DURATION));
 
             return null;
         }
 
         $startTime = \DateTime::createFromFormat('U.u', number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
         if ($startTime === false) {
-            $this->logger->warning(sprintf('The start time (%s) of the profile is not valid, the profile will be discarded.', $this->startTimeStamp));
+            $this->logger->warning(\sprintf('The start time (%s) of the profile is not valid, the profile will be discarded.', $this->startTimeStamp));
 
             return null;
         }
