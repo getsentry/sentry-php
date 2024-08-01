@@ -30,6 +30,6 @@ class ProfileItem implements EnvelopeItemInterface
             return '';
         }
 
-        return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
+        return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }
 }

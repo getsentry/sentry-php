@@ -94,7 +94,7 @@ final class RateLimiter
                     }
 
                     $this->logger->warning(
-                        sprintf('Rate limited exceeded for category "%s", backing off until "%s".', $category, gmdate(\DATE_ATOM, $retryAfter))
+                        \sprintf('Rate limited exceeded for category "%s", backing off until "%s".', $category, gmdate(\DATE_ATOM, $retryAfter))
                     );
                 }
             }
@@ -108,7 +108,7 @@ final class RateLimiter
             $this->rateLimits['all'] = $retryAfter;
 
             $this->logger->warning(
-                sprintf('Rate limited exceeded for all categories, backing off until "%s".', gmdate(\DATE_ATOM, $retryAfter))
+                \sprintf('Rate limited exceeded for all categories, backing off until "%s".', gmdate(\DATE_ATOM, $retryAfter))
             );
 
             return true;

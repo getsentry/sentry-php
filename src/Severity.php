@@ -73,7 +73,7 @@ final class Severity implements \Stringable
     public function __construct(string $value = self::INFO)
     {
         if (!\in_array($value, self::ALLOWED_SEVERITIES, true)) {
-            throw new \InvalidArgumentException(sprintf('The "%s" is not a valid enum value.', $value));
+            throw new \InvalidArgumentException(\sprintf('The "%s" is not a valid enum value.', $value));
         }
 
         $this->value = $value;

@@ -72,17 +72,17 @@ final class Dsn implements \Stringable
         $parsedDsn = parse_url($value);
 
         if ($parsedDsn === false) {
-            throw new \InvalidArgumentException(sprintf('The "%s" DSN is invalid.', $value));
+            throw new \InvalidArgumentException(\sprintf('The "%s" DSN is invalid.', $value));
         }
 
         foreach (['scheme', 'host', 'path', 'user'] as $component) {
             if (!isset($parsedDsn[$component]) || (isset($parsedDsn[$component]) && empty($parsedDsn[$component]))) {
-                throw new \InvalidArgumentException(sprintf('The "%s" DSN must contain a scheme, a host, a user and a path component.', $value));
+                throw new \InvalidArgumentException(\sprintf('The "%s" DSN must contain a scheme, a host, a user and a path component.', $value));
             }
         }
 
         if (!\in_array($parsedDsn['scheme'], ['http', 'https'], true)) {
-            throw new \InvalidArgumentException(sprintf('The scheme of the "%s" DSN must be either "http" or "https".', $value));
+            throw new \InvalidArgumentException(\sprintf('The scheme of the "%s" DSN must be either "http" or "https".', $value));
         }
 
         $segmentPaths = explode('/', $parsedDsn['path']);

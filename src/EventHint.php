@@ -56,19 +56,19 @@ final class EventHint
         $extra = $hintData['extra'] ?? [];
 
         if ($exception !== null && !$exception instanceof \Throwable) {
-            throw new \InvalidArgumentException(sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, get_debug_type($exception)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, get_debug_type($exception)));
         }
 
         if ($mechanism !== null && !$mechanism instanceof ExceptionMechanism) {
-            throw new \InvalidArgumentException(sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, get_debug_type($mechanism)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, get_debug_type($mechanism)));
         }
 
         if ($stacktrace !== null && !$stacktrace instanceof Stacktrace) {
-            throw new \InvalidArgumentException(sprintf('The value of the "stacktrace" field must be an instance of the "%s" class. Got: "%s".', Stacktrace::class, get_debug_type($stacktrace)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "stacktrace" field must be an instance of the "%s" class. Got: "%s".', Stacktrace::class, get_debug_type($stacktrace)));
         }
 
         if (!\is_array($extra)) {
-            throw new \InvalidArgumentException(sprintf('The value of the "extra" field must be an array. Got: "%s".', get_debug_type($extra)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "extra" field must be an array. Got: "%s".', get_debug_type($extra)));
         }
 
         $hint->exception = $exception;

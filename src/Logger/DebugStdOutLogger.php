@@ -14,6 +14,6 @@ class DebugStdOutLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = []): void
     {
-        file_put_contents('php://stdout', sprintf("sentry/sentry: [%s] %s\n", $level, (string) $message));
+        file_put_contents('php://stdout', \sprintf("sentry/sentry: [%s] %s\n", $level, (string) $message));
     }
 }

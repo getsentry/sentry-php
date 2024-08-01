@@ -82,7 +82,7 @@ final class Profiler
         $this->profiler = new \ExcimerProfiler();
         $this->profile->setStartTimeStamp(microtime(true));
 
-        $this->profiler->setEventType(EXCIMER_REAL);
+        $this->profiler->setEventType(\EXCIMER_REAL);
         $this->profiler->setPeriod(self::SAMPLE_RATE);
         $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);
     }

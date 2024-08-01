@@ -22,7 +22,7 @@ final class SentryUid
 
         $uuid = bin2hex(random_bytes(16));
 
-        return sprintf('%08s%04s4%03s%04x%012s',
+        return \sprintf('%08s%04s4%03s%04x%012s',
             // 32 bits for "time_low"
             substr($uuid, 0, 8),
             // 16 bits for "time_mid"

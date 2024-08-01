@@ -208,7 +208,7 @@ class Scope
     public function setUser($user): self
     {
         if (!\is_array($user) && !$user instanceof UserDataBag) {
-            throw new \TypeError(sprintf('The $user argument must be either an array or an instance of the "%s" class. Got: "%s".', UserDataBag::class, get_debug_type($user)));
+            throw new \TypeError(\sprintf('The $user argument must be either an array or an instance of the "%s" class. Got: "%s".', UserDataBag::class, get_debug_type($user)));
         }
 
         if (\is_array($user)) {
@@ -419,7 +419,7 @@ class Scope
             }
 
             if (!$event instanceof Event) {
-                throw new \InvalidArgumentException(sprintf('The event processor must return null or an instance of the %s class', Event::class));
+                throw new \InvalidArgumentException(\sprintf('The event processor must return null or an instance of the %s class', Event::class));
             }
         }
 

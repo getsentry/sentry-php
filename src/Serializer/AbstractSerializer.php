@@ -285,7 +285,7 @@ abstract class AbstractSerializer
         }
 
         if (!\is_callable($callable)) {
-            throw new \InvalidArgumentException(sprintf('Expecting callable, got %s', \is_object($callable) ? \get_class($callable) : \gettype($callable)));
+            throw new \InvalidArgumentException(\sprintf('Expecting callable, got %s', \is_object($callable) ? \get_class($callable) : \gettype($callable)));
         }
 
         try {
