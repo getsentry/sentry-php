@@ -94,6 +94,13 @@ class Span
     protected $metricsSummary = [];
 
     /**
+     * @var string|null The trace origin of the span. If no origin is set, the span is considered to be "manual".
+     *
+     * @see https://develop.sentry.dev/sdk/performance/trace-origin/
+     */
+    protected $origin;
+
+    /**
      * Constructor.
      *
      * @param SpanContext|null $context The context to create the span with
@@ -121,6 +128,7 @@ class Span
         $this->tags = $context->getTags();
         $this->data = $context->getData();
         $this->endTimestamp = $context->getEndTimestamp();
+        $this->origin = $context->getOrigin();
     }
 
     /**
@@ -400,7 +408,8 @@ class Span
      *     span_id: string,
      *     status?: string,
      *     tags?: array<string, string>,
-     *     trace_id: string
+     *     trace_id: string,
+     *     origin: string,
      * }
      */
     public function getTraceContext(): array
@@ -408,6 +417,7 @@ class Span
         $result = [
             'span_id' => (string) $this->spanId,
             'trace_id' => (string) $this->traceId,
+            'origin' => $this->origin ?? 'manual',
         ];
 
         if ($this->parentSpanId !== null) {
@@ -552,6 +562,30 @@ class Span
                 'tags' => $tags,
             ];
         }
+    }
+
+    /**
+     * Sets the trace origin for this span.
+     *
+     * @return string|null
+     */
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
+    }
+
+    /**
+     * Sets the trace origin of the span.
+     *
+     * @param string|null $origin
+     *
+     * @return $this
+     */
+    public function setOrigin(?string $origin)
+    {
+        $this->origin = $origin;
+
+        return $this;
     }
 
     /**

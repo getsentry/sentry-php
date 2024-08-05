@@ -160,6 +160,7 @@ class TransactionItem implements EnvelopeItemInterface
             'span_id' => (string) $span->getSpanId(),
             'trace_id' => (string) $span->getTraceId(),
             'start_timestamp' => $span->getStartTimestamp(),
+            'origin' => $span->getOrigin() ?? 'manual',
         ];
 
         if ($span->getParentSpanId() !== null) {
