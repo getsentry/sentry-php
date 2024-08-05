@@ -566,8 +566,6 @@ class Span
 
     /**
      * Sets the trace origin for this span.
-     *
-     * @return string|null
      */
     public function getOrigin(): ?string
     {
@@ -576,8 +574,6 @@ class Span
 
     /**
      * Sets the trace origin of the span.
-     *
-     * @param string|null $origin
      *
      * @return $this
      */

@@ -62,7 +62,7 @@ class SpanContext
     private $endTimestamp;
 
     /**
-     * @var string|null The trace origin of the span.
+     * @var string|null the trace origin of the span
      */
     private $origin;
 
