@@ -357,18 +357,24 @@ class Span
     }
 
     /**
-     * Gets a map of arbitrary data.
+     * Gets a map of arbitrary data or a specific key from the map of data attached to this span.
      *
-     * @return array<string, mixed>
+     * @param string|null $key     Select a specific key from the data to return the value of
+     * @param mixed       $default When the $key is not found, return this value
+     *
+     * @return ($key is null ? array<string, mixed> : mixed|null)
      */
-    public function getData(): array
+    public function getData(?string $key = null, $default = null)
     {
-        return $this->data;
+        if ($key === null) {
+            return $this->data;
+        }
+
+        return $this->data[$key] ?? $default;
     }
 
     /**
-     * Sets a map of arbitrary data. This method will merge the given data with
-     * the existing one.
+     * Sets a map of arbitrary data. This method will merge the given data with the existing one.
      *
      * @param array<string, mixed> $data The data
      *
