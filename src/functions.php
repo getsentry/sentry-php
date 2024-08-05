@@ -47,7 +47,7 @@ use Sentry\Tracing\TransactionContext;
  *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
  *     max_value_length?: int,
  *     prefixes?: array<string>,
- *     profiler_sample_rate?: int|float|null,
+ *     profiles_sample_rate?: int|float|null,
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
