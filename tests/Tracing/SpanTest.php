@@ -309,4 +309,14 @@ final class SpanTest extends TestCase
             'baz' => 2,
         ], $span->getData());
     }
+
+    public function testOriginIsCopiedFromContext(): void
+    {
+        $context = SpanContext::make()->setOrigin('auto.testing');
+
+        $span = new Span($context);
+
+        $this->assertSame($context->getOrigin(), $span->getOrigin());
+        $this->assertSame($context->getOrigin(), $span->getTraceContext()['origin']);
+    }
 }

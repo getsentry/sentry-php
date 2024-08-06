@@ -166,6 +166,7 @@ class Metrics
             },
             SpanContext::make()
                 ->setOp('metric.timing')
+                ->setOrigin('auto.measure.metrics.timing')
                 ->setDescription($key)
         );
     }

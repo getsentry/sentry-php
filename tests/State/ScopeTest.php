@@ -420,6 +420,7 @@ final class ScopeTest extends TestCase
             'trace' => [
                 'span_id' => '566e3688a61d4bc8',
                 'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+                'origin' => 'manual',
                 'parent_span_id' => '8c2df92a922b4efe',
             ],
             'barcontext' => [
