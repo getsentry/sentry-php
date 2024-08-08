@@ -49,13 +49,13 @@ final class IntegrationRegistryTest extends TestCase
 
     public static function setupIntegrationsDataProvider(): iterable
     {
-        $integration1 = new class() implements IntegrationInterface {
+        $integration1 = new class implements IntegrationInterface {
             public function setupOnce(): void
             {
             }
         };
 
-        $integration2 = new class() implements IntegrationInterface {
+        $integration2 = new class implements IntegrationInterface {
             public function setupOnce(): void
             {
             }

@@ -48,7 +48,7 @@ final class StacktraceTest extends TestCase
         ];
 
         yield [
-            [new class() {
+            [new class {
             }],
             '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "class@anonymous.*"\.$/',
         ];
