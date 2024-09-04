@@ -363,6 +363,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_ssl_native_ca',
+            true,
+            'getHttpSslNativeCa',
+            'setHttpSslNativeCa',
+        ];
+
+        yield [
             'http_compression',
             false,
             'isHttpCompressionEnabled',
