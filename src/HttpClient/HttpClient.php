@@ -78,6 +78,17 @@ class HttpClient implements HttpClientInterface
             curl_setopt($curlHandle, \CURLOPT_SSL_VERIFYPEER, false);
         }
 
+        $httpSslNativeCa = $options->getHttpSslNativeCa();
+        if ($httpSslNativeCa) {
+            if (
+                \defined('CURLSSLOPT_NATIVE_CA')
+                && isset(curl_version()['version'])
+                && version_compare(curl_version()['version'], '7.71', '>=')
+            ) {
+                curl_setopt($curlHandle, \CURLOPT_SSL_OPTIONS, \CURLSSLOPT_NATIVE_CA);
+            }
+        }
+
         $httpProxy = $options->getHttpProxy();
         if ($httpProxy !== null) {
             curl_setopt($curlHandle, \CURLOPT_PROXY, $httpProxy);
