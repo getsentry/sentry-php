@@ -51,7 +51,7 @@ final class UserDataBag
         ?string $email = null,
         ?string $ipAddress = null,
         ?string $username = null,
-        ?string $segment = null
+        ?string $segment = null,
     ) {
         $this->setId($id);
         $this->setEmail($email);

@@ -46,7 +46,7 @@ final class OptionsTest extends TestCase
         string $option,
         $value,
         string $getterMethod,
-        ?string $setterMethod
+        ?string $setterMethod,
     ): void {
         $options = new Options([$option => $value]);
 
@@ -62,7 +62,7 @@ final class OptionsTest extends TestCase
         string $option,
         $value,
         string $getterMethod,
-        ?string $setterMethod
+        ?string $setterMethod,
     ): void {
         $options = new Options();
 

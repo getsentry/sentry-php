@@ -22,7 +22,7 @@ final class DsnTest extends TestCase
         int $expectedPort,
         string $expectedPublicKey,
         string $expectedProjectId,
-        string $expectedPath
+        string $expectedPath,
     ): void {
         $dsn = Dsn::createFromString($value);
 

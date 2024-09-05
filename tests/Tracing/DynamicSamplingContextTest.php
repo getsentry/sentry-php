@@ -28,7 +28,7 @@ final class DynamicSamplingContextTest extends TestCase
         ?string $expectedSampleRate,
         ?string $expectedRelease,
         ?string $expectedEnvironment,
-        ?string $expectedTransaction
+        ?string $expectedTransaction,
     ): void {
         $samplingContext = DynamicSamplingContext::fromHeader($header);
 

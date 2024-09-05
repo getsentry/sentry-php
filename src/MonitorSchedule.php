@@ -33,7 +33,7 @@ final class MonitorSchedule
     public function __construct(
         string $type,
         $value,
-        ?MonitorScheduleUnit $unit = null
+        ?MonitorScheduleUnit $unit = null,
     ) {
         $this->type = $type;
         $this->value = $value;

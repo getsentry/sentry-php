@@ -16,7 +16,7 @@ final class ExceptionMechanismTest extends TestCase
         array $constructorArgs,
         string $expectedType,
         bool $expectedHandled,
-        array $expectedData
+        array $expectedData,
     ): void {
         $exceptionMechanism = new ExceptionMechanism(...$constructorArgs);
 

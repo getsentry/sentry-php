@@ -524,7 +524,7 @@ class Span
         string $key,
         $value,
         MetricsUnit $unit,
-        array $tags
+        array $tags,
     ): void {
         $mri = \sprintf('%s:%s@%s', $type, $key, (string) $unit);
         $bucketKey = $mri . serialize($tags);

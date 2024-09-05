@@ -31,7 +31,7 @@ final class TransactionMetadata
     public function __construct(
         $samplingRate = null,
         ?DynamicSamplingContext $dynamicSamplingContext = null,
-        ?TransactionSource $source = null
+        ?TransactionSource $source = null,
     ) {
         $this->samplingRate = $samplingRate;
         $this->dynamicSamplingContext = $dynamicSamplingContext;

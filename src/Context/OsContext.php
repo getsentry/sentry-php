@@ -50,7 +50,7 @@ final class OsContext
         ?string $version = null,
         ?string $build = null,
         ?string $kernelVersion = null,
-        ?string $machineType = null
+        ?string $machineType = null,
     ) {
         if (trim($name) === '') {
             throw new \InvalidArgumentException('The $name argument cannot be an empty string.');

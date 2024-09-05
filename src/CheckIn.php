@@ -53,7 +53,7 @@ final class CheckIn
         ?string $release = null,
         ?string $environment = null,
         $duration = null,
-        ?MonitorConfig $monitorConfig = null
+        ?MonitorConfig $monitorConfig = null,
     ) {
         $this->setMonitorSlug($monitorSlug);
         $this->setStatus($status);

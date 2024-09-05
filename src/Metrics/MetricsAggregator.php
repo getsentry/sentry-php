@@ -48,7 +48,7 @@ final class MetricsAggregator
         ?MetricsUnit $unit,
         array $tags,
         ?int $timestamp,
-        int $stackLevel
+        int $stackLevel,
     ): void {
         if ($timestamp === null) {
             $timestamp = time();
