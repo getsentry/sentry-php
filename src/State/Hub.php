@@ -14,6 +14,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
+use Sentry\Profiling\Profiler;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -320,12 +321,16 @@ class Hub implements HubInterface
         $profilesSampleRate = $options->getProfilesSampleRate();
         if ($profilesSampleRate === null) {
             $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
+
+            Profiler::maybeDiscardProfilingData();
         } elseif ($this->sample($profilesSampleRate)) {
             $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 
             $transaction->initProfiler()->start();
         } else {
             $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
+
+            Profiler::maybeDiscardProfilingData();
         }
 
         return $transaction;
