@@ -42,7 +42,7 @@ final class MonitorConfig
         ?int $maxRuntime = null,
         ?string $timezone = null,
         ?int $failureIssueThreshold = null,
-        ?int $recoveryThreshold = null,
+        ?int $recoveryThreshold = null
     ) {
         $this->schedule = $schedule;
         $this->checkinMargin = $checkinMargin;

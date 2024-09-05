@@ -37,7 +37,7 @@ final class TransactionContext extends SpanContext
     public function __construct(
         string $name = self::DEFAULT_NAME,
         ?bool $parentSampled = null,
-        ?TransactionMetadata $metadata = null,
+        ?TransactionMetadata $metadata = null
     ) {
         $this->name = $name;
         $this->parentSampled = $parentSampled;

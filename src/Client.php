@@ -87,7 +87,7 @@ class Client implements ClientInterface
         ?string $sdkIdentifier = null,
         ?string $sdkVersion = null,
         ?RepresentationSerializerInterface $representationSerializer = null,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->options = $options;
         $this->transport = $transport;

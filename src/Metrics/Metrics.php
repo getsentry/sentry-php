@@ -48,7 +48,7 @@ class Metrics
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
-        int $stackLevel = 0,
+        int $stackLevel = 0
     ): void {
         $this->aggregator->add(
             CounterType::TYPE,
@@ -70,7 +70,7 @@ class Metrics
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
-        int $stackLevel = 0,
+        int $stackLevel = 0
     ): void {
         $this->aggregator->add(
             DistributionType::TYPE,
@@ -92,7 +92,7 @@ class Metrics
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
-        int $stackLevel = 0,
+        int $stackLevel = 0
     ): void {
         $this->aggregator->add(
             GaugeType::TYPE,
@@ -115,7 +115,7 @@ class Metrics
         ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
-        int $stackLevel = 0,
+        int $stackLevel = 0
     ): void {
         $this->aggregator->add(
             SetType::TYPE,
@@ -140,7 +140,7 @@ class Metrics
         string $key,
         callable $callback,
         array $tags = [],
-        int $stackLevel = 0,
+        int $stackLevel = 0
     ) {
         return trace(
             function () use ($callback, $key, $tags, $stackLevel) {

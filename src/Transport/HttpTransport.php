@@ -53,7 +53,7 @@ class HttpTransport implements TransportInterface
         Options $options,
         HttpClientInterface $httpClient,
         PayloadSerializerInterface $payloadSerializer,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->options = $options;
         $this->httpClient = $httpClient;
