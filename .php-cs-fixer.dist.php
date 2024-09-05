@@ -30,6 +30,10 @@ return (new PhpCsFixer\Config())
             'method' => 'multi',
             'property' => 'multi',
         ],
+        'trailing_comma_in_multiline' => [
+            'after_heredoc' => false,
+            'elements' => ['arrays'],
+        ],
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
