@@ -42,7 +42,7 @@ final class JSON
         $encounteredAnyError = json_last_error() !== \JSON_ERROR_NONE;
 
         if (($encounteredAnyError && ($encodedData === 'null' || $encodedData === false)) || !\in_array(json_last_error(), $allowedErrors, true)) {
-            throw new JsonException(sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
+            throw new JsonException(\sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
         return $encodedData;
@@ -62,7 +62,7 @@ final class JSON
         $decodedData = json_decode($data, true);
 
         if (json_last_error() !== \JSON_ERROR_NONE) {
-            throw new JsonException(sprintf('Could not decode value from JSON format. Error was: "%s".', json_last_error_msg()));
+            throw new JsonException(\sprintf('Could not decode value from JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
         return $decodedData;

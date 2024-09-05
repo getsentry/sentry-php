@@ -144,7 +144,7 @@ class EventItem implements EnvelopeItemInterface
             ];
         }
 
-        return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
+        return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }
 
     /**

@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 4.9.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.9.0.
+
+### Features
+
+- Allow retrieving a single piece of data from the span by it’s key [(#1767)](https://github.com/getsentry/sentry-php/pull/1767)
+
+  ```php
+  \Sentry\SentrySdk::getCurrentHub()->getSpan()?->setData([
+      'failure' => $span->getData('failure', 0) + 1,
+  ]);
+  ```
+
+- Add span trace origin [(#1769)](https://github.com/getsentry/sentry-php/pull/1769)
+
 ## 4.8.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.8.1.

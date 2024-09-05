@@ -49,7 +49,7 @@ trait TestServer
         $pipes = [];
 
         $this->serverProcess = proc_open(
-            $command = sprintf(
+            $command = \sprintf(
                 'php -S localhost:%d -t %s',
                 $this->serverPort,
                 realpath(__DIR__ . '/../testserver')

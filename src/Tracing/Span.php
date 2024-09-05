@@ -94,6 +94,13 @@ class Span
     protected $metricsSummary = [];
 
     /**
+     * @var string|null The trace origin of the span. If no origin is set, the span is considered to be "manual".
+     *
+     * @see https://develop.sentry.dev/sdk/performance/trace-origin/
+     */
+    protected $origin;
+
+    /**
      * Constructor.
      *
      * @param SpanContext|null $context The context to create the span with
@@ -121,6 +128,7 @@ class Span
         $this->tags = $context->getTags();
         $this->data = $context->getData();
         $this->endTimestamp = $context->getEndTimestamp();
+        $this->origin = $context->getOrigin();
     }
 
     /**
@@ -357,18 +365,24 @@ class Span
     }
 
     /**
-     * Gets a map of arbitrary data.
+     * Gets a map of arbitrary data or a specific key from the map of data attached to this span.
      *
-     * @return array<string, mixed>
+     * @param string|null $key     Select a specific key from the data to return the value of
+     * @param mixed       $default When the $key is not found, return this value
+     *
+     * @return ($key is null ? array<string, mixed> : mixed|null)
      */
-    public function getData(): array
+    public function getData(?string $key = null, $default = null)
     {
-        return $this->data;
+        if ($key === null) {
+            return $this->data;
+        }
+
+        return $this->data[$key] ?? $default;
     }
 
     /**
-     * Sets a map of arbitrary data. This method will merge the given data with
-     * the existing one.
+     * Sets a map of arbitrary data. This method will merge the given data with the existing one.
      *
      * @param array<string, mixed> $data The data
      *
@@ -394,7 +408,8 @@ class Span
      *     span_id: string,
      *     status?: string,
      *     tags?: array<string, string>,
-     *     trace_id: string
+     *     trace_id: string,
+     *     origin: string,
      * }
      */
     public function getTraceContext(): array
@@ -402,6 +417,7 @@ class Span
         $result = [
             'span_id' => (string) $this->spanId,
             'trace_id' => (string) $this->traceId,
+            'origin' => $this->origin ?? 'manual',
         ];
 
         if ($this->parentSpanId !== null) {
@@ -510,7 +526,7 @@ class Span
         MetricsUnit $unit,
         array $tags
     ): void {
-        $mri = sprintf('%s:%s@%s', $type, $key, (string) $unit);
+        $mri = \sprintf('%s:%s@%s', $type, $key, (string) $unit);
         $bucketKey = $mri . serialize($tags);
 
         if (
@@ -549,6 +565,26 @@ class Span
     }
 
     /**
+     * Sets the trace origin for this span.
+     */
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
+    }
+
+    /**
+     * Sets the trace origin of the span.
+     *
+     * @return $this
+     */
+    public function setOrigin(?string $origin)
+    {
+        $this->origin = $origin;
+
+        return $this;
+    }
+
+    /**
      * Returns the transaction containing this span.
      */
     public function getTransaction(): ?Transaction
@@ -567,7 +603,7 @@ class Span
             $sampled = $this->sampled ? '-1' : '-0';
         }
 
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return \sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**
@@ -584,7 +620,7 @@ class Span
             $sampled = '00';
         }
 
-        return sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return \sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
     /**

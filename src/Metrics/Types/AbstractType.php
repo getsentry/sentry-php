@@ -119,7 +119,7 @@ abstract class AbstractType
 
     public function getMri(): string
     {
-        return sprintf(
+        return \sprintf(
             '%s:%s@%s',
             $this->getType(),
             $this->getKey(),

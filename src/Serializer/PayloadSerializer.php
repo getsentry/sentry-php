@@ -69,7 +69,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 if ($event->getSdkMetadata('profile') !== null) {
                     $profileItem = ProfileItem::toEnvelopeItem($event);
                     if ($profileItem !== '') {
-                        $items = sprintf("%s\n%s", $transactionItem, $profileItem);
+                        $items = \sprintf("%s\n%s", $transactionItem, $profileItem);
                         break;
                     }
                 }
@@ -83,6 +83,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
         }
 
-        return sprintf("%s\n%s", JSON::encode($envelopeHeader), $items);
+        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), $items);
     }
 }

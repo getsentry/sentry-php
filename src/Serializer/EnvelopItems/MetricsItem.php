@@ -71,7 +71,7 @@ class MetricsItem implements EnvelopeItemInterface
                 'length' => mb_strlen($metricMetaPayload),
             ];
 
-            return sprintf(
+            return \sprintf(
                 "%s\n%s\n%s\n%s",
                 JSON::encode($statsdHeader),
                 $statsdPayload,
@@ -80,7 +80,7 @@ class MetricsItem implements EnvelopeItemInterface
             );
         }
 
-        return sprintf(
+        return \sprintf(
             "%s\n%s",
             JSON::encode($statsdHeader),
             $statsdPayload

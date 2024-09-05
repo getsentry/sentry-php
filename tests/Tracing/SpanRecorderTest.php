@@ -13,7 +13,7 @@ final class SpanRecorderTest extends TestCase
 {
     public function testAdd(): void
     {
-        $span1 = new class() extends Span {
+        $span1 = new class extends Span {
             public function __construct()
             {
                 parent::__construct();

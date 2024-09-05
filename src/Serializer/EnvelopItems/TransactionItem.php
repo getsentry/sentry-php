@@ -134,7 +134,7 @@ class TransactionItem implements EnvelopeItemInterface
             $payload['transaction_info']['source'] = (string) $transactionMetadata->getSource();
         }
 
-        return sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
+        return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
     }
 
     /**
@@ -160,6 +160,7 @@ class TransactionItem implements EnvelopeItemInterface
             'span_id' => (string) $span->getSpanId(),
             'trace_id' => (string) $span->getTraceId(),
             'start_timestamp' => $span->getStartTimestamp(),
+            'origin' => $span->getOrigin() ?? 'manual',
         ];
 
         if ($span->getParentSpanId() !== null) {

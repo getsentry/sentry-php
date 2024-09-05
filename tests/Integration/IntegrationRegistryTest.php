@@ -38,7 +38,7 @@ final class IntegrationRegistryTest extends TestCase
         if (\count($expectedIntegrations) > 0) {
             $logger->expects($this->once())
                 ->method('debug')
-                ->with(sprintf('The "%s" integration(s) have been installed.', implode(', ', array_keys($expectedIntegrations))), []);
+                ->with(\sprintf('The "%s" integration(s) have been installed.', implode(', ', array_keys($expectedIntegrations))), []);
         } else {
             $logger->expects($this->never())
                 ->method('debug');
@@ -49,13 +49,13 @@ final class IntegrationRegistryTest extends TestCase
 
     public static function setupIntegrationsDataProvider(): iterable
     {
-        $integration1 = new class() implements IntegrationInterface {
+        $integration1 = new class implements IntegrationInterface {
             public function setupOnce(): void
             {
             }
         };
 
-        $integration2 = new class() implements IntegrationInterface {
+        $integration2 = new class implements IntegrationInterface {
             public function setupOnce(): void
             {
             }

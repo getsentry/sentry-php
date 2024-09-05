@@ -55,7 +55,7 @@ final class Handler extends AbstractProcessingHandler
         $event = Event::createEvent();
         $event->setLevel(self::getSeverityFromLevel($record['level']));
         $event->setMessage($record['message']);
-        $event->setLogger(sprintf('monolog.%s', $record['channel']));
+        $event->setLogger(\sprintf('monolog.%s', $record['channel']));
 
         $hint = new EventHint();
 
