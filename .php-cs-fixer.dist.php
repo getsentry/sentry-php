@@ -18,9 +18,6 @@ return (new PhpCsFixer\Config())
         ],
         'self_accessor' => false,
         'modernize_strpos' => false,
-        'nullable_type_declaration_for_default_null_value' => [
-            'use_nullable_type_declaration' => true,
-        ],
         'no_superfluous_phpdoc_tags' => [
             'allow_mixed' => true,
         ],
@@ -32,6 +29,10 @@ return (new PhpCsFixer\Config())
             'const' => 'multi',
             'method' => 'multi',
             'property' => 'multi',
+        ],
+        'trailing_comma_in_multiline' => [
+            'after_heredoc' => false,
+            'elements' => ['arrays'],
         ],
     ])
     ->setRiskyAllowed(true)
