@@ -359,7 +359,7 @@ class Scope
             $event->setTags(array_merge($this->tags, $event->getTags()));
         }
 
-        if (!empty($this->extra)) {
+        if (!empty($this->extra) || !empty($event->getExtra())) {
             $event->setExtra(array_merge($this->extra, $event->getExtra()));
         }
 

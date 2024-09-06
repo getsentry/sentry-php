@@ -155,6 +155,23 @@ final class ScopeTest extends TestCase
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
     }
 
+    public function testSetExtrasOnScopeWithoutExtras(): void
+    {
+        $scope = new Scope();
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getExtra());
+
+        $scope->setExtras(['bar' => 'baz']);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['bar' => 'baz'], $event->getExtra());
+    }
+
     public function testSetUser(): void
     {
         $scope = new Scope();
