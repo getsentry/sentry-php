@@ -122,6 +122,9 @@ final class Handler extends AbstractProcessingHandler
         return $extraData;
     }
 
+    /**
+     * @param mixed[] $context
+     */
     private function hasExceptionContext(array $context): bool
     {
         return isset($context[self::CONTEXT_EXCEPTION_KEY]) && $context[self::CONTEXT_EXCEPTION_KEY] instanceof \Throwable;
