@@ -47,6 +47,11 @@ final class EventType implements \Stringable
         return self::getInstance('log');
     }
 
+    public static function profileChunk(): self
+    {
+        return self::getInstance('profile_chunk');
+    }
+
     /**
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */

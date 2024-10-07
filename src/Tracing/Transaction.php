@@ -6,6 +6,8 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Profiles\ProfileChunk;
+use Sentry\Profiles\Profiles;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -188,6 +190,22 @@ final class Transaction extends Span
             if ($profile !== null) {
                 $event->setSdkMetadata('profile', $profile);
             }
+        }
+
+        if (Profiles::getInstance()->getProfiler()->getProfilerId() !== null) {
+            $event->setContext('profile', [
+                'profiler_id' => Profiles::getInstance()->getProfiler()->getProfilerId(),
+            ]);
+
+            $traceContext = $this->getTraceContext();
+            $traceContext['data'] = array_merge(
+                $traceContext['data'] ?? [],
+                [
+                    'thread.id' => ProfileChunk::THREAD_ID,
+                    'thread.name' => ProfileChunk::THREAD_NAME,
+                ]
+            );
+            $event->setContext('trace', $traceContext);
         }
 
         return $this->hub->captureEvent($event);

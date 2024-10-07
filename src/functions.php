@@ -9,6 +9,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
+use Sentry\Profiles\Profiles;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -370,6 +371,23 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 function logger(): Logs
 {
     return Logs::getInstance();
+}
+
+/**
+ * Get the Sentry Profiler client.
+ */
+function profiler(): Profiles
+{
+    $hub = SentrySdk::getCurrentHub();
+
+    $options = null;
+
+    $client = $hub->getClient();
+    if ($client !== null) {
+        $options = $client->getOptions();
+    }
+
+    return Profiles::getInstance($options);
 }
 
 /**
