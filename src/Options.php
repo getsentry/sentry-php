@@ -942,6 +942,20 @@ final class Options
         return $this;
     }
 
+    public function getHttpSslNativeCa(): bool
+    {
+        return $this->options['http_ssl_native_ca'];
+    }
+
+    public function setHttpSslNativeCa(bool $httpSslNativeCa): self
+    {
+        $options = array_merge($this->options, ['http_ssl_native_ca' => $httpSslNativeCa]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
     /**
      * Returns whether the requests should be compressed using GZIP or not.
      */
@@ -1139,6 +1153,7 @@ final class Options
             'http_connect_timeout' => self::DEFAULT_HTTP_CONNECT_TIMEOUT,
             'http_timeout' => self::DEFAULT_HTTP_TIMEOUT,
             'http_ssl_verify_peer' => true,
+            'http_ssl_native_ca' => false,
             'http_compression' => true,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
