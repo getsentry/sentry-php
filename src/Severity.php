@@ -104,7 +104,7 @@ final class Severity implements \Stringable
                 return self::error();
             case \E_NOTICE:
             case \E_USER_NOTICE:
-            case \E_STRICT:
+            case @\E_STRICT:
                 return self::info();
             default:
                 return self::error();
