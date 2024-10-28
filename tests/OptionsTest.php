@@ -342,6 +342,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_timeout',
+            0.2,
+            'getHttpTimeout',
+            'setHttpTimeout',
+        ];
+
+        yield [
             'http_connect_timeout',
             1,
             'getHttpConnectTimeout',
@@ -351,6 +358,13 @@ final class OptionsTest extends TestCase
         yield [
             'http_connect_timeout',
             1.2,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+        ];
+
+        yield [
+            'http_connect_timeout',
+            0.2,
             'getHttpConnectTimeout',
             'setHttpConnectTimeout',
         ];
