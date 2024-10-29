@@ -629,11 +629,6 @@ final class ClientTest extends TestCase
             Event::createCheckIn(),
             false,
         ];
-
-        yield [
-            Event::createMetrics(),
-            true,
-        ];
     }
 
     public function testProcessEventDiscardsEventWhenSampleRateOptionIsZero(): void
@@ -820,32 +815,6 @@ final class ClientTest extends TestCase
                                ->getClient();
 
         $client->captureEvent(Event::createCheckIn());
-    }
-
-    public function testProcessEventDiscardsEventWhenBeforeSendMetricsCallbackReturnsNull(): void
-    {
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-               ->method('info')
-               ->with(
-                   new StringMatchesFormatDescription('The metrics [%s] will be discarded because the "before_send_metrics" callback returned "null".'),
-                   $this->callback(static function (array $context): bool {
-                       return isset($context['event']) && $context['event'] instanceof Event;
-                   })
-               );
-
-        $options = [
-            'before_send_metrics' => static function () {
-                return null;
-            },
-        ];
-
-        $client = ClientBuilder::create($options)
-                               ->setLogger($logger)
-                               ->getClient();
-
-        $client->captureEvent(Event::createMetrics());
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void

@@ -224,6 +224,8 @@ final class Options
 
     /**
      * Gets whether a metric has their code location attached.
+     *
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function shouldAttachMetricCodeLocations(): bool
     {
@@ -232,6 +234,8 @@ final class Options
 
     /**
      * Sets whether a metric will have their code location attached.
+     *
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function setAttachMetricCodeLocations(bool $enable): self
     {
@@ -581,6 +585,8 @@ final class Options
      * If `null` is returned it won't be sent.
      *
      * @psalm-return callable(Event, ?EventHint): ?Event
+     *
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function getBeforeSendMetricsCallback(): callable
     {
@@ -594,6 +600,8 @@ final class Options
      * @param callable $callback The callable
      *
      * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     *
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function setBeforeSendMetricsCallback(callable $callback): self
     {
@@ -1112,6 +1120,9 @@ final class Options
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
+            /**
+             * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+             */
             'attach_metric_code_locations' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
@@ -1132,8 +1143,11 @@ final class Options
             'before_send_check_in' => static function (Event $checkIn): Event {
                 return $checkIn;
             },
-            'before_send_metrics' => static function (Event $metrics): Event {
-                return $metrics;
+            /**
+             * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+             */
+            'before_send_metrics' => static function (Event $metrics): ?Event {
+                return null;
             },
             'trace_propagation_targets' => null,
             'tags' => [],

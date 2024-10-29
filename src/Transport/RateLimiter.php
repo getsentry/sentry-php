@@ -132,10 +132,6 @@ final class RateLimiter
             $category = self::DATA_CATEGORY_ERROR;
         }
 
-        if ($eventType === EventType::metrics()) {
-            $category = self::DATA_CATEGORY_METRIC_BUCKET;
-        }
-
         return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);
     }
 

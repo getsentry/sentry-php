@@ -39,31 +39,8 @@ final class MetricsTest extends TestCase
 
         $self = $this;
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['2794a118fd879e10a3a97836df803872'];
-
-                $self->assertSame(CounterType::TYPE, $metric->getType());
-                $self->assertSame('foo', $metric->getKey());
-                $self->assertSame([3.0], $metric->serialize());
-                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                $self->assertSame(
-                    [
-                        'environment' => 'development',
-                        'foo' => 'bar',
-                        'release' => '1.0.0',
-                    ],
-                    $metric->getTags()
-                );
-                $self->assertSame(1699412953, $metric->getTimestamp());
-
-                $codeLocation = $metric->getCodeLocation();
-
-                $self->assertSame('Sentry\Metrics\Metrics::increment', $codeLocation->getFunctionName());
-
-                return true;
-            }));
+        $client->expects($this->never())
+            ->method('captureEvent');
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -101,31 +78,8 @@ final class MetricsTest extends TestCase
 
         $self = $this;
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['edb74f95b4572e82dc4600cfeea76181'];
-
-                $self->assertSame(DistributionType::TYPE, $metric->getType());
-                $self->assertSame('foo', $metric->getKey());
-                $self->assertSame([1.0, 2.0], $metric->serialize());
-                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                $self->assertSame(
-                    [
-                        'environment' => 'development',
-                        'foo' => 'bar',
-                        'release' => '1.0.0',
-                    ],
-                    $metric->getTags()
-                );
-                $self->assertSame(1699412953, $metric->getTimestamp());
-
-                $codeLocation = $metric->getCodeLocation();
-
-                $self->assertSame('Sentry\Metrics\Metrics::distribution', $codeLocation->getFunctionName());
-
-                return true;
-            }));
+        $client->expects($this->never())
+            ->method('captureEvent');
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -163,31 +117,8 @@ final class MetricsTest extends TestCase
 
         $self = $this;
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['edb74f95b4572e82dc4600cfeea76181'];
-
-                $self->assertSame(DistributionType::TYPE, $metric->getType());
-                $self->assertSame('foo', $metric->getKey());
-                $self->assertSame([1.0, 2.0], $metric->serialize());
-                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                $self->assertSame(
-                    [
-                        'environment' => 'development',
-                        'foo' => 'bar',
-                        'release' => '1.0.0',
-                    ],
-                    $metric->getTags()
-                );
-                $self->assertSame(1699412953, $metric->getTimestamp());
-
-                $codeLocation = $metric->getCodeLocation();
-
-                $self->assertSame('Sentry\Metrics\Metrics::timing', $codeLocation->getFunctionName());
-
-                return true;
-            }));
+        $client->expects($this->never())
+            ->method('captureEvent');
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -237,37 +168,8 @@ final class MetricsTest extends TestCase
 
         $self = $this;
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['f39c23c73897d4f006fd617f76664571'];
-
-                $self->assertSame(GaugeType::TYPE, $metric->getType());
-                $self->assertSame('foo', $metric->getKey());
-                $self->assertSame([
-                    2.0, // last
-                    1.0, // min
-                    2.0, // max
-                    3.0, // sum,
-                    2, // count,
-                ], $metric->serialize());
-                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                $self->assertSame(
-                    [
-                        'environment' => 'development',
-                        'foo' => 'bar',
-                        'release' => '1.0.0',
-                    ],
-                    $metric->getTags()
-                );
-                $self->assertSame(1699412953, $metric->getTimestamp());
-
-                $codeLocation = $metric->getCodeLocation();
-
-                $self->assertSame('Sentry\Metrics\Metrics::gauge', $codeLocation->getFunctionName());
-
-                return true;
-            }));
+        $client->expects($this->never())
+            ->method('captureEvent');
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -305,31 +207,8 @@ final class MetricsTest extends TestCase
 
         $self = $this;
 
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($self): bool {
-                $metric = $event->getMetrics()['868b190d923bbd619570328d7ba3e4cd'];
-
-                $self->assertSame(SetType::TYPE, $metric->getType());
-                $self->assertSame('foo', $metric->getKey());
-                $self->assertSame([1, 1, 2356372769], $metric->serialize());
-                $self->assertSame(MetricsUnit::second(), $metric->getUnit());
-                $self->assertSame(
-                    [
-                        'environment' => 'development',
-                        'foo' => 'bar',
-                        'release' => '1.0.0',
-                    ],
-                    $metric->getTags()
-                );
-                $self->assertSame(1699412953, $metric->getTimestamp());
-
-                $codeLocation = $metric->getCodeLocation();
-
-                $self->assertSame('Sentry\Metrics\Metrics::set', $codeLocation->getFunctionName());
-
-                return true;
-            }));
+        $client->expects($this->never())
+            ->method('captureEvent');
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -378,42 +257,12 @@ final class MetricsTest extends TestCase
             ->method('captureEvent')
             ->with($this->callback(static function (Event $event) use ($self): bool {
                 $self->assertSame(
-                    [
-                        'c:foo@second' => [
-                            'c:foo@seconda:4:{s:11:"environment";s:11:"development";s:3:"foo";s:3:"bar";s:7:"release";s:5:"1.0.0";s:11:"transaction";s:12:"GET /metrics";}' => [
-                                'min' => 1.0,
-                                'max' => 1.0,
-                                'sum' => 1.0,
-                                'count' => 1,
-                                'tags' => [
-                                    'environment' => 'development',
-                                    'foo' => 'bar',
-                                    'release' => '1.0.0',
-                                    'transaction' => 'GET /metrics',
-                                ],
-                            ],
-                        ],
-                    ],
+                    [],
                     $event->getMetricsSummary()
                 );
 
                 $self->assertSame(
-                    [
-                        'c:foo@second' => [
-                            'c:foo@seconda:4:{s:11:"environment";s:11:"development";s:3:"foo";s:3:"bar";s:7:"release";s:5:"1.0.0";s:11:"transaction";s:12:"GET /metrics";}' => [
-                                'min' => 1.0,
-                                'max' => 1.0,
-                                'sum' => 2.0,
-                                'count' => 2,
-                                'tags' => [
-                                    'environment' => 'development',
-                                    'foo' => 'bar',
-                                    'release' => '1.0.0',
-                                    'transaction' => 'GET /metrics',
-                                ],
-                            ],
-                        ],
-                    ],
+                    [],
                     $event->getSpans()[0]->getMetricsSummary()
                 );
 

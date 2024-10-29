@@ -377,6 +377,9 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
 }
 
+/**
+ * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+ */
 function metrics(): Metrics
 {
     return Metrics::getInstance();
