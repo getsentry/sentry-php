@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Metrics\MetricsUnit;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
-use Sentry\Metrics\Types\SetType;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;

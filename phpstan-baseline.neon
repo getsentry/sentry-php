@@ -26,6 +26,26 @@ parameters:
 			path: src/Dsn.php
 
 		-
+			message: "#^Method Sentry\\\\Event\\:\\:getMetrics\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Event.php
+
+		-
+			message: "#^Method Sentry\\\\Event\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Event.php
+
+		-
+			message: "#^Method Sentry\\\\Event\\:\\:setMetrics\\(\\) has parameter \\$metrics with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Event.php
+
+		-
+			message: "#^Method Sentry\\\\Event\\:\\:setMetricsSummary\\(\\) has parameter \\$metricsSummary with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Event.php
+
+		-
 			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/RequestIntegration.php
@@ -39,11 +59,6 @@ parameters:
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/Logger/DebugStdOutLogger.php
-
-		-
-			message: "#^Method Sentry\\\\Metrics\\\\Types\\\\AbstractType\\:\\:add\\(\\) has parameter \\$value with no type specified\\.$#"
-			count: 1
-			path: src/Metrics/Types/AbstractType.php
 
 		-
 			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
@@ -289,6 +304,21 @@ parameters:
 			message: "#^Class GuzzleHttp\\\\Exception\\\\RequestException not found\\.$#"
 			count: 1
 			path: src/Tracing/GuzzleTracingMiddleware.php
+
+		-
+			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Tracing/Span.php
+
+		-
+			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$tags with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Tracing/Span.php
+
+		-
+			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$value with no type specified\\.$#"
+			count: 1
+			path: src/Tracing/Span.php
 
 		-
 			message: "#^Parameter \\#1 \\$email of method Sentry\\\\UserDataBag\\:\\:setEmail\\(\\) expects string\\|null, mixed given\\.$#"
