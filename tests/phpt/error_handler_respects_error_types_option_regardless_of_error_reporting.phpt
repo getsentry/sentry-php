@@ -62,7 +62,13 @@ trigger_error('Error thrown', E_USER_WARNING);
 
 echo 'Triggering E_USER_ERROR error (unsilenceable on PHP8)' . PHP_EOL;
 
-trigger_error('Error thrown', E_USER_ERROR);
+if (PHP_VERSION_ID >= 80400) {
+    // Silence a deprecation notice on PHP 8.4
+    // https://wiki.php.net/rfc/deprecations_php_8_4#deprecate_passing_e_user_error_to_trigger_error
+    @trigger_error('Error thrown', E_USER_ERROR);
+} else {
+    trigger_error('Error thrown', E_USER_ERROR);
+}
 ?>
 --EXPECT--
 Triggering E_USER_NOTICE error

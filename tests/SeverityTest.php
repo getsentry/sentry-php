@@ -83,7 +83,8 @@ final class SeverityTest extends TestCase
             // Info
             [\E_NOTICE, 'info'],
             [\E_USER_NOTICE, 'info'],
-            [\E_STRICT, 'info'],
+            // This is \E_STRICT which has been deprecated in PHP 8.4 so we should not reference it directly to prevent deprecation notices
+            [2048, 'info'],
         ];
     }
 }
