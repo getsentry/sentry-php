@@ -161,7 +161,7 @@ final class FrameBuilder
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
                 }
-            } elseif (!\in_array($backtraceFrame['function'], ['{closure}', '__lambda_func'], true) && \function_exists($backtraceFrame['function'])) {
+            } elseif ($backtraceFrame['function'] !== '__lambda_func' && !str_starts_with($backtraceFrame['function'], '{closure') && \function_exists($backtraceFrame['function'])) {
                 $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
         } catch (\ReflectionException $e) {
