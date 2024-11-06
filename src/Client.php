@@ -409,8 +409,6 @@ class Client implements ClientInterface
                 return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
             case EventType::checkIn():
                 return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
-            case EventType::metrics():
-                return ($this->options->getBeforeSendMetricsCallback())($event, $hint);
             default:
                 return $event;
         }
@@ -423,8 +421,6 @@ class Client implements ClientInterface
                 return 'before_send_transaction';
             case EventType::checkIn():
                 return 'before_send_check_in';
-            case EventType::metrics():
-                return 'before_send_metrics';
             default:
                 return 'before_send';
         }

@@ -6,7 +6,6 @@ namespace Sentry;
 
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
-use Sentry\Metrics\Types\AbstractType;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -61,16 +60,6 @@ final class Event
      * @var CheckIn|null The check in data
      */
     private $checkIn;
-
-    /**
-     * @var array<string, AbstractType> The metrics data
-     */
-    private $metrics = [];
-
-    /**
-     * @var array<string, array<string, MetricsSummary>>
-     */
-    private $metricsSummary = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -227,6 +216,9 @@ final class Event
         return new self($eventId, EventType::checkIn());
     }
 
+    /**
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     */
     public static function createMetrics(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::metrics());
@@ -377,38 +369,34 @@ final class Event
     }
 
     /**
-     * @return array<string, AbstractType>
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function getMetrics(): array
     {
-        return $this->metrics;
+        return [];
     }
 
     /**
-     * @param array<string, AbstractType> $metrics
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function setMetrics(array $metrics): self
     {
-        $this->metrics = $metrics;
-
         return $this;
     }
 
     /**
-     * @return array<string, array<string, MetricsSummary>>
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function getMetricsSummary(): array
     {
-        return $this->metricsSummary;
+        return [];
     }
 
     /**
-     * @param array<string, array<string, MetricsSummary>> $metricsSummary
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function setMetricsSummary(array $metricsSummary): self
     {
-        $this->metricsSummary = $metricsSummary;
-
         return $this;
     }
 

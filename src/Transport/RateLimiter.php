@@ -17,11 +17,6 @@ final class RateLimiter
     private const DATA_CATEGORY_ERROR = 'error';
 
     /**
-     * @var string
-     */
-    private const DATA_CATEGORY_METRIC_BUCKET = 'metric_bucket';
-
-    /**
      * The name of the header to look at to know the rate limits for the events
      * categories supported by the server.
      */
@@ -72,26 +67,7 @@ final class RateLimiter
                 $retryAfter = $now + (ctype_digit($parameters[0]) ? (int) $parameters[0] : self::DEFAULT_RETRY_AFTER_SECONDS);
 
                 foreach (explode(';', $parameters[1]) as $category) {
-                    switch ($category) {
-                        case self::DATA_CATEGORY_METRIC_BUCKET:
-                            $namespaces = [];
-                            if (isset($parameters[4])) {
-                                $namespaces = explode(';', $parameters[4]);
-                            }
-
-                            /**
-                             * As we do not support setting any metric namespaces in the SDK,
-                             * checking for the custom namespace suffices.
-                             * In case the namespace was ommited in the response header,
-                             * we'll also back off.
-                             */
-                            if ($namespaces === [] || \in_array('custom', $namespaces)) {
-                                $this->rateLimits[self::DATA_CATEGORY_METRIC_BUCKET] = $retryAfter;
-                            }
-                            break;
-                        default:
-                            $this->rateLimits[$category ?: 'all'] = $retryAfter;
-                    }
+                    $this->rateLimits[$category ?: 'all'] = $retryAfter;
 
                     $this->logger->warning(
                         \sprintf('Rate limited exceeded for category "%s", backing off until "%s".', $category, gmdate(\DATE_ATOM, $retryAfter))
@@ -130,10 +106,6 @@ final class RateLimiter
 
         if ($eventType === EventType::event()) {
             $category = self::DATA_CATEGORY_ERROR;
-        }
-
-        if ($eventType === EventType::metrics()) {
-            $category = self::DATA_CATEGORY_METRIC_BUCKET;
         }
 
         return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$category] ?? 0);

@@ -16,11 +16,6 @@ use Sentry\EventId;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
-use Sentry\Metrics\MetricsUnit;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
-use Sentry\Metrics\Types\SetType;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
@@ -410,88 +405,6 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam","failure_issue_threshold":5,"recovery_threshold":10},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
-TEXT
-            ,
-        ];
-
-        $counter = new CounterType('counter', 1.0, MetricsUnit::second(), ['foo' => 'bar', 'route' => 'GET /foo'], 1597790835);
-        $distribution = new DistributionType('distribution', 1.0, MetricsUnit::second(), ['foo' => 'bar'], 1597790835);
-        $gauge = new GaugeType('gauge', 1.0, MetricsUnit::second(), ['foo' => 'bar', 'bar' => 'baz'], 1597790835);
-        $set = new SetType('set', 1.0, MetricsUnit::second(), ['key' => 'value'], 1597790835);
-        $noTags = new CounterType('no_tags', 1.0, MetricsUnit::second(), [], 1597790835);
-
-        $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setMetrics([
-            $counter,
-            $distribution,
-            $gauge,
-            $set,
-            $noTags,
-        ]);
-
-        yield [
-            $event,
-            <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"statsd","length":222}
-counter@second:1|c|#foo:bar,route:GET /foo|T1597790835
-distribution@second:1|d|#foo:bar|T1597790835
-gauge@second:1:1:1:1:1|g|#foo:bar,bar:baz|T1597790835
-set@second:1|s|#key:value|T1597790835
-no_tags@second:1|c|T1597790835
-TEXT
-            ,
-        ];
-
-        $span = new Span();
-        $span->setSpanId(new SpanId('5dd538dc297544cc'));
-        $span->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
-        $span->setMetricsSummary(
-            CounterType::TYPE,
-            'counter',
-            10,
-            MetricsUnit::custom('star'),
-            [
-                'repository' => 'client',
-            ]
-        );
-        $span->setMetricsSummary(
-            CounterType::TYPE,
-            'counter',
-            50,
-            MetricsUnit::custom('star'),
-            [
-                'repository' => 'client',
-            ]
-        );
-
-        $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
-        $event->setSpans([$span]);
-        $event->setTransaction('GET /');
-        $event->setContext('trace', [
-            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
-            'span_id' => '5dd538dc297544cc',
-        ]);
-        $event->setMetricsSummary([
-            'c:counter@star' => [
-                'c:counter@stara:0:{s:10:"repository";s:6:"client";}' => [
-                    'min' => 1,
-                    'max' => 1,
-                    'sum' => 1,
-                    'count' => 1,
-                    'tags' => [
-                        'repository' => 'client',
-                    ],
-                ],
-            ],
-        ]);
-
-        yield [
-            $event,
-            <<<TEXT
-{"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion"}}
-{"type":"transaction","content_type":"application\/json"}
-{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion"},"transaction":"GET \/","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835,"origin":"manual","_metrics_summary":{"c:counter@star":[{"min":10,"max":50,"sum":60,"count":2,"tags":{"repository":"client"}}]}}],"_metrics_summary":{"c:counter@star":[{"min":1,"max":1,"sum":1,"count":1,"tags":{"repository":"client"}}]}}
 TEXT
             ,
         ];

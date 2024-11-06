@@ -190,10 +190,6 @@ final class Transaction extends Span
             }
         }
 
-        if (!empty($this->getMetricsSummary())) {
-            $event->setMetricsSummary($this->getMetricsSummary());
-        }
-
         return $this->hub->captureEvent($event);
     }
 }
