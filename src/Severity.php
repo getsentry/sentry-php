@@ -104,7 +104,7 @@ final class Severity implements \Stringable
                 return self::error();
             case \E_NOTICE:
             case \E_USER_NOTICE:
-            case \E_STRICT:
+            case 2048: // This is \E_STRICT which has been deprecated in PHP 8.4 so we should not reference it directly to prevent deprecation notices
                 return self::info();
             default:
                 return self::error();
