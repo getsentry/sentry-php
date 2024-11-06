@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 4.10.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.10.0.
+
+### Features
+
+- The SDK was updated to support PHP 8.4 [(#1760)](https://github.com/getsentry/sentry-php/pull/1760)
+- Expose a new `http_ssl_native_ca` option to tell the HTTP client to use the operating system's native CA store for certificate verification [(#1766)](https://github.com/getsentry/sentry-php/pull/1766)
+
+### Bug Fixes
+
+- Fix the `http_timeout` & `http_connect_timeout` options, which now also work with sub second values [(#1785)](https://github.com/getsentry/sentry-php/pull/1785)
+
+### Misc
+
+- HTTP breadcrumbs created by the `GuzzleTracingMiddleware` are now set to a warning status for `4xx` responses and an error status for `5xx` responses [(#1773)](https://github.com/getsentry/sentry-php/pull/1773)
+- All public Metrics APIs are now no-op, intneral APIs were removed [(#1786)](https://github.com/getsentry/sentry-php/pull/1786)
+
 ## 4.9.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.9.0.
