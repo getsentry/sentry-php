@@ -177,7 +177,7 @@ final class OptionsTest extends TestCase
             'spotlight',
             true,
             'isSpotlightEnabled',
-            'EnableSpotlight',
+            'enableSpotlight',
         ];
 
         yield [
@@ -651,6 +651,37 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_RELEASE'] = '0.0.4';
 
         $this->assertSame('0.0.4', (new Options())->getRelease());
+    }
+
+    /**
+     * @backupGlobals enabled
+     *
+     * @dataProvider spotlightEnvironmentValueDataProvider
+     */
+    public function testSpotlightOptionDefaultValueIsControlledFromEnvironmentVariable(string $environmentVariableValue, bool $expectedSpotlightEnabled, string $expectedSpotlightUrl): void
+    {
+        $_SERVER['SENTRY_SPOTLIGHT'] = $environmentVariableValue;
+
+        $options = new Options();
+
+        $this->assertEquals($expectedSpotlightEnabled, $options->isSpotlightEnabled());
+        $this->assertEquals($expectedSpotlightUrl, $options->getSpotlightUrl());
+    }
+
+    public static function spotlightEnvironmentValueDataProvider(): array
+    {
+        $defaultSpotlightUrl = 'http://localhost:8969';
+
+        return [
+            ['', false, $defaultSpotlightUrl],
+            ['true', true, $defaultSpotlightUrl],
+            ['1', true, $defaultSpotlightUrl],
+            ['false', false, $defaultSpotlightUrl],
+            ['0', false, $defaultSpotlightUrl],
+            ['null', false, $defaultSpotlightUrl],
+            ['http://localhost:1234', true, 'http://localhost:1234'],
+            ['some invalid looking value', false, $defaultSpotlightUrl],
+        ];
     }
 
     public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
