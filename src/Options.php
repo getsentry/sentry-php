@@ -424,6 +424,20 @@ final class Options
         return $this->options['dsn'];
     }
 
+    public function getOrg(): ?string
+    {
+        return $this->options['org'];
+    }
+
+    public function setOrg(string $org): self
+    {
+        $options = array_merge($this->options, ['org' => $org]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
     /**
      * Gets the name of the server the SDK is running on (e.g. the hostname).
      */
@@ -630,6 +644,20 @@ final class Options
     public function setTracePropagationTargets(array $tracePropagationTargets): self
     {
         $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    public function isStrictTracePropagationEnabled(): bool
+    {
+        return $this->options['strict_trace_propagation'];
+    }
+
+    public function setStrictTracePropagationEnabled(bool $enabled): self
+    {
+        $options = array_merge($this->options, ['strict_trace_propagation' => $enabled]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1131,6 +1159,7 @@ final class Options
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
+            'org' => null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
@@ -1150,6 +1179,7 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1191,12 +1221,14 @@ final class Options
         $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
+        $resolver->setAllowedTypes('org', ['null', 'string']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_propagation', ['null', 'bool']);
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
