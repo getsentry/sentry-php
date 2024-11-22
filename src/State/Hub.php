@@ -304,14 +304,8 @@ class Hub implements HubInterface
                 return $transaction;
             }
 
-            // The sample rand should only be used if the traces sampler is set.
-            // Otherwise, we use the configured traces sample rate.
             $sampleRand = $context->getMetadata()->getSampleRand();
-            if ($tracesSampler !== null && $sampleRand !== null) {
-                $transaction->setSampled($sampleRand < $sampleRate);
-            } else {
-                $transaction->setSampled($this->sample($sampleRate));
-            }
+            $transaction->setSampled($sampleRand < $sampleRate);
         }
 
         if (!$transaction->getSampled()) {

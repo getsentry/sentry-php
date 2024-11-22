@@ -201,9 +201,11 @@ final class TransactionContext extends SpanContext
             // otherwise set it to 1.0 if the parent was sampled.
             if ($samplingContext->has('sample_rand')) {
                 $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
-            } elseif ($context->parentSampled === true) {
-                $context->getMetadata()->setSampleRand(1.0);
             }
+            // TBD
+            // } elseif ($context->parentSampled === true) {
+            //     $context->getMetadata()->setSampleRand(0.0);
+            // }
         }
 
         return $context;
