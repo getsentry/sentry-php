@@ -196,6 +196,14 @@ final class TransactionContext extends SpanContext
             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
             // Propagate this Dynamic Sampling Context.
             $context->getMetadata()->setDynamicSamplingContext($samplingContext);
+
+            // Store the parent sample rate (sample_rand) if it exists,
+            // otherwise set it to 1.0 if the parent was sampled.
+            if ($samplingContext->has('sample_rand')) {
+                $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
+            } elseif ($context->parentSampled === true) {
+                $context->getMetadata()->setSampleRand(1.0);
+            }
         }
 
         return $context;

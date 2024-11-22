@@ -17,6 +17,11 @@ final class SamplingContext
     private $parentSampled;
 
     /**
+     * @var float|null The parent sample rate
+     */
+    private $sampleRand;
+
+    /**
      * @var array<string, mixed>|null Additional context, depending on where the SDK runs
      */
     private $additionalContext;
@@ -29,6 +34,7 @@ final class SamplingContext
         $context = new self();
         $context->transactionContext = $transactionContext;
         $context->parentSampled = $transactionContext->getParentSampled();
+        $context->sampleRand = $transactionContext->getMetadata()->getSampleRand();
 
         return $context;
     }
@@ -44,6 +50,11 @@ final class SamplingContext
     public function getParentSampled(): ?bool
     {
         return $this->parentSampled;
+    }
+
+    public function getSampleRand(): ?float
+    {
+        return $this->sampleRand;
     }
 
     /**

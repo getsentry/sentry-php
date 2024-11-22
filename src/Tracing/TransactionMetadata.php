@@ -22,6 +22,11 @@ final class TransactionMetadata
     private $source;
 
     /**
+     * @var float|null
+     */
+    private $sampleRand;
+
+    /**
      * Constructor.
      *
      * @param float|int|null              $samplingRate           The sampling rate
@@ -36,6 +41,8 @@ final class TransactionMetadata
         $this->samplingRate = $samplingRate;
         $this->dynamicSamplingContext = $dynamicSamplingContext;
         $this->source = $source ?? TransactionSource::custom();
+
+        $this->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 2);
     }
 
     /**
@@ -52,6 +59,18 @@ final class TransactionMetadata
     public function setSamplingRate($samplingRate): self
     {
         $this->samplingRate = $samplingRate;
+
+        return $this;
+    }
+
+    public function getSampleRand(): ?float
+    {
+        return $this->sampleRand;
+    }
+
+    public function setSampleRand(?float $sampleRand): self
+    {
+        $this->sampleRand = $sampleRand;
 
         return $this;
     }
