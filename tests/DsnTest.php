@@ -22,7 +22,8 @@ final class DsnTest extends TestCase
         int $expectedPort,
         string $expectedPublicKey,
         string $expectedProjectId,
-        string $expectedPath
+        string $expectedPath,
+        ?string $expectedOrg,
     ): void {
         $dsn = Dsn::createFromString($value);
 
@@ -32,6 +33,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedPublicKey, $dsn->getPublicKey());
         $this->assertSame($expectedProjectId, $dsn->getProjectId(true));
         $this->assertSame($expectedPath, $dsn->getPath());
+        $this->assertSame($expectedOrg, $dsn->getOrg());
     }
 
     public static function createFromStringDataProvider(): \Generator
@@ -44,6 +46,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '/sentry',
+            null,
         ];
 
         yield [
@@ -54,6 +57,18 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
+        ];
+
+        yield [
+            'http://public@o1.example.com/1',
+            'http',
+            'o1.example.com',
+            80,
+            'public',
+            '1',
+            '',
+            '1',
         ];
 
         yield [
@@ -64,6 +79,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
 
         yield [
@@ -74,6 +90,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
 
         yield [
@@ -84,6 +101,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
 
         yield [
@@ -94,6 +112,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
 
         yield [
@@ -104,6 +123,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
 
         yield [
@@ -114,6 +134,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
+            null,
         ];
     }
 
@@ -240,6 +261,7 @@ final class DsnTest extends TestCase
         return [
             ['http://public@example.com/sentry/1'],
             ['http://public@example.com/1'],
+            ['http://public@01.example.com/1'],
             ['http://public@example.com:8080/sentry/1'],
             ['https://public@example.com/sentry/1'],
             ['https://public@example.com:4343/sentry/1'],
