@@ -186,6 +186,10 @@ final class DynamicSamplingContext
             $samplingContext->set('sampled', $transaction->getSampled() ? 'true' : 'false');
         }
 
+        if ($transaction->getMetadata()->getSampleRand() !== null) {
+            $samplingContext->set('sample_rand', (string) $transaction->getMetadata()->getSampleRand());
+        }
+
         $samplingContext->freeze();
 
         return $samplingContext;
