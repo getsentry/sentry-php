@@ -1280,7 +1280,7 @@ final class Options
             return false;
         }
 
-        if (str_starts_with($booleanOrUrl, 'http')) {
+        if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
             return $booleanOrUrl;
         }
 
