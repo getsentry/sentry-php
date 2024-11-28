@@ -371,7 +371,10 @@ final class Options
         return \is_string($this->options['spotlight']) || $this->options['spotlight'];
     }
 
-    public function enableSpotlight(bool $enable): self
+    /**
+     * @param bool|string $enable can be passed a boolean or the Spotlight URL (which will also enable Spotlight)
+     */
+    public function enableSpotlight($enable): self
     {
         $options = array_merge($this->options, ['spotlight' => $enable]);
 
@@ -389,6 +392,11 @@ final class Options
         return $this->options['spotlight_url'];
     }
 
+    /**
+     * @return $this
+     *
+     * @deprecated Use `enableSpotlight` instead. Will be removed in 5.x.
+     */
     public function setSpotlightUrl(string $url): self
     {
         $options = array_merge($this->options, ['spotlight_url' => $url]);
@@ -1132,6 +1140,9 @@ final class Options
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
             'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
+            /**
+             * @deprecated Use `spotlight` instead. Will be removed in 5.x.
+             */
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
