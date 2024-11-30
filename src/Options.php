@@ -395,7 +395,7 @@ final class Options
     /**
      * @return $this
      *
-     * @deprecated Use `enableSpotlight` instead. Will be removed in 5.x.
+     * @deprecated since version 4.11. To be removed in 5.x. You may use `enableSpotlight` instead. 
      */
     public function setSpotlightUrl(string $url): self
     {
