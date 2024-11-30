@@ -1141,7 +1141,7 @@ final class Options
             'logger' => null,
             'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
             /**
-             * @deprecated Use `spotlight` instead. Will be removed in 5.x.
+             * @deprecated since version 4.11. To be removed in 5.0. You may use `spotlight` instead.
              */
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
