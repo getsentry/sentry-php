@@ -199,6 +199,7 @@ final class DynamicSamplingContext
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
+        $samplingContext->set('sample_rand', (string) $scope->getPropagationContext()->getSampleRand());
 
         if ($options->getTracesSampleRate() !== null) {
             $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());

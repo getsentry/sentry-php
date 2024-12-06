@@ -199,12 +199,20 @@ final class TransactionContext extends SpanContext
         }
 
         if ($samplingContext->has('sample_rand')) {
+            // TODO check for 1e13 etc.
             $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
         } else {
             if ($samplingContext->has('sample-rate') && $context->parentSampled !== null) {
-                $context->getMetadata()->setSampleRand(1);
+                if ($context->parentSampled === true) {
+                    // [0, rate)
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * $samplingContext->get('sample-rate'), 6));
+                } else {
+                    // [rate, 1]
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - $samplingContext->get('sample-rate')) + $samplingContext->get('sample-rate'), 6));  
+                }
             } elseif ($context->parentSampled !== null) {
-                $context->getMetadata()->setSampleRand(1);
+                // [0, 1)
+                $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6));
             }
         }
 

@@ -33,6 +33,11 @@ final class PropagationContext
      */
     private $dynamicSamplingContext;
 
+        /**
+     * @var float|null
+     */
+    private $sampleRand;
+
     private function __construct()
     {
     }
@@ -45,6 +50,9 @@ final class PropagationContext
         $context->spanId = SpanId::generate();
         $context->parentSpanId = null;
         $context->dynamicSamplingContext = null;
+
+        // TODO check if this is precise enough
+        $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
 
         return $context;
     }
@@ -159,6 +167,7 @@ final class PropagationContext
         return $this;
     }
 
+    // TODO add same logic as in TransactionContext
     private static function parseTraceparentAndBaggage(string $traceparent, string $baggage): self
     {
         $context = self::fromDefaults();
