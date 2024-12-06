@@ -269,6 +269,7 @@ class Hub implements HubInterface
         $samplingContext->setAdditionalContext($customSamplingContext);
 
         $sampleSource = 'context';
+        $sampleRand = $context->getMetadata()->getSampleRand();
 
         if ($transaction->getSampled() === null) {
             $tracesSampler = $options->getTracesSampler();
@@ -278,12 +279,17 @@ class Hub implements HubInterface
 
                 $sampleSource = 'config:traces_sampler';
             } else {
-                $sampleRate = $this->getSampleRate(
-                    $samplingContext->getParentSampled(),
-                    $options->getTracesSampleRate() ?? 0
-                );
-
-                $sampleSource = $samplingContext->getParentSampled() ? 'parent' : 'config:traces_sample_rate';
+                $parentSampleRate = (float) $context->getMetadata()->getDynamicSamplingContext()->get('sample_rate');
+                if ($parentSampleRate !== null) {
+                    $sampleRate = $parentSampleRate;
+                    $sampleSource = 'parent';
+                } else {
+                    $sampleRate = $this->getSampleRate(
+                        $samplingContext->getParentSampled(),
+                        $options->getTracesSampleRate() ?? 0
+                    );
+                    $sampleSource = $samplingContext->getParentSampled() ? 'parent' : 'config:traces_sample_rate';
+                }
             }
 
             if (!$this->isValidSampleRate($sampleRate)) {
@@ -294,6 +300,7 @@ class Hub implements HubInterface
                 return $transaction;
             }
 
+            // TODO Why are we doing this?
             $transaction->getMetadata()->setSamplingRate($sampleRate);
 
             if ($sampleRate === 0.0) {
@@ -304,7 +311,8 @@ class Hub implements HubInterface
                 return $transaction;
             }
 
-            $transaction->setSampled($this->sample($sampleRate));
+            $sampleRand = $context->getMetadata()->getSampleRand();
+            $transaction->setSampled($sampleRand < $sampleRate);
         }
 
         if (!$transaction->getSampled()) {
@@ -376,11 +384,11 @@ class Hub implements HubInterface
     private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
     {
         if ($hasParentBeenSampled === true) {
-            return 1;
+            return 1.0;
         }
 
         if ($hasParentBeenSampled === false) {
-            return 0;
+            return 0.0;
         }
 
         return $fallbackSampleRate;
