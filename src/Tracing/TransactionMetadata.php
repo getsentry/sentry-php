@@ -42,7 +42,8 @@ final class TransactionMetadata
         $this->dynamicSamplingContext = $dynamicSamplingContext;
         $this->source = $source ?? TransactionSource::custom();
 
-        $this->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 2);
+        // TODO check if this is precise enough
+        $this->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
     }
 
     /**
