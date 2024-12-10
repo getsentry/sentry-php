@@ -368,10 +368,13 @@ final class Options
 
     public function isSpotlightEnabled(): bool
     {
-        return $this->options['spotlight'];
+        return \is_string($this->options['spotlight']) || $this->options['spotlight'];
     }
 
-    public function enableSpotlight(bool $enable): self
+    /**
+     * @param bool|string $enable can be passed a boolean or the Spotlight URL (which will also enable Spotlight)
+     */
+    public function enableSpotlight($enable): self
     {
         $options = array_merge($this->options, ['spotlight' => $enable]);
 
@@ -382,9 +385,18 @@ final class Options
 
     public function getSpotlightUrl(): string
     {
+        if (\is_string($this->options['spotlight'])) {
+            return $this->options['spotlight'];
+        }
+
         return $this->options['spotlight_url'];
     }
 
+    /**
+     * @return $this
+     *
+     * @deprecated since version 4.11. To be removed in 5.x. You may use `enableSpotlight` instead.
+     */
     public function setSpotlightUrl(string $url): self
     {
         $options = array_merge($this->options, ['spotlight_url' => $url]);
@@ -1076,7 +1088,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return null|callable(\Sentry\Tracing\SamplingContext): float
+     * @psalm-return null|callable(Tracing\SamplingContext): float
      */
     public function getTracesSampler(): ?callable
     {
@@ -1089,7 +1101,7 @@ final class Options
      *
      * @param ?callable $sampler The sampler
      *
-     * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
+     * @psalm-param null|callable(Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler(?callable $sampler): self
     {
@@ -1127,7 +1139,10 @@ final class Options
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
-            'spotlight' => false,
+            'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
+            /**
+             * @deprecated since version 4.11. To be removed in 5.0. You may use `spotlight` instead.
+             */
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
@@ -1187,7 +1202,7 @@ final class Options
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
-        $resolver->setAllowedTypes('spotlight', 'bool');
+        $resolver->setAllowedTypes('spotlight', ['bool', 'string', 'null']);
         $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
@@ -1229,6 +1244,8 @@ final class Options
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
+        $resolver->setNormalizer('spotlight', \Closure::fromCallable([$this, 'normalizeBooleanOrUrl']));
+
         $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
@@ -1252,6 +1269,22 @@ final class Options
         }
 
         return $path;
+    }
+
+    /**
+     * @return bool|string
+     */
+    private function normalizeBooleanOrUrl(SymfonyOptions $options, ?string $booleanOrUrl)
+    {
+        if (empty($booleanOrUrl)) {
+            return false;
+        }
+
+        if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
+            return $booleanOrUrl;
+        }
+
+        return filter_var($booleanOrUrl, \FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
