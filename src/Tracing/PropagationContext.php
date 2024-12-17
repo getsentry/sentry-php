@@ -33,7 +33,7 @@ final class PropagationContext
      */
     private $dynamicSamplingContext;
 
-        /**
+    /**
      * @var float|null
      */
     private $sampleRand;
