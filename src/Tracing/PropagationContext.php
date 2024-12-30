@@ -29,14 +29,19 @@ final class PropagationContext
     private $parentSpanId;
 
     /**
-     * @var DynamicSamplingContext|null The dynamic sampling context
+     * @var bool|null The parent's sampling decision
      */
-    private $dynamicSamplingContext;
+    private $parentSampled;
 
     /**
      * @var float|null
      */
     private $sampleRand;
+
+    /**
+     * @var DynamicSamplingContext|null The dynamic sampling context
+     */
+    private $dynamicSamplingContext;
 
     private function __construct()
     {
@@ -49,10 +54,10 @@ final class PropagationContext
         $context->traceId = TraceId::generate();
         $context->spanId = SpanId::generate();
         $context->parentSpanId = null;
-        $context->dynamicSamplingContext = null;
-
+        $context->parentSampled = null;
         // TODO check if this is precise enough
         $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
+        $context->dynamicSamplingContext = null;
 
         return $context;
     }
@@ -167,6 +172,18 @@ final class PropagationContext
         return $this;
     }
 
+    public function getSampleRand(): ?float
+    {
+        return $this->sampleRand;
+    }
+
+    public function setSampleRand(?float $sampleRand): self
+    {
+        $this->sampleRand = $sampleRand;
+
+        return $this;
+    }
+
     // TODO add same logic as in TransactionContext
     private static function parseTraceparentAndBaggage(string $traceparent, string $baggage): self
     {
@@ -183,6 +200,11 @@ final class PropagationContext
                 $context->parentSpanId = new SpanId($matches['span_id']);
                 $hasSentryTrace = true;
             }
+
+            if (isset($matches['sampled'])) {
+                $context->parentSampled = $matches['sampled'] === '1';
+                $hasSentryTrace = true;
+            }
         } elseif (preg_match(self::W3C_TRACEPARENT_HEADER_REGEX, $traceparent, $matches)) {
             if (!empty($matches['trace_id'])) {
                 $context->traceId = new TraceId($matches['trace_id']);
@@ -191,6 +213,11 @@ final class PropagationContext
 
             if (!empty($matches['span_id'])) {
                 $context->parentSpanId = new SpanId($matches['span_id']);
+                $hasSentryTrace = true;
+            }
+
+            if (isset($matches['sampled'])) {
+                $context->parentSampled = $matches['sampled'] === '01';
                 $hasSentryTrace = true;
             }
         }
@@ -208,6 +235,25 @@ final class PropagationContext
             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
             // Propagate this Dynamic Sampling Context.
             $context->dynamicSamplingContext = $samplingContext;
+        }
+
+        // Store the propagated trace sample rand or generate a new one
+        if ($samplingContext->has('sample_rand')) {
+            // TODO check for 1e13 etc.
+            $context->sampleRand = (float) $samplingContext->get('sample_rand');
+        } else {
+            if ($samplingContext->has('sample_rate') && $context->parentSampled !== null) {
+                if ($context->parentSampled === true) {
+                    // [0, rate)
+                    $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6);
+                } else {
+                    // [rate, 1]
+                    $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample-rate'), 6);
+                }
+            } elseif ($context->parentSampled !== null) {
+                // [0, 1)
+                $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
+            }
         }
 
         return $context;
