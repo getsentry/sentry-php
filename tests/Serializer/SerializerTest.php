@@ -144,6 +144,26 @@ final class SerializerTest extends AbstractSerializerTest
         ], $this->invokeSerialization($serializer, $object));
     }
 
+    /**
+     * @dataProvider serializeDateTimeDataProvider
+     */
+    public function testSerializeDateTime(\DateTimeInterface $date, string $expected): void
+    {
+        $serializer = $this->createSerializer();
+
+        $result = $this->invokeSerialization($serializer, $date);
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function serializeDateTimeDataProvider(): \Generator
+    {
+        yield 'DateTime' => [
+            new \DateTime('2001-02-03 13:37:42'),
+            'Object DateTime',
+        ];
+    }
+
     public function testSerializableThatReturnsNull(): void
     {
         $serializer = $this->createSerializer();
