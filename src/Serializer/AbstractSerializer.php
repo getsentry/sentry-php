@@ -135,6 +135,10 @@ abstract class AbstractSerializer
                     }
                 }
 
+                if ($value instanceof \DateTimeInterface) {
+                    return $this->formatDate($value);
+                }
+
                 if ($this->serializeAllObjects || ($value instanceof \stdClass)) {
                     return $this->serializeObject($value, $_depth);
                 }
@@ -273,6 +277,20 @@ abstract class AbstractSerializer
         }
 
         return $this->serializeString($value);
+    }
+
+    private function formatDate(\DateTimeInterface $date): string
+    {
+        $hasMicroseconds = $date->format('u') !== '000000';
+        $formatted = $hasMicroseconds ? $date->format('Y-m-d H:i:s.u') : $date->format('Y-m-d H:i:s');
+        $className = \get_class($date);
+
+        $timezone = $date->getTimezone();
+        if ($timezone && $timezone->getName() !== 'UTC') {
+            $formatted .= ' ' . $date->format('eP');
+        }
+
+        return "$className($formatted)";
     }
 
     /**

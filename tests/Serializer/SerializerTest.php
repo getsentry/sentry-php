@@ -160,7 +160,22 @@ final class SerializerTest extends AbstractSerializerTest
     {
         yield 'DateTime' => [
             new \DateTime('2001-02-03 13:37:42'),
-            'Object DateTime',
+            'DateTime(2001-02-03 13:37:42)',
+        ];
+
+        yield 'Microseconds' => [
+            new \DateTimeImmutable('2001-02-03 13:37:42.123456'),
+            'DateTimeImmutable(2001-02-03 13:37:42.123456)',
+        ];
+
+        yield 'Timezone' => [
+            new \DateTime('2001-02-03 13:37:42', new \DateTimeZone('Europe/Paris')),
+            'DateTime(2001-02-03 13:37:42 Europe/Paris+01:00)',
+        ];
+
+        yield 'Abbreviated timezone' => [
+            new \DateTime('2021-03-28 13:37:42 CET'),
+            'DateTime(2021-03-28 13:37:42 CET+01:00)',
         ];
     }
 
