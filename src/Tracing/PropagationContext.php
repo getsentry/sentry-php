@@ -247,7 +247,7 @@ final class PropagationContext
                     // [0, rate)
                     $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6);
                 } else {
-                    // [rate, 1]
+                    // [rate, 1)
                     $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample-rate'), 6);
                 }
             } elseif ($context->parentSampled !== null) {
