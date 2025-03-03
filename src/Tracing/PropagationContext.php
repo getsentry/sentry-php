@@ -55,7 +55,6 @@ final class PropagationContext
         $context->spanId = SpanId::generate();
         $context->parentSpanId = null;
         $context->parentSampled = null;
-        // TODO check if this is precise enough
         $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
         $context->dynamicSamplingContext = null;
 
