@@ -239,7 +239,6 @@ final class PropagationContext
 
         // Store the propagated trace sample rand or generate a new one
         if ($samplingContext->has('sample_rand')) {
-            // TODO check for 1e13 etc.
             $context->sampleRand = (float) $samplingContext->get('sample_rand');
         } else {
             if ($samplingContext->has('sample_rate') && $context->parentSampled !== null) {

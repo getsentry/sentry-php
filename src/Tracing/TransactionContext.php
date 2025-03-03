@@ -205,7 +205,6 @@ final class TransactionContext extends SpanContext
 
         // Store the propagated trace sample rand or generate a new one
         if ($samplingContext->has('sample_rand')) {
-            // TODO check for 1e13 etc.
             $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
         } else {
             if ($samplingContext->has('sample_rate') && $context->parentSampled !== null) {
@@ -213,7 +212,7 @@ final class TransactionContext extends SpanContext
                     // [0, rate)
                     $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6));
                 } else {
-                    // [rate, 1]
+                    // [rate, 1)
                     $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample-rate'), 6));
                 }
             } elseif ($context->parentSampled !== null) {
