@@ -503,6 +503,7 @@ final class FunctionsTest extends TestCase
     {
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSampleRand(0.25);
 
         $scope = new Scope($propagationContext);
 
@@ -520,7 +521,7 @@ final class FunctionsTest extends TestCase
 
         $baggage = getBaggage();
 
-        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-release=1.0.0,sentry-environment=development', $baggage);
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rand=0.25,sentry-release=1.0.0,sentry-environment=development', $baggage);
     }
 
     public function testBaggageWithTracingEnabled(): void
@@ -541,6 +542,7 @@ final class FunctionsTest extends TestCase
         $transactionContext = new TransactionContext();
         $transactionContext->setName('Test');
         $transactionContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $transactionContext->getMetadata()->setSampleRand(0.25);
 
         $transaction = startTransaction($transactionContext);
 
@@ -552,7 +554,7 @@ final class FunctionsTest extends TestCase
 
         $baggage = getBaggage();
 
-        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true', $baggage);
+        $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true,sentry-sample_rand=0.25', $baggage);
     }
 
     public function testContinueTrace(): void

@@ -198,6 +198,29 @@ final class TransactionContext extends SpanContext
             $context->getMetadata()->setDynamicSamplingContext($samplingContext);
         }
 
+        // Store the propagated traces sample rate
+        if ($samplingContext->has('sample_rate')) {
+            $context->getMetadata()->setParentSamplingRate((float) $samplingContext->get('sample_rate'));
+        }
+
+        // Store the propagated trace sample rand or generate a new one
+        if ($samplingContext->has('sample_rand')) {
+            $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
+        } else {
+            if ($samplingContext->has('sample_rate') && $context->parentSampled !== null) {
+                if ($context->parentSampled === true) {
+                    // [0, rate)
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6));
+                } else {
+                    // [rate, 1)
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample-rate'), 6));
+                }
+            } elseif ($context->parentSampled !== null) {
+                // [0, 1)
+                $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6));
+            }
+        }
+
         return $context;
     }
 }
