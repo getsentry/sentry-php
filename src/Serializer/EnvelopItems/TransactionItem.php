@@ -38,10 +38,6 @@ class TransactionItem implements EnvelopeItemInterface
             'sdk' => [
                 'name' => $event->getSdkIdentifier(),
                 'version' => $event->getSdkVersion(),
-                'settings' => [
-                    // always, never, auto
-                    'infer_ip_address' => 'never',
-                ],
             ],
         ];
 
