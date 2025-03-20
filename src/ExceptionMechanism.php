@@ -32,6 +32,12 @@ final class ExceptionMechanism
      */
     private $data;
 
+    private $exceptionId;
+
+    private $parentId;
+
+    private $isExceptionGroup;
+
     /**
      * Class constructor.
      *
@@ -47,6 +53,9 @@ final class ExceptionMechanism
         $this->type = $type;
         $this->handled = $handled;
         $this->data = $data;
+        $this->exceptionId = 0;
+        $this->parentId = null;
+        $this->isExceptionGroup = false;
     }
 
     /**
@@ -86,6 +95,42 @@ final class ExceptionMechanism
     public function setData(array $data): self
     {
         $this->data = $data;
+
+        return $this;
+    }
+
+    public function getExceptionId(): int
+    {
+        return $this->exceptionId;
+    }
+
+    public function setExceptionId(int $exceptionId): self
+    {
+        $this->exceptionId = $exceptionId;
+
+        return $this;
+    }
+
+    public function getParentId(): ?int
+    {
+        return $this->parentId;
+    }
+
+    public function setParentId(int $parentId): self
+    {
+        $this->parentId = $parentId;
+
+        return $this;
+    }
+
+    public function getIsExceptionGroup(): bool
+    {
+        return $this->isExceptionGroup;
+    }
+
+    public function setIsExceptionGroup(bool $isExceptionGroup): self
+    {
+        $this->isExceptionGroup = $isExceptionGroup;
 
         return $this;
     }
