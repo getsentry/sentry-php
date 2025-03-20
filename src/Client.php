@@ -14,6 +14,8 @@ use Sentry\State\Scope;
 use Sentry\Transport\Result;
 use Sentry\Transport\TransportInterface;
 
+use function count;
+
 /**
  * Default implementation of the {@see ClientInterface} interface.
  */
@@ -468,9 +470,23 @@ class Client implements ClientInterface
             $exceptions[] = new ExceptionDataBag(
                 $exception,
                 $this->stacktraceBuilder->buildFromException($exception),
+                // @FIXME this sets the same mechanism on all exception
                 $hint->mechanism ?? new ExceptionMechanism(ExceptionMechanism::TYPE_GENERIC, true, ['code' => $exception->getCode()])
             );
         } while ($exception = $exception->getPrevious());
+
+        if (count($exceptions) > 1) {
+            foreach ($exceptions as $key => $value) {
+                if ($key === 0) {
+                    $value->getMechanism()->setIsExceptionGroup(true);
+                }
+                if ($key > 0) {
+                    $value->getMechanism()->setParentId(0);
+                }
+
+                $value->getMechanism()->setExceptionId($key);
+            }
+        }
 
         $event->setExceptions($exceptions);
     }
