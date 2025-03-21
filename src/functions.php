@@ -7,6 +7,7 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
@@ -375,6 +376,11 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     });
 
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
+}
+
+function logger(): Logs
+{
+    return Logs::getInstance();
 }
 
 /**
