@@ -62,6 +62,11 @@ final class Event
     private $checkIn;
 
     /**
+     * @var array|null
+     */
+    private $logs;
+
+    /**
      * @var string|null The name of the server (e.g. the host name)
      */
     private $serverName;
@@ -216,6 +221,11 @@ final class Event
         return new self($eventId, EventType::checkIn());
     }
 
+    public static function createLogs(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::logs());
+    }
+
     /**
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
@@ -364,6 +374,18 @@ final class Event
     public function setCheckIn(?CheckIn $checkIn): self
     {
         $this->checkIn = $checkIn;
+
+        return $this;
+    }
+
+    public function getLogs(): array
+    {
+        return $this->logs;
+    }
+
+    public function setLogs(array $logs): self
+    {
+        $this->logs = $logs;
 
         return $this;
     }

@@ -9,6 +9,7 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Serializer\EnvelopItems\CheckInItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
+use Sentry\Serializer\EnvelopItems\LogsItem;
 use Sentry\Serializer\EnvelopItems\ProfileItem;
 use Sentry\Serializer\EnvelopItems\TransactionItem;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -76,6 +77,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
             case EventType::checkIn():
                 $items = CheckInItem::toEnvelopeItem($event);
+                break;
+            case EventType::logs():
+                $items = LogsItem::toEnvelopeItem($event);
                 break;
         }
 
