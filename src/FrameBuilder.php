@@ -74,8 +74,11 @@ final class FrameBuilder
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['class'];
 
-            if (mb_substr($functionName, 0, mb_strlen(Frame::ANONYMOUS_CLASS_PREFIX)) === Frame::ANONYMOUS_CLASS_PREFIX) {
-                $functionName = Frame::ANONYMOUS_CLASS_PREFIX . $this->stripPrefixFromFilePath($this->options, substr($backtraceFrame['class'], \strlen(Frame::ANONYMOUS_CLASS_PREFIX)));
+            // Optimization: skip doing regex if we don't have prefixes to strip
+            if ($this->options->getPrefixes()) {
+                $functionName = preg_replace_callback('/@anonymous\\x00([^:]+)(:.*)?/', function (array $matches) {
+                    return "@anonymous\x00" . $this->stripPrefixFromFilePath($this->options, $matches[1]) . ($matches[2] ?? '');
+                }, $functionName);
             }
 
             $rawFunctionName = \sprintf('%s::%s', $backtraceFrame['class'], $backtraceFrame['function']);

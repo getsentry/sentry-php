@@ -149,6 +149,19 @@ final class FrameBuilderTest extends TestCase
             ],
             new Frame(null, 'path/not/of/app/to/file', 10, null, 'path/not/of/app/to/file'),
         ];
+
+        yield [
+            new Options([
+                'prefixes' => ['/path/to'],
+            ]),
+            [
+                'file' => '/path/to/file',
+                'line' => 10,
+                'function' => 'test_function',
+                'class' => "App\\ClassName@anonymous\0/path/to/file:85$29e",
+            ],
+            new Frame("App\\ClassName@anonymous\0/file::test_function", '/file', 10, "App\\ClassName@anonymous\0/path/to/file:85$29e::test_function", '/path/to/file'),
+        ];
     }
 
     /**
