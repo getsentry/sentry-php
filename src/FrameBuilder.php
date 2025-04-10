@@ -74,7 +74,7 @@ final class FrameBuilder
         if (isset($backtraceFrame['class']) && isset($backtraceFrame['function'])) {
             $functionName = $backtraceFrame['class'];
 
-            // Optimization: skip doing regex if we don't have prefixes to strip
+            // Skip if no prefixes are set
             if ($this->options->getPrefixes()) {
                 $prefixStrippedFunctionName = preg_replace_callback('/@anonymous\\x00([^:]+)(:.*)?/', function (array $matches) {
                     return "@anonymous\x00" . $this->stripPrefixFromFilePath($this->options, $matches[1]) . ($matches[2] ?? '');
