@@ -6,7 +6,6 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Sentry\Integration\SDKModuleIntegration;
 use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
@@ -16,6 +15,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\SDKModuleIntegration;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 
