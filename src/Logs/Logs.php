@@ -32,9 +32,34 @@ class Logs
         return self::$instance;
     }
 
+    public function trace(string $message): void
+    {
+        $this->aggregator->add(LogLevel::trace(), $message);
+    }
+
+    public function debug(string $message): void
+    {
+        $this->aggregator->add(LogLevel::debug(), $message);
+    }
+
     public function info(string $message): void
     {
         $this->aggregator->add(LogLevel::info(), $message);
+    }
+
+    public function warn(string $message): void
+    {
+        $this->aggregator->add(LogLevel::warn(), $message);
+    }
+
+    public function error(string $message): void
+    {
+        $this->aggregator->add(LogLevel::error(), $message);
+    }
+
+    public function fatal(string $message): void
+    {
+        $this->aggregator->add(LogLevel::fatal(), $message);
     }
 
     public function flush(): ?EventId
