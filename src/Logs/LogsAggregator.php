@@ -74,12 +74,12 @@ final class LogsAggregator
                 ];
             }
 
-            $hub->configureScope(function (Scope $scope) use (&$defaultTags) {
+            $hub->configureScope(function (Scope $scope) use (&$defaultAttributes) {
                 $span = $scope->getSpan();
                 if ($span !== null) {
                     $defaultAttributes['sentry.trace.parent_span_id'] = [
                         'type' => 'string',
-                        'value' => $span->getSpanId(),
+                        'value' => (string) $span->getSpanId(),
                     ];
                 }
             });
