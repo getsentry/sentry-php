@@ -21,9 +21,34 @@ class LogLevel
         $this->value = $value;
     }
 
+    public static function trace(): self
+    {
+        return self::getInstance('trace');
+    }
+
+    public static function debug(): self
+    {
+        return self::getInstance('debug');
+    }
+
     public static function info(): self
     {
         return self::getInstance('info');
+    }
+
+    public static function warn(): self
+    {
+        return self::getInstance('warn');
+    }
+
+    public static function error(): self
+    {
+        return self::getInstance('error');
+    }
+
+    public static function fatal(): self
+    {
+        return self::getInstance('fatal');
     }
 
     public function __toString(): string
