@@ -18,7 +18,7 @@ class LogsItem implements EnvelopeItemInterface
 
         $header = [
             'type' => (string) $event->getType(),
-            'item_count' => count($logs),
+            'item_count' => \count($logs),
             'content_type' => 'application/vnd.sentry.items.log+json',
         ];
 
