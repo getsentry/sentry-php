@@ -14,18 +14,20 @@ class LogsItem implements EnvelopeItemInterface
 {
     public static function toEnvelopeItem(Event $event): string
     {
+        $logs = $event->getLogs();
+
         $header = [
             'type' => (string) $event->getType(),
-            'content_type' => 'application/json',
+            'item_count' => count($logs),
+            'content_type' => 'application/vnd.sentry.items.log+json',
         ];
 
-        $payload = '';
-
-        $logs = $event->getLogs();
-        foreach ($logs as $log) {
-            $payload .= \sprintf("%s\n%s", JSON::encode($header), JSON::encode($log));
-        }
-
-        return $payload;
+        return \sprintf(
+            "%s\n%s",
+            JSON::encode($header),
+            JSON::encode([
+                'items' => $logs,
+            ])
+        );
     }
 }
