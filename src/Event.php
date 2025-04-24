@@ -19,7 +19,6 @@ use Sentry\Tracing\Span;
  *     count: int,
  *     tags: array<string>,
  * }
- *
  * @phpstan-type SdkPackageEntry array{
  *     name: string,
  *     version: string,
@@ -293,6 +292,8 @@ final class Event
 
     /**
      * Append a package to the list of SDK packages.
+     *
+     * @param SdkPackageEntry $package The package to append
      *
      * @return $this
      *
