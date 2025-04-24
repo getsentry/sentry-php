@@ -145,7 +145,6 @@ final class IntegrationRegistry
             new FrameContextifierIntegration(),
             new EnvironmentIntegration(),
             new ModulesIntegration(),
-            new SDKModuleIntegration(),
         ];
 
         if ($options->getDsn() !== null) {

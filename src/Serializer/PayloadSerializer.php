@@ -42,10 +42,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
             'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
             'dsn' => (string) $this->options->getDsn(),
-            'sdk' => [
-                'name' => $event->getSdkIdentifier(),
-                'version' => $event->getSdkVersion(),
-            ],
+            'sdk' => $event->getSdkPayload(),
         ];
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');

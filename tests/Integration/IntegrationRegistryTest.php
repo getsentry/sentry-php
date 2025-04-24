@@ -15,7 +15,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\Integration\RequestIntegration;
-use Sentry\Integration\SDKModuleIntegration;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\Options;
 
@@ -87,7 +86,6 @@ final class IntegrationRegistryTest extends TestCase
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
             ],
         ];
 
@@ -123,7 +121,6 @@ final class IntegrationRegistryTest extends TestCase
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
                 $integration1ClassName => $integration1,
                 $integration2ClassName => $integration2,
             ],
@@ -146,7 +143,6 @@ final class IntegrationRegistryTest extends TestCase
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
                 TransactionIntegration::class => new TransactionIntegration(),
                 $integration1ClassName => $integration1,
             ],
@@ -168,7 +164,6 @@ final class IntegrationRegistryTest extends TestCase
                 TransactionIntegration::class => new TransactionIntegration(),
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
             ],
         ];
@@ -213,7 +208,6 @@ final class IntegrationRegistryTest extends TestCase
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
             ],
         ];
 
@@ -231,7 +225,6 @@ final class IntegrationRegistryTest extends TestCase
                 FrameContextifierIntegration::class => new FrameContextifierIntegration(),
                 EnvironmentIntegration::class => new EnvironmentIntegration(),
                 ModulesIntegration::class => new ModulesIntegration(),
-                SDKModuleIntegration::class => new SDKModuleIntegration(),
             ],
         ];
     }
