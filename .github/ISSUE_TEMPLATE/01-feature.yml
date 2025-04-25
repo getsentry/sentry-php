@@ -1,6 +1,6 @@
 name: 💡 Feature Request
 description: Propose new functionality for the SDK
-type: Feature
+labels: ["PHP", "Feature"]
 body:
   - type: markdown
     attributes:
