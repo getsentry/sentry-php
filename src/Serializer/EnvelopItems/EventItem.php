@@ -165,24 +165,33 @@ class EventItem implements EnvelopeItemInterface
      */
     protected static function serializeException(ExceptionDataBag $exception): array
     {
-        $exceptionMechanism = $exception->getMechanism();
-        $exceptionStacktrace = $exception->getStacktrace();
         $result = [
             'type' => $exception->getType(),
             'value' => $exception->getValue(),
         ];
 
+        $exceptionStacktrace = $exception->getStacktrace();
         if ($exceptionStacktrace !== null) {
             $result['stacktrace'] = [
                 'frames' => array_map([self::class, 'serializeStacktraceFrame'], $exceptionStacktrace->getFrames()),
             ];
         }
 
+        $exceptionMechanism = $exception->getMechanism();
         if ($exceptionMechanism !== null) {
             $result['mechanism'] = [
                 'type' => $exceptionMechanism->getType(),
                 'handled' => $exceptionMechanism->isHandled(),
+                'exception_id' => $exceptionMechanism->getExceptionId(),
             ];
+
+            if ($exceptionMechanism->getIsExceptionGroup()) {
+                $result['mechanism']['is_exception_group'] = true;
+            }
+
+            if ($exceptionMechanism->getParentId() !== null) {
+                $result['mechanism']['parent_id'] = $exceptionMechanism->getParentId();
+            }
 
             if ($exceptionMechanism->getData() !== []) {
                 $result['mechanism']['data'] = $exceptionMechanism->getData();
