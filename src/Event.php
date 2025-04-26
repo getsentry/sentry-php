@@ -19,6 +19,10 @@ use Sentry\Tracing\Span;
  *     count: int,
  *     tags: array<string>,
  * }
+ * @phpstan-type SdkPackageEntry array{
+ *     name: string,
+ *     version: string,
+ * }
  */
 final class Event
 {
@@ -175,6 +179,16 @@ final class Event
     private $sdkVersion = Client::SDK_VERSION;
 
     /**
+     * @var SdkPackageEntry[] The Sentry SDK packages
+     */
+    private $sdkPackages = [
+        [
+            'name' => 'composer:sentry/sentry',
+            'version' => Client::SDK_VERSION,
+        ],
+    ];
+
+    /**
      * @var EventType The type of the Event
      */
     private $type;
@@ -274,6 +288,40 @@ final class Event
         $this->sdkVersion = $sdkVersion;
 
         return $this;
+    }
+
+    /**
+     * Append a package to the list of SDK packages.
+     *
+     * @param SdkPackageEntry $package The package to append
+     *
+     * @return $this
+     *
+     * @internal
+     */
+    public function appendSdkPackage(array $package): self
+    {
+        $this->sdkPackages[] = $package;
+
+        return $this;
+    }
+
+    /**
+     * Gets the SDK playload that will be sent to Sentry.
+     *
+     * @see https://develop.sentry.dev/sdk/data-model/event-payloads/sdk/
+     *
+     * @return array{name: string, version: string, packages: SdkPackageEntry[]}
+     *
+     * @internal
+     */
+    public function getSdkPayload(): array
+    {
+        return [
+            'name' => $this->sdkIdentifier,
+            'version' => $this->sdkVersion,
+            'packages' => $this->sdkPackages,
+        ];
     }
 
     /**
