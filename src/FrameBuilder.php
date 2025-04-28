@@ -91,6 +91,17 @@ final class FrameBuilder
             $functionName = $backtraceFrame['function'];
         }
 
+        // Starting with PHP 8.4 a closure function call is reported as "{closure:filename:line}" instead of just "{closure}", properly strip the prefixes from that format
+        if (\PHP_VERSION_ID >= 80400 && $functionName !== null && $this->options->getPrefixes()) {
+            $prefixStrippedFunctionName = preg_replace_callback('/^\{closure:(.*?):(\d+)}$/', function (array $matches) {
+                return '{closure:' . $this->stripPrefixFromFilePath($this->options, $matches[1]) . ':' . $matches[2] . '}';
+            }, $functionName);
+
+            if ($prefixStrippedFunctionName) {
+                $functionName = $prefixStrippedFunctionName;
+            }
+        }
+
         return new Frame(
             $functionName,
             $strippedFilePath,
