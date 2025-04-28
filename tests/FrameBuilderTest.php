@@ -162,6 +162,20 @@ final class FrameBuilderTest extends TestCase
             ],
             new Frame("App\\ClassName@anonymous\0/file::test_function", '/file', 10, "App\\ClassName@anonymous\0/path/to/file:85$29e::test_function", '/path/to/file'),
         ];
+
+        if (\PHP_VERSION_ID >= 80400) {
+            yield [
+                new Options([
+                    'prefixes' => ['/path/to'],
+                ]),
+                [
+                    'file' => '/path/to/file',
+                    'line' => 18,
+                    'function' => '{closure:/path/to/file:18}',
+                ],
+                new Frame('{closure:/file:18}', '/file', 18, null, '/path/to/file'),
+            ];
+        }
     }
 
     /**
