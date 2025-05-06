@@ -6,6 +6,7 @@ namespace Sentry\Transport;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\EventType;
 use Sentry\HttpClient\Response;
 
 final class RateLimiter
@@ -92,15 +93,23 @@ final class RateLimiter
         return false;
     }
 
-    public function isRateLimited(string $eventType): bool
+    /**
+     * @param string|EventType $eventType
+     */
+    public function isRateLimited($eventType): bool
     {
         $disabledUntil = $this->getDisabledUntil($eventType);
 
         return $disabledUntil > time();
     }
 
-    public function getDisabledUntil(string $eventType): int
+    /**
+     * @param string|EventType $eventType
+     */
+    public function getDisabledUntil($eventType): int
     {
+        $eventType = $eventType instanceof EventType ? (string) $eventType : $eventType;
+
         if ($eventType === 'event') {
             $eventType = self::DATA_CATEGORY_ERROR;
         }
