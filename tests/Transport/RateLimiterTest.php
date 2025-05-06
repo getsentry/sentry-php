@@ -116,13 +116,13 @@ final class RateLimiterTest extends TestCase
     private function assertEventTypesAreRateLimited(array $eventTypesLimited): void
     {
         foreach ($eventTypesLimited as $eventType) {
-            $this->assertTrue($this->rateLimiter->isRateLimited($eventType));
+            $this->assertTrue($this->rateLimiter->isRateLimited((string) $eventType));
         }
 
         $eventTypesNotLimited = array_diff(EventType::cases(), $eventTypesLimited);
 
         foreach ($eventTypesNotLimited as $eventType) {
-            $this->assertFalse($this->rateLimiter->isRateLimited($eventType));
+            $this->assertFalse($this->rateLimiter->isRateLimited((string) $eventType));
         }
     }
 }
