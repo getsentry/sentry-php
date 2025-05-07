@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Sentry\Logs;
 
 /**
- * @phpstan-type LogAttribute array{
- *     type: string,
- *     value: mixed
- * }
- * @phpstan-type LogAttributes array<string, LogAttribute>
+ * @phpstan-import-type AttributeValue from LogAttribute
+ * @phpstan-import-type AttributeSerialized from LogAttribute
+ *
  * @phpstan-type LogEnvelopeItem array{
  *     timestamp: int|float,
  *     trace_id: string,
  *     level: string,
  *     body: string,
- *     attributes: LogAttributes
+ *     attributes: array<string, LogAttribute>
  * }
  */
 class Log implements \JsonSerializable
@@ -41,12 +39,12 @@ class Log implements \JsonSerializable
     private $body;
 
     /**
-     * @var LogAttributes
+     * @var array<string, LogAttribute>
      */
     private $attributes;
 
     /**
-     * @param LogAttributes $attributes
+     * @param array<string, LogAttribute> $attributes
      */
     public function __construct(
         int $timestamp,
@@ -63,14 +61,11 @@ class Log implements \JsonSerializable
     }
 
     /**
-     * @param mixed $value
+     * @param AttributeValue $value
      */
-    public function setAttribute(string $key, $value, string $type = 'string'): self
+    public function setAttribute(string $key, $value): self
     {
-        $this->attributes[$key] = [
-            'type' => $type,
-            'value' => $value,
-        ];
+        $this->attributes[$key] = LogAttribute::fromValue($value);
 
         return $this;
     }
