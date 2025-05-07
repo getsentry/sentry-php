@@ -62,6 +62,8 @@ use Sentry\Tracing\TransactionContext;
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
  *     transport?: callable,
+ *     enable_logs?: bool,
+ *     before_send_log?: callable,
  * } $options The client options
  */
 function init(array $options = []): void
