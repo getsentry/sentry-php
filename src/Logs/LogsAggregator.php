@@ -8,83 +8,52 @@ use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 
 /**
  * @internal
  */
 final class LogsAggregator
 {
+    /**
+     * @var Log[]
+     */
     private $logs = [];
 
     public function add(
         LogLevel $level,
-        string $message,
+        string $message
     ): void {
         $timestamp = time();
-        $traceId = null;
 
         $hub = SentrySdk::getCurrentHub();
-        $span = $hub->getSpan();
-        if ($span !== null) {
-            $traceId = $span->getTraceId();
+        $client = $hub->getClient();
+
+        // There is no need to continue if there is no client or if logs are disabled
+        // @TODO: This might needs to be re-evaluated when we send logs to allow loggin to start before init'ing the client
+        if ($client === null || !$client->getOptions()->getEnableLogs()) {
+            return;
         }
 
-        $log = [
-            'timestamp' => $timestamp,
-            'trace_id' => (string) $traceId,
-            'level' => (string) $level,
-            'body' => $message,
-            'attributes' => [],
-        ];
+        $span = $hub->getSpan();
+        $traceId = $span !== null ? $span->getTraceId() : null;
 
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $options = $client->getOptions();
 
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        // @TODO add a proper attributes abstraction we can later re-use for spans
+        // @TODO Add a `server.address` attribute, same value as `server_name` on errors
+        // @FIXME The SDK name and version won't work for Laravel & Symfony and other SDKs, needs to be more flexible
+        $log = (new Log($timestamp, (string) $traceId, $level, $message))
+            ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
+            ->setAttribute('sentry.sdk.name', Client::SDK_IDENTIFIER)
+            ->setAttribute('sentry.sdk.version', Client::SDK_VERSION);
 
-        if ($client !== null) {
-            $options = $client->getOptions();
+        $release = $options->getRelease();
+        if ($release !== null) {
+            $log->setAttribute('sentry.release', $release);
+        }
 
-            // @TODO add a proper attributes abstraction we can later re-use for spans
-            $defaultAttributes = [
-                'sentry.environment' => [
-                    'type' => 'string',
-                    'value' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-                ],
-                'sentry.sdk.name' => [
-                    'type' => 'string',
-                    // @FIXME Won't work for Laravel & Symfony
-                    'value' => Client::SDK_IDENTIFIER,
-                ],
-                'sentry.sdk.version' => [
-                    'type' => 'string',
-                    // @FIXME Won't work for Laravel & Symfony
-                    'value' => Client::SDK_VERSION,
-                ],
-                // @TODO Add a `server.address` attribute, same value as `server_name` on errors
-            ];
-
-            $release = $options->getRelease();
-            if ($release !== null) {
-                $defaultAttributes['sentry.release'] = [
-                    'type' => 'string',
-                    'value' => $options->getRelease(),
-                ];
-            }
-
-            $hub->configureScope(function (Scope $scope) use (&$defaultAttributes) {
-                $span = $scope->getSpan();
-                if ($span !== null) {
-                    $defaultAttributes['sentry.trace.parent_span_id'] = [
-                        'type' => 'string',
-                        'value' => (string) $span->getSpanId(),
-                    ];
-                }
-            });
-
-            $log['attributes'] = $defaultAttributes;
+        if ($span !== null) {
+            $log->setAttribute('sentry.trace.parent_span_id', (string) $span->getSpanId());
         }
 
         $this->logs[] = $log;

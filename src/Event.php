@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
+use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -62,9 +63,9 @@ final class Event
     private $checkIn;
 
     /**
-     * @var array|null
+     * @var Log[]
      */
-    private $logs;
+    private $logs = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -378,11 +379,17 @@ final class Event
         return $this;
     }
 
+    /**
+     * @return Log[]
+     */
     public function getLogs(): array
     {
         return $this->logs;
     }
 
+    /**
+     * @param Log[] $logs
+     */
     public function setLogs(array $logs): self
     {
         $this->logs = $logs;
