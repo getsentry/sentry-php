@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
+/**
+ * @see: https://develop.sentry.dev/sdk/telemetry/logs/#log-severity-level
+ */
 class LogLevel
 {
     /**

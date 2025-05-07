@@ -378,6 +378,9 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
 }
 
+/**
+ * Get the Sentry Logs client.
+ */
 function logger(): Logs
 {
     return Logs::getInstance();
