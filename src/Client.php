@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
+use Sentry\Logs\Log;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\State\Scope;
@@ -409,6 +410,19 @@ class Client implements ClientInterface
                 return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
             case EventType::checkIn():
                 return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+            case EventType::logs():
+                $logs = array_filter(array_map(function (Log $log): ?Log {
+                    // @TODO: Should we emit a log that we dropped a log item?
+                    return ($this->options->getBeforeSendLogCallback())($log);
+                }, $event->getLogs()));
+
+                if (empty($logs)) {
+                    return null;
+                }
+
+                $event->setLogs($logs);
+
+                return $event;
             default:
                 return $event;
         }
