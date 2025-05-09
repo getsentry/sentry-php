@@ -23,7 +23,7 @@ final class LogsAggregator
         LogLevel $level,
         string $message
     ): void {
-        $timestamp = time();
+        $timestamp = microtime(true);
 
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
