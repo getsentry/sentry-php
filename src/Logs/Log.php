@@ -19,7 +19,7 @@ namespace Sentry\Logs;
 class Log implements \JsonSerializable
 {
     /**
-     * @var int
+     * @var float
      */
     private $timestamp;
 
@@ -47,7 +47,7 @@ class Log implements \JsonSerializable
      * @param array<string, LogAttribute> $attributes
      */
     public function __construct(
-        int $timestamp,
+        float $timestamp,
         string $traceId,
         LogLevel $level,
         string $body,
