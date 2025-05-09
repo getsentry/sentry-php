@@ -1,6 +1,6 @@
 name: 💡 Improvement
 description: Propose an improvement for existing functionality of the SDK
-type: Improvement
+labels: ["PHP", "Improvement"]
 body:
   - type: markdown
     attributes:
