@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sentry\Tests\Logs;
+
+use PHPUnit\Framework\TestCase;
+use Sentry\Logs\Log;
+use Sentry\Logs\LogAttribute;
+use Sentry\Logs\LogLevel;
+
+/**
+ * @phpstan-import-type AttributeValue from LogAttribute
+ * @phpstan-import-type AttributeSerialized from LogAttribute
+ */
+final class LogTest extends TestCase
+{
+    public function testJsonSerializesToExpected(): void
+    {
+        $timestamp = microtime(true);
+
+        $log = new Log($timestamp, '123', LogLevel::debug(), 'foo', [
+            'foo' => LogAttribute::fromValue('bar'),
+        ]);
+
+        $serialized = json_decode((string) json_encode($log), true);
+
+        $this->assertEquals([
+            'timestamp' => $timestamp,
+            'trace_id' => '123',
+            'level' => 'debug',
+            'body' => 'foo',
+            'attributes' => [
+                'foo' => [
+                    'type' => 'string',
+                    'value' => 'bar',
+                ],
+            ],
+        ], $serialized);
+    }
+}
