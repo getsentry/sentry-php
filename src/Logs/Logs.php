@@ -6,6 +6,9 @@ namespace Sentry\Logs;
 
 use Sentry\EventId;
 
+/**
+ * @phpstan-import-type AttributeValue from LogAttribute
+ */
 class Logs
 {
     /**
@@ -32,36 +35,69 @@ class Logs
         return self::$instance;
     }
 
-    public function trace(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function trace(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::trace(), $message);
+        $this->aggregator->add(LogLevel::trace(), $message, $values, $attributes);
     }
 
-    public function debug(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function debug(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::debug(), $message);
+        $this->aggregator->add(LogLevel::debug(), $message, $values, $attributes);
     }
 
-    public function info(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function info(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::info(), $message);
+        $this->aggregator->add(LogLevel::info(), $message, $values, $attributes);
     }
 
-    public function warn(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function warn(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::warn(), $message);
+        $this->aggregator->add(LogLevel::warn(), $message, $values, $attributes);
     }
 
-    public function error(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function error(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::error(), $message);
+        $this->aggregator->add(LogLevel::error(), $message, $values, $attributes);
     }
 
-    public function fatal(string $message): void
+    /**
+     * @param string                        $message    see sprintf for a description of format
+     * @param array<int, string|int|float>  $values     see sprintf for a description of values
+     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     */
+    public function fatal(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::fatal(), $message);
+        $this->aggregator->add(LogLevel::fatal(), $message, $values, $attributes);
     }
 
+    /**
+     * Flush the captured logs and send them to Sentry.
+     */
     public function flush(): ?EventId
     {
         return $this->aggregator->flush();
