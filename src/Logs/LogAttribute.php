@@ -8,9 +8,9 @@ namespace Sentry\Logs;
  * @phpstan-type AttributeType 'string'|'boolean'|'integer'|'double'
  * @phpstan-type AttributeValue string|bool|int|float
  * @phpstan-type AttributeSerialized array{
- *      type: AttributeType,
- *      value: AttributeValue
- *  }
+ *     type: AttributeType,
+ *     value: AttributeValue
+ * }
  */
 class LogAttribute implements \JsonSerializable
 {
@@ -35,7 +35,7 @@ class LogAttribute implements \JsonSerializable
     }
 
     /**
-     * @param AttributeValue $value
+     * @param AttributeValue|\Stringable $value
      */
     public static function fromValue($value): self
     {
