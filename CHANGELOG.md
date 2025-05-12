@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.11.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.11.1.
+
+### Bug Fixes
+
+- Fix stripping prefixes from closure frames for PHP 8.4 and up [(#1828)](https://github.com/getsentry/sentry-php/pull/1828)
+
 ## 4.11.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.11.0.
