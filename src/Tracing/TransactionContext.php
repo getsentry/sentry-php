@@ -8,8 +8,6 @@ final class TransactionContext extends SpanContext
 {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
-    private const W3C_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<version>[0]{2})?-?(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01]{2})?[ \\t]*$/i';
-
     public const DEFAULT_NAME = '<unlabeled transaction>';
 
     /**
@@ -164,21 +162,6 @@ final class TransactionContext extends SpanContext
 
             if (isset($matches['sampled'])) {
                 $context->parentSampled = $matches['sampled'] === '1';
-                $hasSentryTrace = true;
-            }
-        } elseif (preg_match(self::W3C_TRACEPARENT_HEADER_REGEX, $sentryTrace, $matches)) {
-            if (!empty($matches['trace_id'])) {
-                $context->traceId = new TraceId($matches['trace_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (!empty($matches['span_id'])) {
-                $context->parentSpanId = new SpanId($matches['span_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (isset($matches['sampled'])) {
-                $context->parentSampled = $matches['sampled'] === '01';
                 $hasSentryTrace = true;
             }
         }

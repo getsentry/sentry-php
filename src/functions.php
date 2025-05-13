@@ -308,29 +308,12 @@ function getTraceparent(): string
  * or HTML meta tag value.
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
+ *
+ * @deprecated since version 4.12. To be removed in version 5.0.
  */
 function getW3CTraceparent(): string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
-
-    if ($client !== null) {
-        $options = $client->getOptions();
-
-        if ($options !== null && $options->isTracingEnabled()) {
-            $span = SentrySdk::getCurrentHub()->getSpan();
-            if ($span !== null) {
-                return $span->toW3CTraceparent();
-            }
-        }
-    }
-
-    $traceParent = '';
-    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
-        $traceParent = $scope->getPropagationContext()->toW3CTraceparent();
-    });
-
-    return $traceParent;
+    return '';
 }
 
 /**

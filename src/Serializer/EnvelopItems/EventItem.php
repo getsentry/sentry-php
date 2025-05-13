@@ -28,10 +28,7 @@ class EventItem implements EnvelopeItemInterface
         $payload = [
             'timestamp' => $event->getTimestamp(),
             'platform' => 'php',
-            'sdk' => [
-                'name' => $event->getSdkIdentifier(),
-                'version' => $event->getSdkVersion(),
-            ],
+            'sdk' => $event->getSdkPayload(),
         ];
 
         if ($event->getStartTimestamp() !== null) {

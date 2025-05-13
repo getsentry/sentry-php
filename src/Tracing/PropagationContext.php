@@ -11,8 +11,6 @@ final class PropagationContext
 {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
-    private const W3C_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<version>[0]{2})?-?(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01]{2})?[ \\t]*$/i';
-
     /**
      * @var TraceId The trace id
      */
@@ -81,10 +79,12 @@ final class PropagationContext
 
     /**
      * Returns a string that can be used for the W3C `traceparent` header & meta tag.
+     *
+     * @deprecated since version 4.12. To be removed in version 5.0.
      */
     public function toW3CTraceparent(): string
     {
-        return \sprintf('00-%s-%s-00', (string) $this->traceId, (string) $this->spanId);
+        return '';
     }
 
     /**
@@ -202,21 +202,6 @@ final class PropagationContext
 
             if (isset($matches['sampled'])) {
                 $context->parentSampled = $matches['sampled'] === '1';
-                $hasSentryTrace = true;
-            }
-        } elseif (preg_match(self::W3C_TRACEPARENT_HEADER_REGEX, $traceparent, $matches)) {
-            if (!empty($matches['trace_id'])) {
-                $context->traceId = new TraceId($matches['trace_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (!empty($matches['span_id'])) {
-                $context->parentSpanId = new SpanId($matches['span_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (isset($matches['sampled'])) {
-                $context->parentSampled = $matches['sampled'] === '01';
                 $hasSentryTrace = true;
             }
         }
