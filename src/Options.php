@@ -436,14 +436,14 @@ final class Options
         return $this->options['dsn'];
     }
 
-    public function getOrg(): ?string
+    public function getOrg(): ?int
     {
-        return $this->options['org'];
+        return $this->options['org_id'];
     }
 
-    public function setOrg(string $org): self
+    public function setOrg(int $orgId): self
     {
-        $options = array_merge($this->options, ['org' => $org]);
+        $options = array_merge($this->options, ['org_id' => $orgId]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1174,7 +1174,7 @@ final class Options
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
-            'org' => null,
+            'org_id' => null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
@@ -1236,7 +1236,7 @@ final class Options
         $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
-        $resolver->setAllowedTypes('org', ['null', 'string']);
+        $resolver->setAllowedTypes('org_id', ['null', 'int']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
