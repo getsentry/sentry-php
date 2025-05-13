@@ -23,7 +23,7 @@ final class DsnTest extends TestCase
         string $expectedPublicKey,
         string $expectedProjectId,
         string $expectedPath,
-        ?int $expectedOrgId,
+        ?int $expectedOrgId
     ): void {
         $dsn = Dsn::createFromString($value);
 
