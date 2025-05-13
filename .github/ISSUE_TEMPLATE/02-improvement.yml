@@ -1,10 +1,10 @@
-name: 💡 Feature Request
-description: Create a feature request for sentry-php SDK.
-labels: 'enhancement'
+name: 💡 Improvement
+description: Propose an improvement for existing functionality of the SDK
+labels: ["PHP", "Improvement"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to file a feature request! Please fill out this form as completely as possible.
+      value: Thanks for taking the time to file a request! Please fill out this form as completely as possible.
   - type: textarea
     id: problem
     attributes:

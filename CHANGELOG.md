@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 4.11.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.11.1.
+
+### Bug Fixes
+
+- Fix stripping prefixes from closure frames for PHP 8.4 and up [(#1828)](https://github.com/getsentry/sentry-php/pull/1828)
+
+## 4.11.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.11.0.
+
+### Features
+
+- Serialize `\DateTimeInterface` objects by default [(#1803)](https://github.com/getsentry/sentry-php/pull/1803)
+- Add support for [Propagated Ramdom Value](https://develop.sentry.dev/sdk/telemetry/traces/#propagated-random-value) [(#1793)](https://github.com/getsentry/sentry-php/pull/1793)
+- Use the `SENTRY_SPOTLIGHT` environment variable as the input for the `spotlight` configuration option [(#1789)](https://github.com/getsentry/sentry-php/pull/1789)
+
+### Bug Fixes
+
+- Fix cases where anonymous stacktrace frames did not get their prefixes stripped [(#1820)](https://github.com/getsentry/sentry-php/pull/1820)
+- Fix Guzzle middleware not setting the span it created as the current span, which resulted in nesting issues in the trace view [(#1801)](https://github.com/getsentry/sentry-php/pull/1801)
+
 ## 4.10.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.10.0.

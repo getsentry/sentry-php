@@ -269,6 +269,7 @@ class Hub implements HubInterface
         $samplingContext->setAdditionalContext($customSamplingContext);
 
         $sampleSource = 'context';
+        $sampleRand = $context->getMetadata()->getSampleRand();
 
         if ($transaction->getSampled() === null) {
             $tracesSampler = $options->getTracesSampler();
@@ -278,12 +279,17 @@ class Hub implements HubInterface
 
                 $sampleSource = 'config:traces_sampler';
             } else {
-                $sampleRate = $this->getSampleRate(
-                    $samplingContext->getParentSampled(),
-                    $options->getTracesSampleRate() ?? 0
-                );
-
-                $sampleSource = $samplingContext->getParentSampled() ? 'parent' : 'config:traces_sample_rate';
+                $parentSampleRate = $context->getMetadata()->getParentSamplingRate();
+                if ($parentSampleRate !== null) {
+                    $sampleRate = $parentSampleRate;
+                    $sampleSource = 'parent:sample_rate';
+                } else {
+                    $sampleRate = $this->getSampleRate(
+                        $samplingContext->getParentSampled(),
+                        $options->getTracesSampleRate() ?? 0
+                    );
+                    $sampleSource = $samplingContext->getParentSampled() ? 'parent:sampling_decision' : 'config:traces_sample_rate';
+                }
             }
 
             if (!$this->isValidSampleRate($sampleRate)) {
@@ -304,7 +310,7 @@ class Hub implements HubInterface
                 return $transaction;
             }
 
-            $transaction->setSampled($this->sample($sampleRate));
+            $transaction->setSampled($sampleRand < $sampleRate);
         }
 
         if (!$transaction->getSampled()) {
@@ -376,11 +382,11 @@ class Hub implements HubInterface
     private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
     {
         if ($hasParentBeenSampled === true) {
-            return 1;
+            return 1.0;
         }
 
         if ($hasParentBeenSampled === false) {
-            return 0;
+            return 0.0;
         }
 
         return $fallbackSampleRate;
