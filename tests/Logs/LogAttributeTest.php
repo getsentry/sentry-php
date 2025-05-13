@@ -22,7 +22,11 @@ final class LogAttributeTest extends TestCase
     public function testFromValue($value, array $expected, bool $expectError = false): void
     {
         if ($expectError) {
-            $this->expectException(\Error::class);
+            if (\PHP_VERSION_ID >= 70400) {
+                $this->expectException(\Error::class);
+            } else {
+                $this->expectError();
+            }
         }
 
         $this->assertEquals($expected, LogAttribute::fromValue($value)->jsonSerialize());
@@ -76,7 +80,7 @@ final class LogAttributeTest extends TestCase
         ];
 
         yield [
-            new class {}, // not stringable or scalar
+            new \stdClass(), // not stringable nor a scalar
             [],
             true,
         ];
