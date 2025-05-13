@@ -172,8 +172,8 @@ final class DynamicSamplingContext
             if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
                 $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
-            if ($options->getDsn() !== null && $options->getDsn()->getOrg() !== null) {
-                $samplingContext->set('org', $options->getDsn()->getOrg());
+            if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+                $samplingContext->set('org_id', $options->getDsn()->getOrgId());
             }
 
             if ($options->getRelease() !== null) {
@@ -212,8 +212,8 @@ final class DynamicSamplingContext
             $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
         }
 
-        if ($options->getDsn() !== null && $options->getDsn()->getOrg() !== null) {
-            $samplingContext->set('org', $options->getDsn()->getOrg());
+        if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+            $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
         }
 
         if ($options->getRelease() !== null) {

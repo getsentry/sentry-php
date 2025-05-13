@@ -17,7 +17,7 @@ final class Dsn implements \Stringable
      * @var string Regex to match the organization ID in the host.
      *             This only applies to Sentry SaaS DSNs that contain the organization ID.
      */
-    private const SENTRY_ORG_REGEX = '/^o(\d+)\./';
+    private const SENTRY_ORG_ID_REGEX = '/^o(\d+)\./';
 
     /**
      * @var string The protocol to be used to access the resource
@@ -50,9 +50,9 @@ final class Dsn implements \Stringable
     private $path;
 
     /**
-     * @var string
+     * @var int
      */
-    private $org;
+    private $orgId;
 
     /**
      * Class constructor.
@@ -63,9 +63,9 @@ final class Dsn implements \Stringable
      * @param string $projectId The ID of the resource to access
      * @param string $path      The specific resource that the web client wants to access
      * @param string $publicKey The public key to authenticate the SDK
-     * @param string $org
+     * @param int $orgId
      */
-    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?string $org = null)
+    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?int $orgId = null)
     {
         $this->scheme = $scheme;
         $this->host = $host;
@@ -73,7 +73,7 @@ final class Dsn implements \Stringable
         $this->projectId = $projectId;
         $this->path = $path;
         $this->publicKey = $publicKey;
-        $this->org = $org;
+        $this->orgId = $orgId;
     }
 
     /**
@@ -108,9 +108,9 @@ final class Dsn implements \Stringable
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
-        $org = null;
-        if (preg_match(self::SENTRY_ORG_REGEX, $parsedDsn['host'], $matches) == 1) {
-            $org = $matches[1];
+        $orgId = null;
+        if (preg_match(self::SENTRY_ORG_ID_REGEX, $parsedDsn['host'], $matches) == 1) {
+            $orgId = $matches[1];
         }
 
         return new self(
@@ -120,7 +120,7 @@ final class Dsn implements \Stringable
             $projectId,
             $path,
             $parsedDsn['user'],
-            $org
+            $orgId
         );
     }
 
@@ -172,9 +172,9 @@ final class Dsn implements \Stringable
         return $this->publicKey;
     }
 
-    public function getOrg(): ?string
+    public function getOrgId(): ?int
     {
-        return $this->org;
+        return $this->orgId;
     }
 
     /**

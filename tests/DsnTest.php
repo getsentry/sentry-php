@@ -23,7 +23,7 @@ final class DsnTest extends TestCase
         string $expectedPublicKey,
         string $expectedProjectId,
         string $expectedPath,
-        ?string $expectedOrg,
+        ?int $expectedOrgId,
     ): void {
         $dsn = Dsn::createFromString($value);
 
@@ -33,7 +33,7 @@ final class DsnTest extends TestCase
         $this->assertSame($expectedPublicKey, $dsn->getPublicKey());
         $this->assertSame($expectedProjectId, $dsn->getProjectId(true));
         $this->assertSame($expectedPath, $dsn->getPath());
-        $this->assertSame($expectedOrg, $dsn->getOrg());
+        $this->assertSame($expectedOrgId, $dsn->getOrgId());
     }
 
     public static function createFromStringDataProvider(): \Generator
@@ -68,7 +68,7 @@ final class DsnTest extends TestCase
             'public',
             '1',
             '',
-            '1',
+            1,
         ];
 
         yield [
