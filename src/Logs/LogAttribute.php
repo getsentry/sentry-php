@@ -35,10 +35,14 @@ class LogAttribute implements \JsonSerializable
     }
 
     /**
-     * @param AttributeValue|\Stringable $value
+     * @param mixed $value
      */
-    public static function fromValue($value): self
+    public static function tryFromValue($value): ?self
     {
+        if ($value === null) {
+            return null;
+        }
+
         if (\is_bool($value)) {
             return new self($value, 'boolean');
         }
@@ -51,7 +55,17 @@ class LogAttribute implements \JsonSerializable
             return new self($value, 'double');
         }
 
-        return new self((string) $value, 'string');
+        if (\is_string($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+            $stringValue = (string) $value;
+
+            if (empty($stringValue)) {
+                return null;
+            }
+
+            return new self($stringValue, 'string');
+        }
+
+        return null;
     }
 
     /**

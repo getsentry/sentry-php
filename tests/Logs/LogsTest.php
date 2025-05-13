@@ -59,6 +59,22 @@ final class LogsTest extends TestCase
         $this->assertNotNull(logger()->flush());
     }
 
+    public function testLogWithTemplate(): void
+    {
+        $this->assertEvent(function (Event $event) {
+            $this->assertCount(1, $event->getLogs());
+
+            $logItem = $event->getLogs()[0]->jsonSerialize();
+
+            $this->assertEquals(LogLevel::info(), $logItem['level']);
+            $this->assertEquals('Some info message', $logItem['body']);
+        });
+
+        logger()->info('Some %s message', ['info']);
+
+        $this->assertNotNull(logger()->flush());
+    }
+
     /**
      * @param callable(Event): void $assert
      */

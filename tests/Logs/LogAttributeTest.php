@@ -14,22 +14,22 @@ use Sentry\Logs\LogAttribute;
 final class LogAttributeTest extends TestCase
 {
     /**
-     * @param AttributeValue      $value
-     * @param AttributeSerialized $expected
+     * @param AttributeValue           $value
+     * @param AttributeSerialized|null $expected
      *
      * @dataProvider fromValueDataProvider
      */
-    public function testFromValue($value, array $expected, bool $expectError = false): void
+    public function testFromValue($value, $expected): void
     {
-        if ($expectError) {
-            if (\PHP_VERSION_ID >= 70400) {
-                $this->expectException(\Error::class);
-            } else {
-                $this->expectError();
-            }
+        $attribute = LogAttribute::tryFromValue($value);
+
+        if ($expected === null) {
+            $this->assertNull($attribute);
+
+            return;
         }
 
-        $this->assertEquals($expected, LogAttribute::fromValue($value)->jsonSerialize());
+        $this->assertEquals($expected, $attribute->jsonSerialize());
     }
 
     public static function fromValueDataProvider(): \Generator
@@ -80,9 +80,18 @@ final class LogAttributeTest extends TestCase
         ];
 
         yield [
-            new \stdClass(), // not stringable nor a scalar
-            [],
-            true,
+            new class {},
+            null,
+        ];
+
+        yield [
+            new \stdClass(),
+            null,
+        ];
+
+        yield [
+            ['key' => 'value'],
+            null,
         ];
     }
 }

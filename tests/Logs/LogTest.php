@@ -19,9 +19,10 @@ final class LogTest extends TestCase
     {
         $timestamp = microtime(true);
 
-        $log = new Log($timestamp, '123', LogLevel::debug(), 'foo', [
-            'foo' => LogAttribute::fromValue('bar'),
-        ]);
+        $log = new Log($timestamp, '123', LogLevel::debug(), 'foo');
+
+        $log->setAttribute('foo', 'bar');
+        $log->setAttribute('should-be-missing', ['foo' => 'bar']);
 
         $serialized = json_decode((string) json_encode($log), true);
 

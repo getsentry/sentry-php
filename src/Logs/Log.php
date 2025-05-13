@@ -41,31 +41,32 @@ class Log implements \JsonSerializable
     /**
      * @var array<string, LogAttribute>
      */
-    private $attributes;
+    private $attributes = [];
 
-    /**
-     * @param array<string, LogAttribute> $attributes
-     */
     public function __construct(
         float $timestamp,
         string $traceId,
         LogLevel $level,
-        string $body,
-        array $attributes = []
+        string $body
     ) {
         $this->timestamp = $timestamp;
         $this->traceId = $traceId;
         $this->level = $level;
         $this->body = $body;
-        $this->attributes = $attributes;
     }
 
     /**
-     * @param AttributeValue $value
+     * @param mixed $value
      */
     public function setAttribute(string $key, $value): self
     {
-        $this->attributes[$key] = LogAttribute::fromValue($value);
+        $attribute = $value instanceof LogAttribute
+            ? $value
+            : LogAttribute::tryFromValue($value);
+
+        if ($attribute !== null) {
+            $this->attributes[$key] = $attribute;
+        }
 
         return $this;
     }

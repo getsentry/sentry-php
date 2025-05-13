@@ -20,7 +20,6 @@ class LogsLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = []): void
     {
-        // @TODO: The $context might contain attributes we don't support yet (like arrays for example), should we ignore them? Type hint is basically mixed[].
         switch ($level) {
             case 'emergency':
             case 'critical':
