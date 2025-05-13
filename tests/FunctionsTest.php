@@ -39,7 +39,6 @@ use function Sentry\configureScope;
 use function Sentry\continueTrace;
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
-use function Sentry\getW3CTraceparent;
 use function Sentry\init;
 use function Sentry\startTransaction;
 use function Sentry\trace;
@@ -453,50 +452,6 @@ final class FunctionsTest extends TestCase
         $traceParent = getTraceparent();
 
         $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
-    }
-
-    public function testW3CTraceparentWithTracingDisabled(): void
-    {
-        $propagationContext = PropagationContext::fromDefaults();
-        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
-        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
-
-        $scope = new Scope($propagationContext);
-
-        $hub = new Hub(null, $scope);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $traceParent = getW3CTraceparent();
-
-        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-00', $traceParent);
-    }
-
-    public function testW3CTraceparentWithTracingEnabled(): void
-    {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1.0,
-            ]));
-
-        $hub = new Hub($client);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $spanContext = (new SpanContext())
-            ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
-            ->setSpanId(new SpanId('566e3688a61d4bc8'))
-            ->setSampled(true);
-
-        $span = new Span($spanContext);
-
-        $hub->setSpan($span);
-
-        $traceParent = getW3CTraceparent();
-
-        $this->assertSame('00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-01', $traceParent);
     }
 
     public function testBaggageWithTracingDisabled(): void
