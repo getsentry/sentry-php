@@ -436,12 +436,12 @@ final class Options
         return $this->options['dsn'];
     }
 
-    public function getOrg(): ?int
+    public function getOrgId(): ?int
     {
         return $this->options['org_id'];
     }
 
-    public function setOrg(int $orgId): self
+    public function setOrgId(int $orgId): self
     {
         $options = array_merge($this->options, ['org_id' => $orgId]);
 
@@ -656,20 +656,6 @@ final class Options
     public function setTracePropagationTargets(array $tracePropagationTargets): self
     {
         $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    public function isStrictTracePropagationEnabled(): bool
-    {
-        return $this->options['strict_trace_propagation'];
-    }
-
-    public function setStrictTracePropagationEnabled(bool $enabled): self
-    {
-        $options = array_merge($this->options, ['strict_trace_propagation' => $enabled]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1194,7 +1180,6 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
-            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1243,7 +1228,6 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
-        $resolver->setAllowedTypes('strict_trace_propagation', ['null', 'bool']);
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');

@@ -173,7 +173,7 @@ final class DynamicSamplingContext
                 $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
             if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
-                $samplingContext->set('org_id', $options->getDsn()->getOrgId());
+                $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
             }
 
             if ($options->getRelease() !== null) {
