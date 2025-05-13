@@ -436,11 +436,17 @@ final class Options
         return $this->options['dsn'];
     }
 
+    /**
+     * Gets the Org ID.
+     */
     public function getOrgId(): ?int
     {
         return $this->options['org_id'];
     }
 
+    /**
+     * Sets the Org ID.
+     */
     public function setOrgId(int $orgId): self
     {
         $options = array_merge($this->options, ['org_id' => $orgId]);
