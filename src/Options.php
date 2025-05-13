@@ -669,6 +669,26 @@ final class Options
     }
 
     /**
+     * Returns whether strict trace propagation is enabled or not.
+     */
+    public function isStrictTracePropagationEnabled(): bool
+    {
+        return $this->options['strict_trace_propagation'];
+    }
+
+    /**
+     * Sets if strict trace propagation should be enabled or not.
+     */
+    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    {
+        $options = array_merge($this->options, ['strict_trace_propagation' => $strictTracePropagation]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets a list of default tags for events.
      *
      * @return array<string, string>
@@ -1186,6 +1206,7 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1234,6 +1255,7 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
