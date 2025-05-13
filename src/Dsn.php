@@ -12,7 +12,6 @@ namespace Sentry;
  */
 final class Dsn implements \Stringable
 {
-
     /**
      * @var string Regex to match the organization ID in the host.
      *             This only applies to Sentry SaaS DSNs that contain the organization ID.
@@ -50,7 +49,7 @@ final class Dsn implements \Stringable
     private $path;
 
     /**
-     * @var int
+     * @var int|null
      */
     private $orgId;
 
@@ -63,7 +62,7 @@ final class Dsn implements \Stringable
      * @param string $projectId The ID of the resource to access
      * @param string $path      The specific resource that the web client wants to access
      * @param string $publicKey The public key to authenticate the SDK
-     * @param int $orgId
+     * @param ?int   $orgId     The org ID
      */
     private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?int $orgId = null)
     {
@@ -110,7 +109,7 @@ final class Dsn implements \Stringable
 
         $orgId = null;
         if (preg_match(self::SENTRY_ORG_ID_REGEX, $parsedDsn['host'], $matches) == 1) {
-            $orgId = $matches[1];
+            $orgId = (int) $matches[1];
         }
 
         return new self(
