@@ -55,6 +55,26 @@ class Log implements \JsonSerializable
         $this->body = $body;
     }
 
+    public function getTimestamp(): float
+    {
+        return $this->timestamp;
+    }
+
+    public function getTraceId(): string
+    {
+        return $this->traceId;
+    }
+
+    public function getLevel(): LogLevel
+    {
+        return $this->level;
+    }
+
+    public function getBody(): string
+    {
+        return $this->body;
+    }
+
     /**
      * @param mixed $value
      */
@@ -69,6 +89,14 @@ class Log implements \JsonSerializable
         }
 
         return $this;
+    }
+
+    /**
+     * @return array<string, LogAttribute>
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
     }
 
     /**

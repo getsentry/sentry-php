@@ -78,4 +78,9 @@ class LogAttribute implements \JsonSerializable
             'value' => $this->value,
         ];
     }
+
+    public function __toString(): string
+    {
+        return "{$this->value} ({$this->type})";
+    }
 }

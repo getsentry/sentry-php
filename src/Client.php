@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
-use Sentry\Logs\Log;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\State\Scope;
@@ -256,6 +255,16 @@ class Client implements ClientInterface
         return $this->transport;
     }
 
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
@@ -349,15 +358,6 @@ class Client implements ClientInterface
             return null;
         }
 
-        // We wait until here to set some default attributes on the log entries because in the meantime logs might have been filtered
-        foreach ($event->getLogs() as $log) {
-            $log->setAttribute('sentry.release', $this->options->getRelease());
-            $log->setAttribute('sentry.sdk.name', $this->sdkIdentifier);
-            $log->setAttribute('sentry.sdk.version', $this->sdkVersion);
-            $log->setAttribute('sentry.environment', $this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
-            $log->setAttribute('sentry.server.address', $this->options->getServerName());
-        }
-
         return $event;
     }
 
@@ -422,30 +422,6 @@ class Client implements ClientInterface
                 return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
             case EventType::checkIn():
                 return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
-            case EventType::logs():
-                $logs = array_filter(array_map(function (Log $log): ?Log {
-                    return ($this->options->getBeforeSendLogCallback())($log);
-                }, $event->getLogs()));
-
-                if (empty($logs)) {
-                    return null;
-                }
-
-                $logCountDifference = \count($event->getLogs()) - \count($logs);
-
-                $event->setLogs($logs);
-
-                if ($logCountDifference > 0) {
-                    $this->logger->info(
-                        \sprintf(
-                            '%s logs will be discarded because the "before_send_log" callback returned "null" for them.',
-                            $logCountDifference
-                        ),
-                        ['event' => $event]
-                    );
-                }
-
-                return $event;
             default:
                 return $event;
         }
@@ -458,8 +434,6 @@ class Client implements ClientInterface
                 return 'before_send_transaction';
             case EventType::checkIn():
                 return 'before_send_check_in';
-            case EventType::logs():
-                return 'before_send_log';
             default:
                 return 'before_send';
         }

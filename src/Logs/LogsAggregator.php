@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
+use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
@@ -53,25 +54,55 @@ final class LogsAggregator
 
         $traceId = $scope->getPropagationContext()->getTraceId();
 
-        // @FIXME The SDK name and version won't work for Laravel & Symfony and other SDKs, needs to be more flexible
+        $options = $client->getOptions();
+
         $log = (new Log($timestamp, (string) $traceId, $level, vsprintf($message, $values)))
+            ->setAttribute('sentry.release', $options->getRelease())
+            ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
+            ->setAttribute('sentry.server.address', $options->getServerName())
             ->setAttribute('sentry.message.template', $message)
             ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
+
+        if ($client instanceof Client) {
+            $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
+            $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
+        }
 
         foreach ($values as $key => $value) {
             $log->setAttribute("sentry.message.parameter.{$key}", $value);
         }
 
+        $logger = $options->getLogger();
+
         foreach ($attributes as $key => $value) {
             $attribute = LogAttribute::tryFromValue($value);
 
             if ($attribute === null) {
-                $client->getOptions()->getLoggerOrNullLogger()->info(
-                    \sprintf("Dropping log attribute {$key} with value of type '%s' because it is not serializable or an unsupported type.", \gettype($value))
-                );
+                if ($logger !== null) {
+                    $logger->info(
+                        \sprintf("Dropping log attribute {$key} with value of type '%s' because it is not serializable or an unsupported type.", \gettype($value))
+                    );
+                }
             } else {
                 $log->setAttribute($key, $attribute);
             }
+        }
+
+        $log = ($options->getBeforeSendLogCallback())($log);
+
+        if ($log === null) {
+            if ($logger !== null) {
+                $logger->info(
+                    'Log will be discarded because the "before_send_log" callback returned "null".',
+                    ['log' => $log]
+                );
+            }
+
+            return;
+        }
+
+        if ($logger !== null) {
+            $logger->log((string) $log->getLevel(), $log->getBody(), $log->getAttributes());
         }
 
         $this->logs[] = $log;
