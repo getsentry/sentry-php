@@ -565,19 +565,12 @@ class Span
 
     /**
      * Returns a string that can be used for the W3C `traceparent` header & meta tag.
+     *
+     * @deprecated since version 4.12. To be removed in version 5.0.
      */
     public function toW3CTraceparent(): string
     {
-        $sampled = '';
-
-        if ($this->sampled !== null) {
-            $sampled = $this->sampled ? '01' : '00';
-        } else {
-            // If no sampling decision was made, set the flag to 00
-            $sampled = '00';
-        }
-
-        return \sprintf('00-%s-%s-%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+        return '';
     }
 
     /**
