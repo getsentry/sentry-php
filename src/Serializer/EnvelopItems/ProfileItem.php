@@ -13,7 +13,7 @@ use Sentry\Util\JSON;
  */
 class ProfileItem implements EnvelopeItemInterface
 {
-    public static function toEnvelopeItem(Event $event): string
+    public static function toEnvelopeItem(Event $event): ?string
     {
         $header = [
             'type' => 'profile',
@@ -22,12 +22,12 @@ class ProfileItem implements EnvelopeItemInterface
 
         $profile = $event->getSdkMetadata('profile');
         if (!$profile instanceof Profile) {
-            return '';
+            return null;
         }
 
         $payload = $profile->getFormattedData($event);
         if ($payload === null) {
-            return '';
+            return null;
         }
 
         return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
