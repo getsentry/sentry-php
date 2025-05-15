@@ -55,31 +55,30 @@ final class PayloadSerializer implements PayloadSerializerInterface
             }
         }
 
-        $items = '';
+        $items = [];
 
         switch ($event->getType()) {
             case EventType::event():
-                $items = EventItem::toEnvelopeItem($event);
+                $items[] = EventItem::toEnvelopeItem($event);
                 break;
             case EventType::transaction():
-                $transactionItem = TransactionItem::toEnvelopeItem($event);
+                $items[] = TransactionItem::toEnvelopeItem($event);
                 if ($event->getSdkMetadata('profile') !== null) {
-                    $profileItem = ProfileItem::toEnvelopeItem($event);
-                    if ($profileItem !== '') {
-                        $items = \sprintf("%s\n%s", $transactionItem, $profileItem);
-                        break;
-                    }
+                    $items[] = ProfileItem::toEnvelopeItem($event);
                 }
-                $items = $transactionItem;
                 break;
             case EventType::checkIn():
-                $items = CheckInItem::toEnvelopeItem($event);
+                $items[] = CheckInItem::toEnvelopeItem($event);
                 break;
             case EventType::logs():
-                $items = LogsItem::toEnvelopeItem($event);
+                $items[] = LogsItem::toEnvelopeItem($event);
                 break;
         }
 
-        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), $items);
+        if ($event->getType() !== EventType::logs() && \count($event->getLogs())) {
+            $items[] = LogsItem::toEnvelopeItem($event);
+        }
+
+        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
     }
 }

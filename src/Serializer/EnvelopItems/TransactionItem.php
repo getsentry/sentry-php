@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
+use Sentry\EventType;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionMetadata;
@@ -28,7 +29,7 @@ class TransactionItem implements EnvelopeItemInterface
     public static function toEnvelopeItem(Event $event): string
     {
         $header = [
-            'type' => (string) $event->getType(),
+            'type' => (string) EventType::transaction(),
             'content_type' => 'application/json',
         ];
 

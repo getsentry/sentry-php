@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
+use Sentry\EventType;
 use Sentry\Util\JSON;
 
 /**
@@ -17,7 +18,7 @@ class LogsItem implements EnvelopeItemInterface
         $logs = $event->getLogs();
 
         $header = [
-            'type' => (string) $event->getType(),
+            'type' => (string) EventType::logs(),
             'item_count' => \count($logs),
             'content_type' => 'application/vnd.sentry.items.log+json',
         ];

@@ -59,6 +59,22 @@ final class LogsTest extends TestCase
         $this->assertNotNull(logger()->flush());
     }
 
+    public function testLogSentWithOtherEvents(): void
+    {
+        $client = $this->assertEvent(function (Event $event) {
+            $this->assertCount(1, $event->getLogs());
+
+            $logItem = $event->getLogs()[0]->jsonSerialize();
+
+            $this->assertEquals(LogLevel::info(), $logItem['level']);
+            $this->assertEquals('Some info message', $logItem['body']);
+        });
+
+        logger()->info('Some info message');
+
+        $this->assertNotNull($client->captureMessage('Some message'));
+    }
+
     public function testLogWithTemplate(): void
     {
         $this->assertEvent(function (Event $event) {
@@ -78,7 +94,7 @@ final class LogsTest extends TestCase
     /**
      * @param callable(Event): void $assert
      */
-    private function assertEvent(callable $assert): void
+    private function assertEvent(callable $assert): ClientInterface
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -99,5 +115,7 @@ final class LogsTest extends TestCase
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
+
+        return $client;
     }
 }
