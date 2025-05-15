@@ -66,6 +66,11 @@
       <code>SentryProfile|null</code>
     </MoreSpecificReturnType>
   </file>
+  <file src="src/Serializer/AbstractSerializer.php">
+    <RedundantCast occurrences="1">
+      <code>(string) $value</code>
+    </RedundantCast>
+  </file>
   <file src="src/Serializer/RepresentationSerializer.php">
     <InvalidReturnStatement occurrences="1">
       <code>$value</code>
