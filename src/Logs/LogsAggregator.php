@@ -103,7 +103,8 @@ final class LogsAggregator
             return;
         }
 
-        if ($logger !== null) {
+        // We check if it's a `LogsLogger` to avoid a infinite loop where the logger is logging the logs it's writing
+        if ($logger !== null && !$logger instanceof LogsLogger) {
             $logger->log((string) $log->getLevel(), $log->getBody(), $log->getAttributes());
         }
 
