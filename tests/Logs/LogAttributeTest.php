@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Sentry\Tests\Logs;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Logs\LogAttribute;
+use Sentry\Attributes\Attribute;
 
 /**
- * @phpstan-import-type AttributeValue from LogAttribute
- * @phpstan-import-type AttributeSerialized from LogAttribute
+ * @phpstan-import-type AttributeValue from Attribute
+ * @phpstan-import-type AttributeSerialized from Attribute
  */
 final class LogAttributeTest extends TestCase
 {
@@ -21,7 +21,7 @@ final class LogAttributeTest extends TestCase
      */
     public function testFromValue($value, $expected): void
     {
-        $attribute = LogAttribute::tryFromValue($value);
+        $attribute = Attribute::tryFromValue($value);
 
         if ($expected === null) {
             $this->assertNull($attribute);

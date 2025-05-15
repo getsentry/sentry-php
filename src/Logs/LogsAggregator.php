@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
+use Sentry\Attributes\Attribute;
 use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Logger\LogsLogger;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 /**
- * @phpstan-import-type AttributeValue from LogAttribute
+ * @phpstan-import-type AttributeValue from Attribute
  *
  * @internal
  */
@@ -75,7 +77,7 @@ final class LogsAggregator
         $logger = $options->getLogger();
 
         foreach ($attributes as $key => $value) {
-            $attribute = LogAttribute::tryFromValue($value);
+            $attribute = Attribute::tryFromValue($value);
 
             if ($attribute === null) {
                 if ($logger !== null) {

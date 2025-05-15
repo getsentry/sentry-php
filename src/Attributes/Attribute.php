@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Logs;
+namespace Sentry\Attributes;
 
 /**
  * @phpstan-type AttributeType 'string'|'boolean'|'integer'|'double'
@@ -12,7 +12,7 @@ namespace Sentry\Logs;
  *     value: AttributeValue
  * }
  */
-class LogAttribute implements \JsonSerializable
+class Attribute implements \JsonSerializable
 {
     /**
      * @var AttributeType

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
+use Sentry\Attributes\Attribute;
+use Sentry\Attributes\AttributeBag;
+
 /**
- * @phpstan-import-type AttributeValue from LogAttribute
- * @phpstan-import-type AttributeSerialized from LogAttribute
- *
  * @phpstan-type LogEnvelopeItem array{
  *     timestamp: int|float,
  *     trace_id: string,
  *     level: string,
  *     body: string,
- *     attributes: array<string, LogAttribute>
+ *     attributes: array<string, Attribute>
  * }
  */
 class Log implements \JsonSerializable
@@ -39,9 +39,9 @@ class Log implements \JsonSerializable
     private $body;
 
     /**
-     * @var array<string, LogAttribute>
+     * @var AttributeBag
      */
-    private $attributes = [];
+    private $attributes;
 
     public function __construct(
         float $timestamp,
@@ -53,6 +53,7 @@ class Log implements \JsonSerializable
         $this->traceId = $traceId;
         $this->level = $level;
         $this->body = $body;
+        $this->attributes = new AttributeBag();
     }
 
     public function getTimestamp(): float
@@ -80,23 +81,17 @@ class Log implements \JsonSerializable
      */
     public function setAttribute(string $key, $value): self
     {
-        $attribute = $value instanceof LogAttribute
-            ? $value
-            : LogAttribute::tryFromValue($value);
-
-        if ($attribute !== null) {
-            $this->attributes[$key] = $attribute;
-        }
+        $this->attributes->set($key, $value);
 
         return $this;
     }
 
     /**
-     * @return array<string, LogAttribute>
+     * @return array<string, Attribute>
      */
     public function getAttributes(): array
     {
-        return $this->attributes;
+        return $this->attributes->all();
     }
 
     /**
@@ -109,7 +104,7 @@ class Log implements \JsonSerializable
             'trace_id' => $this->traceId,
             'level' => (string) $this->level,
             'body' => $this->body,
-            'attributes' => $this->attributes,
+            'attributes' => $this->attributes->all(),
         ];
     }
 }

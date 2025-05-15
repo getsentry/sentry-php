@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
+use Sentry\Attributes\Attribute;
 use Sentry\EventId;
 
 /**
- * @phpstan-import-type AttributeValue from LogAttribute
+ * @phpstan-import-type AttributeValue from Attribute
  */
 class Logs
 {

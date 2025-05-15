@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Sentry\Logger;
 
 use Psr\Log\AbstractLogger;
-use Sentry\Logs\LogAttribute;
+use Sentry\Attributes\Attribute;
 
 use function Sentry\logger;
 
 /**
- * @phpstan-import-type AttributeValue from LogAttribute
+ * @phpstan-import-type AttributeValue from Attribute
  */
 class LogsLogger extends AbstractLogger
 {
