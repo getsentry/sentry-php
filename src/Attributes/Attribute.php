@@ -35,6 +35,38 @@ class Attribute implements \JsonSerializable
     }
 
     /**
+     * @return AttributeType
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return AttributeValue
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @throws \InvalidArgumentException thrown when the value cannot be serialized as an attribute
+     */
+    public static function fromValue($value): self
+    {
+        $attribute = self::tryFromValue($value);
+
+        if ($attribute === null) {
+            throw new \InvalidArgumentException(\sprintf('Invalid attribute value, %s cannot be serialized', \gettype($value)));
+        }
+
+        return $attribute;
+    }
+
+    /**
      * @param mixed $value
      */
     public static function tryFromValue($value): ?self
@@ -71,12 +103,20 @@ class Attribute implements \JsonSerializable
     /**
      * @return AttributeSerialized
      */
-    public function jsonSerialize(): array
+    public function toArray(): array
     {
         return [
             'type' => $this->type,
             'value' => $this->value,
         ];
+    }
+
+    /**
+     * @return AttributeSerialized
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 
     public function __toString(): string

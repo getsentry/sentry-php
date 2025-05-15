@@ -76,6 +76,11 @@ class Log implements \JsonSerializable
         return $this->body;
     }
 
+    public function attributes(): AttributeBag
+    {
+        return $this->attributes;
+    }
+
     /**
      * @param mixed $value
      */
@@ -84,14 +89,6 @@ class Log implements \JsonSerializable
         $this->attributes->set($key, $value);
 
         return $this;
-    }
-
-    /**
-     * @return array<string, Attribute>
-     */
-    public function getAttributes(): array
-    {
-        return $this->attributes->all();
     }
 
     /**

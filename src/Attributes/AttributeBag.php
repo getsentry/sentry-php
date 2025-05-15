@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Attributes;
 
+/**
+ * @phpstan-import-type AttributeValue from Attribute
+ * @phpstan-import-type AttributeSerialized from Attribute
+ */
 class AttributeBag
 {
     /**
@@ -38,5 +42,25 @@ class AttributeBag
     public function all(): array
     {
         return $this->attributes;
+    }
+
+    /**
+     * @return array<string, AttributeSerialized>
+     */
+    public function toArray(): array
+    {
+        return array_map(static function (Attribute $attribute) {
+            return $attribute->jsonSerialize();
+        }, $this->attributes);
+    }
+
+    /**
+     * @return array<string, AttributeValue>
+     */
+    public function toSimpleArray(): array
+    {
+        return array_map(static function (Attribute $attribute) {
+            return $attribute->getValue();
+        }, $this->attributes);
     }
 }
