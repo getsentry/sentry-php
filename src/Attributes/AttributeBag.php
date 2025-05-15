@@ -8,7 +8,7 @@ namespace Sentry\Attributes;
  * @phpstan-import-type AttributeValue from Attribute
  * @phpstan-import-type AttributeSerialized from Attribute
  */
-class AttributeBag
+class AttributeBag implements \JsonSerializable
 {
     /**
      * @var array<string, Attribute>
@@ -52,6 +52,14 @@ class AttributeBag
         return array_map(static function (Attribute $attribute) {
             return $attribute->jsonSerialize();
         }, $this->attributes);
+    }
+
+    /**
+     * @return array<string, AttributeSerialized>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 
     /**
