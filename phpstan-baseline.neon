@@ -296,11 +296,6 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: "#^Cannot cast mixed to string\\.$#"
-			count: 1
-			path: src/Serializer/AbstractSerializer.php
-
-		-
 			message: "#^Call to method getResponse\\(\\) on an unknown class GuzzleHttp\\\\Exception\\\\RequestException\\.$#"
 			count: 1
 			path: src/Tracing/GuzzleTracingMiddleware.php
