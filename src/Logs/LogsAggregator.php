@@ -11,6 +11,7 @@ use Sentry\EventId;
 use Sentry\Logger\LogsLogger;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Util\Arr;
 
 /**
  * @phpstan-import-type AttributeValue from Attribute
@@ -75,6 +76,8 @@ final class LogsAggregator
         }
 
         $logger = $options->getLogger();
+
+        $attributes = Arr::simpleDot($attributes);
 
         foreach ($attributes as $key => $value) {
             $attribute = Attribute::tryFromValue($value);

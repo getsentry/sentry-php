@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Logs;
 
-use Sentry\Attributes\Attribute;
 use Sentry\EventId;
 
-/**
- * @phpstan-import-type AttributeValue from Attribute
- */
 class Logs
 {
     /**
@@ -37,9 +33,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function trace(string $message, array $values = [], array $attributes = []): void
     {
@@ -47,9 +43,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function debug(string $message, array $values = [], array $attributes = []): void
     {
@@ -57,9 +53,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function info(string $message, array $values = [], array $attributes = []): void
     {
@@ -67,9 +63,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function warn(string $message, array $values = [], array $attributes = []): void
     {
@@ -77,9 +73,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function error(string $message, array $values = [], array $attributes = []): void
     {
@@ -87,9 +83,9 @@ class Logs
     }
 
     /**
-     * @param string                        $message    see sprintf for a description of format
-     * @param array<int, string|int|float>  $values     see sprintf for a description of values
-     * @param array<string, AttributeValue> $attributes additional attributes to add to the log
+     * @param string                       $message    see sprintf for a description of format
+     * @param array<int, string|int|float> $values     see sprintf for a description of values
+     * @param array<string, mixed>         $attributes additional attributes to add to the log
      */
     public function fatal(string $message, array $values = [], array $attributes = []): void
     {

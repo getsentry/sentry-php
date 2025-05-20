@@ -24,19 +24,20 @@ final class LogTest extends TestCase
         $log->setAttribute('foo', 'bar');
         $log->setAttribute('should-be-missing', ['foo' => 'bar']);
 
-        $serialized = json_decode((string) json_encode($log), true);
-
-        $this->assertEquals([
-            'timestamp' => $timestamp,
-            'trace_id' => '123',
-            'level' => 'debug',
-            'body' => 'foo',
-            'attributes' => [
-                'foo' => [
-                    'type' => 'string',
-                    'value' => 'bar',
+        $this->assertEquals(
+            [
+                'timestamp' => $timestamp,
+                'trace_id' => '123',
+                'level' => 'debug',
+                'body' => 'foo',
+                'attributes' => [
+                    'foo' => [
+                        'type' => 'string',
+                        'value' => 'bar',
+                    ],
                 ],
             ],
-        ], $serialized);
+            $log->jsonSerialize()
+        );
     }
 }

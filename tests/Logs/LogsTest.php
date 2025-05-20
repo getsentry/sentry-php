@@ -91,6 +91,29 @@ final class LogsTest extends TestCase
         $this->assertNotNull(logger()->flush());
     }
 
+    public function testLogWithNestedAttributes(): void
+    {
+        $this->assertEvent(function (Event $event) {
+            $this->assertCount(1, $event->getLogs());
+
+            $logItem = $event->getLogs()[0]->jsonSerialize();
+
+            $this->assertArrayHasKey('nested.foo', $logItem['attributes']);
+            $this->assertArrayNotHasKey('nested.should-be-missing', $logItem['attributes']);
+
+            $this->assertEquals('bar', $logItem['attributes']['nested.foo']['value']);
+        });
+
+        logger()->info('Some message', [], [
+            'nested' => [
+                'foo' => 'bar',
+                'should-be-missing' => [1, 2, 3],
+            ],
+        ]);
+
+        $this->assertNotNull(logger()->flush());
+    }
+
     /**
      * @param callable(Event): void $assert
      */

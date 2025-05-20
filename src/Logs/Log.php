@@ -8,12 +8,14 @@ use Sentry\Attributes\Attribute;
 use Sentry\Attributes\AttributeBag;
 
 /**
+ * @phpstan-import-type AttributeSerialized from Attribute
+ *
  * @phpstan-type LogEnvelopeItem array{
  *     timestamp: int|float,
  *     trace_id: string,
  *     level: string,
  *     body: string,
- *     attributes: array<string, Attribute>
+ *     attributes: array<string, AttributeSerialized>
  * }
  */
 class Log implements \JsonSerializable
@@ -101,7 +103,7 @@ class Log implements \JsonSerializable
             'trace_id' => $this->traceId,
             'level' => (string) $this->level,
             'body' => $this->body,
-            'attributes' => $this->attributes->all(),
+            'attributes' => $this->attributes->toArray(),
         ];
     }
 }
