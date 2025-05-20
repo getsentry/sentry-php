@@ -75,4 +75,27 @@ final class ArrTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider isListDataProvider
+     */
+    public function testIsList(array $value, bool $expectedResult): void
+    {
+        $this->assertSame($expectedResult, Arr::isList($value));
+    }
+
+    public static function isListDataProvider(): \Generator
+    {
+        yield [
+            [1, 2, 3],
+            true,
+        ];
+
+        yield [
+            [
+                'key' => 'value',
+            ],
+            false,
+        ];
+    }
 }

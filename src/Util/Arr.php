@@ -29,7 +29,7 @@ class Arr
             foreach ($data as $key => $value) {
                 $newKey = $prefix . $key;
 
-                if (\is_array($value) && !empty($value) && !array_is_list($value)) {
+                if (\is_array($value) && !empty($value) && !self::isList($value)) {
                     $flatten($value, $newKey . '.');
                 } else {
                     $results[$newKey] = $value;
@@ -40,5 +40,27 @@ class Arr
         $flatten($array);
 
         return $results;
+    }
+
+    /**
+     * Checks whether a given array is a list.
+     *
+     * `array_is_list` is introduced in PHP 8.1, so we have a polyfill for it.
+     *
+     * @see https://www.php.net/manual/en/function.array-is-list.php#126794
+     *
+     * @param array<string, mixed> $array
+     */
+    public static function isList(array $array): bool
+    {
+        $i = 0;
+
+        foreach ($array as $k => $v) {
+            if ($k !== $i++) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
