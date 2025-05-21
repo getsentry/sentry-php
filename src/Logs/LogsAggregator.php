@@ -10,6 +10,7 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Logger\LogsLogger;
 use Sentry\SentrySdk;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
 
@@ -46,20 +47,9 @@ final class LogsAggregator
             return;
         }
 
-        $scope = null;
-
-        // This we push and pop a scope to get access to it because there is no accessor for the scope
-        $hub->configureScope(function (Scope $hubScope) use (&$scope) {
-            $scope = $hubScope;
-        });
-
-        \assert($scope !== null, 'The scope comes from the hub and cannot be null at this point.');
-
-        $traceId = $scope->getPropagationContext()->getTraceId();
-
         $options = $client->getOptions();
 
-        $log = (new Log($timestamp, (string) $traceId, $level, vsprintf($message, $values)))
+        $log = (new Log($timestamp, $this->getTraceId($hub), $level, vsprintf($message, $values)))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
@@ -140,5 +130,25 @@ final class LogsAggregator
         $this->logs = [];
 
         return $logs;
+    }
+
+    private function getTraceId(HubInterface $hub): string
+    {
+        $span = $hub->getSpan();
+
+        if ($span !== null) {
+            return (string) $span->getTraceId();
+        }
+
+        $scope = null;
+
+        // This we push and pop a scope to get access to it because there is no accessor for the scope
+        $hub->configureScope(function (Scope $hubScope) use (&$scope) {
+            $scope = $hubScope;
+        });
+
+        \assert($scope !== null, 'The scope comes from the hub and cannot be null at this point.');
+
+        return (string) $scope->getPropagationContext()->getTraceId();
     }
 }
