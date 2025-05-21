@@ -140,15 +140,12 @@ final class LogsAggregator
             return (string) $span->getTraceId();
         }
 
-        $scope = null;
+        $traceId = '';
 
-        // This we push and pop a scope to get access to it because there is no accessor for the scope
-        $hub->configureScope(function (Scope $hubScope) use (&$scope) {
-            $scope = $hubScope;
+        $hub->configureScope(function (Scope $scope) use (&$traceId) {
+            $traceId = (string) $scope->getPropagationContext()->getTraceId();
         });
 
-        \assert($scope !== null, 'The scope comes from the hub and cannot be null at this point.');
-
-        return (string) $scope->getPropagationContext()->getTraceId();
+        return $traceId;
     }
 }
