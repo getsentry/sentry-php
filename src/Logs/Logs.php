@@ -99,4 +99,14 @@ class Logs
     {
         return $this->aggregator->flush();
     }
+
+    /**
+     * Get the logs aggregator.
+     *
+     * @internal
+     */
+    public function aggregator(): LogsAggregator
+    {
+        return $this->aggregator;
+    }
 }
