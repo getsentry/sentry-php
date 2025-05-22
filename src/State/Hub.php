@@ -288,7 +288,7 @@ class Hub implements HubInterface
                         $samplingContext->getParentSampled(),
                         $options->getTracesSampleRate() ?? 0
                     );
-                    $sampleSource = $samplingContext->getParentSampled() ? 'parent:sampling_decision' : 'config:traces_sample_rate';
+                    $sampleSource = $samplingContext->getParentSampled() !== null ? 'parent:sampling_decision' : 'config:traces_sample_rate';
                 }
             }
 
