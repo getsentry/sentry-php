@@ -354,8 +354,6 @@ class Client implements ClientInterface
                 ),
                 ['event' => $beforeSendCallback]
             );
-
-            return null;
         }
 
         return $event;
