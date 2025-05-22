@@ -438,6 +438,26 @@ final class Options
     }
 
     /**
+     * Gets the Org ID.
+     */
+    public function getOrgId(): ?int
+    {
+        return $this->options['org_id'];
+    }
+
+    /**
+     * Sets the Org ID.
+     */
+    public function setOrgId(int $orgId): self
+    {
+        $options = array_merge($this->options, ['org_id' => $orgId]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets the name of the server the SDK is running on (e.g. the hostname).
      */
     public function getServerName(): string
@@ -643,6 +663,26 @@ final class Options
     public function setTracePropagationTargets(array $tracePropagationTargets): self
     {
         $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Returns whether strict trace propagation is enabled or not.
+     */
+    public function isStrictTracePropagationEnabled(): bool
+    {
+        return $this->options['strict_trace_propagation'];
+    }
+
+    /**
+     * Sets if strict trace propagation should be enabled or not.
+     */
+    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    {
+        $options = array_merge($this->options, ['strict_trace_propagation' => $strictTracePropagation]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1180,6 +1220,7 @@ final class Options
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
+            'org_id' => null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
@@ -1199,6 +1240,7 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1244,12 +1286,14 @@ final class Options
         $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
+        $resolver->setAllowedTypes('org_id', ['null', 'int']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');

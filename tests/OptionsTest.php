@@ -76,6 +76,13 @@ final class OptionsTest extends TestCase
     public static function optionsDataProvider(): \Generator
     {
         yield [
+            'org_id',
+            1,
+            'getOrgId',
+            'setOrgId',
+        ];
+
+        yield [
             'prefixes',
             ['foo', 'bar'],
             'getPrefixes',
@@ -269,6 +276,13 @@ final class OptionsTest extends TestCase
             ['www.example.com'],
             'getTracePropagationTargets',
             'setTracePropagationTargets',
+        ];
+
+        yield [
+            'strict_trace_propagation',
+            true,
+            'isStrictTracePropagationEnabled',
+            'enableStrictTracePropagation',
         ];
 
         yield [

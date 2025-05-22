@@ -13,6 +13,12 @@ namespace Sentry;
 final class Dsn implements \Stringable
 {
     /**
+     * @var string Regex to match the organization ID in the host.
+     *             This only applies to Sentry SaaS DSNs that contain the organization ID.
+     */
+    private const SENTRY_ORG_ID_REGEX = '/^o(\d+)\./';
+
+    /**
      * @var string The protocol to be used to access the resource
      */
     private $scheme;
@@ -43,6 +49,11 @@ final class Dsn implements \Stringable
     private $path;
 
     /**
+     * @var int|null
+     */
+    private $orgId;
+
+    /**
      * Class constructor.
      *
      * @param string $scheme    The protocol to be used to access the resource
@@ -51,15 +62,17 @@ final class Dsn implements \Stringable
      * @param string $projectId The ID of the resource to access
      * @param string $path      The specific resource that the web client wants to access
      * @param string $publicKey The public key to authenticate the SDK
+     * @param ?int   $orgId     The org ID
      */
-    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey)
+    private function __construct(string $scheme, string $host, int $port, string $projectId, string $path, string $publicKey, ?int $orgId = null)
     {
         $this->scheme = $scheme;
         $this->host = $host;
         $this->port = $port;
-        $this->publicKey = $publicKey;
-        $this->path = $path;
         $this->projectId = $projectId;
+        $this->path = $path;
+        $this->publicKey = $publicKey;
+        $this->orgId = $orgId;
     }
 
     /**
@@ -94,13 +107,19 @@ final class Dsn implements \Stringable
             $path = substr($parsedDsn['path'], 0, $lastSlashPosition);
         }
 
+        $orgId = null;
+        if (preg_match(self::SENTRY_ORG_ID_REGEX, $parsedDsn['host'], $matches) == 1) {
+            $orgId = (int) $matches[1];
+        }
+
         return new self(
             $parsedDsn['scheme'],
             $parsedDsn['host'],
             $parsedDsn['port'] ?? ($parsedDsn['scheme'] === 'http' ? 80 : 443),
             $projectId,
             $path,
-            $parsedDsn['user']
+            $parsedDsn['user'],
+            $orgId
         );
     }
 
@@ -150,6 +169,11 @@ final class Dsn implements \Stringable
     public function getPublicKey(): string
     {
         return $this->publicKey;
+    }
+
+    public function getOrgId(): ?int
+    {
+        return $this->orgId;
     }
 
     /**
