@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Util;
 
 /**
- * This class provides some utility methods to work with array's.
+ * This class provides some utility methods to work with arrays.
  *
  * @internal
  */
