@@ -8,7 +8,6 @@ use Sentry\Attributes\Attribute;
 use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\Logger\LogsLogger;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
@@ -106,7 +105,7 @@ final class LogsAggregator
         }
 
         // We check if it's a `LogsLogger` to avoid a infinite loop where the logger is logging the logs it's writing
-        if ($sdkLogger !== null && !$sdkLogger instanceof LogsLogger) {
+        if ($sdkLogger !== null) {
             $sdkLogger->log((string) $log->getLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
         }
 
