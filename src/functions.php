@@ -57,6 +57,7 @@ use Sentry\Tracing\TransactionContext;
  *     server_name?: string,
  *     spotlight?: bool,
  *     spotlight_url?: string,
+ *     strict_trace_propagation: bool,
  *     tags?: array<string>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
