@@ -209,7 +209,7 @@ final class PropagationContext
             if ($client->getOptions()->isStrictTracePropagationEnabled()) {
                 if (!$samplingContext->has('org_id')) {
                     // We did not receive any org id in the baggage,
-                    // do not continue the trace. The none mathcing org ID
+                    // do not continue the trace. The none matching org ID
                     // case was already handled above.
                     return $context;
                 }
