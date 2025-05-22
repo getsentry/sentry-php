@@ -261,7 +261,7 @@ final class DsnTest extends TestCase
         return [
             ['http://public@example.com/sentry/1'],
             ['http://public@example.com/1'],
-            ['http://public@01.example.com/1'],
+            ['http://public@o1.example.com/1'],
             ['http://public@example.com:8080/sentry/1'],
             ['https://public@example.com/sentry/1'],
             ['https://public@example.com:4343/sentry/1'],
