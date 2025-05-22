@@ -359,11 +359,6 @@ class Client implements ClientInterface
             return null;
         }
 
-        // When we sent an non-logs event to Sentry, also flush the logs in the same envelope to prevent needing to make multiple requests
-        if ($event->getType() !== EventType::logs() && !\count($event->getLogs())) {
-            $event->setLogs(Logs::getInstance()->aggregator()->flushWithoutEvent());
-        }
-
         return $event;
     }
 

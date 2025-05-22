@@ -127,20 +127,6 @@ final class LogsAggregator
         return $hub->captureEvent($event);
     }
 
-    /**
-     * @internal
-     *
-     * @return Log[]
-     */
-    public function flushWithoutEvent(): array
-    {
-        $logs = $this->logs;
-
-        $this->logs = [];
-
-        return $logs;
-    }
-
     private function getTraceId(HubInterface $hub): string
     {
         $span = $hub->getSpan();

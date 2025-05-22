@@ -75,10 +75,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
         }
 
-        if ($event->getType() !== EventType::logs() && \count($event->getLogs())) {
-            $items[] = LogsItem::toEnvelopeItem($event);
-        }
-
         return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
     }
 }
