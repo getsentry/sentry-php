@@ -42,12 +42,23 @@ final class LogsAggregator
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
-        // There is no need to continue if there is no client or if logs are disabled
-        if ($client === null || !$client->getOptions()->getEnableLogs()) {
+        // There is no need to continue if there is no client
+        if ($client === null) {
             return;
         }
 
         $options = $client->getOptions();
+        $sdkLogger = $options->getLogger();
+
+        if (!$options->getEnableLogs()) {
+            if ($sdkLogger !== null) {
+                $sdkLogger->info(
+                    'Log will be discarded because "enable_logs" is "false".'
+                );
+            }
+
+            return;
+        }
 
         $log = (new Log($timestamp, $this->getTraceId($hub), $level, vsprintf($message, $values)))
             ->setAttribute('sentry.release', $options->getRelease())
@@ -65,16 +76,14 @@ final class LogsAggregator
             $log->setAttribute("sentry.message.parameter.{$key}", $value);
         }
 
-        $logger = $options->getLogger();
-
         $attributes = Arr::simpleDot($attributes);
 
         foreach ($attributes as $key => $value) {
             $attribute = Attribute::tryFromValue($value);
 
             if ($attribute === null) {
-                if ($logger !== null) {
-                    $logger->info(
+                if ($sdkLogger !== null) {
+                    $sdkLogger->info(
                         \sprintf("Dropping log attribute {$key} with value of type '%s' because it is not serializable or an unsupported type.", \gettype($value))
                     );
                 }
@@ -86,8 +95,8 @@ final class LogsAggregator
         $log = ($options->getBeforeSendLogCallback())($log);
 
         if ($log === null) {
-            if ($logger !== null) {
-                $logger->info(
+            if ($sdkLogger !== null) {
+                $sdkLogger->info(
                     'Log will be discarded because the "before_send_log" callback returned "null".',
                     ['log' => $log]
                 );
@@ -97,8 +106,8 @@ final class LogsAggregator
         }
 
         // We check if it's a `LogsLogger` to avoid a infinite loop where the logger is logging the logs it's writing
-        if ($logger !== null && !$logger instanceof LogsLogger) {
-            $logger->log((string) $log->getLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
+        if ($sdkLogger !== null && !$sdkLogger instanceof LogsLogger) {
+            $sdkLogger->log((string) $log->getLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
         }
 
         $this->logs[] = $log;
