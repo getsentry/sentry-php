@@ -160,9 +160,9 @@ final class TransactionContext extends SpanContext
             // Always check if the received org ID in the baggages matches
             // the one configured in the SDK.
             if (
-                $orgId !== null &&
-                $samplingContext->has('org_id') &&
-                $samplingContext->get('org_id') !== (string) $orgId
+                $orgId !== null
+                && $samplingContext->has('org_id')
+                && $samplingContext->get('org_id') !== (string) $orgId
             ) {
                 // We do not continue the trace.
                 return $context;
