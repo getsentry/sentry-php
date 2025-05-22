@@ -17,6 +17,11 @@ final class RateLimiter
     private const DATA_CATEGORY_ERROR = 'error';
 
     /**
+     * @var string
+     */
+    private const DATA_CATEGORY_LOG_ITEM = 'log_item';
+
+    /**
      * The name of the header to look at to know the rate limits for the events
      * categories supported by the server.
      */
@@ -112,6 +117,8 @@ final class RateLimiter
 
         if ($eventType === 'event') {
             $eventType = self::DATA_CATEGORY_ERROR;
+        } elseif ($eventType === 'log') {
+            $eventType = self::DATA_CATEGORY_LOG_ITEM;
         }
 
         return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$eventType] ?? 0);

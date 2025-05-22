@@ -7,6 +7,7 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
@@ -63,6 +64,8 @@ use Sentry\Tracing\TransactionContext;
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
  *     transport?: callable,
+ *     enable_logs?: bool,
+ *     before_send_log?: callable,
  * } $options The client options
  */
 function init(array $options = []): void
@@ -360,6 +363,14 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
     });
 
     return TransactionContext::fromHeaders($sentryTrace, $baggage);
+}
+
+/**
+ * Get the Sentry Logs client.
+ */
+function logger(): Logs
+{
+    return Logs::getInstance();
 }
 
 /**

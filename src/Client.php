@@ -255,6 +255,16 @@ class Client implements ClientInterface
         return $this->transport;
     }
 
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
@@ -280,6 +290,7 @@ class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
+
         $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
 
         if ($event->getServerName() === null) {

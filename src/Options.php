@@ -9,6 +9,7 @@ use Psr\Log\NullLogger;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Logs\Log;
 use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -1153,6 +1154,39 @@ final class Options
     }
 
     /**
+     * Sets if logs should be enabled or not.
+     *
+     * @param bool|null $enableLogs Boolean if logs should be enabled or not
+     */
+    public function setEnableLogs(?bool $enableLogs): self
+    {
+        $options = array_merge($this->options, ['enable_tracing' => $enableLogs]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Gets if logs is enabled or not.
+     */
+    public function getEnableLogs(): bool
+    {
+        return $this->options['enable_logs'] ?? false;
+    }
+
+    /**
+     * Gets a callback that will be invoked before an log is sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Log): ?Log
+     */
+    public function getBeforeSendLogCallback(): callable
+    {
+        return $this->options['before_send_log'];
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -1229,6 +1263,10 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'enable_logs' => false,
+            'before_send_log' => static function (Log $log): Log {
+                return $log;
+            },
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
@@ -1275,6 +1313,8 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('enable_logs', 'bool');
+        $resolver->setAllowedTypes('before_send_log', 'callable');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
