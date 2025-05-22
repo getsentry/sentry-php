@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\SentrySdk;
+
 final class TransactionContext extends SpanContext
 {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
@@ -148,6 +150,33 @@ final class TransactionContext extends SpanContext
     {
         $context = new self();
         $hasSentryTrace = false;
+        $samplingContext = DynamicSamplingContext::fromHeader($baggage);
+
+        $client = SentrySdk::getCurrentHub()->getClient();
+        if ($client !== null) {
+            $options = $client->getOptions();
+            $orgId = $options->getOrgId() ?? $options->getDsn()->getOrgId();
+
+            // Always check if the received org ID in the baggages matches
+            // the one configured in the SDK.
+            if (
+                $orgId !== null &&
+                $samplingContext->has('org_id') &&
+                $samplingContext->get('org_id') !== (string) $orgId
+            ) {
+                // We do not continue the trace.
+                return $context;
+            }
+
+            if ($client->getOptions()->isStrictTracePropagationEnabled()) {
+                if (!$samplingContext->has('org_id')) {
+                    // We did not receive any org id in the baggage,
+                    // do not continue the trace. The none mathcing org ID
+                    // case was already handled above.
+                    return $context;
+                }
+            }
+        }
 
         if (preg_match(self::SENTRY_TRACEPARENT_HEADER_REGEX, $sentryTrace, $matches)) {
             if (!empty($matches['trace_id'])) {
@@ -165,8 +194,6 @@ final class TransactionContext extends SpanContext
                 $hasSentryTrace = true;
             }
         }
-
-        $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
         if ($hasSentryTrace && !$samplingContext->hasEntries()) {
             // The request comes from an old SDK which does not support Dynamic Sampling.

@@ -188,6 +188,33 @@ final class PropagationContext
     {
         $context = self::fromDefaults();
         $hasSentryTrace = false;
+        $samplingContext = DynamicSamplingContext::fromHeader($baggage);
+
+        $client = SentrySdk::getCurrentHub()->getClient();
+        if ($client !== null) {
+            $options = $client->getOptions();
+            $orgId = $options->getOrgId() ?? $options->getDsn()->getOrgId();
+
+            // Always check if the received org ID in the baggages matches
+            // the one configured in the SDK.
+            if (
+                $orgId !== null &&
+                $samplingContext->has('org_id') &&
+                $samplingContext->get('org_id') !== (string) $orgId
+            ) {
+                // We do not continue the trace.
+                return $context;
+            }
+
+            if ($client->getOptions()->isStrictTracePropagationEnabled()) {
+                if (!$samplingContext->has('org_id')) {
+                    // We did not receive any org id in the baggage,
+                    // do not continue the trace. The none mathcing org ID
+                    // case was already handled above.
+                    return $context;
+                }
+            }
+        }
 
         if (preg_match(self::SENTRY_TRACEPARENT_HEADER_REGEX, $traceparent, $matches)) {
             if (!empty($matches['trace_id'])) {
@@ -205,8 +232,6 @@ final class PropagationContext
                 $hasSentryTrace = true;
             }
         }
-
-        $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
         if ($hasSentryTrace && !$samplingContext->hasEntries()) {
             // The request comes from an old SDK which does not support Dynamic Sampling.
