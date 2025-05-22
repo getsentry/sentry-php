@@ -437,6 +437,26 @@ final class Options
     }
 
     /**
+     * Gets the Org ID.
+     */
+    public function getOrgId(): ?int
+    {
+        return $this->options['org_id'];
+    }
+
+    /**
+     * Sets the Org ID.
+     */
+    public function setOrgId(int $orgId): self
+    {
+        $options = array_merge($this->options, ['org_id' => $orgId]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets the name of the server the SDK is running on (e.g. the hostname).
      */
     public function getServerName(): string
@@ -1146,6 +1166,7 @@ final class Options
             'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
+            'org_id' => null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
@@ -1206,6 +1227,7 @@ final class Options
         $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
+        $resolver->setAllowedTypes('org_id', ['null', 'int']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
