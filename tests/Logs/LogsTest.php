@@ -99,6 +99,32 @@ final class LogsTest extends TestCase
     }
 
     /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLoggerSetsCorrectLevel(LogLevel $level): void
+    {
+        $this->assertEvent(function (Event $event) use ($level) {
+            $this->assertCount(1, $event->getLogs());
+
+            $this->assertEquals($level, $event->getLogs()[0]->getLevel());
+        });
+
+        logger()->{(string) $level}('Some message');
+
+        $this->assertNotNull(logger()->flush());
+    }
+
+    public static function logLevelDataProvider(): \Generator
+    {
+        yield [LogLevel::trace()];
+        yield [LogLevel::debug()];
+        yield [LogLevel::info()];
+        yield [LogLevel::warn()];
+        yield [LogLevel::error()];
+        yield [LogLevel::fatal()];
+    }
+
+    /**
      * @param callable(Event): void $assert
      */
     private function assertEvent(callable $assert): ClientInterface
