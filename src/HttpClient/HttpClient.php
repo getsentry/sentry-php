@@ -7,9 +7,6 @@ namespace Sentry\HttpClient;
 use Sentry\Options;
 use Sentry\Util\Http;
 
-/**
- * @internal
- */
 class HttpClient implements HttpClientInterface
 {
     /**
