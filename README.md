@@ -1,119 +1,170 @@
-<div align="center">
-    <a href="https://sentry.io/?utm_source=github&utm_medium=logo" target="_blank">
-        <img src="https://sentry-brand.storage.googleapis.com/github-banners/github-sdk-php.jpg" alt="Sentry for PHP">
+<p align="center">
+    <a href="https://sentry.io" target="_blank" align="center">
+        <img src="https://sentry-brand.storage.googleapis.com/sentry-logo-black.png" width="280">
     </a>
-</div>
+</p>
 
-_Bad software is everywhere, and we're tired of it. Sentry is on a mission to help developers write better software faster, so we can get back to enjoying technology. If you want to join us [<kbd>**Check out our open positions**</kbd>](https://sentry.io/careers/)_
+# Sentry for PHP
 
-# Official Sentry SDK for PHP
+> Please note that the `1.x` branch of the Sentry PHP SDK is no longer maintained.
+> 
+> For the most recent Sentry PHP SDK see the [default branch](https://github.com/getsentry/sentry-php).
 
-[![CI](https://github.com/getsentry/sentry-php/workflows/CI/badge.svg?branch=master)](https://github.com/getsentry/sentry-php/actions?query=workflow%3ACI+branch%3Amaster)
-[![Coverage Status](https://img.shields.io/codecov/c/github/getsentry/sentry-php/master?logo=codecov)](https://codecov.io/gh/getsentry/sentry-php/branch/master)
-[![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
-[![License](https://poser.pugx.org/sentry/sentry/license)](https://packagist.org/packages/sentry/sentry)
+---
+
+[![Build Status](https://secure.travis-ci.org/getsentry/sentry-php.png?branch=master)](http://travis-ci.org/getsentry/sentry-php)
 [![Total Downloads](https://poser.pugx.org/sentry/sentry/downloads)](https://packagist.org/packages/sentry/sentry)
 [![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
-[![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/cWnMQeA)
+[![Latest Stable Version](https://poser.pugx.org/sentry/sentry/v/stable)](https://packagist.org/packages/sentry/sentry)
+[![License](https://poser.pugx.org/sentry/sentry/license)](https://packagist.org/packages/sentry/sentry)
+[![Scrutinizer Code Quality](https://img.shields.io/scrutinizer/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
+[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/getsentry/sentry-php/master.svg)](https://scrutinizer-ci.com/g/getsentry/sentry-php/)
 
 The Sentry PHP error reporter tracks errors and exceptions that happen during the
 execution of your application and provides instant notification with detailed
-information needed to prioritize, identify, reproduce and fix each issue.
+informations needed to prioritize, identify, reproduce and fix each issue. Learn
+more about [automatic PHP error reporting with Sentry](https://sentry.io/for/php/).
 
-## Getting started
+## Features
 
-### Install
+- Automatically report (un)handled exceptions and errors
+- Send customized diagnostic data
+- Process and sanitize data before sending it over the network
 
-Install the SDK using [Composer](https://getcomposer.org/).
-
-```bash
-composer require sentry/sentry
-```
-
-### Configuration
-
-Initialize the SDK as early as possible in your application.
+## Usage
 
 ```php
-\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+// Instantiate a new client with a compatible DSN and install built-in
+// handlers
+$client = (new Raven_Client('http://public@example.com/1'))->install();
+
+// Capture an exception
+$event_id = $client->captureException($ex);
+
+// Give the user feedback
+echo "Sorry, there was an error!";
+echo "Your reference ID is " . $event_id;
 ```
 
-### Usage
+For more information, see our [documentation](https://docs.getsentry.com/hosted/clients/php/).
 
-```php
-try {
-    thisFunctionThrows(); // -> throw new \Exception('foo bar');
-} catch (\Exception $exception) {
-    \Sentry\captureException($exception);
-}
-```
 
-## Official integrations
+## Integration with frameworks
+
+Other packages exists to integrate this SDK into the most common frameworks.
+
+### Official integrations
 
 The following integrations are fully supported and maintained by the Sentry team.
 
 - [Symfony](https://github.com/getsentry/sentry-symfony)
 - [Laravel](https://github.com/getsentry/sentry-laravel)
 
-## 3rd party integrations using SDK 4.x
+### 3rd party integrations
 
 The following integrations are available and maintained by members of the Sentry community.
 
-- [Drupal](https://www.drupal.org/project/raven)
-- [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
-- [Magento 2](https://github.com/mygento/module-sentry)
-- ... feel free to be famous, create a port to your favourite platform!
-
-## 3rd party integrations using the old SDK 3.x
-
-- [Neos Flow](https://github.com/flownative/flow-sentry)
+- [Nette](https://github.com/Salamek/raven-nette)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
-- [Yii2](https://github.com/notamedia/yii2-sentry)
-- [Silverstripe](https://github.com/phptek/silverstripe-sentry)
-- [CakePHP 3.0 - 4.3](https://github.com/Connehito/cake-sentry)
-- [CakePHP 4.4+](https://github.com/lordsimal/cakephp-sentry)
-- [October CMS](https://github.com/OFFLINE-GmbH/oc-sentry-plugin)
-
-## 3rd party integrations using the old SDK 2.x
-
-- [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
-- [OXID eShop](https://github.com/OXIDprojects/sentry)
-- [TYPO3](https://github.com/networkteam/sentry_client)
-- [CakePHP](https://github.com/Connehito/cake-sentry/tree/3.x)
-
-## 3rd party integrations using the old SDK 1.x
-
-- [Neos CMS](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
+- [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
+- [Drupal](https://www.drupal.org/project/raven)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
-- [TYPO3](https://github.com/networkteam/sentry_client/tree/2.1.1)
+- [Magento2](https://github.com/justbetter/magento2-sentry)
+- [October CMS](https://github.com/OFFLINE-GmbH/oc-sentry-plugin/)
+- ... feel free to be famous, create a port to your favourite platform!
 
 ## Community
 
-- [Documentation](https://docs.sentry.io/error-reporting/quickstart/?platform=php)
+- [Documentation](https://docs.getsentry.com/hosted/clients/php/)
 - [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
 - [Code](http://github.com/getsentry/sentry-php)
+- [Mailing List](https://groups.google.com/group/getsentry)
+- [IRC](irc://irc.freenode.net/sentry) (irc.freenode.net, #sentry)
 
-## Contributing to the SDK
 
-Please make sure to read the [CONTRIBUTING.md](CONTRIBUTING.md) before making a pull request.
+Contributing
+------------
 
-Thanks to everyone who has contributed to this project so far.
+Dependencies are managed through composer:
 
-<a href="https://github.com/getsentry/sentry-php/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=getsentry/sentry-php" />
-</a>
+```
+$ composer install
+```
 
-## Getting help/support
+Tests can then be run via phpunit:
 
-If you need help setting up or configuring the PHP SDK (or anything else in the Sentry universe) please head over to the [Sentry Community on Discord](https://discord.com/invite/sentry). There is a ton of great people in our Discord community ready to help you!
+```
+$ vendor/bin/phpunit
+```
 
-## Resources
 
-- [![Documentation](https://img.shields.io/badge/documentation-sentry.io-green.svg)](https://docs.sentry.io/quickstart/)
-- [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/Ww9hbqr)
-- [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-sentry-green.svg)](http://stackoverflow.com/questions/tagged/sentry)
-- [![Twitter Follow](https://img.shields.io/twitter/follow/getsentry?label=getsentry&style=social)](https://twitter.com/intent/follow?screen_name=getsentry)
+Tagging a Release
+-----------------
 
-## License
+1. Make sure ``CHANGES`` is up to date (add the release date) and ``master`` is green.
 
-Licensed under the MIT license, see [`LICENSE`](LICENSE)
+2. Create a new branch for the minor version (if not present):
+
+```
+$ git checkout -b releases/1.11.x
+```
+
+3. Update the hardcoded version tag in ``Client.php``:
+
+```php
+class Raven_Client
+{
+    const VERSION = '1.11.0';
+}
+```
+
+4. Commit the change:
+
+```
+$ git commit -a -m "1.11.0"
+```
+
+5. Tag the branch:
+
+```
+git tag 1.11.0
+```
+
+6. Push the tag:
+
+```
+git push --tags
+```
+
+7. Switch back to ``master``:
+
+```
+git checkout master
+```
+
+8. Add the next minor release to the ``CHANGES`` file:
+
+```
+## 1.12.0 (unreleased)
+```
+
+9. Update the version in ``Client.php``:
+
+```php
+class Raven_Client
+{
+    const VERSION = '1.12.x-dev';
+}
+```
+
+10. Lastly, update the composer version in ``composer.json``:
+
+```json
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.12.x-dev"
+        }
+    }
+```
+
+All done! Composer will pick up the tag and configuration automatically.

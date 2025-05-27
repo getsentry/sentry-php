@@ -1,81 +1,59 @@
 {
     "name": "sentry/sentry",
     "type": "library",
-    "description": "PHP SDK for Sentry (http://sentry.io)",
-    "keywords": [
-        "sentry",
-        "log",
-        "logging",
-        "error-monitoring",
-        "error-handler",
-        "crash-reporting",
-        "crash-reports",
-        "profiling",
-        "tracing"
-    ],
-    "homepage": "http://sentry.io",
-    "license": "MIT",
+    "description": "A PHP client for Sentry (http://getsentry.com)",
+    "keywords": ["log", "logging"],
+    "homepage": "http://getsentry.com",
+    "license": "BSD-3-Clause",
     "authors": [
         {
-            "name": "Sentry",
-            "email": "accounts@sentry.io"
+            "name": "David Cramer",
+            "email": "dcramer@gmail.com"
         }
     ],
-    "require": {
-        "php": "^7.2|^8.0",
-        "ext-json": "*",
-        "ext-mbstring": "*",
-        "ext-curl": "*",
-        "guzzlehttp/psr7": "^1.8.4|^2.1.1",
-        "jean85/pretty-package-versions": "^1.5|^2.0.4",
-        "psr/log": "^1.0|^2.0|^3.0",
-        "symfony/options-resolver": "^4.4.30|^5.0.11|^6.0|^7.0"
-    },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.4",
-        "guzzlehttp/promises": "^2.0.3",
-        "guzzlehttp/psr7": "^1.8.4|^2.1.1",
-        "monolog/monolog": "^1.6|^2.0|^3.0",
-        "phpbench/phpbench": "^1.0",
-        "phpstan/phpstan": "^1.3",
-        "phpunit/phpunit": "^8.5|^9.6",
-        "symfony/phpunit-bridge": "^5.2|^6.0|^7.0",
-        "vimeo/psalm": "^4.17"
+        "friendsofphp/php-cs-fixer": "^1.8.0",
+        "phpunit/phpunit": "^4.8.35 || ^5.7",
+        "monolog/monolog": "^1.0"
+    },
+    "require": {
+        "php": "^5.3|^7.0",
+        "ext-curl": "*"
     },
     "suggest": {
-        "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "monolog/monolog": "Automatically capture Monolog events as breadcrumbs"
     },
     "conflict": {
         "raven/raven": "*"
     },
+    "bin": [
+        "bin/sentry"
+    ],
     "autoload": {
-        "files": [
-            "src/functions.php"
-        ],
-        "psr-4": {
-            "Sentry\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Sentry\\Tests\\": "tests/"
+        "psr-0" : {
+            "Raven_" : "lib/"
         }
     },
     "scripts": {
-        "check": [
-            "@cs-check",
-            "@phpstan",
-            "@psalm",
-            "@tests"
+        "tests": [
+            "vendor/bin/phpunit --verbose"
         ],
-        "tests": "vendor/bin/phpunit --verbose",
-        "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
-        "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
-        "phpstan": "vendor/bin/phpstan analyse",
-        "psalm": "vendor/bin/psalm"
+        "tests-travis": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-clover test/clover.xml --log-junit test/junit.xml"
+        ],
+        "tests-report": [
+            "vendor/bin/phpunit --verbose --configuration phpunit.xml --coverage-html test/html-report"
+        ],
+        "phpcs": [
+            "vendor/bin/php-cs-fixer fix --config-file=.php_cs --verbose --diff --dry-run"
+        ]
     },
-    "config": {
-        "sort-packages": true
-    },
-    "prefer-stable": true
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.11.x-dev"
+        }
+    }
 }

@@ -2,8 +2,6 @@
 package.xml
 /vendor
 .idea
-.php-cs-fixer.cache
-.phpbench
-.phpunit.result.cache
+.php_cs.cache
 docs/_build
-tests/clover.xml
+test/clover.xml
