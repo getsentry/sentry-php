@@ -16,8 +16,7 @@ class ProfileItem implements EnvelopeItemInterface
     public static function toEnvelopeItem(Event $event): ?string
     {
         $header = [
-            // @TODO(michi) profile_chunk
-            'type' => 'profile_chunk',
+            'type' => 'profile',
             'content_type' => 'application/json',
         ];
 
