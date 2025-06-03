@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing\Spans;
 
-use Sentry\Event;
-use Sentry\EventId;
+use Sentry\Attributes\AttributeBag;
 use Sentry\SentrySdk;
-use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanStatus;
 
-class Span
+class Span implements \JsonSerializable
  {
-    private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
-
     public $name;
 
-    public $context = [];
+    public $status;
 
     public $traceId;
     
@@ -26,23 +22,20 @@ class Span
 
     public $kind;
 
-    public $startTimeUnixNano;
+    public $isRemote;
 
-    public $endTimeUnixNano;
+    public $startTimestamp;
 
-    public $attributes = [];
+    public $endTimestamp;
 
-    public $events = [];
-
-    public $status;
+    /**
+     * @var AttributeBag
+     */
+    private $attributes;
 
     public $links = [];
 
-    // Sentry specifics
-
     private $hub;
-
-    public $segmentSpan;
 
     public $metadata = [];
 
@@ -52,6 +45,8 @@ class Span
 
         $this->traceId = TraceId::generate();
         $this->spanId = SpanId::generate();
+
+        $this->attributes = new AttributeBag();
     }
 
     public static function make(): self
@@ -59,25 +54,14 @@ class Span
         return new self();
     }
 
-    public static function makeFromTrace(string $sentryTrace, string $baggage): self
-    {
-        $span = new self();
-
-        self::parseTraceAndBaggage($span, $sentryTrace, $baggage);
-
-        return $span;
-    }
-
     public function start(): self
     {
-        $this->startTimeUnixNano = microtime(true);
+        $this->startTimestamp = microtime(true);
 
         $parentSpan = $this->hub->getSpan();
         if ($parentSpan !== null) {
             $this->parentSpanId = $parentSpan->spanId;
             $this->traceId = $parentSpan->traceId;
-
-            $this->segmentSpan = $parentSpan->segmentSpan ?? $parentSpan;
         }
 
 
@@ -93,43 +77,49 @@ class Span
         return $this;
     }
 
-    public function setStartTimeUnixNanosetStartTime(float $startTime): self
+    public function setStartTimestamp(float $startTime): self
     {
-        $this->startTimeUnixNano = $startTime;
+        $this->startTimestamp = $startTime;
 
         return $this;
     }
 
-    public function setEndTimeUnixNanosetStartTime(float $endTime): self
+    public function setEndTimestamp(float $endTime): self
     {
-        $this->endTimeUnixNano = $endTime;
+        $this->endTimestamp = $endTime;
 
         return $this;
     }
 
-    public function setAttribiute(string $key, $value): self
+    public function attributes(): AttributeBag
     {
-        $this->attributes[] = [
-            $key => $value,
-        ];
+        return $this->attributes;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    public function setAttribute(string $key, $value): self
+    {
+        $this->attributes->set($key, $value);
 
         return $this;
     }
 
-    public function finish(): ?EventId
+    public function finish(): void
     {
-        if ($this->endTimeUnixNano !== null) {
-            // The span was already finished once and we don't want to re-flush it
-            return null;
+        if ($this->endTimestamp !== null) {
+            // The span was already finished once
+            return;
         }
 
-        $this->endTimeUnixNano = microtime(true);
+        $this->endTimestamp = microtime(true);
         $this->status = (string) SpanStatus::ok();
 
-        $event = Event::createSpan();
-        $event->setSpan($this);
-
-        return $this->hub->captureEvent($event);
+        $parentSpan = $this->hub->getSpan();
+        if ($parentSpan !== null) {
+            $this->hub->setSpan($parentSpan);
+        }
     }
 
     public function getTraceContext(): array
@@ -168,40 +158,19 @@ class Span
         return $result;
     }
 
-    public function toTraceparent(): string
+    public function jsonSerialize(): array
     {
-        return sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, '-1');
-    }
-
-    private static function parseTraceAndBaggage(Span $span, string $sentryTrace, string $baggage)
-    {
-        $hasSentryTrace = false;
-
-        if (preg_match(self::SENTRY_TRACEPARENT_HEADER_REGEX, $sentryTrace, $matches)) {
-            if (!empty($matches['trace_id'])) {
-                $span->traceId = new TraceId($matches['trace_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (!empty($matches['span_id'])) {
-                $span->parentSpanId = new SpanId($matches['span_id']);
-                $hasSentryTrace = true;
-            }
-        }
-
-        $samplingContext = DynamicSamplingContext::fromHeader($baggage);
-
-        if ($hasSentryTrace && !$samplingContext->hasEntries()) {
-            // The request comes from an old SDK which does not support Dynamic Sampling.
-            // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
-            $samplingContext->freeze();
-            $span->metadata['dynamic_sampling_context'] = $samplingContext;
-        }
-
-        if ($hasSentryTrace && $samplingContext->hasEntries()) {
-            // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
-            // Propagate this Dynamic Sampling Context.
-            $span->metadata['dynamic_sampling_context'] = $samplingContext;
-        }
+        return [
+            'trace_id' => (string) $this->traceId,
+            'parent_span_id' => (string) $this->parentSpanId,
+            'span_id' => (string) $this->spanId,
+            'name' => $this->name,
+            'status' => $this->status,
+            'is_remote' => $this->parentSpanId ? true : false,
+            'kind' => 'server',
+            'start_timestamp' => $this->startTimestamp,
+            'end_timestamp' => $this->endTimestamp,
+            'attributes' => $this->attributes->toArray(),
+        ];
     }
  }

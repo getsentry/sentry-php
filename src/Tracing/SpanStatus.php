@@ -129,6 +129,15 @@ final class SpanStatus implements \Stringable
     }
 
     /**
+     * Gets an instance of this enum representing the fact that the operation
+     * completed un-successfully.
+     */
+    public static function error(): self
+    {
+        return self::getInstance('error');
+    }
+
+    /**
      * Gets an instance of this enum representing the fact that the server returned
      * 4xx as response status code.
      */

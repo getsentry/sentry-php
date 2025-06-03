@@ -9,7 +9,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
-use Sentry\Tracing\Spans\Span as OnlySpan;
+use Sentry\Tracing\Spans\Span as SpanFirst;
 
 /**
  * This is the base class for classes containing event data.
@@ -62,7 +62,10 @@ final class Event
      */
     private $transaction;
 
-    private $span;
+    /**
+     * @var Span[] The array of spans if it's a transaction
+     */
+    private $spans = [];
 
     /**
      * @var CheckIn|null The check in data
@@ -155,11 +158,6 @@ final class Event
     private $breadcrumbs = [];
 
     /**
-     * @var Span[] The array of spans if it's a transaction
-     */
-    private $spans = [];
-
-    /**
      * @var ExceptionDataBag[] The exceptions
      */
     private $exceptions = [];
@@ -234,9 +232,9 @@ final class Event
         return new self($eventId, EventType::transaction());
     }
 
-    public static function createSpan(?EventId $eventId = null): self
+    public static function createSpans(?EventId $eventId = null): self
     {
-        return new self($eventId, EventType::span());
+        return new self($eventId, EventType::spans());
     }
 
     public static function createCheckIn(?EventId $eventId = null): self
@@ -419,18 +417,6 @@ final class Event
     public function setTransaction(?string $transaction): self
     {
         $this->transaction = $transaction;
-
-        return $this;
-    }
-
-    public function getSpan(): ?OnlySpan
-    {
-        return $this->span;
-    }
-
-    public function setSpan(?OnlySpan $span): self
-    {
-        $this->span = $span;
 
         return $this;
     }

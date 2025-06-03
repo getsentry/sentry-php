@@ -37,9 +37,9 @@ final class EventType implements \Stringable
         return self::getInstance('transaction');
     }
 
-    public static function span(): self
+    public static function spans(): self
     {
-        return self::getInstance('otel_span');
+        return self::getInstance('span');
     }
 
     public static function checkIn(): self

@@ -11,7 +11,7 @@ use Sentry\Serializer\EnvelopItems\CheckInItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
 use Sentry\Serializer\EnvelopItems\LogsItem;
 use Sentry\Serializer\EnvelopItems\ProfileItem;
-use Sentry\Serializer\EnvelopItems\SpanItem;
+use Sentry\Serializer\EnvelopItems\SpansItem;
 use Sentry\Serializer\EnvelopItems\TransactionItem;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Util\JSON;
@@ -68,8 +68,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
                     $items[] = ProfileItem::toEnvelopeItem($event);
                 }
                 break;
-            case EventType::span():
-                $items = SpanItem::toEnvelopeItem($event);
+            case EventType::spans():
+                $items[] = SpansItem::toEnvelopeItem($event);
                 break;
             case EventType::checkIn():
                 $items[] = CheckInItem::toEnvelopeItem($event);
