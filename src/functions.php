@@ -8,10 +8,12 @@ use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
+use Sentry\Tracing\Spans;
 use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\Spans\Spans as SpansFirst;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -370,6 +372,14 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 function logger(): Logs
 {
     return Logs::getInstance();
+}
+
+/**
+ * Get the Sentry Spans client.
+ */
+function tracing(): SpansFirst
+{
+    return SpansFirst::getInstance();
 }
 
 /**

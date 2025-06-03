@@ -11,16 +11,8 @@ use Sentry\State\Scope;
 
 /**
  * This class stores all the information about a span.
- *
- * @phpstan-type MetricsSummary array{
- *     min: int|float,
- *     max: int|float,
- *     sum: int|float,
- *     count: int,
- *     tags: array<string>,
- * }
  */
-class Span
+class Span implements \JsonSerializable
 {
     /**
      * @var SpanId Span ID
