@@ -24,11 +24,13 @@ use Sentry\Tracing\TransactionContext;
  *     before_breadcrumb?: callable,
  *     before_send?: callable,
  *     before_send_check_in?: callable,
+ *     before_send_log?: callable,
  *     before_send_transaction?: callable,
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|null|Dsn,
+ *     enable_logs?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
@@ -64,8 +66,6 @@ use Sentry\Tracing\TransactionContext;
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
  *     transport?: callable,
- *     enable_logs?: bool,
- *     before_send_log?: callable,
  * } $options The client options
  */
 function init(array $options = []): void
