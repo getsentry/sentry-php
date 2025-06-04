@@ -6,9 +6,8 @@ namespace Sentry\Attributes;
 
 /**
  * @phpstan-import-type AttributeValue from Attribute
- * @phpstan-import-type AttributeSerialized from Attribute
  */
-class AttributeBag implements \JsonSerializable
+class AttributeBag
 {
     /**
      * @var array<string, Attribute>
@@ -52,24 +51,8 @@ class AttributeBag implements \JsonSerializable
     }
 
     /**
-     * @return array<string, AttributeSerialized>
-     */
-    public function toArray(): array
-    {
-        return array_map(static function (Attribute $attribute) {
-            return $attribute->jsonSerialize();
-        }, $this->attributes);
-    }
-
-    /**
-     * @return array<string, AttributeSerialized>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
-    }
-
-    /**
+     * Get a simplified representation of the attributes as a key-value array, main purpose is for logging output.
+     *
      * @return array<string, AttributeValue>
      */
     public function toSimpleArray(): array

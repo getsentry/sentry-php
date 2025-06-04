@@ -8,10 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Attributes\Attribute;
 use Sentry\Attributes\AttributeBag;
 
-/**
- * @phpstan-import-type AttributeValue from Attribute
- * @phpstan-import-type AttributeSerialized from Attribute
- */
 final class AttributeBagTest extends TestCase
 {
     public function testGettersAndSetters(): void
@@ -32,33 +28,6 @@ final class AttributeBagTest extends TestCase
         $bag->forget('will-be-removed');
 
         $this->assertNull($bag->get('will-be-removed'));
-    }
-
-    public function testSerializeAsJson(): void
-    {
-        $bag = new AttributeBag();
-        $bag->set('foo', 'bar');
-
-        $this->assertEquals(
-            ['foo' => ['type' => 'string', 'value' => 'bar']],
-            $bag->jsonSerialize()
-        );
-
-        $this->assertEquals(
-            '{"foo":{"type":"string","value":"bar"}}',
-            json_encode($bag)
-        );
-    }
-
-    public function testSerializeAsArray(): void
-    {
-        $bag = new AttributeBag();
-        $bag->set('foo', 'bar');
-
-        $this->assertEquals(
-            ['foo' => ['type' => 'string', 'value' => 'bar']],
-            $bag->toArray()
-        );
     }
 
     public function testSerializeAsSimpleArray(): void

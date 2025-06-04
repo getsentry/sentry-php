@@ -49,10 +49,10 @@ final class LogsTest extends TestCase
         $this->assertEvent(function (Event $event) {
             $this->assertCount(1, $event->getLogs());
 
-            $logItem = $event->getLogs()[0]->jsonSerialize();
+            $logItem = $event->getLogs()[0];
 
-            $this->assertEquals(LogLevel::info(), $logItem['level']);
-            $this->assertEquals('Some info message', $logItem['body']);
+            $this->assertEquals(LogLevel::info(), $logItem->getLevel());
+            $this->assertEquals('Some info message', $logItem->getBody());
         });
 
         logger()->info('Some info message');
@@ -66,10 +66,10 @@ final class LogsTest extends TestCase
             function (Event $event) {
                 $this->assertCount(1, $event->getLogs());
 
-                $logItem = $event->getLogs()[0]->jsonSerialize();
+                $logItem = $event->getLogs()[0];
 
-                $this->assertEquals(LogLevel::fatal(), $logItem['level']);
-                $this->assertEquals('Some test message', $logItem['body']);
+                $this->assertEquals(LogLevel::fatal(), $logItem->getLevel());
+                $this->assertEquals('Some test message', $logItem->getBody());
             },
             [
                 'before_send_log' => static function (Log $log): ?Log {
@@ -95,10 +95,10 @@ final class LogsTest extends TestCase
         $this->assertEvent(function (Event $event) {
             $this->assertCount(1, $event->getLogs());
 
-            $logItem = $event->getLogs()[0]->jsonSerialize();
+            $logItem = $event->getLogs()[0];
 
-            $this->assertEquals(LogLevel::info(), $logItem['level']);
-            $this->assertEquals('Some info message', $logItem['body']);
+            $this->assertEquals(LogLevel::info(), $logItem->getLevel());
+            $this->assertEquals('Some info message', $logItem->getBody());
         });
 
         logger()->info('Some %s message', ['info']);
@@ -111,12 +111,14 @@ final class LogsTest extends TestCase
         $this->assertEvent(function (Event $event) {
             $this->assertCount(1, $event->getLogs());
 
-            $logItem = $event->getLogs()[0]->jsonSerialize();
+            $logItem = $event->getLogs()[0];
 
-            $this->assertArrayHasKey('nested.foo', $logItem['attributes']);
-            $this->assertArrayNotHasKey('nested.should-be-missing', $logItem['attributes']);
+            $this->assertNull($logItem->attributes()->get('nested.should-be-missing'));
 
-            $this->assertEquals('bar', $logItem['attributes']['nested.foo']['value']);
+            $attribute = $logItem->attributes()->get('nested.foo');
+
+            $this->assertNotNull($attribute);
+            $this->assertEquals('bar', $attribute->getValue());
         });
 
         logger()->info('Some message', [], [

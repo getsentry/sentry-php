@@ -14,8 +14,6 @@ use Sentry\State\Scope;
 use Sentry\Util\Arr;
 
 /**
- * @phpstan-import-type AttributeValue from Attribute
- *
  * @internal
  */
 final class LogsAggregator
