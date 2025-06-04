@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -55,6 +56,35 @@ final class LogsTest extends TestCase
         });
 
         logger()->info('Some info message');
+
+        $this->assertNotNull(logger()->flush());
+    }
+
+    public function testLogNotSentWithBeforeSendLogOption(): void
+    {
+        $this->assertEvent(
+            function (Event $event) {
+                $this->assertCount(1, $event->getLogs());
+
+                $logItem = $event->getLogs()[0]->jsonSerialize();
+
+                $this->assertEquals(LogLevel::warn(), $logItem['level']);
+                $this->assertEquals('Some warning message', $logItem['body']);
+            },
+            [
+                'before_send_log' => static function (Log $log): ?Log {
+                    if ($log->getLevel() === LogLevel::info()) {
+                        // Returning null will prevent the log from being sent
+                        return null;
+                    }
+
+                    return $log;
+                },
+            ]
+        );
+
+        logger()->info('Some info message');
+        logger()->warn('Some warning message');
 
         $this->assertNotNull(logger()->flush());
     }
@@ -127,7 +157,7 @@ final class LogsTest extends TestCase
     /**
      * @param callable(Event): void $assert
      */
-    private function assertEvent(callable $assert): ClientInterface
+    private function assertEvent(callable $assert, array $options = []): ClientInterface
     {
         /** @var TransportInterface&MockObject $transport */
         $transport = $this->createMock(TransportInterface::class);
@@ -142,9 +172,11 @@ final class LogsTest extends TestCase
                       return new Result(ResultStatus::success(), $event);
                   });
 
-        $client = ClientBuilder::create([
+        $clientOptions = array_merge([
             'enable_logs' => true,
-        ])->setTransport($transport)->getClient();
+        ], $options);
+
+        $client = ClientBuilder::create($clientOptions)->setTransport($transport)->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
