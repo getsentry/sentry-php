@@ -36,6 +36,13 @@ class AttributeBag implements \JsonSerializable
         return $this->attributes[$key] ?? null;
     }
 
+    public function forget(string $key): self
+    {
+        unset($this->attributes[$key]);
+
+        return $this;
+    }
+
     /**
      * @return array<string, Attribute>
      */

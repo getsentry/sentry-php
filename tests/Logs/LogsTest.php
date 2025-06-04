@@ -68,8 +68,8 @@ final class LogsTest extends TestCase
 
                 $logItem = $event->getLogs()[0]->jsonSerialize();
 
-                $this->assertEquals(LogLevel::warn(), $logItem['level']);
-                $this->assertEquals('Some warning message', $logItem['body']);
+                $this->assertEquals(LogLevel::fatal(), $logItem['level']);
+                $this->assertEquals('Some test message', $logItem['body']);
             },
             [
                 'before_send_log' => static function (Log $log): ?Log {
@@ -78,13 +78,14 @@ final class LogsTest extends TestCase
                         return null;
                     }
 
-                    return $log;
+                    // Return the log while changing the level to fatal
+                    return $log->setLevel(LogLevel::fatal());
                 },
             ]
         );
 
         logger()->info('Some info message');
-        logger()->warn('Some warning message');
+        logger()->warn('Some test message');
 
         $this->assertNotNull(logger()->flush());
     }

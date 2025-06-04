@@ -63,9 +63,23 @@ class Log implements \JsonSerializable
         return $this->timestamp;
     }
 
+    public function setTimestamp(float $timestamp): self
+    {
+        $this->timestamp = $timestamp;
+
+        return $this;
+    }
+
     public function getTraceId(): string
     {
         return $this->traceId;
+    }
+
+    public function setTraceId(string $traceId): self
+    {
+        $this->traceId = $traceId;
+
+        return $this;
     }
 
     public function getLevel(): LogLevel
@@ -73,9 +87,23 @@ class Log implements \JsonSerializable
         return $this->level;
     }
 
+    public function setLevel(LogLevel $level): self
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+
     public function getBody(): string
     {
         return $this->body;
+    }
+
+    public function setBody(string $body): self
+    {
+        $this->body = $body;
+
+        return $this;
     }
 
     public function attributes(): AttributeBag

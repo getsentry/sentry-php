@@ -25,7 +25,13 @@ final class AttributeBagTest extends TestCase
         $this->assertCount(1, $bag->all());
         $this->assertInstanceOf(Attribute::class, $bag->get('foo'));
 
-        $this->assertNull($bag->get('non-existing'));
+        $bag->set('will-be-removed', 'baz');
+
+        $this->assertNotNull($bag->get('will-be-removed'));
+
+        $bag->forget('will-be-removed');
+
+        $this->assertNull($bag->get('will-be-removed'));
     }
 
     public function testSerializeAsJson(): void
