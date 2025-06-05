@@ -8,10 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Attributes\Attribute;
 use Sentry\Attributes\AttributeBag;
 
-/**
- * @phpstan-import-type AttributeValue from Attribute
- * @phpstan-import-type AttributeSerialized from Attribute
- */
 final class AttributeBagTest extends TestCase
 {
     public function testGettersAndSetters(): void
@@ -25,34 +21,13 @@ final class AttributeBagTest extends TestCase
         $this->assertCount(1, $bag->all());
         $this->assertInstanceOf(Attribute::class, $bag->get('foo'));
 
-        $this->assertNull($bag->get('non-existing'));
-    }
+        $bag->set('will-be-removed', 'baz');
 
-    public function testSerializeAsJson(): void
-    {
-        $bag = new AttributeBag();
-        $bag->set('foo', 'bar');
+        $this->assertNotNull($bag->get('will-be-removed'));
 
-        $this->assertEquals(
-            ['foo' => ['type' => 'string', 'value' => 'bar']],
-            $bag->jsonSerialize()
-        );
+        $bag->forget('will-be-removed');
 
-        $this->assertEquals(
-            '{"foo":{"type":"string","value":"bar"}}',
-            json_encode($bag)
-        );
-    }
-
-    public function testSerializeAsArray(): void
-    {
-        $bag = new AttributeBag();
-        $bag->set('foo', 'bar');
-
-        $this->assertEquals(
-            ['foo' => ['type' => 'string', 'value' => 'bar']],
-            $bag->toArray()
-        );
+        $this->assertNull($bag->get('will-be-removed'));
     }
 
     public function testSerializeAsSimpleArray(): void

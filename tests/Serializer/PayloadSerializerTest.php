@@ -413,7 +413,8 @@ TEXT
 
         $event = Event::createLogs(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setLogs([
-            new Log(ClockMock::microtime(true), '21160e9b836d479f81611368b2aa3d2c', LogLevel::info(), 'A log message'),
+            (new Log(ClockMock::microtime(true), '21160e9b836d479f81611368b2aa3d2c', LogLevel::info(), 'A log message'))
+                ->setAttribute('foo', 'bar'),
         ]);
 
         yield [
@@ -421,7 +422,7 @@ TEXT
             <<<TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"4.11.1","packages":[{"name":"composer:sentry\/sentry","version":"4.11.1"}]}}
 {"type":"log","item_count":1,"content_type":"application\/vnd.sentry.items.log+json"}
-{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","level":"info","body":"A log message","attributes":[]}]}
+{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","level":"info","body":"A log message","attributes":{"foo":{"type":"string","value":"bar"}}}]}
 TEXT
             ,
         ];

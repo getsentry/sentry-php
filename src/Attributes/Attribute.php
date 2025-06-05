@@ -7,12 +7,8 @@ namespace Sentry\Attributes;
 /**
  * @phpstan-type AttributeType 'string'|'boolean'|'integer'|'double'
  * @phpstan-type AttributeValue string|bool|int|float
- * @phpstan-type AttributeSerialized array{
- *     type: AttributeType,
- *     value: AttributeValue
- * }
  */
-class Attribute implements \JsonSerializable
+class Attribute
 {
     /**
      * @var AttributeType
@@ -98,25 +94,6 @@ class Attribute implements \JsonSerializable
         }
 
         return null;
-    }
-
-    /**
-     * @return AttributeSerialized
-     */
-    public function toArray(): array
-    {
-        return [
-            'type' => $this->type,
-            'value' => $this->value,
-        ];
-    }
-
-    /**
-     * @return AttributeSerialized
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 
     public function __toString(): string

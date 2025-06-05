@@ -8,18 +8,18 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Attributes\Attribute;
 
 /**
+ * @phpstan-import-type AttributeType from Attribute
  * @phpstan-import-type AttributeValue from Attribute
- * @phpstan-import-type AttributeSerialized from Attribute
  */
 final class AttributeTest extends TestCase
 {
     /**
-     * @param AttributeValue           $value
-     * @param AttributeSerialized|null $expected
+     * @param AttributeValue                                         $value
+     * @param array{type: AttributeType, value: AttributeValue}|null $expected
      *
      * @dataProvider fromValueDataProvider
      */
-    public function testFromValue($value, $expected): void
+    public function testFromValue($value, ?array $expected): void
     {
         $attribute = Attribute::tryFromValue($value);
 
@@ -29,7 +29,6 @@ final class AttributeTest extends TestCase
             return;
         }
 
-        $this->assertEquals($expected, $attribute->toArray());
         $this->assertEquals($expected['type'], $attribute->getType());
         $this->assertEquals($expected['value'], $attribute->getValue());
     }
@@ -95,35 +94,6 @@ final class AttributeTest extends TestCase
             [],
             null,
         ];
-    }
-
-    public function testSerializeAsJson(): void
-    {
-        $attribute = Attribute::tryFromValue('foo');
-
-        $this->assertInstanceOf(Attribute::class, $attribute);
-
-        $this->assertEquals(
-            ['type' => 'string', 'value' => 'foo'],
-            $attribute->jsonSerialize()
-        );
-
-        $this->assertEquals(
-            '{"type":"string","value":"foo"}',
-            json_encode($attribute)
-        );
-    }
-
-    public function testSerializeAsArray(): void
-    {
-        $attribute = Attribute::tryFromValue('foo');
-
-        $this->assertInstanceOf(Attribute::class, $attribute);
-
-        $this->assertEquals(
-            ['type' => 'string', 'value' => 'foo'],
-            $attribute->toArray()
-        );
     }
 
     public function testSerializeAsString(): void
