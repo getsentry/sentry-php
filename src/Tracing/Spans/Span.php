@@ -166,7 +166,7 @@ class Span implements \JsonSerializable
             'span_id' => (string) $this->spanId,
             'name' => $this->name,
             'status' => $this->status,
-            'is_remote' => $this->parentSpanId ? true : false,
+            'is_remote' => !$this->parentSpanId ? true : false,
             'kind' => 'server',
             'start_timestamp' => $this->startTimestamp,
             'end_timestamp' => $this->endTimestamp,
