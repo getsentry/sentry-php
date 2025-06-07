@@ -155,7 +155,6 @@ final class Options
         return $this->options['enable_tracing'];
     }
 
-
     /**
      * Sets if logs should be enabled or not.
      *
