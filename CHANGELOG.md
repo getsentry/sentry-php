@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## 4.12.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.12.0.
+
+### Features
+
+- Add support for Sentry Structured Logs [(#1813)](https://github.com/getsentry/sentry-php/pull/1813)
+
+  You can now send logs directly to Sentry using the new logging API:
+
+  ```php
+  use function Sentry\logger;
+
+  // Log messages at different levels
+  logger()->info('User logged in', ['user_id' => 123]);
+  logger()->warn('Deprecated function used', ['function' => 'old_function']);
+  logger()->error('Database connection failed', ['host' => 'db.example.com']);
+  logger()->fatal('Critical system failure: %s', ['Out of memory'], ['component' => 'database']);
+
+  // Flush logs to Sentry
+  logger()->flush();
+
+  // We recommend registering the flushing in a shutdown function
+  register_shutdown_function(static fn () => logger()->flush());
+  ```
+
+  To learn more, head over to our [docs](https://docs.sentry.io/platforms/php/logs/).
+
+### Bug Fixes
+
+- Log correct source of sampling decision [(#1836)](https://github.com/getsentry/sentry-php/pull/1836)
+
 ## 4.11.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.11.1.
