@@ -11,6 +11,13 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
   You can now send logs directly to Sentry using the new logging API:
 
   ```php
+  Sentry\init([
+      // Enable logs to be sent to Sentry
+      'enable_logs' => true,
+  ]);
+  ```
+
+  ```php
   use function Sentry\logger;
 
   // Log messages at different levels
