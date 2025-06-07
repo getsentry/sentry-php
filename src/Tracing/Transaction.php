@@ -9,6 +9,7 @@ use Sentry\EventId;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
+use Sentry\State\Scope;
 
 /**
  * This class stores all the information about a Transaction.
@@ -76,6 +77,11 @@ final class Transaction extends Span
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        // Sync the transaction name with the scope
+        $this->hub->configureScope(function (Scope $scope) use ($name) {
+            $scope->setTransactionName($name);
+        });
 
         return $this;
     }
