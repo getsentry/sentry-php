@@ -21,7 +21,6 @@ use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
-use Sentry\Tests\Fixtures\code\CustomException;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -670,73 +669,262 @@ final class ClientTest extends TestCase
         $client->captureEvent(Event::createEvent());
     }
 
-    public function testProcessEventDiscardsEventWhenIgnoreExceptionsMatches(): void
+    /**
+     * @dataProvider ignoreExceptionsDataProvider
+     */
+    public function testProcessEventDiscardsEventWhenIgnoreExceptionMatches(string $exceptionClass, array $ignorePatterns, bool $shouldIgnore): void
     {
-        $exception = new \Exception('Some foo error');
+        if (class_exists($exceptionClass)) {
+            $exception = new $exceptionClass('Test exception message');
+        } else {
+            $exception = new \Exception('Test exception message');
+        }
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-               ->method('info')
-               ->with('The exception will be discarded because it matches an entry in "ignore_exceptions".');
+
+        if ($shouldIgnore) {
+            $logger->expects($this->once())
+                   ->method('info')
+                   ->with('The exception will be discarded because it matches an entry in "ignore_exceptions".');
+        } else {
+            $logger->expects($this->never())
+                   ->method('info');
+        }
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        if ($shouldIgnore) {
+            $transport->expects($this->never())
+                      ->method('send');
+        } else {
+            $transport->expects($this->once())
+                      ->method('send')
+                      ->with($this->anything())
+                      ->willReturnCallback(static function (Event $event): Result {
+                          return new Result(ResultStatus::success(), $event);
+                      });
+        }
 
         $options = [
-            'ignore_exceptions' => [\Exception::class],
+            'ignore_exceptions' => $ignorePatterns,
         ];
 
         $client = ClientBuilder::create($options)
+                               ->setTransport($transport)
                                ->setLogger($logger)
                                ->getClient();
 
         $client->captureException($exception);
     }
 
-    public function testProcessEventDiscardsEventWhenParentHierarchyOfIgnoreExceptionsMatches(): void
+    public static function ignoreExceptionsDataProvider(): \Generator
     {
-        $exception = new CustomException('Some foo error');
-
-        /** @var LoggerInterface&MockObject $logger */
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-               ->method('info')
-               ->with('The exception will be discarded because it matches an entry in "ignore_exceptions".');
-
-        $options = [
-            'ignore_exceptions' => [\RuntimeException::class],
+        yield 'Exact class name match' => [
+            \Exception::class,
+            [\Exception::class],
+            true,
         ];
 
-        $client = ClientBuilder::create($options)
-                               ->setLogger($logger)
-                               ->getClient();
+        yield 'Class hierarchy match' => [
+            \RuntimeException::class,
+            [\Exception::class],
+            true,
+        ];
 
-        $client->captureException($exception);
+        yield 'No class match' => [
+            \Exception::class,
+            [\RuntimeException::class],
+            false,
+        ];
+
+        yield 'Regex pattern matches exception class' => [
+            \InvalidArgumentException::class,
+            ['/.*ArgumentException$/'],
+            true,
+        ];
+
+        yield 'Regex pattern no match' => [
+            \Exception::class,
+            ['/.*RuntimeException$/'],
+            false,
+        ];
+
+        yield 'Multiple patterns, first matches (class hierarchy)' => [
+            \RuntimeException::class,
+            [\Exception::class, '/.*NotFound.*/'],
+            true,
+        ];
+
+        yield 'Multiple patterns, second matches (regex)' => [
+            \InvalidArgumentException::class,
+            [\RuntimeException::class, '/.*Argument.*/'],
+            true,
+        ];
+
+        yield 'Multiple patterns, none match' => [
+            \Exception::class,
+            [\RuntimeException::class, '/.*NotFound.*/'],
+            false,
+        ];
+
+        yield 'Regex with namespace matching' => [
+            \InvalidArgumentException::class,
+            ['/^InvalidArgumentException$/'],
+            true,
+        ];
+
+        yield 'Regex with full namespace' => [
+            \InvalidArgumentException::class,
+            ['/^InvalidArgumentException$/'],
+            true,
+        ];
+
+        yield 'Case sensitive regex' => [
+            \Exception::class,
+            ['/^exception$/'],
+            false,
+        ];
+
+        yield 'Case insensitive regex' => [
+            \Exception::class,
+            ['/^exception$/i'],
+            true,
+        ];
+
+        yield 'Regex with wildcards for any exception' => [
+            \LogicException::class,
+            ['/.*Exception$/'],
+            true,
+        ];
+
+        yield 'Mixed class and regex patterns' => [
+            \InvalidArgumentException::class,
+            [\RuntimeException::class, '/.*Argument.*/'],
+            true,
+        ];
     }
 
-    public function testProcessEventDiscardsEventWhenIgnoreTransactionsMatches(): void
+    /**
+     * @dataProvider ignoreTransactionsDataProvider
+     */
+    public function testProcessEventDiscardsEventWhenIgnoreTransactionsMatches(string $transactionName, array $ignorePatterns, bool $shouldIgnore): void
     {
         $event = Event::createTransaction();
-        $event->setTransaction('GET /foo');
+        $event->setTransaction($transactionName);
 
         /** @var LoggerInterface&MockObject $logger */
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-               ->method('info')
-               ->with(
-                   new StringMatchesFormatDescription('The transaction [%s] will be discarded because it matches a entry in "ignore_transactions".'),
-                   $this->callback(static function (array $context): bool {
-                       return isset($context['event']) && $context['event'] instanceof Event;
-                   })
-               );
+
+        if ($shouldIgnore) {
+            $logger->expects($this->once())
+                   ->method('info')
+                   ->with(
+                       new StringMatchesFormatDescription('The transaction [%s] will be discarded because it matches a entry in "ignore_transactions".'),
+                       $this->callback(static function (array $context): bool {
+                           return isset($context['event']) && $context['event'] instanceof Event;
+                       })
+                   );
+        } else {
+            $logger->expects($this->never())
+                   ->method('info');
+        }
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        if ($shouldIgnore) {
+            $transport->expects($this->never())
+                      ->method('send');
+        } else {
+            $transport->expects($this->once())
+                      ->method('send')
+                      ->with($event)
+                      ->willReturnCallback(static function (Event $event): Result {
+                          return new Result(ResultStatus::success(), $event);
+                      });
+        }
 
         $options = [
-            'ignore_transactions' => ['GET /foo'],
+            'ignore_transactions' => $ignorePatterns,
         ];
 
         $client = ClientBuilder::create($options)
+                               ->setTransport($transport)
                                ->setLogger($logger)
                                ->getClient();
 
         $client->captureEvent($event);
+    }
+
+    public static function ignoreTransactionsDataProvider(): \Generator
+    {
+        yield 'Exact string match' => [
+            'GET /api/users',
+            ['GET /api/users'],
+            true,
+        ];
+
+        yield 'Exact string no match' => [
+            'GET /api/posts',
+            ['GET /api/users'],
+            false,
+        ];
+
+        yield 'Regex pattern matches' => [
+            'GET /api/users/123',
+            ['/^GET \/api\/users\/\d+$/'],
+            true,
+        ];
+
+        yield 'Regex pattern no match' => [
+            'POST /api/users/123',
+            ['/^GET \/api\/users\/\d+$/'],
+            false,
+        ];
+
+        yield 'Multiple patterns, first matches' => [
+            'GET /health',
+            ['GET /health', '/^POST \/api\/.*$/'],
+            true,
+        ];
+
+        yield 'Multiple patterns, second matches' => [
+            'POST /api/data',
+            ['GET /health', '/^POST \/api\/.*$/'],
+            true,
+        ];
+
+        yield 'Multiple patterns, none match' => [
+            'PUT /api/data',
+            ['GET /health', '/^POST \/api\/.*$/'],
+            false,
+        ];
+
+        yield 'Regex with wildcards' => [
+            'GET /api/v1/users/active',
+            ['/\/api\/v\d+\/users\/.*$/'],
+            true,
+        ];
+
+        yield 'Case sensitive regex' => [
+            'get /api/users',
+            ['/^GET \/api\/users$/'],
+            false,
+        ];
+
+        yield 'Case insensitive regex' => [
+            'get /api/users',
+            ['/^get \/api\/users$/i'],
+            true,
+        ];
+
+        yield 'Mixed exact and regex patterns' => [
+            'DELETE /api/cache',
+            ['GET /health', '/^DELETE \/api\/.*$/'],
+            true,
+        ];
     }
 
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
