@@ -15,29 +15,26 @@ use Sentry\Logs\LogLevel;
  */
 final class LogTest extends TestCase
 {
-    public function testJsonSerializesToExpected(): void
+    public function testGettersAndSetters(): void
     {
-        $timestamp = microtime(true);
+        $log = new Log(1.0, '123', LogLevel::debug(), 'foo');
 
-        $log = new Log($timestamp, '123', LogLevel::debug(), 'foo');
+        $this->assertSame(1.0, $log->getTimestamp());
+        $this->assertSame('123', $log->getTraceId());
+        $this->assertSame(LogLevel::debug(), $log->getLevel());
+        $this->assertSame('foo', $log->getBody());
+        $this->assertSame([], $log->attributes()->all());
 
-        $log->setAttribute('foo', 'bar');
-        $log->setAttribute('should-be-missing', ['foo' => 'bar']);
+        $log->setTimestamp(2.0);
+        $this->assertSame(2.0, $log->getTimestamp());
 
-        $this->assertEquals(
-            [
-                'timestamp' => $timestamp,
-                'trace_id' => '123',
-                'level' => 'debug',
-                'body' => 'foo',
-                'attributes' => [
-                    'foo' => [
-                        'type' => 'string',
-                        'value' => 'bar',
-                    ],
-                ],
-            ],
-            $log->jsonSerialize()
-        );
+        $log->setTraceId('456');
+        $this->assertSame('456', $log->getTraceId());
+
+        $log->setLevel(LogLevel::warn());
+        $this->assertSame(LogLevel::warn(), $log->getLevel());
+
+        $log->setBody('bar');
+        $this->assertSame('bar', $log->getBody());
     }
 }
