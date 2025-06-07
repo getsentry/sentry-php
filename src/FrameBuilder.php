@@ -219,7 +219,18 @@ final class FrameBuilder
         foreach ($reflectionFunction->getParameters() as $reflectionParameter) {
             $parameterPosition = $reflectionParameter->getPosition();
 
-            if (!isset($backtraceFrameArgs[$parameterPosition])) {
+            if ($reflectionParameter->isVariadic()) {
+                // For variadic parameters, collect all remaining arguments into an array
+                $variadicArgs = [];
+                for ($i = $parameterPosition; $i < \count($backtraceFrameArgs); ++$i) {
+                    $variadicArgs[] = $backtraceFrameArgs[$i];
+                }
+                $argumentValues[$reflectionParameter->getName()] = $variadicArgs;
+                // Variadic parameter is always the last one, so we can break
+                break;
+            }
+
+            if (!\array_key_exists($parameterPosition, $backtraceFrameArgs)) {
                 continue;
             }
 
