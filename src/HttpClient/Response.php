@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\HttpClient;
 
-/**
- * @internal
- */
 final class Response
 {
     /**
