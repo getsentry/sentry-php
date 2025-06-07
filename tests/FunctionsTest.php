@@ -514,13 +514,20 @@ final class FunctionsTest extends TestCase
 
     public function testContinueTrace(): void
     {
-        $hub = new Hub();
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
 
         SentrySdk::setCurrentHub($hub);
 
         $transactionContext = continueTrace(
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
-            'sentry-trace_id=566e3688a61d4bc888951642d6f14a19'
+            'sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-org_id=1'
         );
 
         $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $transactionContext->getTraceId());
@@ -537,6 +544,38 @@ final class FunctionsTest extends TestCase
 
             $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
             $this->assertTrue($dynamicSamplingContext->isFrozen());
+        });
+    }
+
+    public function testContinueTraceWithNoneMatchingOrgId(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
+
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-org_id=2'
+        );
+
+        $this->assertNull($transactionContext->getTraceId());
+        $this->assertNull($transactionContext->getParentSpanId());
+        $this->assertNull($transactionContext->getParentSampled());
+
+        configureScope(function (Scope $scope): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertNotSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+            $this->assertNotSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+
+            $this->assertNull($propagationContext->getDynamicSamplingContext());
         });
     }
 }
