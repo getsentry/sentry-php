@@ -284,4 +284,115 @@ final class FrameBuilderTest extends TestCase
             false,
         ];
     }
+
+    public function testGetFunctionArgumentsWithVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, int $second, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testVariadicFunction',
+            'args' => ['hello', 42, 'extra1', 'extra2', 'extra3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentsMethod = $reflectionClass->getMethod('getFunctionArguments');
+        $getFunctionArgumentsMethod->setAccessible(true);
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        $getFunctionArgumentValuesMethod->setAccessible(true);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertSame(42, $result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', 'extra2', 'extra3'], $result['rest']);
+    }
+
+    public function testGetFunctionArgumentsWithOnlyVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (...$args) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testOnlyVariadicFunction',
+            'args' => ['arg1', 'arg2', 'arg3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        $getFunctionArgumentValuesMethod->setAccessible(true);
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertArrayHasKey('args', $result);
+        $this->assertSame(['arg1', 'arg2', 'arg3'], $result['args']);
+    }
+
+    public function testGetFunctionArgumentsWithEmptyVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testEmptyVariadicFunction',
+            'args' => ['hello'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        $getFunctionArgumentValuesMethod->setAccessible(true);
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame([], $result['rest']);
+    }
+
+    public function testGetFunctionArgumentsWithNullValues(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, $second, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testNullFunction',
+            'args' => ['hello', null, 'extra1', null, 'extra3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        $getFunctionArgumentValuesMethod->setAccessible(true);
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertNull($result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', null, 'extra3'], $result['rest']);
+    }
 }
