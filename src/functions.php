@@ -57,7 +57,6 @@ use Sentry\Tracing\TransactionContext;
  *     send_attempts?: int,
  *     send_default_pii?: bool,
  *     server_name?: string,
- *     server_name?: string,
  *     spotlight?: bool,
  *     spotlight_url?: string,
  *     strict_trace_propagation?: bool,
