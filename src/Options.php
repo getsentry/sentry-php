@@ -156,6 +156,28 @@ final class Options
     }
 
     /**
+     * Sets if logs should be enabled or not.
+     *
+     * @param bool|null $enableLogs Boolean if logs should be enabled or not
+     */
+    public function setEnableLogs(?bool $enableLogs): self
+    {
+        $options = array_merge($this->options, ['enable_logs' => $enableLogs]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Gets if logs is enabled or not.
+     */
+    public function getEnableLogs(): bool
+    {
+        return $this->options['enable_logs'] ?? false;
+    }
+
+    /**
      * Sets the sampling factor to apply to transactions. A value of 0 will deny
      * sending any transactions, and a value of 1 will send 100% of transactions.
      *
@@ -607,6 +629,34 @@ final class Options
     public function setBeforeSendCheckInCallback(callable $callback): self
     {
         $options = array_merge($this->options, ['before_send_check_in' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Gets a callback that will be invoked before an log is sent to the server.
+     * If `null` is returned it won't be sent.
+     *
+     * @psalm-return callable(Log): ?Log
+     */
+    public function getBeforeSendLogCallback(): callable
+    {
+        return $this->options['before_send_log'];
+    }
+
+    /**
+     * Sets a callable to be called to decide whether a log should
+     * be captured or not.
+     *
+     * @param callable $callback The callable
+     *
+     * @psalm-param callable(Log): ?Log $callback
+     */
+    public function setBeforeSendLogCallback(callable $callback): self
+    {
+        $options = array_merge($this->options, ['before_send_log' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1154,39 +1204,6 @@ final class Options
     }
 
     /**
-     * Sets if logs should be enabled or not.
-     *
-     * @param bool|null $enableLogs Boolean if logs should be enabled or not
-     */
-    public function setEnableLogs(?bool $enableLogs): self
-    {
-        $options = array_merge($this->options, ['enable_tracing' => $enableLogs]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets if logs is enabled or not.
-     */
-    public function getEnableLogs(): bool
-    {
-        return $this->options['enable_logs'] ?? false;
-    }
-
-    /**
-     * Gets a callback that will be invoked before an log is sent to the server.
-     * If `null` is returned it won't be sent.
-     *
-     * @psalm-return callable(Log): ?Log
-     */
-    public function getBeforeSendLogCallback(): callable
-    {
-        return $this->options['before_send_log'];
-    }
-
-    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -1202,6 +1219,7 @@ final class Options
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
             'enable_tracing' => null,
+            'enable_logs' => false,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
@@ -1233,6 +1251,9 @@ final class Options
             'before_send_check_in' => static function (Event $checkIn): Event {
                 return $checkIn;
             },
+            'before_send_log' => static function (Log $log): Log {
+                return $log;
+            },
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
              */
@@ -1263,15 +1284,12 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'enable_logs' => false,
-            'before_send_log' => static function (Log $log): Log {
-                return $log;
-            },
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
+        $resolver->setAllowedTypes('enable_logs', 'bool');
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
@@ -1290,6 +1308,7 @@ final class Options
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
+        $resolver->setAllowedTypes('before_send_log', 'callable');
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
@@ -1313,8 +1332,6 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
-        $resolver->setAllowedTypes('enable_logs', 'bool');
-        $resolver->setAllowedTypes('before_send_log', 'callable');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));

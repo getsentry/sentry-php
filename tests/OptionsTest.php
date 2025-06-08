@@ -97,6 +97,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'enable_logs',
+            true,
+            'getEnableLogs',
+            'setEnableLogs',
+        ];
+
+        yield [
             'traces_sample_rate',
             0.5,
             'getTracesSampleRate',
@@ -262,6 +269,13 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeSendCheckInCallback',
             'setBeforeSendCheckInCallback',
+        ];
+
+        yield [
+            'before_send_log',
+            static function (): void {},
+            'getBeforeSendLogCallback',
+            'setBeforeSendLogCallback',
         ];
 
         yield [
