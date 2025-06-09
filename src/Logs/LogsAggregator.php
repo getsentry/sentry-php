@@ -57,7 +57,24 @@ final class LogsAggregator
             return;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, vsprintf($message, $values)))
+        $formattedMessage = $message;
+
+        if (!empty($values)) {
+            try {
+                $formattedMessage = vsprintf($message, $values);
+            } catch (\ValueError $e) {
+                // If formatting fails we don't format the message and log the error
+                if ($sdkLogger !== null) {
+                    $sdkLogger->warning('Failed to format log message with values.', [
+                        'message' => $message,
+                        'values' => $values,
+                        'exception' => $e,
+                    ]);
+                }
+            }
+        }
+
+        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
