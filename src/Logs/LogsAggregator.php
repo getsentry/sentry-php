@@ -124,6 +124,14 @@ final class LogsAggregator
         return $hub->captureEvent($event);
     }
 
+    /**
+     * @return Log[]
+     */
+    public function all(): array
+    {
+        return $this->logs;
+    }
+
     private function getTraceId(HubInterface $hub): string
     {
         $span = $hub->getSpan();

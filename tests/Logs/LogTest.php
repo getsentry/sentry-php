@@ -5,14 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tests\Logs;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Attributes\Attribute;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 
-/**
- * @phpstan-import-type AttributeValue from Attribute
- * @phpstan-import-type AttributeSerialized from Attribute
- */
 final class LogTest extends TestCase
 {
     public function testGettersAndSetters(): void
