@@ -323,16 +323,7 @@ class Hub implements HubInterface
 
         $transaction->initSpanRecorder();
 
-        $profilesSampleRate = $options->getProfilesSampleRate();
-        if ($profilesSampleRate === null) {
-            $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
-        } elseif ($this->sample($profilesSampleRate)) {
-            $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
-
-            $transaction->initProfiler()->start();
-        } else {
-            $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
-        }
+        $this->initProfiler($transaction, $options, $logger);
 
         return $transaction;
     }
@@ -422,5 +413,35 @@ class Hub implements HubInterface
         }
 
         return true;
+    }
+
+    private function initProfiler(Transaction $transaction, $options, $logger): void
+    {
+        $profileSessionSampleRate = $options->getProfilesSessionSampleRate();
+        $profilesLifecycle = $options->getProfilesLifecycle();
+
+        // profileSessionSampleRate takes priority
+        if ($profilesLifecycle === 'trace' && $profileSessionSampleRate !== null) {
+            if ($this->sample($profileSessionSampleRate)) {
+                $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled by profiles_session_sample_rate.', (string) $transaction->getTraceId()));
+                $transaction->initProfiler()->start();
+            } else {
+                $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled by profiles_session_sample_rate.', (string) $transaction->getTraceId()));
+            }
+
+            return;
+        }
+
+        // Fall back to profilesSampleRate
+        $profilesSampleRate = $options->getProfilesSampleRate();
+
+        if ($profilesSampleRate === null) {
+            $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
+        } elseif ($this->sample($profilesSampleRate)) {
+            $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
+            $transaction->initProfiler()->start();
+        } else {
+            $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
+        }
     }
 }
