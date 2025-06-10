@@ -139,6 +139,27 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'profile_lifecycle',
+            'trace',
+            'getProfileLifecycle',
+            'setProfileLifecycle',
+        ];
+
+        yield [
+            'profile_lifecycle',
+            'manual',
+            'getProfileLifecycle',
+            'setProfileLifecycle',
+        ];
+
+        yield [
+            'profile_lifecycle',
+            null,
+            'getProfileLifecycle',
+            'setProfileLifecycle',
+        ];
+
+        yield [
             'attach_stacktrace',
             false,
             'shouldAttachStacktrace',
@@ -627,6 +648,64 @@ final class OptionsTest extends TestCase
         yield [
             null,
             null,
+        ];
+    }
+
+    /**
+     * @dataProvider profileLifecycleOptionValidatesInputValueDataProvider
+     */
+    public function testProfileLifecycleOptionValidatesInputValue($value, ?string $expectedExceptionMessage): void
+    {
+        if ($expectedExceptionMessage !== null) {
+            $this->expectException(InvalidOptionsException::class);
+            $this->expectExceptionMessage($expectedExceptionMessage);
+        } else {
+            $this->expectNotToPerformAssertions();
+        }
+
+        new Options(['profile_lifecycle' => $value]);
+    }
+
+    public static function profileLifecycleOptionValidatesInputValueDataProvider(): \Generator
+    {
+        yield [
+            'trace',
+            null,
+        ];
+
+        yield [
+            'manual',
+            null,
+        ];
+
+        yield [
+            null,
+            null,
+        ];
+
+        yield [
+            'invalid',
+            'The option "profile_lifecycle" with value "invalid" is invalid.',
+        ];
+
+        yield [
+            'auto',
+            'The option "profile_lifecycle" with value "auto" is invalid.',
+        ];
+
+        yield [
+            '',
+            'The option "profile_lifecycle" with value "" is invalid.',
+        ];
+
+        yield [
+            123,
+            'The option "profile_lifecycle" with value 123 is expected to be of type "null" or "string", but is of type "int".',
+        ];
+
+        yield [
+            true,
+            'The option "profile_lifecycle" with value true is expected to be of type "null" or "string", but is of type "bool".',
         ];
     }
 
