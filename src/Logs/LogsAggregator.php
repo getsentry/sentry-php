@@ -12,6 +12,7 @@ use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
+use Sentry\Util\Str;
 
 /**
  * @internal
@@ -57,21 +58,18 @@ final class LogsAggregator
             return;
         }
 
-        $formattedMessage = $message;
+        $formattedMessage = Str::vsprintfOrNull($message, $values);
 
-        if (!empty($values)) {
-            try {
-                $formattedMessage = vsprintf($message, $values);
-            } catch (\ValueError $e) {
-                // If formatting fails we don't format the message and log the error
-                if ($sdkLogger !== null) {
-                    $sdkLogger->warning('Failed to format log message with values.', [
-                        'message' => $message,
-                        'values' => $values,
-                        'exception' => $e,
-                    ]);
-                }
+        if ($formattedMessage === null) {
+            // If formatting fails we don't format the message and log the error
+            if ($sdkLogger !== null) {
+                $sdkLogger->warning('Failed to format log message with values.', [
+                    'message' => $message,
+                    'values' => $values,
+                ]);
             }
+
+            $formattedMessage = $message;
         }
 
         $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
