@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 4.13.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.13.0.
+
+### Features
+
+- Add regex support for `ignore_exceptions` and `ignore_transactions` [(#1850)](https://github.com/getsentry/sentry-php/pull/1850)
+
+  You can now use regular expressions to ignore exceptions and transactions:
+
+  ```php
+  Sentry\init([
+      'ignore_exceptions' => [
+          '/.*ArgumentException$/',
+      ],
+      'ignore_transactions' => [
+          '/^GET \/api\/users\/\d+$/',
+      ],
+  ]);
+  ```
+
+- Add support for variadic parameters and null values [(#1849)](https://github.com/getsentry/sentry-php/pull/1849)
+
+### Bug Fixes
+
+- Fix `Options::setEnableLogs` [(#1852)](https://github.com/getsentry/sentry-php/pull/1852)
+- Fix `vsprintf` not handling errors [(#1855)](https://github.com/getsentry/sentry-php/pull/1855)
+
 ## 4.12.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.12.0.
@@ -86,7 +114,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Features
 
-- Allow retrieving a single piece of data from the span by it’s key [(#1767)](https://github.com/getsentry/sentry-php/pull/1767)
+- Allow retrieving a single piece of data from the span by it's key [(#1767)](https://github.com/getsentry/sentry-php/pull/1767)
 
   ```php
   \Sentry\SentrySdk::getCurrentHub()->getSpan()?->setData([
