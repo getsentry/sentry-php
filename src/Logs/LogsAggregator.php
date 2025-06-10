@@ -12,6 +12,7 @@ use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
+use Sentry\Util\Str;
 
 /**
  * @internal
@@ -57,7 +58,21 @@ final class LogsAggregator
             return;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, vsprintf($message, $values)))
+        $formattedMessage = Str::vsprintfOrNull($message, $values);
+
+        if ($formattedMessage === null) {
+            // If formatting fails we don't format the message and log the error
+            if ($sdkLogger !== null) {
+                $sdkLogger->warning('Failed to format log message with values.', [
+                    'message' => $message,
+                    'values' => $values,
+                ]);
+            }
+
+            $formattedMessage = $message;
+        }
+
+        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
@@ -122,6 +137,14 @@ final class LogsAggregator
         $this->logs = [];
 
         return $hub->captureEvent($event);
+    }
+
+    /**
+     * @return Log[]
+     */
+    public function all(): array
+    {
+        return $this->logs;
     }
 
     private function getTraceId(HubInterface $hub): string
