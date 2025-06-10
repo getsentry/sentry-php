@@ -63,5 +63,23 @@ final class LogsAggregatorTest extends TestCase
             ['value'],
             'Message with placeholders but incorrect number of values: %s, %s',
         ];
+
+        yield [
+            'Message with a percentage: 42%',
+            [],
+            'Message with a percentage: 42%',
+        ];
+
+        // This test case is a bit of an odd one, you would not expect this to happen in practice unless the user intended
+        // to format the message but did not add the proper placeholder. On PHP 8+ this will return the message as is, but
+        // on PHP 7 it will return the message without the percentage sign because some processing is done by `vsprintf`.
+        // You would however more likely expect the previous test case where no values are provided when no placeholders are present
+        yield [
+            'Message with a percentage: 42%',
+            ['value'],
+            \PHP_VERSION_ID >= 80000
+                ? 'Message with a percentage: 42%'
+                : 'Message with a percentage: 42',
+        ];
     }
 }
