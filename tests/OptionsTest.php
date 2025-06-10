@@ -139,24 +139,17 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'profile_lifecycle',
-            'trace',
-            'getProfileLifecycle',
-            'setProfileLifecycle',
+            'profiles_session_sample_rate',
+            0.5,
+            'getProfilesSessionSampleRate',
+            'setProfilesSessionSampleRate',
         ];
 
         yield [
-            'profile_lifecycle',
+            'profiles_lifecycle',
             'manual',
-            'getProfileLifecycle',
-            'setProfileLifecycle',
-        ];
-
-        yield [
-            'profile_lifecycle',
-            null,
-            'getProfileLifecycle',
-            'setProfileLifecycle',
+            'getProfilesLifecycle',
+            'setProfilesLifecycle',
         ];
 
         yield [

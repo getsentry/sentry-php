@@ -206,28 +206,28 @@ final class Options
         return $this;
     }
 
-    public function getProfileSessionSampleRate(): ?float
+    public function getProfilesSessionSampleRate(): ?float
     {
-        return $this->options['profile_session_sample_rate'];
+        return $this->options['profiles_session_sample_rate'];
     }
 
-    public function setProfileSessionSampleRate(?float $sampleRate): self
+    public function setProfilesSessionSampleRate(?float $sampleRate): self
     {
-        $options = array_merge($this->options, ['profile_session_sample_rate' => $sampleRate]);
+        $options = array_merge($this->options, ['profiles_session_sample_rate' => $sampleRate]);
 
         $this->options = $this->resolver->resolve($options);
 
         return $this;
     }
 
-    public function getProfileLifecycle(): ?string
+    public function getProfilesLifecycle(): ?string
     {
-        return $this->options['profile_lifecycle'];
+        return $this->options['profiles_lifecycle'];
     }
 
-    public function setProfileLifecycle(?string $lifecycle): self
+    public function setProfilesLifecycle(?string $lifecycle): self
     {
-        $options = array_merge($this->options, ['profile_lifecycle' => $lifecycle]);
+        $options = array_merge($this->options, ['profiles_lifecycle' => $lifecycle]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1248,8 +1248,8 @@ final class Options
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
-            'profile_session_sample_rate' => null,
-            'profile_lifecycle' => null,
+            'profiles_session_sample_rate' => null,
+            'profiles_lifecycle' => 'trace',
             'attach_stacktrace' => false,
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
@@ -1320,8 +1320,8 @@ final class Options
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
-        $resolver->setAllowedTypes('profile_session_sample_rate', ['null', 'int', 'float']);
-        $resolver->setAllowedTypes('profile_lifecycle', ['null', 'string']);
+        $resolver->setAllowedTypes('profiles_session_sample_rate', ['null', 'int', 'float']);
+        $resolver->setAllowedTypes('profiles_lifecycle', ['string']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
@@ -1364,7 +1364,7 @@ final class Options
         $resolver->setAllowedTypes('class_serializers', 'array');
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
-        $resolver->setAllowedValues('profile_lifecycle', [null, 'trace', 'manual']);
+        $resolver->setAllowedValues('profiles_lifecycle', ['trace', 'manual']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
