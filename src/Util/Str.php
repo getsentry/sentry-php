@@ -28,7 +28,7 @@ class Str
 
         foreach ($values as $value) {
             // If the value is not a scalar or null, we cannot safely format it
-            if (!is_scalar($value) && !is_null($value)) {
+            if (!\is_scalar($value) && $value !== null) {
                 return null;
             }
         }
