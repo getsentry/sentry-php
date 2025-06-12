@@ -395,4 +395,39 @@ final class FrameBuilderTest extends TestCase
         $this->assertArrayHasKey('rest', $result);
         $this->assertSame(['extra1', null, 'extra3'], $result['rest']);
     }
+
+    public function testGetFunctionArgumentsWithGapsInBacktraceArrayIndices(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, int $second, ...$rest) {
+        };
+
+        $backtraceFrameArgs = [];
+        $backtraceFrameArgs[0] = 'hello';      // first parameter
+        $backtraceFrameArgs[1] = 42;           // second parameter  
+        $backtraceFrameArgs[3] = 'extra1';     // gap at index 2, starts variadic args
+        $backtraceFrameArgs[5] = 'extra2';     // gap at index 4
+        $backtraceFrameArgs[7] = 'extra3';     // gap at index 6
+
+        $backtraceFrame = [
+            'function' => 'testGapsFunction',
+            'args' => $backtraceFrameArgs,
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        $getFunctionArgumentValuesMethod->setAccessible(true);
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertSame(42, $result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', 'extra2', 'extra3'], $result['rest']);
+    }
 }
