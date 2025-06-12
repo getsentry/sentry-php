@@ -241,6 +241,12 @@ abstract class AbstractSerializer
             return $value;
         }
 
+        if ($value instanceof \UnitEnum) {
+            $reflection = new \ReflectionObject($value);
+
+            return 'Enum ' . $reflection->getName() . '::' . $value->name;
+        }
+
         if (\is_object($value)) {
             $reflection = new \ReflectionObject($value);
 
