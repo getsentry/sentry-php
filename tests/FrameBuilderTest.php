@@ -406,7 +406,7 @@ final class FrameBuilderTest extends TestCase
 
         $backtraceFrameArgs = [];
         $backtraceFrameArgs[0] = 'hello';      // first parameter
-        $backtraceFrameArgs[1] = 42;           // second parameter  
+        $backtraceFrameArgs[1] = 42;           // second parameter
         $backtraceFrameArgs[3] = 'extra1';     // gap at index 2, starts variadic args
         $backtraceFrameArgs[5] = 'extra2';     // gap at index 4
         $backtraceFrameArgs[7] = 'extra3';     // gap at index 6
