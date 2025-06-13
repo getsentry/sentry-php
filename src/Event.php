@@ -7,6 +7,7 @@ namespace Sentry;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
+use Sentry\Profiles\ProfileChunk;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -70,6 +71,11 @@ final class Event
      * @var Log[]
      */
     private $logs = [];
+
+    /**
+     * @var ProfileChunk|null
+     */
+    private $profileChunk;
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -239,6 +245,11 @@ final class Event
     public static function createLogs(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::logs());
+    }
+
+    public static function createProfileChunk(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::profileChunk());
     }
 
     /**
@@ -441,6 +452,18 @@ final class Event
     public function setLogs(array $logs): self
     {
         $this->logs = $logs;
+
+        return $this;
+    }
+
+    public function getProfileChunk(): ?ProfileChunk
+    {
+        return $this->profileChunk;
+    }
+
+    public function setProfileChunk(?ProfileChunk $profileChunk): self
+    {
+        $this->profileChunk = $profileChunk;
 
         return $this;
     }
