@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 4.14.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.0.
+
+### Features
+
+- Serialize enum variants with the variant name [(#1860)](https://github.com/getsentry/sentry-php/pull/1860)
+
+### Bug Fixes
+
+- Fix handling of backtrace frames [(#1862)](https://github.com/getsentry/sentry-php/pull/1862)
+- Set allowed types for `http_ssl_native_ca` [(#1858)](https://github.com/getsentry/sentry-php/pull/1858)
+
 ## 4.13.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.13.0.
