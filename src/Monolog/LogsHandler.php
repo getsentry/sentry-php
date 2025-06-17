@@ -13,7 +13,7 @@ use Sentry\Logs\LogsAggregator;
 
 /**
  * This Monolog handler logs every message to Sentry's logs system using the LogsAggregator.
- * 
+ *
  * Unlike the regular Handler which creates Sentry events, this handler specifically
  * targets the new Sentry logs telemetry feature.
  *
@@ -36,8 +36,8 @@ final class LogsHandler extends AbstractProcessingHandler
     /**
      * {@inheritdoc}
      *
-     * @param LogsAggregator|null $logsAggregator The logs aggregator to use. If null, creates a new one.
-     * @param bool $includeMonologData Whether to include Monolog context and extra data as attributes
+     * @param LogsAggregator|null $logsAggregator     The logs aggregator to use. If null, creates a new one.
+     * @param bool                $includeMonologData Whether to include Monolog context and extra data as attributes
      */
     public function __construct(?LogsAggregator $logsAggregator = null, $level = Logger::DEBUG, bool $bubble = true, bool $includeMonologData = true)
     {
@@ -60,17 +60,17 @@ final class LogsHandler extends AbstractProcessingHandler
         if ($this->includeMonologData) {
             $attributes['monolog.channel'] = $record['channel'];
             $attributes['monolog.level_name'] = $record['level_name'];
-            
+
             if (isset($record['datetime'])) {
                 $attributes['monolog.datetime'] = $record['datetime']->format(\DateTime::ISO8601);
             }
 
             // Include context data as attributes
-            if (isset($record['context']) && is_array($record['context'])) {
+            if (isset($record['context']) && \is_array($record['context'])) {
                 foreach ($record['context'] as $key => $value) {
                     // Skip exception objects as they should be handled separately
                     if ($value instanceof \Throwable) {
-                        $attributes["monolog.context.{$key}.class"] = get_class($value);
+                        $attributes["monolog.context.{$key}.class"] = \get_class($value);
                         $attributes["monolog.context.{$key}.message"] = $value->getMessage();
                         $attributes["monolog.context.{$key}.file"] = $value->getFile();
                         $attributes["monolog.context.{$key}.line"] = $value->getLine();
@@ -81,7 +81,7 @@ final class LogsHandler extends AbstractProcessingHandler
             }
 
             // Include extra data as attributes
-            if (isset($record['extra']) && is_array($record['extra'])) {
+            if (isset($record['extra']) && \is_array($record['extra'])) {
                 foreach ($record['extra'] as $key => $value) {
                     $attributes["monolog.extra.{$key}"] = $value;
                 }
@@ -97,22 +97,46 @@ final class LogsHandler extends AbstractProcessingHandler
      */
     private function mapMonologLevelToSentryLevel(int $monologLevel): LogLevel
     {
-        switch ($monologLevel) {
-            case Level::Debug:
-                return LogLevel::debug();
-            case Level::Info:
-            case Level::Notice:
-                return LogLevel::info();
-            case Level::Warning:
-                return LogLevel::warn();
-            case Level::Error:
-                return LogLevel::error();
-            case Level::Critical:
-            case Level::Alert:
-            case Level::Emergency:
-                return LogLevel::fatal();
-            default:
-                return LogLevel::info();
+        if (Logger::API >= 3) {
+            // Monolog 3.x - use Level enum
+            $level = Level::from($monologLevel);
+
+            switch ($level) {
+                case Level::Debug:
+                    return LogLevel::debug();
+                case Level::Info:
+                case Level::Notice:
+                    return LogLevel::info();
+                case Level::Warning:
+                    return LogLevel::warn();
+                case Level::Error:
+                    return LogLevel::error();
+                case Level::Critical:
+                case Level::Alert:
+                case Level::Emergency:
+                    return LogLevel::fatal();
+                default:
+                    return LogLevel::info();
+            }
+        } else {
+            // Monolog 2.x - use legacy integer constants
+            switch ($monologLevel) {
+                case Logger::DEBUG:
+                    return LogLevel::debug();
+                case Logger::INFO:
+                case Logger::NOTICE:
+                    return LogLevel::info();
+                case Logger::WARNING:
+                    return LogLevel::warn();
+                case Logger::ERROR:
+                    return LogLevel::error();
+                case Logger::CRITICAL:
+                case Logger::ALERT:
+                case Logger::EMERGENCY:
+                    return LogLevel::fatal();
+                default:
+                    return LogLevel::info();
+            }
         }
     }
 
@@ -126,7 +150,7 @@ final class LogsHandler extends AbstractProcessingHandler
 
     /**
      * Flush all accumulated logs to Sentry.
-     * 
+     *
      * This method can be called manually to force sending logs immediately,
      * or it will be called automatically when the aggregator is destructed.
      */
@@ -134,4 +158,4 @@ final class LogsHandler extends AbstractProcessingHandler
     {
         $this->logsAggregator->flush();
     }
-} 
+}
