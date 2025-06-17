@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Sentry\Monolog;
 
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
-use Sentry\SentrySdk;
 
 /**
  * This Monolog handler logs every message to Sentry's logs system using the LogsAggregator.
@@ -98,18 +98,18 @@ final class LogsHandler extends AbstractProcessingHandler
     private function mapMonologLevelToSentryLevel(int $monologLevel): LogLevel
     {
         switch ($monologLevel) {
-            case Logger::DEBUG:
+            case Level::Debug:
                 return LogLevel::debug();
-            case Logger::INFO:
-            case Logger::NOTICE:
+            case Level::Info:
+            case Level::Notice:
                 return LogLevel::info();
-            case Logger::WARNING:
+            case Level::Warning:
                 return LogLevel::warn();
-            case Logger::ERROR:
+            case Level::Error:
                 return LogLevel::error();
-            case Logger::CRITICAL:
-            case Logger::ALERT:
-            case Logger::EMERGENCY:
+            case Level::Critical:
+            case Level::Alert:
+            case Level::Emergency:
                 return LogLevel::fatal();
             default:
                 return LogLevel::info();
