@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace Sentry\Tests\Logs;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
+use Sentry\State\Scope;
+use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\SpanId;
+use Sentry\Tracing\TraceId;
+use Sentry\UserDataBag;
 
 final class LogsAggregatorTest extends TestCase
 {
@@ -35,7 +42,7 @@ final class LogsAggregatorTest extends TestCase
 
         $log = $logs[0];
 
-        $this->assertEquals($expected, $log->getBody());
+        $this->assertSame($expected, $log->getBody());
     }
 
     public static function messageFormattingDataProvider(): \Generator
@@ -81,5 +88,55 @@ final class LogsAggregatorTest extends TestCase
                 ? 'Message with a percentage: 42%'
                 : 'Message with a percentage: 42',
         ];
+    }
+
+    public function testAttributesAreAddedToLogMessage(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'release' => '1.0.0',
+            'environment' => 'production',
+            'server_name' => 'web-server-01',
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $hub->configureScope(function (Scope $scope) {
+            $userDataBag = new UserDataBag();
+            $userDataBag->setId('unique_id');
+            $userDataBag->setEmail('foo@example.com');
+            $userDataBag->setUsername('my_user');
+            $scope->setUser($userDataBag);
+        });
+
+        $spanContext = new SpanContext();
+        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        $span = new Span($spanContext);
+        $hub->setSpan($span);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'User %s performed action %s', [
+            'testuser', 'login',
+        ]);
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+
+        $log = $logs[0];
+        $attributes = $log->attributes();
+
+        $this->assertSame('1.0.0', $attributes->get('sentry.release')->getValue());
+        $this->assertSame('production', $attributes->get('sentry.environment')->getValue());
+        $this->assertSame('web-server-01', $attributes->get('sentry.server.address')->getValue());
+        $this->assertSame('User %s performed action %s', $attributes->get('sentry.message.template')->getValue());
+        $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
+        $this->assertSame('sentry.php', $attributes->get('sentry.sdk.name')->getValue());
+        $this->assertSame(Client::SDK_VERSION, $attributes->get('sentry.sdk.version')->getValue());
+        $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
+        $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
+        $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 }
