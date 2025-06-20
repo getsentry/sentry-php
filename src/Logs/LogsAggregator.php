@@ -84,6 +84,21 @@ final class LogsAggregator
             $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
         }
 
+        $hub->configureScope(function (Scope $scope) use ($log) {
+            $user = $scope->getUser();
+            if ($user !== null) {
+                if ($user->getId() !== null) {
+                    $log->setAttribute('user.id', $user->getId());
+                }
+                if ($user->getEmail() !== null) {
+                    $log->setAttribute('user.email', $user->getEmail());
+                }
+                if ($user->getUsername() !== null) {
+                    $log->setAttribute('user.name', $user->getUsername());
+                }
+            }
+        });
+
         foreach ($values as $key => $value) {
             $log->setAttribute("sentry.message.parameter.{$key}", $value);
         }
