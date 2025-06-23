@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.14.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.1.
+
+### Bug Fixes
+
+- Fix missing user attributes on logs [(#1864)](https://github.com/getsentry/sentry-php/pull/1864)
+
 ## 4.14.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.0.
