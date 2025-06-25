@@ -84,23 +84,31 @@ class LogsHandler implements HandlerInterface
         Logs::getInstance()->flush();
     }
 
-    public function pushProcessor($callback)
+    /**
+     * @param callable $callback
+     */
+    public function pushProcessor($callback): void
     {
         // noop, this handler does not support processors
     }
 
+    /**
+     * @return callable
+     */
     public function popProcessor()
     {
+        // Since we do not support processors, we throw an exception if this method is called
         throw new \LogicException('You tried to pop from an empty processor stack.');
     }
 
-    public function setFormatter(FormatterInterface $formatter)
+    public function setFormatter(FormatterInterface $formatter): void
     {
-        // noop, this handler does not use a formatter
+        // noop, this handler does not support formatters
     }
 
-    public function getFormatter()
+    public function getFormatter(): FormatterInterface
     {
+        // To adhere to the interface we need to return a formatter so we return a default one
         return new LineFormatter();
     }
 }
