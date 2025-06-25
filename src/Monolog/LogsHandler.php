@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Monolog;
 
+use Monolog\Formatter\FormatterInterface;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
@@ -80,5 +82,25 @@ class LogsHandler implements HandlerInterface
     public function close(): void
     {
         Logs::getInstance()->flush();
+    }
+
+    public function pushProcessor($callback)
+    {
+        // noop, this handler does not support processors
+    }
+
+    public function popProcessor()
+    {
+        throw new \LogicException('You tried to pop from an empty processor stack.');
+    }
+
+    public function setFormatter(FormatterInterface $formatter)
+    {
+        // noop, this handler does not use a formatter
+    }
+
+    public function getFormatter()
+    {
+        return new LineFormatter();
     }
 }
