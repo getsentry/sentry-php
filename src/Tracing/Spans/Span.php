@@ -8,8 +8,10 @@ use Sentry\Attributes\AttributeBag;
 use Sentry\SentrySdk;
 use Sentry\Tracing\SpanStatus;
 
-class Span implements \JsonSerializable
- {
+use function Sentry\tracing;
+
+class Span
+{
     public $name;
 
     public $status;
@@ -64,8 +66,9 @@ class Span implements \JsonSerializable
             $this->traceId = $parentSpan->traceId;
         }
 
-
         $this->hub->setSpan($this);
+
+        tracing()->add($this);
 
         return $this;
     }
@@ -156,21 +159,5 @@ class Span implements \JsonSerializable
         // }
 
         return $result;
-    }
-
-    public function jsonSerialize(): array
-    {
-        return [
-            'trace_id' => (string) $this->traceId,
-            'parent_span_id' => (string) $this->parentSpanId,
-            'span_id' => (string) $this->spanId,
-            'name' => $this->name,
-            'status' => $this->status,
-            'is_remote' => !$this->parentSpanId ? true : false,
-            'kind' => 'server',
-            'start_timestamp' => $this->startTimestamp,
-            'end_timestamp' => $this->endTimestamp,
-            'attributes' => $this->attributes->toArray(),
-        ];
     }
  }
