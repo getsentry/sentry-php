@@ -277,13 +277,6 @@ class Hub implements HubInterface
             if ($tracesSampler !== null) {
                 $sampleRate = $tracesSampler($samplingContext);
                 $sampleSource = 'config:traces_sampler';
-
-                $dynamicSamplingContext = $context->getMetadata()->getDynamicSamplingContext();
-                if ($dynamicSamplingContext !== null) {
-                    // If a tracesSampler is defined,
-                    // always overwrite the sample_rate in the DSC
-                    $dynamicSamplingContext->set('sample_rate', (string) $sampleRate, true);
-                }
             } else {
                 $parentSampleRate = $context->getMetadata()->getParentSamplingRate();
                 if ($parentSampleRate !== null) {
@@ -307,6 +300,12 @@ class Hub implements HubInterface
             }
 
             $transaction->getMetadata()->setSamplingRate($sampleRate);
+
+            // Always overwrite the sample_rate in the DSC
+            $dynamicSamplingContext = $context->getMetadata()->getDynamicSamplingContext();
+            if ($dynamicSamplingContext !== null) {
+                $dynamicSamplingContext->set('sample_rate', (string) $sampleRate, true);
+            }
 
             if ($sampleRate === 0.0) {
                 $transaction->setSampled(false);
