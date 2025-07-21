@@ -1,0 +1,68 @@
+---
+globs: CHANGELOG.md
+alwaysApply: false
+---
+# Sentry PHP SDK Release Process
+
+## Release Process
+
+To prepare a new release (e.g., version 4.14.0):
+
+1. **Update master branch**: Always ensure master is up-to-date first
+   ```bash
+   git checkout master
+   git pull origin master
+   ```
+
+2. **Create release branch**: Create a branch named `prepare-X.Y.Z`
+   ```bash
+   git checkout -b prepare-4.14.0
+   ```
+
+3. **Find changes since last release**: Check commits since the last version tag
+   ```bash
+   git log --oneline --no-merges 4.13.0..HEAD
+   ```
+
+4. **Update CHANGELOG.md**: Add new version section with:
+   - Version number and announcement text
+   - Features section for new features
+   - Bug Fixes section for bug fixes
+   - Misc section for documentation/readme updates
+   - Use format: `- Description [(#PR)](mdc:https:/github.com/getsentry/sentry-php/pull/PR)`
+
+## CHANGELOG.md Format
+
+```markdown
+## X.Y.Z
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK vX.Y.Z.
+
+### Features
+
+- New feature description [(#1234)](mdc:https:/github.com/getsentry/sentry-php/pull/1234)
+
+### Bug Fixes
+
+- Bug fix description [(#1235)](mdc:https:/github.com/getsentry/sentry-php/pull/1235)
+
+### Misc
+
+- Documentation/misc changes [(#1236)](mdc:https:/github.com/getsentry/sentry-php/pull/1236)
+```
+
+## Committing Changes
+
+After updating CHANGELOG.md:
+
+1. **Stage only the changelog**: `git add CHANGELOG.md`
+2. **Create simple commit**: `git commit -m "Prepare X.Y.Z"`
+   - Use simple commit message format
+   - Don't include additional descriptions or generated tags
+
+## Common Commands
+
+- Check git status: `git status`
+- View recent commits: `git log --oneline -10`
+- Create branch: `git checkout -b branch-name`
+- Update from remote: `git pull origin master`
