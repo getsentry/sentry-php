@@ -41,7 +41,8 @@ final class PayloadSerializer implements PayloadSerializerInterface
     {
         // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
         $envelopeHeader = [
-            'event_id' => (string) $event->getId(),
+            // FIXME - span envelopes have no event_id -> move to seralizer
+            //'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
             'dsn' => (string) $this->options->getDsn(),
             'sdk' => $event->getSdkPayload(),
