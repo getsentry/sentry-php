@@ -158,9 +158,9 @@ final class FrameBuilder
      *
      * @param array<string, mixed> $backtraceFrame The frame data
      *
-     * @return array<string, mixed>
-     *
      * @psalm-param StacktraceFrame $backtraceFrame
+     *
+     * @return array<string, mixed>
      */
     private function getFunctionArguments(array $backtraceFrame): array
     {

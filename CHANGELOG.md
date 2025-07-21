@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.14.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.2.
+
+### Bug Fixes
+
+- Add missing sample rates in the envelope header [(#1870)](https://github.com/getsentry/sentry-php/pull/1870)
+
 ## 4.14.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.1.

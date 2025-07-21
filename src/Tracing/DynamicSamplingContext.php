@@ -40,9 +40,9 @@ final class DynamicSamplingContext
      * @param string $key   the list member key
      * @param string $value the list member value
      */
-    public function set(string $key, string $value): self
+    public function set(string $key, string $value, bool $forceOverwrite = false): self
     {
-        if ($this->isFrozen) {
+        if ($this->isFrozen && !$forceOverwrite) {
             return $this;
         }
 
