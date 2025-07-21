@@ -20,9 +20,11 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionMetadata;
 use Sentry\Util\SentryUid;
 
 final class HubTest extends TestCase
@@ -803,6 +805,27 @@ final class HubTest extends TestCase
 
         $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
+    }
+
+    public function testStartTransactionUpdatesTheDscSampleRate(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => function (SamplingContext $samplingContext): float {
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+
+        $dsc = DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public');
+        $transactionMetaData = new TransactionMetadata(null, $dsc);
+        $transactionContext = new TransactionContext(TransactionContext::DEFAULT_NAME, null, $transactionMetaData);
+
+        $transaction = $hub->startTransaction($transactionContext);
+        $this->assertSame('1', $transaction->getMetadata()->getDynamicSamplingContext()->get('sample_rate'));
     }
 
     public function testGetTransactionReturnsInstanceSetOnTheScopeIfTransactionIsNotSampled(): void
