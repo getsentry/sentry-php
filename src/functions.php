@@ -202,11 +202,11 @@ function configureScope(callable $callback): void
  *
  * @param callable $callback The callback to be executed
  *
- * @return mixed|void The callback's return value, upon successful execution
- *
  * @psalm-template T
  *
  * @psalm-param callable(Scope): T $callback
+ *
+ * @return mixed|void The callback's return value, upon successful execution
  *
  * @psalm-return T
  */

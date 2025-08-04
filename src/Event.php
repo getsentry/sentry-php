@@ -898,11 +898,11 @@ final class Event
     /**
      * Gets the SDK metadata.
      *
-     * @return mixed
-     *
      * @psalm-template T of string|null
      *
      * @psalm-param T $name
+     *
+     * @return mixed
      *
      * @psalm-return (T is string ? mixed : array<string, mixed>|null)
      */
