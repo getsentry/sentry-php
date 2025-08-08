@@ -6,7 +6,7 @@ namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
 use Sentry\EventType;
-use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
+use Sentry\Serializer\Traits\BreadcrumbSerializerTrait;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\Util\JSON;
@@ -24,7 +24,7 @@ use Sentry\Util\JSON;
  */
 class TransactionItem implements EnvelopeItemInterface
 {
-    use BreadcrumbSeralizerTrait;
+    use BreadcrumbSerializerTrait;
 
     public static function toEnvelopeItem(Event $event): string
     {
