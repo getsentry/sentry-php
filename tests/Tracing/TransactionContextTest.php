@@ -137,4 +137,19 @@ final class TransactionContextTest extends TestCase
             true,
         ];
     }
+
+    public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void
+    {
+        $context = TransactionContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0',
+            'sentry-sample_rate=0.4'
+        );
+
+        $sampleRand = $context->getMetadata()->getSampleRand();
+
+        $this->assertNotNull($sampleRand);
+        // Should be within [rate, 1) and rounded to 6 decimals
+        $this->assertGreaterThanOrEqual(0.4, $sampleRand);
+        $this->assertLessThanOrEqual(0.999999, $sampleRand);
+    }
 }
