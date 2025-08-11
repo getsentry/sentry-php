@@ -727,7 +727,7 @@ final class Options
      */
     public function isStrictTraceContinuationEnabled(): bool
     {
-        return $this->options['strictTraceContinuation'];
+        return $this->options['strict_trace_continuation'];
     }
 
     /**
@@ -737,7 +737,7 @@ final class Options
      */
     public function enableStrictTraceContinuation(bool $strictTraceContinuation): self
     {
-        $options = array_merge($this->options, ['strictTraceContinuation' => $strictTraceContinuation]);
+        $options = array_merge($this->options, ['strict_trace_continuation' => $strictTraceContinuation]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1266,7 +1266,7 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
-            'strictTraceContinuation' => false,
+            'strict_trace_continuation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1317,7 +1317,7 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
-        $resolver->setAllowedTypes('strictTraceContinuation', 'bool');
+        $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
