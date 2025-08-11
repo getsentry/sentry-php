@@ -300,12 +300,16 @@ final class FrameBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($frameBuilder);
         $getFunctionArgumentsMethod = $reflectionClass->getMethod('getFunctionArguments');
-        $getFunctionArgumentsMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentsMethod->setAccessible(true);
+        }
 
         $reflectionFunction = new \ReflectionFunction($testFunction);
 
         $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
-        $getFunctionArgumentValuesMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
 
         $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
 
@@ -331,7 +335,9 @@ final class FrameBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($frameBuilder);
         $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
-        $getFunctionArgumentValuesMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
 
         $reflectionFunction = new \ReflectionFunction($testFunction);
 
@@ -356,7 +362,9 @@ final class FrameBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($frameBuilder);
         $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
-        $getFunctionArgumentValuesMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
 
         $reflectionFunction = new \ReflectionFunction($testFunction);
 
@@ -383,7 +391,9 @@ final class FrameBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($frameBuilder);
         $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
-        $getFunctionArgumentValuesMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
 
         $reflectionFunction = new \ReflectionFunction($testFunction);
 
@@ -418,7 +428,9 @@ final class FrameBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($frameBuilder);
         $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
-        $getFunctionArgumentValuesMethod->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
 
         $reflectionFunction = new \ReflectionFunction($testFunction);
 

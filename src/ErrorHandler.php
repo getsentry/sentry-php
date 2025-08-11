@@ -153,7 +153,9 @@ final class ErrorHandler
     private function __construct()
     {
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
-        $this->exceptionReflection->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $this->exceptionReflection->setAccessible(true);
+        }
     }
 
     /**
