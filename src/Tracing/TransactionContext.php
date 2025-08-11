@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientInterface;
+
 final class TransactionContext extends SpanContext
 {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
@@ -125,26 +127,28 @@ final class TransactionContext extends SpanContext
     /**
      * Returns a context populated with the data of the given environment variables.
      *
-     * @param string $sentryTrace The sentry-trace value from the environment
-     * @param string $baggage     The baggage header value from the environment
+     * @param string               $sentryTrace The sentry-trace value from the environment
+     * @param string               $baggage     The baggage header value from the environment
+     * @param ClientInterface|null $client      The client to use for validation (optional)
      */
-    public static function fromEnvironment(string $sentryTrace, string $baggage): self
+    public static function fromEnvironment(string $sentryTrace, string $baggage, ?ClientInterface $client = null): self
     {
-        return self::parseTraceAndBaggage($sentryTrace, $baggage);
+        return self::parseTraceAndBaggage($sentryTrace, $baggage, $client);
     }
 
     /**
      * Returns a context populated with the data of the given headers.
      *
-     * @param string $sentryTraceHeader The sentry-trace header from an incoming request
-     * @param string $baggageHeader     The baggage header from an incoming request
+     * @param string               $sentryTraceHeader The sentry-trace header from an incoming request
+     * @param string               $baggageHeader     The baggage header from an incoming request
+     * @param ClientInterface|null $client            The client to use for validation (optional)
      */
-    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader): self
+    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader, ?ClientInterface $client = null): self
     {
-        return self::parseTraceAndBaggage($sentryTraceHeader, $baggageHeader);
+        return self::parseTraceAndBaggage($sentryTraceHeader, $baggageHeader, $client);
     }
 
-    private static function parseTraceAndBaggage(string $sentryTrace, string $baggage): self
+    private static function parseTraceAndBaggage(string $sentryTrace, string $baggage, ?ClientInterface $client = null): self
     {
         $context = new self();
         $hasSentryTrace = false;
@@ -167,6 +171,31 @@ final class TransactionContext extends SpanContext
         }
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
+
+        // Check for org ID mismatch - always validate when both local and remote org IDs are present
+        if ($client !== null && $hasSentryTrace) {
+            $options = $client->getOptions();
+            // Get org ID from either the org_id option or the DSN
+            $localOrgId = $options->getOrgId();
+            if ($localOrgId === null && $options->getDsn() !== null) {
+                $localOrgId = $options->getDsn()->getOrgId();
+            }
+            $remoteOrgId = $samplingContext->has('org_id') ? (int) $samplingContext->get('org_id') : null;
+
+            // If we have both a local org ID and a remote org ID, and they don't match, create a new trace
+            if ($localOrgId !== null && $remoteOrgId !== null && $localOrgId !== $remoteOrgId) {
+                // Create a new trace context instead of continuing the existing one
+                $context = new self();
+                $context->traceId = TraceId::generate();
+                $context->parentSpanId = null;
+                $context->parentSampled = null;
+
+                // Generate a new sample rand since we're starting a new trace
+                $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6));
+
+                return $context;
+            }
+        }
 
         if ($hasSentryTrace && !$samplingContext->hasEntries()) {
             // The request comes from an old SDK which does not support Dynamic Sampling.

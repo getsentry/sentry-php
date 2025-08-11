@@ -720,19 +720,24 @@ final class Options
     }
 
     /**
-     * Returns whether strict trace propagation is enabled or not.
+     * Returns whether strict trace continuation is enabled or not.
+     *
+     * When enabled, the SDK will only continue traces from the same organization
+     * based on the org ID in the baggage header matching the org ID from the DSN.
      */
-    public function isStrictTracePropagationEnabled(): bool
+    public function isStrictTraceContinuationEnabled(): bool
     {
-        return $this->options['strict_trace_propagation'];
+        return $this->options['strict_trace_continuation'];
     }
 
     /**
-     * Sets if strict trace propagation should be enabled or not.
+     * Sets if strict trace continuation should be enabled or not.
+     *
+     * @param bool $strictTraceContinuation Whether to enable strict trace continuation
      */
-    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    public function enableStrictTraceContinuation(bool $strictTraceContinuation): self
     {
-        $options = array_merge($this->options, ['strict_trace_propagation' => $strictTracePropagation]);
+        $options = array_merge($this->options, ['strict_trace_continuation' => $strictTraceContinuation]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1261,7 +1266,7 @@ final class Options
                 return null;
             },
             'trace_propagation_targets' => null,
-            'strict_trace_propagation' => false,
+            'strict_trace_continuation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1312,7 +1317,7 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
-        $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
+        $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');

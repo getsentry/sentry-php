@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -59,14 +60,14 @@ final class PropagationContext
         return $context;
     }
 
-    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader): self
+    public static function fromHeaders(string $sentryTraceHeader, string $baggageHeader, ?ClientInterface $client = null): self
     {
-        return self::parseTraceparentAndBaggage($sentryTraceHeader, $baggageHeader);
+        return self::parseTraceparentAndBaggage($sentryTraceHeader, $baggageHeader, $client);
     }
 
-    public static function fromEnvironment(string $sentryTrace, string $baggage): self
+    public static function fromEnvironment(string $sentryTrace, string $baggage, ?ClientInterface $client = null): self
     {
-        return self::parseTraceparentAndBaggage($sentryTrace, $baggage);
+        return self::parseTraceparentAndBaggage($sentryTrace, $baggage, $client);
     }
 
     /**
@@ -183,8 +184,20 @@ final class PropagationContext
         return $this;
     }
 
+    public function getParentSampled(): ?bool
+    {
+        return $this->parentSampled;
+    }
+
+    public function setParentSampled(?bool $parentSampled): self
+    {
+        $this->parentSampled = $parentSampled;
+
+        return $this;
+    }
+
     // TODO add same logic as in TransactionContext
-    private static function parseTraceparentAndBaggage(string $traceparent, string $baggage): self
+    private static function parseTraceparentAndBaggage(string $traceparent, string $baggage, ?ClientInterface $client = null): self
     {
         $context = self::fromDefaults();
         $hasSentryTrace = false;
@@ -207,6 +220,25 @@ final class PropagationContext
         }
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
+
+        // Check for org ID mismatch - always validate when both local and remote org IDs are present
+        if ($client !== null && $hasSentryTrace) {
+            $options = $client->getOptions();
+            // Get org ID from either the org_id option or the DSN
+            $localOrgId = $options->getOrgId();
+            if ($localOrgId === null && $options->getDsn() !== null) {
+                $localOrgId = $options->getDsn()->getOrgId();
+            }
+            $remoteOrgId = $samplingContext->has('org_id') ? (int) $samplingContext->get('org_id') : null;
+
+            // If we have both a local org ID and a remote org ID, and they don't match, create a new trace
+            if ($localOrgId !== null && $remoteOrgId !== null && $localOrgId !== $remoteOrgId) {
+                // Create a new propagation context instead of continuing the existing one
+                $context = self::fromDefaults();
+
+                return $context;
+            }
+        }
 
         if ($hasSentryTrace && !$samplingContext->hasEntries()) {
             // The request comes from an old SDK which does not support Dynamic Sampling.
