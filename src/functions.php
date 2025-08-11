@@ -356,12 +356,14 @@ function getBaggage(): string
 function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 {
     $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
-        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+    $client = $hub->getClient();
+    
+    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage, $client) {
+        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage, $client);
         $scope->setPropagationContext($propagationContext);
     });
 
-    return TransactionContext::fromHeaders($sentryTrace, $baggage);
+    return TransactionContext::fromHeaders($sentryTrace, $baggage, $client);
 }
 
 /**

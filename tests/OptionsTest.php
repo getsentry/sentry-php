@@ -682,6 +682,29 @@ final class OptionsTest extends TestCase
     }
 
     /**
+     * Tests the strictTraceContinuation option
+     */
+    public function testStrictTraceContinuation(): void
+    {
+        $options = new Options();
+        
+        // Default should be false
+        $this->assertFalse($options->isStrictTraceContinuationEnabled());
+        
+        // Should be settable to true
+        $options->enableStrictTraceContinuation(true);
+        $this->assertTrue($options->isStrictTraceContinuationEnabled());
+        
+        // Should be settable to false
+        $options->enableStrictTraceContinuation(false);
+        $this->assertFalse($options->isStrictTraceContinuationEnabled());
+        
+        // Should accept the option in constructor
+        $options = new Options(['strictTraceContinuation' => true]);
+        $this->assertTrue($options->isStrictTraceContinuationEnabled());
+    }
+
+    /**
      * @backupGlobals enabled
      *
      * @dataProvider spotlightEnvironmentValueDataProvider

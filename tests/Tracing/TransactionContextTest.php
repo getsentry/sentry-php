@@ -119,7 +119,7 @@ final class TransactionContextTest extends TestCase
 
         yield [
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
-            'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
+            'sentry-environment=production,sentry-public_key=49d0f7c7e546418e8b684ff47a6c4fae,sentry-trace_id=566e3688a61d4bc888951642d6f14a19',
             new SpanId('566e3688a61d4bc8'),
             new TraceId('566e3688a61d4bc888951642d6f14a19'),
             true,
@@ -136,6 +136,106 @@ final class TransactionContextTest extends TestCase
             DynamicSamplingContext::class,
             true,
         ];
+    }
+
+    /**
+     * Tests that strictTraceContinuation properly validates org IDs from incoming traces
+     */
+    public function testStrictTraceContinuationWithMatchingOrgId(): void
+    {
+        $client = $this->createMock(\Sentry\ClientInterface::class);
+        $options = $this->createMock(\Sentry\Options::class);
+        $dsn = $this->createMock(\Sentry\Dsn::class);
+        
+        $options->expects($this->once())
+            ->method('isStrictTraceContinuationEnabled')
+            ->willReturn(true);
+        
+        $options->expects($this->exactly(2))
+            ->method('getDsn')
+            ->willReturn($dsn);
+        
+        $dsn->expects($this->once())
+            ->method('getOrgId')
+            ->willReturn(123);
+        
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+        
+        $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
+        $baggage = 'sentry-org_id=123,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
+        
+        $context = TransactionContext::fromHeaders($sentryTrace, $baggage, $client);
+        
+        // Should continue the trace since org IDs match
+        $this->assertEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
+        $this->assertEquals(new SpanId('566e3688a61d4bc8'), $context->getParentSpanId());
+        $this->assertTrue($context->getParentSampled());
+    }
+
+    /**
+     * Tests that strictTraceContinuation creates a new trace when org IDs don't match
+     */
+    public function testStrictTraceContinuationWithMismatchedOrgId(): void
+    {
+        $client = $this->createMock(\Sentry\ClientInterface::class);
+        $options = $this->createMock(\Sentry\Options::class);
+        $dsn = $this->createMock(\Sentry\Dsn::class);
+        
+        $options->expects($this->once())
+            ->method('isStrictTraceContinuationEnabled')
+            ->willReturn(true);
+        
+        $options->expects($this->exactly(2))
+            ->method('getDsn')
+            ->willReturn($dsn);
+        
+        $dsn->expects($this->once())
+            ->method('getOrgId')
+            ->willReturn(123);
+        
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+        
+        $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
+        $baggage = 'sentry-org_id=456,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
+        
+        $context = TransactionContext::fromHeaders($sentryTrace, $baggage, $client);
+        
+        // Should create a new trace since org IDs don't match
+        $this->assertNotEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
+        $this->assertNull($context->getParentSpanId());
+        $this->assertNull($context->getParentSampled());
+        $this->assertNotNull($context->getMetadata()->getSampleRand());
+    }
+
+    /**
+     * Tests that strictTraceContinuation is disabled by default
+     */
+    public function testStrictTraceContinuationDisabledByDefault(): void
+    {
+        $client = $this->createMock(\Sentry\ClientInterface::class);
+        $options = $this->createMock(\Sentry\Options::class);
+        
+        $options->expects($this->once())
+            ->method('isStrictTraceContinuationEnabled')
+            ->willReturn(false);
+        
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+        
+        $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
+        $baggage = 'sentry-org_id=456,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
+        
+        $context = TransactionContext::fromHeaders($sentryTrace, $baggage, $client);
+        
+        // Should continue the trace even with mismatched org IDs since strictTraceContinuation is disabled
+        $this->assertEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
+        $this->assertEquals(new SpanId('566e3688a61d4bc8'), $context->getParentSpanId());
+        $this->assertTrue($context->getParentSampled());
     }
 
     public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void
