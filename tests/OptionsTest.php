@@ -125,13 +125,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'enable_tracing',
-            true,
-            'getEnableTracing',
-            'setEnableTracing',
-        ];
-
-        yield [
             'profiles_sample_rate',
             0.5,
             'getProfilesSampleRate',
@@ -143,13 +136,6 @@ final class OptionsTest extends TestCase
             false,
             'shouldAttachStacktrace',
             'setAttachStacktrace',
-        ];
-
-        yield [
-            'attach_metric_code_locations',
-            false,
-            'shouldAttachMetricCodeLocations',
-            'setAttachMetricCodeLocations',
         ];
 
         yield [
@@ -192,13 +178,6 @@ final class OptionsTest extends TestCase
             true,
             'isSpotlightEnabled',
             'enableSpotlight',
-        ];
-
-        yield [
-            'spotlight_url',
-            'http://google.com',
-            'getSpotlightUrl',
-            'setSpotlightUrl',
         ];
 
         yield [
@@ -276,13 +255,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeSendLogCallback',
             'setBeforeSendLogCallback',
-        ];
-
-        yield [
-            'before_send_metrics',
-            static function (): void {},
-            'getBeforeSendMetricsCallback',
-            'setBeforeSendMetricsCallback',
         ];
 
         yield [
@@ -724,34 +696,5 @@ final class OptionsTest extends TestCase
         error_reporting($errorReportingBeforeTest);
 
         $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
-    }
-
-    /**
-     * @dataProvider enableTracingDataProvider
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
-     */
-    public function testEnableTracing(?bool $enabledTracing, ?float $tracesSampleRate, $expectedResult): void
-    {
-        $options = new Options([
-            'enable_tracing' => $enabledTracing,
-            'traces_sample_rate' => $tracesSampleRate,
-        ]);
-
-        $this->assertSame($expectedResult, $options->isTracingEnabled());
-    }
-
-    public static function enableTracingDataProvider(): array
-    {
-        return [
-            [null, null, false],
-            [null, 1.0, true],
-            [false, 1.0, false],
-            [true, 1.0, true],
-            [null, 0.0, true], // We use this as - it's configured but turned off
-            [false, 0.0, false],
-            [true, 0.0, true], // We use this as - it's configured but turned off
-            [true, null, true],
-        ];
     }
 }

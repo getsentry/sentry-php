@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
-use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -19,7 +18,6 @@ use Sentry\Tracing\TransactionContext;
  * Creates a new Client and Hub which will be set as current.
  *
  * @param array{
- *     attach_metric_code_locations?: bool,
  *     attach_stacktrace?: bool,
  *     before_breadcrumb?: callable,
  *     before_send?: callable,
@@ -58,7 +56,6 @@ use Sentry\Tracing\TransactionContext;
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,
- *     spotlight_url?: string,
  *     strict_trace_propagation?: bool,
  *     tags?: array<string>,
  *     trace_propagation_targets?: array<string>|null,
@@ -305,19 +302,6 @@ function getTraceparent(): string
 }
 
 /**
- * Creates the current W3C traceparent string, to be used as a HTTP header value
- * or HTML meta tag value.
- * This function is context aware, as in it either returns the traceparent based
- * on the current span, or the scope's propagation context.
- *
- * @deprecated since version 4.12. To be removed in version 5.0.
- */
-function getW3CTraceparent(): string
-{
-    return '';
-}
-
-/**
  * Creates the baggage content string, to be used as a HTTP header value
  * or HTML meta tag value.
  * This function is context aware, as in it either returns the baggage based
@@ -370,12 +354,4 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 function logger(): Logs
 {
     return Logs::getInstance();
-}
-
-/**
- * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
- */
-function metrics(): Metrics
-{
-    return Metrics::getInstance();
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
-use Sentry\Metrics\MetricsUnit;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -502,26 +501,6 @@ class Span
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function getMetricsSummary(): array
-    {
-        return [];
-    }
-
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function setMetricsSummary(
-        string $type,
-        string $key,
-        $value,
-        MetricsUnit $unit,
-        array $tags
-    ): void {
-    }
-
-    /**
      * Sets the trace origin for this span.
      */
     public function getOrigin(): ?string
@@ -561,16 +540,6 @@ class Span
         }
 
         return \sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
-    }
-
-    /**
-     * Returns a string that can be used for the W3C `traceparent` header & meta tag.
-     *
-     * @deprecated since version 4.12. To be removed in version 5.0.
-     */
-    public function toW3CTraceparent(): string
-    {
-        return '';
     }
 
     /**
