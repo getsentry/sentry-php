@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Options;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -182,35 +183,23 @@ final class PropagationContextTest extends TestCase
     }
 
     /**
-     * Tests that strictTraceContinuation properly validates org IDs from incoming traces
+     * Tests that org ID validation allows trace continuation when org IDs match.
      */
     public function testStrictTraceContinuationWithMatchingOrgId(): void
     {
-        $client = $this->createMock(\Sentry\ClientInterface::class);
-        $options = $this->createMock(\Sentry\Options::class);
-        $dsn = $this->createMock(\Sentry\Dsn::class);
-        
-        $options->expects($this->once())
-            ->method('isStrictTraceContinuationEnabled')
-            ->willReturn(true);
-        
-        $options->expects($this->exactly(2))
-            ->method('getDsn')
-            ->willReturn($dsn);
-        
-        $dsn->expects($this->once())
-            ->method('getOrgId')
-            ->willReturn(123);
-        
+        $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn($options);
-        
+            ->willReturn(new Options([
+                'dsn' => 'https://public_key@sentry.io/project_id',
+                'org_id' => 123,
+            ]));
+
         $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
         $baggage = 'sentry-org_id=123,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
-        
+
         $context = PropagationContext::fromHeaders($sentryTrace, $baggage, $client);
-        
+
         // Should continue the trace since org IDs match
         $this->assertEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
         $this->assertEquals(new SpanId('566e3688a61d4bc8'), $context->getParentSpanId());
@@ -218,35 +207,23 @@ final class PropagationContextTest extends TestCase
     }
 
     /**
-     * Tests that strictTraceContinuation creates a new trace when org IDs don't match
+     * Tests that org ID validation creates a new trace when org IDs don't match.
      */
     public function testStrictTraceContinuationWithMismatchedOrgId(): void
     {
-        $client = $this->createMock(\Sentry\ClientInterface::class);
-        $options = $this->createMock(\Sentry\Options::class);
-        $dsn = $this->createMock(\Sentry\Dsn::class);
-        
-        $options->expects($this->once())
-            ->method('isStrictTraceContinuationEnabled')
-            ->willReturn(true);
-        
-        $options->expects($this->exactly(2))
-            ->method('getDsn')
-            ->willReturn($dsn);
-        
-        $dsn->expects($this->once())
-            ->method('getOrgId')
-            ->willReturn(123);
-        
+        $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn($options);
-        
+            ->willReturn(new Options([
+                'dsn' => 'https://public_key@sentry.io/project_id',
+                'org_id' => 123,
+            ]));
+
         $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
         $baggage = 'sentry-org_id=456,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
-        
+
         $context = PropagationContext::fromHeaders($sentryTrace, $baggage, $client);
-        
+
         // Should create a new trace since org IDs don't match
         $this->assertNotEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
         $this->assertNull($context->getParentSpanId());
@@ -255,29 +232,28 @@ final class PropagationContextTest extends TestCase
     }
 
     /**
-     * Tests that strictTraceContinuation is disabled by default
+     * Tests that org ID validation happens regardless of strictTraceContinuation setting.
      */
-    public function testStrictTraceContinuationDisabledByDefault(): void
+    public function testOrgIdValidationAlwaysHappens(): void
     {
-        $client = $this->createMock(\Sentry\ClientInterface::class);
-        $options = $this->createMock(\Sentry\Options::class);
-        
-        $options->expects($this->once())
-            ->method('isStrictTraceContinuationEnabled')
-            ->willReturn(false);
-        
+        $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn($options);
-        
+            ->willReturn(new Options([
+                'dsn' => 'https://public_key@sentry.io/project_id',
+                'org_id' => 123,
+                // strictTraceContinuation is not set (defaults to false)
+            ]));
+
         $sentryTrace = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
         $baggage = 'sentry-org_id=456,sentry-trace_id=566e3688a61d4bc888951642d6f14a19';
-        
+
         $context = PropagationContext::fromHeaders($sentryTrace, $baggage, $client);
-        
-        // Should continue the trace even with mismatched org IDs since strictTraceContinuation is disabled
-        $this->assertEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
-        $this->assertEquals(new SpanId('566e3688a61d4bc8'), $context->getParentSpanId());
-        $this->assertTrue($context->getParentSampled());
+
+        // Should create a new trace when org IDs don't match, even without strictTraceContinuation enabled
+        $this->assertNotEquals(new TraceId('566e3688a61d4bc888951642d6f14a19'), $context->getTraceId());
+        $this->assertNull($context->getParentSpanId());
+        $this->assertNull($context->getParentSampled());
+        $this->assertNotNull($context->getSampleRand());
     }
 }

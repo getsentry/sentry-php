@@ -184,6 +184,18 @@ final class PropagationContext
         return $this;
     }
 
+    public function getParentSampled(): ?bool
+    {
+        return $this->parentSampled;
+    }
+
+    public function setParentSampled(?bool $parentSampled): self
+    {
+        $this->parentSampled = $parentSampled;
+
+        return $this;
+    }
+
     // TODO add same logic as in TransactionContext
     private static function parseTraceparentAndBaggage(string $traceparent, string $baggage, ?ClientInterface $client = null): self
     {
@@ -209,21 +221,22 @@ final class PropagationContext
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
-        // Check for strict trace continuation
+        // Check for org ID mismatch - always validate when both local and remote org IDs are present
         if ($client !== null && $hasSentryTrace) {
             $options = $client->getOptions();
-            
-            // If strictTraceContinuation is enabled, validate the org ID
-            if ($options->isStrictTraceContinuationEnabled()) {
-                $localOrgId = $options->getDsn() !== null ? $options->getDsn()->getOrgId() : null;
-                $remoteOrgId = $samplingContext->has('org_id') ? (int) $samplingContext->get('org_id') : null;
-                
-                // If we have a local org ID and the remote org ID doesn't match, create a new trace
-                if ($localOrgId !== null && $remoteOrgId !== null && $localOrgId !== $remoteOrgId) {
-                    // Create a new propagation context instead of continuing the existing one
-                    $context = self::fromDefaults();
-                    return $context;
-                }
+            // Get org ID from either the org_id option or the DSN
+            $localOrgId = $options->getOrgId();
+            if ($localOrgId === null && $options->getDsn() !== null) {
+                $localOrgId = $options->getDsn()->getOrgId();
+            }
+            $remoteOrgId = $samplingContext->has('org_id') ? (int) $samplingContext->get('org_id') : null;
+
+            // If we have both a local org ID and a remote org ID, and they don't match, create a new trace
+            if ($localOrgId !== null && $remoteOrgId !== null && $localOrgId !== $remoteOrgId) {
+                // Create a new propagation context instead of continuing the existing one
+                $context = self::fromDefaults();
+
+                return $context;
             }
         }
 

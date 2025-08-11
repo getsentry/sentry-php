@@ -721,7 +721,7 @@ final class Options
 
     /**
      * Returns whether strict trace continuation is enabled or not.
-     * 
+     *
      * When enabled, the SDK will only continue traces from the same organization
      * based on the org ID in the baggage header matching the org ID from the DSN.
      */
@@ -732,7 +732,7 @@ final class Options
 
     /**
      * Sets if strict trace continuation should be enabled or not.
-     * 
+     *
      * @param bool $strictTraceContinuation Whether to enable strict trace continuation
      */
     public function enableStrictTraceContinuation(bool $strictTraceContinuation): self
