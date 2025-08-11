@@ -9,7 +9,7 @@ use Sentry\Frame;
 /**
  * @internal
  */
-trait StacktraceFrameSeralizerTrait
+trait StacktraceFrameSerializerTrait
 {
     /**
      * @return array<string, mixed>
