@@ -86,7 +86,6 @@ class TransactionItem implements EnvelopeItemInterface
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
                 'ip_address' => $user->getIpAddress(),
-                'segment' => $user->getSegment(),
             ]);
         }
 

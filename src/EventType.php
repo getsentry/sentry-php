@@ -48,14 +48,6 @@ final class EventType implements \Stringable
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public static function metrics(): self
-    {
-        return self::getInstance('metrics');
-    }
-
-    /**
      * List of all cases on the enum.
      *
      * @return self[]
@@ -67,7 +59,6 @@ final class EventType implements \Stringable
             self::transaction(),
             self::checkIn(),
             self::logs(),
-            self::metrics(),
         ];
     }
 
