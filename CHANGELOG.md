@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 4.15.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.0.
+
+### Features
+
+- Add Monolog Sentry Logs handler [(#1867)](https://github.com/getsentry/sentry-php/pull/1867)
+
+### Bug Fixes
+
+- Use correct 'sample_rate' key when deriving sampleRand [(#1874)](https://github.com/getsentry/sentry-php/pull/1874)
+- Do not call Reflection*::setAccessible() in PHP >= 8.1 [(#1872)](https://github.com/getsentry/sentry-php/pull/1872)
+
+### Misc
+
+- Refactor trace header parsing logic [(#1876)](https://github.com/getsentry/sentry-php/pull/1876)
+- Add link to Joomla! integration [(#1868)](https://github.com/getsentry/sentry-php/pull/1868)
+
 ## 4.14.2
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.14.2.
