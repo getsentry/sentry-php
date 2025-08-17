@@ -6,8 +6,8 @@ namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
 use Sentry\ExceptionDataBag;
-use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
-use Sentry\Serializer\Traits\StacktraceFrameSeralizerTrait;
+use Sentry\Serializer\Traits\BreadcrumbSerializerTrait;
+use Sentry\Serializer\Traits\StacktraceFrameSerializerTrait;
 use Sentry\Util\JSON;
 use Sentry\Util\Str;
 
@@ -16,8 +16,8 @@ use Sentry\Util\Str;
  */
 class EventItem implements EnvelopeItemInterface
 {
-    use BreadcrumbSeralizerTrait;
-    use StacktraceFrameSeralizerTrait;
+    use BreadcrumbSerializerTrait;
+    use StacktraceFrameSerializerTrait;
 
     public static function toEnvelopeItem(Event $event): string
     {
