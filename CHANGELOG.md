@@ -8,15 +8,39 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 - Add Monolog Sentry Logs handler [(#1867)](https://github.com/getsentry/sentry-php/pull/1867)
 
+  This new handler allows you to capture Monolog logs as Sentry logs. To use it, configure your Monolog logger:
+
+  ```php
+  use Monolog\Logger;
+  use Sentry\Monolog\LogsHandler;
+  use Sentry\Logs\LogLevel;
+  
+  // Initialize Sentry SDK first (make sure 'enable_logs' is set to true)
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'enable_logs' => true,
+  ]);
+  
+  // Create a Monolog logger
+  $logger = new Logger('my-app');
+  
+  // Add the Sentry logs handler
+  // Optional: specify minimum log level (defaults to LogLevel::debug())
+  $handler = new LogsHandler(LogLevel::info());
+  $logger->pushHandler($handler);
+  
+  // Now your logs will be sent to Sentry
+  $logger->info('User logged in', ['user_id' => 123]);
+  $logger->error('Payment failed', ['order_id' => 456]);
+  ```
+  
+  Note: The handler will not collect logs for exceptions (they should be handled separately via `captureException`).
+
 ### Bug Fixes
 
-- Use correct 'sample_rate' key when deriving sampleRand [(#1874)](https://github.com/getsentry/sentry-php/pull/1874)
-- Do not call Reflection*::setAccessible() in PHP >= 8.1 [(#1872)](https://github.com/getsentry/sentry-php/pull/1872)
-
-### Misc
-
-- Refactor trace header parsing logic [(#1876)](https://github.com/getsentry/sentry-php/pull/1876)
-- Add link to Joomla! integration [(#1868)](https://github.com/getsentry/sentry-php/pull/1868)
+- Fix non string indexed attributes passed as log attributes [(#1882)](https://github.com/getsentry/sentry-php/pull/1882)
+- Use correct `sample_rate` key when deriving sampleRand [(#1874)](https://github.com/getsentry/sentry-php/pull/1874)
+- Do not call `Reflection*::setAccessible()` in PHP >= 8.1 [(#1872)](https://github.com/getsentry/sentry-php/pull/1872)
 
 ## 4.14.2
 
