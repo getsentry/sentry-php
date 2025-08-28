@@ -105,6 +105,12 @@ final class LogsAggregatorTest extends TestCase
         $log = $logs[0];
 
         $this->assertSame($expected, $log->getBody());
+
+        if (\count($values)) {
+            $this->assertNotNull($log->attributes()->get('sentry.message.template'));
+        } else {
+            $this->assertNull($log->attributes()->get('sentry.message.template'));
+        }
     }
 
     public static function messageFormattingDataProvider(): \Generator
