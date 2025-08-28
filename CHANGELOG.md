@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.15.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.1.
+
+### Bug Fixes
+
+- Do not send `template` attribute with logs when there are no template values [(#1885)](https://github.com/getsentry/sentry-php/pull/1885)
+
 ## 4.15.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.0.
