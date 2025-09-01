@@ -16,6 +16,11 @@ use Sentry\State\Hub;
 
 final class LogsHandlerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Logs::getInstance()->flush();
+    }
+
     /**
      * @dataProvider handleDataProvider
      */
@@ -36,9 +41,6 @@ final class LogsHandlerTest extends TestCase
 
         $logs = Logs::getInstance()->aggregator()->all();
 
-        // Clear the logs aggregator to avoid side effects in other tests
-        Logs::getInstance()->aggregator()->flush();
-
         $this->assertCount(1, $logs);
 
         $log = $logs[0];
@@ -56,6 +58,28 @@ final class LogsHandlerTest extends TestCase
                 \ARRAY_FILTER_USE_KEY
             )
         );
+    }
+
+    /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLogLevels($record, int $countLogs): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'before_send' => static function () {
+                return null;
+            },
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $handler = new LogsHandler(LogLevel::warn());
+        $handler->handle($record);
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount($countLogs, $logs);
     }
 
     public static function handleDataProvider(): iterable
@@ -195,6 +219,86 @@ final class LogsHandlerTest extends TestCase
             (new Log(123, 'abc', LogLevel::info(), 'foo bar'))
                 ->setAttribute('foo', 'bar')
                 ->setAttribute('bar', 'baz'),
+        ];
+    }
+
+    public static function logLevelDataProvider(): iterable
+    {
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::DEBUG,
+                'channel.foo',
+                [],
+                []
+            ),
+            0,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::NOTICE,
+                'channel.foo',
+                [],
+                []
+            ),
+            0,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::INFO,
+                'channel.foo',
+                [],
+                []
+            ),
+            0,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::WARNING,
+                'channel.foo',
+                [],
+                []
+            ),
+            1,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::CRITICAL,
+                'channel.foo',
+                [],
+                []
+            ),
+            1,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::ALERT,
+                'channel.foo',
+                [],
+                []
+            ),
+            1,
+        ];
+
+        yield [
+            RecordFactory::create(
+                'foo bar',
+                Logger::EMERGENCY,
+                'channel.foo',
+                [],
+                []
+            ),
+            1,
         ];
     }
 }
