@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.15.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.2.
+
+### Bug Fixes
+
+- Ensure the Monolog handler only processes records permitted by their log level. [(#1888)](https://github.com/getsentry/sentry-php/pull/1888)
+
 ## 4.15.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.1.
