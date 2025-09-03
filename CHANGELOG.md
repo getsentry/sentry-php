@@ -6,7 +6,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Bug Fixes
 
-- Ensure handle only processes records permitted by their log level. [(#1888)](https://github.com/getsentry/sentry-php/pull/1888)
+- Ensure the Monolog handler only processes records permitted by their log level. [(#1888)](https://github.com/getsentry/sentry-php/pull/1888)
 
 ## 4.15.1
 
