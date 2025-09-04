@@ -1336,7 +1336,6 @@ final class Options
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
-        $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
@@ -1454,16 +1453,6 @@ final class Options
         } catch (\InvalidArgumentException $exception) {
             return false;
         }
-    }
-
-    /**
-     * Validates if the value of the max_breadcrumbs option is in range.
-     *
-     * @param int $value The value to validate
-     */
-    private function validateMaxBreadcrumbsOptions(int $value): bool
-    {
-        return $value >= 0 && $value <= self::DEFAULT_MAX_BREADCRUMBS;
     }
 
     /**
