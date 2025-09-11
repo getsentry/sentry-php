@@ -1336,16 +1336,9 @@ final class Options
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
+        $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
-        
-        $resolver->setAllowedValues('sample_rate', fn ($value) => ($value >= 0 && $value <= 1));
-        $resolver->setAllowedValues('traces_sample_rate', fn ($value) => ($value >= 0 && $value <= 1));
-        $resolver->setAllowedValues('profiles_sample_rate', fn ($value) => ($value >= 0 && $value <= 1));
-        $resolver->setAllowedValues('context_lines', fn ($value) => ($value >= 0));
-        $resolver->setAllowedValues('max_breadcrumbs', fn ($value) => ($value >= 0));
-        $resolver->setAllowedValues('max_value_length', fn ($value) => ($value >= 0));
-        $resolver->setAllowedValues('http_connect_timeout', fn ($value) => ($value >= 0));
-        $resolver->setAllowedValues('http_timeout', fn ($value) => ($value >= 0));
+        $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
 
@@ -1464,6 +1457,16 @@ final class Options
     }
 
     /**
+     * Validates if the value of the max_breadcrumbs option is valid.
+     *
+     * @param int $value The value to validate
+     */
+    private function validateMaxBreadcrumbsOptions(int $value): bool
+    {
+        return $value >= 0;
+    }
+
+    /**
      * Validates that the values passed to the `class_serializers` option are valid.
      *
      * @param mixed[] $serializers The value to validate
@@ -1477,5 +1480,15 @@ final class Options
         }
 
         return true;
+    }
+
+    /**
+     * Validates that the value passed to the "context_lines" option is valid.
+     *
+     * @param int|null $contextLines The value to validate
+     */
+    private function validateContextLinesOption(?int $contextLines): bool
+    {
+        return $contextLines === null || $contextLines >= 0;
     }
 }
