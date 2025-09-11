@@ -1337,7 +1337,6 @@ final class Options
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
-        $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
         
         $resolver->setAllowedValues('sample_rate', fn ($value) => ($value >= 0 && $value <= 1));
         $resolver->setAllowedValues('traces_sample_rate', fn ($value) => ($value >= 0 && $value <= 1));
@@ -1478,15 +1477,5 @@ final class Options
         }
 
         return true;
-    }
-
-    /**
-     * Validates that the value passed to the "context_lines" option is valid.
-     *
-     * @param int|null $contextLines The value to validate
-     */
-    private function validateContextLinesOption(?int $contextLines): bool
-    {
-        return $contextLines === null || $contextLines >= 0;
     }
 }
