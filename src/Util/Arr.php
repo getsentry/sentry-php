@@ -49,7 +49,7 @@ class Arr
      *
      * @see https://www.php.net/manual/en/function.array-is-list.php#126794
      *
-     * @param array<string, mixed> $array
+     * @param array<mixed, mixed> $array
      */
     public static function isList(array $array): bool
     {

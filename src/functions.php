@@ -288,7 +288,7 @@ function getTraceparent(): string
     if ($client !== null) {
         $options = $client->getOptions();
 
-        if ($options !== null && $options->isTracingEnabled()) {
+        if ($options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
                 return $span->toTraceparent();
@@ -331,7 +331,7 @@ function getBaggage(): string
     if ($client !== null) {
         $options = $client->getOptions();
 
-        if ($options !== null && $options->isTracingEnabled()) {
+        if ($options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
                 return $span->toBaggage();

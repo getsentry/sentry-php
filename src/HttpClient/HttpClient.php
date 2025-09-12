@@ -52,7 +52,11 @@ class HttpClient implements HttpClientInterface
             \extension_loaded('zlib')
             && $options->isHttpCompressionEnabled()
         ) {
-            $requestData = gzcompress($requestData, -1, \ZLIB_ENCODING_GZIP);
+            $compressedData = gzcompress($requestData, -1, \ZLIB_ENCODING_GZIP);
+            if ($compressedData === false) {
+                throw new \RuntimeException('Failed to compress request data.');
+            }
+            $requestData = $compressedData;
             $requestHeaders[] = 'Content-Encoding: gzip';
         }
 
@@ -61,11 +65,15 @@ class HttpClient implements HttpClientInterface
             return Http::parseResponseHeaders($headerLine, $responseHeaders);
         };
 
-        curl_setopt($curlHandle, \CURLOPT_URL, $dsn->getEnvelopeApiEndpointUrl());
+        $url = $dsn->getEnvelopeApiEndpointUrl();
+        if ($url === '') {
+            throw new \RuntimeException('The envelope API endpoint URL is empty.');
+        }
+        curl_setopt($curlHandle, \CURLOPT_URL, $url);
         curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
-        curl_setopt($curlHandle, \CURLOPT_TIMEOUT_MS, $options->getHttpTimeout() * 1000);
-        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT_MS, $options->getHttpConnectTimeout() * 1000);
+        curl_setopt($curlHandle, \CURLOPT_TIMEOUT_MS, (int) ($options->getHttpTimeout() * 1000));
+        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT_MS, (int) ($options->getHttpConnectTimeout() * 1000));
         curl_setopt($curlHandle, \CURLOPT_ENCODING, '');
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
@@ -96,7 +104,7 @@ class HttpClient implements HttpClientInterface
         }
 
         $httpProxyAuthentication = $options->getHttpProxyAuthentication();
-        if ($httpProxyAuthentication !== null) {
+        if ($httpProxyAuthentication !== null && $httpProxyAuthentication !== '') {
             curl_setopt($curlHandle, \CURLOPT_PROXYUSERPWD, $httpProxyAuthentication);
         }
 

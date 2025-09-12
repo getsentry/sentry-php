@@ -54,13 +54,29 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
      */
     protected function write($record): void
     {
+        if ($record instanceof LogRecord) {
+            $level = $record->level;
+            $channel = $record->channel;
+            $message = $record->message;
+            $context = $record->context;
+            $extra = $record->extra;
+            $datetime = $record->datetime;
+        } else {
+            $level = $record['level'];
+            $channel = $record['channel'];
+            $message = $record['message'];
+            $context = $record['context'] ?? [];
+            $extra = $record['extra'] ?? [];
+            $datetime = $record['datetime'];
+        }
+
         $breadcrumb = new Breadcrumb(
-            $this->getBreadcrumbLevel($record['level']),
-            $this->getBreadcrumbType($record['level']),
-            $record['channel'],
-            $record['message'],
-            ($record['context'] ?? []) + ($record['extra'] ?? []),
-            $record['datetime']->getTimestamp()
+            $this->getBreadcrumbLevel($level),
+            $this->getBreadcrumbType($level instanceof Level ? $level->value : $level),
+            $channel,
+            $message,
+            $context + $extra,
+            $datetime->getTimestamp()
         );
 
         $this->hub->addBreadcrumb($breadcrumb);

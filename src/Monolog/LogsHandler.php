@@ -7,6 +7,7 @@ namespace Sentry\Monolog;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;
+use Monolog\Level;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
@@ -46,7 +47,13 @@ class LogsHandler implements HandlerInterface
      */
     public function isHandling($record): bool
     {
-        return self::getSentryLogLevelFromMonologLevel($record['level'])->getPriority() >= $this->logLevel->getPriority();
+        if ($record instanceof LogRecord) {
+            $level = $record->level;
+        } else {
+            /** @var int|Level $level */
+            $level = $record['level'];
+        }
+        return self::getSentryLogLevelFromMonologLevel($level instanceof Level ? $level->value : $level)->getPriority() >= $this->logLevel->getPriority();
     }
 
     /**
@@ -57,16 +64,33 @@ class LogsHandler implements HandlerInterface
         if (!$this->isHandling($record)) {
             return false;
         }
+
+        if ($record instanceof LogRecord) {
+            $level = $record->level;
+            $message = $record->message;
+            $context = $record->context;
+            $extra = $record->extra;
+        } else {
+            /** @var int|Level $level */
+            $level = $record['level'];
+            /** @var string $message */
+            $message = $record['message'];
+            /** @var array<string, mixed> $context */
+            $context = $record['context'] ?? [];
+            /** @var array<string, mixed> $extra */
+            $extra = $record['extra'] ?? [];
+        }
+
         // Do not collect logs for exceptions, they should be handled seperately by the `Handler` or `captureException`
-        if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
+        if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
             return false;
         }
 
         Logs::getInstance()->aggregator()->add(
-            self::getSentryLogLevelFromMonologLevel($record['level']),
-            $record['message'],
+            self::getSentryLogLevelFromMonologLevel($level instanceof Level ? $level->value : $level),
+            $message,
             [],
-            array_merge($record['context'], $record['extra'])
+            array_merge($context, $extra)
         );
 
         return $this->bubble === false;

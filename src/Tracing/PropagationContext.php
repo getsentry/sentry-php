@@ -100,11 +100,9 @@ final class PropagationContext
             if ($client !== null) {
                 $options = $client->getOptions();
 
-                if ($options !== null) {
-                    $hub->configureScope(function (Scope $scope) use ($options) {
-                        $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
-                    });
-                }
+                $hub->configureScope(function (Scope $scope) use ($options) {
+                    $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+                });
             }
         }
 

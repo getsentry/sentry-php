@@ -6,26 +6,6 @@ parameters:
 			path: src/Client.php
 
 		-
-			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 2
-			path: src/Dsn.php
-
-		-
-			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 4
-			path: src/Dsn.php
-
-		-
-			message: "#^Offset 'scheme' does not exist on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 1
-			path: src/Dsn.php
-
-		-
-			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 1
-			path: src/Dsn.php
-
-		-
 			message: "#^Method Sentry\\\\Event\\:\\:getMetrics\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Event.php
@@ -157,11 +137,6 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getHttpTimeout\\(\\) should return float but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
-			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreExceptions\\(\\) should return array\\<int, class\\-string\\<Throwable\\>\\> but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 

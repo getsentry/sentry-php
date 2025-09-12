@@ -94,6 +94,7 @@ final class Dsn implements \Stringable
             }
         }
 
+        /** @var array{scheme: 'http'|'https', host: string, path: string, user: string, port?: int<0, 65535>, pass?: string, query?: string, fragment?: string} $parsedDsn */
         if (!\in_array($parsedDsn['scheme'], ['http', 'https'], true)) {
             throw new \InvalidArgumentException(\sprintf('The scheme of the "%s" DSN must be either "http" or "https".', $value));
         }

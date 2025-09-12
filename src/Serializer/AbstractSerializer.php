@@ -316,6 +316,7 @@ abstract class AbstractSerializer
 
         try {
             if (\is_array($callable)) {
+                /** @var array{0: object|string, 1: string} $callable */
                 $reflection = new \ReflectionMethod($callable[0], $callable[1]);
                 $class = $reflection->getDeclaringClass();
             } elseif ($callable instanceof \Closure) {

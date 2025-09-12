@@ -510,6 +510,7 @@ final class Options
      */
     public function getIgnoreExceptions(): array
     {
+        /** @var list<class-string<\Throwable>> */
         return $this->options['ignore_exceptions'];
     }
 

@@ -22,12 +22,12 @@ final class TransactionMetadata
     private $source;
 
     /**
-     * @var float|int|null
+     * @var float|null
      */
     private $parentSamplingRate;
 
     /**
-     * @var float|int|null
+     * @var float|null
      */
     private $sampleRand;
 

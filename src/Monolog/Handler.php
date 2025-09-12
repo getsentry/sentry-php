@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Monolog;
 
+use Monolog\Level;
+
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Monolog\LogRecord;
@@ -52,28 +54,50 @@ final class Handler extends AbstractProcessingHandler
      */
     protected function doWrite($record): void
     {
+        if ($record instanceof LogRecord) {
+            $level = $record->level;
+            $message = $record->message;
+            $channel = $record->channel;
+            $context = $record->context;
+            $extra = $record->extra;
+            $levelName = $record->level->getName();
+        } else {
+            /** @var int|Level $level */
+            $level = $record['level'];
+            /** @var string $message */
+            $message = $record['message'];
+            /** @var string $channel */
+            $channel = $record['channel'];
+            /** @var array<string, mixed> $context */
+            $context = $record['context'] ?? [];
+            /** @var array<string, mixed> $extra */
+            $extra = $record['extra'] ?? [];
+            /** @var string $levelName */
+            $levelName = $record['level_name'] ?? '';
+        }
+
         $event = Event::createEvent();
-        $event->setLevel(self::getSeverityFromLevel($record['level']));
-        $event->setMessage($record['message']);
-        $event->setLogger(\sprintf('monolog.%s', $record['channel']));
+        $event->setLevel(self::getSeverityFromLevel($level instanceof Level ? $level->value : $level));
+        $event->setMessage($message);
+        $event->setLogger(\sprintf('monolog.%s', $channel));
 
         $hint = new EventHint();
 
-        if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
-            $hint->exception = $record['context']['exception'];
+        if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
+            $hint->exception = $context['exception'];
         }
 
-        $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
-            $scope->setExtra('monolog.channel', $record['channel']);
-            $scope->setExtra('monolog.level', $record['level_name']);
+        $this->hub->withScope(function (Scope $scope) use ($channel, $levelName, $context, $extra, $event, $hint): void {
+            $scope->setExtra('monolog.channel', $channel);
+            $scope->setExtra('monolog.level', $levelName);
 
-            $monologContextData = $this->getMonologContextData($record['context']);
+            $monologContextData = $this->getMonologContextData($context);
 
             if ($monologContextData !== []) {
                 $scope->setExtra('monolog.context', $monologContextData);
             }
 
-            $monologExtraData = $this->getMonologExtraData($record['extra']);
+            $monologExtraData = $this->getMonologExtraData($extra);
 
             if ($monologExtraData !== []) {
                 $scope->setExtra('monolog.extra', $monologExtraData);
