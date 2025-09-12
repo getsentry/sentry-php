@@ -1457,13 +1457,13 @@ final class Options
     }
 
     /**
-     * Validates if the value of the max_breadcrumbs option is in range.
+     * Validates if the value of the max_breadcrumbs option is valid.
      *
      * @param int $value The value to validate
      */
     private function validateMaxBreadcrumbsOptions(int $value): bool
     {
-        return $value >= 0 && $value <= self::DEFAULT_MAX_BREADCRUMBS;
+        return $value >= 0;
     }
 
     /**

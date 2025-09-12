@@ -586,7 +586,7 @@ final class OptionsTest extends TestCase
             [true, 0],
             [true, 1],
             [true, Options::DEFAULT_MAX_BREADCRUMBS],
-            [false, Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            [true, Options::DEFAULT_MAX_BREADCRUMBS + 1],
             [false, 'string'],
             [false, '1'],
         ];
