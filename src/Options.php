@@ -506,7 +506,7 @@ final class Options
      *
      * @return string[]
      *
-     * @psalm-return list<class-string<\Throwable>>
+     * @phpstan-return list<class-string<\Throwable>>
      */
     public function getIgnoreExceptions(): array
     {
@@ -555,7 +555,7 @@ final class Options
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -568,7 +568,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): self
     {
@@ -583,7 +583,7 @@ final class Options
      * Gets a callback that will be invoked before an transaction is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendTransactionCallback(): callable
     {
@@ -596,7 +596,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendTransactionCallback(callable $callback): self
     {
@@ -611,7 +611,7 @@ final class Options
      * Gets a callback that will be invoked before a check-in is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCheckInCallback(): callable
     {
@@ -624,7 +624,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCheckInCallback(callable $callback): self
     {
@@ -639,7 +639,7 @@ final class Options
      * Gets a callback that will be invoked before an log is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Log): ?Log
+     * @phpstan-return callable(Log): ?Log
      */
     public function getBeforeSendLogCallback(): callable
     {
@@ -652,7 +652,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Log): ?Log $callback
+     * @phpstan-param callable(Log): ?Log $callback
      */
     public function setBeforeSendLogCallback(callable $callback): self
     {
@@ -667,7 +667,7 @@ final class Options
      * Gets a callback that will be invoked before metrics are sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      *
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
@@ -682,7 +682,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      *
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
@@ -810,7 +810,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when adding a breadcrumb.
      *
-     * @psalm-return callable(Breadcrumb): ?Breadcrumb
+     * @phpstan-return callable(Breadcrumb): ?Breadcrumb
      */
     public function getBeforeBreadcrumbCallback(): callable
     {
@@ -826,7 +826,7 @@ final class Options
      *
      * @param callable $callback The callback
      *
-     * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
+     * @phpstan-param callable(Breadcrumb): ?Breadcrumb $callback
      */
     public function setBeforeBreadcrumbCallback(callable $callback): self
     {
@@ -1179,7 +1179,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return null|callable(Tracing\SamplingContext): float
+     * @phpstan-return null|callable(Tracing\SamplingContext): float
      */
     public function getTracesSampler(): ?callable
     {
@@ -1192,7 +1192,7 @@ final class Options
      *
      * @param ?callable $sampler The sampler
      *
-     * @psalm-param null|callable(Tracing\SamplingContext): float $sampler
+     * @phpstan-param null|callable(Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler(?callable $sampler): self
     {

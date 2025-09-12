@@ -49,15 +49,15 @@ interface HubInterface
      * Creates a new scope with and executes the given operation within. The scope
      * is automatically removed once the operation finishes or throws.
      *
+     * @template T
+     *
+     * @phpstan-param callable(Scope): T $callback
+     *
      * @param callable $callback The callback to be executed
-     *
-     * @psalm-template T
-     *
-     * @psalm-param callable(Scope): T $callback
      *
      * @return mixed|void The callback's return value, upon successful execution
      *
-     * @psalm-return T
+     * @phpstan-return T
      */
     public function withScope(callable $callback);
 
@@ -109,13 +109,13 @@ interface HubInterface
     /**
      * Gets the integration whose FQCN matches the given one if it's available on the current client.
      *
+     * @template T of IntegrationInterface
+     *
+     * @phpstan-param class-string<T> $className
+     *
      * @param string $className The FQCN of the integration
      *
-     * @psalm-template T of IntegrationInterface
-     *
-     * @psalm-param class-string<T> $className
-     *
-     * @psalm-return T|null
+     * @phpstan-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 

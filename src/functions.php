@@ -199,15 +199,15 @@ function configureScope(callable $callback): void
  * Creates a new scope with and executes the given operation within. The scope
  * is automatically removed once the operation finishes or throws.
  *
+ * @template T
+ *
+ * @phpstan-param callable(Scope): T $callback
+ *
  * @param callable $callback The callback to be executed
- *
- * @psalm-template T
- *
- * @psalm-param callable(Scope): T $callback
  *
  * @return mixed|void The callback's return value, upon successful execution
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withScope(callable $callback)
 {

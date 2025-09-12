@@ -60,12 +60,6 @@ interface ClientInterface
      * Returns the integration instance if it is installed on the client.
      *
      * @param string $className The FQCN of the integration
-     *
-     * @psalm-template T of IntegrationInterface
-     *
-     * @psalm-param class-string<T> $className
-     *
-     * @psalm-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 

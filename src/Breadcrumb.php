@@ -322,15 +322,6 @@ final class Breadcrumb
      * Helper method to create an instance of this class from an array of data.
      *
      * @param array $data Data used to populate the breadcrumb
-     *
-     * @psalm-param array{
-     *     level: string,
-     *     type?: string,
-     *     category: string,
-     *     message?: string|null,
-     *     data?: array<string, mixed>,
-     *     timestamp?: float|null
-     * } $data
      */
     public static function fromArray(array $data): self
     {
