@@ -59,7 +59,7 @@ final class Handler extends AbstractProcessingHandler
 
         $hint = new EventHint();
 
-        if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
+        if ($this->hasExceptionContext($record['context'])) {
             $hint->exception = $record['context']['exception'];
         }
 
@@ -94,18 +94,12 @@ final class Handler extends AbstractProcessingHandler
             return [];
         }
 
-        $contextData = [];
-
-        foreach ($context as $key => $value) {
-            // We skip the `exception` field because it goes in its own context
-            if ($key === self::CONTEXT_EXCEPTION_KEY) {
-                continue;
-            }
-
-            $contextData[$key] = $value;
+        if ($this->hasExceptionContext($context)) {
+            // remove the exception from the context, as it's set on the hint
+            unset($context[self::CONTEXT_EXCEPTION_KEY]);
         }
 
-        return $contextData;
+        return $context;
     }
 
     /**
@@ -126,5 +120,13 @@ final class Handler extends AbstractProcessingHandler
         }
 
         return $extraData;
+    }
+
+    /**
+     * @param mixed[] $context
+     */
+    private function hasExceptionContext(array $context): bool
+    {
+        return isset($context[self::CONTEXT_EXCEPTION_KEY]) && $context[self::CONTEXT_EXCEPTION_KEY] instanceof \Throwable;
     }
 }
