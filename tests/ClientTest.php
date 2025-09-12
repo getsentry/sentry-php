@@ -499,11 +499,6 @@ final class ClientTest extends TestCase
             Event::createCheckIn(),
             false,
         ];
-
-        yield [
-            Event::createMetrics(),
-            false,
-        ];
     }
 
     /**
@@ -540,11 +535,6 @@ final class ClientTest extends TestCase
 
         yield [
             Event::createCheckIn(),
-            false,
-        ];
-
-        yield [
-            Event::createMetrics(),
             false,
         ];
     }
@@ -584,49 +574,6 @@ final class ClientTest extends TestCase
         yield [
             Event::createCheckIn(),
             true,
-        ];
-
-        yield [
-            Event::createMetrics(),
-            false,
-        ];
-    }
-
-    /**
-     * @dataProvider processEventChecksBeforeSendMetricsOptionDataProvider
-     */
-    public function testProcessEventChecksBeforeMetricsSendOption(Event $event, bool $expectedBeforeSendCall): void
-    {
-        $beforeSendCalled = false;
-        $options = [
-            'before_send_metrics' => static function () use (&$beforeSendCalled) {
-                $beforeSendCalled = true;
-
-                return null;
-            },
-        ];
-
-        $client = ClientBuilder::create($options)->getClient();
-        $client->captureEvent($event);
-
-        $this->assertSame($expectedBeforeSendCall, $beforeSendCalled);
-    }
-
-    public static function processEventChecksBeforeSendMetricsOptionDataProvider(): \Generator
-    {
-        yield [
-            Event::createEvent(),
-            false,
-        ];
-
-        yield [
-            Event::createTransaction(),
-            false,
-        ];
-
-        yield [
-            Event::createCheckIn(),
-            false,
         ];
     }
 

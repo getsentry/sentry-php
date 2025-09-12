@@ -242,14 +242,6 @@ final class Event
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public static function createMetrics(?EventId $eventId = null): self
-    {
-        return new self($eventId, EventType::metrics());
-    }
-
-    /**
      * Gets the ID of this event.
      */
     public function getId(): EventId
@@ -442,38 +434,6 @@ final class Event
     {
         $this->logs = $logs;
 
-        return $this;
-    }
-
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function getMetrics(): array
-    {
-        return [];
-    }
-
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function setMetrics(array $metrics): self
-    {
-        return $this;
-    }
-
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function getMetricsSummary(): array
-    {
-        return [];
-    }
-
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function setMetricsSummary(array $metricsSummary): self
-    {
         return $this;
     }
 
