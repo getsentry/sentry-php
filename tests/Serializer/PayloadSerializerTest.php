@@ -68,7 +68,8 @@ final class PayloadSerializerTest extends TestCase
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"event","content_type":"application\/json"}
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
-TEXT,
+TEXT
+            ,
         ];
 
         $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -184,7 +185,8 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"event","content_type":"application\/json"}
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"message":"My raw message with interpreted strings like this"}
-TEXT,
+TEXT
+            ,
         ];
 
         $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -208,7 +210,8 @@ TEXT
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"event","content_type":"application\/json"}
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"message":{"message":"My raw message with interpreted strings like %s","params":["this"],"formatted":"My raw message with interpreted strings like that"}}
-TEXT,
+TEXT
+            ,
         ];
 
         $span1 = new Span();
@@ -298,7 +301,8 @@ TEXT,
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"transaction":"GET \/","release":"1.0.0","environment":"dev","contexts":{"os":{"name":"macOS","version":"13.2.1","build":"22D68","kernel_version":"Darwin Kernel Version 22.2.0"},"runtime":{"name":"php","sapi":"cli","version":"8.2.3"},"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"5dd538dc297544cc","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790835,"origin":"manual"},{"span_id":"b01b9f6349558cd1","trace_id":"1e57b752bc6e4544bbaa246cd1d05dee","start_timestamp":1597790835,"origin":"manual","parent_span_id":"b0e6f15b45c36b12","timestamp":1598659060,"status":"ok","description":"GET \/sockjs-node\/info","op":"http","data":{"url":"http:\/\/localhost:8080\/sockjs-node\/info?t=1588601703755","status_code":200,"type":"xhr","method":"GET"},"tags":{"http.status_code":"200"}}]}
 {"type":"profile","content_type":"application\/json"}
 {"device":{"architecture":"aarch64"},"event_id":"fc9442f5aef34234bb22b9a615e30ccd","os":{"name":"macOS","version":"13.2.1","build_number":"22D68"},"platform":"php","release":"1.0.0","environment":"dev","runtime":{"name":"php","sapi":"cli","version":"8.2.3"},"timestamp":"2023-02-28T08:41:00.000+00:00","transaction":{"id":"fc9442f5aef34234bb22b9a615e30ccd","name":"GET \/","trace_id":"21160e9b836d479f81611368b2aa3d2c","active_thread_id":"0"},"version":"1","profile":{"frames":[{"filename":"\/var\/www\/html\/index.php","abs_path":"\/var\/www\/html\/index.php","module":null,"function":"\/var\/www\/html\/index.php","lineno":42},{"filename":"\/var\/www\/html\/function.php","abs_path":"\/var\/www\/html\/function.php","module":"Function","function":"Function::doStuff","lineno":84}],"samples":[{"stack_id":0,"thread_id":"0","elapsed_since_start_ns":1000000},{"stack_id":1,"thread_id":"0","elapsed_since_start_ns":2000000}],"stacks":[[0],[0,1]]}}
-TEXT,
+TEXT
+            ,
         ];
 
         $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -311,7 +315,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"trace":{"public_key":"public","trace_id":"d49d9bf66f13450b81f65bc51cf49c03","sample_rate":"1"}}
 {"type":"transaction","content_type":"application\/json"}
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"spans":[],"transaction_info":{"source":"custom"}}
-TEXT,
+TEXT
+            ,
         ];
 
         $event = Event::createEvent(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -323,7 +328,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"event","content_type":"application\/json"}
 {"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"stacktrace":{"frames":[{"filename":"","lineno":0,"in_app":true}]}}
-TEXT,
+TEXT
+            ,
         ];
 
         $checkinId = SentryUid::generate();
@@ -345,7 +351,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev"}
-TEXT,
+TEXT
+            ,
         ];
 
         $checkinId = SentryUid::generate();
@@ -364,7 +371,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"in_progress","duration":null,"release":"","environment":"production"}
-TEXT,
+TEXT
+            ,
         ];
 
         $checkinId = SentryUid::generate();
@@ -398,7 +406,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"check_in","content_type":"application\/json"}
 {"check_in_id":"$checkinId","monitor_slug":"my-monitor","status":"ok","duration":10,"release":"1.0.0","environment":"dev","monitor_config":{"schedule":{"type":"crontab","value":"0 0 * * *","unit":""},"checkin_margin":10,"max_runtime":12,"timezone":"Europe\/Amsterdam","failure_issue_threshold":5,"recovery_threshold":10},"contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}}}
-TEXT,
+TEXT
+            ,
         ];
 
         $event = Event::createLogs(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
@@ -413,7 +422,8 @@ TEXT,
 {"event_id":"fc9442f5aef34234bb22b9a615e30ccd","sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"log","item_count":1,"content_type":"application\/vnd.sentry.items.log+json"}
 {"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","level":"info","body":"A log message","attributes":{"foo":{"type":"string","value":"bar"}}}]}
-TEXT,
+TEXT
+            ,
         ];
     }
 }
