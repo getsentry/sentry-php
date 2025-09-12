@@ -6,12 +6,12 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
-use Sentry\ClientBuilder;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -89,5 +89,17 @@ final class ModulesIntegrationTest extends TestCase
         SentrySdk::getCurrentHub()->bindClient($client);
 
         $client->captureEvent(Event::createEvent(), null, new Scope());
+    }
+
+    /**
+     * Polyfill for older phpunit versions.
+     */
+    public static function assertMatchesRegularExpression(string $pattern, string $string, string $message = ''): void
+    {
+        if (method_exists(parent::class, 'assertMatchesRegularExpression')) {
+            parent::assertMatchesRegularExpression($pattern, $string, $message);
+        } else {
+            static::assertRegExp($pattern, $string, $message);
+        }
     }
 }
