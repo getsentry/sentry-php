@@ -9,6 +9,7 @@ use Sentry\ExceptionDataBag;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
 use Sentry\Serializer\Traits\StacktraceFrameSeralizerTrait;
 use Sentry\Util\JSON;
+use Sentry\Util\Str;
 
 /**
  * @internal
@@ -28,10 +29,7 @@ class EventItem implements EnvelopeItemInterface
         $payload = [
             'timestamp' => $event->getTimestamp(),
             'platform' => 'php',
-            'sdk' => [
-                'name' => $event->getSdkIdentifier(),
-                'version' => $event->getSdkVersion(),
-            ],
+            'sdk' => $event->getSdkPayload(),
         ];
 
         if ($event->getStartTimestamp() !== null) {
@@ -85,7 +83,6 @@ class EventItem implements EnvelopeItemInterface
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
                 'ip_address' => $user->getIpAddress(),
-                'segment' => $user->getSegment(),
             ]);
         }
 
@@ -127,7 +124,7 @@ class EventItem implements EnvelopeItemInterface
                 $payload['message'] = [
                     'message' => $event->getMessage(),
                     'params' => $event->getMessageParams(),
-                    'formatted' => $event->getMessageFormatted() ?? vsprintf($event->getMessage(), $event->getMessageParams()),
+                    'formatted' => $event->getMessageFormatted() ?? Str::vsprintfOrNull($event->getMessage(), $event->getMessageParams()) ?? $event->getMessage(),
                 ];
             }
         }

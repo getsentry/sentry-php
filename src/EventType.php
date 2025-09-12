@@ -42,9 +42,9 @@ final class EventType implements \Stringable
         return self::getInstance('check_in');
     }
 
-    public static function metrics(): self
+    public static function logs(): self
     {
-        return self::getInstance('metrics');
+        return self::getInstance('log');
     }
 
     /**
@@ -58,7 +58,7 @@ final class EventType implements \Stringable
             self::event(),
             self::transaction(),
             self::checkIn(),
-            self::metrics(),
+            self::logs(),
         ];
     }
 

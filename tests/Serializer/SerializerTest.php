@@ -144,6 +144,41 @@ final class SerializerTest extends AbstractSerializerTest
         ], $this->invokeSerialization($serializer, $object));
     }
 
+    /**
+     * @dataProvider serializeDateTimeDataProvider
+     */
+    public function testSerializeDateTime(\DateTimeInterface $date, string $expected): void
+    {
+        $serializer = $this->createSerializer();
+
+        $result = $this->invokeSerialization($serializer, $date);
+
+        $this->assertSame($expected, $result);
+    }
+
+    public function serializeDateTimeDataProvider(): \Generator
+    {
+        yield 'DateTime' => [
+            new \DateTime('2001-02-03 13:37:42'),
+            'DateTime(2001-02-03 13:37:42)',
+        ];
+
+        yield 'Microseconds' => [
+            new \DateTimeImmutable('2001-02-03 13:37:42.123456'),
+            'DateTimeImmutable(2001-02-03 13:37:42.123456)',
+        ];
+
+        yield 'Timezone' => [
+            new \DateTime('2001-02-03 13:37:42', new \DateTimeZone('Europe/Paris')),
+            'DateTime(2001-02-03 13:37:42 Europe/Paris+01:00)',
+        ];
+
+        yield 'Abbreviated timezone' => [
+            new \DateTime('2021-03-28 13:37:42 CET'),
+            'DateTime(2021-03-28 13:37:42 CET+01:00)',
+        ];
+    }
+
     public function testSerializableThatReturnsNull(): void
     {
         $serializer = $this->createSerializer();

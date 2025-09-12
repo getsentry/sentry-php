@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Event;
+use Sentry\EventType;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\TransactionMetadata;
@@ -28,17 +29,14 @@ class TransactionItem implements EnvelopeItemInterface
     public static function toEnvelopeItem(Event $event): string
     {
         $header = [
-            'type' => (string) $event->getType(),
+            'type' => (string) EventType::transaction(),
             'content_type' => 'application/json',
         ];
 
         $payload = [
             'timestamp' => $event->getTimestamp(),
             'platform' => 'php',
-            'sdk' => [
-                'name' => $event->getSdkIdentifier(),
-                'version' => $event->getSdkVersion(),
-            ],
+            'sdk' => $event->getSdkPayload(),
         ];
 
         if ($event->getStartTimestamp() !== null) {
@@ -88,7 +86,6 @@ class TransactionItem implements EnvelopeItemInterface
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
                 'ip_address' => $user->getIpAddress(),
-                'segment' => $user->getSegment(),
             ]);
         }
 
@@ -124,10 +121,6 @@ class TransactionItem implements EnvelopeItemInterface
         }
 
         $payload['spans'] = array_values(array_map([self::class, 'serializeSpan'], $event->getSpans()));
-
-        if (!empty($event->getMetricsSummary())) {
-            $payload['_metrics_summary'] = self::serializeMetricsSummary($event->getMetricsSummary());
-        }
 
         $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
         if ($transactionMetadata instanceof TransactionMetadata) {
@@ -191,28 +184,6 @@ class TransactionItem implements EnvelopeItemInterface
             $result['tags'] = $span->getTags();
         }
 
-        if (!empty($span->getMetricsSummary())) {
-            $result['_metrics_summary'] = self::serializeMetricsSummary($span->getMetricsSummary());
-        }
-
         return $result;
-    }
-
-    /**
-     * @param array<string, array<string, MetricsSummary>> $metricsSummary
-     *
-     * @return array<string, mixed>
-     */
-    protected static function serializeMetricsSummary(array $metricsSummary): array
-    {
-        $formattedSummary = [];
-
-        foreach ($metricsSummary as $mri => $metrics) {
-            foreach ($metrics as $metric) {
-                $formattedSummary[$mri][] = $metric;
-            }
-        }
-
-        return $formattedSummary;
     }
 }

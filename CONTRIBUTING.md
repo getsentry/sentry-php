@@ -25,11 +25,7 @@ Thank you for contributing!
 
 ## PR reviews
 
-For feedback in PRs, we use the [LOGAF scale](https://blog.danlew.net/2020/04/15/the-logaf-scale/) to specify how important a comment is:
-
-* `l`: low - nitpick. You may address this comment, but you don't have to.
-* `m`: medium - normal comment. Worth addressing and fixing.
-* `h`: high - Very important. We must not merge this PR without addressing this issue.
+For feedback in PRs, we use the [LOGAF scale](https://develop.sentry.dev/engineering-practices/code-review/#logaf-scale) to specify how important a comment is.
 
 You only need one approval from a maintainer to be able to merge. For some PRs, asking specific or multiple people for review might be adequate.
 

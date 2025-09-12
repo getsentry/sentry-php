@@ -66,13 +66,6 @@ final class FrameContextifierIntegration implements IntegrationInterface
                 }
             }
 
-            foreach ($event->getMetrics() as $metric) {
-                if ($metric->hasCodeLocation()) {
-                    $frame = $metric->getCodeLocation();
-                    $integration->addContextToStacktraceFrame($maxContextLines, $frame);
-                }
-            }
-
             return $event;
         });
     }

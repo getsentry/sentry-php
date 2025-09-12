@@ -61,6 +61,8 @@ The following integrations are available and maintained by members of the Sentry
 
 - [Drupal](https://www.drupal.org/project/raven)
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
+- Magento 2 by [JustBetter](https://github.com/justbetter/magento2-sentry) or by [Mygento](https://github.com/mygento/module-sentry)
+- [Joomla!](https://github.com/AlterBrains/sentry-joomla)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using the old SDK 3.x

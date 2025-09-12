@@ -130,7 +130,8 @@ final class ErrorHandler
         \E_USER_DEPRECATED => 'User Deprecated',
         \E_NOTICE => 'Notice',
         \E_USER_NOTICE => 'User Notice',
-        \E_STRICT => 'Runtime Notice',
+        // This is \E_STRICT which has been deprecated in PHP 8.4 so we should not reference it directly to prevent deprecation notices
+        2048 => 'Runtime Notice',
         \E_WARNING => 'Warning',
         \E_USER_WARNING => 'User Warning',
         \E_COMPILE_WARNING => 'Compile Warning',
@@ -152,7 +153,9 @@ final class ErrorHandler
     private function __construct()
     {
         $this->exceptionReflection = new \ReflectionProperty(\Exception::class, 'trace');
-        $this->exceptionReflection->setAccessible(true);
+        if (\PHP_VERSION_ID < 80100) {
+            $this->exceptionReflection->setAccessible(true);
+        }
     }
 
     /**
@@ -457,9 +460,9 @@ final class ErrorHandler
      * @param string                           $file      The filename the backtrace was raised in
      * @param int                              $line      The line number the backtrace was raised at
      *
-     * @return array<int, mixed>
-     *
      * @psalm-param list<StacktraceFrame> $backtrace
+     *
+     * @return array<int, mixed>
      */
     private function cleanBacktraceFromErrorHandlerFrames(array $backtrace, string $file, int $line): array
     {

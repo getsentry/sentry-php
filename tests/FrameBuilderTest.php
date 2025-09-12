@@ -149,6 +149,33 @@ final class FrameBuilderTest extends TestCase
             ],
             new Frame(null, 'path/not/of/app/to/file', 10, null, 'path/not/of/app/to/file'),
         ];
+
+        yield [
+            new Options([
+                'prefixes' => ['/path/to'],
+            ]),
+            [
+                'file' => '/path/to/file',
+                'line' => 10,
+                'function' => 'test_function',
+                'class' => "App\\ClassName@anonymous\0/path/to/file:85$29e",
+            ],
+            new Frame("App\\ClassName@anonymous\0/file::test_function", '/file', 10, "App\\ClassName@anonymous\0/path/to/file:85$29e::test_function", '/path/to/file'),
+        ];
+
+        if (\PHP_VERSION_ID >= 80400) {
+            yield [
+                new Options([
+                    'prefixes' => ['/path/to'],
+                ]),
+                [
+                    'file' => '/path/to/file',
+                    'line' => 18,
+                    'function' => '{closure:/path/to/file:18}',
+                ],
+                new Frame('{closure:/file:18}', '/file', 18, null, '/path/to/file'),
+            ];
+        }
     }
 
     /**
@@ -256,5 +283,163 @@ final class FrameBuilderTest extends TestCase
             'path/to/file',
             false,
         ];
+    }
+
+    public function testGetFunctionArgumentsWithVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, int $second, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testVariadicFunction',
+            'args' => ['hello', 42, 'extra1', 'extra2', 'extra3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentsMethod = $reflectionClass->getMethod('getFunctionArguments');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentsMethod->setAccessible(true);
+        }
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertSame(42, $result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', 'extra2', 'extra3'], $result['rest']);
+    }
+
+    public function testGetFunctionArgumentsWithOnlyVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (...$args) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testOnlyVariadicFunction',
+            'args' => ['arg1', 'arg2', 'arg3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertArrayHasKey('args', $result);
+        $this->assertSame(['arg1', 'arg2', 'arg3'], $result['args']);
+    }
+
+    public function testGetFunctionArgumentsWithEmptyVariadicParameters(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testEmptyVariadicFunction',
+            'args' => ['hello'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame([], $result['rest']);
+    }
+
+    public function testGetFunctionArgumentsWithNullValues(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, $second, ...$rest) {
+        };
+
+        $backtraceFrame = [
+            'function' => 'testNullFunction',
+            'args' => ['hello', null, 'extra1', null, 'extra3'],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertNull($result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', null, 'extra3'], $result['rest']);
+    }
+
+    public function testGetFunctionArgumentsWithGapsInBacktraceArrayIndices(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $testFunction = function (string $first, int $second, ...$rest) {
+        };
+
+        $backtraceFrameArgs = [];
+        $backtraceFrameArgs[0] = 'hello';      // first parameter
+        $backtraceFrameArgs[1] = 42;           // second parameter
+        $backtraceFrameArgs[3] = 'extra1';     // gap at index 2, starts variadic args
+        $backtraceFrameArgs[5] = 'extra2';     // gap at index 4
+        $backtraceFrameArgs[7] = 'extra3';     // gap at index 6
+
+        $backtraceFrame = [
+            'function' => 'testGapsFunction',
+            'args' => $backtraceFrameArgs,
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentValuesMethod = $reflectionClass->getMethod('getFunctionArgumentValues');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentValuesMethod->setAccessible(true);
+        }
+
+        $reflectionFunction = new \ReflectionFunction($testFunction);
+
+        $result = $getFunctionArgumentValuesMethod->invoke($frameBuilder, $reflectionFunction, $backtraceFrame['args']);
+
+        $this->assertSame('hello', $result['first']);
+        $this->assertSame(42, $result['second']);
+
+        $this->assertArrayHasKey('rest', $result);
+        $this->assertSame(['extra1', 'extra2', 'extra3'], $result['rest']);
     }
 }

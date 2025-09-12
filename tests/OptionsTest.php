@@ -76,6 +76,13 @@ final class OptionsTest extends TestCase
     public static function optionsDataProvider(): \Generator
     {
         yield [
+            'org_id',
+            1,
+            'getOrgId',
+            'setOrgId',
+        ];
+
+        yield [
             'prefixes',
             ['foo', 'bar'],
             'getPrefixes',
@@ -87,6 +94,13 @@ final class OptionsTest extends TestCase
             0.5,
             'getSampleRate',
             'setSampleRate',
+        ];
+
+        yield [
+            'enable_logs',
+            true,
+            'getEnableLogs',
+            'setEnableLogs',
         ];
 
         yield [
@@ -111,13 +125,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'enable_tracing',
-            true,
-            'getEnableTracing',
-            'setEnableTracing',
-        ];
-
-        yield [
             'profiles_sample_rate',
             0.5,
             'getProfilesSampleRate',
@@ -129,13 +136,6 @@ final class OptionsTest extends TestCase
             false,
             'shouldAttachStacktrace',
             'setAttachStacktrace',
-        ];
-
-        yield [
-            'attach_metric_code_locations',
-            false,
-            'shouldAttachMetricCodeLocations',
-            'setAttachMetricCodeLocations',
         ];
 
         yield [
@@ -177,14 +177,7 @@ final class OptionsTest extends TestCase
             'spotlight',
             true,
             'isSpotlightEnabled',
-            'EnableSpotlight',
-        ];
-
-        yield [
-            'spotlight_url',
-            'http://google.com',
-            'getSpotlightUrl',
-            'setSpotlightUrl',
+            'enableSpotlight',
         ];
 
         yield [
@@ -258,10 +251,10 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'before_send_metrics',
+            'before_send_log',
             static function (): void {},
-            'getBeforeSendMetricsCallback',
-            'setBeforeSendMetricsCallback',
+            'getBeforeSendLogCallback',
+            'setBeforeSendLogCallback',
         ];
 
         yield [
@@ -269,6 +262,13 @@ final class OptionsTest extends TestCase
             ['www.example.com'],
             'getTracePropagationTargets',
             'setTracePropagationTargets',
+        ];
+
+        yield [
+            'strict_trace_propagation',
+            true,
+            'isStrictTracePropagationEnabled',
+            'enableStrictTracePropagation',
         ];
 
         yield [
@@ -342,6 +342,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_timeout',
+            0.2,
+            'getHttpTimeout',
+            'setHttpTimeout',
+        ];
+
+        yield [
             'http_connect_timeout',
             1,
             'getHttpConnectTimeout',
@@ -351,6 +358,13 @@ final class OptionsTest extends TestCase
         yield [
             'http_connect_timeout',
             1.2,
+            'getHttpConnectTimeout',
+            'setHttpConnectTimeout',
+        ];
+
+        yield [
+            'http_connect_timeout',
+            0.2,
             'getHttpConnectTimeout',
             'setHttpConnectTimeout',
         ];
@@ -639,6 +653,37 @@ final class OptionsTest extends TestCase
         $this->assertSame('0.0.4', (new Options())->getRelease());
     }
 
+    /**
+     * @backupGlobals enabled
+     *
+     * @dataProvider spotlightEnvironmentValueDataProvider
+     */
+    public function testSpotlightOptionDefaultValueIsControlledFromEnvironmentVariable(string $environmentVariableValue, bool $expectedSpotlightEnabled, string $expectedSpotlightUrl): void
+    {
+        $_SERVER['SENTRY_SPOTLIGHT'] = $environmentVariableValue;
+
+        $options = new Options();
+
+        $this->assertEquals($expectedSpotlightEnabled, $options->isSpotlightEnabled());
+        $this->assertEquals($expectedSpotlightUrl, $options->getSpotlightUrl());
+    }
+
+    public static function spotlightEnvironmentValueDataProvider(): array
+    {
+        $defaultSpotlightUrl = 'http://localhost:8969';
+
+        return [
+            ['', false, $defaultSpotlightUrl],
+            ['true', true, $defaultSpotlightUrl],
+            ['1', true, $defaultSpotlightUrl],
+            ['false', false, $defaultSpotlightUrl],
+            ['0', false, $defaultSpotlightUrl],
+            ['null', false, $defaultSpotlightUrl],
+            ['http://localhost:1234', true, 'http://localhost:1234'],
+            ['some invalid looking value', false, $defaultSpotlightUrl],
+        ];
+    }
+
     public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
     {
         $errorReportingBeforeTest = error_reporting(\E_ERROR);
@@ -651,34 +696,5 @@ final class OptionsTest extends TestCase
         error_reporting($errorReportingBeforeTest);
 
         $this->assertSame($errorTypesOptionValue, $options->getErrorTypes());
-    }
-
-    /**
-     * @dataProvider enableTracingDataProvider
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
-     */
-    public function testEnableTracing(?bool $enabledTracing, ?float $tracesSampleRate, $expectedResult): void
-    {
-        $options = new Options([
-            'enable_tracing' => $enabledTracing,
-            'traces_sample_rate' => $tracesSampleRate,
-        ]);
-
-        $this->assertSame($expectedResult, $options->isTracingEnabled());
-    }
-
-    public static function enableTracingDataProvider(): array
-    {
-        return [
-            [null, null, false],
-            [null, 1.0, true],
-            [false, 1.0, false],
-            [true, 1.0, true],
-            [null, 0.0, true], // We use this as - it's configured but turned off
-            [false, 0.0, false],
-            [true, 0.0, true], // We use this as - it's configured but turned off
-            [true, null, true],
-        ];
     }
 }

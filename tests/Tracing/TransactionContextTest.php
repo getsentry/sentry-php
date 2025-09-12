@@ -118,26 +118,6 @@ final class TransactionContextTest extends TestCase
         ];
 
         yield [
-            '00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-00',
-            '',
-            new SpanId('566e3688a61d4bc8'),
-            new TraceId('566e3688a61d4bc888951642d6f14a19'),
-            false,
-            DynamicSamplingContext::class,
-            true,
-        ];
-
-        yield [
-            '00-566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-01',
-            '',
-            new SpanId('566e3688a61d4bc8'),
-            new TraceId('566e3688a61d4bc888951642d6f14a19'),
-            true,
-            DynamicSamplingContext::class,
-            true,
-        ];
-
-        yield [
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
             'sentry-public_key=public,sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1',
             new SpanId('566e3688a61d4bc8'),
@@ -156,5 +136,20 @@ final class TransactionContextTest extends TestCase
             DynamicSamplingContext::class,
             true,
         ];
+    }
+
+    public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void
+    {
+        $context = TransactionContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-0',
+            'sentry-sample_rate=0.4'
+        );
+
+        $sampleRand = $context->getMetadata()->getSampleRand();
+
+        $this->assertNotNull($sampleRand);
+        // Should be within [rate, 1) and rounded to 6 decimals
+        $this->assertGreaterThanOrEqual(0.4, $sampleRand);
+        $this->assertLessThanOrEqual(0.999999, $sampleRand);
     }
 }

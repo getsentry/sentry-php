@@ -28,7 +28,8 @@ final class DynamicSamplingContextTest extends TestCase
         ?string $expectedSampleRate,
         ?string $expectedRelease,
         ?string $expectedEnvironment,
-        ?string $expectedTransaction
+        ?string $expectedTransaction,
+        ?string $expectedSampleRand
     ): void {
         $samplingContext = DynamicSamplingContext::fromHeader($header);
 
@@ -38,12 +39,14 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame($expectedRelease, $samplingContext->get('release'));
         $this->assertSame($expectedEnvironment, $samplingContext->get('environment'));
         $this->assertSame($expectedTransaction, $samplingContext->get('transaction'));
+        $this->assertSame($expectedSampleRand, $samplingContext->get('sample_rand'));
     }
 
     public static function fromHeaderDataProvider(): \Generator
     {
         yield [
             '',
+            null,
             null,
             null,
             null,
@@ -61,16 +64,18 @@ final class DynamicSamplingContextTest extends TestCase
             null,
             null,
             null,
+            null,
         ];
 
         yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,sentry-release=1.0.0,sentry-environment=test,sentry-user_segment=my_segment,sentry-transaction=<unlabeled transaction>',
+            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,sentry-release=1.0.0,sentry-environment=test,sentry-transaction=<unlabeled transaction>,sentry-sample_rand=0.5',
             'd49d9bf66f13450b81f65bc51cf49c03',
             'public',
             '1',
             '1.0.0',
             'test',
             '<unlabeled transaction>',
+            '0.5',
         ];
     }
 
@@ -92,6 +97,7 @@ final class DynamicSamplingContextTest extends TestCase
 
         $transaction = new Transaction($transactionContext, $hub);
         $transaction->getMetadata()->setSamplingRate(1.0);
+        $transaction->getMetadata()->setSampleRand(0.5);
 
         $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
 
@@ -101,6 +107,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('public', $samplingContext->get('public_key'));
         $this->assertSame('1.0.0', $samplingContext->get('release'));
         $this->assertSame('test', $samplingContext->get('environment'));
+        $this->assertSame('0.5', $samplingContext->get('sample_rand'));
         $this->assertTrue($samplingContext->isFrozen());
     }
 
@@ -130,6 +137,7 @@ final class DynamicSamplingContextTest extends TestCase
 
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+        $propagationContext->setSampleRand(0.5);
 
         $scope = new Scope();
         $scope->setPropagationContext($propagationContext);
@@ -141,6 +149,7 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertSame('public', $samplingContext->get('public_key'));
         $this->assertSame('1.0.0', $samplingContext->get('release'));
         $this->assertSame('test', $samplingContext->get('environment'));
+        $this->assertSame('0.5', $samplingContext->get('sample_rand'));
         $this->assertTrue($samplingContext->isFrozen());
     }
 

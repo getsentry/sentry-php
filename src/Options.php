@@ -9,6 +9,7 @@ use Psr\Log\NullLogger;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Logs\Log;
 use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -60,10 +61,6 @@ final class Options
         $this->configureOptions($this->resolver);
 
         $this->options = $this->resolver->resolve($options);
-
-        if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
-            $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
-        }
     }
 
     /**
@@ -126,16 +123,13 @@ final class Options
     }
 
     /**
-     * Sets if tracing should be enabled or not. If null tracesSampleRate takes
-     * precedence.
+     * Sets if logs should be enabled or not.
      *
-     * @param bool|null $enableTracing Boolean if tracing should be enabled or not
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
+     * @param bool|null $enableLogs Boolean if logs should be enabled or not
      */
-    public function setEnableTracing(?bool $enableTracing): self
+    public function setEnableLogs(?bool $enableLogs): self
     {
-        $options = array_merge($this->options, ['enable_tracing' => $enableTracing]);
+        $options = array_merge($this->options, ['enable_logs' => $enableLogs]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -143,15 +137,11 @@ final class Options
     }
 
     /**
-     * Gets if tracing is enabled or not.
-     *
-     * @return bool|null If the option `enable_tracing` is set or not
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
+     * Gets if logs is enabled or not.
      */
-    public function getEnableTracing(): ?bool
+    public function getEnableLogs(): bool
     {
-        return $this->options['enable_tracing'];
+        return $this->options['enable_logs'] ?? false;
     }
 
     /**
@@ -189,14 +179,10 @@ final class Options
     /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
-     * set and `enable_tracing` is set and not false.
+     * set.
      */
     public function isTracingEnabled(): bool
     {
-        if ($this->getEnableTracing() !== null && $this->getEnableTracing() === false) {
-            return false;
-        }
-
         return $this->getTracesSampleRate() !== null || $this->getTracesSampler() !== null;
     }
 
@@ -216,26 +202,6 @@ final class Options
     public function setAttachStacktrace(bool $enable): self
     {
         $options = array_merge($this->options, ['attach_stacktrace' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets whether a metric has their code location attached.
-     */
-    public function shouldAttachMetricCodeLocations(): bool
-    {
-        return $this->options['attach_metric_code_locations'];
-    }
-
-    /**
-     * Sets whether a metric will have their code location attached.
-     */
-    public function setAttachMetricCodeLocations(bool $enable): self
-    {
-        $options = array_merge($this->options, ['attach_metric_code_locations' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -364,10 +330,13 @@ final class Options
 
     public function isSpotlightEnabled(): bool
     {
-        return $this->options['spotlight'];
+        return \is_string($this->options['spotlight']) || $this->options['spotlight'];
     }
 
-    public function enableSpotlight(bool $enable): self
+    /**
+     * @param bool|string $enable can be passed a boolean or the Spotlight URL (which will also enable Spotlight)
+     */
+    public function enableSpotlight($enable): self
     {
         $options = array_merge($this->options, ['spotlight' => $enable]);
 
@@ -378,16 +347,11 @@ final class Options
 
     public function getSpotlightUrl(): string
     {
-        return $this->options['spotlight_url'];
-    }
+        if (\is_string($this->options['spotlight'])) {
+            return $this->options['spotlight'];
+        }
 
-    public function setSpotlightUrl(string $url): self
-    {
-        $options = array_merge($this->options, ['spotlight_url' => $url]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
+        return 'http://localhost:8969';
     }
 
     /**
@@ -418,6 +382,26 @@ final class Options
     public function getDsn(): ?Dsn
     {
         return $this->options['dsn'];
+    }
+
+    /**
+     * Gets the Org ID.
+     */
+    public function getOrgId(): ?int
+    {
+        return $this->options['org_id'];
+    }
+
+    /**
+     * Sets the Org ID.
+     */
+    public function setOrgId(int $orgId): self
+    {
+        $options = array_merge($this->options, ['org_id' => $orgId]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
     }
 
     /**
@@ -577,27 +561,27 @@ final class Options
     }
 
     /**
-     * Gets a callback that will be invoked before metrics are sent to the server.
+     * Gets a callback that will be invoked before an log is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @psalm-return callable(Log): ?Log
      */
-    public function getBeforeSendMetricsCallback(): callable
+    public function getBeforeSendLogCallback(): callable
     {
-        return $this->options['before_send_metrics'];
+        return $this->options['before_send_log'];
     }
 
     /**
-     * Sets a callable to be called to decide whether metrics should
-     * be send or not.
+     * Sets a callable to be called to decide whether a log should
+     * be captured or not.
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @psalm-param callable(Log): ?Log $callback
      */
-    public function setBeforeSendMetricsCallback(callable $callback): self
+    public function setBeforeSendLogCallback(callable $callback): self
     {
-        $options = array_merge($this->options, ['before_send_metrics' => $callback]);
+        $options = array_merge($this->options, ['before_send_log' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -622,6 +606,26 @@ final class Options
     public function setTracePropagationTargets(array $tracePropagationTargets): self
     {
         $options = array_merge($this->options, ['trace_propagation_targets' => $tracePropagationTargets]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
+     * Returns whether strict trace propagation is enabled or not.
+     */
+    public function isStrictTracePropagationEnabled(): bool
+    {
+        return $this->options['strict_trace_propagation'];
+    }
+
+    /**
+     * Sets if strict trace propagation should be enabled or not.
+     */
+    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    {
+        $options = array_merge($this->options, ['strict_trace_propagation' => $strictTracePropagation]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1068,7 +1072,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return null|callable(\Sentry\Tracing\SamplingContext): float
+     * @psalm-return null|callable(Tracing\SamplingContext): float
      */
     public function getTracesSampler(): ?callable
     {
@@ -1081,7 +1085,7 @@ final class Options
      *
      * @param ?callable $sampler The sampler
      *
-     * @psalm-param null|callable(\Sentry\Tracing\SamplingContext): float $sampler
+     * @psalm-param null|callable(Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler(?callable $sampler): self
     {
@@ -1107,19 +1111,18 @@ final class Options
             'default_integrations' => true,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
-            'enable_tracing' => null,
+            'enable_logs' => false,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
-            'attach_metric_code_locations' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
-            'spotlight' => false,
-            'spotlight_url' => 'http://localhost:8969',
+            'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
+            'org_id' => null,
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
@@ -1132,10 +1135,11 @@ final class Options
             'before_send_check_in' => static function (Event $checkIn): Event {
                 return $checkIn;
             },
-            'before_send_metrics' => static function (Event $metrics): Event {
-                return $metrics;
+            'before_send_log' => static function (Log $log): Log {
+                return $log;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
@@ -1162,27 +1166,28 @@ final class Options
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
+        $resolver->setAllowedTypes('enable_logs', 'bool');
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
-        $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
-        $resolver->setAllowedTypes('spotlight', 'bool');
-        $resolver->setAllowedTypes('spotlight_url', 'string');
+        $resolver->setAllowedTypes('spotlight', ['bool', 'string', 'null']);
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
+        $resolver->setAllowedTypes('org_id', ['null', 'int']);
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
+        $resolver->setAllowedTypes('before_send_log', 'callable');
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
@@ -1198,6 +1203,7 @@ final class Options
         $resolver->setAllowedTypes('http_connect_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('http_timeout', ['int', 'float']);
         $resolver->setAllowedTypes('http_ssl_verify_peer', 'bool');
+        $resolver->setAllowedTypes('http_ssl_native_ca', 'bool');
         $resolver->setAllowedTypes('http_compression', 'bool');
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
@@ -1214,6 +1220,8 @@ final class Options
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
+
+        $resolver->setNormalizer('spotlight', \Closure::fromCallable([$this, 'normalizeBooleanOrUrl']));
 
         $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1238,6 +1246,22 @@ final class Options
         }
 
         return $path;
+    }
+
+    /**
+     * @return bool|string
+     */
+    private function normalizeBooleanOrUrl(SymfonyOptions $options, ?string $booleanOrUrl)
+    {
+        if (empty($booleanOrUrl)) {
+            return false;
+        }
+
+        if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
+            return $booleanOrUrl;
+        }
+
+        return filter_var($booleanOrUrl, \FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

@@ -130,11 +130,9 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
             if ($headersShouldBePresent) {
                 $this->assertNotEmpty($request->getHeader('sentry-trace'));
-                $this->assertNotEmpty($request->getHeader('traceparent'));
                 $this->assertNotEmpty($request->getHeader('baggage'));
             } else {
                 $this->assertEmpty($request->getHeader('sentry-trace'));
-                $this->assertEmpty($request->getHeader('traceparent'));
                 $this->assertEmpty($request->getHeader('baggage'));
             }
 
@@ -167,11 +165,9 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
             if ($headersShouldBePresent) {
                 $this->assertNotEmpty($request->getHeader('sentry-trace'));
-                $this->assertNotEmpty($request->getHeader('traceparent'));
                 $this->assertNotEmpty($request->getHeader('baggage'));
             } else {
                 $this->assertEmpty($request->getHeader('sentry-trace'));
-                $this->assertEmpty($request->getHeader('traceparent'));
                 $this->assertEmpty($request->getHeader('baggage'));
             }
 
@@ -344,7 +340,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $middleware = GuzzleTracingMiddleware::trace($hub);
         $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
             $this->assertNotEmpty($request->getHeader('sentry-trace'));
-            $this->assertNotEmpty($request->getHeader('traceparent'));
             $this->assertNotEmpty($request->getHeader('baggage'));
             if ($expectedPromiseResult instanceof \Throwable) {
                 return new RejectedPromise($expectedPromiseResult);

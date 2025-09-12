@@ -8,8 +8,6 @@ final class TransactionContext extends SpanContext
 {
     private const SENTRY_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01])?[ \\t]*$/i';
 
-    private const W3C_TRACEPARENT_HEADER_REGEX = '/^[ \\t]*(?<version>[0]{2})?-?(?<trace_id>[0-9a-f]{32})?-?(?<span_id>[0-9a-f]{16})?-?(?<sampled>[01]{2})?[ \\t]*$/i';
-
     public const DEFAULT_NAME = '<unlabeled transaction>';
 
     /**
@@ -166,21 +164,6 @@ final class TransactionContext extends SpanContext
                 $context->parentSampled = $matches['sampled'] === '1';
                 $hasSentryTrace = true;
             }
-        } elseif (preg_match(self::W3C_TRACEPARENT_HEADER_REGEX, $sentryTrace, $matches)) {
-            if (!empty($matches['trace_id'])) {
-                $context->traceId = new TraceId($matches['trace_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (!empty($matches['span_id'])) {
-                $context->parentSpanId = new SpanId($matches['span_id']);
-                $hasSentryTrace = true;
-            }
-
-            if (isset($matches['sampled'])) {
-                $context->parentSampled = $matches['sampled'] === '01';
-                $hasSentryTrace = true;
-            }
         }
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
@@ -196,6 +179,29 @@ final class TransactionContext extends SpanContext
             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
             // Propagate this Dynamic Sampling Context.
             $context->getMetadata()->setDynamicSamplingContext($samplingContext);
+        }
+
+        // Store the propagated traces sample rate
+        if ($samplingContext->has('sample_rate')) {
+            $context->getMetadata()->setParentSamplingRate((float) $samplingContext->get('sample_rate'));
+        }
+
+        // Store the propagated trace sample rand or generate a new one
+        if ($samplingContext->has('sample_rand')) {
+            $context->getMetadata()->setSampleRand((float) $samplingContext->get('sample_rand'));
+        } else {
+            if ($samplingContext->has('sample_rate') && $context->parentSampled !== null) {
+                if ($context->parentSampled === true) {
+                    // [0, rate)
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6));
+                } else {
+                    // [rate, 1)
+                    $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample_rate'), 6));
+                }
+            } elseif ($context->parentSampled !== null) {
+                // [0, 1)
+                $context->getMetadata()->setSampleRand(round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6));
+            }
         }
 
         return $context;

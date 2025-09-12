@@ -6,7 +6,7 @@ namespace Sentry;
 
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
-use Sentry\Metrics\Types\AbstractType;
+use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -19,6 +19,10 @@ use Sentry\Tracing\Span;
  *     sum: int|float,
  *     count: int,
  *     tags: array<string>,
+ * }
+ * @phpstan-type SdkPackageEntry array{
+ *     name: string,
+ *     version: string,
  * }
  */
 final class Event
@@ -63,14 +67,9 @@ final class Event
     private $checkIn;
 
     /**
-     * @var array<string, AbstractType> The metrics data
+     * @var Log[]
      */
-    private $metrics = [];
-
-    /**
-     * @var array<string, array<string, MetricsSummary>>
-     */
-    private $metricsSummary = [];
+    private $logs = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -186,6 +185,16 @@ final class Event
     private $sdkVersion = Client::SDK_VERSION;
 
     /**
+     * @var SdkPackageEntry[] The Sentry SDK packages
+     */
+    private $sdkPackages = [
+        [
+            'name' => 'composer:sentry/sentry',
+            'version' => Client::SDK_VERSION,
+        ],
+    ];
+
+    /**
      * @var EventType The type of the Event
      */
     private $type;
@@ -227,9 +236,9 @@ final class Event
         return new self($eventId, EventType::checkIn());
     }
 
-    public static function createMetrics(?EventId $eventId = null): self
+    public static function createLogs(?EventId $eventId = null): self
     {
-        return new self($eventId, EventType::metrics());
+        return new self($eventId, EventType::logs());
     }
 
     /**
@@ -282,6 +291,40 @@ final class Event
         $this->sdkVersion = $sdkVersion;
 
         return $this;
+    }
+
+    /**
+     * Append a package to the list of SDK packages.
+     *
+     * @param SdkPackageEntry $package The package to append
+     *
+     * @return $this
+     *
+     * @internal
+     */
+    public function appendSdkPackage(array $package): self
+    {
+        $this->sdkPackages[] = $package;
+
+        return $this;
+    }
+
+    /**
+     * Gets the SDK playload that will be sent to Sentry.
+     *
+     * @see https://develop.sentry.dev/sdk/data-model/event-payloads/sdk/
+     *
+     * @return array{name: string, version: string, packages: SdkPackageEntry[]}
+     *
+     * @internal
+     */
+    public function getSdkPayload(): array
+    {
+        return [
+            'name' => $this->sdkIdentifier,
+            'version' => $this->sdkVersion,
+            'packages' => $this->sdkPackages,
+        ];
     }
 
     /**
@@ -377,37 +420,19 @@ final class Event
     }
 
     /**
-     * @return array<string, AbstractType>
+     * @return Log[]
      */
-    public function getMetrics(): array
+    public function getLogs(): array
     {
-        return $this->metrics;
+        return $this->logs;
     }
 
     /**
-     * @param array<string, AbstractType> $metrics
+     * @param Log[] $logs
      */
-    public function setMetrics(array $metrics): self
+    public function setLogs(array $logs): self
     {
-        $this->metrics = $metrics;
-
-        return $this;
-    }
-
-    /**
-     * @return array<string, array<string, MetricsSummary>>
-     */
-    public function getMetricsSummary(): array
-    {
-        return $this->metricsSummary;
-    }
-
-    /**
-     * @param array<string, array<string, MetricsSummary>> $metricsSummary
-     */
-    public function setMetricsSummary(array $metricsSummary): self
-    {
-        $this->metricsSummary = $metricsSummary;
+        $this->logs = $logs;
 
         return $this;
     }
@@ -827,11 +852,11 @@ final class Event
     /**
      * Gets the SDK metadata.
      *
-     * @return mixed
-     *
      * @psalm-template T of string|null
      *
      * @psalm-param T $name
+     *
+     * @return mixed
      *
      * @psalm-return (T is string ? mixed : array<string, mixed>|null)
      */

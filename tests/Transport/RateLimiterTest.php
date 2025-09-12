@@ -57,7 +57,6 @@ final class RateLimiterTest extends TestCase
             [
                 EventType::event(),
                 EventType::transaction(),
-                EventType::metrics(),
             ],
         ];
 
@@ -65,38 +64,6 @@ final class RateLimiterTest extends TestCase
             new Response(429, ['X-Sentry-Rate-Limits' => ['60::org']], ''),
             true,
             EventType::cases(),
-        ];
-
-        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category' => [
-            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded:custom']], ''),
-            true,
-            [
-                EventType::metrics(),
-            ],
-        ];
-
-        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category, namespace custom and foo' => [
-            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded:custom;foo']], ''),
-            true,
-            [
-                EventType::metrics(),
-            ],
-        ];
-
-        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category without reason code' => [
-            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization::custom']], ''),
-            true,
-            [
-                EventType::metrics(),
-            ],
-        ];
-
-        yield 'Back-off using X-Sentry-Rate-Limits header with metric_bucket category without metric namespaces' => [
-            new Response(429, ['X-Sentry-Rate-Limits' => ['60:metric_bucket:organization:quota_exceeded']], ''),
-            true,
-            [
-                EventType::metrics(),
-            ],
         ];
 
         yield 'Do not back-off using X-Sentry-Rate-Limits header with metric_bucket category, namespace foo' => [
@@ -149,13 +116,13 @@ final class RateLimiterTest extends TestCase
     private function assertEventTypesAreRateLimited(array $eventTypesLimited): void
     {
         foreach ($eventTypesLimited as $eventType) {
-            $this->assertTrue($this->rateLimiter->isRateLimited($eventType));
+            $this->assertTrue($this->rateLimiter->isRateLimited((string) $eventType));
         }
 
         $eventTypesNotLimited = array_diff(EventType::cases(), $eventTypesLimited);
 
         foreach ($eventTypesNotLimited as $eventType) {
-            $this->assertFalse($this->rateLimiter->isRateLimited($eventType));
+            $this->assertFalse($this->rateLimiter->isRateLimited((string) $eventType));
         }
     }
 }

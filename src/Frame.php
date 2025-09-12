@@ -13,8 +13,6 @@ final class Frame
 {
     public const INTERNAL_FRAME_FILENAME = '[internal]';
 
-    public const ANONYMOUS_CLASS_PREFIX = "class@anonymous\x00";
-
     /**
      * @var string|null The name of the function being called
      */

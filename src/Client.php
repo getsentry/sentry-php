@@ -32,7 +32,13 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.9.0';
+    public const SDK_VERSION = '4.14.2';
+
+    /**
+     * Regex pattern to detect if a string is a regex pattern (starts and ends with / optionally followed by flags).
+     * Supported flags: i (case-insensitive), m (multiline), s (dotall), u (unicode).
+     */
+    private const REGEX_PATTERN_DETECTION = '/^\/.*\/[imsu]*$/';
 
     /**
      * @var Options The client options
@@ -149,7 +155,7 @@ class Client implements ClientInterface
     public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $className = \get_class($exception);
-        if ($this->isIgnoredException($className)) {
+        if ($this->shouldIgnoreException($className)) {
             $this->logger->info(
                 'The exception will be discarded because it matches an entry in "ignore_exceptions".',
                 ['className' => $className]
@@ -255,6 +261,16 @@ class Client implements ClientInterface
         return $this->transport;
     }
 
+    public function getSdkIdentifier(): string
+    {
+        return $this->sdkIdentifier;
+    }
+
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
@@ -280,6 +296,7 @@ class Client implements ClientInterface
 
         $event->setSdkIdentifier($this->sdkIdentifier);
         $event->setSdkVersion($this->sdkVersion);
+
         $event->setTags(array_merge($this->options->getTags(), $event->getTags()));
 
         if ($event->getServerName() === null) {
@@ -348,11 +365,64 @@ class Client implements ClientInterface
         return $event;
     }
 
-    private function isIgnoredException(string $className): bool
+    /**
+     * Checks if an exception should be ignored based on configured patterns.
+     * Supports both class hierarchy matching and regex patterns.
+     * Patterns starting and ending with '/' are treated as regex patterns.
+     */
+    private function shouldIgnoreException(string $className): bool
     {
-        foreach ($this->options->getIgnoreExceptions() as $ignoredException) {
-            if (is_a($className, $ignoredException, true)) {
-                return true;
+        foreach ($this->options->getIgnoreExceptions() as $pattern) {
+            // Check for regex pattern (starts with / and ends with / optionally followed by flags)
+            if (preg_match(self::REGEX_PATTERN_DETECTION, $pattern)) {
+                try {
+                    if (preg_match($pattern, $className)) {
+                        return true;
+                    }
+                } catch (\Throwable $e) {
+                    // Invalid regex pattern, log and skip
+                    $this->logger->warning(
+                        \sprintf('Invalid regex pattern in ignore_exceptions: "%s". Error: %s', $pattern, $e->getMessage())
+                    );
+                    continue;
+                }
+            } else {
+                // Class hierarchy check
+                if (is_a($className, $pattern, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if a transaction should be ignored based on configured patterns.
+     * Supports both exact string matching and regex patterns.
+     * Patterns starting and ending with '/' are treated as regex patterns.
+     */
+    private function shouldIgnoreTransaction(string $transactionName): bool
+    {
+        foreach ($this->options->getIgnoreTransactions() as $pattern) {
+            // Check for regex pattern (starts with / and ends with / optionally followed by flags)
+            if (preg_match(self::REGEX_PATTERN_DETECTION, $pattern)) {
+                try {
+                    if (preg_match($pattern, $transactionName)) {
+                        return true;
+                    }
+                } catch (\Throwable $e) {
+                    // Invalid regex pattern, log and skip
+                    $this->logger->warning(
+                        \sprintf('Invalid regex pattern in ignore_transactions: "%s". Error: %s', $pattern, $e->getMessage())
+                    );
+                    continue;
+                }
+            } else {
+                // Exact string match
+                if ($transactionName === $pattern) {
+                    return true;
+                }
             }
         }
 
@@ -369,7 +439,7 @@ class Client implements ClientInterface
             }
 
             foreach ($exceptions as $exception) {
-                if ($this->isIgnoredException($exception->getType())) {
+                if ($this->shouldIgnoreException($exception->getType())) {
                     $this->logger->info(
                         \sprintf('The %s will be discarded because it matches an entry in "ignore_exceptions".', $eventDescription),
                         ['event' => $event]
@@ -387,7 +457,7 @@ class Client implements ClientInterface
                 return $event;
             }
 
-            if (\in_array($transactionName, $this->options->getIgnoreTransactions(), true)) {
+            if ($this->shouldIgnoreTransaction($transactionName)) {
                 $this->logger->info(
                     \sprintf('The %s will be discarded because it matches a entry in "ignore_transactions".', $eventDescription),
                     ['event' => $event]
@@ -409,8 +479,6 @@ class Client implements ClientInterface
                 return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
             case EventType::checkIn():
                 return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
-            case EventType::metrics():
-                return ($this->options->getBeforeSendMetricsCallback())($event, $hint);
             default:
                 return $event;
         }
@@ -423,8 +491,6 @@ class Client implements ClientInterface
                 return 'before_send_transaction';
             case EventType::checkIn():
                 return 'before_send_check_in';
-            case EventType::metrics():
-                return 'before_send_metrics';
             default:
                 return 'before_send';
         }

@@ -7,7 +7,7 @@ parameters:
 
 		-
 			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 1
+			count: 2
 			path: src/Dsn.php
 
 		-
@@ -33,17 +33,7 @@ parameters:
 		-
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
 			count: 1
-			path: src/Logger/DebugFileLogger.php
-
-		-
-			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
-			count: 1
-			path: src/Logger/DebugStdOutLogger.php
-
-		-
-			message: "#^Method Sentry\\\\Metrics\\\\Types\\\\AbstractType\\:\\:add\\(\\) has parameter \\$value with no type specified\\.$#"
-			count: 1
-			path: src/Metrics/Types/AbstractType.php
+			path: src/Logger/DebugLogger.php
 
 		-
 			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
@@ -66,7 +56,7 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendMetricsCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendLogCallback\\(\\) should return callable\\(Sentry\\\\Logs\\\\Log\\)\\: \\(Sentry\\\\Logs\\\\Log\\|null\\) but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -91,7 +81,7 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getEnableTracing\\(\\) should return bool\\|null but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:getEnableLogs\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -186,6 +176,11 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: "#^Method Sentry\\\\Options\\:\\:getOrgId\\(\\) should return int\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/Options.php
+
+		-
 			message: "#^Method Sentry\\\\Options\\:\\:getPrefixes\\(\\) should return array\\<string\\> but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -202,11 +197,6 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getServerName\\(\\) should return string but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
-			message: "#^Method Sentry\\\\Options\\:\\:getSpotlightUrl\\(\\) should return string but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -246,12 +236,7 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:isSpotlightEnabled\\(\\) should return bool but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachMetricCodeLocations\\(\\) should return bool but returns mixed\\.$#"
+			message: "#^Method Sentry\\\\Options\\:\\:isStrictTracePropagationEnabled\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -272,11 +257,6 @@ parameters:
 
 		-
 			message: "#^Argument of an invalid type object supplied for foreach, only iterables are supported\\.$#"
-			count: 1
-			path: src/Serializer/AbstractSerializer.php
-
-		-
-			message: "#^Cannot cast mixed to string\\.$#"
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
 
@@ -302,11 +282,6 @@ parameters:
 
 		-
 			message: "#^Parameter \\#1 \\$ipAddress of method Sentry\\\\UserDataBag\\:\\:setIpAddress\\(\\) expects string\\|null, mixed given\\.$#"
-			count: 1
-			path: src/UserDataBag.php
-
-		-
-			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
 

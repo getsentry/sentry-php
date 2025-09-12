@@ -40,9 +40,9 @@ final class DynamicSamplingContext
      * @param string $key   the list member key
      * @param string $value the list member value
      */
-    public function set(string $key, string $value): self
+    public function set(string $key, string $value, bool $forceOverwrite = false): self
     {
-        if ($this->isFrozen) {
+        if ($this->isFrozen && !$forceOverwrite) {
             return $this;
         }
 
@@ -172,6 +172,9 @@ final class DynamicSamplingContext
             if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
                 $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
             }
+            if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+                $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
+            }
 
             if ($options->getRelease() !== null) {
                 $samplingContext->set('release', $options->getRelease());
@@ -186,6 +189,10 @@ final class DynamicSamplingContext
             $samplingContext->set('sampled', $transaction->getSampled() ? 'true' : 'false');
         }
 
+        if ($transaction->getMetadata()->getSampleRand() !== null) {
+            $samplingContext->set('sample_rand', (string) $transaction->getMetadata()->getSampleRand());
+        }
+
         $samplingContext->freeze();
 
         return $samplingContext;
@@ -195,6 +202,7 @@ final class DynamicSamplingContext
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
+        $samplingContext->set('sample_rand', (string) $scope->getPropagationContext()->getSampleRand());
 
         if ($options->getTracesSampleRate() !== null) {
             $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());
@@ -202,6 +210,10 @@ final class DynamicSamplingContext
 
         if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
             $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
+        }
+
+        if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+            $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
         }
 
         if ($options->getRelease() !== null) {

@@ -15,7 +15,6 @@ use Sentry\State\HubInterface;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
-use function Sentry\getW3CTraceparent;
 
 /**
  * This handler traces each outgoing HTTP request by recording performance data.
@@ -59,20 +58,23 @@ final class GuzzleTracingMiddleware
                     $spanContext->setDescription($request->getMethod() . ' ' . $partialUri);
 
                     $childSpan = $parentSpan->startChild($spanContext);
+
+                    $hub->setSpan($childSpan);
                 }
 
                 if (self::shouldAttachTracingHeaders($client, $request)) {
                     $request = $request
                         ->withHeader('sentry-trace', getTraceparent())
-                        ->withHeader('traceparent', getW3CTraceparent())
                         ->withHeader('baggage', getBaggage());
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $partialUri) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
                         $childSpan->finish();
+
+                        $hub->setSpan($parentSpan);
                     }
 
                     $response = null;

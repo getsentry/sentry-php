@@ -64,8 +64,8 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_URL, $dsn->getEnvelopeApiEndpointUrl());
         curl_setopt($curlHandle, \CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($curlHandle, \CURLOPT_USERAGENT, $this->sdkIdentifier . '/' . $this->sdkVersion);
-        curl_setopt($curlHandle, \CURLOPT_TIMEOUT, $options->getHttpTimeout());
-        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT, $options->getHttpConnectTimeout());
+        curl_setopt($curlHandle, \CURLOPT_TIMEOUT_MS, $options->getHttpTimeout() * 1000);
+        curl_setopt($curlHandle, \CURLOPT_CONNECTTIMEOUT_MS, $options->getHttpConnectTimeout() * 1000);
         curl_setopt($curlHandle, \CURLOPT_ENCODING, '');
         curl_setopt($curlHandle, \CURLOPT_POST, true);
         curl_setopt($curlHandle, \CURLOPT_POSTFIELDS, $requestData);
