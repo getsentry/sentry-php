@@ -1,0 +1,111 @@
+# Sentry PHP SDK Development Rules
+
+## Project Overview
+The Sentry PHP SDK is an official error tracking and monitoring library for PHP applications. It provides error reporting, performance monitoring, and crash reporting capabilities.
+
+## Core Requirements
+
+### PHP Version Compatibility
+- All code must support PHP 7.2 and up (including PHP 8.x)
+- Use appropriate type hints and features compatible with the minimum PHP version
+- Test against multiple PHP versions in CI
+
+### Breaking Changes Policy
+- No breaking changes to any public methods are allowed in minor/patch releases
+- Existing methods in interfaces cannot be altered without major version bump
+- Follow semantic versioning strictly as defined in [CONTRIBUTING.md](mdc:CONTRIBUTING.md)
+
+## Code Quality Standards
+
+### Code Style and Linting
+- All code must adhere to the project's code style
+- Run `composer cs-check` to check for linting errors
+- Use `composer cs-fix` to automatically fix linting issues
+- Configuration is in [.php-cs-fixer.dist.php](mdc:.php-cs-fixer.dist.php)
+
+### Static Analysis
+- Code must pass PHPStan analysis (`composer phpstan`)
+- Code must pass Psalm analysis (`composer psalm`)
+- Baseline files exist for legacy issues: [phpstan-baseline.neon](mdc:phpstan-baseline.neon) and [psalm-baseline.xml](mdc:psalm-baseline.xml)
+
+### Testing Requirements
+- All new features require comprehensive tests
+- Tests are located in the [tests/](mdc:tests) directory
+- Run tests with `composer tests` or `vendor/bin/phpunit`
+- Test structure mirrors the src/ directory structure
+- Use PHPUnit for unit testing
+
+## Project Structure
+
+### Main Source Code
+- Core SDK code is in [src/](mdc:src) directory
+- Entry point functions are in [src/functions.php](mdc:src/functions.php)
+- Main client class is [src/Client.php](mdc:src/Client.php)
+- Configuration handled by [src/Options.php](mdc:src/Options.php)
+
+### Key Components
+- **Events**: [src/Event.php](mdc:src/Event.php) - Core event structure
+- **Error Handling**: [src/ErrorHandler.php](mdc:src/ErrorHandler.php) - Error capture
+- **Integrations**: [src/Integration/](mdc:src/Integration) - Framework integrations
+- **Transport**: [src/Transport/](mdc:src/Transport) - Data transmission
+- **Serialization**: [src/Serializer/](mdc:src/Serializer) - Data serialization
+- **Tracing**: [src/Tracing/](mdc:src/Tracing) - Performance monitoring
+- **Profiling**: [src/Profiling/](mdc:src/Profiling) - Performance profiling
+
+### Dependencies
+- Core dependencies defined in [composer.json](mdc:composer.json)
+- PSR-7 HTTP messages via guzzlehttp/psr7
+- Symfony OptionsResolver for configuration
+- PSR-3 logging interface support
+
+## Development Workflow
+
+### Code Formatting
+- Always add import statements for all classes and functions used
+- Use proper PHP namespacing (`Sentry\` namespace)
+- Follow PSR-4 autoloading standards
+
+### Commit Messages
+- Follow the commit message format: https://develop.sentry.dev/commit-messages/#commit-message-format
+- Use conventional commits for automatic changelog generation
+
+### Pull Request Guidelines
+- Read [CONTRIBUTING.md](mdc:CONTRIBUTING.md) before submitting PRs
+- PRs use LOGAF scale for feedback (Low, Medium, High priority comments)
+- Ensure all CI checks pass (tests, linting, static analysis)
+- Add appropriate tests for new functionality
+
+## Common Patterns
+
+### Error Handling
+- Use proper exception handling and logging
+- Capture exceptions with appropriate context
+- Follow Sentry's error reporting best practices
+
+### Configuration
+- Use [src/Options.php](mdc:src/Options.php) for configuration management
+- Support environment-based configuration
+- Provide sensible defaults
+
+### Integration Development
+- New integrations go in [src/Integration/](mdc:src/Integration)
+- Follow existing integration patterns
+- Provide proper setup and teardown methods
+- Document integration usage
+
+### Testing Patterns
+- Test files mirror source structure in [tests/](mdc:tests)
+- Use descriptive test method names
+- Include both positive and negative test cases
+- Mock external dependencies appropriately
+
+## Documentation
+- Update [CHANGELOG.md](mdc:CHANGELOG.md) for user-facing changes
+- Follow upgrade guides pattern for breaking changes
+- Maintain compatibility with official Sentry documentation
+
+## Release Process
+- Releases are managed through GitHub Actions and Craft
+- Follow the release process outlined in [CONTRIBUTING.md](mdc:CONTRIBUTING.md)
+- Two-person approval process for releases
+- Automatic changelog generation from conventional commits
