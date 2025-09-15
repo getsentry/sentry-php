@@ -74,7 +74,6 @@ class LogLevel
     {
         switch ($this->value) {
             case 'trace':
-                return \Psr\Log\LogLevel::NOTICE;
             case 'debug':
                 return \Psr\Log\LogLevel::DEBUG;
             case 'warn':
@@ -83,6 +82,7 @@ class LogLevel
                 return \Psr\Log\LogLevel::ERROR;
             case 'fatal':
                 return \Psr\Log\LogLevel::CRITICAL;
+            case 'info':
             default:
                 return \Psr\Log\LogLevel::INFO;
         }
