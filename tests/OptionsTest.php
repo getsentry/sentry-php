@@ -321,13 +321,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'max_value_length',
-            50,
-            'getMaxValueLength',
-            'setMaxValueLength',
-        ];
-
-        yield [
             'transport',
             new HttpTransport(new Options(), new HttpClient('foo', 'bar'), new PayloadSerializer(new Options())),
             'getTransport',

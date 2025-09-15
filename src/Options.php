@@ -936,24 +936,14 @@ final class Options
     }
 
     /**
-     * Gets the max length for values in the event payload.
-     */
-    public function getMaxValueLength(): int
-    {
-        return $this->options['max_value_length'];
-    }
-
-    /**
      * Sets the max length for specific values in the event payload.
      *
      * @param int $maxValueLength The number of characters after which the values containing text will be truncated
+     *
+     * @deprecated SDK will no longer perform truncation on individual fields, this is now a no-op
      */
     public function setMaxValueLength(int $maxValueLength): self
     {
-        $options = array_merge($this->options, ['max_value_length' => $maxValueLength]);
-
-        $this->options = $this->resolver->resolve($options);
-
         return $this;
     }
 
@@ -1271,7 +1261,6 @@ final class Options
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
             'http_proxy' => null,
@@ -1320,7 +1309,6 @@ final class Options
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
-        $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
         $resolver->setAllowedTypes('http_client', ['null', HttpClientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
