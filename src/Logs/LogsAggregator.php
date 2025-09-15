@@ -149,7 +149,7 @@ final class LogsAggregator
 
         // We check if it's a `LogsLogger` to avoid a infinite loop where the logger is logging the logs it's writing
         if ($sdkLogger !== null) {
-            $sdkLogger->log($log->getPsrLogLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
+            $sdkLogger->log($log->getPsrLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
         }
 
         $this->logs[] = $log;
