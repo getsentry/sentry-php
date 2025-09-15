@@ -21,6 +21,68 @@ use Sentry\UserDataBag;
 final class LogsAggregatorTest extends TestCase
 {
     /**
+     * This test is kept simple to ensure the `LogAggregator` is able to handle attributes passed in different formats.
+     *
+     * Extensive testing of attributes is done in the `Attributes/*` test classes.
+     *
+     * @dataProvider attributesDataProvider
+     */
+    public function testAttributes(array $attributes, array $expected): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'Test message', [], $attributes);
+
+        $logs = $aggregator->all();
+
+        $this->assertCount(1, $logs);
+
+        $log = $logs[0];
+
+        $this->assertSame(
+            $expected,
+            array_filter(
+                $log->attributes()->toSimpleArray(),
+                static function (string $key) {
+                    // We are not testing internal Sentry attributes here, only the ones the user supplied
+                    return !str_starts_with($key, 'sentry.');
+                },
+                \ARRAY_FILTER_USE_KEY
+            )
+        );
+    }
+
+    public static function attributesDataProvider(): \Generator
+    {
+        yield [
+            [],
+            [],
+        ];
+
+        yield [
+            ['foo', 'bar'],
+            [],
+        ];
+
+        yield [
+            ['foo' => 'bar'],
+            ['foo' => 'bar'],
+        ];
+
+        yield [
+            ['foo' => ['bar']],
+            [],
+        ];
+    }
+
+    /**
      * @dataProvider messageFormattingDataProvider
      */
     public function testMessageFormatting(string $message, array $values, string $expected): void
@@ -43,6 +105,12 @@ final class LogsAggregatorTest extends TestCase
         $log = $logs[0];
 
         $this->assertSame($expected, $log->getBody());
+
+        if (\count($values)) {
+            $this->assertNotNull($log->attributes()->get('sentry.message.template'));
+        } else {
+            $this->assertNull($log->attributes()->get('sentry.message.template'));
+        }
     }
 
     public static function messageFormattingDataProvider(): \Generator
