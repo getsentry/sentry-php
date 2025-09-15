@@ -45,9 +45,13 @@ final class ModulesIntegration implements IntegrationInterface
     {
         if (empty(self::$packages)) {
             foreach (InstalledVersions::getInstalledPackages() as $package) {
-                $version = InstalledVersions::getPrettyVersion($package);
-                if ($version !== null) {
-                    self::$packages[$package] = $version;
+                try {
+                    $version = InstalledVersions::getPrettyVersion($package);
+                    if ($version !== null) {
+                        self::$packages[$package] = $version;
+                    }
+                } catch (\Throwable $t) {
+                    // Ignore it in case of any error
                 }
             }
         }
