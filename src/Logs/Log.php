@@ -82,6 +82,11 @@ class Log
         return $this;
     }
 
+    public function getPsrLogLevel(): string
+    {
+        return $this->level->asPsrLevel();
+    }
+
     public function getBody(): string
     {
         return $this->body;

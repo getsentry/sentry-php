@@ -70,6 +70,24 @@ class LogLevel
         return $this->priority;
     }
 
+    public function asPsrLevel(): string
+    {
+        switch ($this->value) {
+            case 'trace':
+                return \Psr\Log\LogLevel::NOTICE;
+            case 'debug':
+                return \Psr\Log\LogLevel::DEBUG;
+            case 'warn':
+                return \Psr\Log\LogLevel::WARNING;
+            case 'error':
+                return \Psr\Log\LogLevel::ERROR;
+            case 'fatal':
+                return \Psr\Log\LogLevel::CRITICAL;
+            default:
+                return \Psr\Log\LogLevel::INFO;
+        }
+    }
+
     private static function getInstance(string $value, int $priority): self
     {
         if (!isset(self::$instances[$value])) {

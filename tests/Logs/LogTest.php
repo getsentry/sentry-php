@@ -32,4 +32,32 @@ final class LogTest extends TestCase
         $log->setBody('bar');
         $this->assertSame('bar', $log->getBody());
     }
+
+    /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLogLevelToPsrMapping(LogLevel $logLevel, $expected): void
+    {
+        $this->assertSame($expected, $logLevel->asPsrLevel());
+    }
+
+    /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLogAndLogLevelConsistent(LogLevel $level, $expected): void
+    {
+        $log = new Log(1.0, '123', $level, 'foo');
+        $this->assertSame($expected, $log->getPsrLogLevel());
+    }
+
+    private function logLevelDataProvider(): \Generator
+    {
+        yield 'Debug -> Debug' => [LogLevel::debug(), \Psr\Log\LogLevel::DEBUG];
+        yield 'Trace -> Notice' => [LogLevel::trace(), \Psr\Log\LogLevel::NOTICE];
+        yield 'Info -> Info' => [LogLevel::info(), \Psr\Log\LogLevel::INFO];
+        yield 'Warn -> Warning' => [LogLevel::warn(), \Psr\Log\LogLevel::WARNING];
+        yield 'Error -> Error' => [LogLevel::error(), \Psr\Log\LogLevel::ERROR];
+        yield 'Fatal -> Critical' => [LogLevel::fatal(), \Psr\Log\LogLevel::CRITICAL];
+    }
+
 }
