@@ -94,4 +94,4 @@ jobs:
 
       - name: Check benchmarks
         run: vendor/bin/phpbench run --revs=1 --iterations=1
-        if: ${{ matrix.dependencies == 'highest' && matrix.php.version == '8.3' }}
+        if: ${{ matrix.dependencies == 'highest' && matrix.php.version == '8.4' }}
