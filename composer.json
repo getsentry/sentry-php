@@ -27,7 +27,6 @@
         "ext-mbstring": "*",
         "ext-curl": "*",
         "guzzlehttp/psr7": "^1.8.4|^2.1.1",
-        "jean85/pretty-package-versions": "^1.5|^2.0.4",
         "psr/log": "^1.0|^2.0|^3.0",
         "symfony/options-resolver": "^4.4.30|^5.0.11|^6.0|^7.0"
     },
