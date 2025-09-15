@@ -50,7 +50,7 @@ final class LogTest extends TestCase
         $this->assertSame($expected, $log->getPsrLogLevel());
     }
 
-    private function logLevelDataProvider(): \Generator
+    public function logLevelDataProvider(): \Generator
     {
         yield 'Debug -> Debug' => [LogLevel::debug(), \Psr\Log\LogLevel::DEBUG];
         yield 'Trace -> Notice' => [LogLevel::trace(), \Psr\Log\LogLevel::NOTICE];
