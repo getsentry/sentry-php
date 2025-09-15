@@ -34,6 +34,7 @@ return (new PhpCsFixer\Config())
             'after_heredoc' => false,
             'elements' => ['arrays'],
         ],
+        'no_whitespace_before_comma_in_array' => false, // Should be dropped when we drop support for PHP 7.x
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
