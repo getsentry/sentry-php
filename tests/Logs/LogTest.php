@@ -53,7 +53,7 @@ final class LogTest extends TestCase
     public function logLevelDataProvider(): \Generator
     {
         yield 'Debug -> Debug' => [LogLevel::debug(), \Psr\Log\LogLevel::DEBUG];
-        yield 'Trace -> Notice' => [LogLevel::trace(), \Psr\Log\LogLevel::NOTICE];
+        yield 'Trace -> Debug' => [LogLevel::trace(), \Psr\Log\LogLevel::DEBUG];
         yield 'Info -> Info' => [LogLevel::info(), \Psr\Log\LogLevel::INFO];
         yield 'Warn -> Warning' => [LogLevel::warn(), \Psr\Log\LogLevel::WARNING];
         yield 'Error -> Error' => [LogLevel::error(), \Psr\Log\LogLevel::ERROR];
