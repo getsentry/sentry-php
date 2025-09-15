@@ -70,7 +70,7 @@ class LogLevel
         return $this->priority;
     }
 
-    public function asPsrLevel(): string
+    public function toPsrLevel(): string
     {
         switch ($this->value) {
             case 'trace':

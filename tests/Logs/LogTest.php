@@ -38,7 +38,7 @@ final class LogTest extends TestCase
      */
     public function testLogLevelToPsrMapping(LogLevel $logLevel, $expected): void
     {
-        $this->assertSame($expected, $logLevel->asPsrLevel());
+        $this->assertSame($expected, $logLevel->toPsrLevel());
     }
 
     /**
@@ -47,7 +47,7 @@ final class LogTest extends TestCase
     public function testLogAndLogLevelConsistent(LogLevel $level, $expected): void
     {
         $log = new Log(1.0, '123', $level, 'foo');
-        $this->assertSame($expected, $log->getPsrLogLevel());
+        $this->assertSame($expected, $log->getPsrLevel());
     }
 
     public function logLevelDataProvider(): \Generator

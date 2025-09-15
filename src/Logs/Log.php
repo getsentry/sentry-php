@@ -84,7 +84,7 @@ class Log
 
     public function getPsrLevel(): string
     {
-        return $this->level->asPsrLevel();
+        return $this->level->toPsrLevel();
     }
 
     public function getBody(): string
