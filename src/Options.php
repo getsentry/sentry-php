@@ -936,6 +936,16 @@ final class Options
     }
 
     /**
+     * Gets the max length for values in the event payload.
+     *
+     * @deprecated always returns 1024 now because the limit is no longer enforced
+     */
+    public function getMaxValueLength(): int
+    {
+        return 1024;
+    }
+
+    /**
      * Sets the max length for specific values in the event payload.
      *
      * @param int $maxValueLength The number of characters after which the values containing text will be truncated
