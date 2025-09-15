@@ -59,5 +59,4 @@ final class LogTest extends TestCase
         yield 'Error -> Error' => [LogLevel::error(), \Psr\Log\LogLevel::ERROR];
         yield 'Fatal -> Critical' => [LogLevel::fatal(), \Psr\Log\LogLevel::CRITICAL];
     }
-
 }
