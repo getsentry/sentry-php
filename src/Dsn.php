@@ -10,7 +10,7 @@ namespace Sentry;
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
-final class Dsn implements \Stringable
+final class Dsn
 {
     /**
      * @var string Regex to match the organization ID in the host.
