@@ -6,12 +6,11 @@ namespace Sentry\Monolog;
 
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 
-class LogsHandler implements HandlerInterface
+class LogsHandler extends \Monolog\Handler\Handler
 {
     use CompatibilityLogLevelTrait;
 
@@ -70,16 +69,6 @@ class LogsHandler implements HandlerInterface
         );
 
         return $this->bubble === false;
-    }
-
-    /**
-     * @param array<array<string, mixed>|LogRecord> $records
-     */
-    public function handleBatch(array $records): void
-    {
-        foreach ($records as $record) {
-            $this->handle($record);
-        }
     }
 
     public function close(): void
