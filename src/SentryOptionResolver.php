@@ -19,7 +19,7 @@ class SentryOptionResolver
     /**
      * List of allowed types for each top level array key.
      *
-     * @var array<string, mixed[]>
+     * @var array<string, string[]>
      */
     private $allowedTypes = [];
 
