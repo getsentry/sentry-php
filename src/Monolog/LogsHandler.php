@@ -114,4 +114,13 @@ class LogsHandler implements HandlerInterface
         // To adhere to the interface we need to return a formatter so we return a default one
         return new LineFormatter();
     }
+
+    public function __destruct()
+    {
+        try {
+            $this->close();
+        } catch (\Throwable $e) {
+            // Just in case so that the destructor can never fail.
+        }
+    }
 }
