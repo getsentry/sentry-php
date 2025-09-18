@@ -134,12 +134,12 @@ final class UserDataBagTest extends TestCase
     {
         yield [
             12.34,
-            'Expected an integer or string value for the $id argument. Got: "float".',
+            'Expected an integer or string value for the $id argument. Got: "double".',
         ];
 
         yield [
             new \stdClass(),
-            'Expected an integer or string value for the $id argument. Got: "stdClass".',
+            'Expected an integer or string value for the $id argument. Got: "object".',
         ];
     }
 
