@@ -7,7 +7,7 @@ namespace Sentry;
 /**
  * This enum represents all the possible status of a check in.
  */
-final class CheckInStatus implements \Stringable
+final class CheckInStatus
 {
     /**
      * @var string The value of the enum instance

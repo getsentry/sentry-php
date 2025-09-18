@@ -9,7 +9,7 @@ namespace Sentry\Tracing;
  *
  * @see https://develop.sentry.dev/sdk/event-payloads/transaction/#transaction-annotations
  */
-final class TransactionSource implements \Stringable
+final class TransactionSource
 {
     /**
      * @var string The value of the enum instance

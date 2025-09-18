@@ -9,7 +9,7 @@ use Sentry\Util\SentryUid;
 /**
  * This class represents an span ID.
  */
-final class SpanId implements \Stringable
+final class SpanId
 {
     /**
      * @var string The ID

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-final class MonitorScheduleUnit implements \Stringable
+final class MonitorScheduleUnit
 {
     /**
      * @var string The value of the enum instance

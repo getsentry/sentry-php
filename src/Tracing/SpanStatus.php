@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-final class SpanStatus implements \Stringable
+final class SpanStatus
 {
     /**
      * @var string The value of the enum instance
