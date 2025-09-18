@@ -6,11 +6,12 @@ namespace Sentry\Monolog;
 
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 
-class LogsHandler extends \Monolog\Handler\Handler
+class LogsHandler implements HandlerInterface
 {
     use CompatibilityLogLevelTrait;
 
@@ -71,6 +72,16 @@ class LogsHandler extends \Monolog\Handler\Handler
         return $this->bubble === false;
     }
 
+    /**
+     * @param array<array<string, mixed>|LogRecord> $records
+     */
+    public function handleBatch(array $records): void
+    {
+        foreach ($records as $record) {
+            $this->handle($record);
+        }
+    }
+
     public function close(): void
     {
         Logs::getInstance()->flush();
@@ -102,5 +113,14 @@ class LogsHandler extends \Monolog\Handler\Handler
     {
         // To adhere to the interface we need to return a formatter so we return a default one
         return new LineFormatter();
+    }
+
+    public function __destruct()
+    {
+        try {
+            $this->close();
+        } catch (\Throwable $e) {
+            // Just in case so that the destructor can never fail.
+        }
     }
 }
