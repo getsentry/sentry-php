@@ -56,6 +56,19 @@ class SentryOptionResolver
         $this->defaults = $processed;
     }
 
+    public function setDefault(string $name, $value): void
+    {
+        [$isValid, $normalized] = $this->normalizeAndValidate($value, $name);
+
+        if (!$isValid) {
+            // Since defaults are used as fallback values if passed options are invalid, we want to
+            // get hard errors here to make sure we have something to fall back to.
+            throw new \InvalidArgumentException(\sprintf('Invalid default for option "%s"', $name));
+        }
+
+        $this->defaults[$name] = $normalized;
+    }
+
     /**
      * @param mixed $types
      */
