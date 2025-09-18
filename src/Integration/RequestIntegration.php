@@ -79,10 +79,6 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      * @param array<string, mixed>         $options        The options
-     *
-     * @psalm-param array{
-     *     pii_sanitize_headers?: string[]
-     * } $options
      */
     public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
     {
