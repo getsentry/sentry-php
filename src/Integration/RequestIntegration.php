@@ -169,6 +169,10 @@ final class RequestIntegration implements IntegrationInterface
             // Cast the header name into a string, to avoid errors on numeric headers
             $name = (string) $name;
 
+            if (!\is_array($this->options['pii_sanitize_headers'])) {
+                break;
+            }
+
             if (!\in_array(strtolower($name), $this->options['pii_sanitize_headers'], true)) {
                 continue;
             }
