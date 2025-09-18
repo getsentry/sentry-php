@@ -37,9 +37,6 @@ class SentryOptionResolver
      */
     private $normalizers = [];
 
-    /**
-     * @param array $defaults
-     */
     public function setDefaults(array $defaults): void
     {
         $processed = [];

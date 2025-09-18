@@ -258,6 +258,7 @@ class SentryOptionResolverTest extends TestCase
     {
         $logger = new class extends AbstractLogger {
             private $logs = [];
+
             public function log($level, $message, array $context = []): void
             {
                 $this->logs[] = $message;

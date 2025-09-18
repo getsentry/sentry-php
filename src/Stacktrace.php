@@ -31,7 +31,7 @@ final class Stacktrace
 
         foreach ($frames as $frame) {
             if (!$frame instanceof Frame) {
-                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', Frame::class, get_debug_type($frame)));
+                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', Frame::class, \gettype($frame)));
             }
         }
 
