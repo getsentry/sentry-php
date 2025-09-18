@@ -223,10 +223,6 @@ abstract class AbstractSerializer
             $encoded = mb_convert_encoding($value, 'UTF-8') ?: '<encoding error>';
         }
 
-        if (mb_strlen($encoded) > $this->options->getMaxValueLength()) {
-            $encoded = mb_substr($encoded, 0, $this->options->getMaxValueLength() - 10, 'UTF-8') . ' {clipped}';
-        }
-
         return $encoded;
     }
 
