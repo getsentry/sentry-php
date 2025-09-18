@@ -7,12 +7,16 @@ namespace Sentry\Tests\Monolog;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
+use Sentry\Event;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 use Sentry\Monolog\LogsHandler;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
+use Sentry\Transport\TransportInterface;
 
 final class LogsHandlerTest extends TestCase
 {
@@ -80,6 +84,51 @@ final class LogsHandlerTest extends TestCase
 
         $logs = Logs::getInstance()->aggregator()->all();
         $this->assertCount($countLogs, $logs);
+    }
+
+    public function testLogsHandlerDestructor()
+    {
+        $transport = new class implements TransportInterface {
+            private $events = [];
+
+            public function send(Event $event): Result
+            {
+                $this->events[] = $event;
+
+                return new Result(ResultStatus::success());
+            }
+
+            public function close(?int $timeout = null): Result
+            {
+                return new Result(ResultStatus::success());
+            }
+
+            /**
+             * @return Event[]
+             */
+            public function getEvents(): array
+            {
+                return $this->events;
+            }
+        };
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->setTransport($transport)
+            ->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $this->handleLogAndDrop();
+
+        $this->assertCount(1, $transport->getEvents());
+        $this->assertSame('I was dropped :(', $transport->getEvents()[0]->getLogs()[0]->getBody());
+    }
+
+    private function handleLogAndDrop(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create('I was dropped :(', Logger::INFO, 'chanel.foo', [], []));
     }
 
     public static function handleDataProvider(): iterable
