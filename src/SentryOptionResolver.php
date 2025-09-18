@@ -12,21 +12,21 @@ class SentryOptionResolver
      * Contains all default values and also acts as a kind of schema.
      * Only values present in the defaults can be overwritten.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     private $defaults = [];
 
     /**
      * List of allowed types for each top level array key.
      *
-     * @var array<string, array>
+     * @var array<string, mixed[]>
      */
     private $allowedTypes = [];
 
     /**
      * List of valid values or a validation callback for each top level array key.
      *
-     * @var array<array|callable>
+     * @var array<string, mixed[]|callable>
      */
     private $allowedValues = [];
 
@@ -37,12 +37,15 @@ class SentryOptionResolver
      */
     private $normalizers = [];
 
+    /**
+     * @param array<string, mixed> $defaults
+     */
     public function setDefaults(array $defaults): void
     {
         $processed = [];
 
         foreach ($defaults as $option => $defaultValue) {
-            [$isValid, $normalized] = $this->normalizeAndValidate($defaultValue, $option);
+            [$isValid, $normalized] = $this->normalizeAndValidate($option, $defaultValue);
 
             if (!$isValid) {
                 // Since defaults are used as fallback values if passed options are invalid, we want to
@@ -56,9 +59,12 @@ class SentryOptionResolver
         $this->defaults = $processed;
     }
 
+    /**
+     * @param mixed $value
+     */
     public function setDefault(string $name, $value): void
     {
-        [$isValid, $normalized] = $this->normalizeAndValidate($value, $name);
+        [$isValid, $normalized] = $this->normalizeAndValidate($name, $value);
 
         if (!$isValid) {
             // Since defaults are used as fallback values if passed options are invalid, we want to
@@ -72,11 +78,14 @@ class SentryOptionResolver
     /**
      * @param mixed $types
      */
-    public function setAllowedTypes(string $path, $types): void
+    public function setAllowedTypes(string $name, $types): void
     {
-        $this->allowedTypes[$path] = \is_array($types) ? $types : [$types];
+        $this->allowedTypes[$name] = \is_array($types) ? $types : [$types];
     }
 
+    /**
+     * @param mixed[]|callable $values
+     */
     public function setAllowedValues(string $path, $values): void
     {
         $this->allowedValues[$path] = $values;
@@ -93,6 +102,10 @@ class SentryOptionResolver
      * If a value is invalid but has a default, it will fall back to using the default value.
      *
      * If a value doesn't exist or is invalid, a DEBUG log is generated using the configured logger.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
      */
     public function resolve(array $options = [], ?LoggerInterface $logger = null): array
     {
@@ -106,7 +119,7 @@ class SentryOptionResolver
                 continue;
             }
 
-            [$isValid, $normalized] = $this->normalizeAndValidate($value, $option);
+            [$isValid, $normalized] = $this->normalizeAndValidate($option, $value);
             if (!$isValid) {
                 if ($logger !== null) {
                     $logger->debug(\sprintf('Invalid value for option "%s". Using default value.', $option));
@@ -127,18 +140,18 @@ class SentryOptionResolver
      *
      * @return array{0: bool, 1: mixed} [isValid, normalizedValue]
      */
-    private function normalizeAndValidate($value, string $path): array
+    private function normalizeAndValidate(string $name, $value): array
     {
-        if (!$this->validateType($value, $path)) {
+        if (!$this->validateType($name, $value)) {
             return [false, $value];
         }
 
-        if (!$this->validateValue($value, $path)) {
+        if (!$this->validateValue($name, $value)) {
             return [false, $value];
         }
 
         // If there's no normalizer for this path, or normalization is a no-op, skip re-validation
-        $normalizer = $this->normalizers[$path] ?? null;
+        $normalizer = $this->normalizers[$name] ?? null;
         if ($normalizer === null) {
             return [true, $value];
         }
@@ -149,11 +162,11 @@ class SentryOptionResolver
             return [true, $value];
         }
 
-        if (!$this->validateType($normalized, $path)) {
+        if (!$this->validateType($name, $normalized)) {
             return [false, $normalized];
         }
 
-        if (!$this->validateValue($normalized, $path)) {
+        if (!$this->validateValue($name, $normalized)) {
             return [false, $normalized];
         }
 
@@ -163,9 +176,9 @@ class SentryOptionResolver
     /**
      * @param mixed $value
      */
-    private function validateType($value, string $path): bool
+    private function validateType(string $name, $value): bool
     {
-        $allowedTypes = $this->allowedTypes[$path] ?? null;
+        $allowedTypes = $this->allowedTypes[$name] ?? null;
         if ($allowedTypes === null) {
             return true;
         }
@@ -235,9 +248,9 @@ class SentryOptionResolver
     /**
      * @param mixed $value
      */
-    private function validateValue($value, string $path): bool
+    private function validateValue(string $name, $value): bool
     {
-        $allowedValue = $this->allowedValues[$path] ?? null;
+        $allowedValue = $this->allowedValues[$name] ?? null;
         if ($allowedValue === null) {
             return true;
         }

@@ -1068,6 +1068,8 @@ final class Options
     }
 
     /**
+     * @param bool|string $booleanOrUrl
+     *
      * @return bool|string
      */
     private function normalizeBooleanOrUrl($booleanOrUrl)
@@ -1188,6 +1190,10 @@ final class Options
     /**
      * Calls the resolve method of the internal resolver with a logger so that
      * validation failures can be logged and investigated.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
      */
     private function resolveWithLogger(array $options = []): array
     {
@@ -1197,6 +1203,8 @@ final class Options
     /**
      * Merges the passed options with the current options and resolves them.
      * The result is stored back onto the class field.
+     *
+     * @param array<string, mixed> $override
      */
     private function updateOptions(array $override = []): self
     {
