@@ -43,7 +43,7 @@ final class Options
     private $options;
 
     /**
-     * @var SentryOptionResolver The options resolver
+     * @var OptionsResolver The options resolver
      */
     private $resolver;
 
@@ -54,7 +54,7 @@ final class Options
      */
     public function __construct(array $options = [])
     {
-        $this->resolver = new SentryOptionResolver();
+        $this->resolver = new OptionsResolver();
 
         $this->configureOptions($this->resolver);
 
@@ -921,9 +921,9 @@ final class Options
     /**
      * Configures the options of the client.
      *
-     * @param SentryOptionResolver $resolver The resolver for the options
+     * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(SentryOptionResolver $resolver): void
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);

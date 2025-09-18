@@ -6,7 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 
-class SentryOptionResolver
+class OptionsResolver
 {
     /**
      * Contains all default values and also acts as a kind of schema.

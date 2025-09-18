@@ -9,7 +9,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
-use Sentry\SentryOptionResolver;
+use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
@@ -78,7 +78,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
 
         $this->configureOptions($resolver);
 
@@ -293,9 +293,9 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * Configures the options of the client.
      *
-     * @param SentryOptionResolver $resolver The resolver for the options
+     * @param OptionsResolver $resolver The resolver for the options
      */
-    private function configureOptions(SentryOptionResolver $resolver): void
+    private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setAllowedTypes('pii_sanitize_headers', 'string[]');
         $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {

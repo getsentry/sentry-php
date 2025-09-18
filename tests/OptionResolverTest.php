@@ -6,13 +6,13 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
-use Sentry\SentryOptionResolver;
+use Sentry\OptionsResolver;
 
-class SentryOptionResolverTest extends TestCase
+class OptionResolverTest extends TestCase
 {
     public function testFlatOptionResolve(): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults([
             'foo' => 'bar',
             'test' => 10,
@@ -24,7 +24,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testNestedOptionResolve(): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => ['bar' => 'baz'], 'a' => 'b']);
         $result = $resolver->resolve(['foo' => ['bar' => 'test']]);
         $this->assertEquals(['foo' => ['bar' => 'test'], 'a' => 'b'], $result);
@@ -32,7 +32,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testArrayValues(): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => ['bar', 'baz'], 'a' => 'b']);
         $result = $resolver->resolve(['foo' => ['php'], 'a' => 'b']);
         $this->assertEquals(['foo' => ['php'], 'a' => 'b'], $result);
@@ -40,7 +40,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testAllowedTypeIntValid(): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => ['bar', 'baz'], 'a' => 20]);
         $resolver->setAllowedTypes('a', ['integer']);
         $result = $resolver->resolve(['foo' => ['bar', 'baz'], 'a' => 100]);
@@ -49,7 +49,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testAllowedTypeIntInvalid(): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => ['bar', 'baz'], 'a' => 20]);
         $resolver->setAllowedTypes('a', ['integer']);
         $result = $resolver->resolve(['foo' => ['bar', 'baz'], 'a' => '100']);
@@ -61,7 +61,7 @@ class SentryOptionResolverTest extends TestCase
      */
     public function testAllowedTypes(array $defaults, array $options, array $allowedTypes, array $expectedResult): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults($defaults);
         foreach ($allowedTypes as $path => $type) {
             $resolver->setAllowedTypes($path, $type);
@@ -75,7 +75,7 @@ class SentryOptionResolverTest extends TestCase
      */
     public function testAllowedValues(array $defaults, array $options, array $allowedValues, array $expectedResult): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults($defaults);
         foreach ($allowedValues as $path => $values) {
             $resolver->setAllowedValues($path, $values);
@@ -89,7 +89,7 @@ class SentryOptionResolverTest extends TestCase
      */
     public function testNormalizers(array $defaults, array $options, array $normalizers, array $expectedResult): void
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults($defaults);
         foreach ($normalizers as $path => $type) {
             $resolver->setNormalizer($path, $type);
@@ -100,7 +100,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testNormalizerReturnsInvalidType()
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'bar']);
         $resolver->setAllowedTypes('foo', ['string']);
         $resolver->setNormalizer('foo', function ($value) {
@@ -112,7 +112,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testNormalizerReturnsInvalidValue()
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);
         $resolver->setAllowedValues('foo', ['a', 'b', 'c']);
         $resolver->setNormalizer('foo', function ($value) {
@@ -124,7 +124,7 @@ class SentryOptionResolverTest extends TestCase
 
     public function testNormalizerResultFailsValidation()
     {
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);
         $resolver->setAllowedValues('foo', ['a', 'b', 'c']);
         $resolver->setNormalizer('foo', function ($value) {
@@ -269,7 +269,7 @@ class SentryOptionResolverTest extends TestCase
                 return $this->logs;
             }
         };
-        $resolver = new SentryOptionResolver();
+        $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults([
             'test' => 'foo',
