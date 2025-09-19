@@ -85,7 +85,7 @@ final class LogsHandlerTest extends TestCase
 
     public function testOriginTagNotAppliedWhenUsingDirectly()
     {
-        \Sentry\logger()->info("No origin attribute");
+        \Sentry\logger()->info('No origin attribute');
 
         $logs = Logs::getInstance()->aggregator()->all();
         $this->assertCount(1, $logs);
