@@ -83,6 +83,17 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('auto.logger.monolog', $log->attributes()->toSimpleArray()['sentry.origin']);
     }
 
+    public function testOriginTagNotAppliedWhenUsingDirectly()
+    {
+        \Sentry\logger()->info("No origin attribute");
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+        $log = $logs[0];
+        $this->assertSame('No origin attribute', $log->getBody());
+        $this->assertArrayNotHasKey('sentry.origin', $log->attributes()->toSimpleArray());
+    }
+
     public static function handleDataProvider(): iterable
     {
         yield [
