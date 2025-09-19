@@ -19,13 +19,6 @@ final class LogsHandlerTest extends TestCase
     protected function setUp(): void
     {
         Logs::getInstance()->flush();
-    }
-
-    /**
-     * @dataProvider handleDataProvider
-     */
-    public function testHandle($record, Log $expectedLog): void
-    {
         $client = ClientBuilder::create([
             'enable_logs' => true,
             'before_send' => static function () {
@@ -35,7 +28,13 @@ final class LogsHandlerTest extends TestCase
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
+    }
 
+    /**
+     * @dataProvider handleDataProvider
+     */
+    public function testHandle($record, Log $expectedLog): void
+    {
         $handler = new LogsHandler();
         $handler->handle($record);
 
@@ -65,21 +64,23 @@ final class LogsHandlerTest extends TestCase
      */
     public function testLogLevels($record, int $countLogs): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-            'before_send' => static function () {
-                return null;
-            },
-        ])->getClient();
-
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
         $handler = new LogsHandler(LogLevel::warn());
         $handler->handle($record);
 
         $logs = Logs::getInstance()->aggregator()->all();
         $this->assertCount($countLogs, $logs);
+    }
+
+    public function testOriginTagAppliedWithHandler(): void
+    {
+        $handler = new LogsHandler(LogLevel::warn());
+        $handler->handle(RecordFactory::create('with origin', Logger::WARNING, 'channel.foo', [], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+        $log = $logs[0];
+        $this->assertArrayHasKey('sentry.origin', $log->attributes()->toSimpleArray());
+        $this->assertSame('auto.logger.monolog', $log->attributes()->toSimpleArray()['sentry.origin']);
     }
 
     public static function handleDataProvider(): iterable
