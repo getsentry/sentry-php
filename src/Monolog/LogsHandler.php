@@ -66,8 +66,7 @@ class LogsHandler implements HandlerInterface
             self::getSentryLogLevelFromMonologLevel($record['level']),
             $record['message'],
             [],
-            // If sentry.origin exists in other arrays, it will be overwritten.
-            array_merge(['sentry.origin' => 'auto.logger.monolog'], $record['context'], $record['extra'])
+            array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.logger.monolog'])
         );
 
         return $this->bubble === false;
