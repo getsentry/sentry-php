@@ -43,6 +43,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
 
     /**
      * @param array<string, mixed>|LogRecord $record
+     *
      * @phpstan-param LogRecord|array{
      *      level: int,
      *      channel: string,
