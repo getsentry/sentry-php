@@ -68,7 +68,7 @@ jobs:
 
       # These dependencies are not used running the tests but can cause deprecation warnings so we remove them before running the tests
       - name: Remove unused dependencies
-        run: composer remove vimeo/psalm phpstan/phpstan friendsofphp/php-cs-fixer  --dev --no-interaction --no-update
+        run: composer remove phpstan/phpstan friendsofphp/php-cs-fixer  --dev --no-interaction --no-update
 
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update

@@ -38,8 +38,7 @@
         "phpbench/phpbench": "^1.0",
         "phpstan/phpstan": "^1.3",
         "phpunit/phpunit": "^8.5|^9.6",
-        "symfony/phpunit-bridge": "^5.2|^6.0|^7.0",
-        "vimeo/psalm": "^4.17"
+        "symfony/phpunit-bridge": "^5.2|^6.0|^7.0"
     },
     "suggest": {
         "monolog/monolog": "Allow sending log messages to Sentry by using the included Monolog handler."
@@ -64,14 +63,12 @@
         "check": [
             "@cs-check",
             "@phpstan",
-            "@psalm",
             "@tests"
         ],
         "tests": "vendor/bin/phpunit --verbose",
         "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
         "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
-        "phpstan": "vendor/bin/phpstan analyse",
-        "psalm": "vendor/bin/psalm"
+        "phpstan": "vendor/bin/phpstan analyse"
     },
     "config": {
         "sort-packages": true

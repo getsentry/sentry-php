@@ -42,7 +42,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
+     * @phpstan-suppress MoreSpecificImplementedParamType
      *
      * @param LogRecord|array{
      *      level: int,
