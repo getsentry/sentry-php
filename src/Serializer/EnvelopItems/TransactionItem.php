@@ -143,7 +143,7 @@ class TransactionItem implements EnvelopeItemInterface
      *     description?: string,
      *     op?: string,
      *     data?: array<string, mixed>,
-     *     tags?: array<string, string>
+     *     tags?: array<string, string>,
      *     _metrics_summary?: array<string, mixed>
      * }
      */
