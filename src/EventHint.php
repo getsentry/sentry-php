@@ -68,7 +68,7 @@ final class EventHint
         }
 
         if (!\is_array($extra)) {
-            throw new \InvalidArgumentException(\sprintf('The value of the "extra" field must be an array. Got: "%s".', gettype($extra)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "extra" field must be an array. Got: "%s".', \gettype($extra)));
         }
 
         $hint->exception = $exception;

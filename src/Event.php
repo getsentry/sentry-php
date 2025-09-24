@@ -842,7 +842,7 @@ final class Event
     {
         foreach ($exceptions as $exception) {
             if (!$exception instanceof ExceptionDataBag) {
-                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', ExceptionDataBag::class, gettype($exception)));
+                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', ExceptionDataBag::class, \gettype($exception)));
             }
         }
 

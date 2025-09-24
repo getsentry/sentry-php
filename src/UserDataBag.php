@@ -133,7 +133,7 @@ final class UserDataBag
     public function setId($id): self
     {
         if ($id !== null && !\is_string($id) && !\is_int($id)) {
-            throw new \UnexpectedValueException(\sprintf('Expected an integer or string value for the $id argument. Got: "%s".', gettype($id)));
+            throw new \UnexpectedValueException(\sprintf('Expected an integer or string value for the $id argument. Got: "%s".', \gettype($id)));
         }
 
         $this->id = $id;
