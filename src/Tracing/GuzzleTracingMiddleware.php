@@ -79,10 +79,9 @@ final class GuzzleTracingMiddleware
 
                     $response = null;
 
-                    /** @psalm-suppress UndefinedClass */
-                    if ($responseOrException instanceof ResponseInterface) {
+                    if (interface_exists(ResponseInterface::class) && $responseOrException instanceof ResponseInterface) {
                         $response = $responseOrException;
-                    } elseif ($responseOrException instanceof GuzzleRequestException) {
+                    } elseif (class_exists(GuzzleRequestException::class) && $responseOrException instanceof GuzzleRequestException) {
                         $response = $responseOrException->getResponse();
                     }
 

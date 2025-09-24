@@ -14,7 +14,7 @@ trait StacktraceFrameSerializerTrait
     /**
      * @return array<string, mixed>
      *
-     * @psalm-return array{
+     * @phpstan-return array{
      *     filename: string,
      *     lineno: int,
      *     in_app: bool,

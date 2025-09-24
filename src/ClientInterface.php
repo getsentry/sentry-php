@@ -61,11 +61,11 @@ interface ClientInterface
      *
      * @param string $className The FQCN of the integration
      *
-     * @psalm-template T of IntegrationInterface
+     * @template T of IntegrationInterface
      *
-     * @psalm-param class-string<T> $className
+     * @phpstan-param class-string<T> $className
      *
-     * @psalm-return T|null
+     * @phpstan-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 

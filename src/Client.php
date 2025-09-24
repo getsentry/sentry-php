@@ -58,7 +58,7 @@ class Client implements ClientInterface
     /**
      * @var array<string, IntegrationInterface> The stack of integrations
      *
-     * @psalm-var array<class-string<IntegrationInterface>, IntegrationInterface>
+     * @phpstan-var array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     private $integrations;
 
@@ -221,11 +221,11 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      *
-     * @psalm-template T of IntegrationInterface
+     * @template T of IntegrationInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        /** @psalm-var T|null */
+        /** @phpstan-var T|null */
         return $this->integrations[$className] ?? null;
     }
 

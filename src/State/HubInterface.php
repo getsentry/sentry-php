@@ -51,13 +51,13 @@ interface HubInterface
      *
      * @param callable $callback The callback to be executed
      *
-     * @psalm-template T
+     * @template T
      *
-     * @psalm-param callable(Scope): T $callback
+     * @phpstan-param callable(Scope): T $callback
      *
      * @return mixed|void The callback's return value, upon successful execution
      *
-     * @psalm-return T
+     * @phpstan-return T
      */
     public function withScope(callable $callback);
 
@@ -111,11 +111,11 @@ interface HubInterface
      *
      * @param string $className The FQCN of the integration
      *
-     * @psalm-template T of IntegrationInterface
+     * @template T of IntegrationInterface
      *
-     * @psalm-param class-string<T> $className
+     * @phpstan-param class-string<T> $className
      *
-     * @psalm-return T|null
+     * @phpstan-return T|null
      */
     public function getIntegration(string $className): ?IntegrationInterface;
 

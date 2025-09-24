@@ -198,13 +198,13 @@ function configureScope(callable $callback): void
  *
  * @param callable $callback The callback to be executed
  *
- * @psalm-template T
+ * @template T
  *
- * @psalm-param callable(Scope): T $callback
+ * @phpstan-param callable(Scope): T $callback
  *
  * @return mixed|void The callback's return value, upon successful execution
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withScope(callable $callback)
 {

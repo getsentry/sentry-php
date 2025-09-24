@@ -42,9 +42,9 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
+     * @param array<string, mixed>|LogRecord $record
      *
-     * @param LogRecord|array{
+     * @phpstan-param LogRecord|array{
      *      level: int,
      *      channel: string,
      *      datetime: \DateTimeImmutable,

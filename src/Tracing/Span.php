@@ -393,7 +393,7 @@ class Span
      *
      * @return array<string, mixed>
      *
-     * @psalm-return array{
+     * @phpstan-return array{
      *     data?: array<string, mixed>,
      *     description?: string,
      *     op?: string,
