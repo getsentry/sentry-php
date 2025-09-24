@@ -26,26 +26,6 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Method Sentry\\\\Event\\:\\:getMetrics\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Method Sentry\\\\Event\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Method Sentry\\\\Event\\:\\:setMetrics\\(\\) has parameter \\$metrics with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Method Sentry\\\\Event\\:\\:setMetricsSummary\\(\\) has parameter \\$metricsSummary with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
 			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
 			count: 1
 			path: src/Integration/RequestIntegration.php
@@ -81,11 +61,6 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendMetricsCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
 			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendTransactionCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -107,11 +82,6 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getEnableLogs\\(\\) should return bool but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
-			message: "#^Method Sentry\\\\Options\\:\\:getEnableTracing\\(\\) should return bool\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -201,11 +171,6 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getMaxValueLength\\(\\) should return int but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
 			message: "#^Method Sentry\\\\Options\\:\\:getOrgId\\(\\) should return int\\|null but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -227,11 +192,6 @@ parameters:
 
 		-
 			message: "#^Method Sentry\\\\Options\\:\\:getServerName\\(\\) should return string but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
-			message: "#^Method Sentry\\\\Options\\:\\:getSpotlightUrl\\(\\) should return string but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
 
@@ -276,11 +236,6 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachMetricCodeLocations\\(\\) should return bool but returns mixed\\.$#"
-			count: 1
-			path: src/Options.php
-
-		-
 			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachStacktrace\\(\\) should return bool but returns mixed\\.$#"
 			count: 1
 			path: src/Options.php
@@ -316,21 +271,6 @@ parameters:
 			path: src/Tracing/PropagationContext.php
 
 		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Tracing/Span.php
-
-		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$tags with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Tracing/Span.php
-
-		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$value with no type specified\\.$#"
-			count: 1
-			path: src/Tracing/Span.php
-
-		-
 			message: "#^Parameter \\#1 \\$email of method Sentry\\\\UserDataBag\\:\\:setEmail\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
@@ -342,11 +282,6 @@ parameters:
 
 		-
 			message: "#^Parameter \\#1 \\$ipAddress of method Sentry\\\\UserDataBag\\:\\:setIpAddress\\(\\) expects string\\|null, mixed given\\.$#"
-			count: 1
-			path: src/UserDataBag.php
-
-		-
-			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/UserDataBag.php
 

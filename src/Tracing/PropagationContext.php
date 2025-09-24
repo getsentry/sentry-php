@@ -79,16 +79,6 @@ final class PropagationContext
     }
 
     /**
-     * Returns a string that can be used for the W3C `traceparent` header & meta tag.
-     *
-     * @deprecated since version 4.12. To be removed in version 5.0.
-     */
-    public function toW3CTraceparent(): string
-    {
-        return '';
-    }
-
-    /**
      * Returns a string that can be used for the `baggage` header & meta tag.
      */
     public function toBaggage(): string

@@ -9,7 +9,7 @@ use Sentry\Breadcrumb;
 /**
  * @internal
  */
-trait BreadcrumbSeralizerTrait
+trait BreadcrumbSerializerTrait
 {
     /**
      * @return array<string, mixed>

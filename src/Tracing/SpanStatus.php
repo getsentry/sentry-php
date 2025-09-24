@@ -83,17 +83,6 @@ final class SpanStatus
 
     /**
      * Gets an instance of this enum representing the fact that the server returned
-     * 429 Too Many Requests.
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0. Use SpanStatus::resourceExhausted() instead.
-     */
-    public static function resourceExchausted(): self
-    {
-        return self::resourceExhausted();
-    }
-
-    /**
-     * Gets an instance of this enum representing the fact that the server returned
      * 501 Not Implemented.
      */
     public static function unimplemented(): self

@@ -6,11 +6,15 @@ namespace Sentry\Tests\Integration;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
+use Sentry\Transport\TransportInterface;
 
 use function Sentry\withScope;
 
@@ -56,5 +60,46 @@ final class ModulesIntegrationTest extends TestCase
             true,
             false,
         ];
+    }
+
+    public function testModuleIntegration(): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+            ->method('send')
+            ->with($this->callback(function (Event $event): bool {
+                $modules = $event->getModules();
+
+                $this->assertIsArray($modules);
+                $this->assertNotEmpty($modules);
+                $this->assertArrayHasKey('psr/log', $modules);
+                $this->assertMatchesRegularExpression("/^\d+\.\d+\.\d+$/", $modules['psr/log']);
+
+                return true;
+            }))
+            ->willReturnCallback(static function (Event $event): Result {
+                return new Result(ResultStatus::success(), $event);
+            });
+
+        $client = ClientBuilder::create()
+                               ->setTransport($transport)
+                               ->getClient();
+
+        SentrySdk::getCurrentHub()->bindClient($client);
+
+        $client->captureEvent(Event::createEvent(), null, new Scope());
+    }
+
+    /**
+     * Polyfill for older phpunit versions.
+     */
+    public static function assertMatchesRegularExpression(string $pattern, string $string, string $message = ''): void
+    {
+        if (method_exists(parent::class, 'assertMatchesRegularExpression')) {
+            parent::assertMatchesRegularExpression($pattern, $string, $message);
+        } else {
+            static::assertRegExp($pattern, $string, $message);
+        }
     }
 }

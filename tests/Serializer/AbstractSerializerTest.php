@@ -396,26 +396,6 @@ abstract class AbstractSerializerTest extends TestCase
     /**
      * @dataProvider serializeAllObjectsDataProvider
      */
-    public function testLongString(bool $serializeAllObjects): void
-    {
-        $serializer = $this->createSerializer();
-
-        if ($serializeAllObjects) {
-            $serializer->setSerializeAllObjects(true);
-        }
-
-        foreach ([100, 1000, 1010, 1024, 1050, 1100, 10000] as $length) {
-            $input = str_repeat('x', $length);
-            $result = $this->invokeSerialization($serializer, $input);
-
-            $this->assertIsString($result);
-            $this->assertLessThanOrEqual(1024, \strlen($result));
-        }
-    }
-
-    /**
-     * @dataProvider serializeAllObjectsDataProvider
-     */
     public function testSerializeValueResource(bool $serializeAllObjects): void
     {
         $serializer = $this->createSerializer();

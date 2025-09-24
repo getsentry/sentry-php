@@ -61,10 +61,6 @@ final class Options
         $this->configureOptions($this->resolver);
 
         $this->options = $this->resolver->resolve($options);
-
-        if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
-            $this->options = array_merge($this->options, ['traces_sample_rate' => 1]);
-        }
     }
 
     /**
@@ -127,35 +123,6 @@ final class Options
     }
 
     /**
-     * Sets if tracing should be enabled or not. If null tracesSampleRate takes
-     * precedence.
-     *
-     * @param bool|null $enableTracing Boolean if tracing should be enabled or not
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
-     */
-    public function setEnableTracing(?bool $enableTracing): self
-    {
-        $options = array_merge($this->options, ['enable_tracing' => $enableTracing]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets if tracing is enabled or not.
-     *
-     * @return bool|null If the option `enable_tracing` is set or not
-     *
-     * @deprecated since version 4.7. To be removed in version 5.0
-     */
-    public function getEnableTracing(): ?bool
-    {
-        return $this->options['enable_tracing'];
-    }
-
-    /**
      * Sets if logs should be enabled or not.
      *
      * @param bool|null $enableLogs Boolean if logs should be enabled or not
@@ -212,14 +179,10 @@ final class Options
     /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
-     * set and `enable_tracing` is set and not false.
+     * set.
      */
     public function isTracingEnabled(): bool
     {
-        if ($this->getEnableTracing() !== null && $this->getEnableTracing() === false) {
-            return false;
-        }
-
         return $this->getTracesSampleRate() !== null || $this->getTracesSampler() !== null;
     }
 
@@ -239,30 +202,6 @@ final class Options
     public function setAttachStacktrace(bool $enable): self
     {
         $options = array_merge($this->options, ['attach_stacktrace' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets whether a metric has their code location attached.
-     *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function shouldAttachMetricCodeLocations(): bool
-    {
-        return $this->options['attach_metric_code_locations'];
-    }
-
-    /**
-     * Sets whether a metric will have their code location attached.
-     *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function setAttachMetricCodeLocations(bool $enable): self
-    {
-        $options = array_merge($this->options, ['attach_metric_code_locations' => $enable]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -412,21 +351,7 @@ final class Options
             return $this->options['spotlight'];
         }
 
-        return $this->options['spotlight_url'];
-    }
-
-    /**
-     * @return $this
-     *
-     * @deprecated since version 4.11. To be removed in 5.x. You may use `enableSpotlight` instead.
-     */
-    public function setSpotlightUrl(string $url): self
-    {
-        $options = array_merge($this->options, ['spotlight_url' => $url]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
+        return 'http://localhost:8969';
     }
 
     /**
@@ -657,38 +582,6 @@ final class Options
     public function setBeforeSendLogCallback(callable $callback): self
     {
         $options = array_merge($this->options, ['before_send_log' => $callback]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets a callback that will be invoked before metrics are sent to the server.
-     * If `null` is returned it won't be sent.
-     *
-     * @psalm-return callable(Event, ?EventHint): ?Event
-     *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function getBeforeSendMetricsCallback(): callable
-    {
-        return $this->options['before_send_metrics'];
-    }
-
-    /**
-     * Sets a callable to be called to decide whether metrics should
-     * be send or not.
-     *
-     * @param callable $callback The callable
-     *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
-     *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
-    public function setBeforeSendMetricsCallback(callable $callback): self
-    {
-        $options = array_merge($this->options, ['before_send_metrics' => $callback]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -929,28 +822,6 @@ final class Options
     public function setDefaultIntegrations(bool $enable): self
     {
         $options = array_merge($this->options, ['default_integrations' => $enable]);
-
-        $this->options = $this->resolver->resolve($options);
-
-        return $this;
-    }
-
-    /**
-     * Gets the max length for values in the event payload.
-     */
-    public function getMaxValueLength(): int
-    {
-        return $this->options['max_value_length'];
-    }
-
-    /**
-     * Sets the max length for specific values in the event payload.
-     *
-     * @param int $maxValueLength The number of characters after which the values containing text will be truncated
-     */
-    public function setMaxValueLength(int $maxValueLength): self
-    {
-        $options = array_merge($this->options, ['max_value_length' => $maxValueLength]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1218,24 +1089,15 @@ final class Options
             'default_integrations' => true,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
-            'enable_tracing' => null,
             'enable_logs' => false,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'attach_stacktrace' => false,
-            /**
-             * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-             */
-            'attach_metric_code_locations' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
             'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
-            /**
-             * @deprecated since version 4.11. To be removed in 5.0. You may use `spotlight` instead.
-             */
-            'spotlight_url' => 'http://localhost:8969',
             'release' => $_SERVER['SENTRY_RELEASE'] ?? $_SERVER['AWS_LAMBDA_FUNCTION_VERSION'] ?? null,
             'dsn' => $_SERVER['SENTRY_DSN'] ?? null,
             'org_id' => null,
@@ -1254,12 +1116,6 @@ final class Options
             'before_send_log' => static function (Log $log): Log {
                 return $log;
             },
-            /**
-             * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-             */
-            'before_send_metrics' => static function (Event $metrics): ?Event {
-                return null;
-            },
             'trace_propagation_targets' => null,
             'strict_trace_propagation' => false,
             'tags' => [],
@@ -1271,7 +1127,6 @@ final class Options
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
             'http_proxy' => null,
@@ -1288,20 +1143,17 @@ final class Options
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
         $resolver->setAllowedTypes('enable_logs', 'bool');
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
-        $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
         $resolver->setAllowedTypes('logger', ['null', LoggerInterface::class]);
         $resolver->setAllowedTypes('spotlight', ['bool', 'string', 'null']);
-        $resolver->setAllowedTypes('spotlight_url', 'string');
         $resolver->setAllowedTypes('release', ['null', 'string']);
         $resolver->setAllowedTypes('dsn', ['null', 'string', 'bool', Dsn::class]);
         $resolver->setAllowedTypes('org_id', ['null', 'int']);
@@ -1320,7 +1172,6 @@ final class Options
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
-        $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
         $resolver->setAllowedTypes('http_client', ['null', HttpClientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);

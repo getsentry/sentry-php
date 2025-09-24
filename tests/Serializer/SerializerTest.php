@@ -201,30 +201,6 @@ final class SerializerTest extends AbstractSerializerTest
         $this->assertEquals('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
     }
 
-    public function testLongStringWithOverwrittenMessageLength(): void
-    {
-        $serializer = $this->createSerializer(new Options(['max_value_length' => 500]));
-
-        foreach ([100, 490, 499, 500, 501, 1000, 10000] as $length) {
-            $input = str_repeat('x', $length);
-            $result = $this->invokeSerialization($serializer, $input);
-
-            $this->assertIsString($result);
-            $this->assertLessThanOrEqual(500, \strlen($result));
-        }
-    }
-
-    public function testClippingUTF8Characters(): void
-    {
-        $serializer = $this->createSerializer(new Options(['max_value_length' => 19]));
-
-        $clipped = $this->invokeSerialization($serializer, 'Прекратите надеяться, что ваши пользователи будут сообщать об ошибках');
-
-        $this->assertSame('Прекратит {clipped}', $clipped);
-        $this->assertNotNull(json_encode($clipped));
-        $this->assertSame(\JSON_ERROR_NONE, json_last_error());
-    }
-
     /**
      * @return Serializer
      */

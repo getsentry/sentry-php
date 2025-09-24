@@ -68,7 +68,7 @@ final class DynamicSamplingContextTest extends TestCase
         ];
 
         yield [
-            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,sentry-release=1.0.0,sentry-environment=test,sentry-user_segment=my_segment,sentry-transaction=<unlabeled transaction>,sentry-sample_rand=0.5',
+            'sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public,sentry-sample_rate=1,sentry-release=1.0.0,sentry-environment=test,sentry-transaction=<unlabeled transaction>,sentry-sample_rand=0.5',
             'd49d9bf66f13450b81f65bc51cf49c03',
             'public',
             '1',
