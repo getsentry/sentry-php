@@ -1,6 +1,8 @@
 <?php
 
 /*
+ * Original Code: https://github.com/symfony/polyfill/blob/1.x/src/Php80/Php80.php
+ *
  * Copyright (c) 2015-present Fabien Potencier
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,7 +28,7 @@ declare(strict_types=1);
 
 namespace Sentry\Util;
 
-/***
+/**
  * @internal
  */
 final class DebugType

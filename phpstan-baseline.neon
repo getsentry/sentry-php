@@ -1,6 +1,9 @@
 parameters:
 	ignoreErrors:
 		-
+			message: "#.*#"
+			path: src/Util/DebugType.php
+		-
 			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null but returns \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null\\.$#"
 			count: 1
 			path: src/Client.php
