@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Util\DebugType;
+
 /**
  * This class contains all the information about an error stacktrace.
  *
@@ -31,7 +33,7 @@ final class Stacktrace
 
         foreach ($frames as $frame) {
             if (!$frame instanceof Frame) {
-                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', Frame::class, \gettype($frame)));
+                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', Frame::class, DebugType::getDebugType($frame)));
             }
         }
 
