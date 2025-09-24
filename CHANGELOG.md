@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 4.16.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.16.0.
+
+### Features
+
+- Remove `max_breadcrumbs` limit. [(#1890)](https://github.com/getsentry/sentry-php/pull/1890)
+- Implement `__destruct` in `LogsHandler` to make sure logs are always flushed. [(#1916)](https://github.com/getsentry/sentry-php/pull/1916)
+
+### Bug Fixes
+
+- Use PSR log level when logging messages using the PSR-3 logger within the SDK. [(#1907)](https://github.com/getsentry/sentry-php/pull/1907)
+- Remove `@internal` annotation from `Sentry\Transport\Result`. [(#1904)](https://github.com/getsentry/sentry-php/pull/1904)
+
+### Misc
+
+- Add `sentry.origin` attribute to `LogsHandler`. [(#1917)](https://github.com/getsentry/sentry-php/pull/1917)
+
 ## 4.15.2
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.15.2.
@@ -30,26 +48,26 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
   use Monolog\Logger;
   use Sentry\Monolog\LogsHandler;
   use Sentry\Logs\LogLevel;
-  
+
   // Initialize Sentry SDK first (make sure 'enable_logs' is set to true)
   \Sentry\init([
       'dsn' => '__YOUR_DSN__',
       'enable_logs' => true,
   ]);
-  
+
   // Create a Monolog logger
   $logger = new Logger('my-app');
-  
+
   // Add the Sentry logs handler
   // Optional: specify minimum log level (defaults to LogLevel::debug())
   $handler = new LogsHandler(LogLevel::info());
   $logger->pushHandler($handler);
-  
+
   // Now your logs will be sent to Sentry
   $logger->info('User logged in', ['user_id' => 123]);
   $logger->error('Payment failed', ['order_id' => 456]);
   ```
-  
+
   Note: The handler will not collect logs for exceptions (they should be handled separately via `captureException`).
 
 ### Bug Fixes
