@@ -8,7 +8,7 @@ namespace Sentry\Transport;
  * This enum represents all possible reasons an event sending operation succeeded
  * or failed.
  */
-class ResultStatus implements \Stringable
+class ResultStatus
 {
     /**
      * @var string The value of the enum instance
