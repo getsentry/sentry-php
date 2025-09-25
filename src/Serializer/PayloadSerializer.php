@@ -7,6 +7,7 @@ namespace Sentry\Serializer;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\Serializer\EnvelopItems\AttachmentItem;
 use Sentry\Serializer\EnvelopItems\CheckInItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
 use Sentry\Serializer\EnvelopItems\LogsItem;
@@ -23,6 +24,11 @@ use Sentry\Util\JSON;
  */
 final class PayloadSerializer implements PayloadSerializerInterface
 {
+    /**
+     * Attachments have a limit of 100MB before compression.
+     */
+    private const MAX_ATTACHMENT_SIZE = 100000000;
+
     /**
      * @var Options The SDK client options
      */
@@ -73,6 +79,13 @@ final class PayloadSerializer implements PayloadSerializerInterface
             case EventType::logs():
                 $items[] = LogsItem::toEnvelopeItem($event);
                 break;
+        }
+
+        // If attachments are exceeding the limit, then we drop all attachments
+        if (AttachmentItem::totalAttachmentSize($event->getAttachments()) <= self::MAX_ATTACHMENT_SIZE) {
+            foreach ($event->getAttachments() as $attachment) {
+                $items[] = AttachmentItem::toAttachmentItem($attachment);
+            }
         }
 
         return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));

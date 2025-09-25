@@ -47,6 +47,11 @@ final class EventType
         return self::getInstance('log');
     }
 
+    public static function attachment(): self
+    {
+        return self::getInstance('attachment');
+    }
+
     /**
      * List of all cases on the enum.
      *
@@ -59,6 +64,7 @@ final class EventType
             self::transaction(),
             self::checkIn(),
             self::logs(),
+            self::attachment()
         ];
     }
 
