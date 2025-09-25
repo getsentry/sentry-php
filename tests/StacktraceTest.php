@@ -39,18 +39,18 @@ final class StacktraceTest extends TestCase
                 new Frame(__FUNCTION__, __FILE__, __LINE__),
                 10,
             ],
-            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "integer"\.$/',
+            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "int"\.$/',
         ];
 
         yield [
             [(object) []],
-            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "object"\.$/',
+            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "stdClass"\.$/',
         ];
 
         yield [
             [new class {
             }],
-            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "object"\.$/',
+            '/^Expected an instance of the "Sentry\\\\Frame" class\. Got: "class@anonymous.*"\.$/',
         ];
     }
 

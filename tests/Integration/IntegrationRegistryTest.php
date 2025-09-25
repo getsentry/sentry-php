@@ -252,12 +252,12 @@ final class IntegrationRegistryTest extends TestCase
     {
         yield [
             12.34,
-            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "double".',
+            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "float".',
         ];
 
         yield [
             new \stdClass(),
-            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "object".',
+            'Expected the callback set for the "integrations" option to return a list of integrations. Got: "stdClass".',
         ];
     }
 

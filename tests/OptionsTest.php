@@ -565,11 +565,6 @@ final class OptionsTest extends TestCase
 
     public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
     {
-        //        yield [
-        //            -1,
-        //            'The option "context_lines" with value -1 is invalid.',
-        //        ];
-
         yield [
             0,
             null,
