@@ -1177,7 +1177,12 @@ final class Options
      */
     private function resolveWithLogger(array $options = []): array
     {
-        return $this->resolver->resolve($options, $this->getLoggerOrNullLogger());
+        /**
+         * @var LoggerInterface $logger
+         */
+        $logger = $options['logger'] ?? $this->getLoggerOrNullLogger();
+
+        return $this->resolver->resolve($options, $logger);
     }
 
     /**
