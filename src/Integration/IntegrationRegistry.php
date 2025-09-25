@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Psr\Log\LoggerInterface;
 use Sentry\Options;
+use Sentry\Util\DebugType;
 
 /**
  * @internal
@@ -123,7 +124,7 @@ final class IntegrationRegistry
             $integrations = $userIntegrations($defaultIntegrations);
 
             if (!\is_array($integrations)) {
-                throw new \UnexpectedValueException(\sprintf('Expected the callback set for the "integrations" option to return a list of integrations. Got: "%s".', get_debug_type($integrations)));
+                throw new \UnexpectedValueException(\sprintf('Expected the callback set for the "integrations" option to return a list of integrations. Got: "%s".', DebugType::getDebugType($integrations)));
             }
         }
 

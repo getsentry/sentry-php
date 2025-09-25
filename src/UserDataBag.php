@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Util\DebugType;
+
 /**
  * This class stores the information about the authenticated user for a request.
  *
@@ -123,7 +125,7 @@ final class UserDataBag
     public function setId($id): self
     {
         if ($id !== null && !\is_string($id) && !\is_int($id)) {
-            throw new \UnexpectedValueException(\sprintf('Expected an integer or string value for the $id argument. Got: "%s".', get_debug_type($id)));
+            throw new \UnexpectedValueException(\sprintf('Expected an integer or string value for the $id argument. Got: "%s".', DebugType::getDebugType($id)));
         }
 
         $this->id = $id;
