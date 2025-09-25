@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Util\DebugType;
+
 /**
  * This class represents hints on how to process an event.
  */
@@ -56,19 +58,19 @@ final class EventHint
         $extra = $hintData['extra'] ?? [];
 
         if ($exception !== null && !$exception instanceof \Throwable) {
-            throw new \InvalidArgumentException(\sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, \gettype($exception)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "exception" field must be an instance of a class implementing the "%s" interface. Got: "%s".', \Throwable::class, DebugType::getDebugType($exception)));
         }
 
         if ($mechanism !== null && !$mechanism instanceof ExceptionMechanism) {
-            throw new \InvalidArgumentException(\sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, \gettype($mechanism)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "mechanism" field must be an instance of the "%s" class. Got: "%s".', ExceptionMechanism::class, DebugType::getDebugType($mechanism)));
         }
 
         if ($stacktrace !== null && !$stacktrace instanceof Stacktrace) {
-            throw new \InvalidArgumentException(\sprintf('The value of the "stacktrace" field must be an instance of the "%s" class. Got: "%s".', Stacktrace::class, \gettype($stacktrace)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "stacktrace" field must be an instance of the "%s" class. Got: "%s".', Stacktrace::class, DebugType::getDebugType($stacktrace)));
         }
 
         if (!\is_array($extra)) {
-            throw new \InvalidArgumentException(\sprintf('The value of the "extra" field must be an array. Got: "%s".', \gettype($extra)));
+            throw new \InvalidArgumentException(\sprintf('The value of the "extra" field must be an array. Got: "%s".', DebugType::getDebugType($extra)));
         }
 
         $hint->exception = $exception;
