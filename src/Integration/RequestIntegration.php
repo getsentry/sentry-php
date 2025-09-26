@@ -59,6 +59,7 @@ final class RequestIntegration implements IntegrationInterface
         'Set-Cookie',
         'X-Forwarded-For',
         'X-Real-IP',
+        'CF-Connecting-IP',
     ];
 
     /**
