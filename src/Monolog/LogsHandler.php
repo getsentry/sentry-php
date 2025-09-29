@@ -124,7 +124,10 @@ class LogsHandler implements HandlerInterface
         }
     }
 
-    protected function compileAttributes(LogRecord $record): array
+    /**
+     * @param array<string, mixed>|LogRecord $record
+     */
+    protected function compileAttributes($record): array
     {
         return array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.logger.monolog']);
     }
