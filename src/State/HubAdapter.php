@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -217,5 +218,10 @@ final class HubAdapter implements HubInterface
     public function __sleep()
     {
         throw new \BadMethodCallException('Serializing instances of this class is forbidden.');
+    }
+
+    public function addAttachment(Attachment $attachment): bool
+    {
+        return self::$instance->addAttachment($attachment);
     }
 }

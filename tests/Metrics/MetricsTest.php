@@ -13,7 +13,7 @@ use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
-use Symfony\Bridge\PhpUnit\ClockMock;
+use Sentry\Util\ClockMock;
 
 use function Sentry\metrics;
 
