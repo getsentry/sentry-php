@@ -28,21 +28,6 @@ class AttachmentItem implements EnvelopeItemInterface
         return \sprintf("%s\n%s", JSON::encode($header), $data);
     }
 
-    /**
-     * Returns the total size of all attachments in bytes.
-     *
-     * @param Attachment[] $attachments
-     */
-    public static function totalAttachmentSize(array $attachments): int
-    {
-        $sum = 0;
-        foreach ($attachments as $attachment) {
-            $sum += $attachment->getSize();
-        }
-
-        return $sum;
-    }
-
     public static function toEnvelopeItem(Event $event): ?string
     {
         $result = [];

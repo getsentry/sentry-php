@@ -47,11 +47,6 @@ final class EventType implements \Stringable
         return self::getInstance('log');
     }
 
-    public static function attachment(): self
-    {
-        return self::getInstance('attachment');
-    }
-
     /**
      * List of all cases on the enum.
      *
@@ -64,7 +59,6 @@ final class EventType implements \Stringable
             self::transaction(),
             self::checkIn(),
             self::logs(),
-            self::attachment(),
         ];
     }
 

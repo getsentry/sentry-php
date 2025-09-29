@@ -25,11 +25,6 @@ use Sentry\Util\JSON;
 final class PayloadSerializer implements PayloadSerializerInterface
 {
     /**
-     * Attachments have a limit of 100MB before compression.
-     */
-    private const MAX_ATTACHMENT_SIZE = 100000000;
-
-    /**
      * @var Options The SDK client options
      */
     private $options;
