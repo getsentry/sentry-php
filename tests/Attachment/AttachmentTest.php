@@ -11,12 +11,13 @@ class AttachmentTest extends TestCase
 {
     public function testFileAttachment(): void
     {
-        $file = tempnam(sys_get_temp_dir(), 'attachment.txt');
+        // We use 3 char prefix because windows supports only 3
+        $file = tempnam(sys_get_temp_dir(), 'att');
         file_put_contents($file, 'This is a temp attachment');
         $attachment = Attachment::fromFile($file);
         $this->assertEquals(25, $attachment->getSize());
         $this->assertEquals('This is a temp attachment', $attachment->getData());
-        $this->assertStringStartsWith('attachment.txt', $attachment->getFilename());
+        $this->assertStringStartsWith('att', $attachment->getFilename());
         $this->assertEquals('application/octet-stream', $attachment->getContentType());
     }
 
