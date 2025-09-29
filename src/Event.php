@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Attachment\Attachment;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
@@ -204,6 +205,11 @@ final class Event
      * @var Profile|null The profile data
      */
     private $profile;
+
+    /**
+     * @var Attachment[]
+     */
+    private $attachments = [];
 
     private function __construct(?EventId $eventId, EventType $eventType)
     {
@@ -933,5 +939,21 @@ final class Event
         }
 
         return null;
+    }
+
+    /**
+     * @return Attachment[]
+     */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /**
+     * @param Attachment[] $attachments
+     */
+    public function setAttachments(array $attachments): void
+    {
+        $this->attachments = $attachments;
     }
 }

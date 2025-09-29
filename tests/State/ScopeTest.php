@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -433,5 +434,24 @@ final class ScopeTest extends TestCase
         $this->assertInstanceOf(DynamicSamplingContext::class, $dynamicSamplingContext);
         $this->assertSame('foo', $dynamicSamplingContext->get('transaction'));
         $this->assertSame('566e3688a61d4bc888951642d6f14a19', $dynamicSamplingContext->get('trace_id'));
+    }
+
+    /**
+     * @dataProvider eventWithLogCountProvider
+     */
+    public function testAttachmentsAppliedForType(Event $event, int $attachmentCount): void
+    {
+        $scope = new Scope();
+        $scope->addAttachment(Attachment::fromBytes('test', 'abcde'));
+        $scope->applyToEvent($event);
+        $this->assertCount($attachmentCount, $event->getAttachments());
+    }
+
+    public function eventWithLogCountProvider(): \Generator
+    {
+        yield 'event' => [Event::createEvent(), 1];
+        yield 'transaction' => [Event::createTransaction(), 1];
+        yield 'check-in' => [Event::createCheckIn(), 0];
+        yield 'logs' => [Event::createLogs(), 0];
     }
 }

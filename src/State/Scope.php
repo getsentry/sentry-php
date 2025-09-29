@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -75,6 +77,11 @@ class Scope
      * @var Span|null Set a Span on the Scope
      */
     private $span;
+
+    /**
+     * @var Attachment[]
+     */
+    private $attachments = [];
 
     /**
      * @var callable[] List of event processors
@@ -334,6 +341,7 @@ class Scope
         $this->tags = [];
         $this->extra = [];
         $this->contexts = [];
+        $this->attachments = [];
 
         return $this;
     }
@@ -412,6 +420,12 @@ class Scope
             $hint = new EventHint();
         }
 
+        if ($event->getType() === EventType::event() || $event->getType() === EventType::transaction()) {
+            if (empty($event->getAttachments())) {
+                $event->setAttachments($this->attachments);
+            }
+        }
+
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
             $event = $processor($event, $hint);
 
@@ -481,5 +495,19 @@ class Scope
         if ($this->propagationContext !== null) {
             $this->propagationContext = clone $this->propagationContext;
         }
+    }
+
+    public function addAttachment(Attachment $attachment): self
+    {
+        $this->attachments[] = $attachment;
+
+        return $this;
+    }
+
+    public function clearAttachments(): self
+    {
+        $this->attachments = [];
+
+        return $this;
     }
 }
