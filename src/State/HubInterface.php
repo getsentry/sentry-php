@@ -154,5 +154,8 @@ interface HubInterface
      */
     public function setSpan(?Span $span): HubInterface;
 
+    /**
+     * Records a new attachment that will be attached to error and transaction events.
+     */
     public function addAttachment(Attachment $attachment): bool;
 }

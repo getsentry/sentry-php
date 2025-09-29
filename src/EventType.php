@@ -64,7 +64,7 @@ final class EventType implements \Stringable
             self::transaction(),
             self::checkIn(),
             self::logs(),
-            self::attachment()
+            self::attachment(),
         ];
     }
 

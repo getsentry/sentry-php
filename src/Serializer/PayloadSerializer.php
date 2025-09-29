@@ -66,12 +66,14 @@ final class PayloadSerializer implements PayloadSerializerInterface
         switch ($event->getType()) {
             case EventType::event():
                 $items[] = EventItem::toEnvelopeItem($event);
+                $items[] = AttachmentItem::toEnvelopeItem($event);
                 break;
             case EventType::transaction():
                 $items[] = TransactionItem::toEnvelopeItem($event);
                 if ($event->getSdkMetadata('profile') !== null) {
                     $items[] = ProfileItem::toEnvelopeItem($event);
                 }
+                $items[] = AttachmentItem::toEnvelopeItem($event);
                 break;
             case EventType::checkIn():
                 $items[] = CheckInItem::toEnvelopeItem($event);
@@ -79,13 +81,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
             case EventType::logs():
                 $items[] = LogsItem::toEnvelopeItem($event);
                 break;
-        }
-
-        // If attachments are exceeding the limit, then we drop all attachments
-        if (AttachmentItem::totalAttachmentSize($event->getAttachments()) <= self::MAX_ATTACHMENT_SIZE) {
-            foreach ($event->getAttachments() as $attachment) {
-                $items[] = AttachmentItem::toAttachmentItem($attachment);
-            }
         }
 
         return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));

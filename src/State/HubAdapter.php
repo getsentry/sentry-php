@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -153,6 +154,14 @@ final class HubAdapter implements HubInterface
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
         return SentrySdk::getCurrentHub()->addBreadcrumb($breadcrumb);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addAttachment(Attachment $attachment): bool
+    {
+        return SentrySdk::getCurrentHub()->addAttachment($attachment);
     }
 
     /**

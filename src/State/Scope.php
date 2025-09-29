@@ -8,6 +8,7 @@ use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -418,8 +419,10 @@ class Scope
             $hint = new EventHint();
         }
 
-        if (empty($event->getAttachments())) {
-            $event->setAttachments($this->attachments);
+        if ($event->getType() === EventType::event() || $event->getType() === EventType::transaction()) {
+            if (empty($event->getAttachments())) {
+                $event->setAttachments($this->attachments);
+            }
         }
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {

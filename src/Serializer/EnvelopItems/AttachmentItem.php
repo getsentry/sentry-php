@@ -10,28 +10,6 @@ use Sentry\Util\JSON;
 
 class AttachmentItem implements EnvelopeItemInterface
 {
-    /**
-     * {@inheritDoc}
-     */
-    public static function toEnvelopeItem(Event $event)
-    {
-        $attachments = $event->getAttachments();
-
-        $items = [];
-
-        foreach ($attachments as $attachment) {
-            $header = [
-                'filename' => $attachment->getFilename(),
-                'content_type' => $attachment->getContentType(),
-                'attachment_type' => 'event.attachment',
-            ];
-
-            $items[] = \sprintf("%s\n%s", JSON::encode($header), file_get_contents($attachment->getFilename()));
-        }
-
-        return $items;
-    }
-
     public static function toAttachmentItem(Attachment $attachment): ?string
     {
         $data = $attachment->getData();
@@ -63,5 +41,15 @@ class AttachmentItem implements EnvelopeItemInterface
         }
 
         return $sum;
+    }
+
+    public static function toEnvelopeItem(Event $event): ?string
+    {
+        $result = [];
+        foreach ($event->getAttachments() as $attachment) {
+            $result[] = self::toAttachmentItem($attachment);
+        }
+
+        return implode("\n", $result);
     }
 }

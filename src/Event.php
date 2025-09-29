@@ -247,11 +247,6 @@ final class Event
         return new self($eventId, EventType::logs());
     }
 
-    public static function createAttachments(?EventId $eventId = null): self
-    {
-        return new self($eventId, EventType::attachment());
-    }
-
     /**
      * Gets the ID of this event.
      */

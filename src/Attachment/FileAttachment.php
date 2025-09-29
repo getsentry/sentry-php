@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Attachment;
 
 /**
@@ -7,7 +9,6 @@ namespace Sentry\Attachment;
  */
 class FileAttachment extends Attachment
 {
-
     /**
      * @var string
      */

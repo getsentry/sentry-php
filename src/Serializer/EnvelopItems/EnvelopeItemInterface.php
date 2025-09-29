@@ -11,9 +11,5 @@ use Sentry\Event;
  */
 interface EnvelopeItemInterface
 {
-    /**
-     * @param Event $event
-     * @return ?string|string[]
-     */
-    public static function toEnvelopeItem(Event $event);
+    public static function toEnvelopeItem(Event $event): ?string;
 }
