@@ -273,6 +273,8 @@ final class Options
      * 1. the passed `$options`
      * 2. already configured `logger` option
      * 3. `NullLogger` as fallback
+     *
+     * @param array<string, mixed> $options
      */
     public function getLoggerOrNullLogger(array $options = []): LoggerInterface
     {
