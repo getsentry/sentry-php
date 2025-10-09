@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\EventType;
 use Sentry\HttpClient\Response;
 use Sentry\Transport\RateLimiter;
-use Symfony\Bridge\PhpUnit\ClockMock;
+use Sentry\Util\ClockMock;
 
 /**
  * @group time-sensitive

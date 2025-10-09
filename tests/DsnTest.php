@@ -6,12 +6,9 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Dsn;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class DsnTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     /**
      * @dataProvider createFromStringDataProvider
      */

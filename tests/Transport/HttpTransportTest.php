@@ -15,7 +15,7 @@ use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\ResultStatus;
-use Symfony\Bridge\PhpUnit\ClockMock;
+use Sentry\Util\ClockMock;
 
 final class HttpTransportTest extends TestCase
 {

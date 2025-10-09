@@ -16,7 +16,7 @@ use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
-use Symfony\Bridge\PhpUnit\ClockMock;
+use Sentry\Util\ClockMock;
 
 /**
  * @group time-sensitive

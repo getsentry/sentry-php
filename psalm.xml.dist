@@ -11,6 +11,7 @@
         <ignoreFiles>
             <directory name="vendor" />
             <file name="src/Util/DebugType.php" />
+            <file name="src/Util/ClockMock.php" />
         </ignoreFiles>
     </projectFiles>
 

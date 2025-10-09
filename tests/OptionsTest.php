@@ -11,13 +11,10 @@ use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Transport\HttpTransport;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     /**
      * @var int
      */
