@@ -46,7 +46,6 @@ use Sentry\Tracing\TransactionContext;
  *     logger?: LoggerInterface|null,
  *     max_breadcrumbs?: int,
  *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
- *     max_value_length?: int,
  *     org_id?: int|null,
  *     prefixes?: array<string>,
  *     profiles_sample_rate?: int|float|null,
