@@ -278,7 +278,12 @@ final class Options
      */
     public function getLoggerOrNullLogger(array $options = []): LoggerInterface
     {
-        return $options['logger'] ?? $this->getLogger() ?? new NullLogger();
+        /**
+         * @var LoggerInterface $logger
+         */
+        $logger = $options['logger'] ?? $this->getLogger() ?? new NullLogger();
+
+        return $logger;
     }
 
     /**
@@ -1179,8 +1184,10 @@ final class Options
      * The result is stored back onto the class field.
      *
      * @param array<string, mixed> $override
+     *
+     * @internal
      */
-    private function updateOptions(array $override = []): self
+    public function updateOptions(array $override = []): self
     {
         $resolved = $this->resolver->resolveOnly($override, $this->getLoggerOrNullLogger($override));
 
