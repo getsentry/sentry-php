@@ -58,7 +58,7 @@ final class Options
 
         $this->configureOptions($this->resolver);
 
-        $this->options = $this->resolveWithLogger($options);
+        $this->options = $this->resolver->resolve($options, $this->getLoggerOrNullLogger($options));
     }
 
     /**
@@ -268,10 +268,15 @@ final class Options
 
     /**
      * Helper to always get a logger instance even if it was not set.
+     *
+     * it will check for a logger using the following order:
+     * 1. the passed `$options`
+     * 2. already configured `logger` option
+     * 3. `NullLogger` as fallback
      */
-    public function getLoggerOrNullLogger(): LoggerInterface
+    public function getLoggerOrNullLogger(array $options = []): LoggerInterface
     {
-        return $this->getLogger() ?? new NullLogger();
+        return $options['logger'] ?? $this->getLogger() ?? new NullLogger();
     }
 
     /**
@@ -1168,24 +1173,6 @@ final class Options
     }
 
     /**
-     * Calls the resolve method of the internal resolver with a logger so that
-     * validation failures can be logged and investigated.
-     *
-     * @param array<string, mixed> $options
-     *
-     * @return array<string, mixed>
-     */
-    private function resolveWithLogger(array $options = []): array
-    {
-        /**
-         * @var LoggerInterface $logger
-         */
-        $logger = $options['logger'] ?? $this->getLoggerOrNullLogger();
-
-        return $this->resolver->resolve($options, $logger);
-    }
-
-    /**
      * Merges the passed options with the current options and resolves them.
      * The result is stored back onto the class field.
      *
@@ -1193,9 +1180,9 @@ final class Options
      */
     private function updateOptions(array $override = []): self
     {
-        $options = array_merge($this->options, $override);
+        $resolved = $this->resolver->resolveOnly($override, $this->getLoggerOrNullLogger($override));
 
-        $this->options = $this->resolveWithLogger($options);
+        $this->options = array_merge($this->options, $resolved);
 
         return $this;
     }

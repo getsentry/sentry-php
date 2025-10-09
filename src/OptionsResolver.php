@@ -109,7 +109,21 @@ class OptionsResolver
      */
     public function resolve(array $options = [], ?LoggerInterface $logger = null): array
     {
-        $result = $this->defaults;
+        return array_merge($this->defaults, $this->resolveOnly($options, $logger));
+    }
+
+    /**
+     * Resolves passed options against the defaults but in contrast to {@see self::resolve}, it will not merge
+     * defaults into the result. This means that the returning array will always be equal or smaller than
+     * the input array.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveOnly(array $options = [], ?LoggerInterface $logger = null): array
+    {
+        $result = [];
 
         foreach ($options as $option => $value) {
             if (!\array_key_exists($option, $this->defaults)) {
@@ -124,6 +138,7 @@ class OptionsResolver
                 if ($logger !== null) {
                     $logger->debug(\sprintf('Invalid value for option "%s". Using default value.', $option));
                 }
+                $result[$option] = $this->defaults[$option];
                 continue;
             }
 

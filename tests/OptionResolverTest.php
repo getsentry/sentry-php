@@ -98,6 +98,17 @@ class OptionResolverTest extends TestCase
         $this->assertEquals($result, $expectedResult);
     }
 
+    /**
+     * @dataProvider resolveOnlyTestProvider
+     */
+    public function testResolveOnly(array $defaults, array $options, array $expectedResult): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults($defaults);
+        $result = $resolver->resolveOnly($options);
+        $this->assertEquals($expectedResult, $result);
+    }
+
     public function testNormalizerReturnsInvalidType()
     {
         $resolver = new OptionsResolver();
@@ -242,7 +253,30 @@ class OptionResolverTest extends TestCase
         ];
     }
 
-    public function normalizerTestProvider()
+    public function resolveOnlyTestProvider(): \Generator
+    {
+        $defaults = ['foo' => 'bar', 'test' => 'example', 'a' => 'b'];
+
+        yield 'Result only contains passed values' => [
+            $defaults,
+            ['foo' => 'test'],
+            ['foo' => 'test'],
+        ];
+
+        yield 'Result does not contain invalid key' => [
+            $defaults,
+            ['foo' => 'test', 'example' => 'abcde'],
+            ['foo' => 'test'],
+        ];
+
+        yield 'Empty input returns empty output' => [
+            $defaults,
+            [],
+            [],
+        ];
+    }
+
+    public function normalizerTestProvider(): \Generator
     {
         yield 'Normalizes successful' => [
             ['a' => 'b'],
@@ -254,21 +288,9 @@ class OptionResolverTest extends TestCase
         ];
     }
 
-    public function testDebugLogsProduced()
+    public function testDebugLogsProduced(): void
     {
-        $logger = new class extends AbstractLogger {
-            private $logs = [];
-
-            public function log($level, $message, array $context = []): void
-            {
-                $this->logs[] = $message;
-            }
-
-            public function getLogs(): array
-            {
-                return $this->logs;
-            }
-        };
+        $logger = new TestLogger();
         $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults([
@@ -281,5 +303,36 @@ class OptionResolverTest extends TestCase
         $resolver->resolve(['test' => 'abc'], $logger);
         $this->assertCount(2, $logger->getLogs());
         $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
+    }
+
+    public function testDebugLogsProducedForResolveOnly(): void
+    {
+        $logger = new TestLogger();
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedValues('test', ['foo']);
+        $resolver->setDefaults(['test' => 'foo', 'abc' => 'def', 'bar' => 'baz']);
+
+        $resolver->resolveOnly(['example' => 'test'], $logger);
+        $this->assertCount(1, $logger->getLogs());
+        $this->assertEquals('Option "example" does not exist and will be ignored', $logger->getLogs()[0]);
+
+        $resolver->resolveOnly(['test' => 'abc'], $logger);
+        $this->assertCount(2, $logger->getLogs());
+        $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
+    }
+}
+
+class TestLogger extends AbstractLogger
+{
+    private $logs = [];
+
+    public function log($level, $message, array $context = []): void
+    {
+        $this->logs[] = $message;
+    }
+
+    public function getLogs(): array
+    {
+        return $this->logs;
     }
 }
