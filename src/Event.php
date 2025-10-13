@@ -10,6 +10,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
+use Sentry\Util\DebugType;
 
 /**
  * This is the base class for classes containing event data.
@@ -808,7 +809,7 @@ final class Event
     {
         foreach ($exceptions as $exception) {
             if (!$exception instanceof ExceptionDataBag) {
-                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', ExceptionDataBag::class, get_debug_type($exception)));
+                throw new \UnexpectedValueException(\sprintf('Expected an instance of the "%s" class. Got: "%s".', ExceptionDataBag::class, DebugType::getDebugType($exception)));
             }
         }
 

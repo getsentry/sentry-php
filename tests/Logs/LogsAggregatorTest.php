@@ -52,7 +52,7 @@ final class LogsAggregatorTest extends TestCase
                 $log->attributes()->toSimpleArray(),
                 static function (string $key) {
                     // We are not testing internal Sentry attributes here, only the ones the user supplied
-                    return !str_starts_with($key, 'sentry.');
+                    return strpos($key, 'sentry.') !== 0;
                 },
                 \ARRAY_FILTER_USE_KEY
             )

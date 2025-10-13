@@ -16,6 +16,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
+use Sentry\Util\DebugType;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -215,7 +216,7 @@ class Scope
     public function setUser($user): self
     {
         if (!\is_array($user) && !$user instanceof UserDataBag) {
-            throw new \TypeError(\sprintf('The $user argument must be either an array or an instance of the "%s" class. Got: "%s".', UserDataBag::class, get_debug_type($user)));
+            throw new \TypeError(\sprintf('The $user argument must be either an array or an instance of the "%s" class. Got: "%s".', UserDataBag::class, DebugType::getDebugType($user)));
         }
 
         if (\is_array($user)) {

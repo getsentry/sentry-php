@@ -33,8 +33,8 @@ use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\UserDataBag;
+use Sentry\Util\ClockMock;
 use Sentry\Util\SentryUid;
-use Symfony\Bridge\PhpUnit\ClockMock;
 
 /**
  * @group time-sensitive
