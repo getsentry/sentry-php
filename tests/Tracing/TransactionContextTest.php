@@ -11,12 +11,9 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\Tracing\TransactionSource;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 final class TransactionContextTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     public function testGettersAndSetters(): void
     {
         $transactionContext = new TransactionContext();

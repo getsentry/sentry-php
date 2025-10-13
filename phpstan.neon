@@ -10,6 +10,7 @@ parameters:
     excludePaths:
         - tests/resources
         - tests/Fixtures
+        - src/Util/ClockMock.php
     dynamicConstantNames:
         - Monolog\Logger::API
     bootstrapFiles:
