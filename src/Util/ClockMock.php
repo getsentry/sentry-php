@@ -146,7 +146,7 @@ class ClockMock
         if (strpos($class, '\\Tests\\') > 0) {
             $ns = str_replace('\\Tests\\', '\\', $class);
             $mockedNs[] = substr($ns, 0, strrpos($ns, '\\'));
-        } elseif (str_starts_with($class, 'Tests\\')) {
+        } elseif (strpos($class, 'Tests\\') === 0) {
             $mockedNs[] = substr($class, 6, strrpos($class, '\\') - 6);
         }
         foreach ($mockedNs as $ns) {
