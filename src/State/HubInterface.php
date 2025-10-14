@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -152,4 +153,9 @@ interface HubInterface
      * Sets the span on the Hub.
      */
     public function setSpan(?Span $span): HubInterface;
+
+    /**
+     * Records a new attachment that will be attached to error and transaction events.
+     */
+    public function addAttachment(Attachment $attachment): bool;
 }
