@@ -11,13 +11,10 @@ use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Transport\HttpTransport;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     /**
      * @var int
      */
@@ -586,7 +583,7 @@ final class OptionsTest extends TestCase
             [true, 0],
             [true, 1],
             [true, Options::DEFAULT_MAX_BREADCRUMBS],
-            [false, Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            [true, Options::DEFAULT_MAX_BREADCRUMBS + 1],
             [false, 'string'],
             [false, '1'],
         ];

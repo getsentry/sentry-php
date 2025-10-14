@@ -76,7 +76,6 @@ final class LogsAggregator
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.message.template', $message)
             ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
 
         if ($client instanceof Client) {
@@ -99,8 +98,12 @@ final class LogsAggregator
             }
         });
 
-        foreach ($values as $key => $value) {
-            $log->setAttribute("sentry.message.parameter.{$key}", $value);
+        if (\count($values)) {
+            $log->setAttribute('sentry.message.template', $message);
+
+            foreach ($values as $key => $value) {
+                $log->setAttribute("sentry.message.parameter.{$key}", $value);
+            }
         }
 
         $attributes = Arr::simpleDot($attributes);
@@ -108,15 +111,27 @@ final class LogsAggregator
         foreach ($attributes as $key => $value) {
             $attribute = Attribute::tryFromValue($value);
 
+            if (!\is_string($key)) {
+                if ($sdkLogger !== null) {
+                    $sdkLogger->info(
+                        \sprintf("Dropping log attribute with non-string key '%s' and value of type '%s'.", $key, \gettype($value))
+                    );
+                }
+
+                continue;
+            }
+
             if ($attribute === null) {
                 if ($sdkLogger !== null) {
                     $sdkLogger->info(
                         \sprintf("Dropping log attribute {$key} with value of type '%s' because it is not serializable or an unsupported type.", \gettype($value))
                     );
                 }
-            } else {
-                $log->setAttribute($key, $attribute);
+
+                continue;
             }
+
+            $log->setAttribute($key, $attribute);
         }
 
         $log = ($options->getBeforeSendLogCallback())($log);
@@ -132,9 +147,8 @@ final class LogsAggregator
             return;
         }
 
-        // We check if it's a `LogsLogger` to avoid a infinite loop where the logger is logging the logs it's writing
         if ($sdkLogger !== null) {
-            $sdkLogger->log((string) $log->getLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
+            $sdkLogger->log($log->getPsrLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
         }
 
         $this->logs[] = $log;

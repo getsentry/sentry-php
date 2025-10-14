@@ -311,6 +311,11 @@ parameters:
 			path: src/Tracing/GuzzleTracingMiddleware.php
 
 		-
+			message: "#^Property Sentry\\\\Tracing\\\\PropagationContext\\:\\:\\$parentSampled is never read, only written\\.$#"
+			count: 1
+			path: src/Tracing/PropagationContext.php
+
+		-
 			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Tracing/Span.php

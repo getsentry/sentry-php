@@ -30,7 +30,7 @@ use Sentry\Tracing\TransactionContext;
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
  *     default_integrations?: bool,
- *     dsn?: string|bool|null|Dsn,
+ *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
