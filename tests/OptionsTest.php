@@ -466,24 +466,19 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider dsnOptionThrowsOnInvalidValueDataProvider
      */
-    public function testDsnOptionThrowsOnInvalidValue($value, string $expectedExceptionMessage): void
+    public function testDnsOptionInvalidIsIgnored($value): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage($expectedExceptionMessage);
-
-        new Options(['dsn' => $value]);
+        $options = new Options(['dsn' => $value]);
+        $this->assertNull($options->getDsn());
     }
 
     public static function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
     {
-        yield [
+        yield '"true" is not a valid DSN' => [
             true,
-            'The option "dsn" with value true is invalid.',
         ];
-
-        yield [
+        yield '"foo" is not a valid DSN' => [
             'foo',
-            'The option "dsn" with value "foo" is invalid.',
         ];
     }
 
@@ -530,27 +525,23 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider
      */
-    public function testMaxBreadcrumbsOptionIsValidatedCorrectly(bool $isValid, $value): void
+    public function testMaxBreadcrumbsOptionIsValidatedCorrectly($value, $expectedValue): void
     {
-        if (!$isValid) {
-            $this->expectException(InvalidOptionsException::class);
-        }
-
         $options = new Options(['max_breadcrumbs' => $value]);
 
-        $this->assertSame($value, $options->getMaxBreadcrumbs());
+        $this->assertSame($expectedValue, $options->getMaxBreadcrumbs());
     }
 
     public static function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
-            [false, -1],
-            [true, 0],
-            [true, 1],
-            [true, Options::DEFAULT_MAX_BREADCRUMBS],
-            [true, Options::DEFAULT_MAX_BREADCRUMBS + 1],
-            [false, 'string'],
-            [false, '1'],
+            [-1, Options::DEFAULT_MAX_BREADCRUMBS],
+            [0, 0],
+            [1, 1],
+            [Options::DEFAULT_MAX_BREADCRUMBS, Options::DEFAULT_MAX_BREADCRUMBS],
+            [Options::DEFAULT_MAX_BREADCRUMBS + 1, Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            ['string', Options::DEFAULT_MAX_BREADCRUMBS],
+            ['1', Options::DEFAULT_MAX_BREADCRUMBS],
         ];
     }
 
@@ -571,11 +562,6 @@ final class OptionsTest extends TestCase
 
     public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
     {
-        yield [
-            -1,
-            'The option "context_lines" with value -1 is invalid.',
-        ];
-
         yield [
             0,
             null,

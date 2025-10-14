@@ -9,12 +9,11 @@ use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
+use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
 use Sentry\Util\JSON;
-use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * This integration collects information from the request and attaches them to
@@ -68,10 +67,6 @@ final class RequestIntegration implements IntegrationInterface
 
     /**
      * @var array<string, mixed> The options
-     *
-     * @psalm-var array{
-     *     pii_sanitize_headers: string[]
-     * }
      */
     private $options;
 
@@ -80,10 +75,6 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      * @param array<string, mixed>         $options        The options
-     *
-     * @psalm-param array{
-     *     pii_sanitize_headers?: string[]
-     * } $options
      */
     public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
     {
@@ -177,6 +168,10 @@ final class RequestIntegration implements IntegrationInterface
         foreach ($headers as $name => $values) {
             // Cast the header name into a string, to avoid errors on numeric headers
             $name = (string) $name;
+
+            if (!\is_array($this->options['pii_sanitize_headers'])) {
+                break;
+            }
 
             if (!\in_array(strtolower($name), $this->options['pii_sanitize_headers'], true)) {
                 continue;
@@ -302,10 +297,10 @@ final class RequestIntegration implements IntegrationInterface
      */
     private function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
         $resolver->setAllowedTypes('pii_sanitize_headers', 'string[]');
-        $resolver->setNormalizer('pii_sanitize_headers', static function (SymfonyOptions $options, array $value): array {
+        $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
             return array_map('strtolower', $value);
         });
+        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
     }
 }
