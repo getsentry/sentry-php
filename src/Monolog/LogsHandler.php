@@ -66,7 +66,7 @@ class LogsHandler implements HandlerInterface
             self::getSentryLogLevelFromMonologLevel($record['level']),
             $record['message'],
             [],
-            array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.logger.monolog'])
+            array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog'])
         );
 
         return $this->bubble === false;
