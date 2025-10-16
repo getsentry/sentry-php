@@ -10,6 +10,7 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
+use Sentry\Util\Arr;
 
 class LogsHandler implements HandlerInterface
 {
@@ -130,8 +131,8 @@ class LogsHandler implements HandlerInterface
     protected function compileAttributes($record): array
     {
         return [
-            'log.context' => $record['context'],
-            'log.extra' => $record['extra'],
+            ...Arr::simpleDot(['context' => $record['context']]),
+            ...Arr::simpleDot(['extra' => $record['extra']]),
             'log.channel' => $record['channel'],
             'sentry.origin' => 'auto.logger.monolog',
         ];
