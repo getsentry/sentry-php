@@ -32,8 +32,11 @@ echo 'Before OOM memory limit: ' . ini_get('memory_limit');
 
 $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
---EXPECTF--
+--EXPECTREGEX--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 1073741856 bytes\) in Standard input code on line 28
+(Stack trace:)?
+(#0 Standard input code\(28\): str_repeat\('x', 1073741824\))?
+(#1 {main})?
 Fatal error listener called
 After OOM memory limit: 67108864
