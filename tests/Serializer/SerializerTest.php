@@ -225,6 +225,15 @@ final class SerializerTest extends AbstractSerializerTest
         $this->assertSame(\JSON_ERROR_NONE, json_last_error());
     }
 
+    public function testEmptyString(): void
+    {
+        $serializer = $this->createSerializer();
+
+        $result = $this->invokeSerialization($serializer, '');
+
+        $this->assertSame('', $result);
+    }
+
     /**
      * @return Serializer
      */
