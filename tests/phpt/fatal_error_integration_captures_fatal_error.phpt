@@ -58,7 +58,7 @@ final class TestClass implements \JsonSerializable
 }
 ?>
 --EXPECTREGEX--
-^Fatal error: Class Sentry\\Tests\\TestClass contains 1 abstract methods? and must therefore be declared abstract or implement the remaining methods? \(JsonSerializable::jsonSerialize\) in Standard input code on line 53
+^Fatal error: Class Sentry\\Tests\\TestClass contains 1 abstract methods? and must therefore be declared abstract or implement the remaining methods? \(JsonSerializable::jsonSerialize\) in .* on line 53
 (Stack trace:)?
 (#0 {main})?
 Transport called\R?$

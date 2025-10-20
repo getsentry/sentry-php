@@ -72,7 +72,7 @@ for ($i = 0; $i < 100000000; ++$i) {
 }
 --EXPECTREGEX--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 67108872 bytes\) in Standard input code on line 66
+Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 67108872 bytes\) in .* on line 66
 (Stack trace:)?
 (#0 {main})?
 Transport called

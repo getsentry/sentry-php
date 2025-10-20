@@ -34,7 +34,7 @@ $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTREGEX--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 1073741856 bytes\) in Standard input code on line 28
+Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 1073741856 bytes\) in .* on line 28
 (Stack trace:)?
 (#0 Standard input code\(28\): str_repeat\('x', 1073741824\))?
 (#1 {main})?
