@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 4.17.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.17.0.
+
+### Bug Fixes
+
+- Empty strings will no longer display `<encoding error>` when serialized. [(#1940)](https://github.com/getsentry/sentry-php/pull/1940)
+
+### Misc
+
+- Replace polyfill methods with PHP 7.2 equivalents. [(#1922)](https://github.com/getsentry/sentry-php/pull/1922)
+- Remove `symfony/phpunit-bridge` as a dev dependency. [(#1930)](https://github.com/getsentry/sentry-php/pull/1930)
+- Update `sentry.origin` to be consistent with other SDKs. [(#1938)](https://github.com/getsentry/sentry-php/pull/1938)
+
 ## 4.16.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.16.0.
