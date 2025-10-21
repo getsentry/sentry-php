@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Attributes\Attribute;
+use Sentry\Attributes\AttributeBag;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -50,6 +52,11 @@ class Scope
      * @var array<string, mixed> A set of extra data associated to this scope
      */
     private $extra = [];
+
+    /**
+     * @var array<string, mixed> A set of attributes associated to this scope
+     */
+    private $attributes = [];
 
     /**
      * @var string[] List of fingerprints used to group events together in
@@ -157,6 +164,26 @@ class Scope
     public function removeContext(string $name): self
     {
         unset($this->contexts[$name]);
+
+        return $this;
+    }
+
+    /**
+     * @param string $key   The key that uniquely identifies the attribute
+     * @param int|float|string|bool  $value The value
+     *
+     * @return $this
+     */
+    public function setAttribute(string $key, $value): self
+    {
+        $this->attributes[$key] = $value;
+
+        return $this;
+    }
+
+    public function removeAttribute(string $key): self
+    {
+        unset($this->attributes[$key]);
 
         return $this;
     }
@@ -333,6 +360,7 @@ class Scope
         $this->tags = [];
         $this->extra = [];
         $this->contexts = [];
+        $this->attributes = new AttributeBag();
 
         return $this;
     }
@@ -361,6 +389,10 @@ class Scope
 
         if (!empty($this->extra)) {
             $event->setExtra(array_merge($this->extra, $event->getExtra()));
+        }
+
+        if (!empty($this->attributes)) {
+            $event->setAttributes(array_merge($this->attributes, $event->getAttributes()));
         }
 
         if ($this->user !== null) {

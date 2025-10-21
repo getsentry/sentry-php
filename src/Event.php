@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Attributes\AttributeBag;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
@@ -135,6 +136,11 @@ final class Event
      * @var array<string, array<string, mixed>> An arbitrary mapping of additional contexts associated to this event
      */
     private $contexts = [];
+
+    /**
+     * @var array<string, mixed> A set of attributes associated to this event
+     */
+    private $attributes = [];
 
     /**
      * @var array<string, mixed> An arbitrary mapping of additional metadata
@@ -624,6 +630,26 @@ final class Event
         if (!empty($data)) {
             $this->contexts[$name] = $data;
         }
+
+        return $this;
+    }
+
+    /**
+     * Gets the attributes associated to this event.
+     * 
+     * @return array<string, mixed>
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Sets the attributes associated to this event.
+     */
+    public function setAttributes(array $attributes): self
+    {
+        $this->attributes = $attributes;
 
         return $this;
     }
