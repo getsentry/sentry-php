@@ -63,7 +63,7 @@ final class Event
     private $transaction;
 
     /**
-     * @var Span[] The array of spans if it's a transaction
+     * @var Span[]|SpanFirst[] The array of spans if it's a transaction
      */
     private $spans = [];
 
@@ -948,7 +948,7 @@ final class Event
     /**
      * Sets a list of timed application events that have a start and end time.
      *
-     * @param Span[] $spans The list of spans
+     * @param Span[]|SpanFirst[] $spans The list of spans
      */
     public function setSpans(array $spans): self
     {

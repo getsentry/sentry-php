@@ -70,6 +70,9 @@ class Scope
      */
     private $eventProcessors = [];
 
+    /**
+     * @var Span
+     */
     private $span;
 
     /**
@@ -383,7 +386,7 @@ class Scope
             }
 
             // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
-            $event->setSdkMetadata('dynamic_sampling_context', $this->span->metadata['dynamic_sampling_context'] ?? null);
+            $event->setSdkMetadata('dynamic_sampling_context', $this->span->getTransaction()->getDynamicSamplingContext() ?? null);
         } else {
             if (!\array_key_exists('trace', $event->getContexts())) {
                 $event->setContext('trace', $this->propagationContext->getTraceContext());
@@ -422,6 +425,7 @@ class Scope
 
     /**
      * Returns the span that is on the scope.
+     * @return Span
      */
     public function getSpan()
     {
@@ -431,7 +435,7 @@ class Scope
     /**
      * Sets the span on the scope.
      *
-     * @param Span|null $span The span
+     * @param Span|\Sentry\Tracing\Spans\Span|null $span The span
      *
      * @return $this
      */

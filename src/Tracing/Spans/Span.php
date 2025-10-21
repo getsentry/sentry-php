@@ -6,40 +6,67 @@ namespace Sentry\Tracing\Spans;
 
 use Sentry\Attributes\AttributeBag;
 use Sentry\SentrySdk;
-use Sentry\Tracing\SpanStatus;
 
+use Sentry\Tracing\SpanStatus;
 use function Sentry\tracing;
 
 class Span
 {
-    public $name;
+    /**
+     * @var string
+     */
+    private $name;
 
-    public $status;
+    /**
+     * Even though we only allow 'ok' and 'error' as status here, we can re-use the old SpanStatus for now since
+     * it has one 'ok' state and many 'error' states, which we can collapse into one.
+     *
+     * @var SpanStatus
+     */
+    private $status;
 
-    public $traceId;
-    
-    public $spanId;
+    /**
+     * @var TraceId
+     */
+    private $traceId;
 
-    public $parentSpanId;
+    /**
+     * @var SpanId
+     */
+    private $spanId;
 
-    public $kind;
+    /**
+     * @var SpanId|null
+     */
+    private $parentSpanId;
 
-    public $isRemote;
+    private $kind;
 
-    public $startTimestamp;
+    private $isRemote;
 
-    public $endTimestamp;
+    /**
+     * @var float|null
+     */
+    private $startTimestamp;
+
+    /**
+     * @var float|null
+     */
+    private $endTimestamp;
 
     /**
      * @var AttributeBag
      */
     private $attributes;
 
-    public $links = [];
+    private $links = [];
 
+    /**
+     * @var \Sentry\State\HubInterface
+     */
     private $hub;
 
-    public $metadata = [];
+    private $metadata = [];
 
     public function __construct()
     {
@@ -87,11 +114,51 @@ class Span
         return $this;
     }
 
+    public function getStartTimestamp(): ?float
+    {
+        return $this->startTimestamp;
+    }
+
     public function setEndTimestamp(float $endTime): self
     {
         $this->endTimestamp = $endTime;
 
         return $this;
+    }
+
+    public function getEndTimestamp(): ?float
+    {
+        return $this->endTimestamp;
+    }
+
+    public function getTraceId(): TraceId
+    {
+        return $this->traceId;
+    }
+
+    public function getSpanId(): SpanId
+    {
+        return $this->spanId;
+    }
+
+    public function getParentSpanId(): ?SpanId
+    {
+        return $this->parentSpanId;
+    }
+
+    public function setParentSpanId(?SpanId $parentSpanId): void
+    {
+        $this->parentSpanId = $parentSpanId;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getStatus(): SpanStatus
+    {
+        return $this->status;
     }
 
     public function attributes(): AttributeBag
@@ -109,6 +176,26 @@ class Span
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function setAttributes(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            $this->attributes->set($key, $value);
+        }
+
+        return $this;
+    }
+
+    public function setStatus(SpanStatus $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    // TODO: Should this be called end?
     public function finish(): void
     {
         if ($this->endTimestamp !== null) {
@@ -117,7 +204,7 @@ class Span
         }
 
         $this->endTimestamp = microtime(true);
-        $this->status = (string) SpanStatus::ok();
+        $this->status = SpanStatus::ok();
 
         $parentSpan = $this->hub->getSpan();
         if ($parentSpan !== null) {
@@ -137,7 +224,7 @@ class Span
         }
 
         // @TODO(michi) do we need all this data on the trace context?
-        // 
+        //
         // if ($this->description !== null) {
         //     $result['description'] = $this->description;
         // }
@@ -160,5 +247,4 @@ class Span
 
         return $result;
     }
- }
- 
+}

@@ -10,6 +10,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Log;
+use Sentry\Tracing\Spans\Span;
 use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -40,6 +41,16 @@ final class Options
     public const DEFAULT_HTTP_CONNECT_TIMEOUT = 2;
 
     /**
+     * Uses the old transaction based span mechanism.
+     */
+    public const TRACING_TRANSACTION = 'transaction';
+
+    /**
+     * Uses the new span streaming API.
+     */
+    public const TRACING_SPAN = 'spans';
+
+    /**
      * @var array<string, mixed> The configuration options
      */
     private $options;
@@ -49,7 +60,7 @@ final class Options
      */
     private $resolver;
 
-    /**
+    /**A
      * Class constructor.
      *
      * @param array<string, mixed> $options The configuration options
@@ -696,6 +707,33 @@ final class Options
     }
 
     /**
+     * Returns a callback that will be called for every span before sending them to Sentry.
+     *
+     * Compared to other before_* callbacks, this is not used to filter out Spans and will not
+     * allow to return null. It is only used to modify span data before sending it.
+     *
+     * @psalm-return callable(Span): Span
+     */
+    public function getBeforeSendSpanCallback(): callable
+    {
+        return $this->options['before_send_span'];
+    }
+
+    /**
+     * Sets a callback to modify every span before sending them to Sentry.
+     *
+     * @psalm-param $callback callable(Span): Span
+     */
+    public function setBeforeSendSpanCallback(callable $callback): self
+    {
+        $options = array_merge($this->options, ['before_send_span' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets an allow list of trace propagation targets.
      *
      * @return string[]|null
@@ -1284,6 +1322,14 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+
+            // ---- Span first config options ----
+            'span_processing_mode' => self::TRACING_TRANSACTION,
+            // TODO: Think about own type with reduced set of fields that are editable by users instead of
+            // having access to the entire span.
+            'before_send_span' => static function (Span $span): Span {
+                return $span;
+            },
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
@@ -1355,6 +1401,11 @@ final class Options
         $resolver->setNormalizer('in_app_include', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
+
+        $resolver->setAllowedTypes('span_processing_mode', ['string']);
+        $resolver->setAllowedValues('span_processing_mode', [self::TRACING_TRANSACTION, self::TRACING_SPAN]);
+
+        $resolver->setAllowedTypes('before_send_span', ['callable']);
     }
 
     /**

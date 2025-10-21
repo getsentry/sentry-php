@@ -72,6 +72,7 @@ final class EventType implements \Stringable
             self::transaction(),
             self::checkIn(),
             self::logs(),
+            self::spans(),
             self::metrics(),
         ];
     }
@@ -88,5 +89,10 @@ final class EventType implements \Stringable
         }
 
         return self::$instances[$value];
+    }
+
+    public function usesEventId(): bool
+    {
+        return $this !== self::spans();
     }
 }

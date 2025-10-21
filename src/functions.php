@@ -12,6 +12,7 @@ use Sentry\Metrics\Metrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\Spans\Span;
 use Sentry\Tracing\Spans\Spans;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -387,4 +388,9 @@ function tracing(): Spans
 function metrics(): Metrics
 {
     return Metrics::getInstance();
+}
+
+function startSpan(string $name, array $attributes = [], ?Span $parent = null): Span
+{
+    return Spans::startSpan($name, $attributes, $parent);
 }

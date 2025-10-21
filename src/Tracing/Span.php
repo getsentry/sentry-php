@@ -12,7 +12,7 @@ use Sentry\State\Scope;
 /**
  * This class stores all the information about a span.
  */
-class Span implements \JsonSerializable
+class Span
 {
     /**
      * @var SpanId Span ID

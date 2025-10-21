@@ -30,6 +30,11 @@ class AttributeBag
         return $this;
     }
 
+    public function exists(string $key): bool
+    {
+        return \array_key_exists($key, $this->attributes);
+    }
+
     public function get(string $key): ?Attribute
     {
         return $this->attributes[$key] ?? null;

@@ -46,4 +46,21 @@ class Spans
     {
         return $this->aggregator;
     }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public static function startSpan(string $name, array $attributes = [], ?Span $parent = null): Span
+    {
+        $span = Span::make()->start();
+        $span->setName($name);
+        foreach ($attributes as $name => $value) {
+            $span->setAttribute($name, $value);
+        }
+        if ($parent !== null) {
+            $span->setParentSpanId($parent->getSpanId());
+        }
+
+        return $span;
+    }
 }

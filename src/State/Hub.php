@@ -16,7 +16,6 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
-use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 

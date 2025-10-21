@@ -206,6 +206,16 @@ final class SpanStatus implements \Stringable
         return $this->value;
     }
 
+    public function isOk(): bool
+    {
+        return $this->value === 'ok';
+    }
+
+    public function isError(): bool
+    {
+        return !$this->isOk();
+    }
+
     private static function getInstance(string $value): self
     {
         if (!isset(self::$instances[$value])) {

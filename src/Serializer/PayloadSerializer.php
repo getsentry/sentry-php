@@ -39,14 +39,16 @@ final class PayloadSerializer implements PayloadSerializerInterface
      */
     public function serialize(Event $event): string
     {
+        $envelopeHeader = [];
+
+        if ($event->getType()->usesEventId()) {
+            $envelopeHeader['event_id'] = (string) $event->getId();
+        }
+
         // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
-        $envelopeHeader = [
-            // FIXME - span envelopes have no event_id -> move to seralizer
-            //'event_id' => (string) $event->getId(),
-            'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
-            'dsn' => (string) $this->options->getDsn(),
-            'sdk' => $event->getSdkPayload(),
-        ];
+        $envelopeHeader['sent_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $envelopeHeader['dsn'] = (string) $this->options->getDsn();
+        $envelopeHeader['sdk'] = $event->getSdkPayload();
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
         if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
