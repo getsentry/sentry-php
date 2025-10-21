@@ -275,7 +275,7 @@ final class RequestIntegration implements IntegrationInterface
             return false;
         }
 
-        if ($maxRequestBodySize === 'none' || $maxRequestBodySize === 'never') {
+        if ($maxRequestBodySize === 'never') {
             return false;
         }
 

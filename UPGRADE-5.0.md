@@ -100,3 +100,17 @@ The following deprecated methods have been removed:
 ### EventType Changes
 
 The `metrics` event type has been removed from `EventType::cases()` as metrics are no longer supported.
+
+### Request Body Size Option Value Changed
+
+The `max_request_body_size` option value `'none'` has been renamed to `'never'` for consistency:
+
+```php
+// Before (4.x)
+$options->setMaxRequestBodySize('none');
+
+// After (5.0)
+$options->setMaxRequestBodySize('never');
+```
+
+The allowed values for this option are now: `'never'`, `'small'`, `'medium'`, `'always'`.
