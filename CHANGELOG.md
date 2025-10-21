@@ -10,7 +10,6 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Misc
 
-- Replace polyfill methods with PHP 7.2 equivalents. [(#1922)](https://github.com/getsentry/sentry-php/pull/1922)
 - Remove `symfony/phpunit-bridge` as a dev dependency. [(#1930)](https://github.com/getsentry/sentry-php/pull/1930)
 - Update `sentry.origin` to be consistent with other SDKs. [(#1938)](https://github.com/getsentry/sentry-php/pull/1938)
 
