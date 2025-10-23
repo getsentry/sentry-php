@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Psr\Log\NullLogger;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
@@ -229,6 +230,19 @@ class Hub implements HubInterface
         }
 
         return $breadcrumb !== null;
+    }
+
+    public function addAttachment(Attachment $attachment): bool
+    {
+        $client = $this->getClient();
+
+        if ($client === null) {
+            return false;
+        }
+
+        $this->getScope()->addAttachment($attachment);
+
+        return true;
     }
 
     /**
