@@ -8,7 +8,7 @@ use Sentry\Attachment\Attachment;
 use Sentry\Event;
 use Sentry\Util\JSON;
 
-class AttachmentItem implements EnvelopeItemInterface
+class AttachmentItem
 {
     public static function toAttachmentItem(Attachment $attachment): ?string
     {
@@ -26,15 +26,5 @@ class AttachmentItem implements EnvelopeItemInterface
         ];
 
         return \sprintf("%s\n%s", JSON::encode($header), $data);
-    }
-
-    public static function toEnvelopeItem(Event $event): ?string
-    {
-        $result = [];
-        foreach ($event->getAttachments() as $attachment) {
-            $result[] = self::toAttachmentItem($attachment);
-        }
-
-        return implode("\n", $result);
     }
 }

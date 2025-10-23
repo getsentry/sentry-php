@@ -61,14 +61,18 @@ final class PayloadSerializer implements PayloadSerializerInterface
         switch ($event->getType()) {
             case EventType::event():
                 $items[] = EventItem::toEnvelopeItem($event);
-                $items[] = AttachmentItem::toEnvelopeItem($event);
+                foreach ($event->getAttachments() as $attachment) {
+                    $items[] = AttachmentItem::toAttachmentItem($attachment);
+                }
                 break;
             case EventType::transaction():
                 $items[] = TransactionItem::toEnvelopeItem($event);
                 if ($event->getSdkMetadata('profile') !== null) {
                     $items[] = ProfileItem::toEnvelopeItem($event);
                 }
-                $items[] = AttachmentItem::toEnvelopeItem($event);
+                foreach ($event->getAttachments() as $attachment) {
+                    $items[] = AttachmentItem::toAttachmentItem($attachment);
+                }
                 break;
             case EventType::checkIn():
                 $items[] = CheckInItem::toEnvelopeItem($event);
