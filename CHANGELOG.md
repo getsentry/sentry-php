@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.17.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.17.1.
+
+### Misc
+
+- Call `curl_close` only on PHP version 7.4 and below to prevent deprecation warnings. [(#1947)](https://github.com/getsentry/sentry-php/pull/1947)
+
 ## 4.17.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.17.0.
