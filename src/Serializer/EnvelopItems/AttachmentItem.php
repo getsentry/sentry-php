@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Serializer\EnvelopItems;
 
 use Sentry\Attachment\Attachment;
-use Sentry\Event;
 use Sentry\Util\JSON;
 
 class AttachmentItem
