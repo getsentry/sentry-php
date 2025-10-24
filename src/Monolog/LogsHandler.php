@@ -135,7 +135,7 @@ class LogsHandler implements HandlerInterface
             Arr::simpleDot(['extra' => $record['extra']]),
             [
                 'log.channel' => $record['channel'],
-                'sentry.origin' => 'auto.logger.monolog',
+                'sentry.origin' => 'auto.log.monolog',
             ]
         );
     }
