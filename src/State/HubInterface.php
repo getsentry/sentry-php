@@ -15,6 +15,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\Spans\Span as SpanV2;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -146,13 +147,15 @@ interface HubInterface
 
     /**
      * Returns the span that is on the Hub.
+     * @return Span|SpanV2|null
      */
-    public function getSpan(): ?Span;
+    public function getSpan();
 
     /**
      * Sets the span on the Hub.
+     * @param Span|SpanV2|null $span
      */
-    public function setSpan(?Span $span): HubInterface;
+    public function setSpan($span): HubInterface;
 
     /**
      * Records a new attachment that will be attached to error and transaction events.

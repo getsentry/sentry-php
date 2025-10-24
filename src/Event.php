@@ -10,6 +10,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\Spans\Span as SpanV2;
 use Sentry\Util\DebugType;
 
 /**
@@ -154,7 +155,7 @@ final class Event
     private $breadcrumbs = [];
 
     /**
-     * @var Span[] The array of spans if it's a transaction
+     * @var Span[]|SpanV2[] The array of spans if it's a transaction
      */
     private $spans = [];
 
@@ -246,6 +247,11 @@ final class Event
     public static function createLogs(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::logs());
+    }
+
+    public static function createSpans(): self
+    {
+        return new self(null, EventType::spans());
     }
 
     /**
@@ -899,7 +905,7 @@ final class Event
     /**
      * A list of timed application events that have a start and end time.
      *
-     * @return Span[]
+     * @return Span[]|SpanV2[]
      */
     public function getSpans(): array
     {
@@ -909,7 +915,7 @@ final class Event
     /**
      * Sets a list of timed application events that have a start and end time.
      *
-     * @param Span[] $spans The list of spans
+     * @param Span[]|SpanV2[] $spans The list of spans
      */
     public function setSpans(array $spans): self
     {

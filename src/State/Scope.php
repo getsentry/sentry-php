@@ -14,6 +14,7 @@ use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\Spans\Span as SpanV2;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
 use Sentry\Util\DebugType;
@@ -74,7 +75,7 @@ class Scope
     private $eventProcessors = [];
 
     /**
-     * @var Span|null Set a Span on the Scope
+     * @var Span|SpanV2|null Set a Span on the Scope
      */
     private $span;
 
@@ -389,7 +390,7 @@ class Scope
          * Else fallback to the propagation context.
          * But do not override a trace context already present.
          */
-        if ($this->span !== null) {
+        if ($this->span instanceof Span) {
             if (!\array_key_exists('trace', $event->getContexts())) {
                 $event->setContext('trace', $this->span->getTraceContext());
             }
@@ -399,6 +400,12 @@ class Scope
             if ($transaction !== null) {
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
+        } elseif ($this->span instanceof SpanV2) {
+            if (!\array_key_exists('trace', $event->getContexts())) {
+                $event->setContext('trace', $this->span->getTraceContext());
+            }
+
+            $event->setSdkMetadata('dynamic_sampling_context', $this->span->getDynamicSamplingContext());
         } else {
             if (!\array_key_exists('trace', $event->getContexts())) {
                 $event->setContext('trace', $this->propagationContext->getTraceContext());
@@ -443,8 +450,10 @@ class Scope
 
     /**
      * Returns the span that is on the scope.
+     *
+     * @return Span|SpanV2|null
      */
-    public function getSpan(): ?Span
+    public function getSpan()
     {
         return $this->span;
     }
@@ -452,11 +461,11 @@ class Scope
     /**
      * Sets the span on the scope.
      *
-     * @param Span|null $span The span
+     * @param Span|SpanV2|null $span The span
      *
      * @return $this
      */
-    public function setSpan(?Span $span): self
+    public function setSpan($span): self
     {
         $this->span = $span;
 
@@ -468,7 +477,7 @@ class Scope
      */
     public function getTransaction(): ?Transaction
     {
-        if ($this->span !== null) {
+        if ($this->span instanceof Span) {
             return $this->span->getTransaction();
         }
 

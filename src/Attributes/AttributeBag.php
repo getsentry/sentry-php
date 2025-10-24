@@ -35,6 +35,11 @@ class AttributeBag
         return $this->attributes[$key] ?? null;
     }
 
+    public function exists(string $key): bool
+    {
+        return \array_key_exists($key, $this->attributes);
+    }
+
     public function forget(string $key): self
     {
         unset($this->attributes[$key]);

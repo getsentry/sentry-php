@@ -47,6 +47,11 @@ final class EventType
         return self::getInstance('log');
     }
 
+    public static function spans(): self
+    {
+        return self::getInstance('span');
+    }
+
     /**
      * List of all cases on the enum.
      *
@@ -59,7 +64,13 @@ final class EventType
             self::transaction(),
             self::checkIn(),
             self::logs(),
+            self::spans(),
         ];
+    }
+
+    public function usesEventId()
+    {
+        return $this !== self::spans();
     }
 
     public function __toString(): string

@@ -12,6 +12,7 @@ use Sentry\Serializer\EnvelopItems\CheckInItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
 use Sentry\Serializer\EnvelopItems\LogsItem;
 use Sentry\Serializer\EnvelopItems\ProfileItem;
+use Sentry\Serializer\EnvelopItems\SpansItem;
 use Sentry\Serializer\EnvelopItems\TransactionItem;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Util\JSON;
@@ -41,11 +42,14 @@ final class PayloadSerializer implements PayloadSerializerInterface
     {
         // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
         $envelopeHeader = [
-            'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
             'dsn' => (string) $this->options->getDsn(),
             'sdk' => $event->getSdkPayload(),
         ];
+
+        if ($event->getType()->usesEventId()) {
+            $envelopeHeader['event_id'] = (string) $event->getId();
+        }
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
         if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
@@ -74,6 +78,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
                     $items[] = AttachmentItem::toAttachmentItem($attachment);
                 }
                 break;
+            case EventType::spans():
+                $items[] = SpansItem::toEnvelopeItem($event);
+                break;
             case EventType::checkIn():
                 $items[] = CheckInItem::toEnvelopeItem($event);
                 break;
@@ -82,6 +89,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
         }
 
-        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
+        $result =  \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
+        print($result);
+
+        return $result;
     }
 }

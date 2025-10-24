@@ -191,7 +191,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getSpan(): ?Span
+    public function getSpan()
     {
         return SentrySdk::getCurrentHub()->getSpan();
     }
@@ -199,7 +199,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function setSpan(?Span $span): HubInterface
+    public function setSpan($span): HubInterface
     {
         return SentrySdk::getCurrentHub()->setSpan($span);
     }

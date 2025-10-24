@@ -367,7 +367,7 @@ class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function setSpan(?Span $span): HubInterface
+    public function setSpan($span): HubInterface
     {
         $this->getScope()->setSpan($span);
 
@@ -377,7 +377,7 @@ class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getSpan(): ?Span
+    public function getSpan()
     {
         return $this->getScope()->getSpan();
     }

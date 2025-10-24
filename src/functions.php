@@ -11,6 +11,8 @@ use Sentry\Logs\Logs;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\Spans\Span;
+use Sentry\Tracing\Spans\Spans;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -353,4 +355,18 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 function logger(): Logs
 {
     return Logs::getInstance();
+}
+
+/**
+ * Starts a new Span. If no parent is specified, it will use the current span as parent if it exists.
+ *
+ * @param Span|false|null      $parent     false will use the current span as parent if it exists. If there is no current
+ *                                         span, this will also make it a segment span.
+ *                                         null will start a new segment span
+ *                                         Passing a parent will create a span with $parent as its parent.
+ * @param array<string, mixed> $attributes
+ */
+function startSpan(string $name, $parent = false, array $attributes = []): Span
+{
+    return Spans::startSpan($name, $parent, $attributes);
 }

@@ -181,6 +181,11 @@ final class SpanStatus
         }
     }
 
+    public function isOk(): bool
+    {
+        return $this === self::ok();
+    }
+
     public function __toString(): string
     {
         return $this->value;

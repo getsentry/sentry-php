@@ -198,6 +198,51 @@ final class DynamicSamplingContext
         return $samplingContext;
     }
 
+    public static function fromSegment(Spans\Span $segment, HubInterface $hub): self
+    {
+        $samplingContext = new self();
+        $samplingContext->set('trace_id', (string) $segment->getTraceId());
+
+        $sampleRate = $segment->getSampleRate();
+        if ($sampleRate !== null) {
+            $samplingContext->set('sample_rate', (string) $sampleRate);
+        }
+
+        $samplingContext->set('transaction', $segment->getName());
+
+        $client = $hub->getClient();
+
+        if ($client !== null) {
+            $options = $client->getOptions();
+
+            if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
+                $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
+            }
+            if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+                $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
+            }
+
+            if ($options->getRelease() !== null) {
+                $samplingContext->set('release', $options->getRelease());
+            }
+
+            if ($options->getEnvironment() !== null) {
+                $samplingContext->set('environment', $options->getEnvironment());
+            }
+        }
+
+        if ($segment->getSampled() !== null) {
+            $samplingContext->set('sampled', $segment->getSampled() ? 'true' : 'false');
+        }
+        if ($segment->getSampleRand() !== null) {
+            $samplingContext->set('sample_rand', (string) $segment->getSampleRand());
+        }
+
+        $samplingContext->freeze();
+
+        return $samplingContext;
+    }
+
     public static function fromOptions(Options $options, Scope $scope): self
     {
         $samplingContext = new self();
