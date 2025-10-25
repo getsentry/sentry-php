@@ -40,11 +40,25 @@ class Span
     private $parentSpan;
 
     /**
+     * The parent span id coming from propagation context.
+     *
+     * @var SpanId
+     */
+    private $parentSpanId;
+
+    /**
      * Is only null if the current span is a segment span.
      *
      * @var ?Span
      */
     private $segmentSpan;
+
+    /**
+     * the segment span id coming from propagation context.
+     *
+     * @var SpanId
+     */
+    private $segmentSpanId;
 
     private $kind;
 
@@ -265,9 +279,6 @@ class Span
         return DynamicSamplingContext::fromSegment($this->segmentSpan ?? $this, $this->hub);
     }
 
-    /**
-     * @return float
-     */
     public function getSampleRate(): ?float
     {
         return $this->getMetadataSpan()->metadata['sample_rate'] ?? null;
@@ -325,6 +336,34 @@ class Span
 
         return $result;
     }
+
+    // ====== Propagation context things =========
+
+    public function setParentSpanId(SpanId $id): self
+    {
+        $this->parentSpanId = $id;
+
+        return $this;
+    }
+
+    public function getParentSpanId(): SpanId
+    {
+        return $this->parentSpanId;
+    }
+
+    public function setSegmentSpanId(SpanId $id): self
+    {
+        $this->segmentSpanId = $id;
+
+        return $this;
+    }
+
+    public function getSegmentSpanId(): SpanId
+    {
+        return $this->segmentSpanId;
+    }
+
+    // ====== End Propagation context things =====
 
     /**
      * Returns the span that should be considered for metadata.

@@ -208,7 +208,7 @@ final class DynamicSamplingContext
             $samplingContext->set('sample_rate', (string) $sampleRate);
         }
 
-        $samplingContext->set('transaction', $segment->getName());
+        $samplingContext->set('transaction', $segment->getSegmentName());
 
         $client = $hub->getClient();
 

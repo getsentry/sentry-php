@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Tracing\Spans;
 
 use Sentry\EventId;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
 
 class Spans
 {
@@ -62,6 +64,13 @@ class Spans
         if (!\is_bool($parent) && $parent !== null) {
             $span->applyFromParent($parent);
         }
+        SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($span) {
+            $pc = $scope->getPropagationContext();
+            if ($pc->getParentSpanId() !== null) {
+                $span->setParentSpanId(new SpanId((string) $pc->getParentSpanId()));
+                $span->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
+            }
+        });
 
         return $span;
     }

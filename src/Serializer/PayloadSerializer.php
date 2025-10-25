@@ -89,9 +89,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
         }
 
-        $result =  \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
-        print($result);
-
-        return $result;
+        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
     }
 }
