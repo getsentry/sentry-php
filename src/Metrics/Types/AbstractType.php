@@ -6,6 +6,8 @@ namespace Sentry\Metrics\Types;
 
 use Sentry\Attributes\AttributeBag;
 use Sentry\Metrics\MetricsUnit;
+use Sentry\Tracing\SpanId;
+use Sentry\Tracing\TraceId;
 
 /**
  * @internal
@@ -23,6 +25,16 @@ abstract class AbstractType
     private $unit;
 
     /**
+     * @var TraceId
+     */
+    private $traceId;
+
+    /**
+     * @var SpanId
+     */
+    private $spanId;
+
+    /**
      * @var float
      */
     private $timestamp;
@@ -35,15 +47,23 @@ abstract class AbstractType
     /**
      * @param array<string, string> $attributes
      */
-    public function __construct(string $name, MetricsUnit $unit, array $attributes, float $timestamp)
-    {
+    public function __construct(
+        string $name,
+        MetricsUnit $unit,
+        TraceId $traceId,
+        SpanId $spanId,
+        array $attributes,
+        float $timestamp
+    ) {
         $this->name = $name;
         $this->unit = $unit;
+        $this->traceId = $traceId;
+        $this->spanId = $spanId;
         $this->timestamp = $timestamp;
         $this->attributes = new AttributeBag();
 
-        foreach ($attributes as $attribute) {
-            $this->attributes->set($attribute['name'], $attribute['value']);
+        foreach ($attributes as $key => $value) {
+            $this->attributes->set($key, $value);
         }
     }
 
@@ -61,6 +81,16 @@ abstract class AbstractType
     public function getUnit(): MetricsUnit
     {
         return $this->unit;
+    }
+
+    public function getTraceId(): TraceId
+    {
+        return $this->traceId;
+    }
+
+    public function getSpanId(): SpanId
+    {
+        return $this->spanId;
     }
 
     public function getAttributes(): AttributeBag

@@ -33,7 +33,8 @@ class MetricsItem implements EnvelopeItemInterface
                 'items' => array_map(static function (AbstractType $metric): array {
                     return [
                         'timestamp' => $metric->getTimestamp(),
-                        'trace_id' => (string) SentrySdk::getCurrentHub()->getSpan()->getTraceId(),
+                        'trace_id' => (string) $metric->getTraceId(),
+                        'span_id' => (string) $metric->getSpanId(),
                         'name' => $metric->getName(),
                         'value' => $metric->getValue(),
                         // 'unit' => (string) $metric->getUnit(),

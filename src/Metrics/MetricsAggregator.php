@@ -11,6 +11,7 @@ use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
 use Sentry\SentrySdk;
+use Sentry\State\Scope;
 
 /**
  * @internal
@@ -46,10 +47,46 @@ final class MetricsAggregator
             $unit = MetricsUnit::none();
         }
 
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+
+        if ($client !== null) {
+            $options = $client->getOptions();
+
+            $defaultAttributes = [
+                'sentry.sdk.name' => $client->getSdkIdentifier(),
+                'sentry.sdk.version' => $client->getSdkVersion(),
+                'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
+            ];
+
+            $release = $options->getRelease();
+            if ($release !== null) {
+                $defaultAttributes['sentry.release'] = $release;
+            }
+
+            $attributes = array_merge($defaultAttributes, $attributes);
+        }
+
+        $spanId = null;
+        $traceId = null;
+
+        $span = $hub->getSpan();
+        if ($span !== null) {
+            $spanId = $span->getSpanId();
+            $traceId = $span->getTraceId();
+        } else {
+            $hub->configureScope(function (Scope $scope) use (&$traceId, &$spanId) {
+                $propagationContext = $scope->getPropagationContext();
+                $traceId = $propagationContext->getTraceId();
+                $spanId = $propagationContext->getSpanId();
+            });
+        }
+
         $metricTypeClass = self::METRIC_TYPES[$type];
         /** @var AbstractType $metric */
         /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
-        $metric = new $metricTypeClass($name, $value, $unit, $attributes, $timestamp);
+        $metric = new $metricTypeClass($name, $value, $unit, $traceId, $spanId, $attributes, $timestamp);
+
         $this->metrics[] = $metric;
     }
 
