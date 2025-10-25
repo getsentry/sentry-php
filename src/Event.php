@@ -72,6 +72,11 @@ final class Event
     private $logs = [];
 
     /**
+     * @var array<string, AbstractType>
+     */
+    private $metrics = [];
+
+    /**
      * @var string|null The name of the server (e.g. the host name)
      */
     private $serverName;
@@ -241,9 +246,6 @@ final class Event
         return new self($eventId, EventType::logs());
     }
 
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
     public static function createMetrics(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::metrics());
@@ -445,19 +447,18 @@ final class Event
         return $this;
     }
 
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
     public function getMetrics(): array
     {
-        return [];
+        return $this->metrics;
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @param array<string, AbstractType> $metrics
      */
     public function setMetrics(array $metrics): self
     {
+        $this->metrics = $metrics;
+
         return $this;
     }
 
