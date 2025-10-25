@@ -172,6 +172,13 @@ class Span
         return $this->traceId;
     }
 
+    public function setTraceId(TraceId $traceId): self
+    {
+        $this->traceId = $traceId;
+
+        return $this;
+    }
+
     public function getSpanId(): SpanId
     {
         return $this->spanId;

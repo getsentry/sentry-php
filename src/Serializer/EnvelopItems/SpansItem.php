@@ -53,9 +53,16 @@ class SpansItem implements EnvelopeItemInterface
                         $attributes->set('segment.name', $span->getSegmentName());
                     }
 
+                    $parentSpanId = null;
+                    if ($span->getParentSpan() !== null) {
+                        $parentSpanId = (string) $span->getParentSpan()->getSpanId();
+                    } elseif ($span->getParentSpanId() !== null) {
+                        $parentSpanId = (string) $span->getParentSpanId();
+                    }
+
                     return [
                         'trace_id' => (string) $span->getTraceId(),
-                        'parent_span_id' => ($span->getParentSpan() ? (string) $span->getParentSpan()->getSpanId() : null),
+                        'parent_span_id' => $parentSpanId,
                         'span_id' => (string) $span->getSpanId(),
                         'name' => $span->getName(),
                         'status' => $span->getStatus()->isOk() ? 'ok' : 'error',

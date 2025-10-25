@@ -65,10 +65,15 @@ class Spans
             $span->applyFromParent($parent);
         }
         SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($span) {
-            $pc = $scope->getPropagationContext();
-            if ($pc->getParentSpanId() !== null) {
-                $span->setParentSpanId(new SpanId((string) $pc->getParentSpanId()));
-                $span->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
+            if ($span->getParentSpan() === null) {
+                $pc = $scope->getPropagationContext();
+
+                $span->setTraceId(new TraceId((string) $pc->getTraceId()));
+
+                if ($pc->getParentSpanId() !== null) {
+                    $span->setParentSpanId(new SpanId((string) $pc->getParentSpanId()));
+                    $span->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
+                }
             }
         });
 
