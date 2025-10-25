@@ -337,6 +337,17 @@ class Span
         return $result;
     }
 
+    public function toTraceparent(): string
+    {
+        $sampled = '';
+
+        if ($this->getSampled() !== null) {
+            $sampled = $this->getSampled() ? '-1' : '-0';
+        }
+
+        return \sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
+    }
+
     // ====== Propagation context things =========
 
     public function setParentSpanId(SpanId $id): self
