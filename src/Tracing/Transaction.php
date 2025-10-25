@@ -6,6 +6,8 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Profiles\ProfileChunk;
+use Sentry\Profiles\Profiler as ContinuousProfiler;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -36,7 +38,7 @@ final class Transaction extends Span
     protected $metadata;
 
     /**
-     * @var Profiler|null Reference instance to the {@see Profiler}
+     * @var Profiler|ContinuousProfiler|null Reference instance to the {@see Profiler or @see ContinuousProfiler}
      */
     protected $profiler;
 
@@ -119,19 +121,31 @@ final class Transaction extends Span
         return $this;
     }
 
-    public function initProfiler(): Profiler
+    /**
+     * @return Profiler|ContinuousProfiler|null
+     */
+    public function initProfiler()
     {
         if ($this->profiler === null) {
             $client = $this->hub->getClient();
             $options = $client !== null ? $client->getOptions() : null;
 
-            $this->profiler = new Profiler($options);
+            if ($options !== null) {
+                if ($options->getProfilesLifecycle() === 'trace' && $options->getProfilesSessionSampleRate() !== null) {
+                    $this->profiler = new ContinuousProfiler($options);
+                } else {
+                    $this->profiler = new Profiler($options);
+                }
+            }
         }
 
         return $this->profiler;
     }
 
-    public function getProfiler(): ?Profiler
+    /**
+     * @return Profiler|ContinuousProfiler|null
+     */
+    public function getProfiler()
     {
         return $this->profiler;
     }
@@ -183,11 +197,29 @@ final class Transaction extends Span
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
-        if ($this->profiler !== null) {
+        // Legacy Profiler
+        if ($this->profiler !== null && $this->profiler instanceof Profiler) {
             $profile = $this->profiler->getProfile();
             if ($profile !== null) {
                 $event->setSdkMetadata('profile', $profile);
             }
+        }
+
+        // Continuous Profiler
+        if ($this->profiler !== null && $this->profiler instanceof ContinuousProfiler) {
+            $event->setContext('profile', [
+                'profiler_id' => $this->profiler->getProfilerId(),
+            ]);
+
+            $traceContext = $this->getTraceContext();
+            $traceContext['data'] = array_merge(
+                $traceContext['data'] ?? [],
+                [
+                    'thread.id' => ProfileChunk::THREAD_ID,
+                    'thread.name' => ProfileChunk::THREAD_NAME,
+                ]
+            );
+            $event->setContext('trace', $traceContext);
         }
 
         return $this->hub->captureEvent($event);
