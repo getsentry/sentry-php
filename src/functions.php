@@ -320,12 +320,7 @@ function getBaggage(): string
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
                 if ($span instanceof Span) {
-                    $baggage = '';
-                    $hub->configureScope(function (Scope $scope) use (&$baggage) {
-                        $baggage = $scope->getPropagationContext()->toBaggage();
-                    });
-
-                    return $baggage;
+                    return (string) $span->getDynamicSamplingContext();
                 }
 
                 return $span->toBaggage();

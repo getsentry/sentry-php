@@ -64,8 +64,8 @@ class Spans
         if (!\is_bool($parent) && $parent !== null) {
             $span->applyFromParent($parent);
         }
-        SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($span) {
-            if ($span->getParentSpan() === null) {
+        SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($span, $parent) {
+            if ($parent === false && $span->getParentSpan() === null) {
                 $pc = $scope->getPropagationContext();
 
                 $span->setTraceId(new TraceId((string) $pc->getTraceId()));
