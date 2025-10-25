@@ -74,6 +74,10 @@ class Spans
                     $span->setParentSpanId(new SpanId((string) $pc->getParentSpanId()));
                     $span->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
                 }
+
+                // Ensure outgoing propagation uses this segment span id
+                $pc->setSpanId(new \Sentry\Tracing\SpanId((string) $span->getSpanId()));
+                $scope->setPropagationContext($pc);
             }
         });
 

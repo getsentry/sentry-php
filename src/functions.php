@@ -319,6 +319,15 @@ function getBaggage(): string
         if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
+                if ($span instanceof Span) {
+                    $baggage = '';
+                    $hub->configureScope(function (Scope $scope) use (&$baggage) {
+                        $baggage = $scope->getPropagationContext()->toBaggage();
+                    });
+
+                    return $baggage;
+                }
+
                 return $span->toBaggage();
             }
         }

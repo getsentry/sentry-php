@@ -42,7 +42,7 @@ class Span
     /**
      * The parent span id coming from propagation context.
      *
-     * @var SpanId
+     * @var ?SpanId
      */
     private $parentSpanId;
 
@@ -56,7 +56,7 @@ class Span
     /**
      * the segment span id coming from propagation context.
      *
-     * @var SpanId
+     * @var ?SpanId
      */
     private $segmentSpanId;
 
@@ -364,7 +364,7 @@ class Span
         return $this;
     }
 
-    public function getParentSpanId(): SpanId
+    public function getParentSpanId(): ?SpanId
     {
         return $this->parentSpanId;
     }
@@ -376,7 +376,7 @@ class Span
         return $this;
     }
 
-    public function getSegmentSpanId(): SpanId
+    public function getSegmentSpanId(): ?SpanId
     {
         return $this->segmentSpanId;
     }
