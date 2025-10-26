@@ -126,7 +126,6 @@ class Span
 
         // Segment span
         } else {
-            // Adopt propagation context for remote parent linkage and trace id
             $pc = null;
             $this->hub->configureScope(function (Scope $scope) use (&$pc) {
                 $pc = $scope->getPropagationContext();
@@ -139,7 +138,6 @@ class Span
                 $this->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
             }
 
-            // Update propagation to use this new segment span id for downstream
             $pc->setSpanId(new \Sentry\Tracing\SpanId((string) $this->getSpanId()));
             $this->hub->configureScope(function (Scope $scope) use ($pc) {
                 $scope->setPropagationContext($pc);
