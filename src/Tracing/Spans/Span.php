@@ -8,6 +8,7 @@ use Sentry\Attributes\AttributeBag;
 use Sentry\SentrySdk;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanStatus;
+use Sentry\State\Scope;
 
 class Span
 {
@@ -125,6 +126,25 @@ class Span
 
         // Segment span
         } else {
+            // Adopt propagation context for remote parent linkage and trace id
+            $pc = null;
+            $this->hub->configureScope(function (Scope $scope) use (&$pc) {
+                $pc = $scope->getPropagationContext();
+            });
+
+            $this->traceId = new TraceId((string) $pc->getTraceId());
+
+            if ($pc->getParentSpanId() !== null) {
+                $this->setParentSpanId(new SpanId((string) $pc->getParentSpanId()));
+                $this->setSegmentSpanId(new SpanId((string) $pc->getSpanId()));
+            }
+
+            // Update propagation to use this new segment span id for downstream
+            $pc->setSpanId(new \Sentry\Tracing\SpanId((string) $this->getSpanId()));
+            $this->hub->configureScope(function (Scope $scope) use ($pc) {
+                $scope->setPropagationContext($pc);
+            });
+
             $this->metadata['sampled_rand'] = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
             $this->metadata['sampled'] = $this->metadata['sampled_rand'] < $this->hub->getClient()->getOptions()->getSampleRate();
         }
@@ -324,19 +344,19 @@ class Span
         // if ($this->description !== null) {
         //     $result['description'] = $this->description;
         // }
-
+        //
         // if ($this->op !== null) {
         //     $result['op'] = $this->op;
         // }
-
+        //
         // if ($this->status !== null) {
         //     $result['status'] = (string) $this->status;
         // }
-
+        //
         // if (!empty($this->data)) {
         //     $result['data'] = $this->data;
         // }
-
+        //
         // if (!empty($this->tags)) {
         //     $result['tags'] = $this->tags;
         // }
