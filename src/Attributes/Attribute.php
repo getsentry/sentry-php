@@ -95,13 +95,7 @@ class Attribute
         }
 
         if (\is_string($value) || (\is_object($value) && method_exists($value, '__toString'))) {
-            $stringValue = (string) $value;
-
-            if (empty($stringValue)) {
-                return null;
-            }
-
-            return new self($stringValue, 'string');
+            return new self((string) $value, 'string');
         }
 
         try {

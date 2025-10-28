@@ -45,6 +45,14 @@ final class AttributeTest extends TestCase
         ];
 
         yield [
+            '',
+            [
+                'type' => 'string',
+                'value' => '',
+            ],
+        ];
+
+        yield [
             123,
             [
                 'type' => 'integer',
