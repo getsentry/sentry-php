@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Attributes;
 
-use Sentry\Exception\JsonException;
 use Sentry\Serializer\SerializableInterface;
 use Sentry\Util\JSON;
 
