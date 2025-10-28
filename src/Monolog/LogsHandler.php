@@ -130,13 +130,6 @@ class LogsHandler implements HandlerInterface
      */
     protected function compileAttributes($record): array
     {
-        return array_merge(
-            Arr::simpleDot(['context' => $record['context']]),
-            Arr::simpleDot(['extra' => $record['extra']]),
-            [
-                'log.channel' => $record['channel'],
-                'sentry.origin' => 'auto.log.monolog',
-            ]
-        );
+        return array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog']);
     }
 }
