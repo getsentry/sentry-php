@@ -77,6 +77,14 @@ final class AttributeTest extends TestCase
         ];
 
         yield [
+            null,
+            [
+                'type' => 'string',
+                'value' => 'null',
+            ],
+        ];
+
+        yield [
             new class {
                 public function __toString(): string
                 {
