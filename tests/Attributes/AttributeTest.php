@@ -6,6 +6,7 @@ namespace Sentry\Tests\Attributes;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Attributes\Attribute;
+use Sentry\Serializer\SerializableInterface;
 
 /**
  * @phpstan-import-type AttributeType from Attribute
@@ -81,18 +82,40 @@ final class AttributeTest extends TestCase
         ];
 
         yield [
+            new class implements SerializableInterface {
+                public function toSentry(): ?array
+                {
+                    return ['foo' => 'bar'];
+                }
+            },
+            [
+                'type' => 'string',
+                'value' => '{"foo":"bar"}',
+            ],
+        ];
+
+        yield [
             new class {},
-            null,
+            [
+                'type' => 'string',
+                'value' => '{}',
+            ],
         ];
 
         yield [
             new \stdClass(),
-            null,
+            [
+                'type' => 'string',
+                'value' => '{}',
+            ],
         ];
 
         yield [
             [],
-            null,
+            [
+                'type' => 'string',
+                'value' => '[]',
+            ],
         ];
     }
 
@@ -112,6 +135,7 @@ final class AttributeTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        Attribute::fromValue([]);
+        // Since we support almost any type, we use a resource to trigger the exception
+        Attribute::fromValue(fopen(__FILE__, 'r'));
     }
 }
