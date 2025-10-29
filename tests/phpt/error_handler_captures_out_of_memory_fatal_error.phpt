@@ -32,8 +32,8 @@ echo 'Before OOM memory limit: ' . ini_get('memory_limit');
 
 $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
---EXPECTF--
+--EXPECTREGEX--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate 1073741856 bytes\) in .* on line 28(?:\RStack trace:\R(?:#\d+.*\R?)+)?
 Fatal error listener called
 After OOM memory limit: 67108864

@@ -70,8 +70,8 @@ $array = [];
 for ($i = 0; $i < 100000000; ++$i) {
     $array[] = 'sentry';
 }
---EXPECTF--
-Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+--EXPECTREGEX--
+^Before OOM memory limit: 67108864
+Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate \d+ bytes\) in [^\r\n]+ on line \d+(?:\RStack trace:\R(?:#\d+[^\r\n]*)+)?
 Transport called
-After OOM memory limit: 72351744
+After OOM memory limit: 72351744$
