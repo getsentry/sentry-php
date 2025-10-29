@@ -217,8 +217,8 @@ class Span
     public function applyFromParent(?Span $parentSpan): self
     {
         if ($parentSpan !== null) {
-            $this->segmentSpan = $parentSpan->segmentSpan;
-            $this->parentSpan = $parentSpan;
+            $this->segmentSpan = $this->segmentSpan ?? $parentSpan->segmentSpan;
+            $this->parentSpan = $this->parentSpan ?? $parentSpan;
         }
 
         return $this;
