@@ -119,12 +119,17 @@ final class LogsTest extends TestCase
 
             $this->assertNotNull($attribute);
             $this->assertEquals('bar', $attribute->getValue());
+
+            $attribute = $logItem->attributes()->get('nested.baz');
+
+            $this->assertNotNull($attribute);
+            $this->assertEquals(json_encode([1, 2, 3]), $attribute->getValue());
         });
 
         logger()->info('Some message', [], [
             'nested' => [
                 'foo' => 'bar',
-                'should-be-missing' => [1, 2, 3],
+                'baz' => [1, 2, 3],
             ],
         ]);
 
