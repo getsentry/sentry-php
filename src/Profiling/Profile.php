@@ -15,10 +15,10 @@ use Sentry\Util\PrefixStripper;
 use Sentry\Util\SentryUid;
 
 /**
- * Type definition of the Sentry profile format.
+ * Type definition of the Sentry v1 profile format.
  * All fields are none otpional.
  *
- * @see https://develop.sentry.dev/sdk/sample-format/
+ * @see https://develop.sentry.dev/sdk/telemetry/profiles/sample-format-v1/
  *
  * @phpstan-type SentryProfileFrame array{
  *     abs_path: string,
