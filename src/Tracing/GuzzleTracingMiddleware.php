@@ -12,9 +12,11 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
+use Sentry\Tracing\Spans\Span as SpanV2;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
+use function Sentry\startSpan;
 
 /**
  * This handler traces each outgoing HTTP request by recording performance data.
@@ -49,8 +51,7 @@ final class GuzzleTracingMiddleware
                 }
 
                 $childSpan = null;
-
-                if ($parentSpan !== null && $parentSpan->getSampled()) {
+                if ($parentSpan instanceof Span && $parentSpan->getSampled()) {
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
                     $spanContext->setData($spanAndBreadcrumbData);
@@ -60,6 +61,8 @@ final class GuzzleTracingMiddleware
                     $childSpan = $parentSpan->startChild($spanContext);
 
                     $hub->setSpan($childSpan);
+                } elseif ($parentSpan instanceof SpanV2 && $parentSpan->getSampled()) {
+                    $childSpan = startSpan('http.client', $parentSpan);
                 }
 
                 if (self::shouldAttachTracingHeaders($client, $request)) {
@@ -99,11 +102,19 @@ final class GuzzleTracingMiddleware
                         }
                     }
 
-                    if ($childSpan !== null) {
+                    if ($childSpan instanceof Span) {
                         if ($response !== null) {
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             $childSpan->setData($spanAndBreadcrumbData);
                         } else {
+                            $childSpan->setStatus(SpanStatus::internalError());
+                        }
+                    } elseif ($childSpan instanceof SpanV2) {
+                        if ($response !== null) {
+                            $childSpan->setAttributes($spanAndBreadcrumbData);
+                            $childSpan->setStatus(SpanStatus::ok());
+                        } else {
+                            // TODO: new span API only has 'error' so we can technically set any error state here.
                             $childSpan->setStatus(SpanStatus::internalError());
                         }
                     }

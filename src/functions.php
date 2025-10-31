@@ -10,8 +10,9 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
-use Sentry\Tracing\Spans\Span;
+use Sentry\Tracing\Spans\Span as SpanV2;
 use Sentry\Tracing\Spans\Spans;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -232,6 +233,15 @@ function withScope(callable $callback)
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+    if ($client !== null) {
+        if ($client->getOptions()->getTraceLifecycle() === 'stream') {
+            // TODO: This should prevent the transaction from being started.
+            // We might want to start a span instead but we have to figure out what to return here.
+        }
+    }
+
     return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
 }
 
@@ -251,19 +261,29 @@ function trace(callable $trace, SpanContext $context)
     return SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
 
-        // If there is a span set on the scope and it's sampled there is an active transaction.
-        // If that is the case we create the child span and set it on the scope.
-        // Otherwise we only execute the callable without creating a span.
-        if ($parentSpan !== null && $parentSpan->getSampled()) {
-            $span = $parentSpan->startChild($context);
+        /**
+         * @var Span|SpanV2|null $span
+         */
+        $span = null;
+        // Instead of checking against the client option, we just see which Span type we received.
+        if ($parentSpan instanceof Span) {
+            // If there is a span set on the scope and it's sampled there is an active transaction.
+            // If that is the case we create the child span and set it on the scope.
+            // Otherwise we only execute the callable without creating a span.
+            if ($parentSpan->getSampled()) {
+                $span = $parentSpan->startChild($context);
 
-            $scope->setSpan($span);
+                $scope->setSpan($span);
+            }
+        // Span Streaming API
+        } elseif ($parentSpan instanceof SpanV2) {
+            $span = startSpan($context->getOp() ?? $context->getDescription() ?? '', $parentSpan);
         }
 
         try {
             return $trace($scope);
         } finally {
-            if (isset($span)) {
+            if ($span !== null) {
                 $span->finish();
 
                 $scope->setSpan($parentSpan);
@@ -319,7 +339,7 @@ function getBaggage(): string
         if ($options !== null && $options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
-                if ($span instanceof Span) {
+                if ($span instanceof \Sentry\Tracing\Spans\Span) {
                     return (string) $span->getDynamicSamplingContext();
                 }
 
@@ -354,6 +374,24 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 }
 
 /**
+ * === Span First API ===.
+ *
+ * Sets the propagation context from HTTP header values so that they are applied
+ * on newly created spans.
+ *
+ * TODO: think about how and if to merge this with continueTrace to not expose
+ * two almost identical functions.
+ */
+function setPropagationContext(string $sentryTrace, string $baggage)
+{
+    $hub = SentrySdk::getCurrentHub();
+    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
+        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+        $scope->setPropagationContext($propagationContext);
+    });
+}
+
+/**
  * Get the Sentry Logs client.
  */
 function logger(): Logs
@@ -364,13 +402,13 @@ function logger(): Logs
 /**
  * Starts a new Span. If no parent is specified, it will use the current span as parent if it exists.
  *
- * @param Span|false|null      $parent     false will use the current span as parent if it exists. If there is no current
+ * @param SpanV2|false|null    $parent     false will use the current span as parent if it exists. If there is no current
  *                                         span, this will also make it a segment span.
  *                                         null will start a new segment span
  *                                         Passing a parent will create a span with $parent as its parent.
  * @param array<string, mixed> $attributes
  */
-function startSpan(string $name, $parent = false, array $attributes = []): Span
+function startSpan(string $name, $parent = false, array $attributes = []): SpanV2
 {
     return Spans::startSpan($name, $parent, $attributes);
 }

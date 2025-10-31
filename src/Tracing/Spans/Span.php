@@ -6,9 +6,9 @@ namespace Sentry\Tracing\Spans;
 
 use Sentry\Attributes\AttributeBag;
 use Sentry\SentrySdk;
+use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanStatus;
-use Sentry\State\Scope;
 
 class Span
 {
@@ -36,27 +36,11 @@ class Span
     private $spanId;
 
     /**
-     * @var ?Span
-     */
-    private $parentSpan;
-
-    /**
-     * The parent span id coming from propagation context.
-     *
      * @var ?SpanId
      */
     private $parentSpanId;
 
     /**
-     * Is only null if the current span is a segment span.
-     *
-     * @var ?Span
-     */
-    private $segmentSpan;
-
-    /**
-     * the segment span id coming from propagation context.
-     *
      * @var ?SpanId
      */
     private $segmentSpanId;
@@ -110,6 +94,7 @@ class Span
     public function start(?Span $parentSpan = null): self
     {
         $this->startTimestamp = microtime(true);
+        $client = $this->hub->getClient();
 
         /**
          * TODO: Do we assert that this is always the new span or do we fail?
@@ -120,9 +105,9 @@ class Span
 
         // If this is not a segment span
         if ($parentSpan !== null) {
-            $this->parentSpan = $parentSpan;
+            $this->parentSpanId = $parentSpan->getSpanId();
             $this->traceId = $parentSpan->getTraceId();
-            $this->segmentSpan = $parentSpan->segmentSpan ?? $parentSpan;
+            $this->segmentSpanId = $parentSpan->segmentSpanId ?? $parentSpan->getSpanId();
 
         // Segment span
         } else {
@@ -130,6 +115,8 @@ class Span
             $this->hub->configureScope(function (Scope $scope) use (&$pc) {
                 $pc = $scope->getPropagationContext();
             });
+            // assert for linters that it's always not null at this point
+            \assert($pc !== null);
 
             $this->traceId = new TraceId((string) $pc->getTraceId());
 
@@ -144,7 +131,9 @@ class Span
             });
 
             $this->metadata['sampled_rand'] = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
-            $this->metadata['sampled'] = $this->metadata['sampled_rand'] < $this->hub->getClient()->getOptions()->getSampleRate();
+            if ($client !== null) {
+                $this->metadata['sampled'] = $this->metadata['sampled_rand'] < $client->getOptions()->getSampleRate();
+            }
         }
 
         $this->hub->setSpan($this);
@@ -202,26 +191,14 @@ class Span
         return $this->spanId;
     }
 
-    public function getParentSpan(): ?Span
-    {
-        return $this->parentSpan;
-    }
-
-    public function setParentSpan(?Span $parentSpan): self
-    {
-        $this->parentSpan = $parentSpan;
-
-        return $this;
-    }
-
     public function applyFromParent(?Span $parentSpan): self
     {
         if ($parentSpan !== null) {
-            if ($this->segmentSpan === null) {
-                $this->segmentSpan = $parentSpan->segmentSpan;
+            if ($this->segmentSpanId === null) {
+                $this->segmentSpanId = $parentSpan->segmentSpanId;
             }
-            if ($this->parentSpan === null) {
-                $this->parentSpan = $parentSpan->parentSpan;
+            if ($this->parentSpanId === null) {
+                $this->parentSpanId = $parentSpan->spanId;
             }
         }
 
@@ -233,28 +210,24 @@ class Span
         return $this->name;
     }
 
-    public function getStatus(): SpanStatus
+    public function getStatus(): ?SpanStatus
     {
         return $this->status;
     }
 
     public function isSegment(): bool
     {
-        return $this->segmentSpan === null;
+        return $this->segmentSpanId === null;
     }
 
     public function getSampled(): ?bool
     {
-        if ($this->segmentSpan !== null) {
-            return $this->segmentSpan->metadata['sampled'] ?? null;
-        }
-
-        return $this->metadata['sampled'] ?? null;
+        return $this->getSegmentSpan()->metadata['sampled'] ?? null;
     }
 
     public function getSampleRand(): ?float
     {
-        return $this->getMetadataSpan()->metadata['sampled_rand'] ?? null;
+        return $this->getSegmentSpan()->metadata['sampled_rand'] ?? null;
     }
 
     public function attributes(): AttributeBag
@@ -291,26 +264,19 @@ class Span
         return $this;
     }
 
-    public function setSegment(Span $span): self
-    {
-        $this->segmentSpan = $span;
-
-        return $this;
-    }
-
     public function getSegmentName(): string
     {
-        return $this->getMetadataSpan()->getName();
+        return $this->getSegmentSpan()->getName();
     }
 
     public function getDynamicSamplingContext(): DynamicSamplingContext
     {
-        return DynamicSamplingContext::fromSegment($this->segmentSpan ?? $this, $this->hub);
+        return DynamicSamplingContext::fromSegment($this->getSegmentSpan(), $this->hub);
     }
 
     public function getSampleRate(): ?float
     {
-        return $this->getMetadataSpan()->metadata['sample_rate'] ?? null;
+        return $this->getSegmentSpan()->metadata['sample_rate'] ?? null;
     }
 
     // TODO: Should this be called end?
@@ -324,7 +290,7 @@ class Span
         $this->endTimestamp = microtime(true);
         $this->status = SpanStatus::ok();
 
-        $parentSpan = $this->parentSpan;
+        $parentSpan = Spans::getInstance()->get($this->parentSpanId);
         if ($parentSpan !== null) {
             $this->hub->setSpan($parentSpan);
         }
@@ -337,8 +303,8 @@ class Span
             'trace_id' => (string) $this->traceId,
         ];
 
-        if ($this->parentSpan !== null) {
-            $result['parent_span_id'] = (string) $this->parentSpan->spanId;
+        if ($this->parentSpanId !== null) {
+            $result['parent_span_id'] = (string) $this->parentSpanId;
         }
 
         // @TODO(michi) do we need all this data on the trace context?
@@ -377,8 +343,6 @@ class Span
         return \sprintf('%s-%s%s', (string) $this->traceId, (string) $this->spanId, $sampled);
     }
 
-    // ====== Propagation context things =========
-
     public function setParentSpanId(SpanId $id): self
     {
         $this->parentSpanId = $id;
@@ -403,16 +367,14 @@ class Span
         return $this->segmentSpanId;
     }
 
-    // ====== End Propagation context things =====
-
     /**
      * Returns the span that should be considered for metadata.
      *
      * For segment spans, it will return itself.
      * For child spans, it will find the relevant segment span.
      */
-    private function getMetadataSpan(): Span
+    private function getSegmentSpan(): Span
     {
-        return $this->segmentSpan ?? $this;
+        return Spans::getInstance()->get($this->segmentSpanId) ?? $this;
     }
 }

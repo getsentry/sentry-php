@@ -913,6 +913,26 @@ final class Options
     }
 
     /**
+     * Sets the trace lifecycle mode.
+     *
+     * It can be either `transaction` or `stream`.
+     */
+    public function setTraceLifecycle(string $lifecycle): self
+    {
+        return $this->updateOptions(['trace_lifecycle' => $lifecycle]);
+    }
+
+    /**
+     * Returns the current trace lifecycle mode.
+     *
+     * It can be either `transaction` or `stream`.
+     */
+    public function getTraceLifecycle(): string
+    {
+        return $this->options['trace_lifecycle'];
+    }
+
+    /**
      * Configures the options of the client.
      *
      * @param OptionsResolver $resolver The resolver for the options
@@ -962,12 +982,14 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('trace_lifecycle', 'string');
 
         $resolver->setAllowedValues('max_request_body_size', ['never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
+        $resolver->setAllowedValues('trace_lifecycle', ['transaction', 'stream']);
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
 
@@ -1040,6 +1062,9 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            // == Span First API ==
+            'trace_lifecycle' => 'transaction',
+            // == Span First API ==
         ]);
     }
 

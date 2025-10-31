@@ -84,7 +84,10 @@ class OptionsResolver
     }
 
     /**
-     * @param mixed[]|callable $values
+     * When passing callables, make sure to use {@see \Closure} instead of a 2 element string array
+     * because arrays are used to specify enum values.
+     *
+     * @param mixed[]|\Closure $values
      */
     public function setAllowedValues(string $path, $values): void
     {
@@ -269,11 +272,14 @@ class OptionsResolver
         if ($allowedValue === null) {
             return true;
         }
-        if (\is_callable($allowedValue)) {
-            return $allowedValue($value);
-        }
+        // Check for array first, otherwise passing a 2 element string array
+        // will attempt to autoload the first string as class, which might produce
+        // unexpected results.
         if (\is_array($allowedValue)) {
             return \in_array($value, $allowedValue, true);
+        }
+        if (\is_callable($allowedValue)) {
+            return $allowedValue($value);
         }
 
         return false;

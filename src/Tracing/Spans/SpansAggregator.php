@@ -23,7 +23,15 @@ final class SpansAggregator
 
     public function add(Span $span): void
     {
-        $this->spans[] = $span;
+        $this->spans[(string) $span->getSpanId()] = $span;
+    }
+
+    public function get(?SpanId $spanId): ?Span
+    {
+        if ($spanId === null) {
+            return null;
+        }
+        return $this->spans[(string) $spanId] ?? null;
     }
 
     public function flush(): ?EventId
@@ -33,7 +41,7 @@ final class SpansAggregator
         }
 
         $hub = SentrySdk::getCurrentHub();
-        $event = Event::createSpans()->setSpans($this->spans);
+        $event = Event::createSpans()->setSpans(array_values($this->spans));
 
         $this->spans = [];
 

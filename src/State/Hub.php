@@ -15,6 +15,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;

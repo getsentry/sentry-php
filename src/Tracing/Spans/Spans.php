@@ -39,6 +39,11 @@ class Spans
         $this->aggregator->add($span);
     }
 
+    public function get(?SpanId $spanId): ?Span
+    {
+        return $this->aggregator->get($spanId);
+    }
+
     public function flush(): ?EventId
     {
         return $this->aggregator->flush();
