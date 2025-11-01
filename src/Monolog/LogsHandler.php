@@ -10,7 +10,6 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\LogRecord;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
-use Sentry\Util\Arr;
 
 class LogsHandler implements HandlerInterface
 {
@@ -126,7 +125,8 @@ class LogsHandler implements HandlerInterface
     }
 
     /**
-     * @param array<string, mixed>|LogRecord $record
+     * @param array<string,mixed>|LogRecord $record
+     * @return array<string,mixed>
      */
     protected function compileAttributes($record): array
     {
