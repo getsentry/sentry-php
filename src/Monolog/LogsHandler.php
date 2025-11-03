@@ -126,6 +126,7 @@ class LogsHandler implements HandlerInterface
 
     /**
      * @param array<string,mixed>|LogRecord $record
+     *
      * @return array<string,mixed>
      */
     protected function compileAttributes($record): array
