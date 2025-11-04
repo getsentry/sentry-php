@@ -23,7 +23,7 @@ interface HubInterface
     /**
      * Gets the client bound to the top of the stack.
      */
-    public function getClient(): ?ClientInterface;
+    public function getClient(): ClientInterface;
 
     /**
      * Gets the ID of the last captured event.

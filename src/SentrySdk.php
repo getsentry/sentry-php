@@ -30,9 +30,12 @@ final class SentrySdk
      * Initializes the SDK by creating a new hub instance each time this method
      * gets called.
      */
-    public static function init(): HubInterface
+    public static function init(?ClientInterface $client = null): HubInterface
     {
-        self::$currentHub = new Hub();
+        if ($client === null) {
+            $client = new NullClient();
+        }
+        self::$currentHub = new Hub($client);
 
         return self::$currentHub;
     }
@@ -44,7 +47,7 @@ final class SentrySdk
     public static function getCurrentHub(): HubInterface
     {
         if (self::$currentHub === null) {
-            self::$currentHub = new Hub();
+            self::$currentHub = new Hub(new NullClient());
         }
 
         return self::$currentHub;

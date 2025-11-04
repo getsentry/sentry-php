@@ -16,6 +16,7 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
+use Sentry\NullClient;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
@@ -145,7 +146,7 @@ final class HubTest extends TestCase
     public function testWithScope(): void
     {
         $scope = new Scope();
-        $hub = new Hub(null, $scope);
+        $hub = new Hub(new NullClient(), $scope);
 
         $callbackReturn = $hub->withScope(function (Scope $scopeArg) use ($scope): string {
             $this->assertNotSame($scope, $scopeArg);
@@ -202,7 +203,7 @@ final class HubTest extends TestCase
     public function testConfigureScope(): void
     {
         $scope = new Scope();
-        $hub = new Hub(null, $scope);
+        $hub = new Hub(new NullClient(), $scope);
 
         $callbackInvoked = false;
 
@@ -238,7 +239,7 @@ final class HubTest extends TestCase
     public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
@@ -297,7 +298,7 @@ final class HubTest extends TestCase
     public function testCaptureException(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
@@ -352,7 +353,7 @@ final class HubTest extends TestCase
     public function testCaptureLastError(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void
     {
         $eventId = EventId::generate();
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
@@ -442,7 +443,7 @@ final class HubTest extends TestCase
 
     public function testCaptureEvent(): void
     {
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
         $event = Event::createEvent();
 
         /** @var ClientInterface&MockObject $client */
@@ -468,7 +469,7 @@ final class HubTest extends TestCase
             ->willReturn(new Options());
 
         $callbackInvoked = false;
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $hub->addBreadcrumb($breadcrumb);
@@ -611,7 +612,7 @@ final class HubTest extends TestCase
             ->with('Foo\\Bar')
             ->willReturn($integration);
 
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $this->assertNull($hub->getIntegration('Foo\\Bar'));
 
@@ -877,7 +878,7 @@ final class HubTest extends TestCase
 
     public function testEventTraceContextIsAlwaysFilled(): void
     {
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $event = Event::createEvent();
 
@@ -890,7 +891,7 @@ final class HubTest extends TestCase
 
     public function testEventTraceContextIsNotOverridenWhenPresent(): void
     {
-        $hub = new Hub();
+        $hub = new Hub(new NullClient());
 
         $traceContext = ['foo' => 'bar'];
 

@@ -53,7 +53,7 @@ final class HubAdapter implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getClient(): ?ClientInterface
+    public function getClient(): ClientInterface
     {
         return SentrySdk::getCurrentHub()->getClient();
     }

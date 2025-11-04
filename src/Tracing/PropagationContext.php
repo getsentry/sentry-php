@@ -85,17 +85,11 @@ final class PropagationContext
     {
         if ($this->dynamicSamplingContext === null) {
             $hub = SentrySdk::getCurrentHub();
-            $client = $hub->getClient();
+            $options = $hub->getClient()->getOptions();
 
-            if ($client !== null) {
-                $options = $client->getOptions();
-
-                if ($options !== null) {
-                    $hub->configureScope(function (Scope $scope) use ($options) {
-                        $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
-                    });
-                }
-            }
+            $hub->configureScope(function (Scope $scope) use ($options) {
+                $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+            });
         }
 
         return (string) $this->dynamicSamplingContext;
