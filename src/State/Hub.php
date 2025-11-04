@@ -159,6 +159,10 @@ class Hub implements HubInterface
     {
         $client = $this->getClient();
 
+        if ($client instanceof NullClient) {
+            return null;
+        }
+
         $options = $client->getOptions();
         $event = Event::createCheckIn();
         $checkIn = new CheckIn(
