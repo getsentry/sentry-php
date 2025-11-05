@@ -15,7 +15,7 @@ use Sentry\ClientInterface;
 final class Layer
 {
     /**
-     * @var ClientInterface|null The client held by this layer
+     * @var ClientInterface The client held by this layer
      */
     private $client;
 
@@ -27,10 +27,10 @@ final class Layer
     /**
      * Constructor.
      *
-     * @param ClientInterface|null $client The client held by this layer
-     * @param Scope                $scope  The scope held by this layer
+     * @param ClientInterface $client The client held by this layer
+     * @param Scope           $scope  The scope held by this layer
      */
-    public function __construct(?ClientInterface $client, Scope $scope)
+    public function __construct(ClientInterface $client, Scope $scope)
     {
         $this->client = $client;
         $this->scope = $scope;
@@ -39,7 +39,7 @@ final class Layer
     /**
      * Gets the client held by this layer.
      */
-    public function getClient(): ?ClientInterface
+    public function getClient(): ClientInterface
     {
         return $this->client;
     }
@@ -47,11 +47,11 @@ final class Layer
     /**
      * Sets the client held by this layer.
      *
-     * @param ClientInterface|null $client The client instance
+     * @param ClientInterface $client The client instance
      *
      * @return $this
      */
-    public function setClient(?ClientInterface $client): self
+    public function setClient(ClientInterface $client): self
     {
         $this->client = $client;
 

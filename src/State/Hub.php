@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
-use Psr\Log\NullLogger;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckIn;
@@ -15,6 +14,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
+use Sentry\NoOpClient;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -39,10 +39,10 @@ class Hub implements HubInterface
     /**
      * Hub constructor.
      *
-     * @param ClientInterface|null $client The client bound to the hub
-     * @param Scope|null           $scope  The scope bound to the hub
+     * @param ClientInterface $client The client bound to the hub
+     * @param Scope|null      $scope  The scope bound to the hub
      */
-    public function __construct(?ClientInterface $client = null, ?Scope $scope = null)
+    public function __construct(ClientInterface $client, ?Scope $scope = null)
     {
         $this->stack[] = new Layer($client, $scope ?? new Scope());
     }
@@ -50,7 +50,7 @@ class Hub implements HubInterface
     /**
      * {@inheritdoc}
      */
-    public function getClient(): ?ClientInterface
+    public function getClient(): ClientInterface
     {
         return $this->getStackTop()->getClient();
     }
@@ -123,13 +123,7 @@ class Hub implements HubInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        $client = $this->getClient();
-
-        if ($client !== null) {
-            return $this->lastEventId = $client->captureMessage($message, $level, $this->getScope(), $hint);
-        }
-
-        return null;
+        return $this->lastEventId = $this->getClient()->captureMessage($message, $level, $this->getScope(), $hint);
     }
 
     /**
@@ -137,13 +131,7 @@ class Hub implements HubInterface
      */
     public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        $client = $this->getClient();
-
-        if ($client !== null) {
-            return $this->lastEventId = $client->captureException($exception, $this->getScope(), $hint);
-        }
-
-        return null;
+        return $this->lastEventId = $this->getClient()->captureException($exception, $this->getScope(), $hint);
     }
 
     /**
@@ -151,13 +139,7 @@ class Hub implements HubInterface
      */
     public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
-        $client = $this->getClient();
-
-        if ($client !== null) {
-            return $this->lastEventId = $client->captureEvent($event, $hint, $this->getScope());
-        }
-
-        return null;
+        return $this->lastEventId = $this->getClient()->captureEvent($event, $hint, $this->getScope());
     }
 
     /**
@@ -165,13 +147,7 @@ class Hub implements HubInterface
      */
     public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        $client = $this->getClient();
-
-        if ($client !== null) {
-            return $this->lastEventId = $client->captureLastError($this->getScope(), $hint);
-        }
-
-        return null;
+        return $this->lastEventId = $this->getClient()->captureLastError($this->getScope(), $hint);
     }
 
     /**
@@ -183,7 +159,7 @@ class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if ($client === null) {
+        if ($client instanceof NoOpClient) {
             return null;
         }
 
@@ -211,7 +187,8 @@ class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if ($client === null) {
+        // No point in storing breadcrumbs if the client will never send them
+        if ($client instanceof NoOpClient) {
             return false;
         }
 
@@ -234,9 +211,8 @@ class Hub implements HubInterface
 
     public function addAttachment(Attachment $attachment): bool
     {
-        $client = $this->getClient();
-
-        if ($client === null) {
+        // No point in storing attachments if the client will never send them
+        if ($this->getClient() instanceof NoOpClient) {
             return false;
         }
 
@@ -250,13 +226,7 @@ class Hub implements HubInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        $client = $this->getClient();
-
-        if ($client !== null) {
-            return $client->getIntegration($className);
-        }
-
-        return null;
+        return $this->getClient()->getIntegration($className);
     }
 
     /**
@@ -267,11 +237,10 @@ class Hub implements HubInterface
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
         $transaction = new Transaction($context, $this);
-        $client = $this->getClient();
-        $options = $client !== null ? $client->getOptions() : null;
-        $logger = $options !== null ? $options->getLoggerOrNullLogger() : new NullLogger();
+        $options = $this->getClient()->getOptions();
+        $logger = $options->getLoggerOrNullLogger();
 
-        if ($options === null || !$options->isTracingEnabled()) {
+        if (!$options->isTracingEnabled()) {
             $transaction->setSampled(false);
 
             $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);

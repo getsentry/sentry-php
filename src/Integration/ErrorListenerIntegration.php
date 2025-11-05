@@ -35,13 +35,12 @@ final class ErrorListenerIntegration extends AbstractErrorListenerIntegration im
                         static function (\ErrorException $exception): void {
                             $currentHub = SentrySdk::getCurrentHub();
                             $integration = $currentHub->getIntegration(self::class);
-                            $client = $currentHub->getClient();
 
-                            // The client bound to the current hub, if any, could not have this
-                            // integration enabled. If this is the case, bail out
-                            if ($integration === null || $client === null) {
+                            if ($integration === null) {
                                 return;
                             }
+
+                            $client = $currentHub->getClient();
 
                             if ($exception instanceof SilencedErrorException && !$client->getOptions()->shouldCaptureSilencedErrors()) {
                                 return;

@@ -67,7 +67,7 @@ function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init()->bindClient($client);
+    SentrySdk::init($client);
 }
 
 /**
@@ -279,16 +279,11 @@ function trace(callable $trace, SpanContext $context)
 function getTraceparent(): string
 {
     $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
-
-    if ($client !== null) {
-        $options = $client->getOptions();
-
-        if ($options !== null && $options->isTracingEnabled()) {
-            $span = SentrySdk::getCurrentHub()->getSpan();
-            if ($span !== null) {
-                return $span->toTraceparent();
-            }
+    $options = $hub->getClient()->getOptions();
+    if ($options->isTracingEnabled()) {
+        $span = SentrySdk::getCurrentHub()->getSpan();
+        if ($span !== null) {
+            return $span->toTraceparent();
         }
     }
 
@@ -309,16 +304,11 @@ function getTraceparent(): string
 function getBaggage(): string
 {
     $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
-
-    if ($client !== null) {
-        $options = $client->getOptions();
-
-        if ($options !== null && $options->isTracingEnabled()) {
-            $span = SentrySdk::getCurrentHub()->getSpan();
-            if ($span !== null) {
-                return $span->toBaggage();
-            }
+    $options = $hub->getClient()->getOptions();
+    if ($options->isTracingEnabled()) {
+        $span = SentrySdk::getCurrentHub()->getSpan();
+        if ($span !== null) {
+            return $span->toBaggage();
         }
     }
 

@@ -24,13 +24,12 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
         $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
             $currentHub = SentrySdk::getCurrentHub();
             $integration = $currentHub->getIntegration(self::class);
-            $client = $currentHub->getClient();
 
-            // The client bound to the current hub, if any, could not have this
-            // integration enabled. If this is the case, bail out
-            if ($integration === null || $client === null) {
+            if ($integration === null) {
                 return;
             }
+
+            $client = $currentHub->getClient();
 
             if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
                 return;
