@@ -15,7 +15,7 @@ use Sentry\Transport\ResultStatus;
  * simply workflows where previously the client was null.
  * It also holds options which helps with situations where no options were available if the client was set to `null`.
  */
-class NullClient implements ClientInterface
+class NoOpClient implements ClientInterface
 {
     /**
      * @var Options

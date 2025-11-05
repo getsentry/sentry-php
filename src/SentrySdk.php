@@ -33,7 +33,7 @@ final class SentrySdk
     public static function init(?ClientInterface $client = null): HubInterface
     {
         if ($client === null) {
-            $client = new NullClient();
+            $client = new NoOpClient();
         }
         self::$currentHub = new Hub($client);
 
@@ -47,7 +47,7 @@ final class SentrySdk
     public static function getCurrentHub(): HubInterface
     {
         if (self::$currentHub === null) {
-            self::$currentHub = new Hub(new NullClient());
+            self::$currentHub = new Hub(new NoOpClient());
         }
 
         return self::$currentHub;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\NullClient;
+use Sentry\NoOpClient;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 
@@ -32,7 +32,7 @@ final class SentrySdkTest extends TestCase
 
     public function testSetCurrentHub(): void
     {
-        $hub = new Hub(new NullClient());
+        $hub = new Hub(new NoOpClient());
 
         $this->assertSame($hub, SentrySdk::setCurrentHub($hub));
         $this->assertSame($hub, SentrySdk::getCurrentHub());

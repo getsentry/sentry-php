@@ -14,7 +14,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
-use Sentry\NullClient;
+use Sentry\NoOpClient;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -159,7 +159,7 @@ class Hub implements HubInterface
     {
         $client = $this->getClient();
 
-        if ($client instanceof NullClient) {
+        if ($client instanceof NoOpClient) {
             return null;
         }
 
@@ -188,7 +188,7 @@ class Hub implements HubInterface
         $client = $this->getClient();
 
         // No point in storing breadcrumbs if the client will never send them
-        if ($client instanceof NullClient) {
+        if ($client instanceof NoOpClient) {
             return false;
         }
 
@@ -212,7 +212,7 @@ class Hub implements HubInterface
     public function addAttachment(Attachment $attachment): bool
     {
         // No point in storing attachments if the client will never send them
-        if ($this->getClient() instanceof NullClient) {
+        if ($this->getClient() instanceof NoOpClient) {
             return false;
         }
 

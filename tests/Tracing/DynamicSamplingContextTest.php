@@ -6,7 +6,7 @@ namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
-use Sentry\NullClient;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -114,7 +114,7 @@ final class DynamicSamplingContextTest extends TestCase
 
     public function testFromTransactionSourceUrl(): void
     {
-        $hub = new Hub(new NullClient());
+        $hub = new Hub(new NoOpClient());
 
         $transactionContext = new TransactionContext();
         $transactionContext->setName('/foo/bar/123');

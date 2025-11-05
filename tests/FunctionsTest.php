@@ -14,7 +14,7 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
-use Sentry\NullClient;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -362,7 +362,7 @@ final class FunctionsTest extends TestCase
 
     public function testTraceCorrectlyReplacesAndRestoresCurrentSpan(): void
     {
-        $hub = new Hub(new NullClient());
+        $hub = new Hub(new NoOpClient());
 
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(true);
@@ -392,7 +392,7 @@ final class FunctionsTest extends TestCase
     {
         $scope = $this->createMock(Scope::class);
 
-        $hub = new Hub(new NullClient(), $scope);
+        $hub = new Hub(new NoOpClient(), $scope);
 
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(false);
@@ -420,7 +420,7 @@ final class FunctionsTest extends TestCase
 
         $scope = new Scope($propagationContext);
 
-        $hub = new Hub(new NullClient(), $scope);
+        $hub = new Hub(new NoOpClient(), $scope);
 
         SentrySdk::setCurrentHub($hub);
 
@@ -515,7 +515,7 @@ final class FunctionsTest extends TestCase
 
     public function testContinueTrace(): void
     {
-        $hub = new Hub(new NullClient());
+        $hub = new Hub(new NoOpClient());
 
         SentrySdk::setCurrentHub($hub);
 
