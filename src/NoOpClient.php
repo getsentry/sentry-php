@@ -87,7 +87,7 @@ class NoOpClient implements ClientInterface
     public function getStacktraceBuilder(): StacktraceBuilder
     {
         if ($this->stacktraceBuilder === null) {
-            $this->stacktraceBuilder = new StacktraceBuilder($this->sentryOptions, new RepresentationSerializer($this->sentryOptions));
+            $this->stacktraceBuilder = new StacktraceBuilder($this->getOptions(), new RepresentationSerializer($this->getOptions()));
         }
 
         return $this->stacktraceBuilder;
