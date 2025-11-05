@@ -18,12 +18,17 @@ use Sentry\Transport\ResultStatus;
 class NoOpClient implements ClientInterface
 {
     /**
-     * @var Options
+     * @var array<string, mixed>
      */
     private $options;
 
     /**
-     * @var StacktraceBuilder
+     * @var Options
+     */
+    private $sentryOptions;
+
+    /**
+     * @var StacktraceBuilder|null
      */
     private $stacktraceBuilder;
 
@@ -32,13 +37,16 @@ class NoOpClient implements ClientInterface
      */
     public function __construct(array $options = [])
     {
-        $this->options = new Options($options);
-        $this->stacktraceBuilder = new StacktraceBuilder($this->options, new RepresentationSerializer($this->options));
+        $this->options = $options;
     }
 
     public function getOptions(): Options
     {
-        return $this->options;
+        if ($this->sentryOptions === null) {
+            $this->sentryOptions = new Options($this->options);
+        }
+
+        return $this->sentryOptions;
     }
 
     public function getCspReportUrl(): ?string
@@ -78,6 +86,10 @@ class NoOpClient implements ClientInterface
 
     public function getStacktraceBuilder(): StacktraceBuilder
     {
+        if ($this->stacktraceBuilder === null) {
+            $this->stacktraceBuilder = new StacktraceBuilder($this->sentryOptions, new RepresentationSerializer($this->sentryOptions));
+        }
+
         return $this->stacktraceBuilder;
     }
 }
