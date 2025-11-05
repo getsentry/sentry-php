@@ -7,6 +7,11 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 ### Features
 
 - Add support for feature flags. [(#1951)](https://github.com/getsentry/sentry-php/pull/1951)
+```php
+\Sentry\SentrySdk::getCurrentHub()->withScope(function (\Sentry\State\Scope $scope) {
+    $scope->addFeatureFlag("my.feature.enabled", true);
+});
+```
 - Add more representations for log attributes instead of dropping them. [(#1950)](https://github.com/getsentry/sentry-php/pull/1950)
 
 ### Misc
