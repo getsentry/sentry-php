@@ -1,5 +1,10 @@
 --TEST--
 Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID > 80400) {
+    die('skip - only works for PHP 8.4 and below');
+}
 --INI--
 memory_limit=67108864
 --FILE--
@@ -70,8 +75,8 @@ $array = [];
 for ($i = 0; $i < 100000000; ++$i) {
     $array[] = 'sentry';
 }
---EXPECTREGEX--
-^Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of 67108864 bytes exhausted \(tried to allocate \d+ bytes\) in [^\r\n]+ on line \d+(?:\RStack trace:\R(?:#\d+[^\r\n]*)+)?
+--EXPECTF--
+Before OOM memory limit: 67108864
+Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
 Transport called
-After OOM memory limit: 72351744$
+After OOM memory limit: 72351744

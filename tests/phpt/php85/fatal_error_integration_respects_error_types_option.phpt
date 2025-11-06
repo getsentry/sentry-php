@@ -1,5 +1,10 @@
 --TEST--
 Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the error_types option
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID < 80500) {
+    die('skip - only works for PHP 8.5 and above');
+}
 --FILE--
 <?php
 
@@ -58,5 +63,7 @@ final class TestClass implements \JsonSerializable
 {
 }
 ?>
---EXPECTREGEX--
-Fatal error: Class Sentry\\Tests\\TestClass contains 1 abstract method and must therefore be declared abstract or implement the remaining methods? \(JsonSerializable::jsonSerialize\) in .* on line 54
+--EXPECTF--
+Fatal error: Class Sentry\Tests\TestClass contains 1 abstract method and must therefore be declared abstract or implement the remaining method (JsonSerializable::jsonSerialize) in %s on line %d
+Stack trace:
+%A
