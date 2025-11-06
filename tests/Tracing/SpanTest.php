@@ -11,7 +11,7 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
-use Symfony\Bridge\PhpUnit\ClockMock;
+use Sentry\Util\ClockMock;
 
 /**
  * @group time-sensitive
@@ -186,5 +186,35 @@ final class SpanTest extends TestCase
 
         $this->assertSame($context->getOrigin(), $span->getOrigin());
         $this->assertSame($context->getOrigin(), $span->getTraceContext()['origin']);
+    }
+
+    public function testFlagIsRecorded(): void
+    {
+        $span = new Span();
+
+        $span->setFlag('feature', true);
+
+        $this->assertSame(['flag.evaluation.feature' => true], $span->getData());
+    }
+
+    public function testFlagLimitRecorded(): void
+    {
+        $span = new Span();
+
+        $expectedFlags = [
+            'flag.evaluation.should-not-be-discarded' => true,
+        ];
+
+        $span->setFlag('should-not-be-discarded', true);
+
+        foreach (range(1, Span::MAX_FLAGS - 1) as $i) {
+            $span->setFlag("feature{$i}", true);
+
+            $expectedFlags["flag.evaluation.feature{$i}"] = true;
+        }
+
+        $span->setFlag('should-be-discarded', true);
+
+        $this->assertSame($expectedFlags, $span->getData());
     }
 }

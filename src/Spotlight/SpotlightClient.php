@@ -42,7 +42,9 @@ class SpotlightClient
         if ($body === false) {
             $errorCode = curl_errno($curlHandle);
             $error = curl_error($curlHandle);
-            curl_close($curlHandle);
+            if (\PHP_MAJOR_VERSION < 8) {
+                curl_close($curlHandle);
+            }
 
             $message = 'cURL Error (' . $errorCode . ') ' . $error;
 
@@ -51,7 +53,9 @@ class SpotlightClient
 
         $statusCode = curl_getinfo($curlHandle, \CURLINFO_HTTP_CODE);
 
-        curl_close($curlHandle);
+        if (\PHP_MAJOR_VERSION < 8) {
+            curl_close($curlHandle);
+        }
 
         return new Response($statusCode, [], '');
     }

@@ -78,7 +78,7 @@ final class LogsAggregatorTest extends TestCase
 
         yield [
             ['foo' => ['bar']],
-            [],
+            ['foo' => '["bar"]'],
         ];
     }
 
