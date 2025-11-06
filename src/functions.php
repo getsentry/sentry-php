@@ -382,7 +382,7 @@ function metrics(): Metrics
 
 /**
  * Adds a feature flag evaluation to the current scope.
- * It will use the value of the last call if called multiple times.
+ * When invoked repeatedly for the same name, the most recent value is used.
  */
 function addFeatureFlag(string $name, bool $result): void
 {
