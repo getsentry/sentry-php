@@ -1,5 +1,10 @@
 --TEST--
-Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the error_types option
+Test catching fatal errors
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID >= 80500) {
+    die('skip - only works for PHP 8.4 and below');
+}
 --FILE--
 <?php
 
@@ -7,11 +12,9 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use GuzzleHttp\Promise\FulfilledPromise;
-use GuzzleHttp\Promise\PromiseInterface;
 use Sentry\ClientBuilder;
+use Sentry\ErrorHandler;
 use Sentry\Event;
-use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Transport\Result;
@@ -40,19 +43,30 @@ $transport = new class implements TransportInterface {
     }
 };
 
-$options = new Options([
-    'error_types' => E_ALL & ~E_ERROR,
-    'default_integrations' => false,
-    'integrations' => [
-        new FatalErrorListenerIntegration(),
-    ],
-]);
+$options = [
+    'dsn' => 'http://public@example.com/sentry/1',
+];
 
-$client = (new ClientBuilder($options))
+$client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
 SentrySdk::getCurrentHub()->bindClient($client);
+
+$errorHandler = ErrorHandler::registerOnceErrorHandler();
+$errorHandler->addErrorHandlerListener(static function (): void {
+    echo 'Error listener called (it should not have been)' . PHP_EOL;
+});
+
+$errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+$errorHandler->addFatalErrorHandlerListener(static function (): void {
+    echo 'Fatal error listener called' . PHP_EOL;
+});
+
+$errorHandler = ErrorHandler::registerOnceExceptionHandler();
+$errorHandler->addExceptionHandlerListener(static function (): void {
+    echo 'Exception listener called (it should not have been)' . PHP_EOL;
+});
 
 final class TestClass implements \JsonSerializable
 {
@@ -60,3 +74,5 @@ final class TestClass implements \JsonSerializable
 ?>
 --EXPECTF--
 Fatal error: Class Sentry\Tests\TestClass contains 1 abstract method and must therefore be declared abstract or implement the remaining methods (JsonSerializable::jsonSerialize) in %s on line %d
+Transport called
+Fatal error listener called
