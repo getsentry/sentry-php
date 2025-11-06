@@ -2,7 +2,7 @@
 Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID > 80400) {
+if (PHP_VERSION_ID >= 80400) {
     die('skip - only works for PHP 8.4 and below');
 }
 --INI--

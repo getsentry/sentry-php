@@ -2,7 +2,7 @@
 Test that the FatalErrorListenerIntegration integration captures only the errors allowed by the error_types option
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID > 80400) {
+if (PHP_VERSION_ID >= 80500) {
     die('skip - only works for PHP 8.4 and below');
 }
 --FILE--
