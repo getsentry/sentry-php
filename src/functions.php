@@ -379,3 +379,14 @@ function metrics(): Metrics
 {
     return Metrics::getInstance();
 }
+
+/**
+ * Adds a feature flag evaluation to the current scope.
+ * It will use the value of the last call if called multiple times.
+ */
+function addFeatureFlag(string $name, bool $result): void
+{
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($name, $result) {
+        $scope->addFeatureFlag($name, $result);
+    });
+}
