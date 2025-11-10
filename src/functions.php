@@ -80,6 +80,8 @@ function init(array $options = []): void
  * @param string         $message The message
  * @param Severity|null  $level   The severity level of the message
  * @param EventHint|null $hint    Object that can contain additional information about the event
+ *
+ * @deprecated Use \Sentry\logger() instead. To be removed in version 5.0
  */
 function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
@@ -91,6 +93,8 @@ function captureMessage(string $message, ?Severity $level = null, ?EventHint $hi
  *
  * @param \Throwable     $exception The exception
  * @param EventHint|null $hint      Object that can contain additional information about the event
+ *
+ * @deprecated Use \Sentry\report() instead. To be removed in version 5.0
  */
 function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
@@ -116,6 +120,19 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 function captureLastError(?EventHint $hint = null): ?EventId
 {
     return SentrySdk::getCurrentHub()->captureLastError($hint);
+}
+
+/**
+ * Capture an exception event and report it to Sentry.
+ *
+ * @param \Throwable     $exception The exception
+ * @param EventHint|null $hint      Object that can contain additional information about the event
+ *
+ * @deprecated Use \Sentry\report() instead. To be removed in version 5.0
+ */
+function report(\Throwable $exception, ?EventHint $hint = null): ?EventId
+{
+    return SentrySdk::getCurrentHub()->captureException($exception, $hint);
 }
 
 /**
