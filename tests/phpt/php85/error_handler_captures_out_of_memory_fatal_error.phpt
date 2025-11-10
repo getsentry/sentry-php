@@ -1,5 +1,10 @@
 --TEST--
 Test catching out of memory fatal error without increasing memory limit
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID < 80500) {
+    die('skip - only works for PHP 8.5 and above');
+}
 --INI--
 memory_limit=67108864
 --FILE--
@@ -35,5 +40,7 @@ $foo = str_repeat('x', 1024 * 1024 * 1024);
 --EXPECTF--
 Before OOM memory limit: 67108864
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Stack trace:
+%A
 Fatal error listener called
 After OOM memory limit: 67108864

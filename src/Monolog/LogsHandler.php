@@ -66,7 +66,7 @@ class LogsHandler implements HandlerInterface
             self::getSentryLogLevelFromMonologLevel($record['level']),
             $record['message'],
             [],
-            array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog'])
+            $this->compileAttributes($record)
         );
 
         return $this->bubble === false;
@@ -122,5 +122,15 @@ class LogsHandler implements HandlerInterface
         } catch (\Throwable $e) {
             // Just in case so that the destructor can never fail.
         }
+    }
+
+    /**
+     * @param array<string,mixed>|LogRecord $record
+     *
+     * @return array<string,mixed>
+     */
+    protected function compileAttributes($record): array
+    {
+        return array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog']);
     }
 }
