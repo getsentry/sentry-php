@@ -36,17 +36,9 @@ final class MetricsAggregator
         string $type,
         string $name,
         $value,
-        ?MetricsUnit $unit,
         array $attributes,
-        ?float $timestamp
+        ?MetricsUnit $unit
     ): void {
-        if ($timestamp === null) {
-            $timestamp = microtime(true);
-        }
-        if ($unit === null) {
-            $unit = MetricsUnit::none();
-        }
-
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
@@ -85,7 +77,7 @@ final class MetricsAggregator
         $metricTypeClass = self::METRIC_TYPES[$type];
         /** @var AbstractType $metric */
         /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
-        $metric = new $metricTypeClass($name, $value, $unit, $traceId, $spanId, $attributes, $timestamp);
+        $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         $this->metrics[] = $metric;
     }

@@ -41,7 +41,7 @@ class Metrics
     /**
      * @param array<string, string> $tags
      *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @deprecated Use Metrics::count() instead. To be removed in 5.x.
      */
     public function increment(
         string $key,
@@ -56,51 +56,45 @@ class Metrics
     public function count(
         string $name,
         float $value,
-        ?MetricsUnit $unit = null,
         array $attributes = [],
-        ?float $timestamp = null
+        ?MetricsUnit $unit = null
     ): void {
         $this->aggregator->add(
             CounterType::TYPE,
             $name,
             $value,
-            $unit,
             $attributes,
-            $timestamp
+            $unit
         );
     }
 
     public function distribution(
         string $name,
         float $value,
-        ?MetricsUnit $unit = null,
         array $attributes = [],
-        ?float $timestamp = null
+        ?MetricsUnit $unit = null
     ): void {
         $this->aggregator->add(
             DistributionType::TYPE,
             $name,
             $value,
-            $unit,
             $attributes,
-            $timestamp
+            $unit
         );
     }
 
     public function gauge(
         string $name,
         float $value,
-        ?MetricsUnit $unit = null,
         array $attributes = [],
-        ?float $timestamp = null
+        ?MetricsUnit $unit = null
     ): void {
         $this->aggregator->add(
             GaugeType::TYPE,
             $name,
             $value,
-            $unit,
             $attributes,
-            $timestamp
+            $unit
         );
     }
 
@@ -108,7 +102,7 @@ class Metrics
      * @param int|string            $value
      * @param array<string, string> $tags
      *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @deprecated To be removed in 5.x.
      */
     public function set(
         string $key,
@@ -128,7 +122,7 @@ class Metrics
      *
      * @return T
      *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @deprecated To be removed in 5.x.
      */
     public function timing(
         string $key,

@@ -8,7 +8,6 @@ use Sentry\Attributes\Attribute;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Metrics\Types\AbstractType;
-use Sentry\SentrySdk;
 use Sentry\Util\JSON;
 
 /**
@@ -37,7 +36,7 @@ class MetricsItem implements EnvelopeItemInterface
                         'span_id' => (string) $metric->getSpanId(),
                         'name' => $metric->getName(),
                         'value' => $metric->getValue(),
-                        // 'unit' => (string) $metric->getUnit(),
+                        'unit' => $metric->getUnit() ? (string) $metric->getUnit() : null,
                         'type' => $metric->getType(),
                         'attributes' => array_map(static function (Attribute $attribute): array {
                             return [

@@ -20,11 +20,6 @@ abstract class AbstractType
     private $name;
 
     /**
-     * @var MetricsUnit
-     */
-    private $unit;
-
-    /**
      * @var TraceId
      */
     private $traceId;
@@ -45,15 +40,20 @@ abstract class AbstractType
     private $attributes;
 
     /**
+     * @var MetricsUnit|null
+     */
+    private $unit;
+
+    /**
      * @param array<string, string> $attributes
      */
     public function __construct(
         string $name,
-        MetricsUnit $unit,
         TraceId $traceId,
         SpanId $spanId,
+        float $timestamp,
         array $attributes,
-        float $timestamp
+        ?MetricsUnit $unit,
     ) {
         $this->name = $name;
         $this->unit = $unit;

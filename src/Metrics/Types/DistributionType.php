@@ -30,13 +30,13 @@ final class DistributionType extends AbstractType
     public function __construct(
         string $name,
         $value,
-        MetricsUnit $unit,
         TraceId $traceId,
         SpanId $spanId,
         array $attributes,
-        float $timestamp
+        float $timestamp,
+        ?MetricsUnit $unit,
     ) {
-        parent::__construct($name, $unit, $traceId, $spanId, $attributes, $timestamp);
+        parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 
         $this->value = (float) $value;
     }
