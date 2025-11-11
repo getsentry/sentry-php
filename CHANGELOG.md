@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 4.18.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.18.1.
+
+### Misc
+
+- Add `addFeatureFlag` helper function. [(#1960)](https://github.com/getsentry/sentry-php/pull/1960)
+```php
+\Sentry\addFeatureFlag("my.feature.enabled", true);
+```
+
 ## 4.18.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.18.0.
