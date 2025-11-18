@@ -68,6 +68,16 @@ final class EventType implements \Stringable
         ];
     }
 
+    public function requiresEventId(): bool
+    {
+        switch ($this) {
+            case self::metrics():
+                return false;
+            default:
+                return true;
+        }
+    }
+
     public function __toString(): string
     {
         return $this->value;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics;
 
+use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Metrics\Types\AbstractType;
@@ -12,6 +13,7 @@ use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Util\RingBuffer;
 
 /**
  * @internal
@@ -19,9 +21,19 @@ use Sentry\State\Scope;
 final class MetricsAggregator
 {
     /**
-     * @var array<string, AbstractType>
+     * @var int
      */
-    private $metrics = [];
+    public const METRICS_BUFFER_SIZE = 1000;
+
+    /**
+     * @var RingBuffer<AbstractType>
+     */
+    private $metrics;
+
+    public function __construct()
+    {
+        $this->metrics = new RingBuffer(self::METRICS_BUFFER_SIZE);
+    }
 
     private const METRIC_TYPES = [
         CounterType::TYPE => CounterType::class,
@@ -30,7 +42,8 @@ final class MetricsAggregator
     ];
 
     /**
-     * @param int|float|string $value
+     * @param int|float|string                     $value
+     * @param array<string, int|float|string|bool> $attributes
      */
     public function add(
         string $type,
@@ -42,7 +55,7 @@ final class MetricsAggregator
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
-        if ($client !== null) {
+        if ($client instanceof Client) {
             $options = $client->getOptions();
 
             $defaultAttributes = [
@@ -56,7 +69,7 @@ final class MetricsAggregator
                 $defaultAttributes['sentry.release'] = $release;
             }
 
-            $attributes = array_merge($defaultAttributes, $attributes);
+            $attributes += $defaultAttributes;
         }
 
         $spanId = null;
@@ -79,19 +92,17 @@ final class MetricsAggregator
         /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
-        $this->metrics[] = $metric;
+        $this->metrics->push($metric);
     }
 
     public function flush(): ?EventId
     {
-        if ($this->metrics === []) {
+        if ($this->metrics->isEmpty()) {
             return null;
         }
 
         $hub = SentrySdk::getCurrentHub();
-        $event = Event::createMetrics()->setMetrics($this->metrics);
-
-        $this->metrics = [];
+        $event = Event::createMetrics()->setMetrics($this->metrics->drain());
 
         return $hub->captureEvent($event);
     }

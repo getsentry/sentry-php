@@ -34,7 +34,7 @@ final class GaugeType extends AbstractType
         SpanId $spanId,
         array $attributes,
         float $timestamp,
-        ?MetricsUnit $unit,
+        ?MetricsUnit $unit
     ) {
         parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 

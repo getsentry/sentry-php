@@ -141,6 +141,7 @@ final class MetricsUnit implements \Stringable
         return self::getInstance('percent');
     }
 
+    // none and custom is removed
     public static function none(): self
     {
         return self::getInstance('none');

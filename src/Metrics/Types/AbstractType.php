@@ -53,7 +53,7 @@ abstract class AbstractType
         SpanId $spanId,
         float $timestamp,
         array $attributes,
-        ?MetricsUnit $unit,
+        ?MetricsUnit $unit
     ) {
         $this->name = $name;
         $this->unit = $unit;
@@ -78,7 +78,7 @@ abstract class AbstractType
         return $this->name;
     }
 
-    public function getUnit(): MetricsUnit
+    public function getUnit(): ?MetricsUnit
     {
         return $this->unit;
     }

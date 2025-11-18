@@ -53,6 +53,9 @@ class Metrics
     ): void {
     }
 
+    /**
+     * @param array<string, int|float|string|bool> $attributes
+     */
     public function count(
         string $name,
         float $value,
@@ -68,6 +71,9 @@ class Metrics
         );
     }
 
+    /**
+     * @param array<string, int|float|string|bool> $attributes
+     */
     public function distribution(
         string $name,
         float $value,
@@ -83,6 +89,9 @@ class Metrics
         );
     }
 
+    /**
+     * @param array<string, int|float|string|bool> $attributes
+     */
     public function gauge(
         string $name,
         float $value,

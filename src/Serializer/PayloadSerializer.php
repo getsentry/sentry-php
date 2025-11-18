@@ -41,20 +41,24 @@ final class PayloadSerializer implements PayloadSerializerInterface
     {
         // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
         $envelopeHeader = [
-            // 'event_id' => (string) $event->getId(),
             'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
             'dsn' => (string) $this->options->getDsn(),
             'sdk' => $event->getSdkPayload(),
         ];
+
+        if ($event->getType()->requiresEventId()) {
+            $envelopeHeader = ['event_id' => (string) $event->getId()] + $envelopeHeader;
+        }
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
         if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
             $entries = $dynamicSamplingContext->getEntries();
 
             if (!empty($entries)) {
-                // $envelopeHeader['trace'] = $entries;
+                $envelopeHeader['trace'] = $entries;
             }
         }
+
 
         $items = [];
 
@@ -78,8 +82,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 $items[] = MetricsItem::toEnvelopeItem($event);
                 break;
         }
-
-        // dd(\sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items))));
 
         return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
     }
