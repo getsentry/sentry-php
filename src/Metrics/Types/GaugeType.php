@@ -24,8 +24,8 @@ final class GaugeType extends AbstractType
     private $value;
 
     /**
-     * @param int|float            $value
-     * @param array<string, mixed> $attributes
+     * @param int|float                            $value
+     * @param array<string, int|float|string|bool> $attributes
      */
     public function __construct(
         string $name,
@@ -49,6 +49,9 @@ final class GaugeType extends AbstractType
         $this->value = $value;
     }
 
+    /**
+     * @return int|float
+     */
     public function getValue()
     {
         return $this->value;

@@ -45,7 +45,7 @@ abstract class AbstractType
     private $unit;
 
     /**
-     * @param array<string, string> $attributes
+     * @param array<string, int|float|string|bool> $attributes
      */
     public function __construct(
         string $name,
@@ -67,10 +67,16 @@ abstract class AbstractType
         }
     }
 
+    /**
+     * @param int|float|string $value
+     */
     abstract public function setValue($value): void;
 
     abstract public function getType(): string;
 
+    /**
+     * @return int|float|string
+     */
     abstract public function getValue();
 
     public function getName(): string
