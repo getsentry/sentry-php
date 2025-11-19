@@ -45,11 +45,11 @@ class Metrics
      */
     public function increment(
         string $key,
-        float  $value,
-        ?Unit  $unit = null,
-        array  $tags = [],
-        ?int   $timestamp = null,
-        int    $stackLevel = 0
+        float $value,
+        ?Unit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
     ): void {
     }
 
@@ -115,11 +115,11 @@ class Metrics
      */
     public function set(
         string $key,
-               $value,
-        ?Unit  $unit = null,
-        array  $tags = [],
-        ?int   $timestamp = null,
-        int    $stackLevel = 0
+        $value,
+        ?Unit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
     ): void {
     }
 

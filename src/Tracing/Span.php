@@ -547,9 +547,9 @@ class Span
     public function setMetricsSummary(
         string $type,
         string $key,
-               $value,
-        Unit   $unit,
-        array  $tags
+        $value,
+        Unit $unit,
+        array $tags
     ): void {
     }
 
