@@ -108,7 +108,7 @@ class HttpTransport implements TransportInterface
                 // Just remove profiling data so the normal transaction can be sent.
                 $event->setSdkMetadata('profile', null);
                 $this->logger->warning(
-                    'Rate limit exceeding for sending requests of type "profile".',
+                    'Rate limit exceeded for sending requests of type "profile". The profile has been dropped.',
                     ['event' => $event]
                 );
             }
