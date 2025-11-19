@@ -34,7 +34,7 @@ final class DistributionType extends AbstractType
         SpanId $spanId,
         array $attributes,
         float $timestamp,
-        ?Unit $unit,
+        ?Unit $unit
     ) {
         parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 
