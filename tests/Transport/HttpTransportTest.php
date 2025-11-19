@@ -12,6 +12,7 @@ use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Response;
 use Sentry\Options;
+use Sentry\Profiling\Profile;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\ResultStatus;
@@ -25,7 +26,7 @@ final class HttpTransportTest extends TestCase
     private $logger;
 
     /**
-     * @var MockObject&HttpAsyncClientInterface
+     * @var MockObject&HttpClientInterface
      */
     private $httpClient;
 
@@ -180,7 +181,7 @@ final class HttpTransportTest extends TestCase
         $this->assertSame(ResultStatus::failed(), $result->getStatus());
     }
 
-    public function testSendFailsDueToCulrError(): void
+    public function testSendFailsDueToCurlError(): void
     {
         $event = Event::createEvent();
 
@@ -261,6 +262,105 @@ final class HttpTransportTest extends TestCase
         $result = $transport->send($event);
 
         $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
+    }
+
+    /**
+     * @group time-sensitive
+     */
+    public function testDropsProfileAndSendsTransactionWhenProfileRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/1']),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $event = Event::createTransaction();
+        $event->setSdkMetadata('profile', new Profile());
+
+        $this->payloadSerializer->expects($this->exactly(2))
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->exactly(2))
+            ->method('sendRequest')
+            ->willReturnOnConsecutiveCalls(
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:profile:key']], ''),
+                new Response(200, [], '')
+            );
+
+        // First request is rate limited because of profiles
+        $result = $transport->send($event);
+
+        $this->assertEquals(ResultStatus::rateLimit(), $result->getStatus());
+
+        // profile information is still present
+        $this->assertNotNull($event->getSdkMetadata('profile'));
+
+        $event = Event::createTransaction();
+        $event->setSdkMetadata('profile', new Profile());
+
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                $this->stringContains('Rate limit exceeded for sending requests of type "profile".'),
+                ['event' => $event]
+            );
+
+        $result = $transport->send($event);
+
+        // Sending transaction is successful because only profiles are rate limited
+        $this->assertEquals(ResultStatus::success(), $result->getStatus());
+
+        // profile information is removed because it was rate limited
+        $this->assertNull($event->getSdkMetadata('profile'));
+    }
+
+    /**
+     * @group time-sensitive
+     */
+    public function testCheckInsAreRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/1']),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $event = Event::createCheckIn();
+
+        $this->payloadSerializer->expects($this->exactly(1))
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->exactly(1))
+            ->method('sendRequest')
+            ->willReturn(
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:monitor:key']], '')
+            );
+
+        $result = $transport->send($event);
+
+        $this->assertEquals(ResultStatus::rateLimit(), $result->getStatus());
+
+        $event = Event::createCheckIn();
+
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                $this->stringContains('Rate limit exceeded for sending requests of type "check_in".'),
+                ['event' => $event]
+            );
+
+        $result = $transport->send($event);
+
+        $this->assertEquals(ResultStatus::rateLimit(), $result->getStatus());
     }
 
     public function testClose(): void
