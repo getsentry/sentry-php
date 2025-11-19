@@ -68,7 +68,7 @@ abstract class AbstractType
     }
 
     /**
-     * @param int|float|string $value
+     * @param int|float $value
      */
     abstract public function setValue($value): void;
 
