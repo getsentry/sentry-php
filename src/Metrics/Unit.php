@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics;
 
-final class MetricsUnit implements \Stringable
+final class Unit implements \Stringable
 {
     /**
      * @var string The value of the enum instance

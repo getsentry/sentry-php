@@ -50,7 +50,7 @@ final class MetricsAggregator
         string $name,
         $value,
         array $attributes,
-        ?MetricsUnit $unit
+        ?Unit $unit
     ): void {
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics\Types;
 
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 
@@ -28,13 +28,13 @@ final class DistributionType extends AbstractType
      * @param array<string, mixed> $attributes
      */
     public function __construct(
-        string $name,
-        $value,
+        string  $name,
+                $value,
         TraceId $traceId,
-        SpanId $spanId,
-        array $attributes,
-        float $timestamp,
-        ?MetricsUnit $unit,
+        SpanId  $spanId,
+        array   $attributes,
+        float   $timestamp,
+        ?Unit   $unit,
     ) {
         parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 

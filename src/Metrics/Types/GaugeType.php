@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics\Types;
 
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 
@@ -34,7 +34,7 @@ final class GaugeType extends AbstractType
         SpanId $spanId,
         array $attributes,
         float $timestamp,
-        ?MetricsUnit $unit
+        ?Unit $unit
     ) {
         parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 

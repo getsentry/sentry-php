@@ -18,7 +18,7 @@ use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
@@ -433,7 +433,7 @@ TEXT
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMetrics([
-            new CounterType('test-counter', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], 1597790835.0, MetricsUnit::bit()),
+            new CounterType('test-counter', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], 1597790835.0, Unit::bit()),
         ]);
 
         yield [
@@ -447,7 +447,7 @@ TEXT
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMetrics([
-            new GaugeType('test-gauge', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], ClockMock::microtime(true), MetricsUnit::second()),
+            new GaugeType('test-gauge', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], ClockMock::microtime(true), Unit::second()),
         ]);
 
         yield [
@@ -461,7 +461,7 @@ TEXT
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMetrics([
-            new DistributionType('test-distribution', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], ClockMock::microtime(true), MetricsUnit::day()),
+            new DistributionType('test-distribution', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], ClockMock::microtime(true), Unit::day()),
         ]);
 
         yield [

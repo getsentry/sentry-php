@@ -9,7 +9,7 @@ use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Metrics\MetricsAggregator;
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
@@ -53,14 +53,14 @@ final class MetricsTest extends TestCase
         metrics()->increment(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
         metrics()->increment(
             'foo',
             2,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
@@ -143,21 +143,21 @@ final class MetricsTest extends TestCase
         metrics()->set(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
         metrics()->set(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
         metrics()->set(
             'foo',
             'foo',
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
@@ -208,7 +208,7 @@ final class MetricsTest extends TestCase
         metrics()->increment(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
@@ -220,14 +220,14 @@ final class MetricsTest extends TestCase
         metrics()->increment(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 
         metrics()->increment(
             'foo',
             1,
-            MetricsUnit::second(),
+            Unit::second(),
             ['foo' => 'bar']
         );
 

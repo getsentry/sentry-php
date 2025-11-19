@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Metrics\Types;
 
 use Sentry\Attributes\AttributeBag;
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 
@@ -40,7 +40,7 @@ abstract class AbstractType
     private $attributes;
 
     /**
-     * @var MetricsUnit|null
+     * @var Unit|null
      */
     private $unit;
 
@@ -53,7 +53,7 @@ abstract class AbstractType
         SpanId $spanId,
         float $timestamp,
         array $attributes,
-        ?MetricsUnit $unit
+        ?Unit $unit
     ) {
         $this->name = $name;
         $this->unit = $unit;
@@ -78,7 +78,7 @@ abstract class AbstractType
         return $this->name;
     }
 
-    public function getUnit(): ?MetricsUnit
+    public function getUnit(): ?Unit
     {
         return $this->unit;
     }

@@ -45,11 +45,11 @@ class Metrics
      */
     public function increment(
         string $key,
-        float $value,
-        ?MetricsUnit $unit = null,
-        array $tags = [],
-        ?int $timestamp = null,
-        int $stackLevel = 0
+        float  $value,
+        ?Unit  $unit = null,
+        array  $tags = [],
+        ?int   $timestamp = null,
+        int    $stackLevel = 0
     ): void {
     }
 
@@ -60,7 +60,7 @@ class Metrics
         string $name,
         float $value,
         array $attributes = [],
-        ?MetricsUnit $unit = null
+        ?Unit $unit = null
     ): void {
         $this->aggregator->add(
             CounterType::TYPE,
@@ -78,7 +78,7 @@ class Metrics
         string $name,
         float $value,
         array $attributes = [],
-        ?MetricsUnit $unit = null
+        ?Unit $unit = null
     ): void {
         $this->aggregator->add(
             DistributionType::TYPE,
@@ -96,7 +96,7 @@ class Metrics
         string $name,
         float $value,
         array $attributes = [],
-        ?MetricsUnit $unit = null
+        ?Unit $unit = null
     ): void {
         $this->aggregator->add(
             GaugeType::TYPE,
@@ -115,11 +115,11 @@ class Metrics
      */
     public function set(
         string $key,
-        $value,
-        ?MetricsUnit $unit = null,
-        array $tags = [],
-        ?int $timestamp = null,
-        int $stackLevel = 0
+               $value,
+        ?Unit  $unit = null,
+        array  $tags = [],
+        ?int   $timestamp = null,
+        int    $stackLevel = 0
     ): void {
     }
 

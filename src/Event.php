@@ -73,7 +73,7 @@ final class Event
     private $logs = [];
 
     /**
-     * @var array<int, AbstractType>
+     * @var AbstractType[]
      */
     private $metrics = [];
 

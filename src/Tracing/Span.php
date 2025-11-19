@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
-use Sentry\Metrics\MetricsUnit;
+use Sentry\Metrics\Unit;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -547,9 +547,9 @@ class Span
     public function setMetricsSummary(
         string $type,
         string $key,
-        $value,
-        MetricsUnit $unit,
-        array $tags
+               $value,
+        Unit   $unit,
+        array  $tags
     ): void {
     }
 
