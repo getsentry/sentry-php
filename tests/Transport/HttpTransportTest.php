@@ -292,7 +292,6 @@ final class HttpTransportTest extends TestCase
                 new Response(200, [], '')
             );
 
-
         // First request is rate limited because of profiles
         $result = $transport->send($event);
 
