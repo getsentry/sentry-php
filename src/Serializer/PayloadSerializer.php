@@ -59,7 +59,6 @@ final class PayloadSerializer implements PayloadSerializerInterface
             }
         }
 
-
         $items = [];
 
         switch ($event->getType()) {
