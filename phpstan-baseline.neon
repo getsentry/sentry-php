@@ -26,17 +26,7 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Method Sentry\\\\Event\\:\\:getMetrics\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
 			message: "#^Method Sentry\\\\Event\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Method Sentry\\\\Event\\:\\:setMetrics\\(\\) has parameter \\$metrics with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Event.php
 

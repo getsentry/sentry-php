@@ -373,7 +373,7 @@ function logger(): Logs
 }
 
 /**
- * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+ * Get the Sentry Metrics client.
  */
 function metrics(): Metrics
 {
