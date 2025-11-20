@@ -75,7 +75,7 @@ abstract class AbstractType
     abstract public function getType(): string;
 
     /**
-     * @return int|float|string
+     * @return int|float
      */
     abstract public function getValue();
 
