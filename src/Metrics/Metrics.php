@@ -5,29 +5,21 @@ declare(strict_types=1);
 namespace Sentry\Metrics;
 
 use Sentry\EventId;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
 use Sentry\Tracing\SpanContext;
 
 use function Sentry\trace;
 
+class_alias(Unit::class, '\Sentry\Metrics\MetricsUnit');
+
+/**
+ * @deprecated use TraceMetrics instead
+ */
 class Metrics
 {
     /**
      * @var self|null
      */
     private static $instance;
-
-    /**
-     * @var MetricsAggregator
-     */
-    private $aggregator;
-
-    private function __construct()
-    {
-        $this->aggregator = new MetricsAggregator();
-    }
 
     public static function getInstance(): self
     {
@@ -41,7 +33,7 @@ class Metrics
     /**
      * @param array<string, string> $tags
      *
-     * @deprecated Use Metrics::count() instead. To be removed in 5.x.
+     * @deprecated Use TraceMetrics::count() instead. To be removed in 5.x.
      */
     public function increment(
         string $key,
@@ -54,69 +46,45 @@ class Metrics
     }
 
     /**
-     * @param array<string, int|float|string|bool> $attributes
-     */
-    public function count(
-        string $name,
-        float $value,
-        array $attributes = [],
-        ?Unit $unit = null
-    ): void {
-        $this->aggregator->add(
-            CounterType::TYPE,
-            $name,
-            $value,
-            $attributes,
-            $unit
-        );
-    }
-
-    /**
-     * @param array<string, int|float|string|bool> $attributes
+     * @param array<string, string> $tags
+     *
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function distribution(
-        string $name,
+        string $key,
         float $value,
-        array $attributes = [],
-        ?Unit $unit = null
+        ?Unit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
     ): void {
-        $this->aggregator->add(
-            DistributionType::TYPE,
-            $name,
-            $value,
-            $attributes,
-            $unit
-        );
     }
 
     /**
-     * @param array<string, int|float|string|bool> $attributes
+     * @param array<string, string> $tags
+     *
+     * @deprecated Use TraceMetrics::gauge() instead. To be removed in 5.x.
      */
     public function gauge(
-        string $name,
+        string $key,
         float $value,
-        array $attributes = [],
-        ?Unit $unit = null
+        ?Unit $unit = null,
+        array $tags = [],
+        ?int $timestamp = null,
+        int $stackLevel = 0
     ): void {
-        $this->aggregator->add(
-            GaugeType::TYPE,
-            $name,
-            $value,
-            $attributes,
-            $unit
-        );
     }
 
     /**
      * @param int|string            $value
      * @param array<string, string> $tags
      *
-     * @deprecated To be removed in 5.x.
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function set(
         string $key,
         $value,
-        ?Unit $unit = null,
+        ?MetricsUnit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
         int $stackLevel = 0
@@ -131,7 +99,7 @@ class Metrics
      *
      * @return T
      *
-     * @deprecated To be removed in 5.x.
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function timing(
         string $key,
@@ -150,8 +118,11 @@ class Metrics
         );
     }
 
+    /**
+     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     */
     public function flush(): ?EventId
     {
-        return $this->aggregator->flush();
+        return null;
     }
 }
