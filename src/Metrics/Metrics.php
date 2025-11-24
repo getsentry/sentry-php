@@ -84,7 +84,7 @@ class Metrics
     public function set(
         string $key,
         $value,
-        ?MetricsUnit $unit = null,
+        ?Unit $unit = null,
         array $tags = [],
         ?int $timestamp = null,
         int $stackLevel = 0
