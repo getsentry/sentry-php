@@ -19,6 +19,20 @@ class StubTransport implements TransportInterface
      */
     public static $events = [];
 
+    /**
+     * @var self
+     */
+    private static $instance;
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
     public function send(Event $event): Result
     {
         self::$events[] = $event;

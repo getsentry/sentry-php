@@ -48,7 +48,7 @@ class Metrics
     /**
      * @param array<string, string> $tags
      *
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @deprecated Use TraceMetrics::distribution() instead. Metrics API is a no-op and will be removed in 5.x.
      */
     public function distribution(
         string $key,

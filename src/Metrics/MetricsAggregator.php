@@ -42,7 +42,7 @@ final class MetricsAggregator
     ];
 
     /**
-     * @param int|float|string                     $value
+     * @param int|float                            $value
      * @param array<string, int|float|string|bool> $attributes
      */
     public function add(
@@ -57,6 +57,10 @@ final class MetricsAggregator
 
         if ($client instanceof Client) {
             $options = $client->getOptions();
+
+            if ($options->getEnableMetrics() === false) {
+                return;
+            }
 
             $defaultAttributes = [
                 'sentry.sdk.name' => $client->getSdkIdentifier(),
@@ -89,8 +93,16 @@ final class MetricsAggregator
 
         $metricTypeClass = self::METRIC_TYPES[$type];
         /** @var AbstractType $metric */
-        /** @phpstan-ignore-next-line SetType accepts int|float|string, others only int|float */
+        /** @phpstan-ignore-next-line */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
+
+        if ($client !== null) {
+            $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
+            $metric = $beforeSendMetric($metric);
+            if ($metric === null) {
+                return;
+            }
+        }
 
         $this->metrics->push($metric);
     }

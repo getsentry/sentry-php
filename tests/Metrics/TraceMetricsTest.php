@@ -7,6 +7,7 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\Metrics\MetricsAggregator;
+use Sentry\Metrics\Types\AbstractType;
 use Sentry\Metrics\Types\CounterType;
 use Sentry\Metrics\Types\DistributionType;
 use Sentry\Metrics\Types\GaugeType;
@@ -19,7 +20,7 @@ final class TraceMetricsTest extends TestCase
 {
     protected function setUp(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options(), new StubTransport()));
+        HubAdapter::getInstance()->bindClient(new Client(new Options(), StubTransport::getInstance()));
         StubTransport::$events = [];
     }
 
@@ -81,5 +82,38 @@ final class TraceMetricsTest extends TestCase
         $event = StubTransport::$events[0];
         $metrics = $event->getMetrics();
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, $metrics);
+    }
+
+    public function testEnableMetrics(): void
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'enable_metrics' => false,
+        ]), StubTransport::getInstance()));
+
+        trace_metrics()->count('test-count', 2, ['foo' => 'bar']);
+        trace_metrics()->flush();
+
+        $this->assertEmpty(StubTransport::$events);
+    }
+
+    public function testBeforeSendMetricAltersContent()
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'before_send_metric' => static function (AbstractType $metric) {
+                $metric->setValue(99999);
+
+                return $metric;
+            },
+        ]), StubTransport::getInstance()));
+
+        trace_metrics()->count('test-count', 2, ['foo' => 'bar']);
+        trace_metrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(1, $event->getMetrics());
+        $metric = $event->getMetrics()[0];
+        $this->assertEquals(99999, $metric->getValue());
     }
 }
