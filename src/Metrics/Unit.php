@@ -141,12 +141,17 @@ final class Unit implements \Stringable
         return self::getInstance('percent');
     }
 
-    // none and custom is removed
+    /**
+     * @deprecated `none` is not supported and will be removed in 5.x
+     */
     public static function none(): self
     {
         return self::getInstance('none');
     }
 
+    /**
+     * @deprecated custom unit types are currently not supported. Will be removed in 5.x
+     */
     public static function custom(string $unit): self
     {
         return new self($unit);
