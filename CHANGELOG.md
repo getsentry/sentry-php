@@ -23,7 +23,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Bug Fixes
 
-- Add rate limiting for profiles and check_ins. [(#1970)](https://github.com/getsentry/sentry-php/pull/1970)
+- Add rate limiting for profiles and cron check-ins. [(#1970)](https://github.com/getsentry/sentry-php/pull/1970)
 - Fix Spotlight so it always registers the error integrations and emits transport logs even when no DSN is configured. [(#1964)](https://github.com/getsentry/sentry-php/pull/1964)
 
 ## 4.18.1
