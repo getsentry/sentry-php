@@ -104,12 +104,12 @@ final class MetricsTest extends TestCase
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->any())
-               ->method('getOptions')
-               ->willReturn(new Options([
-                   'release' => '1.0.0',
-                   'environment' => 'development',
-                   'attach_metric_code_locations' => true,
-               ]));
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+                'attach_metric_code_locations' => true,
+            ]));
 
         $self = $this;
 

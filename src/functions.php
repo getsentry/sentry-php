@@ -9,6 +9,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -373,11 +374,16 @@ function logger(): Logs
 }
 
 /**
- * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+ * @deprecated use `trace_metrics` instead
  */
 function metrics(): Metrics
 {
     return Metrics::getInstance();
+}
+
+function trace_metrics(): TraceMetrics
+{
+    return TraceMetrics::getInstance();
 }
 
 /**
