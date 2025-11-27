@@ -47,7 +47,7 @@ final class PayloadSerializer implements PayloadSerializerInterface
         ];
 
         if ($event->getType()->requiresEventId()) {
-            $envelopeHeader = ['event_id' => (string) $event->getId()] + $envelopeHeader;
+            $envelopeHeader['event_id'] = (string) $event->getId();
         }
 
         $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');

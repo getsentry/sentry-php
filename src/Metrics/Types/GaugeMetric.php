@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics\Types;
 
-use Sentry\Metrics\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Unit;
 
 /**
  * @internal
  */
-final class CounterType extends AbstractType
+final class GaugeMetric extends Metric
 {
     /**
      * @var string
      */
-    public const TYPE = 'counter';
+    public const TYPE = 'gauge';
 
     /**
      * @var int|float

@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Sentry\Metrics\Types;
 
 use Sentry\Attributes\AttributeBag;
-use Sentry\Metrics\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Unit;
 
 /**
  * @internal
  */
-abstract class AbstractType
+abstract class Metric
 {
     /**
      * @var string

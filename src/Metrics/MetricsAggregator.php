@@ -7,10 +7,10 @@ namespace Sentry\Metrics;
 use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
-use Sentry\Metrics\Types\AbstractType;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\CounterMetric;
+use Sentry\Metrics\Types\DistributionMetric;
+use Sentry\Metrics\Types\GaugeMetric;
+use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Util\RingBuffer;
@@ -26,7 +26,7 @@ final class MetricsAggregator
     public const METRICS_BUFFER_SIZE = 1000;
 
     /**
-     * @var RingBuffer<AbstractType>
+     * @var RingBuffer<Metric>
      */
     private $metrics;
 
@@ -36,9 +36,9 @@ final class MetricsAggregator
     }
 
     private const METRIC_TYPES = [
-        CounterType::TYPE => CounterType::class,
-        DistributionType::TYPE => DistributionType::class,
-        GaugeType::TYPE => GaugeType::class,
+        CounterMetric::TYPE => CounterMetric::class,
+        DistributionMetric::TYPE => DistributionMetric::class,
+        GaugeMetric::TYPE => GaugeMetric::class,
     ];
 
     /**
@@ -66,7 +66,25 @@ final class MetricsAggregator
                 'sentry.sdk.name' => $client->getSdkIdentifier(),
                 'sentry.sdk.version' => $client->getSdkVersion(),
                 'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
+                'server.address' => $options->getServerName(),
             ];
+
+            if ($options->shouldSendDefaultPii()) {
+                $hub->configureScope(function (Scope $scope) use (&$defaultAttributes) {
+                    $user = $scope->getUser();
+                    if ($user !== null) {
+                        if ($user->getId() !== null) {
+                            $defaultAttributes['user.id'] = $user->getId();
+                        }
+                        if ($user->getEmail() !== null) {
+                            $defaultAttributes['user.email'] = $user->getEmail();
+                        }
+                        if ($user->getUsername() !== null) {
+                            $defaultAttributes['user.name'] = $user->getUsername();
+                        }
+                    }
+                });
+            }
 
             $release = $options->getRelease();
             if ($release !== null) {
@@ -92,7 +110,7 @@ final class MetricsAggregator
         }
 
         $metricTypeClass = self::METRIC_TYPES[$type];
-        /** @var AbstractType $metric */
+        /** @var Metric $metric */
         /** @phpstan-ignore-next-line */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 

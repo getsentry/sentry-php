@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Metrics;
+namespace Sentry;
 
 final class Unit implements \Stringable
 {

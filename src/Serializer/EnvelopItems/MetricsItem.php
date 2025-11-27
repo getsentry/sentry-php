@@ -7,7 +7,7 @@ namespace Sentry\Serializer\EnvelopItems;
 use Sentry\Attributes\Attribute;
 use Sentry\Event;
 use Sentry\EventType;
-use Sentry\Metrics\Types\AbstractType;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Util\JSON;
 
 /**
@@ -29,7 +29,7 @@ class MetricsItem implements EnvelopeItemInterface
             "%s\n%s",
             JSON::encode($header),
             JSON::encode([
-                'items' => array_map(static function (AbstractType $metric): array {
+                'items' => array_map(static function (Metric $metric): array {
                     return [
                         'timestamp' => $metric->getTimestamp(),
                         'trace_id' => (string) $metric->getTraceId(),

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
-use Sentry\Metrics\Unit;
+use Sentry\Unit;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 

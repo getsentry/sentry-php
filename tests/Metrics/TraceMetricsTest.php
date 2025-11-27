@@ -7,10 +7,10 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\Metrics\MetricsAggregator;
-use Sentry\Metrics\Types\AbstractType;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\Metric;
+use Sentry\Metrics\Types\CounterMetric;
+use Sentry\Metrics\Types\DistributionMetric;
+use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Options;
 use Sentry\State\HubAdapter;
 
@@ -36,7 +36,7 @@ final class TraceMetricsTest extends TestCase
         $metrics = $event->getMetrics();
         $metric = $metrics[0];
         $this->assertEquals('test-count', $metric->getName());
-        $this->assertEquals(CounterType::TYPE, $metric->getType());
+        $this->assertEquals(CounterMetric::TYPE, $metric->getType());
         $this->assertEquals(2, $metric->getValue());
         $this->assertArrayHasKey('foo', $metric->getAttributes()->toSimpleArray());
     }
@@ -52,7 +52,7 @@ final class TraceMetricsTest extends TestCase
         $metrics = $event->getMetrics();
         $metric = $metrics[0];
         $this->assertEquals('test-gauge', $metric->getName());
-        $this->assertEquals(GaugeType::TYPE, $metric->getType());
+        $this->assertEquals(GaugeMetric::TYPE, $metric->getType());
         $this->assertEquals(10, $metric->getValue());
         $this->assertArrayHasKey('foo', $metric->getAttributes()->toSimpleArray());
     }
@@ -67,7 +67,7 @@ final class TraceMetricsTest extends TestCase
         $metrics = $event->getMetrics();
         $metric = $metrics[0];
         $this->assertEquals('test-distribution', $metric->getName());
-        $this->assertEquals(DistributionType::TYPE, $metric->getType());
+        $this->assertEquals(DistributionMetric::TYPE, $metric->getType());
         $this->assertEquals(10, $metric->getValue());
         $this->assertArrayHasKey('foo', $metric->getAttributes()->toSimpleArray());
     }
@@ -99,7 +99,7 @@ final class TraceMetricsTest extends TestCase
     public function testBeforeSendMetricAltersContent()
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options([
-            'before_send_metric' => static function (AbstractType $metric) {
+            'before_send_metric' => static function (Metric $metric) {
                 $metric->setValue(99999);
 
                 return $metric;

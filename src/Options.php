@@ -10,7 +10,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Log;
-use Sentry\Metrics\Types\AbstractType;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Transport\TransportInterface;
 use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -1317,7 +1317,7 @@ final class Options
             'before_send_metrics' => static function (Event $metrics): ?Event {
                 return null;
             },
-            'before_send_metric' => static function (AbstractType $metric): AbstractType {
+            'before_send_metric' => static function (Metric $metric): Metric {
                 return $metric;
             },
             'trace_propagation_targets' => null,

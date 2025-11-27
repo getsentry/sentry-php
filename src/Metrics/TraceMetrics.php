@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Sentry\Metrics;
 
 use Sentry\EventId;
-use Sentry\Metrics\Types\CounterType;
-use Sentry\Metrics\Types\DistributionType;
-use Sentry\Metrics\Types\GaugeType;
+use Sentry\Metrics\Types\CounterMetric;
+use Sentry\Metrics\Types\DistributionMetric;
+use Sentry\Metrics\Types\GaugeMetric;
+use Sentry\Unit;
 
 class TraceMetrics
 {
@@ -46,7 +47,7 @@ class TraceMetrics
         ?Unit $unit = null
     ): void {
         $this->aggregator->add(
-            CounterType::TYPE,
+            CounterMetric::TYPE,
             $name,
             $value,
             $attributes,
@@ -65,7 +66,7 @@ class TraceMetrics
         ?Unit $unit = null
     ): void {
         $this->aggregator->add(
-            DistributionType::TYPE,
+            DistributionMetric::TYPE,
             $name,
             $value,
             $attributes,
@@ -84,7 +85,7 @@ class TraceMetrics
         ?Unit $unit = null
     ): void {
         $this->aggregator->add(
-            GaugeType::TYPE,
+            GaugeMetric::TYPE,
             $name,
             $value,
             $attributes,

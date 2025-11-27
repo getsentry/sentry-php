@@ -7,7 +7,7 @@ namespace Sentry;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
-use Sentry\Metrics\Types\AbstractType;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -73,7 +73,7 @@ final class Event
     private $logs = [];
 
     /**
-     * @var AbstractType[]
+     * @var Metric[]
      */
     private $metrics = [];
 
@@ -449,7 +449,7 @@ final class Event
     }
 
     /**
-     * @return AbstractType[]
+     * @return Metric[]
      */
     public function getMetrics(): array
     {
@@ -457,7 +457,7 @@ final class Event
     }
 
     /**
-     * @param AbstractType[] $metrics
+     * @param Metric[] $metrics
      */
     public function setMetrics(array $metrics): self
     {
