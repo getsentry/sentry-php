@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## 4.19.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.0.
+
+### Features
+
+- Add support for metrics. [(#1968)](https://github.com/getsentry/sentry-php/pull/1968)
+```php
+// Counter metric
+\Sentry\trace_metrics()->count('test-counter', 10, ['my-attribute' => 'foo']);
+
+// Gauge metric
+\Sentry\trace_metrics()->gauge('test-gauge', 50.0, ['my-attribute' => 'foo'], \Sentry\Unit::millisecond());
+
+// Distribution metric
+\Sentry\trace_metrics()->distribution('test-distribution', 20.0, ['my-attribute' => 'foo'], \Sentry\Unit::kilobyte());
+
+// Flush metrics
+\Sentry\trace_metrics()->flush();
+```
+
+### Bug Fixes
+
+- Add rate limiting for profiles and cron check-ins. [(#1970)](https://github.com/getsentry/sentry-php/pull/1970)
+- Fix Spotlight so it always registers the error integrations and emits transport logs even when no DSN is configured. [(#1964)](https://github.com/getsentry/sentry-php/pull/1964)
+
 ## 4.18.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.18.1.
