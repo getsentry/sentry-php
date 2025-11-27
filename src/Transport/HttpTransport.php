@@ -171,6 +171,15 @@ class HttpTransport implements TransportInterface
             return;
         }
 
+        $eventDescription = \sprintf(
+            '%s%s [%s]',
+            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
+            (string) $event->getType(),
+            (string) $event->getId()
+        );
+
+        $this->logger->info(\sprintf('Sending %s to Spotlight.', $eventDescription), ['event' => $event]);
+
         $request = new Request();
         $request->setStringBody($this->payloadSerializer->serialize($event));
 
