@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Metrics\Types;
 
-use Sentry\Unit;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Unit;
 
 /**
  * @internal

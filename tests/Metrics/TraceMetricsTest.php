@@ -7,10 +7,10 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\Metrics\MetricsAggregator;
-use Sentry\Metrics\Types\Metric;
 use Sentry\Metrics\Types\CounterMetric;
 use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
 use Sentry\State\HubAdapter;
 

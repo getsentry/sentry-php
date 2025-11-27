@@ -6,8 +6,8 @@ namespace Sentry\Metrics;
 
 use Sentry\EventId;
 use Sentry\Tracing\SpanContext;
-
 use Sentry\Unit;
+
 use function Sentry\trace;
 
 class_alias(Unit::class, '\Sentry\Metrics\MetricsUnit');

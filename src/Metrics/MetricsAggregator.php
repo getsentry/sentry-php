@@ -13,6 +13,7 @@ use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Unit;
 use Sentry\Util\RingBuffer;
 
 /**
