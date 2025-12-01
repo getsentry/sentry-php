@@ -8,6 +8,7 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Serializer\EnvelopItems\CheckInItem;
+use Sentry\Serializer\EnvelopItems\ClientReportItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
 use Sentry\Serializer\EnvelopItems\LogsItem;
 use Sentry\Serializer\EnvelopItems\ProfileItem;
@@ -38,21 +39,25 @@ final class PayloadSerializer implements PayloadSerializerInterface
      */
     public function serialize(Event $event): string
     {
-        // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
-        $envelopeHeader = [
-            'event_id' => (string) $event->getId(),
-            'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
-            'dsn' => (string) $this->options->getDsn(),
-            'sdk' => $event->getSdkPayload(),
-        ];
+        if ($event->getType() !== EventType::clientReport()) {
+            // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
+            $envelopeHeader = [
+                'event_id' => (string) $event->getId(),
+                'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
+                'dsn' => (string) $this->options->getDsn(),
+                'sdk' => $event->getSdkPayload(),
+            ];
 
-        $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
-        if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
-            $entries = $dynamicSamplingContext->getEntries();
+            $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+            if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+                $entries = $dynamicSamplingContext->getEntries();
 
-            if (!empty($entries)) {
-                $envelopeHeader['trace'] = $entries;
+                if (!empty($entries)) {
+                    $envelopeHeader['trace'] = $entries;
+                }
             }
+        } else {
+            $envelopeHeader = [];
         }
 
         $items = [];
@@ -73,8 +78,11 @@ final class PayloadSerializer implements PayloadSerializerInterface
             case EventType::logs():
                 $items[] = LogsItem::toEnvelopeItem($event);
                 break;
+            case EventType::clientReport():
+                $items[] = ClientReportItem::toEnvelopeItem($event);
+                break;
         }
 
-        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
+        return \sprintf("%s\n%s", JSON::encode($envelopeHeader, \JSON_FORCE_OBJECT), implode("\n", array_filter($items)));
     }
 }

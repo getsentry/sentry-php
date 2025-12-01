@@ -55,6 +55,11 @@ final class EventType implements \Stringable
         return self::getInstance('metrics');
     }
 
+    public static function clientReport(): self
+    {
+        return self::getInstance('client_report');
+    }
+
     /**
      * List of all cases on the enum.
      *
@@ -68,6 +73,7 @@ final class EventType implements \Stringable
             self::checkIn(),
             self::logs(),
             self::metrics(),
+            self::clientReport(),
         ];
     }
 
