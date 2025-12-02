@@ -28,6 +28,7 @@ use Sentry\Profiling\Profile;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanId;
@@ -36,7 +37,6 @@ use Sentry\Tracing\TraceId;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\Unit;
 use Sentry\UserDataBag;
-use Sentry\Util\ClockMock;
 use Sentry\Util\SentryUid;
 
 /**

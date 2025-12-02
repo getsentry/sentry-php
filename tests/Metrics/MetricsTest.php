@@ -11,10 +11,9 @@ use Sentry\Metrics\MetricsUnit;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
-use Sentry\Util\ClockMock;
-
 use function Sentry\metrics;
 
 final class MetricsTest extends TestCase
