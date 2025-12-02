@@ -116,4 +116,43 @@ final class TraceMetricsTest extends TestCase
         $metric = $event->getMetrics()[0];
         $this->assertEquals(99999, $metric->getValue());
     }
+
+    public function testIntType()
+    {
+        trace_metrics()->count('test-count', 2, ['foo' => 'bar']);
+        trace_metrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(1, $event->getMetrics());
+        $metric = $event->getMetrics()[0];
+
+        $this->assertEquals('test-count', $metric->getName());
+        $this->assertEquals(2, $metric->getValue());
+    }
+
+    public function testFloatType(): void
+    {
+        trace_metrics()->gauge('test-gauge', 10.50, ['foo' => 'bar']);
+        trace_metrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(1, $event->getMetrics());
+        $metric = $event->getMetrics()[0];
+
+        $this->assertEquals('test-gauge', $metric->getName());
+        $this->assertEquals(10.50, $metric->getValue());
+    }
+
+    public function testInvalidTypeIsDiscarded(): void
+    {
+        // @phpstan-ignore-next-line
+        trace_metrics()->count('test-count', 'test-value');
+        trace_metrics()->flush();
+
+        $this->assertEmpty(StubTransport::$events);
+    }
 }

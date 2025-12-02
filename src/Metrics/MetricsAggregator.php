@@ -56,6 +56,14 @@ final class MetricsAggregator
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
+        if (!\is_int($value) && !\is_float($value)) {
+            if ($client !== null) {
+                $client->getOptions()->getLoggerOrNullLogger()->debug('Metrics value is neither int nor float. Metric will be discarded');
+            }
+
+            return;
+        }
+
         if ($client instanceof Client) {
             $options = $client->getOptions();
 

@@ -9,9 +9,6 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Unit;
 
-/**
- * @internal
- */
 abstract class Metric
 {
     /**
