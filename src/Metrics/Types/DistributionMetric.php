@@ -38,7 +38,7 @@ final class DistributionMetric extends Metric
     ) {
         parent::__construct($name, $traceId, $spanId, $timestamp, $attributes, $unit);
 
-        $this->value = (float) $value;
+        $this->value = $value;
     }
 
     /**

@@ -63,6 +63,12 @@ final class MetricsAggregator
                 return;
             }
 
+            if (!\is_int($value) && !\is_float($value)) {
+                $options->getLoggerOrNullLogger()->debug('Metrics value is neither int nor float. Metric will be discarded');
+
+                return;
+            }
+
             $defaultAttributes = [
                 'sentry.sdk.name' => $client->getSdkIdentifier(),
                 'sentry.sdk.version' => $client->getSdkVersion(),
