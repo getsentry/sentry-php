@@ -14,6 +14,7 @@ use Sentry\State\Hub;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
+
 use function Sentry\metrics;
 
 final class MetricsTest extends TestCase
