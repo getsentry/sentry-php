@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.19.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.1.
+
+### Bug Fixes
+
+- Don't cast metrics value to `float` in constructor, drop invalid metrics instead. [(#1981)](https://github.com/getsentry/sentry-php/pull/1981)
+
 ## 4.19.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.0.
