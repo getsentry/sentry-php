@@ -184,9 +184,13 @@ class HttpTransport implements TransportInterface
         $request->setStringBody($this->payloadSerializer->serialize($event));
 
         try {
+            $spotLightUrl = $this->options->getSpotlightUrl();
+            if (substr_compare($spotLightUrl, '/stream', -7, 7) !== 0) {
+                $spotLightUrl .= '/stream';
+            }
             $spotLightResponse = SpotlightClient::sendRequest(
                 $request,
-                $this->options->getSpotlightUrl() . '/stream'
+                $spotLightUrl
             );
 
             if ($spotLightResponse->hasError()) {
