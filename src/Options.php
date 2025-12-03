@@ -1408,6 +1408,7 @@ final class Options
             return array_map([$this, 'normalizeAbsolutePath'], $value);
         });
 
+        $resolver->setNormalizer('spotlight_url', \Closure::fromCallable([$this, 'normalizeSpotlightUrl']));
         $resolver->setNormalizer('spotlight', \Closure::fromCallable([$this, 'normalizeBooleanOrUrl']));
 
         $resolver->setNormalizer('in_app_exclude', function (SymfonyOptions $options, array $value) {
@@ -1445,10 +1446,22 @@ final class Options
         }
 
         if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
-            return $booleanOrUrl;
+            return $this->normalizeSpotlightUrl($options, $booleanOrUrl);
         }
 
         return filter_var($booleanOrUrl, \FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Normalizes the spotlight URL by removing the `/stream` at the end if present.
+     */
+    private function normalizeSpotlightUrl(SymfonyOptions $options, string $url): string
+    {
+        if (substr_compare($url, '/stream', -7, 7) === 0) {
+            return substr($url, 0, -7);
+        }
+
+        return $url;
     }
 
     /**
