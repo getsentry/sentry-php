@@ -14,9 +14,9 @@ use Sentry\HttpClient\Response;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\Serializer\PayloadSerializerInterface;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\ResultStatus;
-use Sentry\Util\ClockMock;
 
 final class HttpTransportTest extends TestCase
 {

@@ -6,7 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
-use Sentry\Util\ClockMock;
+use Sentry\Tests\TestUtil\ClockMock;
 
 final class BreadcrumbTest extends TestCase
 {
