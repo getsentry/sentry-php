@@ -40,11 +40,6 @@ final class LogsAggregator
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
-        // There is no need to continue if there is no client
-        if ($client === null) {
-            return;
-        }
-
         $options = $client->getOptions();
         $sdkLogger = $options->getLogger();
 

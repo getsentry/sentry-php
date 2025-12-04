@@ -130,12 +130,8 @@ final class GuzzleTracingMiddleware
         };
     }
 
-    private static function shouldAttachTracingHeaders(?ClientInterface $client, RequestInterface $request): bool
+    private static function shouldAttachTracingHeaders(ClientInterface $client, RequestInterface $request): bool
     {
-        if ($client === null) {
-            return false;
-        }
-
         $sdkOptions = $client->getOptions();
 
         // Check if the request destination is allow listed in the trace_propagation_targets option.

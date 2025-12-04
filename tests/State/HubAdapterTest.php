@@ -15,6 +15,7 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
@@ -272,7 +273,7 @@ final class HubAdapterTest extends TestCase
 
     public function testCaptureCheckIn()
     {
-        $hub = new Hub();
+        $hub = new Hub(new NoOpClient());
 
         $options = new Options([
             'environment' => Event::DEFAULT_ENVIRONMENT,
