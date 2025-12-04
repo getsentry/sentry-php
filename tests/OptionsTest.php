@@ -751,4 +751,56 @@ final class OptionsTest extends TestCase
             [true, null, true],
         ];
     }
+
+    /**
+     * @dataProvider spotlightUrlNormalizationDataProvider
+     */
+    public function testSpotlightUrlNormalization(array $data, string $expected): void
+    {
+        $options = new Options($data);
+        $this->assertSame($expected, $options->getSpotlightUrl());
+    }
+
+    public static function spotlightUrlNormalizationDataProvider(): \Generator
+    {
+        yield [['spotlight_url' => 'http://localhost:8969'], 'http://localhost:8969'];
+        yield [['spotlight_url' => 'http://localhost:8969/stream'], 'http://localhost:8969'];
+        yield [['spotlight_url' => 'http://localhost:8969/foo'], 'http://localhost:8969/foo'];
+        yield [['spotlight_url' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo'];
+        yield [['spotlight_url' => 'http://localhost:8969/stream/foo'], 'http://localhost:8969/stream/foo'];
+        yield [['spotlight' => 'http://localhost:8969'], 'http://localhost:8969'];
+        yield [['spotlight' => 'http://localhost:8969/stream'], 'http://localhost:8969'];
+        yield [['spotlight' => 'http://localhost:8969/foo'], 'http://localhost:8969/foo'];
+        yield [['spotlight' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo'];
+        yield [['spotlight' => 'http://localhost:8969/stream/foo'], 'http://localhost:8969/stream/foo'];
+    }
+
+    /**
+     * @dataProvider setSpotlightUrlNormalizationDataProvider
+     */
+    public function testSetSpotlightUrlNormalization(string $url, string $expected): void
+    {
+        $options = new Options();
+        $options->setSpotlightUrl($url);
+        $this->assertSame($expected, $options->getSpotlightUrl());
+    }
+
+    /**
+     * @dataProvider setSpotlightUrlNormalizationDataProvider
+     */
+    public function testEnableSpotlightNormalization(string $url, string $expected): void
+    {
+        $options = new Options();
+        $options->enableSpotlight($url);
+        $this->assertSame($expected, $options->getSpotlightUrl());
+    }
+
+    public static function setSpotlightUrlNormalizationDataProvider(): \Generator
+    {
+        yield ['http://localhost:8969', 'http://localhost:8969'];
+        yield ['http://localhost:8969/stream', 'http://localhost:8969'];
+        yield ['http://localhost:8969/foo', 'http://localhost:8969/foo'];
+        yield ['http://localhost:8969/foo/stream', 'http://localhost:8969/foo'];
+        yield ['http://localhost:8969/stream/foo', 'http://localhost:8969/stream/foo'];
+    }
 }
