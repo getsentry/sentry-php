@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
-use Sentry\Metrics\MetricsUnit;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Unit;
 
 /**
  * This class stores all the information about a span.
@@ -548,7 +548,7 @@ class Span
         string $type,
         string $key,
         $value,
-        MetricsUnit $unit,
+        Unit $unit,
         array $tags
     ): void {
     }

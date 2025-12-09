@@ -12,11 +12,10 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
-use Sentry\Tracing\Span;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
-use Sentry\Util\ClockMock;
 
 /**
  * @group time-sensitive

@@ -63,11 +63,13 @@ The following integrations are available and maintained by members of the Sentry
 - [WordPress](https://wordpress.org/plugins/wp-sentry-integration/)
 - Magento 2 by [JustBetter](https://github.com/justbetter/magento2-sentry) or by [Mygento](https://github.com/mygento/module-sentry)
 - [Joomla!](https://github.com/AlterBrains/sentry-joomla)
+- Neos Flow (and CMS) using [flownative/sentry](https://github.com/flownative/flow-sentry) or [networkteam/sentryclient](https://github.com/networkteam/Networkteam.SentryClient)
+- Neos CMS with specific Fusion handling using [networkteam/neos-sentryclient](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
+- [TYPO3](https://github.com/networkteam/sentry_client)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using the old SDK 3.x
 
-- [Neos Flow](https://github.com/flownative/flow-sentry)
 - [ZendFramework](https://github.com/facile-it/sentry-module)
 - [Yii2](https://github.com/notamedia/yii2-sentry)
 - [Silverstripe](https://github.com/phptek/silverstripe-sentry)
@@ -77,14 +79,11 @@ The following integrations are available and maintained by members of the Sentry
 
 ## 3rd party integrations using the old SDK 2.x
 
-- [Neos Flow](https://github.com/networkteam/Networkteam.SentryClient)
 - [OXID eShop](https://github.com/OXIDprojects/sentry)
-- [TYPO3](https://github.com/networkteam/sentry_client)
 - [CakePHP](https://github.com/Connehito/cake-sentry/tree/3.x)
 
 ## 3rd party integrations using the old SDK 1.x
 
-- [Neos CMS](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
 - [OpenCart](https://github.com/BurdaPraha/oc_sentry)
 - [TYPO3](https://github.com/networkteam/sentry_client/tree/2.1.1)
 

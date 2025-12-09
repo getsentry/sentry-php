@@ -8,6 +8,7 @@ use Sentry\ClientReport\ClientReport;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 
@@ -71,6 +72,11 @@ final class Event
      * @var Log[]
      */
     private $logs = [];
+
+    /**
+     * @var Metric[]
+     */
+    private $metrics = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -247,9 +253,6 @@ final class Event
         return new self($eventId, EventType::logs());
     }
 
-    /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
-     */
     public static function createMetrics(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::metrics());
@@ -457,18 +460,20 @@ final class Event
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @return Metric[]
      */
     public function getMetrics(): array
     {
-        return [];
+        return $this->metrics;
     }
 
     /**
-     * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+     * @param Metric[] $metrics
      */
     public function setMetrics(array $metrics): self
     {
+        $this->metrics = $metrics;
+
         return $this;
     }
 

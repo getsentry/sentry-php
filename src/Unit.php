@@ -2,12 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Sentry\Metrics;
+namespace Sentry;
 
-/**
- * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
- */
-final class MetricsUnit implements \Stringable
+final class Unit implements \Stringable
 {
     /**
      * @var string The value of the enum instance
@@ -144,11 +141,17 @@ final class MetricsUnit implements \Stringable
         return self::getInstance('percent');
     }
 
+    /**
+     * @deprecated `none` is not supported and will be removed in 5.x
+     */
     public static function none(): self
     {
         return self::getInstance('none');
     }
 
+    /**
+     * @deprecated custom unit types are currently not supported. Will be removed in 5.x
+     */
     public static function custom(string $unit): self
     {
         return new self($unit);
